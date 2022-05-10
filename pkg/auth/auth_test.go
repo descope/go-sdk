@@ -2,6 +2,6 @@ package auth
 
 import "testing"
 
-func TestAuth(t *testing.T) {
+func TestAuth(_ *testing.T) {
 
 }
