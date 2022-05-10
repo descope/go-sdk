@@ -1,2 +1,2 @@
-# descope-go-sdk
+# go-sdk
 Go library used to integrate with Descope
