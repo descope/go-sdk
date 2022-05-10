@@ -1,13 +1,3 @@
-# Mac OS X files
-.DS_Store
-
-# IDE files
-.idea/
-.vscode/
-.history/
-*.vsix
-.ionide
-
 # Binaries for programs and plugins
 *.exe
 *.exe~
@@ -15,23 +5,11 @@
 *.so
 *.dylib
 
-# Test binary, build with `go test -c`
+# Test binary, built with `go test -c`
 *.test
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
-coverage.html
 
-# Project-local glide cache, RE: https://github.com/Masterminds/glide/issues/736
-.glide/
-
-# Dependency directories
-vendor/
-
-local_test.go
-.test/
-
-# Go workspace file
-go.work
-
-__debug_bin
+# Dependency directories (remove the comment below to include it)
+# vendor/
