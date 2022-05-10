@@ -1,7 +1,10 @@
+CURRENT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 echo "- Running golangci-lint"
 
-lintresult=$(golangci-lint --config .golangci.yml --out-format github-actions run)
-
+golang_cli_config="${1:-"${CURRENT_DIR}/.golangci.yml"}" # get first argument and set "cmd" to be default
+lintresult=$(golangci-lint --config ${golang_cli_config} --out-format github-actions run)
+echo $lintresult
 if [[ -n $lintresult ]]; then
     echo "Some files aren't passing lint, please run 'golangci-lint run' to see the errors it flags and correct your source code before committing"
     echo $lintresult
