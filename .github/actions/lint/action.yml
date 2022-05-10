@@ -1,0 +1,19 @@
+name: Lint and more checks
+description: 'Lint and more checks'
+inputs:
+  go_version:
+    description: 'Go version to use'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Setup
+      uses: ./.github/actions/setup
+      with:
+        go_version: ${{ inputs.go_version }}
+
+    - name: Lint and more checks
+      run: |
+        chmod +x ./build/ci/build_lint.sh
+        ./build/ci/build_lint.sh
+      shell: bash

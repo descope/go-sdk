@@ -34,4 +34,12 @@ local_test.go
 # Go workspace file
 go.work
 
+local.env
+allconfig.env
+token.env
+
+pkg/*/doc/
+
+THIRD_PARTY_LICENSE
+
 __debug_bin
