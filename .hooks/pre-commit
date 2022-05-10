@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+source scripts/lint/lint.sh
+
+run_default_linter --build-folder "./..." --do-not-check-main $1
