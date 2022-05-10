@@ -14,6 +14,6 @@ runs:
 
     - name: Lint and more checks
       run: |
-        chmod +x ./build/ci/build_lint.sh
-        ./build/ci/build_lint.sh
+        chmod +x ./scripts/build/ci/build_lint.sh
+        ./scripts/build/ci/build_lint.sh
       shell: bash

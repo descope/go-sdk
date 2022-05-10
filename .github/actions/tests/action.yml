@@ -17,8 +17,8 @@ runs:
 
     - name: Run tests
       run: |
-        chmod +x ./build/ci/build_test.sh
-        ./build/ci/build_test.sh
+        chmod +x ./scripts/build/ci/build_test.sh
+        ./scripts/build/ci/build_test.sh
       shell: bash
 
     - name: Upload coverage HTML

@@ -14,6 +14,6 @@ runs:
 
     - name: Build
       run: |
-        chmod +x ./build/ci/build_go.sh
-        ./build/ci/build_go.sh ./... true .
+        chmod +x ./scripts/build/ci/build_go.sh
+        ./scripts/build/ci/build_go.sh ./... true .
       shell: bash
