@@ -9,21 +9,14 @@ import (
 	"time"
 )
 
-const (
-	defaultURI = "http://localhost:8080"
-)
-
-type iClient interface {
-	post(path string, body interface{}) ([]byte, *WebError)
-}
-
 type client struct {
 	httpClient *http.Client
 	uri        string
 	headers    map[string]string
+	conf       *Config
 }
 
-func newClient(authentication string) *client {
+func newClient(conf *Config) *client {
 	t := http.DefaultTransport.(*http.Transport).Clone()
 	t.MaxIdleConns = 100
 	t.MaxConnsPerHost = 100
@@ -35,13 +28,14 @@ func newClient(authentication string) *client {
 	}
 
 	defaultHeaders := map[string]string{
-		"Authorization": authentication,
+		"Authorization": conf.ProjectID,
 	}
 
 	return &client{
 		uri:        defaultURI,
 		httpClient: httpClient,
 		headers:    defaultHeaders,
+		conf:       conf,
 	}
 }
 
@@ -60,8 +54,10 @@ func (c *client) post(uriPath string, body interface{}) ([]byte, *WebError) {
 	}
 	req.Header.Set("Content-Type", "application/json")
 
+	c.conf.LogDebug("sending request to [%s]", uriPath)
 	response, err := c.httpClient.Do(req)
 	if err != nil {
+		c.conf.LogInfo("failing sending request to [%s]", uriPath)
 		return nil, NewFromErrorError("", err)
 	}
 

@@ -8,7 +8,7 @@ import (
 )
 
 func newTestAuth(callback func(uriPath string, body interface{}) ([]byte, *WebError)) *Auth {
-	auth := NewAuth()
+	auth := NewAuth(Config{})
 	auth.client = newTestClient(callback)
 	return auth
 }
@@ -55,7 +55,7 @@ func TestInvalidPhoneSignInWhatsapp(t *testing.T) {
 func TestValidEmailSignInEmail(t *testing.T) {
 	email := "test@email.com"
 	a := newTestAuth(func(uriPath string, body interface{}) ([]byte, *WebError) {
-		assert.EqualValues(t, signInURL(emailMethod), uriPath)
+		assert.EqualValues(t, composeSignInURL(methodEmail), uriPath)
 		assert.EqualValues(t, map[string]interface{}{"email": email}, body.(map[string]interface{})["identifiers"])
 		return nil, nil
 	})
@@ -66,7 +66,7 @@ func TestValidEmailSignInEmail(t *testing.T) {
 func TestSignUpEmail(t *testing.T) {
 	email := "test@email.com"
 	a := newTestAuth(func(uriPath string, body interface{}) ([]byte, *WebError) {
-		assert.EqualValues(t, signUpURL(emailMethod), uriPath)
+		assert.EqualValues(t, composeSignUpURL(methodEmail), uriPath)
 
 		m := body.(map[string]interface{})
 		assert.EqualValues(t, map[string]interface{}{"email": email}, m["identifiers"])
