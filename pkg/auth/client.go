@@ -3,9 +3,10 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
-	"path"
+	"strings"
 	"time"
 )
 
@@ -30,7 +31,7 @@ func newClient(conf *Config) *client {
 		}
 	}
 	defaultHeaders := map[string]string{
-		"Authorization": conf.ProjectID,
+		"PROJECT-ID": conf.ProjectID,
 	}
 
 	return &client{
@@ -41,14 +42,15 @@ func newClient(conf *Config) *client {
 	}
 }
 
-func (c *client) post(uriPath string, body interface{}) ([]byte, *WebError) {
+func (c *client) Post(uriPath string, body interface{}) ([]byte, []*http.Cookie, error) {
 	buf := new(bytes.Buffer)
 	if err := json.NewEncoder(buf).Encode(body); err != nil {
-		return nil, NewFromError("", err)
+		return nil, nil, NewFromError("", err)
 	}
-	req, err := http.NewRequest(http.MethodPost, path.Join(c.uri, uriPath), buf)
+	url := fmt.Sprintf("%s/%s", c.uri, strings.TrimLeft(uriPath, "/"))
+	req, err := http.NewRequest(http.MethodPost, url, buf)
 	if err != nil {
-		return nil, NewFromError("", err)
+		return nil, nil, NewFromError("", err)
 	}
 
 	for key, value := range c.headers {
@@ -60,21 +62,22 @@ func (c *client) post(uriPath string, body interface{}) ([]byte, *WebError) {
 	response, err := c.httpClient.Do(req)
 	if err != nil {
 		c.conf.LogInfo("failed sending request to [%s]", uriPath)
-		return nil, NewFromError("", err)
+		return nil, nil, NewFromError("", err)
 	}
 
 	defer response.Body.Close()
 	resBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
 		c.conf.LogInfo("failed reading body from request to [%s]", uriPath)
-		return nil, NewFromError("", err)
+		return nil, nil, NewFromError("", err)
 	}
 	if !isResponseOK(response) {
 		var responseErr *WebError
 		json.Unmarshal(resBytes, responseErr)
-		return nil, responseErr
+		return nil, nil, responseErr
 	}
-	return resBytes, nil
+	c.conf.LogInfo("got from [%s] [%s] = headers: %#v", uriPath, string(resBytes), response.Header)
+	return resBytes, response.Cookies(), nil
 }
 
 func isResponseOK(response *http.Response) bool {

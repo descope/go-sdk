@@ -1,8 +1,15 @@
 package auth
 
 import (
+	"errors"
+	"fmt"
 	"log"
+	"net/http"
+	"os"
 	"path"
+
+	"github.com/lestrrat-go/jwx/v2/jwa"
+	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
 type Auth struct {
@@ -29,7 +36,7 @@ func (auth *Auth) SignInOTP(method DeliveryMethod, identifier string) error {
 		return err
 	}
 
-	_, err := auth.client.post(composeSignInURL(method), map[string]interface{}{"identifiers": map[string]interface{}{string(method): identifier}})
+	_, _, err := auth.client.Post(composeSignInURL(method), map[string]interface{}{string(method): identifier})
 	return err
 }
 
@@ -44,14 +51,14 @@ func (auth *Auth) SignUpOTP(method DeliveryMethod, identifier string, user *User
 		return err
 	}
 
-	_, err := auth.client.post(composeSignUpURL(method), map[string]interface{}{"identifiers": map[string]interface{}{string(method): identifier}, "user": user})
+	_, _, err := auth.client.Post(composeSignUpURL(method), map[string]interface{}{string(method): identifier, "user": user})
 	return err
 }
 
-func (auth *Auth) VerifyCode(identifier string, code string, method DeliveryMethod) *WebError {
+func (auth *Auth) VerifyCode(method DeliveryMethod, identifier string, code string) ([]*http.Cookie, error) {
 	if auth.client == nil {
 		if err := auth.prepareClient(); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
@@ -65,26 +72,59 @@ func (auth *Auth) VerifyCode(identifier string, code string, method DeliveryMeth
 		}
 
 		if method == "" {
-			return NewInvalidArgumentError("identifier")
+			return nil, NewInvalidArgumentError("identifier")
 		}
 	} else if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
-		return err
+		return nil, err
 	}
 
-	_, err := auth.client.post(composeVerifyCodeURL(MethodEmail), map[string]interface{}{"identifiers": map[string]interface{}{string(method): identifier}, "code": code})
-	return err
+	_, cookies, err := auth.client.Post(composeVerifyCodeURL(method), map[string]interface{}{string(method): identifier, "code": code})
+	return cookies, err
 }
 
-func (auth *Auth) VerifyCodeEmail(identifier string, code string) error {
-	return auth.VerifyCode(identifier, code, MethodEmail)
+func (auth *Auth) VerifyCodeEmail(identifier string, code string) ([]*http.Cookie, error) {
+	return auth.VerifyCode(MethodEmail, identifier, code)
 }
 
-func (auth *Auth) VerifyCodeSMS(identifier string, code string) error {
-	return auth.VerifyCode(identifier, code, MethodSMS)
+func (auth *Auth) VerifyCodeSMS(identifier string, code string) ([]*http.Cookie, error) {
+	return auth.VerifyCode(MethodSMS, identifier, code)
 }
 
-func (auth *Auth) VerifyCodeWhatsApp(identifier string, code string) error {
-	return auth.VerifyCode(identifier, code, MethodWhatsApp)
+func (auth *Auth) VerifyCodeWhatsApp(identifier string, code string) ([]*http.Cookie, error) {
+	return auth.VerifyCode(MethodWhatsApp, identifier, code)
+}
+
+func (auth *Auth) ValidateSessionRequest(r *http.Request) (bool, error) {
+	c, err := r.Cookie(CookieDefaultName)
+	if err != nil {
+		auth.conf.LogDebug("unable to find session cookie")
+		return false, err
+	}
+	if c == nil {
+		return false, nil
+	}
+	return auth.ValidateSession(c.Value)
+}
+
+func (auth *Auth) ValidateSession(signedToken string) (bool, error) {
+	if auth.conf.PublicKey == "" {
+		return false, fmt.Errorf("public key was not initialized")
+	}
+
+	_, err := jwt.Parse([]byte(signedToken), jwt.WithKey(jwa.ES384, auth.conf.PublicKey))
+	if errors.Is(err, jwt.ErrTokenExpired()) {
+		auth.conf.LogDebug("token has expired")
+		return false, nil
+	}
+	if errors.Is(err, jwt.ErrTokenNotYetValid()) {
+		auth.conf.LogDebug("token is not yet valid")
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("failed verify token %s", err)
+	}
+
+	return true, nil
 }
 
 func (*Auth) verifyDeliveryMethod(method DeliveryMethod, identifier string) *WebError {
@@ -111,7 +151,11 @@ func (*Auth) verifyDeliveryMethod(method DeliveryMethod, identifier string) *Web
 
 func (auth *Auth) prepareClient() *WebError {
 	if auth.conf.ProjectID == "" {
-		return NewError("E00000", "missing project id env variable")
+		if projectID := os.Getenv("PROJECT_ID"); projectID != "" {
+			auth.conf.ProjectID = projectID
+		} else {
+			return NewError("E00000", "missing project id env variable")
+		}
 	}
 
 	auth.client = newClient(auth.conf)

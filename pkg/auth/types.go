@@ -11,7 +11,7 @@ const (
 )
 
 type IClient interface {
-	post(path string, body interface{}) ([]byte, *WebError)
+	Post(path string, body interface{}) ([]byte, []*http.Cookie, error)
 }
 
 type LoggerInterface interface {
@@ -60,12 +60,41 @@ type User struct {
 }
 
 type IAuth interface {
+	// SignInOTP - use to login a user based on the given identifier either email or a phone
+	// and choose the selected delivery method for verification.
+	// returns an error upon failure.
 	SignInOTP(method DeliveryMethod, identifier string) error
+	// SignUpOTP - use to create a new user based on the given identifier either email or a phone
+	// and choose the selected delivery method for verification.
+	// optional to add user metadata for farther user details such as name and more.
+	// returns an error upon failure.
 	SignUpOTP(method DeliveryMethod, identifier string, user *User) error
 
-	VerifyCodeEmail(identifier string, code string) error
-	VerifyCodeSMS(identifier string, code string) error
-	VerifyCodeWhatsApp(identifier string, code string) error
+	// VerifyCode - Use to verify a SignIn/SignUp based on the given identifier either an email or a phone
+	// followed by the code used to verify and authenticate the user.
+	// returns a list of set-cookie data or an error upon failure.
+	VerifyCode(method DeliveryMethod, identifier string, code string) ([]*http.Cookie, error)
+	// VerifyCodeEmail - Use to verify a SignIn/SignUp based on the email identifier
+	// followed by the code used to verify and authenticate the user.
+	// returns a list of set-cookie data or an error upon failure.
+	VerifyCodeEmail(identifier string, code string) ([]*http.Cookie, error)
+	// VerifyCodeEmail - Use to verify a SignIn/SignUp based on the phone identifier
+	// followed by the code used to verify and authenticate the user.
+	// returns a list of set-cookie data or an error upon failure.
+	VerifyCodeSMS(identifier string, code string) ([]*http.Cookie, error)
+	// VerifyCodeEmail - Use to verify a SignIn/SignUp based on the phone identifier
+	// followed by the code used to verify and authenticate the user.
+	// returns a list of set-cookie data or an error upon failure.
+	VerifyCodeWhatsApp(identifier string, code string) ([]*http.Cookie, error)
+
+	// ValidateSessionRequest - Use to validate a session of a given request.
+	// Should be called before any private API call that requires authorization.
+	// returns true upon success or false and/or error upon failure.
+	ValidateSessionRequest(request *http.Request) (bool, error)
+	// ValidateSession - Use to validate a given token.
+	// Should be called before any private API call that requires authorization.
+	// returns true upon success or false and/or error upon failure.
+	ValidateSession(token string) (bool, error)
 }
 
 type DeliveryMethod string
@@ -78,6 +107,8 @@ const (
 	signInOTPPath  = "/v1/auth/signin/otp"
 	signUpOTPPath  = "/v1/auth/signup/otp"
 	verifyCodePath = "/v1/auth/code/verify"
+
+	CookieDefaultName = "S"
 )
 
 var (
