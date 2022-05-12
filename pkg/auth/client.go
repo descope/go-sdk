@@ -42,7 +42,7 @@ func newClient(conf *Config) *client {
 	}
 }
 
-func (c *client) Post(uriPath string, body interface{}) ([]byte, []*http.Cookie, error) {
+func (c *client) Post(uriPath string, body interface{}) ([]byte, *http.Response, error) {
 	buf := new(bytes.Buffer)
 	if err := json.NewEncoder(buf).Encode(body); err != nil {
 		return nil, nil, NewFromError("", err)
@@ -77,7 +77,7 @@ func (c *client) Post(uriPath string, body interface{}) ([]byte, []*http.Cookie,
 		return nil, nil, responseErr
 	}
 	c.conf.LogInfo("got from [%s] [%s] = headers: %#v", uriPath, string(resBytes), response.Header)
-	return resBytes, response.Cookies(), nil
+	return resBytes, response, nil
 }
 
 func isResponseOK(response *http.Response) bool {

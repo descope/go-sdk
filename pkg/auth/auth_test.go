@@ -8,21 +8,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func newTestAuth(callback func(uriPath string, body interface{}) ([]byte, []*http.Cookie, error)) *Auth {
+func newTestAuth(callback func(uriPath string, body interface{}) ([]byte, *http.Response, error)) *Auth {
 	auth := NewAuth(Config{})
 	auth.client = newTestClient(callback)
 	return auth
 }
 
 type mockClient struct {
-	callback func(uriPath string, body interface{}) ([]byte, []*http.Cookie, error)
+	callback func(uriPath string, body interface{}) ([]byte, *http.Response, error)
 }
 
-func newTestClient(callback func(uriPath string, body interface{}) ([]byte, []*http.Cookie, error)) *mockClient {
+func newTestClient(callback func(uriPath string, body interface{}) ([]byte, *http.Response, error)) *mockClient {
 	return &mockClient{callback: callback}
 }
 
-func (c *mockClient) Post(uriPath string, body interface{}) ([]byte, []*http.Cookie, error) {
+func (c *mockClient) Post(uriPath string, body interface{}) ([]byte, *http.Response, error) {
 	if c.callback == nil {
 		return nil, nil, nil
 	}
@@ -55,7 +55,7 @@ func TestInvalidPhoneSignInWhatsApp(t *testing.T) {
 
 func TestValidEmailSignInEmail(t *testing.T) {
 	email := "test@email.com"
-	a := newTestAuth(func(uriPath string, body interface{}) ([]byte, []*http.Cookie, error) {
+	a := newTestAuth(func(uriPath string, body interface{}) ([]byte, *http.Response, error) {
 		assert.EqualValues(t, composeSignInURL(MethodEmail), uriPath)
 		assert.EqualValues(t, email, body.(map[string]interface{})["email"])
 		return nil, nil, nil
@@ -90,7 +90,7 @@ func TestInvalidEmailSignUpEmail(t *testing.T) {
 
 func TestSignUpEmail(t *testing.T) {
 	email := "test@email.com"
-	a := newTestAuth(func(uriPath string, body interface{}) ([]byte, []*http.Cookie, error) {
+	a := newTestAuth(func(uriPath string, body interface{}) ([]byte, *http.Response, error) {
 		assert.EqualValues(t, composeSignUpURL(MethodEmail), uriPath)
 
 		m := body.(map[string]interface{})
@@ -121,7 +121,7 @@ func TestInvalidPhoneVerifyCodeSMS(t *testing.T) {
 func TestVerifyCodeEmail(t *testing.T) {
 	email := "test@email.com"
 	code := "4914"
-	a := newTestAuth(func(uriPath string, body interface{}) ([]byte, []*http.Cookie, error) {
+	a := newTestAuth(func(uriPath string, body interface{}) ([]byte, *http.Response, error) {
 		assert.EqualValues(t, composeVerifyCodeURL(MethodEmail), uriPath)
 
 		m := body.(map[string]interface{})
@@ -136,7 +136,7 @@ func TestVerifyCodeEmail(t *testing.T) {
 func TestVerifyCodeSMS(t *testing.T) {
 	phone := "943248329844"
 	code := "4914"
-	a := newTestAuth(func(uriPath string, body interface{}) ([]byte, []*http.Cookie, error) {
+	a := newTestAuth(func(uriPath string, body interface{}) ([]byte, *http.Response, error) {
 		assert.EqualValues(t, composeVerifyCodeURL(MethodSMS), uriPath)
 
 		m := body.(map[string]interface{})
@@ -145,13 +145,13 @@ func TestVerifyCodeSMS(t *testing.T) {
 		return nil, nil, nil
 	})
 	_, err := a.VerifyCodeSMS(phone, code)
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func TestVerifyCodeWhatsApp(t *testing.T) {
 	phone := "943248329844"
 	code := "4914"
-	a := newTestAuth(func(uriPath string, body interface{}) ([]byte, []*http.Cookie, error) {
+	a := newTestAuth(func(uriPath string, body interface{}) ([]byte, *http.Response, error) {
 		assert.EqualValues(t, composeVerifyCodeURL(MethodWhatsApp), uriPath)
 
 		m := body.(map[string]interface{})

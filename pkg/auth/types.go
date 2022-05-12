@@ -11,7 +11,7 @@ const (
 )
 
 type IClient interface {
-	Post(path string, body interface{}) ([]byte, []*http.Cookie, error)
+	Post(path string, body interface{}) ([]byte, *http.Response, error)
 }
 
 type LoggerInterface interface {
@@ -104,11 +104,11 @@ const (
 	MethodSMS      DeliveryMethod = "phone"
 	MethodEmail    DeliveryMethod = "email"
 
+	CookieDefaultName = "S"
+
 	signInOTPPath  = "/v1/auth/signin/otp"
 	signUpOTPPath  = "/v1/auth/signup/otp"
 	verifyCodePath = "/v1/auth/code/verify"
-
-	CookieDefaultName = "S"
 )
 
 var (

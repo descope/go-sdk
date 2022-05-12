@@ -78,8 +78,8 @@ func (auth *Auth) VerifyCode(method DeliveryMethod, identifier string, code stri
 		return nil, err
 	}
 
-	_, cookies, err := auth.client.Post(composeVerifyCodeURL(method), map[string]interface{}{string(method): identifier, "code": code})
-	return cookies, err
+	_, response, err := auth.client.Post(composeVerifyCodeURL(method), map[string]interface{}{string(method): identifier, "code": code})
+	return response.Cookies(), err
 }
 
 func (auth *Auth) VerifyCodeEmail(identifier string, code string) ([]*http.Cookie, error) {
