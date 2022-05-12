@@ -55,7 +55,6 @@ func (auth *Auth) VerifyCode(identifier string, code string, method DeliveryMeth
 		}
 	}
 
-	
 	if method == "" {
 		if phoneRegex.MatchString(identifier) {
 			method = MethodSMS
@@ -112,10 +111,10 @@ func (*Auth) verifyDeliveryMethod(method DeliveryMethod, identifier string) *Web
 
 func (auth *Auth) prepareClient() *WebError {
 	if auth.conf.ProjectID == "" {
-		return NewError("E00000", "missing project id env variable") // TODO: add error code
-	} else {
-		auth.client = newClient(auth.conf)
+		return NewError("E00000", "missing project id env variable")
 	}
+
+	auth.client = newClient(auth.conf)
 	return nil
 }
 

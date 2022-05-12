@@ -72,7 +72,7 @@ type DeliveryMethod string
 
 const (
 	MethodWhatsApp DeliveryMethod = "whatsapp"
-	MethodSMS    DeliveryMethod = "phone"
+	MethodSMS      DeliveryMethod = "phone"
 	MethodEmail    DeliveryMethod = "email"
 
 	signInOTPPath  = "/v1/auth/signin/otp"
