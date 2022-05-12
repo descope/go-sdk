@@ -160,5 +160,5 @@ func TestVerifyCodeWhatsApp(t *testing.T) {
 		return nil, nil, nil
 	})
 	_, err := a.VerifyCodeWhatsApp(phone, code)
-	require.Nil(t, err)
+	require.NoError(t, err)
 }

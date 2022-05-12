@@ -108,7 +108,11 @@ func (auth *Auth) ValidateSessionRequest(r *http.Request) (bool, error) {
 
 func (auth *Auth) ValidateSession(signedToken string) (bool, error) {
 	if auth.conf.PublicKey == "" {
-		return false, fmt.Errorf("public key was not initialized")
+		if publicKey := os.Getenv("PUBLIC_KEY"); publicKey != "" {
+			auth.conf.PublicKey = publicKey
+		} else {
+			return false, fmt.Errorf("public key was not initialized")
+		}
 	}
 
 	_, err := jwt.Parse([]byte(signedToken), jwt.WithKey(jwa.ES384, auth.conf.PublicKey))
@@ -149,12 +153,12 @@ func (*Auth) verifyDeliveryMethod(method DeliveryMethod, identifier string) *Web
 	return nil
 }
 
-func (auth *Auth) prepareClient() *WebError {
+func (auth *Auth) prepareClient() error {
 	if auth.conf.ProjectID == "" {
 		if projectID := os.Getenv("PROJECT_ID"); projectID != "" {
 			auth.conf.ProjectID = projectID
 		} else {
-			return NewError("E00000", "missing project id env variable")
+			return fmt.Errorf("project id is missing. Make sure to add it in the configuration or the environment variable PROJECT_ID")
 		}
 	}
 

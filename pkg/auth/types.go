@@ -78,11 +78,11 @@ type IAuth interface {
 	// followed by the code used to verify and authenticate the user.
 	// returns a list of set-cookie data or an error upon failure.
 	VerifyCodeEmail(identifier string, code string) ([]*http.Cookie, error)
-	// VerifyCodeEmail - Use to verify a SignIn/SignUp based on the phone identifier
+	// VerifyCodeSMS - Use to verify a SignIn/SignUp based on the phone identifier
 	// followed by the code used to verify and authenticate the user.
 	// returns a list of set-cookie data or an error upon failure.
 	VerifyCodeSMS(identifier string, code string) ([]*http.Cookie, error)
-	// VerifyCodeEmail - Use to verify a SignIn/SignUp based on the phone identifier
+	// VerifyCodeWhatsApp - Use to verify a SignIn/SignUp based on the phone identifier
 	// followed by the code used to verify and authenticate the user.
 	// returns a list of set-cookie data or an error upon failure.
 	VerifyCodeWhatsApp(identifier string, code string) ([]*http.Cookie, error)

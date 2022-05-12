@@ -29,7 +29,7 @@ func main() {
 
 	server := &http.Server{Addr: ":8085", Handler: router}
 	go func() {
-        if err := server.ListenAndServe(); err != nil {
+        if err := server.ListenAndServeTLS("server.crt", "server.key"); err != nil {
 			fmt.Println("server error " + err.Error())
         }
     }()
@@ -50,7 +50,6 @@ func main() {
 
 func handleIsHealthy(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
-	log.Println("Returning 200 - Healthy")
 	w.Write([]byte("Healthy"))
 }
 
