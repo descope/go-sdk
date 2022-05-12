@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -30,7 +29,7 @@ func main() {
 	server := &http.Server{Addr: ":8085", Handler: router}
 	go func() {
         if err := server.ListenAndServeTLS("server.crt", "server.key"); err != nil {
-			fmt.Println("server error " + err.Error())
+			log.Println("server error " + err.Error())
         }
     }()
 
@@ -43,25 +42,22 @@ func main() {
     ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
     defer cancel()
     if err := server.Shutdown(ctx); err != nil {
-		fmt.Println("server error " + err.Error())
+		log.Println("server error " + err.Error())
     }
 	log.Println("stopping server")
 }
 
 func handleIsHealthy(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Healthy"))
+	setOK(w)
 }
 
 func handleSignIn(w http.ResponseWriter, r *http.Request) {
 	method, identifier := getMethodAndIdentifier(r)
 	err := client.SignInOTP(method, identifier)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		setError(w, err.Error())
 	} else {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Ok"))
+		setOK(w)
 	}
 }
 
@@ -87,21 +83,18 @@ func handleVerify(w http.ResponseWriter, r *http.Request) {
 		code = codes[0]
 	}
 	if code == "" {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("code is empty"))
+		setError(w, "code is empty")
 		return
 	}
 	cookies, err := client.VerifyCode(method, identifier, code)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(err.Error()))
+		setError(w, err.Error())
 		return
 	}
 	for i := range cookies {
 		http.SetCookie(w, cookies[i])
 	}
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Ok"))
+	setOK(w)
 }
 
 func loggingMiddleware(next http.Handler) http.Handler {
@@ -119,8 +112,20 @@ func authenticationMiddleware(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 		} else {
 			log.Println("request failed because token is invalid = " + err.Error())
-			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte("Unauthorized"))
+			setResponse(w, http.StatusUnauthorized, "Unauthorized")
 		}
 	})
+}
+
+func setOK(w http.ResponseWriter) {
+	setResponse(w, http.StatusOK, "OK")
+}
+
+func setError(w http.ResponseWriter, message string) {
+	setResponse(w, http.StatusInternalServerError, message)
+}
+
+func setResponse(w http.ResponseWriter, status int, message string) {
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
 }

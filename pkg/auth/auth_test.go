@@ -96,7 +96,7 @@ func TestSignUpEmail(t *testing.T) {
 		m := body.(map[string]interface{})
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, "test", m["user"].(*User).Username)
-		return nil, nil, nil
+		return nil, &http.Response{}, nil
 	})
 	err := a.SignUpOTP(MethodEmail, email, &User{Username: "test"})
 	require.NoError(t, err)
@@ -127,7 +127,7 @@ func TestVerifyCodeEmail(t *testing.T) {
 		m := body.(map[string]interface{})
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, code, m["code"])
-		return nil, nil, nil
+		return nil, &http.Response{}, nil
 	})
 	_, err := a.VerifyCodeEmail(email, code)
 	require.Nil(t, err)
@@ -142,7 +142,7 @@ func TestVerifyCodeSMS(t *testing.T) {
 		m := body.(map[string]interface{})
 		assert.EqualValues(t, phone, m["phone"])
 		assert.EqualValues(t, code, m["code"])
-		return nil, nil, nil
+		return nil, &http.Response{}, nil
 	})
 	_, err := a.VerifyCodeSMS(phone, code)
 	require.NoError(t, err)
@@ -157,7 +157,7 @@ func TestVerifyCodeWhatsApp(t *testing.T) {
 		m := body.(map[string]interface{})
 		assert.EqualValues(t, phone, m["whatsapp"])
 		assert.EqualValues(t, code, m["code"])
-		return nil, nil, nil
+		return nil, &http.Response{}, nil
 	})
 	_, err := a.VerifyCodeWhatsApp(phone, code)
 	require.NoError(t, err)
