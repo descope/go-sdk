@@ -6,7 +6,7 @@ import (
 )
 
 type Auth struct {
-	client iClient
+	client IClient
 	conf   *Config
 }
 
@@ -18,147 +18,96 @@ func NewAuth(conf Config) *Auth {
 	return &Auth{conf: &conf}
 }
 
-func (auth *Auth) SignInEmail(email string) *WebError {
+func (auth *Auth) SignInOTP(method DeliveryMethod, identifier string) error {
 	if auth.client == nil {
 		if err := auth.prepareClient(); err != nil {
 			return err
 		}
 	}
 
-	if !emailRegex.MatchString(email) {
-		return NewInvalidArgumentError("email")
+	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
+		return err
 	}
 
-	_, err := auth.client.post(composeSignInURL(methodEmail), map[string]interface{}{"identifiers": map[string]interface{}{"email": email}}) // TODO: internal struct
+	_, err := auth.client.post(composeSignInURL(method), map[string]interface{}{"identifiers": map[string]interface{}{string(method): identifier}})
 	return err
 }
 
-func (auth *Auth) SignInPhone(phone string) *WebError {
+func (auth *Auth) SignUpOTP(method DeliveryMethod, identifier string, user *User) error {
 	if auth.client == nil {
 		if err := auth.prepareClient(); err != nil {
 			return err
 		}
 	}
 
-	if !phoneRegex.MatchString(phone) {
-		return NewInvalidArgumentError("phone")
+	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
+		return err
 	}
 
-	_, err := auth.client.post(composeSignInURL(methodPhone), map[string]interface{}{"identifiers": map[string]interface{}{"phone": phone}})
+	_, err := auth.client.post(composeSignUpURL(method), map[string]interface{}{"identifiers": map[string]interface{}{string(method): identifier}, "user": user})
 	return err
 }
 
-func (auth *Auth) SignInWhatsapp(phone string) *WebError {
+func (auth *Auth) VerifyCode(identifier string, code string, method DeliveryMethod) *WebError {
 	if auth.client == nil {
 		if err := auth.prepareClient(); err != nil {
 			return err
 		}
 	}
 
-	if !phoneRegex.MatchString(phone) {
-		return NewInvalidArgumentError("phone")
+	
+	if method == "" {
+		if phoneRegex.MatchString(identifier) {
+			method = MethodSMS
+		}
+
+		if emailRegex.MatchString(identifier) {
+			method = MethodEmail
+		}
+
+		if method == "" {
+			return NewInvalidArgumentError("identifier")
+		}
+	} else if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
+		return err
 	}
 
-	_, err := auth.client.post(composeSignInURL(methodWhatsapp), map[string]interface{}{"identifiers": map[string]interface{}{"phone": phone}})
+	_, err := auth.client.post(composeVerifyCodeURL(MethodEmail), map[string]interface{}{"identifiers": map[string]interface{}{string(method): identifier}, "code": code})
 	return err
 }
 
-func (auth *Auth) SignUpEmail(email string, user *User) *WebError {
-	if auth.client == nil {
-		if err := auth.prepareClient(); err != nil {
-			return err
-		}
-	}
-
-	if email == "" {
-		return NewError("E...", "bad request") // TODO: add error code
-	}
-
-	if !emailRegex.MatchString(email) {
-		return NewInvalidArgumentError("email")
-	}
-
-	_, err := auth.client.post(composeSignUpURL(methodEmail), map[string]interface{}{"identifiers": map[string]interface{}{"email": email}, "user": user})
-	return err
+func (auth *Auth) VerifyCodeEmail(identifier string, code string) error {
+	return auth.VerifyCode(identifier, code, MethodEmail)
 }
 
-func (auth *Auth) SignUpSMS(phone string, user *User) *WebError { // TODO: should unify SMS and whatsapp phone base code?
-	if auth.client == nil {
-		if err := auth.prepareClient(); err != nil {
-			return err
-		}
-	}
-
-	if phone == "" {
-		return NewError("E...", "bad request") // TODO: add error code
-	}
-
-	if !phoneRegex.MatchString(phone) {
-		return NewInvalidArgumentError("phone")
-	}
-
-	_, err := auth.client.post(composeSignUpURL(methodEmail), map[string]interface{}{"identifiers": map[string]interface{}{"phone": phone}, "user": user})
-	return err
+func (auth *Auth) VerifyCodeSMS(identifier string, code string) error {
+	return auth.VerifyCode(identifier, code, MethodSMS)
 }
 
-func (auth *Auth) SignUpWhatsapp(phone string, user *User) *WebError {
-	if auth.client == nil {
-		if err := auth.prepareClient(); err != nil {
-			return err
-		}
-	}
-
-	if phone == "" {
-		return NewError("E...", "bad request") // TODO: add error code
-	}
-
-	if !phoneRegex.MatchString(phone) {
-		return NewInvalidArgumentError("phone")
-	}
-
-	_, err := auth.client.post(composeSignUpURL(methodEmail), map[string]interface{}{"identifiers": map[string]interface{}{"phone": phone}, "user": user})
-	return err
+func (auth *Auth) VerifyCodeWhatsApp(identifier string, code string) error {
+	return auth.VerifyCode(identifier, code, MethodWhatsApp)
 }
 
-func (auth *Auth) VerifyCode(identifier string, code string, method Method) *WebError {
-	if auth.client == nil {
-		if err := auth.prepareClient(); err != nil {
-			return err
-		}
-	}
-
+func (*Auth) verifyDeliveryMethod(method DeliveryMethod, identifier string) *WebError {
 	if identifier == "" {
 		return NewError(badRequestErrorCode, "bad request")
 	}
 
-	if method == "" {
-		if phoneRegex.MatchString(identifier) {
-			method = methodPhone // TODO: where is whatsapp?
+	switch method {
+	case MethodEmail:
+		if !emailRegex.MatchString(identifier) {
+			return NewInvalidArgumentError("identifier")
 		}
-
-		if emailRegex.MatchString(identifier) {
-			method = methodEmail
+	case MethodSMS:
+		if !phoneRegex.MatchString(identifier) {
+			return NewInvalidArgumentError("identifier")
+		}
+	case MethodWhatsApp:
+		if !phoneRegex.MatchString(identifier) {
+			return NewInvalidArgumentError("identifier")
 		}
 	}
-
-	if method == "" {
-		return NewInvalidArgumentError("identifier")
-	}
-
-	_, err := auth.client.post(composeVerifyCodeURL(methodEmail), map[string]interface{}{"identifiers": map[string]interface{}{string(method): identifier}, "code": code})
-	return err
-}
-
-func (auth *Auth) VerifyCodeEmail(identifier string, code string) *WebError {
-	return auth.VerifyCode(identifier, code, methodEmail)
-}
-
-func (auth *Auth) VerifyCodeSMS(identifier string, code string) *WebError {
-	return auth.VerifyCode(identifier, code, methodPhone)
-}
-
-func (auth *Auth) VerifyCodeWhatsapp(identifier string, code string) *WebError {
-	return auth.VerifyCode(identifier, code, methodWhatsapp)
+	return nil
 }
 
 func (auth *Auth) prepareClient() *WebError {
@@ -170,16 +119,18 @@ func (auth *Auth) prepareClient() *WebError {
 	return nil
 }
 
-func composeURL(base string, method Method) string {
+func composeURL(base string, method DeliveryMethod) string {
 	return path.Join(base, string(method))
 }
 
-func composeSignInURL(method Method) string {
+func composeSignInURL(method DeliveryMethod) string {
 	return composeURL(signInOTPPath, method)
 }
-func composeSignUpURL(method Method) string {
+
+func composeSignUpURL(method DeliveryMethod) string {
 	return composeURL(signUpOTPPath, method)
 }
-func composeVerifyCodeURL(method Method) string {
+
+func composeVerifyCodeURL(method DeliveryMethod) string {
 	return composeURL(verifyCodePath, method)
 }

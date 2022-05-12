@@ -7,11 +7,11 @@ const (
 )
 
 type WebError struct {
-	Code    string `json:error`
-	Message string `json:message`
+	Code    string `json:"error"`
+	Message string `json:"message,omitempty"`
 }
 
-func NewFromErrorError(code string, err error) *WebError {
+func NewFromError(code string, err error) *WebError {
 	return NewError(code, err.Error())
 }
 

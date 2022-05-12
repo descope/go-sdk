@@ -17,16 +17,18 @@ type client struct {
 }
 
 func newClient(conf *Config) *client {
-	t := http.DefaultTransport.(*http.Transport).Clone()
-	t.MaxIdleConns = 100
-	t.MaxConnsPerHost = 100
-	t.MaxIdleConnsPerHost = 100
+	httpClient := conf.DefaultClient
+	if httpClient == nil {
+		t := http.DefaultTransport.(*http.Transport).Clone()
+		t.MaxIdleConns = 100
+		t.MaxConnsPerHost = 100
+		t.MaxIdleConnsPerHost = 100
 
-	httpClient := &http.Client{
-		Timeout:   time.Second * 10,
-		Transport: t,
+		httpClient = &http.Client{
+			Timeout:   time.Second * 10,
+			Transport: t,
+		}
 	}
-
 	defaultHeaders := map[string]string{
 		"Authorization": conf.ProjectID,
 	}
@@ -42,11 +44,11 @@ func newClient(conf *Config) *client {
 func (c *client) post(uriPath string, body interface{}) ([]byte, *WebError) {
 	buf := new(bytes.Buffer)
 	if err := json.NewEncoder(buf).Encode(body); err != nil {
-		return nil, NewFromErrorError("", err)
+		return nil, NewFromError("", err)
 	}
-	req, err := http.NewRequest("POST", path.Join(c.uri, uriPath), buf)
+	req, err := http.NewRequest(http.MethodPost, path.Join(c.uri, uriPath), buf)
 	if err != nil {
-		return nil, NewFromErrorError("", err)
+		return nil, NewFromError("", err)
 	}
 
 	for key, value := range c.headers {
@@ -57,20 +59,24 @@ func (c *client) post(uriPath string, body interface{}) ([]byte, *WebError) {
 	c.conf.LogDebug("sending request to [%s]", uriPath)
 	response, err := c.httpClient.Do(req)
 	if err != nil {
-		c.conf.LogInfo("failing sending request to [%s]", uriPath)
-		return nil, NewFromErrorError("", err)
+		c.conf.LogInfo("failed sending request to [%s]", uriPath)
+		return nil, NewFromError("", err)
 	}
 
 	defer response.Body.Close()
 	resBytes, err := ioutil.ReadAll(response.Body)
 	if err != nil {
-		return nil, NewFromErrorError("", err)
+		c.conf.LogInfo("failed reading body from request to [%s]", uriPath)
+		return nil, NewFromError("", err)
 	}
-	statusOK := response.StatusCode >= 200 && response.StatusCode < 300
-	if !statusOK {
+	if !isResponseOK(response) {
 		var responseErr *WebError
 		json.Unmarshal(resBytes, responseErr)
 		return nil, responseErr
 	}
 	return resBytes, nil
+}
+
+func isResponseOK(response *http.Response) bool {
+	return response.StatusCode >= http.StatusOK && response.StatusCode < http.StatusMultipleChoices
 }

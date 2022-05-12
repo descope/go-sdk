@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"net/http"
 	"regexp"
 )
 
@@ -9,7 +10,7 @@ const (
 	defaultURI = "http://localhost:8080"
 )
 
-type iClient interface {
+type IClient interface {
 	post(path string, body interface{}) ([]byte, *WebError)
 }
 
@@ -22,6 +23,8 @@ type Config struct {
 	ProjectID string
 	PublicKey string
 
+	DefaultClient *http.Client
+
 	LogLevel LogLevel
 	Logger   LoggerInterface
 }
@@ -30,7 +33,7 @@ func (c *Config) doLog(l LogLevel, format string, args ...interface{}) {
 	if c.LogLevel < l {
 		return
 	}
-	c.Logger.Print(fmt.Printf(format, args...))
+	c.Logger.Print(fmt.Sprintf(format, args...))
 }
 
 func (c *Config) LogDebug(format string, args ...interface{}) {
@@ -57,29 +60,24 @@ type User struct {
 }
 
 type IAuth interface {
-	SignInEmail(email string) *WebError
-	SignInSMS(phone string) *WebError
-	SignInWhatsapp(phone string) *WebError
+	SignInOTP(method DeliveryMethod, identifier string) error
+	SignUpOTP(method DeliveryMethod, identifier string, user *User) error
 
-	SignUpEmail(email string, user *User) *WebError
-	SignUpSMS(phone string, user *User) *WebError
-	SignUpWhatsapp(phone string, user *User) *WebError
-
-	VerifyCodeEmail(identifier string, code string) *WebError
-	VerifyCodeSMS(identifier string, code string) *WebError
-	VerifyCodeWhatsapp(identifier string, code string) *WebError
+	VerifyCodeEmail(identifier string, code string) error
+	VerifyCodeSMS(identifier string, code string) error
+	VerifyCodeWhatsApp(identifier string, code string) error
 }
 
-type Method string
+type DeliveryMethod string
 
 const (
-	methodWhatsapp Method = "whatsapp"
-	methodPhone    Method = "phone"
-	methodEmail    Method = "email"
+	MethodWhatsApp DeliveryMethod = "whatsapp"
+	MethodSMS    DeliveryMethod = "phone"
+	MethodEmail    DeliveryMethod = "email"
 
-	signInOTPPath  = "/v1/auth/signin/otp/"
-	signUpOTPPath  = "/v1/auth/signup/otp/"
-	verifyCodePath = "v1/auth/code/verify/"
+	signInOTPPath  = "/v1/auth/signin/otp"
+	signUpOTPPath  = "/v1/auth/signup/otp"
+	verifyCodePath = "/v1/auth/code/verify"
 )
 
 var (
