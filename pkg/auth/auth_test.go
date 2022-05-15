@@ -270,6 +270,23 @@ func TestValidateSession(t *testing.T) {
 	require.True(t, ok)
 }
 
+func TestValidateSessionRequest(t *testing.T) {
+	a := newTestAuthConf(Config{ProjectID: "a", PublicKey: publicKey}, DoOk(nil))
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: CookieDefaultName, Value: jwtTokenValid})
+	ok, err := a.ValidateSessionRequest(request)
+	require.NoError(t, err)
+	require.True(t, ok)
+}
+
+func TestValidateSessionRequestNoCookie(t *testing.T) {
+	a := newTestAuthConf(Config{ProjectID: "a", PublicKey: publicKey}, DoOk(nil))
+	request := &http.Request{Header: http.Header{}}
+	ok, err := a.ValidateSessionRequest(request)
+	require.Error(t, err)
+	require.False(t, ok)
+}
+
 func TestValidateSessionExpired(t *testing.T) {
 	a := newTestAuthConf(Config{ProjectID: "a", PublicKey: publicKey}, DoOk(nil))
 	ok, err := a.ValidateSession(jwtTokenExpired)
