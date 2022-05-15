@@ -60,7 +60,7 @@ func (c *client) Post(uriPath string, body interface{}) ([]byte, *http.Response,
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.SetBasicAuth(c.conf.ProjectID, "")
-	
+
 	c.conf.LogDebug("sending request to [%s]", uriPath)
 	response, err := c.httpClient.Do(req)
 	if err != nil {
