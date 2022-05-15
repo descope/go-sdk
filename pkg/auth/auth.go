@@ -9,6 +9,7 @@ import (
 	"path"
 
 	"github.com/lestrrat-go/jwx/v2/jwa"
+	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
@@ -20,6 +21,10 @@ type Auth struct {
 func NewAuth(conf Config) *Auth {
 	if conf.Logger == nil {
 		conf.Logger = log.Default()
+	}
+
+	if conf.DefaultURL == "" {
+		conf.DefaultURL = defaultURL
 	}
 
 	return &Auth{conf: &conf}
@@ -79,7 +84,11 @@ func (auth *Auth) VerifyCode(method DeliveryMethod, identifier string, code stri
 	}
 
 	_, response, err := auth.client.Post(composeVerifyCodeURL(method), map[string]interface{}{string(method): identifier, "code": code})
-	return response.Cookies(), err
+	cookies := []*http.Cookie{}
+	if response != nil {
+		cookies = response.Cookies()
+	}
+	return cookies, err
 }
 
 func (auth *Auth) VerifyCodeEmail(identifier string, code string) ([]*http.Cookie, error) {

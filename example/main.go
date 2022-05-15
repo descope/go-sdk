@@ -107,7 +107,6 @@ func loggingMiddleware(next http.Handler) http.Handler {
 
 func authenticationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		log.Println(r.Cookies())
 		if ok, err := client.ValidateSessionRequest(r); ok {
 			next.ServeHTTP(w, r)
 		} else {
@@ -126,6 +125,6 @@ func setError(w http.ResponseWriter, message string) {
 }
 
 func setResponse(w http.ResponseWriter, status int, message string) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("OK"))
+	w.WriteHeader(status)
+	w.Write([]byte(message))
 }

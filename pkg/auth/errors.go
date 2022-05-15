@@ -23,6 +23,10 @@ func NewInvalidArgumentError(arg string) *WebError {
 	return NewError(badRequestErrorCode, fmt.Sprintf("invalid argument %s", arg))
 }
 
+func NewUnauthorizedError() *WebError {
+	return NewError(badRequestErrorCode, fmt.Sprintf("unauthorized access"))
+}
+
 func (e *WebError) Error() string {
 	return fmt.Sprintf("[%s] %s", e.Code, e.Message)
 }

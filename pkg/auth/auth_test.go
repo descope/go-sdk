@@ -9,7 +9,11 @@ import (
 )
 
 func newTestAuth(callback func(uriPath string, body interface{}) ([]byte, *http.Response, error)) *Auth {
-	auth := NewAuth(Config{})
+	return newTestAuthConf(Config{}, callback)
+}
+
+func newTestAuthConf(conf Config, callback func(uriPath string, body interface{}) ([]byte, *http.Response, error)) *Auth {
+	auth := NewAuth(conf)
 	auth.client = newTestClient(callback)
 	return auth
 }
@@ -99,6 +103,34 @@ func TestSignUpEmail(t *testing.T) {
 		return nil, &http.Response{}, nil
 	})
 	err := a.SignUpOTP(MethodEmail, email, &User{Username: "test"})
+	require.NoError(t, err)
+}
+
+func TestSignUpSMS(t *testing.T) {
+	phone := "943248329844"
+	a := newTestAuth(func(uriPath string, body interface{}) ([]byte, *http.Response, error) {
+		assert.EqualValues(t, composeSignUpURL(MethodSMS), uriPath)
+
+		m := body.(map[string]interface{})
+		assert.EqualValues(t, phone, m["phone"])
+		assert.EqualValues(t, "test", m["user"].(*User).Username)
+		return nil, &http.Response{}, nil
+	})
+	err := a.SignUpOTP(MethodSMS, phone, &User{Username: "test"})
+	require.NoError(t, err)
+}
+
+func TestSignUpWhatsApp(t *testing.T) {
+	phone := "943248329844"
+	a := newTestAuth(func(uriPath string, body interface{}) ([]byte, *http.Response, error) {
+		assert.EqualValues(t, composeSignUpURL(MethodWhatsApp), uriPath)
+
+		m := body.(map[string]interface{})
+		assert.EqualValues(t, phone, m["whatsapp"])
+		assert.EqualValues(t, "test", m["user"].(*User).Username)
+		return nil, &http.Response{}, nil
+	})
+	err := a.SignUpOTP(MethodWhatsApp, phone, &User{Username: "test"})
 	require.NoError(t, err)
 }
 

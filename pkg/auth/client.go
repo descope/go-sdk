@@ -30,12 +30,14 @@ func newClient(conf *Config) *client {
 			Transport: t,
 		}
 	}
-	defaultHeaders := map[string]string{
-		"PROJECT-ID": conf.ProjectID,
+	defaultHeaders := map[string]string{}
+
+	for key, value := range conf.CustomDefaultHeaders {
+		defaultHeaders[key] = value
 	}
 
 	return &client{
-		uri:        defaultURI,
+		uri:        defaultURL,
 		httpClient: httpClient,
 		headers:    defaultHeaders,
 		conf:       conf,
@@ -57,7 +59,8 @@ func (c *client) Post(uriPath string, body interface{}) ([]byte, *http.Response,
 		req.Header.Add(key, value)
 	}
 	req.Header.Set("Content-Type", "application/json")
-
+	req.SetBasicAuth(c.conf.ProjectID, "")
+	
 	c.conf.LogDebug("sending request to [%s]", uriPath)
 	response, err := c.httpClient.Do(req)
 	if err != nil {
@@ -72,12 +75,22 @@ func (c *client) Post(uriPath string, body interface{}) ([]byte, *http.Response,
 		return nil, nil, NewFromError("", err)
 	}
 	if !isResponseOK(response) {
-		var responseErr *WebError
-		json.Unmarshal(resBytes, responseErr)
-		return nil, nil, responseErr
+		return nil, nil, c.parseResponseError(response, resBytes)
 	}
-	c.conf.LogInfo("got from [%s] [%s] = headers: %#v", uriPath, string(resBytes), response.Header)
 	return resBytes, response, nil
+}
+
+func (c *client) parseResponseError(response *http.Response, body []byte) error {
+	if response.StatusCode == http.StatusUnauthorized {
+		return NewUnauthorizedError()
+	}
+
+	var responseErr *WebError
+	if err := json.Unmarshal(body, responseErr); err != nil {
+		c.conf.LogInfo("failed to load error from response")
+		return err
+	}
+	return responseErr
 }
 
 func isResponseOK(response *http.Response) bool {

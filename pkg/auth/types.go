@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	defaultURI = "http://localhost:8080"
+	defaultURL = "http://localhost:8080"
 )
 
 type IClient interface {
@@ -23,7 +23,9 @@ type Config struct {
 	ProjectID string
 	PublicKey string
 
-	DefaultClient *http.Client
+	DefaultURL           string
+	DefaultClient        *http.Client
+	CustomDefaultHeaders map[string]string
 
 	LogLevel LogLevel
 	Logger   LoggerInterface
