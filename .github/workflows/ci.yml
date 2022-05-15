@@ -4,7 +4,6 @@ on: push
 
 env:
   GO_VERSION: 1.18
-  GOROOT: "/opt/hostedtoolcache/go/1.18.1/x64"
 
 jobs:
   build:
@@ -39,4 +38,4 @@ jobs:
         uses: ./.github/actions/tests
         with:
           go_version: ${{ env.GO_VERSION }}
-          min_coverage: 100
+          min_coverage: 90

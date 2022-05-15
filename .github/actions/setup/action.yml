@@ -1,14 +1,14 @@
 name: Setup repo
-description: 'Setup repo'
+description: "Setup repo"
 inputs:
   go_version:
-    description: 'Go version to use'
+    description: "Go version to use"
     required: true
 runs:
   using: "composite"
   steps:
     - name: Set up Go
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v3.0.0
       with:
         go-version: ${{ inputs.go_version }}
 

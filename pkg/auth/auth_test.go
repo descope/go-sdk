@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -12,7 +13,9 @@ import (
 
 func DoOk(checks func(*http.Request)) Do {
 	return func(r *http.Request) (*http.Response, error) {
-		checks(r)
+		if checks != nil {
+			checks(r)
+		}
 		return &http.Response{StatusCode: http.StatusOK}, nil
 	}
 }
@@ -25,6 +28,20 @@ func newTestAuthConf(conf Config, callback Do) *Auth {
 	conf.DefaultClient = newTestClient(callback)
 	auth := NewAuth(conf)
 	return auth
+}
+
+func TestEnvVariableProjectID(t *testing.T) {
+	expectedProjectID := "test"
+	err := os.Setenv("PROJECT_ID", expectedProjectID)
+	defer func() {
+		err = os.Setenv("PROJECT_ID", "")
+		require.NoError(t, err)
+	}()
+	require.NoError(t, err)
+	a := NewAuth(Config{})
+	err = a.prepareClient()
+	require.NoError(t, err)
+	assert.EqualValues(t, expectedProjectID, a.conf.ProjectID)
 }
 
 func TestInvalidEmailSignInEmail(t *testing.T) {
@@ -219,6 +236,46 @@ func TestAuthDefaultURL(t *testing.T) {
 	}))
 	_, err := a.VerifyCodeWhatsApp("4444", "444")
 	require.NoError(t, err)
+}
+
+var (
+	jwtTokenValid   = `eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjE5ODEzOTgxMTF9.GQ3nLYT4XWZWezJ1tRV6ET0ibRvpEipeo6RCuaCQBdP67yu98vtmUvusBElDYVzRxGRtw5d20HICyo0_3Ekb0euUP3iTupgS3EU1DJMeAaJQgOwhdQnQcJFkOpASLKWh`
+	jwtTokenExpired = `eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjExODEzOTgxMTF9.EdetpQro-frJV1St1mWGygRSzxf6Bg01NNR_Ipwy_CAQyGDmIQ6ITGQ620hfmjW5HDtZ9-0k7AZnwoLnb709QQgbHMFxlDpIOwtFIAJuU-CqaBDwsNWA1f1RNyPpLxop`
+	publicKey       = `{
+		"crv": "P-384",
+		"key_ops": [
+		  "verify"
+		],
+		"kty": "EC",
+		"x": "Zd7Unk3ijm3MKXt9vbHR02Y1zX-cpXu6H1_wXRtMl3e39TqeOJ3XnJCxSfE5vjMX",
+		"y": "Cv8AgXWpMkMFWvLGhJ_Gsb8LmapAtEurnBsFI4CAG42yUGDfkZ_xjFXPbYssJl7U",
+		"alg": "ES384",
+		"use": "sig",
+		"kid": "32b3da5277b142c7e24fdf0ef09e0919"
+	  }`
+)
+
+func TestEmptyPublicKey(t *testing.T) {
+	a := newTestAuthConf(Config{ProjectID: "a"}, DoOk(nil))
+	ok, err := a.ValidateSession("test")
+	require.False(t, ok)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "public key was not initialized")
+}
+
+func TestValidateSession(t *testing.T) {
+	a := newTestAuthConf(Config{ProjectID: "a", PublicKey: publicKey}, DoOk(nil))
+	ok, err := a.ValidateSession(jwtTokenValid)
+	require.NoError(t, err)
+	require.True(t, ok)
+}
+
+func TestValidateSessionExpired(t *testing.T) {
+	a := newTestAuthConf(Config{ProjectID: "a", PublicKey: publicKey}, DoOk(nil))
+	ok, err := a.ValidateSession(jwtTokenExpired)
+	require.Error(t, err)
+	require.False(t, ok)
+	assert.EqualValues(t, badRequestErrorCode, err.(*WebError).Code)
 }
 
 func readBody(r *http.Request) (m map[string]interface{}, err error) {

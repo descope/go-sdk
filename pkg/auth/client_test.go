@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -80,4 +81,30 @@ func TestPostWebError(t *testing.T) {
 	_, _, err := c.Post("path", nil)
 	require.Error(t, err)
 	assert.EqualValues(t, code, err.(*WebError).Code)
+}
+
+func TestPostError(t *testing.T) {
+	projectID := "test"
+	expectedErr := "error here"
+	c := newClient(&Config{ProjectID: projectID, DefaultClient: newTestClient(func(r *http.Request) (*http.Response, error) {
+		assert.NotNil(t, r.Body)
+		return nil, errors.New(expectedErr)
+	})})
+
+	_, _, err := c.Post("path", nil)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), expectedErr)
+}
+
+func TestPostUnknownError(t *testing.T) {
+	projectID := "test"
+	code := "this is an error"
+	c := newClient(&Config{ProjectID: projectID, LogLevel: LogDebug, DefaultClient: newTestClient(func(r *http.Request) (*http.Response, error) {
+		assert.NotNil(t, r.Body)
+		return &http.Response{StatusCode: http.StatusBadRequest, Body: io.NopCloser(strings.NewReader(code))}, nil
+	})})
+
+	_, _, err := c.Post("path", nil)
+	require.Error(t, err)
+	assert.EqualValues(t, code, err.Error())
 }
