@@ -10,8 +10,8 @@ const (
 	defaultURL = "http://localhost:8080"
 )
 
-type IClient interface {
-	Post(path string, body interface{}) ([]byte, *http.Response, error)
+type IHttpClient interface {
+	Do(req *http.Request) (*http.Response, error)
 }
 
 type LoggerInterface interface {
@@ -24,7 +24,7 @@ type Config struct {
 	PublicKey string
 
 	DefaultURL           string
-	DefaultClient        *http.Client
+	DefaultClient        IHttpClient
 	CustomDefaultHeaders map[string]string
 
 	LogLevel LogLevel

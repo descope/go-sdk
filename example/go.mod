@@ -1,4 +1,4 @@
-module example
+module github.com/descope/go-sdk/example
 
 go 1.18
 

@@ -21,6 +21,7 @@ func main() {
 
 	router.Use(loggingMiddleware)
 	router.HandleFunc("/signin", handleSignIn).Methods(http.MethodGet)
+	router.HandleFunc("/signup", handleSignUp).Methods(http.MethodGet)
 	router.HandleFunc("/verify", handleVerify).Methods(http.MethodGet)
 	authRouter := router.Methods(http.MethodGet).Subrouter()
 	authRouter.Use(authenticationMiddleware)
@@ -49,6 +50,16 @@ func main() {
 
 func handleIsHealthy(w http.ResponseWriter, r *http.Request) {
 	setOK(w)
+}
+
+func handleSignUp(w http.ResponseWriter, r *http.Request) {
+	method, identifier := getMethodAndIdentifier(r)
+	err := client.SignUpOTP(method, identifier, &auth.User{Name: "test"})
+	if err != nil {
+		setError(w, err.Error())
+	} else {
+		setOK(w)
+	}
 }
 
 func handleSignIn(w http.ResponseWriter, r *http.Request) {

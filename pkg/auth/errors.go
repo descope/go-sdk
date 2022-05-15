@@ -24,7 +24,7 @@ func NewInvalidArgumentError(arg string) *WebError {
 }
 
 func NewUnauthorizedError() *WebError {
-	return NewError(badRequestErrorCode, fmt.Sprintf("unauthorized access"))
+	return NewError(badRequestErrorCode, "unauthorized access")
 }
 
 func (e *WebError) Error() string {

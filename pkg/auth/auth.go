@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -8,12 +9,12 @@ import (
 	"os"
 	"path"
 
-	"github.com/lestrrat-go/jwx/v2/jwa"
+	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
 type Auth struct {
-	client IClient
+	client *client
 	conf   *Config
 }
 
@@ -114,23 +115,39 @@ func (auth *Auth) ValidateSessionRequest(r *http.Request) (bool, error) {
 	return auth.ValidateSession(c.Value)
 }
 
-func (auth *Auth) ValidateSession(signedToken string) (bool, error) {
+func (auth *Auth) getAuthenticationKey() (jwk.Key, error) {
 	if auth.conf.PublicKey == "" {
 		if publicKey := os.Getenv("PUBLIC_KEY"); publicKey != "" {
 			auth.conf.PublicKey = publicKey
 		} else {
-			return false, fmt.Errorf("public key was not initialized")
+			return nil, fmt.Errorf("public key was not initialized")
 		}
 	}
 
-	_, err := jwt.Parse([]byte(signedToken), jwt.WithKey(jwa.ES384, auth.conf.PublicKey))
+	jk, err := jwk.ParseKey([]byte(auth.conf.PublicKey))
+	if err != nil {
+		auth.conf.LogDebug("unable to parse key")
+		return nil, err
+	}
+	return jk, nil
+}
+
+func (auth *Auth) ValidateSession(signedToken string) (bool, error) {
+	_, err := auth.getAuthenticationKey()
+	if err != nil {
+		return false, err
+	}
+
+	t, err := jwt.Parse([]byte(signedToken), jwt.WithVerify(false), jwt.WithValidate(false))
+	b, _ := json.Marshal(t)
+	fmt.Printf("token: %s", string(b))
 	if errors.Is(err, jwt.ErrTokenExpired()) {
 		auth.conf.LogDebug("token has expired")
-		return false, nil
+		return false, NewUnauthorizedError()
 	}
 	if errors.Is(err, jwt.ErrTokenNotYetValid()) {
 		auth.conf.LogDebug("token is not yet valid")
-		return false, nil
+		return false, NewUnauthorizedError()
 	}
 	if err != nil {
 		return false, fmt.Errorf("failed verify token %s", err)

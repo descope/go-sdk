@@ -11,7 +11,7 @@ import (
 )
 
 type client struct {
-	httpClient *http.Client
+	httpClient IHttpClient
 	uri        string
 	headers    map[string]string
 	conf       *Config
@@ -37,7 +37,7 @@ func newClient(conf *Config) *client {
 	}
 
 	return &client{
-		uri:        defaultURL,
+		uri:        conf.DefaultURL,
 		httpClient: httpClient,
 		headers:    defaultHeaders,
 		conf:       conf,
@@ -68,11 +68,14 @@ func (c *client) Post(uriPath string, body interface{}) ([]byte, *http.Response,
 		return nil, nil, NewFromError("", err)
 	}
 
-	defer response.Body.Close()
-	resBytes, err := ioutil.ReadAll(response.Body)
-	if err != nil {
-		c.conf.LogInfo("failed reading body from request to [%s]", uriPath)
-		return nil, nil, NewFromError("", err)
+	var resBytes []byte
+	if response.Body != nil {
+		defer response.Body.Close()
+		resBytes, err = ioutil.ReadAll(response.Body)
+		if err != nil {
+			c.conf.LogInfo("failed reading body from request to [%s]", uriPath)
+			return nil, nil, NewFromError("", err)
+		}
 	}
 	if !isResponseOK(response) {
 		return nil, nil, c.parseResponseError(response, resBytes)
