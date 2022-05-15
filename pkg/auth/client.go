@@ -3,6 +3,7 @@ package auth
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -90,8 +91,8 @@ func (c *client) parseResponseError(response *http.Response, body []byte) error 
 
 	var responseErr *WebError
 	if err := json.Unmarshal(body, responseErr); err != nil {
-		c.conf.LogInfo("failed to load error from response")
-		return err
+		c.conf.LogInfo("failed to load error from response [error: %s]", err)
+		return errors.New(string(body))
 	}
 	return responseErr
 }

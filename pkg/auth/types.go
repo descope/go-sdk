@@ -10,6 +10,8 @@ const (
 	defaultURL = "http://localhost:8080"
 )
 
+type Do func(r *http.Request) (*http.Response, error)
+
 type IHttpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }

@@ -10,8 +10,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type Do func(r *http.Request) (*http.Response, error)
-
 func DoOk(checks func(*http.Request)) Do {
 	return func(r *http.Request) (*http.Response, error) {
 		checks(r)
@@ -27,21 +25,6 @@ func newTestAuthConf(conf Config, callback Do) *Auth {
 	conf.DefaultClient = newTestClient(callback)
 	auth := NewAuth(conf)
 	return auth
-}
-
-type mockClient struct {
-	callback Do
-}
-
-func newTestClient(callback Do) *mockClient {
-	return &mockClient{callback: callback}
-}
-
-func (c *mockClient) Do(r *http.Request) (*http.Response, error) {
-	if c.callback == nil {
-		return nil, nil
-	}
-	return c.callback(r)
 }
 
 func TestInvalidEmailSignInEmail(t *testing.T) {

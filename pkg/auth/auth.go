@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -9,6 +8,7 @@ import (
 	"os"
 	"path"
 
+	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
@@ -133,14 +133,12 @@ func (auth *Auth) getAuthenticationKey() (jwk.Key, error) {
 }
 
 func (auth *Auth) ValidateSession(signedToken string) (bool, error) {
-	_, err := auth.getAuthenticationKey()
+	key, err := auth.getAuthenticationKey()
 	if err != nil {
 		return false, err
 	}
 
-	t, err := jwt.Parse([]byte(signedToken), jwt.WithVerify(false), jwt.WithValidate(false))
-	b, _ := json.Marshal(t)
-	fmt.Printf("token: %s", string(b))
+	_, err = jwt.ParseString(signedToken, jwt.WithKey(jwa.ES384, key))
 	if errors.Is(err, jwt.ErrTokenExpired()) {
 		auth.conf.LogDebug("token has expired")
 		return false, NewUnauthorizedError()
