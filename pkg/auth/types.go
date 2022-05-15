@@ -2,6 +2,7 @@ package auth
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"regexp"
 )
@@ -36,6 +37,9 @@ type Config struct {
 func (c *Config) doLog(l LogLevel, format string, args ...interface{}) {
 	if c.LogLevel < l {
 		return
+	}
+	if c.Logger == nil {
+		c.Logger = log.Default()
 	}
 	c.Logger.Print(fmt.Sprintf(format, args...))
 }
