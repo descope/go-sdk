@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -66,4 +67,17 @@ func TestPostUnauthorized(t *testing.T) {
 	_, _, err := c.Post("path", nil)
 	require.Error(t, err)
 	assert.EqualValues(t, badRequestErrorCode, err.(*WebError).Code)
+}
+
+func TestPostWebError(t *testing.T) {
+	projectID := "test"
+	code := "this is an error"
+	c := newClient(&Config{ProjectID: projectID, DefaultClient: newTestClient(func(r *http.Request) (*http.Response, error) {
+		assert.NotNil(t, r.Body)
+		return &http.Response{StatusCode: http.StatusBadRequest, Body: io.NopCloser(strings.NewReader(fmt.Sprintf(`{ "error": "%s" }`, code)))}, nil
+	})})
+
+	_, _, err := c.Post("path", nil)
+	require.Error(t, err)
+	assert.EqualValues(t, code, err.(*WebError).Code)
 }

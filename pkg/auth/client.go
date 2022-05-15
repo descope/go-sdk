@@ -90,7 +90,7 @@ func (c *client) parseResponseError(response *http.Response, body []byte) error 
 	}
 
 	var responseErr *WebError
-	if err := json.Unmarshal(body, responseErr); err != nil {
+	if err := json.Unmarshal(body, &responseErr); err != nil {
 		c.conf.LogInfo("failed to load error from response [error: %s]", err)
 		return errors.New(string(body))
 	}
