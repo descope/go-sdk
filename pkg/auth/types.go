@@ -39,6 +39,28 @@ func (c *Config) LogInfo(format string, args ...interface{}) {
 	c.doLog(LogInfo, format, args...)
 }
 
+func (c *Config) GetProjectID() string {
+	if c.ProjectID == "" {
+		if projectID := GetProjectIDEnvVariable(); projectID != "" {
+			c.ProjectID = projectID
+		} else {
+			return ""
+		}
+	}
+	return c.ProjectID
+}
+
+func (c *Config) GetPublicKey() string {
+	if c.PublicKey == "" {
+		if publicKey := GetPublicKeyEnvVariable(); publicKey != "" {
+			c.PublicKey = publicKey
+		} else {
+			return ""
+		}
+	}
+	return c.PublicKey
+}
+
 type LogLevel uint
 
 const (
@@ -102,8 +124,12 @@ const (
 	signUpOTPPath  = "/v1/auth/signup/otp"
 	verifyCodePath = "/v1/auth/code/verify"
 
+	publicKeyPath = "/v1/keys/"
+
 	environmentVariablePublicKey = "DESCOPE_PUBLIC_KEY"
 	environmentVariableProjectID = "DESCOPE_PROJECT_ID"
+
+	contextProjectID = "project_id"
 
 	CookieDefaultName = "S"
 )

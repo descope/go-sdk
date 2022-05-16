@@ -25,6 +25,7 @@ type HTTPResponse struct {
 }
 type HTTPRequest struct {
 	headers    map[string]string
+	baseURL    string
 	resBodyObj interface{}
 }
 
@@ -86,7 +87,13 @@ func (c *client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 	if options == nil {
 		options = &HTTPRequest{}
 	}
-	url := fmt.Sprintf("%s/%s", c.uri, strings.TrimLeft(uriPath, "/"))
+
+	base := c.uri
+	if options.baseURL != "" {
+		base = options.baseURL
+	}
+
+	url := fmt.Sprintf("%s/%s", base, strings.TrimLeft(uriPath, "/"))
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, NewFromError("", err)

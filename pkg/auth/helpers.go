@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 )
@@ -15,10 +16,22 @@ func Unmarshal(bs []byte, obj interface{}) error {
 	return json.Unmarshal(bs, obj)
 }
 
-func GetPublicKey() string {
+func GetPublicKeyEnvVariable() string {
 	return os.Getenv(environmentVariablePublicKey)
 }
 
-func GetProjectID() string {
+func GetProjectIDEnvVariable() string {
 	return os.Getenv(environmentVariableProjectID)
+}
+
+func GetValueAsString(ctx context.Context, key string) string {
+	val := ctx.Value(key)
+	if val == nil {
+		return ""
+	}
+	strVal, ok := val.(string)
+	if !ok {
+		return ""
+	}
+	return strVal
 }
