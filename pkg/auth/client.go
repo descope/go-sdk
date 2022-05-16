@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -16,6 +17,16 @@ type client struct {
 	uri        string
 	headers    map[string]string
 	conf       *Config
+}
+type HTTPResponse struct {
+	req     *http.Request
+	res     *http.Response
+	bodyStr string
+}
+type HTTPRequest struct {
+	headers    map[string]string
+	resBodyObj interface{}
+	username   string
 }
 
 func newClient(conf *Config) *client {
@@ -45,48 +56,103 @@ func newClient(conf *Config) *client {
 	}
 }
 
-func (c *client) Post(uriPath string, body interface{}) ([]byte, *http.Response, error) {
+func (c *client) DoGetRequest(uri string, options *HTTPRequest) (*HTTPResponse, error) {
+	return c.DoRequest(http.MethodGet, uri, nil, options)
+}
+
+func (c *client) DoPostRequest(uri string, body interface{}, options *HTTPRequest) (*HTTPResponse, error) {
+	if options == nil {
+		options = &HTTPRequest{}
+	}
+	if options.headers == nil {
+		options.headers = map[string]string{}
+	}
+	if _, ok := options.headers["Content-Type"]; !ok {
+		options.headers["Content-Type"] = "application/json"
+	}
+
+	var payload io.Reader
+	if body != nil {
+		if b, err := Marshal(body); err == nil {
+			payload = bytes.NewBuffer(b)
+		} else {
+			return nil, err
+		}
+	}
+
+	return c.DoRequest(http.MethodPost, uri, payload, options)
+}
+
+func (c *client) DoRequest(method, uriPath string, body io.Reader, options *HTTPRequest) (*HTTPResponse, error) {
 	buf := new(bytes.Buffer)
+	if options == nil {
+		options = &HTTPRequest{}
+	}
 	if err := json.NewEncoder(buf).Encode(body); err != nil {
-		return nil, nil, NewFromError("", err)
+		return nil, NewFromError("", err)
 	}
 	url := fmt.Sprintf("%s/%s", c.uri, strings.TrimLeft(uriPath, "/"))
-	req, err := http.NewRequest(http.MethodPost, url, buf)
+	req, err := http.NewRequest(method, url, buf)
 	if err != nil {
-		return nil, nil, NewFromError("", err)
+		return nil, NewFromError("", err)
 	}
 
 	for key, value := range c.headers {
 		req.Header.Add(key, value)
 	}
-	req.Header.Set("Content-Type", "application/json")
 	req.SetBasicAuth(c.conf.ProjectID, "")
 
 	c.conf.LogDebug("sending request to [%s]", uriPath)
 	response, err := c.httpClient.Do(req)
 	if err != nil {
 		c.conf.LogInfo("failed sending request to [%s]", uriPath)
-		return nil, nil, NewFromError("", err)
+		return nil, NewFromError("", err)
 	}
 
-	var resBytes []byte
 	if response.Body != nil {
 		defer response.Body.Close()
-		resBytes, err = ioutil.ReadAll(response.Body)
-		if err != nil {
-			c.conf.LogInfo("failed reading body from request to [%s]", uriPath)
-			return nil, nil, NewFromError("", err)
-		}
 	}
 	if !isResponseOK(response) {
-		return nil, nil, c.parseResponseError(response, resBytes)
+		return nil, c.parseResponseError(response)
 	}
-	return resBytes, response, nil
+
+	resBytes, err := c.parseBody(response)
+	if err != nil {
+		return nil, err
+	}
+
+	if options.resBodyObj != nil {
+		if err = Unmarshal(resBytes, &options.resBodyObj); err != nil {
+			return nil, err
+		}
+	}
+
+	return &HTTPResponse{
+		req:     req,
+		res:     response,
+		bodyStr: string(resBytes),
+	}, nil
 }
 
-func (c *client) parseResponseError(response *http.Response, body []byte) error {
+func (c *client) parseBody(response *http.Response) (resBytes []byte, err error) {
+	if response.Body != nil {
+		resBytes, err = ioutil.ReadAll(response.Body)
+		if err != nil {
+			c.conf.LogInfo("failed reading body from request to [%s]", response.Request.URL.String())
+			return nil, NewFromError("", err)
+		}
+	}
+	return
+}
+
+func (c *client) parseResponseError(response *http.Response) error {
 	if response.StatusCode == http.StatusUnauthorized {
 		return NewUnauthorizedError()
+	}
+
+	body, err := c.parseBody(response)
+	if err != nil {
+		return err
 	}
 
 	var responseErr *WebError

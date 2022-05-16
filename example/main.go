@@ -17,7 +17,7 @@ var client auth.IAuth
 func main() {
 	log.Println("starting server")
 	router := mux.NewRouter()
-	client = auth.NewAuth(auth.Config{LogLevel: auth.LogDebug})
+	client = auth.NewAuth(auth.Config{LogLevel: auth.LogDebug, DefaultURL: "http://localhost:8080"})
 
 	router.Use(loggingMiddleware)
 	router.HandleFunc("/signin", handleSignIn).Methods(http.MethodGet)

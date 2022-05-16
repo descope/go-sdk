@@ -16,5 +16,3 @@ require (
 	github.com/lestrrat-go/option v1.0.0 // indirect
 	golang.org/x/crypto v0.0.0-20220427172511-eb4f295cb31f // indirect
 )
-
-replace github.com/descope/go-sdk => /Users/bar/dev/go/src/github.com/descope/go-sdk

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"path"
 
 	"github.com/lestrrat-go/jwx/v2/jwa"
@@ -41,7 +40,7 @@ func (auth *Auth) SignInOTP(method DeliveryMethod, identifier string) error {
 		return err
 	}
 
-	_, _, err := auth.client.Post(composeSignInURL(method), map[string]interface{}{string(method): identifier})
+	_, err := auth.client.DoPostRequest(composeSignInURL(method), newAuthenticationRequestBody(method, identifier), nil)
 	return err
 }
 
@@ -56,7 +55,7 @@ func (auth *Auth) SignUpOTP(method DeliveryMethod, identifier string, user *User
 		return err
 	}
 
-	_, _, err := auth.client.Post(composeSignUpURL(method), map[string]interface{}{string(method): identifier, "user": user})
+	_, err := auth.client.DoPostRequest(composeSignUpURL(method), newAuthenticationSignInRequestBody(method, identifier, user), nil)
 	return err
 }
 
@@ -83,10 +82,10 @@ func (auth *Auth) VerifyCode(method DeliveryMethod, identifier string, code stri
 		return nil, err
 	}
 
-	_, response, err := auth.client.Post(composeVerifyCodeURL(method), map[string]interface{}{string(method): identifier, "code": code})
+	httpResponse, err := auth.client.DoPostRequest(composeVerifyCodeURL(method), newAuthenticationVerifyRequestBody(method, identifier, code), nil)
 	cookies := []*http.Cookie{}
-	if response != nil {
-		cookies = response.Cookies()
+	if httpResponse != nil {
+		cookies = httpResponse.req.Cookies()
 	}
 	return cookies, err
 }
@@ -117,7 +116,7 @@ func (auth *Auth) ValidateSessionRequest(r *http.Request) (bool, error) {
 
 func (auth *Auth) getAuthenticationKey() (jwk.Key, error) {
 	if auth.conf.PublicKey == "" {
-		if publicKey := os.Getenv("PUBLIC_KEY"); publicKey != "" {
+		if publicKey := GetPublicKey(); publicKey != "" {
 			auth.conf.PublicKey = publicKey
 		} else {
 			return nil, fmt.Errorf("public key was not initialized")
@@ -178,10 +177,10 @@ func (*Auth) verifyDeliveryMethod(method DeliveryMethod, identifier string) *Web
 
 func (auth *Auth) prepareClient() error {
 	if auth.conf.ProjectID == "" {
-		if projectID := os.Getenv("PROJECT_ID"); projectID != "" {
+		if projectID := GetProjectID(); projectID != "" {
 			auth.conf.ProjectID = projectID
 		} else {
-			return fmt.Errorf("project id is missing. Make sure to add it in the configuration or the environment variable PROJECT_ID")
+			return fmt.Errorf("project id is missing. Make sure to add it in the configuration or the environment variable DESCOPE_PROJECT_ID")
 		}
 	}
 

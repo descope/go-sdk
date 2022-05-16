@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	defaultURL = "http://localhost:8080"
+	defaultURL = "https://descope.com"
 )
 
 type Do func(r *http.Request) (*http.Response, error)
@@ -19,19 +19,6 @@ type IHttpClient interface {
 
 type LoggerInterface interface {
 	Print(v ...interface{})
-}
-
-// Configuration struct describes the configurational data for the authentication methods.
-type Config struct {
-	ProjectID string
-	PublicKey string
-
-	DefaultURL           string
-	DefaultClient        IHttpClient
-	CustomDefaultHeaders map[string]string
-
-	LogLevel LogLevel
-	Logger   LoggerInterface
 }
 
 func (c *Config) doLog(l LogLevel, format string, args ...interface{}) {
@@ -67,56 +54,58 @@ type User struct {
 	Email    string `json:"email,omitempty"`
 }
 
-type IAuth interface {
-	// SignInOTP - use to login a user based on the given identifier either email or a phone
-	// and choose the selected delivery method for verification.
-	// returns an error upon failure.
-	SignInOTP(method DeliveryMethod, identifier string) error
-	// SignUpOTP - use to create a new user based on the given identifier either email or a phone
-	// and choose the selected delivery method for verification.
-	// optional to add user metadata for farther user details such as name and more.
-	// returns an error upon failure.
-	SignUpOTP(method DeliveryMethod, identifier string, user *User) error
+type DeliveryMethod string
 
-	// VerifyCode - Use to verify a SignIn/SignUp based on the given identifier either an email or a phone
-	// followed by the code used to verify and authenticate the user.
-	// returns a list of set-cookie data or an error upon failure.
-	VerifyCode(method DeliveryMethod, identifier string, code string) ([]*http.Cookie, error)
-	// VerifyCodeEmail - Use to verify a SignIn/SignUp based on the email identifier
-	// followed by the code used to verify and authenticate the user.
-	// returns a list of set-cookie data or an error upon failure.
-	VerifyCodeEmail(identifier string, code string) ([]*http.Cookie, error)
-	// VerifyCodeSMS - Use to verify a SignIn/SignUp based on the phone identifier
-	// followed by the code used to verify and authenticate the user.
-	// returns a list of set-cookie data or an error upon failure.
-	VerifyCodeSMS(identifier string, code string) ([]*http.Cookie, error)
-	// VerifyCodeWhatsApp - Use to verify a SignIn/SignUp based on the phone identifier
-	// followed by the code used to verify and authenticate the user.
-	// returns a list of set-cookie data or an error upon failure.
-	VerifyCodeWhatsApp(identifier string, code string) ([]*http.Cookie, error)
-
-	// ValidateSessionRequest - Use to validate a session of a given request.
-	// Should be called before any private API call that requires authorization.
-	// returns true upon success or false and/or error upon failure.
-	ValidateSessionRequest(request *http.Request) (bool, error)
-	// ValidateSession - Use to validate a given token.
-	// Should be called before any private API call that requires authorization.
-	// returns true upon success or false and/or error upon failure.
-	ValidateSession(token string) (bool, error)
+type authenticationRequestBody struct {
+	WhatsApp string `json:"whatsapp,omitempty"`
+	Phone    string `json:"phone,omitempty"`
+	Email    string `json:"email,omitempty"`
 }
 
-type DeliveryMethod string
+type authenticationSignInRequestBody struct {
+	authenticationRequestBody `json:",inline"`
+	User                      *User `json:"user"`
+}
+
+type authenticationVerifyRequestBody struct {
+	authenticationRequestBody `json:",inline"`
+	Code                      string `json:"code"`
+}
+
+func newAuthenticationRequestBody(method DeliveryMethod, value string) authenticationRequestBody {
+	switch method {
+	case MethodSMS:
+		return authenticationRequestBody{Phone: value}
+	case MethodWhatsApp:
+		return authenticationRequestBody{WhatsApp: value}
+	}
+
+	return authenticationRequestBody{Email: value}
+}
+
+func newAuthenticationSignInRequestBody(method DeliveryMethod, value string, user *User) authenticationSignInRequestBody {
+	a := newAuthenticationRequestBody(method, value)
+	return authenticationSignInRequestBody{authenticationRequestBody: a, User: user}
+}
+
+func newAuthenticationVerifyRequestBody(method DeliveryMethod, value string, code string) authenticationVerifyRequestBody {
+	a := newAuthenticationRequestBody(method, value)
+	return authenticationVerifyRequestBody{authenticationRequestBody: a, Code: code}
+}
 
 const (
 	MethodWhatsApp DeliveryMethod = "whatsapp"
 	MethodSMS      DeliveryMethod = "phone"
 	MethodEmail    DeliveryMethod = "email"
 
-	CookieDefaultName = "S"
-
 	signInOTPPath  = "/v1/auth/signin/otp"
 	signUpOTPPath  = "/v1/auth/signup/otp"
 	verifyCodePath = "/v1/auth/code/verify"
+
+	environmentVariablePublicKey = "DESCOPE_PUBLIC_KEY"
+	environmentVariableProjectID = "DESCOPE_PROJECT_ID"
+
+	CookieDefaultName = "S"
 )
 
 var (

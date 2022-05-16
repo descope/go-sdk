@@ -38,9 +38,9 @@ func TestPost(t *testing.T) {
 		return &http.Response{Body: io.NopCloser(strings.NewReader(expectedResponse)), StatusCode: http.StatusOK}, nil
 	})})
 
-	body, _, err := c.Post("path", nil)
+	res, err := c.DoPostRequest("path", nil, nil)
 	require.NoError(t, err)
-	assert.EqualValues(t, expectedResponse, string(body))
+	assert.EqualValues(t, expectedResponse, res.bodyStr)
 }
 
 func TestPostCustomHeaders(t *testing.T) {
@@ -54,7 +54,7 @@ func TestPostCustomHeaders(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK}, nil
 	})})
 
-	_, _, err := c.Post("path", nil)
+	_, err := c.DoPostRequest("path", nil, nil)
 	require.NoError(t, err)
 }
 
@@ -65,7 +65,7 @@ func TestPostUnauthorized(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusUnauthorized}, nil
 	})})
 
-	_, _, err := c.Post("path", nil)
+	_, err := c.DoPostRequest("path", nil, nil)
 	require.Error(t, err)
 	assert.EqualValues(t, badRequestErrorCode, err.(*WebError).Code)
 }
@@ -78,7 +78,7 @@ func TestPostWebError(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusBadRequest, Body: io.NopCloser(strings.NewReader(fmt.Sprintf(`{ "error": "%s" }`, code)))}, nil
 	})})
 
-	_, _, err := c.Post("path", nil)
+	_, err := c.DoPostRequest("path", nil, nil)
 	require.Error(t, err)
 	assert.EqualValues(t, code, err.(*WebError).Code)
 }
@@ -91,7 +91,7 @@ func TestPostError(t *testing.T) {
 		return nil, errors.New(expectedErr)
 	})})
 
-	_, _, err := c.Post("path", nil)
+	_, err := c.DoPostRequest("path", nil, nil)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), expectedErr)
 }
@@ -104,7 +104,7 @@ func TestPostUnknownError(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusBadRequest, Body: io.NopCloser(strings.NewReader(code))}, nil
 	})})
 
-	_, _, err := c.Post("path", nil)
+	_, err := c.DoPostRequest("path", nil, nil)
 	require.Error(t, err)
 	assert.EqualValues(t, code, err.Error())
 }
