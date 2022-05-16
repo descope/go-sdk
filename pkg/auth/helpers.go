@@ -20,5 +20,5 @@ func GetPublicKey() string {
 }
 
 func GetProjectID() string {
-	return os.Getenv(environmentVariablePublicKey)
+	return os.Getenv(environmentVariableProjectID)
 }

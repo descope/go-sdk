@@ -26,7 +26,6 @@ type HTTPResponse struct {
 type HTTPRequest struct {
 	headers    map[string]string
 	resBodyObj interface{}
-	username   string
 }
 
 func newClient(conf *Config) *client {
@@ -84,15 +83,11 @@ func (c *client) DoPostRequest(uri string, body interface{}, options *HTTPReques
 }
 
 func (c *client) DoRequest(method, uriPath string, body io.Reader, options *HTTPRequest) (*HTTPResponse, error) {
-	buf := new(bytes.Buffer)
 	if options == nil {
 		options = &HTTPRequest{}
 	}
-	if err := json.NewEncoder(buf).Encode(body); err != nil {
-		return nil, NewFromError("", err)
-	}
 	url := fmt.Sprintf("%s/%s", c.uri, strings.TrimLeft(uriPath, "/"))
-	req, err := http.NewRequest(method, url, buf)
+	req, err := http.NewRequest(method, url, body)
 	if err != nil {
 		return nil, NewFromError("", err)
 	}
@@ -100,6 +95,11 @@ func (c *client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 	for key, value := range c.headers {
 		req.Header.Add(key, value)
 	}
+
+	for key, value := range options.headers {
+		req.Header.Add(key, value)
+	}
+
 	req.SetBasicAuth(c.conf.ProjectID, "")
 
 	c.conf.LogDebug("sending request to [%s]", uriPath)

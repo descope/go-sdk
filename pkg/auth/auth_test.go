@@ -32,9 +32,9 @@ func newTestAuthConf(conf Config, callback Do) *Auth {
 
 func TestEnvVariableProjectID(t *testing.T) {
 	expectedProjectID := "test"
-	err := os.Setenv("PROJECT_ID", expectedProjectID)
+	err := os.Setenv(environmentVariableProjectID, expectedProjectID)
 	defer func() {
-		err = os.Setenv("PROJECT_ID", "")
+		err = os.Setenv(environmentVariableProjectID, "")
 		require.NoError(t, err)
 	}()
 	require.NoError(t, err)
@@ -42,6 +42,13 @@ func TestEnvVariableProjectID(t *testing.T) {
 	err = a.prepareClient()
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedProjectID, a.conf.ProjectID)
+}
+
+func TestEmptyProjectID(t *testing.T) {
+	a := NewAuth(Config{})
+	err := a.prepareClient()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "project id is missing")
 }
 
 func TestInvalidEmailSignInEmail(t *testing.T) {
