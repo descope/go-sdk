@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"context"
 	"encoding/json"
 	"os"
 )
@@ -22,16 +21,4 @@ func GetPublicKeyEnvVariable() string {
 
 func GetProjectIDEnvVariable() string {
 	return os.Getenv(environmentVariableProjectID)
-}
-
-func GetValueAsString(ctx context.Context, key string) string {
-	val := ctx.Value(key)
-	if val == nil {
-		return ""
-	}
-	strVal, ok := val.(string)
-	if !ok {
-		return ""
-	}
-	return strVal
 }

@@ -11,9 +11,9 @@ import (
 )
 
 type Auth struct {
-	client   *client
-	conf     *Config
-	provider *provider
+	client             *client
+	conf               *Config
+	publicKeysProvider *provider
 }
 
 func NewAuth(conf Config) (*Auth, error) {
@@ -31,7 +31,7 @@ func NewAuth(conf Config) (*Auth, error) {
 	}
 
 	c := auth.getClient()
-	auth.provider = newProvider(c, auth.conf)
+	auth.publicKeysProvider = newProvider(c, auth.conf)
 	return auth, nil
 }
 
@@ -96,15 +96,12 @@ func (auth *Auth) ValidateSessionRequest(r *http.Request) (bool, error) {
 		auth.conf.LogDebug("unable to find session cookie")
 		return false, err
 	}
-	if c == nil {
-		return false, nil
-	}
 	return auth.ValidateSession(c.Value)
 }
 
 func (auth *Auth) ValidateSession(signedToken string) (bool, error) {
-	_, err := jwt.ParseString(signedToken, jwt.WithKeyProvider(auth.provider))
-	if !auth.provider.isPublicKeyExist() {
+	_, err := jwt.ParseString(signedToken, jwt.WithKeyProvider(auth.publicKeysProvider))
+	if !auth.publicKeysProvider.isPublicKeyExist() {
 		return false, NewNoPublicKeyError()
 	}
 

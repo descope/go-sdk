@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -24,10 +23,14 @@ func DoOk(checks func(*http.Request)) Do {
 }
 
 func newTestAuth(callback Do) (*Auth, error) {
-	return newTestAuthConf(Config{ProjectID: "a"}, callback)
+	return newTestAuthConf(nil, callback)
 }
 
-func newTestAuthConf(conf Config, callback Do) (*Auth, error) {
+func newTestAuthConf(confBuilder *ConfigBuilder, callback Do) (*Auth, error) {
+	if confBuilder == nil {
+		confBuilder = newTestConfig()
+	}
+	conf := confBuilder.Build()
 	conf.DefaultClient = newTestClient(callback)
 	return NewAuth(conf)
 }
@@ -262,7 +265,7 @@ func TestVerifyCodeWhatsApp(t *testing.T) {
 
 func TestAuthDefaultURL(t *testing.T) {
 	url := "http://test.com"
-	a, err := newTestAuthConf(Config{ProjectID: "a", DefaultURL: url}, DoOk(func(r *http.Request) {
+	a, err := newTestAuthConf(newTestConfig().WithDefaultURL(url), DoOk(func(r *http.Request) {
 		assert.Contains(t, r.URL.String(), url)
 	}))
 	require.NoError(t, err)
@@ -271,9 +274,10 @@ func TestAuthDefaultURL(t *testing.T) {
 }
 
 var (
-	jwtTokenValid   = `eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjE5ODEzOTgxMTF9.GQ3nLYT4XWZWezJ1tRV6ET0ibRvpEipeo6RCuaCQBdP67yu98vtmUvusBElDYVzRxGRtw5d20HICyo0_3Ekb0euUP3iTupgS3EU1DJMeAaJQgOwhdQnQcJFkOpASLKWh`
-	jwtTokenExpired = `eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjExODEzOTgxMTF9.EdetpQro-frJV1St1mWGygRSzxf6Bg01NNR_Ipwy_CAQyGDmIQ6ITGQ620hfmjW5HDtZ9-0k7AZnwoLnb709QQgbHMFxlDpIOwtFIAJuU-CqaBDwsNWA1f1RNyPpLxop`
-	publicKey       = `{
+	jwtTokenValid    = `eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjBhZDk5ODY5ZjJkNGU1N2YzZjcxYzY4MzAwYmE4NGZhIn0.eyJleHAiOjE5ODEzOTgxMTF9.MHSHryNl0oU3ZBjWc0pFIBKlXHcXU0vcoO3PpRg8MIQ8M14k4sTsUqJfxXCTbxh24YKE6w0XFBh9B4L7vjIY7iVZPM44LXNEzUFyyX3m6eN_iAavGKPKdKnao2ayNeu1`
+	jwtTokenExpired  = `eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjBhZDk5ODY5ZjJkNGU1N2YzZjcxYzY4MzAwYmE4NGZhIn0.eyJleHAiOjExODEzOTgxMTF9.Qbi7klMrWKSM2z89AtMyDk_lRYnxxz0WApEO5iPikEcAzemmJyR_7b1IvHVxR4uQgCZrH46anUD0aTtPG7k3PpMjP2o2pDHWgY0mWlxW0lDlMqkrvZtBPC7qa_NJTHFl`
+	jwtTokenNotYet   = `eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjBhZDk5ODY5ZjJkNGU1N2YzZjcxYzY4MzAwYmE4NGZhIn0.eyJleHAiOjE5ODEzOTgxMTEsIm5iZiI6MTk4MTM5ODExMX0.imZHharGl5zu3pVcFdzpP78Zp_Quv4bOqA1v21uhgtTpAMjppHjgLZufCOmxyzNHawSfQRopMDI0jTMoXZtdmtJZldlsxJ--Yfl9o3Xj1ooaFNU5ipLsnSCJqkXpgL4i`
+	unknownPublicKey = `{
 		"crv": "P-384",
 		"key_ops": [
 		  "verify"
@@ -285,7 +289,7 @@ var (
 		"use": "sig",
 		"kid": "32b3da5277b142c7e24fdf0ef09e0919"
 	  }`
-	unknownPublicKey = `{
+	publicKey = `{
 		"crv": "P-384",
 		"d": "FfTHqwIAM3OMj808FlAL59OkwdXnfmc8FAXtTqyKnfu023kXHtDrAjEwMEBnOC3O",
 		"key_ops": [
@@ -301,7 +305,7 @@ var (
 )
 
 func TestEmptyPublicKey(t *testing.T) {
-	a, err := newTestAuthConf(Config{ProjectID: "a"}, Do(func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuthConf(nil, Do(func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("[]"))}, nil
 	}))
 	require.NoError(t, err)
@@ -312,18 +316,20 @@ func TestEmptyPublicKey(t *testing.T) {
 }
 
 func TestValidateSession(t *testing.T) {
-	a, err := newTestAuthConf(Config{ProjectID: "a", PublicKey: publicKey}, DoOk(nil))
+	a, err := newTestAuthConf(newTestConfig().WithValidKey(), DoOk(nil))
 	require.NoError(t, err)
 	ok, err := a.ValidateSession(jwtTokenValid)
+	require.NoError(t, err)
+	require.True(t, ok)
+	ok, err = a.ValidateSession(jwtTokenValid)
 	require.NoError(t, err)
 	require.True(t, ok)
 }
 
 func TestValidateSessionFetchKeyCalledOnce(t *testing.T) {
 	count := 0
-	a, err := newTestAuthConf(Config{ProjectID: "a"}, Do(func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuthConf(nil, Do(func(r *http.Request) (*http.Response, error) {
 		count++
-		log.Print("hey")
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", publicKey)))}, nil
 	}))
 	require.NoError(t, err)
@@ -338,8 +344,7 @@ func TestValidateSessionFetchKeyCalledOnce(t *testing.T) {
 }
 
 func TestValidateSessionFetchKeyMalformed(t *testing.T) {
-	a, err := newTestAuthConf(Config{ProjectID: "a"}, Do(func(r *http.Request) (*http.Response, error) {
-		log.Print("hey2")
+	a, err := newTestAuthConf(nil, Do(func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", unknownPublicKey)))}, nil
 	}))
 	require.NoError(t, err)
@@ -351,9 +356,21 @@ func TestValidateSessionFetchKeyMalformed(t *testing.T) {
 
 func TestValidateSessionFetchKeyWithExisting(t *testing.T) {
 	count := 0
-	a, err := newTestAuthConf(Config{ProjectID: "a", PublicKey: unknownPublicKey}, Do(func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuthConf(newTestConfig().WithUnkownKey(), Do(func(r *http.Request) (*http.Response, error) {
 		count++
-		log.Print("hey3")
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", publicKey)))}, nil
+	}))
+	require.NoError(t, err)
+	ok, err := a.ValidateSession(jwtTokenValid)
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.EqualValues(t, 1, count)
+}
+
+func TestValidateSessionFetchKeyWithInvalidKey(t *testing.T) {
+	count := 0
+	a, err := newTestAuthConf(newTestConfig().WithInvalidKey(), Do(func(r *http.Request) (*http.Response, error) {
+		count++
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", publicKey)))}, nil
 	}))
 	require.NoError(t, err)
@@ -364,7 +381,7 @@ func TestValidateSessionFetchKeyWithExisting(t *testing.T) {
 }
 
 func TestValidateSessionRequest(t *testing.T) {
-	a, err := newTestAuthConf(Config{ProjectID: "a", PublicKey: publicKey}, DoOk(nil))
+	a, err := newTestAuthConf(newTestConfig().WithValidKey(), DoOk(nil))
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: CookieDefaultName, Value: jwtTokenValid})
@@ -374,7 +391,7 @@ func TestValidateSessionRequest(t *testing.T) {
 }
 
 func TestValidateSessionRequestNoCookie(t *testing.T) {
-	a, err := newTestAuthConf(Config{ProjectID: "a", PublicKey: publicKey}, DoOk(nil))
+	a, err := newTestAuthConf(newTestConfig().WithValidKey(), DoOk(nil))
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	ok, err := a.ValidateSessionRequest(request)
@@ -383,9 +400,18 @@ func TestValidateSessionRequestNoCookie(t *testing.T) {
 }
 
 func TestValidateSessionExpired(t *testing.T) {
-	a, err := newTestAuthConf(Config{ProjectID: "a", PublicKey: publicKey}, DoOk(nil))
+	a, err := newTestAuthConf(newTestConfig().WithValidKey(), DoOk(nil))
 	require.NoError(t, err)
 	ok, err := a.ValidateSession(jwtTokenExpired)
+	require.Error(t, err)
+	require.False(t, ok)
+	assert.EqualValues(t, badRequestErrorCode, err.(*WebError).Code)
+}
+
+func TestValidateSessionNotYet(t *testing.T) {
+	a, err := newTestAuthConf(newTestConfig().WithValidKey(), DoOk(nil))
+	require.NoError(t, err)
+	ok, err := a.ValidateSession(jwtTokenNotYet)
 	require.Error(t, err)
 	require.False(t, ok)
 	assert.EqualValues(t, badRequestErrorCode, err.(*WebError).Code)
@@ -398,4 +424,46 @@ func readBody(r *http.Request) (m map[string]interface{}, err error) {
 	}
 	err = json.Unmarshal(res, &m)
 	return
+}
+
+type ConfigBuilder struct {
+	conf *Config
+}
+
+func newTestConfig() *ConfigBuilder {
+	return &ConfigBuilder{conf: &Config{ProjectID: "a"}}
+}
+
+func (cb *ConfigBuilder) WithInvalidKey() *ConfigBuilder {
+	cb.conf.PublicKey = `{"test": "test"}`
+	return cb
+}
+
+func (cb *ConfigBuilder) WithValidKey() *ConfigBuilder {
+	cb.conf.PublicKey = publicKey
+	return cb
+}
+
+func (cb *ConfigBuilder) WithProjectID(id string) *ConfigBuilder {
+	cb.conf.ProjectID = id
+	return cb
+}
+
+func (cb *ConfigBuilder) WithDefaultURL(url string) *ConfigBuilder {
+	cb.conf.DefaultURL = url
+	return cb
+}
+
+func (cb *ConfigBuilder) WithDebug() *ConfigBuilder {
+	cb.conf.LogLevel = LogDebug
+	return cb
+}
+
+func (cb *ConfigBuilder) WithUnkownKey() *ConfigBuilder {
+	cb.conf.PublicKey = unknownPublicKey
+	return cb
+}
+
+func (cb *ConfigBuilder) Build() Config {
+	return *cb.conf
 }
