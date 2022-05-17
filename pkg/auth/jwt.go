@@ -10,10 +10,10 @@ import (
 )
 
 type provider struct {
-	client   *client
-	conf     *Config
-	knownKey jwk.Key
-	keySet   map[string]jwk.Key
+	client      *client
+	conf        *Config
+	providedKey jwk.Key
+	keySet      map[string]jwk.Key
 }
 
 func newProvider(client *client, conf *Config) *provider {
@@ -21,7 +21,7 @@ func newProvider(client *client, conf *Config) *provider {
 }
 
 func (p *provider) publicKeyExists() bool {
-	return len(p.keySet) > 0 || p.knownKey != nil
+	return len(p.keySet) > 0 || p.providedKey != nil
 }
 
 func (p *provider) selectKey(sink jws.KeySink, key jwk.Key) error {
@@ -78,8 +78,8 @@ func (p *provider) requestKeys() error {
 }
 
 func (p *provider) providedPublicKey() (jwk.Key, error) {
-	if p.knownKey != nil {
-		return p.knownKey, nil
+	if p.providedKey != nil {
+		return p.providedKey, nil
 	}
 
 	if p.conf.PublicKey != "" {
@@ -88,8 +88,8 @@ func (p *provider) providedPublicKey() (jwk.Key, error) {
 			p.conf.LogDebug("unable to parse key")
 			return nil, err
 		}
-		p.knownKey, _ = jk.PublicKey()
-		return p.knownKey, nil
+		p.providedKey, _ = jk.PublicKey()
+		return p.providedKey, nil
 	}
 	return nil, nil
 }
@@ -111,7 +111,12 @@ func (p *provider) findKey(kid string) (jwk.Key, error) {
 		return nil, err
 	}
 
-	return p.keySet[kid], nil
+	key, ok := p.keySet[kid]
+	if !ok {
+		return nil, NewValidationError("no matching public key found for the current key id")
+	}
+
+	return key, nil
 }
 
 func (p *provider) FetchKeys(_ context.Context, sink jws.KeySink, sig *jws.Signature, _ *jws.Message) error {
