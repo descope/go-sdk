@@ -2,22 +2,20 @@ package auth
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"path"
 
-	"github.com/lestrrat-go/jwx/v2/jwa"
-	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
 type Auth struct {
-	client *client
-	conf   *Config
+	client             *client
+	conf               *Config
+	publicKeysProvider *provider
 }
 
-func NewAuth(conf Config) *Auth {
+func NewAuth(conf Config) (*Auth, error) {
 	if conf.Logger == nil {
 		conf.Logger = log.Default()
 	}
@@ -26,16 +24,22 @@ func NewAuth(conf Config) *Auth {
 		conf.DefaultURL = defaultURL
 	}
 
-	return &Auth{conf: &conf}
+	authenticationObject := &Auth{conf: &conf}
+	if authenticationObject.conf.setProjectID() == "" {
+		return nil, NewValidationError("project id is missing. Make sure to add it in the Config struct or the environment variable \"%s\"", environmentVariableProjectID)
+	}
+	if authenticationObject.conf.setPublicKey() == "" {
+		conf.LogDebug("provided public key is not set")
+	} else {
+		conf.LogInfo("provided public key is set, forcing only provided public key validation")
+	}
+
+	c := authenticationObject.prepareClient()
+	authenticationObject.publicKeysProvider = newProvider(c, authenticationObject.conf)
+	return authenticationObject, nil
 }
 
 func (auth *Auth) SignInOTP(method DeliveryMethod, identifier string) error {
-	if auth.client == nil {
-		if err := auth.prepareClient(); err != nil {
-			return err
-		}
-	}
-
 	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
 		return err
 	}
@@ -45,12 +49,6 @@ func (auth *Auth) SignInOTP(method DeliveryMethod, identifier string) error {
 }
 
 func (auth *Auth) SignUpOTP(method DeliveryMethod, identifier string, user *User) error {
-	if auth.client == nil {
-		if err := auth.prepareClient(); err != nil {
-			return err
-		}
-	}
-
 	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
 		return err
 	}
@@ -60,12 +58,6 @@ func (auth *Auth) SignUpOTP(method DeliveryMethod, identifier string, user *User
 }
 
 func (auth *Auth) VerifyCode(method DeliveryMethod, identifier string, code string) ([]*http.Cookie, error) {
-	if auth.client == nil {
-		if err := auth.prepareClient(); err != nil {
-			return nil, err
-		}
-	}
-
 	if method == "" {
 		if phoneRegex.MatchString(identifier) {
 			method = MethodSMS
@@ -85,7 +77,7 @@ func (auth *Auth) VerifyCode(method DeliveryMethod, identifier string, code stri
 	httpResponse, err := auth.client.DoPostRequest(composeVerifyCodeURL(method), newAuthenticationVerifyRequestBody(method, identifier, code), nil)
 	cookies := []*http.Cookie{}
 	if httpResponse != nil {
-		cookies = httpResponse.req.Cookies()
+		cookies = httpResponse.res.Cookies()
 	}
 	return cookies, err
 }
@@ -108,36 +100,15 @@ func (auth *Auth) ValidateSessionRequest(r *http.Request) (bool, error) {
 		auth.conf.LogDebug("unable to find session cookie")
 		return false, err
 	}
-	if c == nil {
-		return false, nil
-	}
 	return auth.ValidateSession(c.Value)
 }
 
-func (auth *Auth) getAuthenticationKey() (jwk.Key, error) {
-	if auth.conf.PublicKey == "" {
-		if publicKey := GetPublicKey(); publicKey != "" {
-			auth.conf.PublicKey = publicKey
-		} else {
-			return nil, fmt.Errorf("public key was not initialized")
-		}
-	}
-
-	jk, err := jwk.ParseKey([]byte(auth.conf.PublicKey))
-	if err != nil {
-		auth.conf.LogDebug("unable to parse key")
-		return nil, err
-	}
-	return jk, nil
-}
-
 func (auth *Auth) ValidateSession(signedToken string) (bool, error) {
-	key, err := auth.getAuthenticationKey()
-	if err != nil {
-		return false, err
+	_, err := jwt.ParseString(signedToken, jwt.WithKeyProvider(auth.publicKeysProvider))
+	if !auth.publicKeysProvider.publicKeyExists() {
+		return false, NewNoPublicKeyError()
 	}
 
-	_, err = jwt.ParseString(signedToken, jwt.WithKey(jwa.ES384, key))
 	if errors.Is(err, jwt.ErrTokenExpired()) {
 		auth.conf.LogDebug("token has expired")
 		return false, NewUnauthorizedError()
@@ -147,7 +118,8 @@ func (auth *Auth) ValidateSession(signedToken string) (bool, error) {
 		return false, NewUnauthorizedError()
 	}
 	if err != nil {
-		return false, fmt.Errorf("failed verify token %s", err)
+		auth.conf.LogDebug("failed to verify token [%s]", err)
+		return false, NewUnauthorizedError()
 	}
 
 	return true, nil
@@ -175,17 +147,11 @@ func (*Auth) verifyDeliveryMethod(method DeliveryMethod, identifier string) *Web
 	return nil
 }
 
-func (auth *Auth) prepareClient() error {
-	if auth.conf.ProjectID == "" {
-		if projectID := GetProjectID(); projectID != "" {
-			auth.conf.ProjectID = projectID
-		} else {
-			return fmt.Errorf("project id is missing. Make sure to add it in the configuration or the environment variable DESCOPE_PROJECT_ID")
-		}
+func (auth *Auth) prepareClient() *client {
+	if auth.client == nil {
+		auth.client = newClient(auth.conf)
 	}
-
-	auth.client = newClient(auth.conf)
-	return nil
+	return auth.client
 }
 
 func composeURL(base string, method DeliveryMethod) string {

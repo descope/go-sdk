@@ -27,6 +27,26 @@ func NewUnauthorizedError() *WebError {
 	return NewError(badRequestErrorCode, "unauthorized access")
 }
 
+func NewNoPublicKeyError() *WebError {
+	return NewError(badRequestErrorCode, "no public key was found for this project")
+}
+
+func NewPublicKeyDoesNotMatchError() *WebError {
+	return NewError(badRequestErrorCode, "public key found is not compatible for given tokens")
+}
+
 func (e *WebError) Error() string {
 	return fmt.Sprintf("[%s] %s", e.Code, e.Message)
+}
+
+type ValidationError struct {
+	Message string `json:"message,omitempty"`
+}
+
+func (e *ValidationError) Error() string {
+	return e.Message
+}
+
+func NewValidationError(message string, args ...interface{}) *ValidationError {
+	return &ValidationError{Message: fmt.Sprintf(message, args...)}
 }

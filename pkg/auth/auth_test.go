@@ -2,9 +2,11 @@ package auth
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,14 +22,17 @@ func DoOk(checks func(*http.Request)) Do {
 	}
 }
 
-func newTestAuth(callback Do) *Auth {
-	return newTestAuthConf(Config{ProjectID: "a"}, callback)
+func newTestAuth(callback Do) (*Auth, error) {
+	return newTestAuthConf(nil, callback)
 }
 
-func newTestAuthConf(conf Config, callback Do) *Auth {
+func newTestAuthConf(confBuilder *ConfigBuilder, callback Do) (*Auth, error) {
+	if confBuilder == nil {
+		confBuilder = newTestConfig()
+	}
+	conf := *confBuilder.Build()
 	conf.DefaultClient = newTestClient(callback)
-	auth := NewAuth(conf)
-	return auth
+	return NewAuth(conf)
 }
 
 func TestEnvVariableProjectID(t *testing.T) {
@@ -38,82 +43,107 @@ func TestEnvVariableProjectID(t *testing.T) {
 		require.NoError(t, err)
 	}()
 	require.NoError(t, err)
-	a := NewAuth(Config{})
-	err = a.prepareClient()
+	a, err := NewAuth(Config{})
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedProjectID, a.conf.ProjectID)
 }
 
+func TestEnvVariablePublicKey(t *testing.T) {
+	expectedPublicKey := "test"
+	err := os.Setenv(environmentVariablePublicKey, expectedPublicKey)
+	defer func() {
+		err = os.Setenv(environmentVariablePublicKey, "")
+		require.NoError(t, err)
+	}()
+	require.NoError(t, err)
+	a, err := newTestAuth(nil)
+	require.NoError(t, err)
+	assert.EqualValues(t, expectedPublicKey, a.conf.PublicKey)
+}
+
 func TestEmptyProjectID(t *testing.T) {
-	a := NewAuth(Config{})
-	err := a.prepareClient()
+	_, err := NewAuth(Config{})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "project id is missing")
 }
 
+func TestVerifyDeliveryMethodEmptyIdentifier(t *testing.T) {
+	a, err := newTestAuth(nil)
+	require.NoError(t, err)
+	err = a.verifyDeliveryMethod(MethodEmail, "")
+	assert.EqualValues(t, badRequestErrorCode, err.(*WebError).Code)
+}
+
 func TestInvalidEmailSignInEmail(t *testing.T) {
 	email := "notavalidemail"
-	a := newTestAuth(nil)
-	err := a.SignInOTP(MethodEmail, email)
+	a, err := newTestAuth(nil)
+	require.NoError(t, err)
+	err = a.SignInOTP(MethodEmail, email)
 	require.Error(t, err)
 	assert.EqualValues(t, badRequestErrorCode, err.(*WebError).Code)
 }
 
 func TestInvalidPhoneSignInSMS(t *testing.T) {
 	phone := "thisisemail@af.com"
-	a := newTestAuth(nil)
-	err := a.SignInOTP(MethodSMS, phone)
+	a, err := newTestAuth(nil)
+	require.NoError(t, err)
+	err = a.SignInOTP(MethodSMS, phone)
 	require.Error(t, err)
 	assert.EqualValues(t, badRequestErrorCode, err.(*WebError).Code)
 }
 
 func TestInvalidPhoneSignInWhatsApp(t *testing.T) {
 	phone := "thisisemail@af.com"
-	a := newTestAuth(nil)
-	err := a.SignInOTP(MethodWhatsApp, phone)
+	a, err := newTestAuth(nil)
+	require.NoError(t, err)
+	err = a.SignInOTP(MethodWhatsApp, phone)
 	require.Error(t, err)
 	assert.EqualValues(t, badRequestErrorCode, err.(*WebError).Code)
 }
 
 func TestValidEmailSignInEmail(t *testing.T) {
 	email := "test@email.com"
-	a := newTestAuth(DoOk(func(r *http.Request) {
+	a, err := newTestAuth(DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeSignInURL(MethodEmail), r.URL.RequestURI())
 		body, err := readBody(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, email, body["email"])
 	}))
-	err := a.SignInOTP(MethodEmail, email)
+	require.NoError(t, err)
+	err = a.SignInOTP(MethodEmail, email)
 	require.NoError(t, err)
 }
 
 func TestInvalidPhoneSignUpSMS(t *testing.T) {
 	phone := "thisisemail@af.com"
-	a := newTestAuth(nil)
-	err := a.SignUpOTP(MethodSMS, phone, &User{Username: "test"})
+	a, err := newTestAuth(nil)
+	require.NoError(t, err)
+	err = a.SignUpOTP(MethodSMS, phone, &User{Username: "test"})
 	require.Error(t, err)
 	assert.EqualValues(t, badRequestErrorCode, err.(*WebError).Code)
 }
 
 func TestInvalidPhoneSignUpWhatsApp(t *testing.T) {
 	phone := "thisisemail@af.com"
-	a := newTestAuth(nil)
-	err := a.SignUpOTP(MethodSMS, phone, &User{Username: "test"})
+	a, err := newTestAuth(nil)
+	require.NoError(t, err)
+	err = a.SignUpOTP(MethodSMS, phone, &User{Username: "test"})
 	require.Error(t, err)
 	assert.EqualValues(t, badRequestErrorCode, err.(*WebError).Code)
 }
 
 func TestInvalidEmailSignUpEmail(t *testing.T) {
 	email := "943248329844"
-	a := newTestAuth(nil)
-	err := a.SignUpOTP(MethodEmail, email, &User{Username: "test"})
+	a, err := newTestAuth(nil)
+	require.NoError(t, err)
+	err = a.SignUpOTP(MethodEmail, email, &User{Username: "test"})
 	require.Error(t, err)
 	assert.EqualValues(t, badRequestErrorCode, err.(*WebError).Code)
 }
 
 func TestSignUpEmail(t *testing.T) {
 	email := "test@email.com"
-	a := newTestAuth(DoOk(func(r *http.Request) {
+	a, err := newTestAuth(DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeSignUpURL(MethodEmail), r.URL.RequestURI())
 
 		m, err := readBody(r)
@@ -121,13 +151,14 @@ func TestSignUpEmail(t *testing.T) {
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["username"])
 	}))
-	err := a.SignUpOTP(MethodEmail, email, &User{Username: "test"})
+	require.NoError(t, err)
+	err = a.SignUpOTP(MethodEmail, email, &User{Username: "test"})
 	require.NoError(t, err)
 }
 
 func TestSignUpSMS(t *testing.T) {
 	phone := "943248329844"
-	a := newTestAuth(DoOk(func(r *http.Request) {
+	a, err := newTestAuth(DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeSignUpURL(MethodSMS), r.URL.RequestURI())
 
 		body, err := readBody(r)
@@ -135,13 +166,14 @@ func TestSignUpSMS(t *testing.T) {
 		assert.EqualValues(t, phone, body["phone"])
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["username"])
 	}))
-	err := a.SignUpOTP(MethodSMS, phone, &User{Username: "test"})
+	require.NoError(t, err)
+	err = a.SignUpOTP(MethodSMS, phone, &User{Username: "test"})
 	require.NoError(t, err)
 }
 
 func TestSignUpWhatsApp(t *testing.T) {
 	phone := "943248329844"
-	a := newTestAuth(DoOk(func(r *http.Request) {
+	a, err := newTestAuth(DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeSignUpURL(MethodWhatsApp), r.URL.RequestURI())
 
 		body, err := readBody(r)
@@ -149,37 +181,69 @@ func TestSignUpWhatsApp(t *testing.T) {
 		assert.EqualValues(t, phone, body["whatsapp"])
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["username"])
 	}))
-	err := a.SignUpOTP(MethodWhatsApp, phone, &User{Username: "test"})
+	require.NoError(t, err)
+	err = a.SignUpOTP(MethodWhatsApp, phone, &User{Username: "test"})
 	require.NoError(t, err)
 }
 
 func TestInvalidEmailVerifyCodeEmail(t *testing.T) {
 	email := "943248329844"
-	a := newTestAuth(nil)
-	_, err := a.VerifyCodeEmail(email, "4444")
+	a, err := newTestAuth(nil)
+	require.NoError(t, err)
+	_, err = a.VerifyCodeEmail(email, "4444")
 	require.Error(t, err)
 	assert.EqualValues(t, badRequestErrorCode, err.(*WebError).Code)
 }
 
 func TestInvalidPhoneVerifyCodeSMS(t *testing.T) {
 	phone := "ahaatest"
-	a := newTestAuth(nil)
-	_, err := a.VerifyCodeSMS(phone, "4444")
+	a, err := newTestAuth(nil)
+	require.NoError(t, err)
+	_, err = a.VerifyCodeSMS(phone, "4444")
 	require.Error(t, err)
 	assert.EqualValues(t, badRequestErrorCode, err.(*WebError).Code)
 }
 
 func TestInvalidVerifyCode(t *testing.T) {
 	email := "a"
-	a := newTestAuth(nil)
-	_, err := a.VerifyCode("", email, "4444")
+	a, err := newTestAuth(nil)
+	require.NoError(t, err)
+	_, err = a.VerifyCode("", email, "4444")
 	require.Error(t, err)
 	assert.EqualValues(t, badRequestErrorCode, err.(*WebError).Code)
 }
 
+func TestVerifyCodeDetectEmail(t *testing.T) {
+	email := "test@test.com"
+	a, err := newTestAuth(DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeVerifyCodeURL(MethodEmail), r.URL.RequestURI())
+
+		body, err := readBody(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, email, body["email"])
+	}))
+	require.NoError(t, err)
+	_, err = a.VerifyCode("", email, "555")
+	require.NoError(t, err)
+}
+
+func TestVerifyCodeDetectPhone(t *testing.T) {
+	phone := "74987539043"
+	a, err := newTestAuth(DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeVerifyCodeURL(MethodSMS), r.URL.RequestURI())
+
+		body, err := readBody(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, body["phone"])
+	}))
+	require.NoError(t, err)
+	_, err = a.VerifyCode("", phone, "555")
+	require.NoError(t, err)
+}
+
 func TestVerifyCodeWithPhone(t *testing.T) {
 	phone := "7753131313"
-	a := newTestAuth(DoOk(func(r *http.Request) {
+	a, err := newTestAuth(DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeVerifyCodeURL(MethodSMS), r.URL.RequestURI())
 
 		body, err := readBody(r)
@@ -187,14 +251,15 @@ func TestVerifyCodeWithPhone(t *testing.T) {
 		assert.EqualValues(t, phone, body["phone"])
 		assert.EqualValues(t, "4444", body["code"])
 	}))
-	_, err := a.VerifyCode(MethodSMS, phone, "4444")
+	require.NoError(t, err)
+	_, err = a.VerifyCode(MethodSMS, phone, "4444")
 	require.NoError(t, err)
 }
 
 func TestVerifyCodeEmail(t *testing.T) {
 	email := "test@email.com"
 	code := "4914"
-	a := newTestAuth(DoOk(func(r *http.Request) {
+	a, err := newTestAuth(DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeVerifyCodeURL(MethodEmail), r.URL.RequestURI())
 
 		body, err := readBody(r)
@@ -202,14 +267,15 @@ func TestVerifyCodeEmail(t *testing.T) {
 		assert.EqualValues(t, email, body["email"])
 		assert.EqualValues(t, code, body["code"])
 	}))
-	_, err := a.VerifyCodeEmail(email, code)
+	require.NoError(t, err)
+	_, err = a.VerifyCodeEmail(email, code)
 	require.Nil(t, err)
 }
 
 func TestVerifyCodeSMS(t *testing.T) {
 	phone := "943248329844"
 	code := "4914"
-	a := newTestAuth(DoOk(func(r *http.Request) {
+	a, err := newTestAuth(DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeVerifyCodeURL(MethodSMS), r.URL.RequestURI())
 
 		body, err := readBody(r)
@@ -217,14 +283,15 @@ func TestVerifyCodeSMS(t *testing.T) {
 		assert.EqualValues(t, phone, body["phone"])
 		assert.EqualValues(t, code, body["code"])
 	}))
-	_, err := a.VerifyCodeSMS(phone, code)
+	require.NoError(t, err)
+	_, err = a.VerifyCodeSMS(phone, code)
 	require.NoError(t, err)
 }
 
 func TestVerifyCodeWhatsApp(t *testing.T) {
 	phone := "943248329844"
 	code := "4914"
-	a := newTestAuth(DoOk(func(r *http.Request) {
+	a, err := newTestAuth(DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeVerifyCodeURL(MethodWhatsApp), r.URL.RequestURI())
 
 		body, err := readBody(r)
@@ -232,53 +299,99 @@ func TestVerifyCodeWhatsApp(t *testing.T) {
 		assert.EqualValues(t, phone, body["whatsapp"])
 		assert.EqualValues(t, code, body["code"])
 	}))
-	_, err := a.VerifyCodeWhatsApp(phone, code)
+	require.NoError(t, err)
+	_, err = a.VerifyCodeWhatsApp(phone, code)
 	require.NoError(t, err)
 }
 
 func TestAuthDefaultURL(t *testing.T) {
 	url := "http://test.com"
-	a := newTestAuthConf(Config{ProjectID: "a", DefaultURL: url}, DoOk(func(r *http.Request) {
+	a, err := newTestAuthConf(newTestConfig().WithDefaultURL(url), DoOk(func(r *http.Request) {
 		assert.Contains(t, r.URL.String(), url)
 	}))
-	_, err := a.VerifyCodeWhatsApp("4444", "444")
+	require.NoError(t, err)
+	_, err = a.VerifyCodeWhatsApp("4444", "444")
 	require.NoError(t, err)
 }
 
-var (
-	jwtTokenValid   = `eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjE5ODEzOTgxMTF9.GQ3nLYT4XWZWezJ1tRV6ET0ibRvpEipeo6RCuaCQBdP67yu98vtmUvusBElDYVzRxGRtw5d20HICyo0_3Ekb0euUP3iTupgS3EU1DJMeAaJQgOwhdQnQcJFkOpASLKWh`
-	jwtTokenExpired = `eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjMyYjNkYTUyNzdiMTQyYzdlMjRmZGYwZWYwOWUwOTE5In0.eyJleHAiOjExODEzOTgxMTF9.EdetpQro-frJV1St1mWGygRSzxf6Bg01NNR_Ipwy_CAQyGDmIQ6ITGQ620hfmjW5HDtZ9-0k7AZnwoLnb709QQgbHMFxlDpIOwtFIAJuU-CqaBDwsNWA1f1RNyPpLxop`
-	publicKey       = `{
-		"crv": "P-384",
-		"key_ops": [
-		  "verify"
-		],
-		"kty": "EC",
-		"x": "Zd7Unk3ijm3MKXt9vbHR02Y1zX-cpXu6H1_wXRtMl3e39TqeOJ3XnJCxSfE5vjMX",
-		"y": "Cv8AgXWpMkMFWvLGhJ_Gsb8LmapAtEurnBsFI4CAG42yUGDfkZ_xjFXPbYssJl7U",
-		"alg": "ES384",
-		"use": "sig",
-		"kid": "32b3da5277b142c7e24fdf0ef09e0919"
-	  }`
-)
-
 func TestEmptyPublicKey(t *testing.T) {
-	a := newTestAuthConf(Config{ProjectID: "a"}, DoOk(nil))
-	ok, err := a.ValidateSession("test")
+	a, err := newTestAuthConf(nil, Do(func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("[]"))}, nil
+	}))
+	require.NoError(t, err)
+	ok, err := a.ValidateSession(jwtTokenExpired)
 	require.False(t, ok)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "public key was not initialized")
+	assert.Contains(t, err.Error(), "no public key was found")
+}
+
+func TestErrorFetchPublicKey(t *testing.T) {
+	a, err := newTestAuthConf(nil, Do(func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusInternalServerError, Body: io.NopCloser(strings.NewReader("what"))}, nil
+	}))
+	require.NoError(t, err)
+	ok, err := a.ValidateSession(jwtTokenExpired)
+	require.False(t, ok)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "no public key was found")
 }
 
 func TestValidateSession(t *testing.T) {
-	a := newTestAuthConf(Config{ProjectID: "a", PublicKey: publicKey}, DoOk(nil))
+	a, err := newTestAuthConf(newTestConfig().WithValidKey(), DoOk(nil))
+	require.NoError(t, err)
 	ok, err := a.ValidateSession(jwtTokenValid)
+	require.NoError(t, err)
+	require.True(t, ok)
+	ok, err = a.ValidateSession(jwtTokenValid)
 	require.NoError(t, err)
 	require.True(t, ok)
 }
 
+func TestValidateSessionFetchKeyCalledOnce(t *testing.T) {
+	count := 0
+	a, err := newTestAuthConf(nil, Do(func(r *http.Request) (*http.Response, error) {
+		count++
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", publicKey)))}, nil
+	}))
+	require.NoError(t, err)
+	ok, err := a.ValidateSession(jwtTokenValid)
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.EqualValues(t, 1, count)
+	ok, err = a.ValidateSession(jwtTokenValid)
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.EqualValues(t, 1, count)
+}
+
+func TestValidateSessionFetchKeyMalformed(t *testing.T) {
+	a, err := newTestAuthConf(nil, Do(func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", unknownPublicKey)))}, nil
+	}))
+	require.NoError(t, err)
+	ok, err := a.ValidateSession(jwtTokenValid)
+	require.Error(t, err)
+	assert.EqualValues(t, badRequestErrorCode, err.(*WebError).Code)
+	require.False(t, ok)
+}
+
+func TestValidateSessionFailWithInvalidKey(t *testing.T) {
+	count := 0
+	a, err := newTestAuthConf(newTestConfig().WithUnkownKey(), Do(func(r *http.Request) (*http.Response, error) {
+		count++
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", publicKey)))}, nil
+	}))
+	require.NoError(t, err)
+	ok, err := a.ValidateSession(jwtTokenValid)
+	require.Error(t, err)
+	assert.EqualValues(t, badRequestErrorCode, err.(*WebError).Code)
+	require.False(t, ok)
+	require.Zero(t, count)
+}
+
 func TestValidateSessionRequest(t *testing.T) {
-	a := newTestAuthConf(Config{ProjectID: "a", PublicKey: publicKey}, DoOk(nil))
+	a, err := newTestAuthConf(newTestConfig().WithValidKey(), DoOk(nil))
+	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: CookieDefaultName, Value: jwtTokenValid})
 	ok, err := a.ValidateSessionRequest(request)
@@ -287,7 +400,8 @@ func TestValidateSessionRequest(t *testing.T) {
 }
 
 func TestValidateSessionRequestNoCookie(t *testing.T) {
-	a := newTestAuthConf(Config{ProjectID: "a", PublicKey: publicKey}, DoOk(nil))
+	a, err := newTestAuthConf(newTestConfig().WithValidKey(), DoOk(nil))
+	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	ok, err := a.ValidateSessionRequest(request)
 	require.Error(t, err)
@@ -295,8 +409,18 @@ func TestValidateSessionRequestNoCookie(t *testing.T) {
 }
 
 func TestValidateSessionExpired(t *testing.T) {
-	a := newTestAuthConf(Config{ProjectID: "a", PublicKey: publicKey}, DoOk(nil))
+	a, err := newTestAuthConf(newTestConfig().WithValidKey(), DoOk(nil))
+	require.NoError(t, err)
 	ok, err := a.ValidateSession(jwtTokenExpired)
+	require.Error(t, err)
+	require.False(t, ok)
+	assert.EqualValues(t, badRequestErrorCode, err.(*WebError).Code)
+}
+
+func TestValidateSessionNotYet(t *testing.T) {
+	a, err := newTestAuthConf(newTestConfig().WithValidKey(), DoOk(nil))
+	require.NoError(t, err)
+	ok, err := a.ValidateSession(jwtTokenNotYet)
 	require.Error(t, err)
 	require.False(t, ok)
 	assert.EqualValues(t, badRequestErrorCode, err.(*WebError).Code)
