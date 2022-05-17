@@ -15,15 +15,14 @@ import (
 var client auth.IAuth
 
 func main() {
+	log.Println("starting server")
 	var err error
-	log.Println("server starting")
 	router := mux.NewRouter()
-	client, err = auth.NewAuth(auth.Config{LogLevel: auth.LogDebug, DefaultURL: "http://localhost:8191"})
+	client, err = auth.NewAuth(auth.Config{LogLevel: auth.LogDebug, DefaultURL: "http://localhost:8080"})
 	if err != nil {
 		log.Println("failed to init authentication" + err.Error()) 
 		os.Exit(1)
 	}
-
 	router.Use(loggingMiddleware)
 	router.HandleFunc("/signin", handleSignIn).Methods(http.MethodGet)
 	router.HandleFunc("/signup", handleSignUp).Methods(http.MethodGet)
@@ -50,7 +49,7 @@ func main() {
     if err := server.Shutdown(ctx); err != nil {
 		log.Println("server error " + err.Error())
     }
-	log.Println("server stopped")
+	log.Println("stopping server")
 }
 
 func handleIsHealthy(w http.ResponseWriter, r *http.Request) {
