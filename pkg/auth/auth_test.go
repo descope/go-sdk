@@ -48,6 +48,19 @@ func TestEnvVariableProjectID(t *testing.T) {
 	assert.EqualValues(t, expectedProjectID, a.conf.ProjectID)
 }
 
+func TestEnvVariablePublicKey(t *testing.T) {
+	expectedPublicKey := "test"
+	err := os.Setenv(environmentVariablePublicKey, expectedPublicKey)
+	defer func() {
+		err = os.Setenv(environmentVariablePublicKey, "")
+		require.NoError(t, err)
+	}()
+	require.NoError(t, err)
+	a, err := newTestAuth(nil)
+	require.NoError(t, err)
+	assert.EqualValues(t, expectedPublicKey, a.conf.PublicKey)
+}
+
 func TestEmptyProjectID(t *testing.T) {
 	_, err := NewAuth(Config{})
 	require.Error(t, err)

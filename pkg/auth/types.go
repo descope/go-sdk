@@ -39,7 +39,7 @@ func (c *Config) LogInfo(format string, args ...interface{}) {
 	c.doLog(LogInfo, format, args...)
 }
 
-func (c *Config) GetProjectID() string {
+func (c *Config) setProjectID() string {
 	if c.ProjectID == "" {
 		if projectID := GetProjectIDEnvVariable(); projectID != "" {
 			c.ProjectID = projectID
@@ -50,7 +50,7 @@ func (c *Config) GetProjectID() string {
 	return c.ProjectID
 }
 
-func (c *Config) GetPublicKey() string {
+func (c *Config) setPublicKey() string {
 	if c.PublicKey == "" {
 		if publicKey := GetPublicKeyEnvVariable(); publicKey != "" {
 			c.PublicKey = publicKey

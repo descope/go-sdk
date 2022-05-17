@@ -2,7 +2,6 @@ package auth
 
 import (
 	"context"
-	"fmt"
 	"path"
 
 	"github.com/lestrrat-go/jwx/v2/jwa"
@@ -21,7 +20,7 @@ func newProvider(client *client, conf *Config) *provider {
 	return &provider{client: client, conf: conf, keySet: make(map[string]jwk.Key)}
 }
 
-func (p *provider) isPublicKeyExist() bool {
+func (p *provider) publicKeyExists() bool {
 	return len(p.keySet) > 0 || p.knownKey != nil
 }
 
@@ -33,14 +32,14 @@ func (p *provider) selectKey(sink jws.KeySink, key jwk.Key) error {
 	if v := key.Algorithm(); v.String() != "" {
 		var alg jwa.SignatureAlgorithm
 		if err := alg.Accept(v); err != nil {
-			return fmt.Errorf(`invalid signature algorithm %s: %w`, key.Algorithm(), err)
+			return NewValidationError(`invalid signature algorithm %s: %s`, key.Algorithm(), err)
 		}
 
 		sink.Key(alg, key)
 		return nil
 	}
 
-	return fmt.Errorf("algorithm in the message does not match")
+	return NewValidationError("algorithm in the message does not match")
 }
 
 func (p *provider) requestKeys() error {
@@ -78,15 +77,13 @@ func (p *provider) requestKeys() error {
 	return nil
 }
 
-func (p *provider) getAuthenticationKey() (jwk.Key, error) {
+func (p *provider) providedPublicKey() (jwk.Key, error) {
 	if p.knownKey != nil {
 		return p.knownKey, nil
 	}
 
-	existingPublicKey := p.conf.GetPublicKey()
-
-	if existingPublicKey != "" {
-		jk, err := jwk.ParseKey([]byte(existingPublicKey))
+	if p.conf.PublicKey != "" {
+		jk, err := jwk.ParseKey([]byte(p.conf.PublicKey))
 		if err != nil {
 			p.conf.LogDebug("unable to parse key")
 			return nil, err
@@ -98,7 +95,7 @@ func (p *provider) getAuthenticationKey() (jwk.Key, error) {
 }
 
 func (p *provider) findKey(kid string) (jwk.Key, error) {
-	key, err := p.getAuthenticationKey()
+	key, err := p.providedPublicKey()
 	if err != nil {
 		return nil, err
 	}
@@ -119,9 +116,6 @@ func (p *provider) findKey(kid string) (jwk.Key, error) {
 
 func (p *provider) FetchKeys(_ context.Context, sink jws.KeySink, sig *jws.Signature, _ *jws.Message) error {
 	wantedKid := sig.ProtectedHeaders().KeyID()
-	if wantedKid == "" {
-		wantedKid = p.conf.GetProjectID()
-	}
 	v, ok := p.keySet[wantedKid]
 	if !ok {
 		p.conf.LogDebug("key was not found, looking for key id [%s]", wantedKid)

@@ -2,7 +2,6 @@ package auth
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"path"
@@ -26,11 +25,16 @@ func NewAuth(conf Config) (*Auth, error) {
 	}
 
 	authenticationObject := &Auth{conf: &conf}
-	if authenticationObject.conf.GetProjectID() == "" {
-		return nil, fmt.Errorf("project id is missing. Make sure to add it in the configuration or the environment variable %s", environmentVariableProjectID)
+	if authenticationObject.conf.setProjectID() == "" {
+		return nil, NewValidationError("project id is missing. Make sure to add it in the Config struct or the environment variable \"%s\"", environmentVariableProjectID)
+	}
+	if authenticationObject.conf.setPublicKey() == "" {
+		conf.LogDebug("provided public key is not set")
+	} else {
+		conf.LogInfo("provided public key is set, forcing only provided public key validation")
 	}
 
-	c := authenticationObject.getClient()
+	c := authenticationObject.prepareClient()
 	authenticationObject.publicKeysProvider = newProvider(c, authenticationObject.conf)
 	return authenticationObject, nil
 }
@@ -40,7 +44,7 @@ func (auth *Auth) SignInOTP(method DeliveryMethod, identifier string) error {
 		return err
 	}
 
-	_, err := auth.getClient().DoPostRequest(composeSignInURL(method), newAuthenticationRequestBody(method, identifier), nil)
+	_, err := auth.client.DoPostRequest(composeSignInURL(method), newAuthenticationRequestBody(method, identifier), nil)
 	return err
 }
 
@@ -49,7 +53,7 @@ func (auth *Auth) SignUpOTP(method DeliveryMethod, identifier string, user *User
 		return err
 	}
 
-	_, err := auth.getClient().DoPostRequest(composeSignUpURL(method), newAuthenticationSignInRequestBody(method, identifier, user), nil)
+	_, err := auth.client.DoPostRequest(composeSignUpURL(method), newAuthenticationSignInRequestBody(method, identifier, user), nil)
 	return err
 }
 
@@ -70,7 +74,7 @@ func (auth *Auth) VerifyCode(method DeliveryMethod, identifier string, code stri
 		return nil, err
 	}
 
-	httpResponse, err := auth.getClient().DoPostRequest(composeVerifyCodeURL(method), newAuthenticationVerifyRequestBody(method, identifier, code), nil)
+	httpResponse, err := auth.client.DoPostRequest(composeVerifyCodeURL(method), newAuthenticationVerifyRequestBody(method, identifier, code), nil)
 	cookies := []*http.Cookie{}
 	if httpResponse != nil {
 		cookies = httpResponse.res.Cookies()
@@ -101,7 +105,7 @@ func (auth *Auth) ValidateSessionRequest(r *http.Request) (bool, error) {
 
 func (auth *Auth) ValidateSession(signedToken string) (bool, error) {
 	_, err := jwt.ParseString(signedToken, jwt.WithKeyProvider(auth.publicKeysProvider))
-	if !auth.publicKeysProvider.isPublicKeyExist() {
+	if !auth.publicKeysProvider.publicKeyExists() {
 		return false, NewNoPublicKeyError()
 	}
 
@@ -143,7 +147,7 @@ func (*Auth) verifyDeliveryMethod(method DeliveryMethod, identifier string) *Web
 	return nil
 }
 
-func (auth *Auth) getClient() *client {
+func (auth *Auth) prepareClient() *client {
 	if auth.client == nil {
 		auth.client = newClient(auth.conf)
 	}
