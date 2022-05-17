@@ -31,6 +31,10 @@ func NewNoPublicKeyError() *WebError {
 	return NewError(badRequestErrorCode, "no public key was found for this project")
 }
 
+func NewPublicKeyDoesNotMatchError() *WebError {
+	return NewError(badRequestErrorCode, "public key found is not compatible for given tokens")
+}
+
 func (e *WebError) Error() string {
 	return fmt.Sprintf("[%s] %s", e.Code, e.Message)
 }

@@ -30,7 +30,7 @@ func newTestAuthConf(confBuilder *ConfigBuilder, callback Do) (*Auth, error) {
 	if confBuilder == nil {
 		confBuilder = newTestConfig()
 	}
-	conf := confBuilder.Build()
+	conf := *confBuilder.Build()
 	conf.DefaultClient = newTestClient(callback)
 	return NewAuth(conf)
 }
@@ -200,6 +200,34 @@ func TestInvalidVerifyCode(t *testing.T) {
 	assert.EqualValues(t, badRequestErrorCode, err.(*WebError).Code)
 }
 
+func TestVerifyCodeDetectEmail(t *testing.T) {
+	email := "test@test.com"
+	a, err := newTestAuth(DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeVerifyCodeURL(MethodEmail), r.URL.RequestURI())
+
+		body, err := readBody(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, email, body["email"])
+	}))
+	require.NoError(t, err)
+	_, err = a.VerifyCode("", email, "555")
+	require.NoError(t, err)
+}
+
+func TestVerifyCodeDetectPhone(t *testing.T) {
+	phone := "74987539043"
+	a, err := newTestAuth(DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeVerifyCodeURL(MethodSMS), r.URL.RequestURI())
+
+		body, err := readBody(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, body["phone"])
+	}))
+	require.NoError(t, err)
+	_, err = a.VerifyCode("", phone, "555")
+	require.NoError(t, err)
+}
+
 func TestVerifyCodeWithPhone(t *testing.T) {
 	phone := "7753131313"
 	a, err := newTestAuth(DoOk(func(r *http.Request) {
@@ -273,40 +301,20 @@ func TestAuthDefaultURL(t *testing.T) {
 	require.NoError(t, err)
 }
 
-var (
-	jwtTokenValid    = `eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjBhZDk5ODY5ZjJkNGU1N2YzZjcxYzY4MzAwYmE4NGZhIn0.eyJleHAiOjE5ODEzOTgxMTF9.MHSHryNl0oU3ZBjWc0pFIBKlXHcXU0vcoO3PpRg8MIQ8M14k4sTsUqJfxXCTbxh24YKE6w0XFBh9B4L7vjIY7iVZPM44LXNEzUFyyX3m6eN_iAavGKPKdKnao2ayNeu1`
-	jwtTokenExpired  = `eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjBhZDk5ODY5ZjJkNGU1N2YzZjcxYzY4MzAwYmE4NGZhIn0.eyJleHAiOjExODEzOTgxMTF9.Qbi7klMrWKSM2z89AtMyDk_lRYnxxz0WApEO5iPikEcAzemmJyR_7b1IvHVxR4uQgCZrH46anUD0aTtPG7k3PpMjP2o2pDHWgY0mWlxW0lDlMqkrvZtBPC7qa_NJTHFl`
-	jwtTokenNotYet   = `eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzM4NCIsImtpZCI6IjBhZDk5ODY5ZjJkNGU1N2YzZjcxYzY4MzAwYmE4NGZhIn0.eyJleHAiOjE5ODEzOTgxMTEsIm5iZiI6MTk4MTM5ODExMX0.imZHharGl5zu3pVcFdzpP78Zp_Quv4bOqA1v21uhgtTpAMjppHjgLZufCOmxyzNHawSfQRopMDI0jTMoXZtdmtJZldlsxJ--Yfl9o3Xj1ooaFNU5ipLsnSCJqkXpgL4i`
-	unknownPublicKey = `{
-		"crv": "P-384",
-		"key_ops": [
-		  "verify"
-		],
-		"kty": "EC",
-		"x": "Zd7Unk3ijm3MKXt9vbHR02Y1zX-cpXu6H1_wXRtMl3e39TqeOJ3XnJCxSfE5vjMX",
-		"y": "Cv8AgXWpMkMFWvLGhJ_Gsb8LmapAtEurnBsFI4CAG42yUGDfkZ_xjFXPbYssJl7U",
-		"alg": "ES384",
-		"use": "sig",
-		"kid": "32b3da5277b142c7e24fdf0ef09e0919"
-	  }`
-	publicKey = `{
-		"crv": "P-384",
-		"d": "FfTHqwIAM3OMj808FlAL59OkwdXnfmc8FAXtTqyKnfu023kXHtDrAjEwMEBnOC3O",
-		"key_ops": [
-		  "sign"
-		],
-		"kty": "EC",
-		"x": "c9ZzWUHmgUpCiDMpxaIhPxORaFqMx_HB6DQUmFM0M1GFCdxoaZwAPv2KONgoaRxZ",
-		"y": "zTt0paDnsE98Sd7erCVvLWLGGnGcjbOVy5C3m6AI116hUV5JeFAspBe_uDTnAfBD",
-		"alg": "ES384",
-		"use": "sig",
-		"kid": "0ad99869f2d4e57f3f71c68300ba84fa"
-	  }`
-)
-
 func TestEmptyPublicKey(t *testing.T) {
 	a, err := newTestAuthConf(nil, Do(func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("[]"))}, nil
+	}))
+	require.NoError(t, err)
+	ok, err := a.ValidateSession(jwtTokenExpired)
+	require.False(t, ok)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "no public key was found")
+}
+
+func TestErrorFetchPublicKey(t *testing.T) {
+	a, err := newTestAuthConf(nil, Do(func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusInternalServerError, Body: io.NopCloser(strings.NewReader("what"))}, nil
 	}))
 	require.NoError(t, err)
 	ok, err := a.ValidateSession(jwtTokenExpired)
@@ -354,7 +362,7 @@ func TestValidateSessionFetchKeyMalformed(t *testing.T) {
 	require.False(t, ok)
 }
 
-func TestValidateSessionFetchKeyWithExisting(t *testing.T) {
+func TestValidateSessionFailWithInvalidKey(t *testing.T) {
 	count := 0
 	a, err := newTestAuthConf(newTestConfig().WithUnkownKey(), Do(func(r *http.Request) (*http.Response, error) {
 		count++
@@ -362,22 +370,10 @@ func TestValidateSessionFetchKeyWithExisting(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	ok, err := a.ValidateSession(jwtTokenValid)
-	require.NoError(t, err)
-	require.True(t, ok)
-	require.EqualValues(t, 1, count)
-}
-
-func TestValidateSessionFetchKeyWithInvalidKey(t *testing.T) {
-	count := 0
-	a, err := newTestAuthConf(newTestConfig().WithInvalidKey(), Do(func(r *http.Request) (*http.Response, error) {
-		count++
-		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", publicKey)))}, nil
-	}))
-	require.NoError(t, err)
-	ok, err := a.ValidateSession(jwtTokenValid)
-	require.NoError(t, err)
-	require.True(t, ok)
-	require.EqualValues(t, 1, count)
+	require.Error(t, err)
+	assert.EqualValues(t, badRequestErrorCode, err.(*WebError).Code)
+	require.False(t, ok)
+	require.Zero(t, count)
 }
 
 func TestValidateSessionRequest(t *testing.T) {
@@ -424,46 +420,4 @@ func readBody(r *http.Request) (m map[string]interface{}, err error) {
 	}
 	err = json.Unmarshal(res, &m)
 	return
-}
-
-type ConfigBuilder struct {
-	conf *Config
-}
-
-func newTestConfig() *ConfigBuilder {
-	return &ConfigBuilder{conf: &Config{ProjectID: "a"}}
-}
-
-func (cb *ConfigBuilder) WithInvalidKey() *ConfigBuilder {
-	cb.conf.PublicKey = `{"test": "test"}`
-	return cb
-}
-
-func (cb *ConfigBuilder) WithValidKey() *ConfigBuilder {
-	cb.conf.PublicKey = publicKey
-	return cb
-}
-
-func (cb *ConfigBuilder) WithProjectID(id string) *ConfigBuilder {
-	cb.conf.ProjectID = id
-	return cb
-}
-
-func (cb *ConfigBuilder) WithDefaultURL(url string) *ConfigBuilder {
-	cb.conf.DefaultURL = url
-	return cb
-}
-
-func (cb *ConfigBuilder) WithDebug() *ConfigBuilder {
-	cb.conf.LogLevel = LogDebug
-	return cb
-}
-
-func (cb *ConfigBuilder) WithUnkownKey() *ConfigBuilder {
-	cb.conf.PublicKey = unknownPublicKey
-	return cb
-}
-
-func (cb *ConfigBuilder) Build() Config {
-	return *cb.conf
 }

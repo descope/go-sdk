@@ -73,19 +73,14 @@ func (p *provider) requestKeys() error {
 		tempKeySet[pk.KeyID()] = pk
 	}
 
-	if p.knownKey != nil {
-		p.conf.LogDebug("adding existing key from configurations")
-		tempKeySet[p.knownKey.KeyID()] = p.knownKey
-	}
-
 	p.conf.LogDebug("refresh keys set with %d key(s)", len(tempKeySet))
 	p.keySet = tempKeySet
 	return nil
 }
 
-func (p *provider) getAuthenticationKey() (jwk.Key, bool) {
+func (p *provider) getAuthenticationKey() (jwk.Key, error) {
 	if p.knownKey != nil {
-		return p.knownKey, true
+		return p.knownKey, nil
 	}
 
 	existingPublicKey := p.conf.GetPublicKey()
@@ -94,17 +89,24 @@ func (p *provider) getAuthenticationKey() (jwk.Key, bool) {
 		jk, err := jwk.ParseKey([]byte(existingPublicKey))
 		if err != nil {
 			p.conf.LogDebug("unable to parse key")
-			return nil, false
+			return nil, err
 		}
 		p.knownKey, _ = jk.PublicKey()
-		return p.knownKey, true
+		return p.knownKey, nil
 	}
-	return nil, false
+	return nil, nil
 }
 
 func (p *provider) findKey(kid string) (jwk.Key, error) {
-	if key, ok := p.getAuthenticationKey(); ok && key.KeyID() == kid {
-		return key, nil
+	key, err := p.getAuthenticationKey()
+	if err != nil {
+		return nil, err
+	}
+	if key != nil {
+		if key.KeyID() == kid {
+			return key, nil
+		}
+		return nil, NewPublicKeyDoesNotMatchError()
 	}
 
 	if err := p.requestKeys(); err != nil {

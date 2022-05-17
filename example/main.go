@@ -50,7 +50,7 @@ func main() {
     if err := server.Shutdown(ctx); err != nil {
 		log.Println("server error " + err.Error())
     }
-	log.Println("server stopping")
+	log.Println("server stopped")
 }
 
 func handleIsHealthy(w http.ResponseWriter, r *http.Request) {

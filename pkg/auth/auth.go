@@ -25,14 +25,14 @@ func NewAuth(conf Config) (*Auth, error) {
 		conf.DefaultURL = defaultURL
 	}
 
-	auth := &Auth{conf: &conf}
-	if auth.conf.GetProjectID() == "" {
+	authenticationObject := &Auth{conf: &conf}
+	if authenticationObject.conf.GetProjectID() == "" {
 		return nil, fmt.Errorf("project id is missing. Make sure to add it in the configuration or the environment variable %s", environmentVariableProjectID)
 	}
 
-	c := auth.getClient()
-	auth.publicKeysProvider = newProvider(c, auth.conf)
-	return auth, nil
+	c := authenticationObject.getClient()
+	authenticationObject.publicKeysProvider = newProvider(c, authenticationObject.conf)
+	return authenticationObject, nil
 }
 
 func (auth *Auth) SignInOTP(method DeliveryMethod, identifier string) error {
