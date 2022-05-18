@@ -63,9 +63,7 @@ func NewDescopeAPI(config Config) (*API, error) {
 	if config.setProjectID() == "" {
 		return nil, errors.NewValidationError("project id is missing. Make sure to add it in the Config struct or the environment variable \"%s\"", utils.EnvironmentVariableProjectID)
 	}
-	if config.setPublicKey() == "" {
-		logger.LogDebug("provided public key is not set")
-	} else {
+	if config.setPublicKey() != "" {
 		logger.LogInfo("provided public key is set, forcing only provided public key validation")
 	}
 	c := api.NewClient(api.ClientParams{DefaultURL: config.DefaultURL, CustomDefaultHeaders: config.CustomDefaultHeaders, DefaultClient: config.DefaultClient, ProjectID: config.ProjectID})

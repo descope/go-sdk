@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/descope/go-sdk/descope"
+	"github.com/descope/go-sdk/descope/auth"
+	"github.com/descope/go-sdk/descope/logger"
 	"github.com/gorilla/mux"
 )
 
@@ -18,7 +20,7 @@ func main() {
 	log.Println("starting server")
 	var err error
 	router := mux.NewRouter()
-	client, err = descope.NewDescopeAPI(descope.Config{LogLevel: descope.LogDebug, DefaultURL: "http://localhost:8080"})
+	client, err = descope.NewDescopeAPI(descope.Config{LogLevel: logger.LogDebugLevel, DefaultURL: "http://localhost:8080"})
 	
 	if err != nil {
 		log.Println("failed to init authentication" + err.Error()) 
@@ -59,7 +61,7 @@ func handleIsHealthy(w http.ResponseWriter, r *http.Request) {
 
 func handleSignUp(w http.ResponseWriter, r *http.Request) {
 	method, identifier := getMethodAndIdentifier(r)
-	err := client.SignUpOTP(method, identifier, &auth.User{Name: "test"})
+	err := client.Auth.SignUpOTP(method, identifier, &auth.User{Name: "test"})
 	if err != nil {
 		setError(w, err.Error())
 	} else {
@@ -69,7 +71,7 @@ func handleSignUp(w http.ResponseWriter, r *http.Request) {
 
 func handleSignIn(w http.ResponseWriter, r *http.Request) {
 	method, identifier := getMethodAndIdentifier(r)
-	err := client.SignInOTP(method, identifier)
+	err := client.Auth.SignInOTP(method, identifier)
 	if err != nil {
 		setError(w, err.Error())
 	} else {
@@ -102,7 +104,7 @@ func handleVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	cookies, err := client.VerifyCode(method, identifier, code)
+	cookies, err := client.Auth.VerifyCode(method, identifier, code)
 	if err != nil {
 		setError(w, err.Error())
 		return
@@ -123,7 +125,7 @@ func loggingMiddleware(next http.Handler) http.Handler {
 
 func authenticationMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if ok, err := client.ValidateSessionRequest(r); ok {
+		if ok, err := client.Auth.ValidateSessionRequest(r); ok {
 			next.ServeHTTP(w, r)
 		} else {
 			log.Println("request failed because token is invalid = " + err.Error())
