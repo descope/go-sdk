@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+source scripts/lint/lint.sh
+
+run_linter --build-folder "./..."

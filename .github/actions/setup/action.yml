@@ -1,0 +1,26 @@
+name: Setup repo
+description: "Setup repo"
+inputs:
+  go_version:
+    description: "Go version to use"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Set up Go
+      uses: actions/setup-go@v3.0.0
+      with:
+        go-version: ${{ inputs.go_version }}
+
+    - uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+        key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-go-
+
+    - name: Go mod vendor
+      run: go mod vendor
+      shell: bash
