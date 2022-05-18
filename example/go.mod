@@ -6,7 +6,7 @@ require github.com/gorilla/mux v1.8.0
 
 require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
-	github.com/descope/go-sdk v0.0.0-20220518211208-d32fe2f1b9d4
+	github.com/descope/go-sdk v0.0.0-20220518212213-c21abd5507a9
 	github.com/goccy/go-json v0.9.7 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.1 // indirect
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect
