@@ -8,17 +8,18 @@ import (
 	"os/signal"
 	"time"
 
-	"github.com/descope/go-sdk/pkg/auth"
+	"github.com/descope/go-sdk/descope"
 	"github.com/gorilla/mux"
 )
 
-var client auth.IAuth
+var client *descope.API
 
 func main() {
 	log.Println("starting server")
 	var err error
 	router := mux.NewRouter()
-	client, err = auth.NewAuth(auth.Config{LogLevel: auth.LogDebug, DefaultURL: "http://localhost:8080"})
+	client, err = descope.NewDescopeAPI(descope.Config{LogLevel: descope.LogDebug, DefaultURL: "http://localhost:8080"})
+	
 	if err != nil {
 		log.Println("failed to init authentication" + err.Error()) 
 		os.Exit(1)

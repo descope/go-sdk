@@ -1,9 +1,9 @@
-package auth
+package errors
 
 import "fmt"
 
 const (
-	badRequestErrorCode = "E01000"
+	BadRequestErrorCode = "E01000"
 )
 
 type WebError struct {
@@ -20,19 +20,19 @@ func NewError(code, message string) *WebError {
 }
 
 func NewInvalidArgumentError(arg string) *WebError {
-	return NewError(badRequestErrorCode, fmt.Sprintf("invalid argument %s", arg))
+	return NewError(BadRequestErrorCode, fmt.Sprintf("invalid argument %s", arg))
 }
 
 func NewUnauthorizedError() *WebError {
-	return NewError(badRequestErrorCode, "unauthorized access")
+	return NewError(BadRequestErrorCode, "unauthorized access")
 }
 
 func NewNoPublicKeyError() *WebError {
-	return NewError(badRequestErrorCode, "no public key was found for this project")
+	return NewError(BadRequestErrorCode, "no public key was found for this project")
 }
 
 func NewPublicKeyDoesNotMatchError() *WebError {
-	return NewError(badRequestErrorCode, "public key found is not compatible for given tokens")
+	return NewError(BadRequestErrorCode, "public key found is not compatible for given tokens")
 }
 
 func (e *WebError) Error() string {

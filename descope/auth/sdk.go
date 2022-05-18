@@ -39,24 +39,3 @@ type IAuth interface {
 	// returns true upon success or false and/or error upon failure.
 	ValidateSession(token string) (bool, error)
 }
-
-// Conf - Configuration struct describes the configurational data for the authentication methods.
-type Config struct {
-	// ProjectID (required, "") - used to validate and authenticate against descope services.
-	ProjectID string
-	// PublicKey (optional, "") - used to override or implicitly use a dedicated public key in order to decrypt and validate the JWT tokens
-	// during ValidateSession() and ValidateSessionRequest(). If empty, will attempt to fetch all public keys from the specified project id.
-	PublicKey string
-
-	// DefaultURL (optional, "https://descope.com") - override the default base URL used to communicate with descope services.
-	DefaultURL string
-	// DefaultClient (optional, http.DefaultClient) - override the default client used to Do the actual http request.
-	DefaultClient IHttpClient
-	// CustomDefaultHeaders (optional, nil) - add custom headers to all requests used to communicate with descope services.
-	CustomDefaultHeaders map[string]string
-
-	// LogLevel (optional, LogNone) - set a log level (Debug/Info/None) for the sdk to use when logging.
-	LogLevel LogLevel
-	// LoggerInterface (optional, log.Default()) - set the logger instance to use for logging with the sdk.
-	Logger LoggerInterface
-}
