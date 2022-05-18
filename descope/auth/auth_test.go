@@ -10,6 +10,7 @@ import (
 
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/errors"
+	"github.com/descope/go-sdk/descope/tests"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -45,7 +46,7 @@ const (
 	  }`
 )
 
-func DoOk(checks func(*http.Request)) api.Do {
+func DoOk(checks func(*http.Request)) tests.Do {
 	return func(r *http.Request) (*http.Response, error) {
 		if checks != nil {
 			checks(r)
@@ -54,18 +55,18 @@ func DoOk(checks func(*http.Request)) api.Do {
 	}
 }
 
-func newTestAuth(clientParams *api.ClientParams, callback api.Do) (*Auth, error) {
+func newTestAuth(clientParams *api.ClientParams, callback tests.Do) (*Auth, error) {
 	return newTestAuthConf(nil, clientParams, callback)
 }
 
-func newTestAuthConf(authParams *AuthParams, clientParams *api.ClientParams, callback api.Do) (*Auth, error) {
+func newTestAuthConf(authParams *AuthParams, clientParams *api.ClientParams, callback tests.Do) (*Auth, error) {
 	if clientParams == nil {
 		clientParams = &api.ClientParams{}
 	}
 	if authParams == nil {
 		authParams = &AuthParams{ProjectID: "a"}
 	}
-	clientParams.DefaultClient = api.NewTestClient(callback)
+	clientParams.DefaultClient = tests.NewTestClient(callback)
 	return NewAuth(*authParams, api.NewClient(*clientParams))
 }
 
@@ -317,7 +318,7 @@ func TestAuthDefaultURL(t *testing.T) {
 }
 
 func TestEmptyPublicKey(t *testing.T) {
-	a, err := newTestAuth(nil, api.Do(func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, tests.Do(func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("[]"))}, nil
 	}))
 	require.NoError(t, err)
@@ -328,7 +329,7 @@ func TestEmptyPublicKey(t *testing.T) {
 }
 
 func TestErrorFetchPublicKey(t *testing.T) {
-	a, err := newTestAuth(nil, api.Do(func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, tests.Do(func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusInternalServerError, Body: io.NopCloser(strings.NewReader("what"))}, nil
 	}))
 	require.NoError(t, err)
@@ -351,7 +352,7 @@ func TestValidateSession(t *testing.T) {
 
 func TestValidateSessionFetchKeyCalledOnce(t *testing.T) {
 	count := 0
-	a, err := newTestAuth(nil, api.Do(func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, tests.Do(func(r *http.Request) (*http.Response, error) {
 		count++
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", publicKey)))}, nil
 	}))
@@ -367,7 +368,7 @@ func TestValidateSessionFetchKeyCalledOnce(t *testing.T) {
 }
 
 func TestValidateSessionFetchKeyMalformed(t *testing.T) {
-	a, err := newTestAuth(nil, api.Do(func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, tests.Do(func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", unknownPublicKey)))}, nil
 	}))
 	require.NoError(t, err)
@@ -379,7 +380,7 @@ func TestValidateSessionFetchKeyMalformed(t *testing.T) {
 
 func TestValidateSessionFailWithInvalidKey(t *testing.T) {
 	count := 0
-	a, err := newTestAuthConf(&AuthParams{PublicKey: unknownPublicKey}, nil, api.Do(func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuthConf(&AuthParams{PublicKey: unknownPublicKey}, nil, tests.Do(func(r *http.Request) (*http.Response, error) {
 		count++
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", publicKey)))}, nil
 	}))

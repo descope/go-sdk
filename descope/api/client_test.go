@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/descope/go-sdk/descope/errors"
+	"github.com/descope/go-sdk/descope/tests"
 	"github.com/descope/go-sdk/descope/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -17,7 +18,7 @@ import (
 func TestGetRequest(t *testing.T) {
 	projectID := "test"
 	expectedResponse := "hey"
-	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: NewTestClient(func(r *http.Request) (*http.Response, error) {
+	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: tests.NewTestClient(func(r *http.Request) (*http.Response, error) {
 		assert.Nil(t, r.Body)
 		assert.EqualValues(t, "/path", r.URL.Path)
 		actualProject, _, ok := r.BasicAuth()
@@ -40,7 +41,7 @@ func TestPostRequest(t *testing.T) {
 	projectID := "test"
 	outputBytes, err := utils.Marshal(expectedOutput)
 	require.NoError(t, err)
-	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: NewTestClient(func(r *http.Request) (*http.Response, error) {
+	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: tests.NewTestClient(func(r *http.Request) (*http.Response, error) {
 		assert.NotNil(t, r.Body)
 		actualProject, _, ok := r.BasicAuth()
 		assert.True(t, ok)
@@ -59,7 +60,7 @@ func TestPostRequest(t *testing.T) {
 func TestPostCustomHeaders(t *testing.T) {
 	projectID := "test"
 	headers := map[string]string{"test": "a", "test2": "b"}
-	c := NewClient(ClientParams{ProjectID: projectID, CustomDefaultHeaders: headers, DefaultClient: NewTestClient(func(r *http.Request) (*http.Response, error) {
+	c := NewClient(ClientParams{ProjectID: projectID, CustomDefaultHeaders: headers, DefaultClient: tests.NewTestClient(func(r *http.Request) (*http.Response, error) {
 		assert.Nil(t, r.Body)
 		for k, v := range headers {
 			assert.EqualValues(t, v, r.Header.Get(k))
@@ -73,7 +74,7 @@ func TestPostCustomHeaders(t *testing.T) {
 
 func TestPostUnauthorized(t *testing.T) {
 	projectID := "test"
-	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: NewTestClient(func(r *http.Request) (*http.Response, error) {
+	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: tests.NewTestClient(func(r *http.Request) (*http.Response, error) {
 		assert.Nil(t, r.Body)
 		return &http.Response{StatusCode: http.StatusUnauthorized}, nil
 	})})
@@ -86,7 +87,7 @@ func TestPostUnauthorized(t *testing.T) {
 func TestPostWebError(t *testing.T) {
 	projectID := "test"
 	code := "this is an error"
-	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: NewTestClient(func(r *http.Request) (*http.Response, error) {
+	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: tests.NewTestClient(func(r *http.Request) (*http.Response, error) {
 		assert.Nil(t, r.Body)
 		return &http.Response{StatusCode: http.StatusBadRequest, Body: io.NopCloser(strings.NewReader(fmt.Sprintf(`{ "error": "%s" }`, code)))}, nil
 	})})
@@ -99,7 +100,7 @@ func TestPostWebError(t *testing.T) {
 func TestPostError(t *testing.T) {
 	projectID := "test"
 	expectedErr := "error here"
-	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: NewTestClient(func(r *http.Request) (*http.Response, error) {
+	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: tests.NewTestClient(func(r *http.Request) (*http.Response, error) {
 		assert.Nil(t, r.Body)
 		return nil, fmt.Errorf(expectedErr)
 	})})
@@ -112,7 +113,7 @@ func TestPostError(t *testing.T) {
 func TestPostUnknownError(t *testing.T) {
 	projectID := "test"
 	code := "this is an error"
-	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: NewTestClient(func(r *http.Request) (*http.Response, error) {
+	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: tests.NewTestClient(func(r *http.Request) (*http.Response, error) {
 		assert.Nil(t, r.Body)
 		return &http.Response{StatusCode: http.StatusBadRequest, Body: io.NopCloser(strings.NewReader(code))}, nil
 	})})

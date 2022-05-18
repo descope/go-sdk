@@ -23,8 +23,6 @@ type ClientParams struct {
 	ProjectID string
 }
 
-type Do func(r *http.Request) (*http.Response, error)
-
 type IHttpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
@@ -189,19 +187,4 @@ func (c *Client) parseResponseError(response *http.Response) error {
 
 func isResponseOK(response *http.Response) bool {
 	return response.StatusCode >= http.StatusOK && response.StatusCode < http.StatusMultipleChoices
-}
-
-type mockClient struct {
-	callback Do
-}
-
-func NewTestClient(callback Do) *mockClient {
-	return &mockClient{callback: callback}
-}
-
-func (c *mockClient) Do(r *http.Request) (*http.Response, error) {
-	if c.callback == nil {
-		return nil, nil
-	}
-	return c.callback(r)
 }

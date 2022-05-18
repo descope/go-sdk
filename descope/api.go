@@ -52,8 +52,7 @@ func (c *Config) setPublicKey() string {
 }
 
 type API struct {
-	Auth auth.IAuth
-
+	Auth   auth.IAuth
 	config *Config
 }
 
