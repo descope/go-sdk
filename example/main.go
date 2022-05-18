@@ -21,9 +21,9 @@ func main() {
 	var err error
 	router := mux.NewRouter()
 	client, err = descope.NewDescopeAPI(descope.Config{LogLevel: logger.LogDebugLevel, DefaultURL: "http://localhost:8080"})
-	
+
 	if err != nil {
-		log.Println("failed to init authentication" + err.Error()) 
+		log.Println("failed to init authentication" + err.Error())
 		os.Exit(1)
 	}
 	router.Use(loggingMiddleware)
@@ -36,22 +36,22 @@ func main() {
 
 	server := &http.Server{Addr: ":8085", Handler: router}
 	go func() {
-        if err := server.ListenAndServeTLS("server.crt", "server.key"); err != nil {
+		if err := server.ListenAndServeTLS("server.crt", "server.key"); err != nil {
 			log.Println("server error " + err.Error())
-        }
-    }()
+		}
+	}()
 
-    stop := make(chan os.Signal, 1)
-    signal.Notify(stop, os.Interrupt)
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
 
-    // Waiting for SIGINT (kill -2)
-    <-stop
+	// Waiting for SIGINT (kill -2)
+	<-stop
 
-    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-    defer cancel()
-    if err := server.Shutdown(ctx); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := server.Shutdown(ctx); err != nil {
 		log.Println("server error " + err.Error())
-    }
+	}
 	log.Println("stopping server")
 }
 

@@ -2,4 +2,4 @@
 
 source scripts/lint/lint.sh
 
-run_linter --build-folder "./..."
+run_linter --build-folder "./..." --do-not-check-main $1
