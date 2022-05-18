@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-
 func TestEnvVariableProjectID(t *testing.T) {
 	expectedProjectID := "test"
 	err := os.Setenv(utils.EnvironmentVariableProjectID, expectedProjectID)
