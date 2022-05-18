@@ -1,35 +1,50 @@
-package auth
+package api
 
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/descope/go-sdk/descope/errors"
+	"github.com/descope/go-sdk/descope/logger"
+	"github.com/descope/go-sdk/descope/utils"
 )
 
-type client struct {
+type ClientParams struct {
+	DefaultURL           string
+	DefaultClient        IHttpClient
+	CustomDefaultHeaders map[string]string
+
+	ProjectID string
+}
+
+type IHttpClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
+type Client struct {
 	httpClient IHttpClient
 	uri        string
 	headers    map[string]string
-	conf       *Config
+	conf       ClientParams
 }
 type HTTPResponse struct {
-	req     *http.Request
-	res     *http.Response
-	bodyStr string
+	Req     *http.Request
+	Res     *http.Response
+	BodyStr string
 }
 type HTTPRequest struct {
-	headers    map[string]string
-	baseURL    string
-	resBodyObj interface{}
+	Headers    map[string]string
+	BaseURL    string
+	ResBodyObj interface{}
 }
 
-func newClient(conf *Config) *client {
+func NewClient(conf ClientParams) *Client {
 	httpClient := conf.DefaultClient
 	if httpClient == nil {
 		t := http.DefaultTransport.(*http.Transport).Clone()
@@ -48,7 +63,7 @@ func newClient(conf *Config) *client {
 		defaultHeaders[key] = value
 	}
 
-	return &client{
+	return &Client{
 		uri:        conf.DefaultURL,
 		httpClient: httpClient,
 		headers:    defaultHeaders,
@@ -56,24 +71,24 @@ func newClient(conf *Config) *client {
 	}
 }
 
-func (c *client) DoGetRequest(uri string, options *HTTPRequest) (*HTTPResponse, error) {
+func (c *Client) DoGetRequest(uri string, options *HTTPRequest) (*HTTPResponse, error) {
 	return c.DoRequest(http.MethodGet, uri, nil, options)
 }
 
-func (c *client) DoPostRequest(uri string, body interface{}, options *HTTPRequest) (*HTTPResponse, error) {
+func (c *Client) DoPostRequest(uri string, body interface{}, options *HTTPRequest) (*HTTPResponse, error) {
 	if options == nil {
 		options = &HTTPRequest{}
 	}
-	if options.headers == nil {
-		options.headers = map[string]string{}
+	if options.Headers == nil {
+		options.Headers = map[string]string{}
 	}
-	if _, ok := options.headers["Content-Type"]; !ok {
-		options.headers["Content-Type"] = "application/json"
+	if _, ok := options.Headers["Content-Type"]; !ok {
+		options.Headers["Content-Type"] = "application/json"
 	}
 
 	var payload io.Reader
 	if body != nil {
-		if b, err := Marshal(body); err == nil {
+		if b, err := utils.Marshal(body); err == nil {
 			payload = bytes.NewBuffer(b)
 		} else {
 			return nil, err
@@ -83,37 +98,37 @@ func (c *client) DoPostRequest(uri string, body interface{}, options *HTTPReques
 	return c.DoRequest(http.MethodPost, uri, payload, options)
 }
 
-func (c *client) DoRequest(method, uriPath string, body io.Reader, options *HTTPRequest) (*HTTPResponse, error) {
+func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTPRequest) (*HTTPResponse, error) {
 	if options == nil {
 		options = &HTTPRequest{}
 	}
 
 	base := c.uri
-	if options.baseURL != "" {
-		base = options.baseURL
+	if options.BaseURL != "" {
+		base = options.BaseURL
 	}
 
 	url := fmt.Sprintf("%s/%s", base, strings.TrimLeft(uriPath, "/"))
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
-		return nil, NewFromError("", err)
+		return nil, errors.NewFromError("", err)
 	}
 
 	for key, value := range c.headers {
 		req.Header.Add(key, value)
 	}
 
-	for key, value := range options.headers {
+	for key, value := range options.Headers {
 		req.Header.Add(key, value)
 	}
 
 	req.SetBasicAuth(c.conf.ProjectID, "")
 
-	c.conf.LogDebug("sending request to [%s]", uriPath)
+	logger.LogDebug("sending request to [%s]", uriPath)
 	response, err := c.httpClient.Do(req)
 	if err != nil {
-		c.conf.LogInfo("failed sending request to [%s]", uriPath)
-		return nil, NewFromError("", err)
+		logger.LogInfo("failed sending request to [%s]", uriPath)
+		return nil, errors.NewFromError("", err)
 	}
 
 	if response.Body != nil {
@@ -128,33 +143,33 @@ func (c *client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 		return nil, err
 	}
 
-	if options.resBodyObj != nil {
-		if err = Unmarshal(resBytes, &options.resBodyObj); err != nil {
+	if options.ResBodyObj != nil {
+		if err = utils.Unmarshal(resBytes, &options.ResBodyObj); err != nil {
 			return nil, err
 		}
 	}
 
 	return &HTTPResponse{
-		req:     req,
-		res:     response,
-		bodyStr: string(resBytes),
+		Req:     req,
+		Res:     response,
+		BodyStr: string(resBytes),
 	}, nil
 }
 
-func (c *client) parseBody(response *http.Response) (resBytes []byte, err error) {
+func (c *Client) parseBody(response *http.Response) (resBytes []byte, err error) {
 	if response.Body != nil {
 		resBytes, err = ioutil.ReadAll(response.Body)
 		if err != nil {
-			c.conf.LogInfo("failed reading body from request to [%s]", response.Request.URL.String())
-			return nil, NewFromError("", err)
+			logger.LogInfo("failed reading body from request to [%s]", response.Request.URL.String())
+			return nil, errors.NewFromError("", err)
 		}
 	}
 	return
 }
 
-func (c *client) parseResponseError(response *http.Response) error {
+func (c *Client) parseResponseError(response *http.Response) error {
 	if response.StatusCode == http.StatusUnauthorized {
-		return NewUnauthorizedError()
+		return errors.NewUnauthorizedError()
 	}
 
 	body, err := c.parseBody(response)
@@ -162,10 +177,10 @@ func (c *client) parseResponseError(response *http.Response) error {
 		return err
 	}
 
-	var responseErr *WebError
+	var responseErr *errors.WebError
 	if err := json.Unmarshal(body, &responseErr); err != nil {
-		c.conf.LogInfo("failed to load error from response [error: %s]", err)
-		return errors.New(string(body))
+		logger.LogInfo("failed to load error from response [error: %s]", err)
+		return errors.NewValidationError(string(body))
 	}
 	return responseErr
 }

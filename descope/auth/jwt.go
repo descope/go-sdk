@@ -7,16 +7,21 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jws"
+
+	"github.com/descope/go-sdk/descope/api"
+	"github.com/descope/go-sdk/descope/errors"
+	"github.com/descope/go-sdk/descope/logger"
+	"github.com/descope/go-sdk/descope/utils"
 )
 
 type provider struct {
-	client      *client
-	conf        *Config
+	client      *api.Client
+	conf        *AuthParams
 	providedKey jwk.Key
 	keySet      map[string]jwk.Key
 }
 
-func newProvider(client *client, conf *Config) *provider {
+func newProvider(client *api.Client, conf *AuthParams) *provider {
 	return &provider{client: client, conf: conf, keySet: make(map[string]jwk.Key)}
 }
 
@@ -32,47 +37,47 @@ func (p *provider) selectKey(sink jws.KeySink, key jwk.Key) error {
 	if v := key.Algorithm(); v.String() != "" {
 		var alg jwa.SignatureAlgorithm
 		if err := alg.Accept(v); err != nil {
-			return NewValidationError(`invalid signature algorithm %s: %s`, key.Algorithm(), err)
+			return errors.NewValidationError(`invalid signature algorithm %s: %s`, key.Algorithm(), err)
 		}
 
 		sink.Key(alg, key)
 		return nil
 	}
 
-	return NewValidationError("algorithm in the message does not match")
+	return errors.NewValidationError("algorithm in the message does not match")
 }
 
 func (p *provider) requestKeys() error {
 	projectID := p.conf.ProjectID
 	keys := []map[string]interface{}{}
-	_, err := p.client.DoGetRequest(path.Join(publicKeyPath, projectID), &HTTPRequest{resBodyObj: &keys, baseURL: "http://localhost:8152"})
+	_, err := p.client.DoGetRequest(path.Join(publicKeyPath, projectID), &api.HTTPRequest{ResBodyObj: &keys, BaseURL: "http://localhost:8152"})
 	if err != nil {
 		return err
 	}
 	tempKeySet := map[string]jwk.Key{}
 	for i := range keys {
-		b, err := Marshal(keys[i])
+		b, err := utils.Marshal(keys[i])
 		if err != nil {
-			p.conf.LogDebug("Validate failed to marshal key to bytes [%s]", err)
+			logger.LogDebug("Validate failed to marshal key to bytes [%s]", err)
 			continue
 		}
 
 		jk, err := jwk.ParseKey(b)
 		if err != nil {
-			p.conf.LogDebug("Validate failed to parse key [%s]", err)
+			logger.LogDebug("Validate failed to parse key [%s]", err)
 			continue
 		}
 
 		pk, err := jk.PublicKey()
 		if err != nil {
-			p.conf.LogDebug("Validate failed to parse public key [%s]", err)
+			logger.LogDebug("Validate failed to parse public key [%s]", err)
 			continue
 		}
 
 		tempKeySet[pk.KeyID()] = pk
 	}
 
-	p.conf.LogDebug("refresh keys set with %d key(s)", len(tempKeySet))
+	logger.LogDebug("refresh keys set with %d key(s)", len(tempKeySet))
 	p.keySet = tempKeySet
 	return nil
 }
@@ -85,7 +90,7 @@ func (p *provider) providedPublicKey() (jwk.Key, error) {
 	if p.conf.PublicKey != "" {
 		jk, err := jwk.ParseKey([]byte(p.conf.PublicKey))
 		if err != nil {
-			p.conf.LogDebug("unable to parse key")
+			logger.LogDebug("unable to parse key")
 			return nil, err
 		}
 		p.providedKey, _ = jk.PublicKey()
@@ -103,17 +108,17 @@ func (p *provider) findKey(kid string) (jwk.Key, error) {
 		if key.KeyID() == kid {
 			return key, nil
 		}
-		return nil, NewPublicKeyDoesNotMatchError()
+		return nil, errors.NewPublicKeyDoesNotMatchError()
 	}
 
 	if err := p.requestKeys(); err != nil {
-		p.conf.LogDebug("failed to retreive public keys from API [%s]", err)
+		logger.LogDebug("failed to retreive public keys from API [%s]", err)
 		return nil, err
 	}
 
 	key, ok := p.keySet[kid]
 	if !ok {
-		return nil, NewValidationError("no matching public key found for the current key id")
+		return nil, errors.NewValidationError("no matching public key found for the current key id")
 	}
 
 	return key, nil
@@ -123,7 +128,7 @@ func (p *provider) FetchKeys(_ context.Context, sink jws.KeySink, sig *jws.Signa
 	wantedKid := sig.ProtectedHeaders().KeyID()
 	v, ok := p.keySet[wantedKid]
 	if !ok {
-		p.conf.LogDebug("key was not found, looking for key id [%s]", wantedKid)
+		logger.LogDebug("key was not found, looking for key id [%s]", wantedKid)
 		if key, err := p.findKey(wantedKid); key != nil {
 			v = key
 		} else {

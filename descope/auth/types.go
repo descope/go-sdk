@@ -1,72 +1,7 @@
 package auth
 
 import (
-	"fmt"
-	"log"
-	"net/http"
 	"regexp"
-)
-
-const (
-	defaultURL = "https://descope.com"
-)
-
-type Do func(r *http.Request) (*http.Response, error)
-
-type IHttpClient interface {
-	Do(req *http.Request) (*http.Response, error)
-}
-
-type LoggerInterface interface {
-	Print(v ...interface{})
-}
-
-func (c *Config) doLog(l LogLevel, format string, args ...interface{}) {
-	if c.LogLevel < l {
-		return
-	}
-	if c.Logger == nil {
-		c.Logger = log.Default()
-	}
-	c.Logger.Print(fmt.Sprintf(format, args...))
-}
-
-func (c *Config) LogDebug(format string, args ...interface{}) {
-	c.doLog(LogDebug, format, args...)
-}
-
-func (c *Config) LogInfo(format string, args ...interface{}) {
-	c.doLog(LogInfo, format, args...)
-}
-
-func (c *Config) setProjectID() string {
-	if c.ProjectID == "" {
-		if projectID := GetProjectIDEnvVariable(); projectID != "" {
-			c.ProjectID = projectID
-		} else {
-			return ""
-		}
-	}
-	return c.ProjectID
-}
-
-func (c *Config) setPublicKey() string {
-	if c.PublicKey == "" {
-		if publicKey := GetPublicKeyEnvVariable(); publicKey != "" {
-			c.PublicKey = publicKey
-		} else {
-			return ""
-		}
-	}
-	return c.PublicKey
-}
-
-type LogLevel uint
-
-const (
-	LogNone  LogLevel = iota
-	LogInfo  LogLevel = 1
-	LogDebug LogLevel = 2
 )
 
 type User struct {
@@ -125,11 +60,6 @@ const (
 	verifyCodePath = "/v1/auth/code/verify"
 
 	publicKeyPath = "/v1/keys/"
-
-	environmentVariablePublicKey = "DESCOPE_PUBLIC_KEY"
-	environmentVariableProjectID = "DESCOPE_PROJECT_ID"
-
-	contextProjectID = "project_id"
 
 	CookieDefaultName = "S"
 )

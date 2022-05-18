@@ -1,4 +1,4 @@
-package auth
+package utils
 
 import (
 	"encoding/json"
@@ -16,9 +16,9 @@ func Unmarshal(bs []byte, obj interface{}) error {
 }
 
 func GetPublicKeyEnvVariable() string {
-	return os.Getenv(environmentVariablePublicKey)
+	return os.Getenv(EnvironmentVariablePublicKey)
 }
 
 func GetProjectIDEnvVariable() string {
-	return os.Getenv(environmentVariableProjectID)
+	return os.Getenv(EnvironmentVariableProjectID)
 }
