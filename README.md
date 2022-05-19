@@ -6,7 +6,7 @@ Go library used to integrate with Descope
 
 ## API
 
-https://github.com/descope/go-sdk/blob/implementation/pkg/auth/types.go#L70
+https://github.com/descope/go-sdk/blob/main/descope/api.go#L12
 
 ## How To Use
 
@@ -66,5 +66,5 @@ openssl req -new -x509 -sha256 -key server.key -out server.crt -days 3650
 export PROJECT_ID=<insert here> && export PUBLIC_KEY=<insert here>
 ```
 
-5. Run the example application `go run example/main.go`
+5. Run the example application `make run-example`
 6. Application runs on `http://localhost:8085`
