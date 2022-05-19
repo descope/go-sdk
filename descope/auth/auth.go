@@ -136,18 +136,22 @@ func (*Auth) verifyDeliveryMethod(method DeliveryMethod, identifier string) *err
 	return nil
 }
 
-func composeURL(base string, method DeliveryMethod) string {
-	return path.Join(base, string(method))
+func composeURLMethod(base string, method DeliveryMethod) string {
+	p := string(method)
+	if method == MethodSMS {
+		p = "phone"
+	}
+	return path.Join(base, p)
 }
 
 func composeSignInURL(method DeliveryMethod) string {
-	return composeURL(signInOTPPath, method)
+	return composeURLMethod(signInOTPPath, method)
 }
 
 func composeSignUpURL(method DeliveryMethod) string {
-	return composeURL(signUpOTPPath, method)
+	return composeURLMethod(signUpOTPPath, method)
 }
 
 func composeVerifyCodeURL(method DeliveryMethod) string {
-	return composeURL(verifyCodePath, method)
+	return composeURLMethod(verifyCodePath, method)
 }

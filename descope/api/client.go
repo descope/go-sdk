@@ -173,6 +173,9 @@ func (c *Client) parseResponseError(response *http.Response) error {
 	if response.StatusCode == http.StatusUnauthorized {
 		return errors.NewUnauthorizedError()
 	}
+	if response.StatusCode == http.StatusNotFound {
+		return errors.NewError("404", fmt.Sprintf("url [%s] not found", response.Request.URL.String()))
+	}
 
 	body, err := c.parseBody(response)
 	if err != nil {

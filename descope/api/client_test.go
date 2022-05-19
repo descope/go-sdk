@@ -122,3 +122,15 @@ func TestPostUnknownError(t *testing.T) {
 	require.Error(t, err)
 	assert.EqualValues(t, code, err.Error())
 }
+
+func TestPostNotFoundError(t *testing.T) {
+	projectID := "test"
+	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: tests.NewTestClient(func(r *http.Request) (*http.Response, error) {
+		assert.Nil(t, r.Body)
+		return &http.Response{StatusCode: http.StatusNotFound, Request: r}, nil
+	})})
+
+	_, err := c.DoPostRequest("path", nil, nil)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "404")
+}
