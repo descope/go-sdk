@@ -1,5 +1,4 @@
 [![CI](https://github.com/descope/go-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/descope/go-sdk/actions/workflows/ci.yml)
-![Coverage](https://img.shields.io/badge/Coverage-90.6%25-brightgreen)
 
 # Golang SDK
 
