@@ -1,11 +1,11 @@
 name: Run Tests
-description: 'Run Tests'
+description: "Run Tests"
 inputs:
   min_coverage:
-    description: 'Minimum coverage'
+    description: "Minimum coverage"
     required: true
   go_version:
-    description: 'Go version to use'
+    description: "Go version to use"
     required: true
 runs:
   using: "composite"
@@ -39,8 +39,7 @@ runs:
         min_coverage: ${{ inputs.min_coverage }}
         token: ${{ github.token }}
     - name: Go Coverage Badge
-        uses: tj-actions/coverage-badge-go@v1.1
-        with:
-          filename: coverage.out
-          green: ${{ inputs.min_coverage }}
-
+      uses: tj-actions/coverage-badge-go@v1.1
+      with:
+        filename: coverage.out
+        green: ${{ inputs.min_coverage }}
