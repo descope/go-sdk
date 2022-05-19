@@ -38,11 +38,13 @@ runs:
         result_path: coverage.lcov
         min_coverage: ${{ inputs.min_coverage }}
         token: ${{ github.token }}
+
     - name: Go Coverage Badge
       uses: tj-actions/coverage-badge-go@v1.1
       with:
         filename: coverage.out
         green: ${{ inputs.min_coverage }}
+
     - name: Commit changes
       if: steps.verify-changed-files.outputs.files_changed == 'true'
       run: |
@@ -50,6 +52,8 @@ runs:
         git config --local user.name "GitHub Action"
         git add README.md
         git commit -m "chore: Updated coverage badge."
+      shell: bash
+
     - name: Push changes
       if: steps.verify-changed-files.outputs.files_changed == 'true'
       uses: ad-m/github-push-action@master
