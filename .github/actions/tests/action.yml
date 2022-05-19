@@ -65,4 +65,4 @@ runs:
       uses: ad-m/github-push-action@master
       with:
         github_token: ${{ github.token }}
-        branch: ${{ github.head_ref }}
+        branch: ${{ github.ref }}
