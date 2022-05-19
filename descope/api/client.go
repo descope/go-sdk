@@ -124,10 +124,10 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 
 	req.SetBasicAuth(c.conf.ProjectID, "")
 
-	logger.LogDebug("sending request to [%s]", uriPath)
+	logger.LogDebug("sending request to [%s]", url)
 	response, err := c.httpClient.Do(req)
 	if err != nil {
-		logger.LogInfo("failed sending request to [%s]", uriPath)
+		logger.LogInfo("failed sending request to [%s]", url)
 		return nil, errors.NewFromError("", err)
 	}
 
@@ -135,7 +135,9 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 		defer response.Body.Close()
 	}
 	if !isResponseOK(response) {
-		return nil, c.parseResponseError(response)
+		err = c.parseResponseError(response)
+		logger.LogDebug("failed sneding request to [%s] with [%s]", url, err)
+		return nil, err
 	}
 
 	resBytes, err := c.parseBody(response)

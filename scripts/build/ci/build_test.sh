@@ -6,6 +6,7 @@ if [ $? -ne 0 ]; then
 fi
 
 cat raw_coverage.out | grep -v -e ".*\/.*mock.*\/.*\.go\:.*" | grep -v -e "${1:-"empty"}" > coverage.out
+go tool cover -func=coverage.out -o=test_coverage.out
 
 go install github.com/dave/courtney@master
 courtney -l coverage.out 

@@ -42,7 +42,7 @@ runs:
     - name: Go Coverage Badge
       uses: tj-actions/coverage-badge-go@v1.1
       with:
-        filename: raw_coverage.out
+        filename: test_coverage.out
         green: ${{ inputs.min_coverage }}
 
     - name: Verify Changed files
