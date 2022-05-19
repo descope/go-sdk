@@ -43,9 +43,12 @@ if err := client.Auth.SignInOTP(auth.MethodEmail, "mytestmail@test.com"); err !=
 if tokens, err := client.Auth.VerifyCodeEmail("mytestmail@test.com", code); err != nil {
     // handle error
 }
+for i := range tokens {
+    http.SetCookie(w, tokens[i])
+}
 ...
 
-if authorized, err := client.Auth.ValidateSession(token); !authorized {
+if authorized, err := client.Auth.ValidateSessionRequest(r); !authorized {
     // unauthorized error
 }
 ```

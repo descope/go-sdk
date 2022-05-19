@@ -42,7 +42,7 @@ runs:
     - name: Go Coverage Badge
       uses: tj-actions/coverage-badge-go@v1.1
       with:
-        filename: coverage.out
+        filename: raw_coverage.out
         green: ${{ inputs.min_coverage }}
 
     - name: Verify Changed files
@@ -57,7 +57,7 @@ runs:
         git config --local user.email "action@github.com"
         git config --local user.name "GitHub Action"
         git add README.md
-        git commit -m "chore: Updated coverage badge."
+        git commit -m "Updated coverage badge."
       shell: bash
 
     - name: Push changes
