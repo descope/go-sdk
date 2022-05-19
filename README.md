@@ -29,22 +29,23 @@ Use the following code snippets or the example in the example package for how to
 ```
 package myapp
 
-import github.com/descope/go-sdk/pkg/auth
+import github.com/descope/go-sdk/descope
 
+client, err = descope.NewDescopeAPI(descope.Config{ProjectID: "myprojectid"})
 ...
 
-if err := auth.SignInOTP(auth.MethodEmail, "mytestmail@test.com"); err != nil {
+if err := client.SignInOTP(auth.MethodEmail, "mytestmail@test.com"); err != nil {
     // handle error
 }
 ...
 
-if tokens, err := auth.VerifyCodeEmail("mytestmail@test.com", code); err != nil {
+if tokens, err := client.VerifyCodeEmail("mytestmail@test.com", code); err != nil {
     // handle error
 }
 
 ...
 
-if authorized, err := auth.ValidateSession(token); !authorized {
+if authorized, err := client.ValidateSession(token); !authorized {
     // unauthorized error
 }
 ```
