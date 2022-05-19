@@ -9,3 +9,5 @@ help: ## This help
 
 build: ## Build package
 	go mod tidy && go mod vendor && go build ./...
+run-example: ## Build package
+	cd example && go mod tidy && go mod vendor && go run main.go

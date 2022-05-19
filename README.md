@@ -6,7 +6,7 @@ Go library used to integrate with Descope
 
 ## API
 
-https://github.com/descope/go-sdk/blob/implementation/pkg/auth/types.go#L70
+https://github.com/descope/go-sdk/blob/main/descope/api.go#L12
 
 ## How To Use
 
@@ -29,22 +29,23 @@ Use the following code snippets or the example in the example package for how to
 ```
 package myapp
 
-import github.com/descope/go-sdk/pkg/auth
+import github.com/descope/go-sdk/descope
 
+client, err = descope.NewDescopeAPI(descope.Config{ProjectID: "myprojectid"})
 ...
 
-if err := auth.SignInOTP(auth.MethodEmail, "mytestmail@test.com"); err != nil {
+if err := client.SignInOTP(auth.MethodEmail, "mytestmail@test.com"); err != nil {
     // handle error
 }
 ...
 
-if tokens, err := auth.VerifyCodeEmail("mytestmail@test.com", code); err != nil {
+if tokens, err := client.VerifyCodeEmail("mytestmail@test.com", code); err != nil {
     // handle error
 }
 
 ...
 
-if authorized, err := auth.ValidateSession(token); !authorized {
+if authorized, err := client.ValidateSession(token); !authorized {
     // unauthorized error
 }
 ```
@@ -66,5 +67,5 @@ openssl req -new -x509 -sha256 -key server.key -out server.crt -days 3650
 export PROJECT_ID=<insert here> && export PUBLIC_KEY=<insert here>
 ```
 
-5. Run the example application `go run example/main.go`
+5. Run the example application `make run-example`
 6. Application runs on `http://localhost:8085`
