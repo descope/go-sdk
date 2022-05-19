@@ -38,3 +38,9 @@ runs:
         result_path: coverage.lcov
         min_coverage: ${{ inputs.min_coverage }}
         token: ${{ github.token }}
+    - name: Go Coverage Badge
+        uses: tj-actions/coverage-badge-go@v1.1
+        with:
+          filename: coverage.out
+          green: ${{ inputs.min_coverage }}
+

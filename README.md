@@ -18,9 +18,10 @@ Use the authentication API to provide an easy sign up or sign in options for Gol
 1. In order to use any of the authentication API you must specify the project ID given by Descope either by:
    - Set the `DESCOPE_PROJECT_ID` environment variable.
    - Set the ProjectID in the Conf{} on initialize.
-1. In order to use session validation API you must specify the public key given by Descope either by:
+1. When using the session validation API you may specify the public key given by Descope either by:
    - Set the `DESCOPE_PUBLIC_KEY` environment variable.
    - Set the PublicKey in the Conf{} on initialize.
+   - Or keep empty to fetch matching public keys from descope services.
 
 ### Usage
 
@@ -34,18 +35,17 @@ import github.com/descope/go-sdk/descope
 client, err = descope.NewDescopeAPI(descope.Config{ProjectID: "myprojectid"})
 ...
 
-if err := client.SignInOTP(auth.MethodEmail, "mytestmail@test.com"); err != nil {
+if err := client.Auth.SignInOTP(auth.MethodEmail, "mytestmail@test.com"); err != nil {
     // handle error
 }
 ...
 
-if tokens, err := client.VerifyCodeEmail("mytestmail@test.com", code); err != nil {
+if tokens, err := client.Auth.VerifyCodeEmail("mytestmail@test.com", code); err != nil {
     // handle error
 }
-
 ...
 
-if authorized, err := client.ValidateSession(token); !authorized {
+if authorized, err := client.Auth.ValidateSession(token); !authorized {
     // unauthorized error
 }
 ```
@@ -64,7 +64,7 @@ openssl req -new -x509 -sha256 -key server.key -out server.crt -days 3650
 4. export your project id and public key for the project:
 
 ```
-export PROJECT_ID=<insert here> && export PUBLIC_KEY=<insert here>
+export DESCOPE_PROJECT_ID=<insert here> && export DESCOPE_PUBLIC_KEY=<insert here>
 ```
 
 5. Run the example application `make run-example`
