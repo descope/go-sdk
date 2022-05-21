@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -44,6 +45,10 @@ const (
 		"use": "sig",
 		"kid": "0ad99869f2d4e57f3f71c68300ba84fa"
 	  }`
+)
+
+var (
+	mockAuthCookie = &http.Cookie{Value: jwtTokenValid, Name: CookieDefaultName}
 )
 
 func DoOk(checks func(*http.Request)) tests.Do {
@@ -322,7 +327,7 @@ func TestEmptyPublicKey(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("[]"))}, nil
 	}))
 	require.NoError(t, err)
-	ok, err := a.ValidateSession(jwtTokenExpired)
+	ok, err := a.validateSession(jwtTokenExpired)
 	require.False(t, ok)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "no public key was found")
@@ -333,19 +338,19 @@ func TestErrorFetchPublicKey(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusInternalServerError, Body: io.NopCloser(strings.NewReader("what"))}, nil
 	}))
 	require.NoError(t, err)
-	ok, err := a.ValidateSession(jwtTokenExpired)
+	ok, err := a.validateSession(jwtTokenExpired)
 	require.False(t, ok)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "no public key was found")
 }
 
-func TestValidateSession(t *testing.T) {
+func TestvalidateSession(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, err := a.ValidateSession(jwtTokenValid)
+	ok, err := a.validateSession(jwtTokenValid)
 	require.NoError(t, err)
 	require.True(t, ok)
-	ok, err = a.ValidateSession(jwtTokenValid)
+	ok, err = a.validateSession(jwtTokenValid)
 	require.NoError(t, err)
 	require.True(t, ok)
 }
@@ -357,11 +362,11 @@ func TestValidateSessionFetchKeyCalledOnce(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", publicKey)))}, nil
 	}))
 	require.NoError(t, err)
-	ok, err := a.ValidateSession(jwtTokenValid)
+	ok, err := a.validateSession(jwtTokenValid)
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.EqualValues(t, 1, count)
-	ok, err = a.ValidateSession(jwtTokenValid)
+	ok, err = a.validateSession(jwtTokenValid)
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.EqualValues(t, 1, count)
@@ -372,7 +377,7 @@ func TestValidateSessionFetchKeyMalformed(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", unknownPublicKey)))}, nil
 	}))
 	require.NoError(t, err)
-	ok, err := a.ValidateSession(jwtTokenValid)
+	ok, err := a.validateSession(jwtTokenValid)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 	require.False(t, ok)
@@ -385,7 +390,7 @@ func TestValidateSessionFailWithInvalidKey(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", publicKey)))}, nil
 	}))
 	require.NoError(t, err)
-	ok, err := a.ValidateSession(jwtTokenValid)
+	ok, err := a.validateSession(jwtTokenValid)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 	require.False(t, ok)
@@ -414,7 +419,7 @@ func TestValidateSessionRequestNoCookie(t *testing.T) {
 func TestValidateSessionExpired(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, err := a.ValidateSession(jwtTokenExpired)
+	ok, err := a.validateSession(jwtTokenExpired)
 	require.Error(t, err)
 	require.False(t, ok)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
@@ -423,10 +428,52 @@ func TestValidateSessionExpired(t *testing.T) {
 func TestValidateSessionNotYet(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, err := a.ValidateSession(jwtTokenNotYet)
+	ok, err := a.validateSession(jwtTokenNotYet)
 	require.Error(t, err)
 	require.False(t, ok)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+}
+
+func TestAuthenticationMiddlewareFailure(t *testing.T) {
+	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
+	require.NoError(t, err)
+	handlerToTest := a.AuthenticationMiddleWare(func(w http.ResponseWriter, r *http.Request, err error) {
+		assert.Error(t, err)
+		w.WriteHeader(http.StatusBadGateway)
+	}, nil)(nil)
+
+	req := httptest.NewRequest("GET", "http://testing", nil)
+
+	res := httptest.NewRecorder()
+	handlerToTest.ServeHTTP(res, req)
+	assert.EqualValues(t, http.StatusBadGateway, res.Result().StatusCode)
+}
+
+func TestAuthenticationMiddlewareFailureDefault(t *testing.T) {
+	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
+	require.NoError(t, err)
+	handlerToTest := a.AuthenticationMiddleWare(nil, nil)(nil)
+
+	req := httptest.NewRequest("GET", "http://testing", nil)
+
+	res := httptest.NewRecorder()
+	handlerToTest.ServeHTTP(res, req)
+	assert.EqualValues(t, http.StatusUnauthorized, res.Result().StatusCode)
+}
+
+func TestAuthenticationMiddlewareSuccess(t *testing.T) {
+	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
+	require.NoError(t, err)
+	handlerToTest := a.AuthenticationMiddleWare(nil, func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusTeapot)
+	})(nil)
+
+	req := httptest.NewRequest("GET", "http://testing", nil)
+	req.AddCookie(mockAuthCookie)
+
+	res := httptest.NewRecorder()
+	handlerToTest.ServeHTTP(res, req)
+	assert.EqualValues(t, http.StatusTeapot, res.Result().StatusCode)
 }
 
 func readBody(r *http.Request) (m map[string]interface{}, err error) {

@@ -25,14 +25,14 @@ Use the authentication API to provide an easy sign up or sign in options for Gol
 
 ### Usage
 
-Use the following code snippets or the example in the example package for how to use.
+Use the following code snippets or the example in the example package for a more depth how to use.
 
 ```
 package myapp
 
 import github.com/descope/go-sdk/descope
 
-client, err = descope.NewDescopeAPI(descope.Config{ProjectID: "myprojectid"})
+client, err = descope.NewDescopeClient(descope.Config{ProjectID: "myprojectid"})
 ...
 
 if err := client.Auth.SignInOTP(auth.MethodEmail, "mytestmail@test.com"); err != nil {

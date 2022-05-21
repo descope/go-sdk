@@ -89,10 +89,10 @@ func (auth *Auth) ValidateSessionRequest(r *http.Request) (bool, error) {
 		logger.LogDebug("unable to find session cookie")
 		return false, err
 	}
-	return auth.ValidateSession(c.Value)
+	return auth.validateSession(c.Value)
 }
 
-func (auth *Auth) ValidateSession(signedToken string) (bool, error) {
+func (auth *Auth) validateSession(signedToken string) (bool, error) {
 	_, err := jwt.ParseString(signedToken, jwt.WithKeyProvider(auth.publicKeysProvider))
 	if !auth.publicKeysProvider.publicKeyExists() {
 		return false, errors.NewNoPublicKeyError()
@@ -112,6 +112,27 @@ func (auth *Auth) ValidateSession(signedToken string) (bool, error) {
 	}
 
 	return true, nil
+}
+
+func (auth *Auth) AuthenticationMiddleWare(onFailure func(http.ResponseWriter, *http.Request, error), onSuccess func(http.ResponseWriter, *http.Request)) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if ok, err := auth.ValidateSessionRequest(r); ok {
+				if onSuccess != nil {
+					onSuccess(w, r)
+				} else {
+					next.ServeHTTP(w, r)
+				}
+			} else {
+				logger.LogDebug("request failed because token is invalid = " + err.Error())
+				if onFailure != nil {
+					onFailure(w, r, err)
+				} else {
+					w.WriteHeader(http.StatusUnauthorized)
+				}
+			}
+		})
+	}
 }
 
 func (*Auth) verifyDeliveryMethod(method DeliveryMethod, identifier string) *errors.WebError {
@@ -145,13 +166,13 @@ func composeURLMethod(base string, method DeliveryMethod) string {
 }
 
 func composeSignInURL(method DeliveryMethod) string {
-	return composeURLMethod(signInOTPPath, method)
+	return composeURLMethod(signInV1AuthOTPPath, method)
 }
 
 func composeSignUpURL(method DeliveryMethod) string {
-	return composeURLMethod(signUpOTPPath, method)
+	return composeURLMethod(signUpV1AuthOTPPath, method)
 }
 
 func composeVerifyCodeURL(method DeliveryMethod) string {
-	return composeURLMethod(verifyCodePath, method)
+	return composeURLMethod(verifyCodeV1AuthPath, method)
 }

@@ -55,11 +55,11 @@ const (
 	MethodSMS      DeliveryMethod = "phone"
 	MethodEmail    DeliveryMethod = "email"
 
-	signInOTPPath  = "/v1/auth/signin/otp"
-	signUpOTPPath  = "/v1/auth/signup/otp"
-	verifyCodePath = "/v1/auth/code/verify"
+	signInV1AuthOTPPath  = "/v1/auth/signin/otp"
+	signUpV1AuthOTPPath  = "/v1/auth/signup/otp"
+	verifyCodeV1AuthPath = "/v1/auth/code/verify"
 
-	publicKeyPath = "/v1/keys/"
+	publicKeyV1Path = "/v1/keys/"
 
 	CookieDefaultName = "S"
 )

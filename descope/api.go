@@ -13,7 +13,7 @@ type Config struct {
 	// ProjectID (required, "") - used to validate and authenticate against descope services.
 	ProjectID string
 	// PublicKey (optional, "") - used to override or implicitly use a dedicated public key in order to decrypt and validate the JWT tokens
-	// during ValidateSession() and ValidateSessionRequest(). If empty, will attempt to fetch all public keys from the specified project id.
+	// during ValidateSessionRequest(). If empty, will attempt to fetch all public keys from the specified project id.
 	PublicKey string
 
 	// DefaultURL (optional, "https://descope.com") - override the default base URL used to communicate with descope services.
@@ -56,7 +56,7 @@ type API struct {
 	config *Config
 }
 
-func NewDescopeAPI(config Config) (*API, error) {
+func NewDescopeClient(config Config) (*API, error) {
 	logger.Init(config.LogLevel, config.Logger)
 
 	if config.setProjectID() == "" {
