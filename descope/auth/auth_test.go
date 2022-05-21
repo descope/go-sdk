@@ -344,7 +344,7 @@ func TestErrorFetchPublicKey(t *testing.T) {
 	assert.Contains(t, err.Error(), "no public key was found")
 }
 
-func TestvalidateSession(t *testing.T) {
+func TestValidateSession(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
 	require.NoError(t, err)
 	ok, err := a.validateSession(jwtTokenValid)
