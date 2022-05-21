@@ -1,8 +1,8 @@
 name: Build
-description: "Build"
+description: 'Build'
 inputs:
   go_version:
-    description: "Go version to use"
+    description: 'Go version to use'
     required: true
 runs:
   using: "composite"
