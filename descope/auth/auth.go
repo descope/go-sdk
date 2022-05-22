@@ -160,7 +160,7 @@ func (*Auth) verifyDeliveryMethod(method DeliveryMethod, identifier string) *err
 func composeURLMethod(base string, method DeliveryMethod) string {
 	p := string(method)
 	if method == MethodSMS {
-		p = "phone"
+		p = "sms"
 	}
 	return path.Join(base, p)
 }
