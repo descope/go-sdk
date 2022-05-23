@@ -42,7 +42,7 @@ func (auth *Auth) SignUpOTP(method DeliveryMethod, identifier string, user *User
 		return err
 	}
 
-	_, err := auth.client.DoPostRequest(composeSignUpURL(method), newAuthenticationSignInRequestBody(method, identifier, user), nil)
+	_, err := auth.client.DoPostRequest(composeSignUpURL(method), newAuthenticationSignUpRequestBody(method, identifier, user), nil)
 	return err
 }
 
@@ -84,20 +84,58 @@ func (auth *Auth) VerifyCodeWhatsApp(identifier string, code string) ([]*http.Co
 }
 
 func (auth *Auth) ValidateSessionRequest(r *http.Request) (bool, error) {
-	c, err := r.Cookie(CookieDefaultName)
+	sessionToken := ""
+	if sessionCookie, _ := r.Cookie(SessionCookieName); sessionCookie != nil {
+		sessionToken = sessionCookie.Value
+	}
+	refreshCookie, err := r.Cookie(RefreshCookieName)
 	if err != nil {
-		logger.LogDebug("unable to find session cookie")
+		logger.LogDebug("unable to find refresh cookie")
 		return false, err
 	}
-	return auth.ValidateSession(c.Value)
+
+	ok, cookies, err := auth.validateSession(sessionToken, refreshCookie.Value)
+	if ok {
+		for _, cookie := range cookies {
+			r.AddCookie(cookie)
+		}
+		return true, nil
+	}
+	return false, err
 }
 
-func (auth *Auth) ValidateSession(signedToken string) (bool, error) {
-	_, err := jwt.ParseString(signedToken, jwt.WithKeyProvider(auth.publicKeysProvider))
-	if !auth.publicKeysProvider.publicKeyExists() {
-		return false, errors.NewNoPublicKeyError()
+func (auth *Auth) validateSession(sessionToken string, refreshToken string) (bool, []*http.Cookie, error) {
+	_, err := auth.validateJWT(sessionToken)
+	if sessionToken != "" && !auth.publicKeysProvider.publicKeyExists() {
+		return false, nil, errors.NewNoPublicKeyError()
+	}
+	if err != nil {
+		// check refresh token
+		_, err := auth.validateJWT(refreshToken)
+		if ok, err := validateTokenError(err); !ok {
+			return false, nil, err
+		}
+		// auto-refresh session token
+		httpResponse, err := auth.client.DoGetRequest(refreshTokenV1Path, &api.HTTPRequest{
+			Cookies: []*http.Cookie{{Name: SessionCookieName, Value: sessionToken}, {Name: RefreshCookieName, Value: refreshToken}},
+		})
+		if err != nil {
+			return false, nil, errors.NewValidationError("Failed to auto-refresh token")
+		}
+		return true, httpResponse.Res.Cookies(), nil
+	}
+	if ok, err := validateTokenError(err); !ok {
+		return false, nil, err
 	}
 
+	return true, nil, nil
+}
+
+func (auth *Auth) validateJWT(JWT string) (jwt.Token, error) {
+	return jwt.Parse([]byte(JWT), jwt.WithKeyProvider(auth.publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true))
+}
+
+func validateTokenError(err error) (bool, error) {
 	if goErrors.Is(err, jwt.ErrTokenExpired()) {
 		logger.LogDebug("token has expired")
 		return false, errors.NewUnauthorizedError()
@@ -110,8 +148,24 @@ func (auth *Auth) ValidateSession(signedToken string) (bool, error) {
 		logger.LogDebug("failed to verify token [%s]", err)
 		return false, errors.NewUnauthorizedError()
 	}
-
 	return true, nil
+}
+
+func (auth *Auth) AuthenticationMiddleware(onFailure func(http.ResponseWriter, *http.Request, error)) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if ok, err := auth.ValidateSessionRequest(r); ok {
+				next.ServeHTTP(w, r)
+			} else {
+				logger.LogDebug("request failed because token is invalid error: " + err.Error())
+				if onFailure != nil {
+					onFailure(w, r, err)
+				} else {
+					w.WriteHeader(http.StatusUnauthorized)
+				}
+			}
+		})
+	}
 }
 
 func (*Auth) verifyDeliveryMethod(method DeliveryMethod, identifier string) *errors.WebError {
@@ -136,18 +190,18 @@ func (*Auth) verifyDeliveryMethod(method DeliveryMethod, identifier string) *err
 	return nil
 }
 
-func composeURL(base string, method DeliveryMethod) string {
+func composeURLMethod(base string, method DeliveryMethod) string {
 	return path.Join(base, string(method))
 }
 
 func composeSignInURL(method DeliveryMethod) string {
-	return composeURL(signInOTPPath, method)
+	return composeURLMethod(signInV1AuthOTPPath, method)
 }
 
 func composeSignUpURL(method DeliveryMethod) string {
-	return composeURL(signUpOTPPath, method)
+	return composeURLMethod(signUpV1AuthOTPPath, method)
 }
 
 func composeVerifyCodeURL(method DeliveryMethod) string {
-	return composeURL(verifyCodePath, method)
+	return composeURLMethod(verifyCodeV1AuthPath, method)
 }

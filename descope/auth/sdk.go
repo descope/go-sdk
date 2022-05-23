@@ -34,8 +34,9 @@ type IAuth interface {
 	// Should be called before any private API call that requires authorization.
 	// returns true upon success or false and/or error upon failure.
 	ValidateSessionRequest(request *http.Request) (bool, error)
-	// ValidateSession - Use to validate a given token.
-	// Should be called before any private API call that requires authorization.
-	// returns true upon success or false and/or error upon failure.
-	ValidateSession(token string) (bool, error)
+
+	// AuthenticationMiddleware - middleware used to validate session and invoke if provided a failure and
+	// success callbacks after calling ValidateSessionRequest().
+	// onFailure will be called when the authentication failed, if empty, will write unauthorized (401) on the response writer.
+	AuthenticationMiddleware(onFailure func(http.ResponseWriter, *http.Request, error)) func(next http.Handler) http.Handler
 }

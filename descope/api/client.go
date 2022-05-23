@@ -15,8 +15,12 @@ import (
 	"github.com/descope/go-sdk/descope/utils"
 )
 
+const (
+	defaultURL = "https://descope.com"
+)
+
 type ClientParams struct {
-	DefaultURL           string
+	BaseURL              string
 	DefaultClient        IHttpClient
 	CustomDefaultHeaders map[string]string
 
@@ -42,6 +46,7 @@ type HTTPRequest struct {
 	Headers    map[string]string
 	BaseURL    string
 	ResBodyObj interface{}
+	Cookies    []*http.Cookie
 }
 
 func NewClient(conf ClientParams) *Client {
@@ -63,8 +68,12 @@ func NewClient(conf ClientParams) *Client {
 		defaultHeaders[key] = value
 	}
 
+	if conf.BaseURL == "" {
+		conf.BaseURL = defaultURL
+	}
+
 	return &Client{
-		uri:        conf.DefaultURL,
+		uri:        conf.BaseURL,
 		httpClient: httpClient,
 		headers:    defaultHeaders,
 		conf:       conf,
@@ -121,13 +130,16 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 	for key, value := range options.Headers {
 		req.Header.Add(key, value)
 	}
+	for _, cookie := range options.Cookies {
+		req.AddCookie(cookie)
+	}
 
 	req.SetBasicAuth(c.conf.ProjectID, "")
 
-	logger.LogDebug("sending request to [%s]", uriPath)
+	logger.LogDebug("sending request to [%s]", url)
 	response, err := c.httpClient.Do(req)
 	if err != nil {
-		logger.LogInfo("failed sending request to [%s]", uriPath)
+		logger.LogInfo("failed sending request to [%s]", url)
 		return nil, errors.NewFromError("", err)
 	}
 
@@ -135,7 +147,9 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 		defer response.Body.Close()
 	}
 	if !isResponseOK(response) {
-		return nil, c.parseResponseError(response)
+		err = c.parseResponseError(response)
+		logger.LogDebug("failed sending request to [%s] with [%s]", url, err)
+		return nil, err
 	}
 
 	resBytes, err := c.parseBody(response)
@@ -170,6 +184,9 @@ func (c *Client) parseBody(response *http.Response) (resBytes []byte, err error)
 func (c *Client) parseResponseError(response *http.Response) error {
 	if response.StatusCode == http.StatusUnauthorized {
 		return errors.NewUnauthorizedError()
+	}
+	if response.StatusCode == http.StatusNotFound {
+		return errors.NewError("404", fmt.Sprintf("url [%s] not found", response.Request.URL.String()))
 	}
 
 	body, err := c.parseBody(response)

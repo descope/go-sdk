@@ -22,7 +22,7 @@ func main() {
 	log.Println("starting server on port " + port)
 	var err error
 	router := mux.NewRouter()
-	client, err = descope.NewDescopeAPI(descope.Config{LogLevel: logger.LogDebugLevel, DefaultURL: "http://localhost:8080"})
+	client, err = descope.NewDescopeClient(descope.Config{LogLevel: logger.LogDebugLevel, DescopeBaseURL: "http://localhost:8191"})
 
 	if err != nil {
 		log.Println("failed to init: " + err.Error())
@@ -33,7 +33,7 @@ func main() {
 	router.HandleFunc("/signup", handleSignUp).Methods(http.MethodGet)
 	router.HandleFunc("/verify", handleVerify).Methods(http.MethodGet)
 	authRouter := router.Methods(http.MethodGet).Subrouter()
-	authRouter.Use(authenticationMiddleware)
+	authRouter.Use(client.Auth.AuthenticationMiddleware(func(w http.ResponseWriter, r *http.Request, err error) { setResponse(w, http.StatusUnauthorized, "Unauthorized") }))
 	authRouter.HandleFunc("/health", handleIsHealthy)
 
 	server := &http.Server{Addr: fmt.Sprintf(":%s", port), Handler: router}
@@ -121,17 +121,6 @@ func loggingMiddleware(next http.Handler) http.Handler {
 		log.Printf("Url requested: %s", r.RequestURI)
 		next.ServeHTTP(w, r)
 		log.Println("Request finished")
-	})
-}
-
-func authenticationMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if ok, err := client.Auth.ValidateSessionRequest(r); ok {
-			next.ServeHTTP(w, r)
-		} else {
-			log.Println("request failed because token is invalid = " + err.Error())
-			setResponse(w, http.StatusUnauthorized, "Unauthorized")
-		}
 	})
 }
 

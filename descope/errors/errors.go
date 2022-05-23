@@ -6,6 +6,10 @@ const (
 	BadRequestErrorCode = "E01000"
 )
 
+var (
+	NoPublicKeyError = NewPublicKeyValidationError("no public key was found for this project")
+)
+
 type WebError struct {
 	Code    string `json:"error"`
 	Message string `json:"message,omitempty"`
@@ -27,8 +31,8 @@ func NewUnauthorizedError() *WebError {
 	return NewError(BadRequestErrorCode, "unauthorized access")
 }
 
-func NewNoPublicKeyError() *WebError {
-	return NewError(BadRequestErrorCode, "no public key was found for this project")
+func NewNoPublicKeyError() *PublicKeyValidationError {
+	return NoPublicKeyError
 }
 
 func NewPublicKeyDoesNotMatchError() *WebError {
@@ -37,6 +41,18 @@ func NewPublicKeyDoesNotMatchError() *WebError {
 
 func (e *WebError) Error() string {
 	return fmt.Sprintf("[%s] %s", e.Code, e.Message)
+}
+
+type PublicKeyValidationError struct {
+	Message string `json:"message,omitempty"`
+}
+
+func NewPublicKeyValidationError(message string, args ...interface{}) *PublicKeyValidationError {
+	return &PublicKeyValidationError{Message: fmt.Sprintf(message, args...)}
+}
+
+func (e *PublicKeyValidationError) Error() string {
+	return e.Message
 }
 
 type ValidationError struct {
