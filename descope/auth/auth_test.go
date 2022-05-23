@@ -315,7 +315,7 @@ func TestVerifyCodeWhatsApp(t *testing.T) {
 
 func TestAuthDefaultURL(t *testing.T) {
 	url := "http://test.com"
-	a, err := newTestAuthConf(nil, &api.ClientParams{DefaultURL: url}, DoOk(func(r *http.Request) {
+	a, err := newTestAuthConf(nil, &api.ClientParams{BaseURL: url}, DoOk(func(r *http.Request) {
 		assert.Contains(t, r.URL.String(), url)
 	}))
 	require.NoError(t, err)
@@ -446,7 +446,7 @@ func TestValidateSessionRequestNoCookie(t *testing.T) {
 func TestValidateSessionExpired(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.validateSession(jwtTokenExpired, "")
+	ok, _, err := a.validateSession(jwtTokenExpired, jwtTokenExpired)
 	require.Error(t, err)
 	require.False(t, ok)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
@@ -455,7 +455,7 @@ func TestValidateSessionExpired(t *testing.T) {
 func TestValidateSessionNotYet(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.validateSession(jwtTokenNotYet, "")
+	ok, _, err := a.validateSession(jwtTokenNotYet, jwtTokenNotYet)
 	require.Error(t, err)
 	require.False(t, ok)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
@@ -504,7 +504,7 @@ func TestAuthenticationMiddlewareSuccess(t *testing.T) {
 	assert.EqualValues(t, http.StatusTeapot, res.Result().StatusCode)
 }
 
-func BenchmarkFib10(b *testing.B) {
+func BenchmarkValidateSession(b *testing.B) {
 	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
 	require.NoError(b, err)
 

@@ -157,7 +157,7 @@ func (auth *Auth) AuthenticationMiddleware(onFailure func(http.ResponseWriter, *
 			if ok, err := auth.ValidateSessionRequest(r); ok {
 				next.ServeHTTP(w, r)
 			} else {
-				logger.LogDebug("request failed because token is invalid = " + err.Error())
+				logger.LogDebug("request failed because token is invalid error: " + err.Error())
 				if onFailure != nil {
 					onFailure(w, r, err)
 				} else {

@@ -15,8 +15,12 @@ import (
 	"github.com/descope/go-sdk/descope/utils"
 )
 
+const (
+	defaultURL = "https://descope.com"
+)
+
 type ClientParams struct {
-	DefaultURL           string
+	BaseURL              string
 	DefaultClient        IHttpClient
 	CustomDefaultHeaders map[string]string
 
@@ -64,8 +68,12 @@ func NewClient(conf ClientParams) *Client {
 		defaultHeaders[key] = value
 	}
 
+	if conf.BaseURL == "" {
+		conf.BaseURL = defaultURL
+	}
+
 	return &Client{
-		uri:        conf.DefaultURL,
+		uri:        conf.BaseURL,
 		httpClient: httpClient,
 		headers:    defaultHeaders,
 		conf:       conf,

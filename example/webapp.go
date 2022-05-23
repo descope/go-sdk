@@ -62,7 +62,7 @@ func handleIsHealthy(w http.ResponseWriter, r *http.Request) {
 
 func handleSignUp(w http.ResponseWriter, r *http.Request) {
 	method, identifier := getMethodAndIdentifier(r)
-	err := client.Auth.SignUpOTP(method, identifier, &auth.User{Name: "test", Username: identifier})
+	err := client.Auth.SignUpOTP(method, identifier, &auth.User{Name: "test"})
 	if err != nil {
 		setError(w, err.Error())
 	} else {

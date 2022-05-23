@@ -65,7 +65,7 @@ func NewDescopeClient(config Config) (*API, error) {
 	if config.setPublicKey() != "" {
 		logger.LogInfo("provided public key is set, forcing only provided public key validation")
 	}
-	c := api.NewClient(api.ClientParams{DefaultURL: config.DescopeBaseURL, CustomDefaultHeaders: config.CustomDefaultHeaders, DefaultClient: config.DefaultClient, ProjectID: config.ProjectID})
+	c := api.NewClient(api.ClientParams{BaseURL: config.DescopeBaseURL, CustomDefaultHeaders: config.CustomDefaultHeaders, DefaultClient: config.DefaultClient, ProjectID: config.ProjectID})
 
 	authService, err := auth.NewAuth(auth.AuthParams{ProjectID: config.ProjectID, PublicKey: config.PublicKey}, c)
 	if err != nil {
