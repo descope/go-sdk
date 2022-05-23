@@ -16,8 +16,8 @@ type Config struct {
 	// during ValidateSessionRequest(). If empty, will attempt to fetch all public keys from the specified project id.
 	PublicKey string
 
-	// DefaultURL (optional, "https://descope.com") - override the default base URL used to communicate with descope services.
-	DefaultURL string
+	// DescopeBaseURL (optional, "https://descope.com") - override the default base URL used to communicate with descope services.
+	DescopeBaseURL string
 	// DefaultClient (optional, http.DefaultClient) - override the default client used to Do the actual http request.
 	DefaultClient api.IHttpClient
 	// CustomDefaultHeaders (optional, nil) - add custom headers to all requests used to communicate with descope services.
@@ -65,7 +65,7 @@ func NewDescopeClient(config Config) (*API, error) {
 	if config.setPublicKey() != "" {
 		logger.LogInfo("provided public key is set, forcing only provided public key validation")
 	}
-	c := api.NewClient(api.ClientParams{DefaultURL: config.DefaultURL, CustomDefaultHeaders: config.CustomDefaultHeaders, DefaultClient: config.DefaultClient, ProjectID: config.ProjectID})
+	c := api.NewClient(api.ClientParams{DefaultURL: config.DescopeBaseURL, CustomDefaultHeaders: config.CustomDefaultHeaders, DefaultClient: config.DefaultClient, ProjectID: config.ProjectID})
 
 	authService, err := auth.NewAuth(auth.AuthParams{ProjectID: config.ProjectID, PublicKey: config.PublicKey}, c)
 	if err != nil {

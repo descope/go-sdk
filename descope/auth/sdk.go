@@ -35,9 +35,8 @@ type IAuth interface {
 	// returns true upon success or false and/or error upon failure.
 	ValidateSessionRequest(request *http.Request) (bool, error)
 
-	// AuthenticationMiddleWare - middleware used to validate session and invoke if provided a failure and
+	// AuthenticationMiddleware - middleware used to validate session and invoke if provided a failure and
 	// success callbacks after calling ValidateSessionRequest().
 	// onFailure will be called when the authentication failed, if empty, will write unauthorized (401) on the response writer.
-	// onSuccess will be called when the authentication succeded, if empty, the request will be forwarded to the next handle.
-	AuthenticationMiddleWare(onFailure func(http.ResponseWriter, *http.Request, error), onSuccess func(http.ResponseWriter, *http.Request)) func(next http.Handler) http.Handler
+	AuthenticationMiddleware(onFailure func(http.ResponseWriter, *http.Request, error)) func(next http.Handler) http.Handler
 }

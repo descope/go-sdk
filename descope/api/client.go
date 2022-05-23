@@ -42,6 +42,7 @@ type HTTPRequest struct {
 	Headers    map[string]string
 	BaseURL    string
 	ResBodyObj interface{}
+	Cookies    []*http.Cookie
 }
 
 func NewClient(conf ClientParams) *Client {
@@ -121,6 +122,9 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 	for key, value := range options.Headers {
 		req.Header.Add(key, value)
 	}
+	for _, cookie := range options.Cookies {
+		req.AddCookie(cookie)
+	}
 
 	req.SetBasicAuth(c.conf.ProjectID, "")
 
@@ -136,7 +140,7 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 	}
 	if !isResponseOK(response) {
 		err = c.parseResponseError(response)
-		logger.LogDebug("failed sneding request to [%s] with [%s]", url, err)
+		logger.LogDebug("failed sending request to [%s] with [%s]", url, err)
 		return nil, err
 	}
 

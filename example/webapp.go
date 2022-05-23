@@ -22,7 +22,7 @@ func main() {
 	log.Println("starting server on port " + port)
 	var err error
 	router := mux.NewRouter()
-	client, err = descope.NewDescopeClient(descope.Config{LogLevel: logger.LogDebugLevel, DefaultURL: "http://localhost:8080"})
+	client, err = descope.NewDescopeClient(descope.Config{LogLevel: logger.LogDebugLevel, DescopeBaseURL: "http://localhost:8191"})
 
 	if err != nil {
 		log.Println("failed to init: " + err.Error())
@@ -33,7 +33,7 @@ func main() {
 	router.HandleFunc("/signup", handleSignUp).Methods(http.MethodGet)
 	router.HandleFunc("/verify", handleVerify).Methods(http.MethodGet)
 	authRouter := router.Methods(http.MethodGet).Subrouter()
-	authRouter.Use(client.Auth.AuthenticationMiddleWare(func(w http.ResponseWriter, r *http.Request, err error) { setResponse(w, http.StatusUnauthorized, "Unauthorized") }, nil))
+	authRouter.Use(client.Auth.AuthenticationMiddleware(func(w http.ResponseWriter, r *http.Request, err error) { setResponse(w, http.StatusUnauthorized, "Unauthorized") }))
 	authRouter.HandleFunc("/health", handleIsHealthy)
 
 	server := &http.Server{Addr: fmt.Sprintf(":%s", port), Handler: router}
@@ -62,7 +62,7 @@ func handleIsHealthy(w http.ResponseWriter, r *http.Request) {
 
 func handleSignUp(w http.ResponseWriter, r *http.Request) {
 	method, identifier := getMethodAndIdentifier(r)
-	err := client.Auth.SignUpOTP(method, identifier, &auth.User{Name: "test"})
+	err := client.Auth.SignUpOTP(method, identifier, &auth.User{Name: "test", Username: identifier})
 	if err != nil {
 		setError(w, err.Error())
 	} else {

@@ -40,28 +40,30 @@ func newAuthenticationRequestBody(method DeliveryMethod, value string) authentic
 	return authenticationRequestBody{Email: value}
 }
 
-func newAuthenticationSignInRequestBody(method DeliveryMethod, value string, user *User) authenticationSignInRequestBody {
-	a := newAuthenticationRequestBody(method, value)
-	return authenticationSignInRequestBody{authenticationRequestBody: a, User: user}
+func newAuthenticationSignUpRequestBody(method DeliveryMethod, value string, user *User) authenticationSignInRequestBody {
+	b := newAuthenticationRequestBody(method, value)
+	return authenticationSignInRequestBody{authenticationRequestBody: b, User: user}
 }
 
 func newAuthenticationVerifyRequestBody(method DeliveryMethod, value string, code string) authenticationVerifyRequestBody {
-	a := newAuthenticationRequestBody(method, value)
-	return authenticationVerifyRequestBody{authenticationRequestBody: a, Code: code}
+	b := newAuthenticationRequestBody(method, value)
+	return authenticationVerifyRequestBody{authenticationRequestBody: b, Code: code}
 }
 
 const (
 	MethodWhatsApp DeliveryMethod = "whatsapp"
-	MethodSMS      DeliveryMethod = "phone"
+	MethodSMS      DeliveryMethod = "sms"
 	MethodEmail    DeliveryMethod = "email"
 
 	signInV1AuthOTPPath  = "/v1/auth/signin/otp"
 	signUpV1AuthOTPPath  = "/v1/auth/signup/otp"
 	verifyCodeV1AuthPath = "/v1/auth/code/verify"
 
-	publicKeyV1Path = "/v1/keys/"
+	publicKeyV1Path    = "/v1/keys/"
+	refreshTokenV1Path = "/v1/refresh"
 
-	CookieDefaultName = "S"
+	SessionCookieName = "DS"
+	RefreshCookieName = "DSR"
 )
 
 var (
