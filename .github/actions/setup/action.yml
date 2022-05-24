@@ -1,9 +1,6 @@
 name: Setup repo
 description: "Setup repo"
 inputs:
-  token:
-    description: 'Token for the common repo'
-    required: true
   go_version:
     description: "Go version to use"
     required: true
@@ -23,12 +20,6 @@ runs:
         key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go-
-
-    - name: Configure git for private modules
-      env:
-        TOKEN: ${{ inputs.token }}
-      run: git config --global url."https://${TOKEN}@github.com/descope".insteadOf "https://github.com/descope"
-      shell: bash
 
     - name: Go mod vendor
       run: go mod vendor

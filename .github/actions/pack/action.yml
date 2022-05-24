@@ -1,9 +1,6 @@
 name: Pack and Upload
 description: 'Pack and Upload'
 inputs:
-  token:
-    description: 'Token for the common repo'
-    required: true
   go_version:
     description: 'Go version to use'
     required: true
@@ -14,4 +11,3 @@ runs:
       uses: ./.github/actions/setup
       with:
         go_version: ${{ inputs.go_version }}
-        token: ${{ inputs.token }}

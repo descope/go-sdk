@@ -35,7 +35,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
 
-// will be removed after merge to main
 replace (
 	github.com/descope/go-sdk => ../../
 	github.com/descope/go-sdk/descope/gin => ../../descope/gin

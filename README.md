@@ -59,8 +59,8 @@ if authorized, err := client.Auth.ValidateSession(auth.RequestJWTProvider(r)); !
 ## Run The Example
 
 1. Clone repository locally `git clone github.com/descope/go-sdk`
-2. Download prerequisites and compile `make build`
-3. Move to examples folder `cd examples`
+2. Download prerequisites and build `make build`
+3. Navigate to examples folder `cd examples`
 4. Set a self signed local private and public key using:
 
 ```
@@ -74,7 +74,9 @@ openssl req -new -x509 -sha256 -key server.key -out server.crt -days 3650
 export DESCOPE_PROJECT_ID=<insert here>
 ```
 
-6. Run the example web application or the example gin web application `make run-example` / `make run-gin-example`
+6. Run one of our example applications:
+    - Gin web app: `make run-gin-example`
+    - HTTP web app: `make run-example`
 7. Application runs on `http://localhost:8085`
 
 

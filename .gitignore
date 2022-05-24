@@ -3,7 +3,8 @@
 
 # IDE files
 .idea/
-.vscode/*.log
+.vscode/*
+!.vscode/launch.json
 .history/
 *.vsix
 .ionide
