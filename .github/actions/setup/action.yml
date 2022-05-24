@@ -21,6 +21,12 @@ runs:
         restore-keys: |
           ${{ runner.os }}-go-
 
+    - name: Configure git for private modules
+      env:
+        TOKEN: ${{ inputs.token }}
+      run: git config --global url."https://${TOKEN}@github.com/descope".insteadOf "https://github.com/descope"
+      shell: bash
+
     - name: Go mod vendor
       run: go mod vendor
       shell: bash

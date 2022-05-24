@@ -10,6 +10,6 @@ help: ## This help
 build: ## Build package
 	go mod tidy && go mod vendor && go build ./...
 run-example: ## Run example web application
-	cd examples/ginwebapp && go mod tidy && go mod vendor && go run main.go
-run-gin-example: ## Run example web application
 	cd examples/webapp && go mod tidy && go mod vendor && go run main.go
+run-gin-example: ## Run example web application
+	cd examples/ginwebapp && go mod tidy && go mod vendor && go run main.go
