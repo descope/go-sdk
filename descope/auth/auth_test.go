@@ -474,7 +474,7 @@ func TestValidateSessionRequestFailRefreshSession(t *testing.T) {
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
 	ok, cookies, err := a.ValidateSession(RequestJWTProvider(request))
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.FailedToRefreshToken)
+	assert.ErrorIs(t, err, errors.FailedToRefreshTokenError)
 	require.False(t, ok)
 	require.Empty(t, cookies)
 }
@@ -496,6 +496,15 @@ func TestValidateSessionExpired(t *testing.T) {
 	require.Error(t, err)
 	require.False(t, ok)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+}
+
+func TestValidateSessionNoProvider(t *testing.T) {
+	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
+	require.NoError(t, err)
+	ok, _, err := a.ValidateSession(nil)
+	require.Error(t, err)
+	require.ErrorIs(t, err, errors.MissingProviderError)
+	require.False(t, ok)
 }
 
 func TestValidateSessionNotYet(t *testing.T) {

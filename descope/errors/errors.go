@@ -8,7 +8,8 @@ const (
 
 var (
 	NoPublicKeyError     = NewPublicKeyValidationError("no public key was found for this project")
-	FailedToRefreshToken = NewValidationError("refresh token not found")
+	FailedToRefreshTokenError = NewValidationError("refresh token not found")
+	MissingProviderError = NewValidationError("missing JWT provider implementation, use a built-in implementation or custom")
 )
 
 type WebError struct {

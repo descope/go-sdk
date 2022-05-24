@@ -85,6 +85,10 @@ func (auth *Auth) VerifyCodeWhatsApp(identifier string, code string, options ...
 }
 
 func (auth *Auth) ValidateSession(provider IJWTProvider, options ...Option) (bool, []*http.Cookie, error) {
+	if provider == nil {
+		return false, nil, errors.MissingProviderError
+	}
+
 	sessionToken, refreshToken := provider.ProvideTokens()
 	if refreshToken == "" {
 		logger.LogDebug("unable to find refresh cookie using given provider [%T]", provider)
@@ -115,7 +119,7 @@ func (auth *Auth) validateSession(sessionToken string, refreshToken string) (boo
 			Cookies: []*http.Cookie{{Name: SessionCookieName, Value: sessionToken}, {Name: RefreshCookieName, Value: refreshToken}},
 		})
 		if err != nil {
-			return false, nil, errors.FailedToRefreshToken
+			return false, nil, errors.FailedToRefreshTokenError
 		}
 		return true, httpResponse.Res.Cookies(), nil
 	}
