@@ -7,6 +7,7 @@ import (
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/auth"
+	descopegin "github.com/descope/go-sdk/descope/gin"
 	"github.com/descope/go-sdk/descope/logger"
 	"github.com/gin-gonic/gin"
 )
@@ -21,18 +22,13 @@ func main() {
 		log.Println("failed to init: " + err.Error())
 		os.Exit(1)
 	}
-	r.GET("/ping", func(c *gin.Context) {
-		c.JSON(200, gin.H{
-			"message": "pong",
-		})
-	})
 
 	r.GET("/signup", handleSignUp)
 	r.GET("/signin", handleSignIn)
 	r.GET("/verify", handleVerify)
 
 	authorized := r.Group("/")
-	authorized.Use(authneticationMiddleware())
+	authorized.Use(descopegin.AuthneticationMiddleware(client.Auth, nil))
 	authorized.GET("/health", handleIsHealthy)
 	r.RunTLS(":8085", "../server.crt", "../server.key")
 }
@@ -68,13 +64,10 @@ func handleVerify(c *gin.Context) {
 		setError(c, "code is empty")
 		return
 	}
-	cookies, err := client.Auth.VerifyCode(method, identifier, code)
+	_, err := client.Auth.VerifyCode(method, identifier, code, descopegin.WithResponseOption(c))
 	if err != nil {
 		setError(c, err.Error())
 		return
-	}
-	for _, cookie := range cookies {
-		c.SetCookie(cookie.Name, cookie.Value, cookie.MaxAge, cookie.Path, cookie.Domain, cookie.Secure, cookie.HttpOnly)
 	}
 	setOK(c)
 }
@@ -104,15 +97,4 @@ func setError(c *gin.Context, message string) {
 
 func setResponse(c *gin.Context, status int, message string) {
 	c.String(status, message)
-}
-
-func authneticationMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if ok, _, err := client.Auth.ValidateSession(auth.RequestJWTProvider(c.Request), auth.WithResponseOption(c.Writer)); ok {
-			c.Next()
-		} else {
-			logger.LogDebug("request failed because token is invalid error: " + err.Error())
-			c.AbortWithStatus(http.StatusUnauthorized)
-		}
-	}
 }

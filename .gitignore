@@ -29,6 +29,10 @@ coverage.html
 vendor/
 
 local_test.go
+
+# Go workspace file
+go.work
+
 .test/
 
 THIRD_PARTY_LICENSE

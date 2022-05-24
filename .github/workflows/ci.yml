@@ -41,4 +41,4 @@ jobs:
         with:
           go_version: ${{ env.GO_VERSION }}
           token: ${{ secrets.CI_READ_COMMON }}
-          min_coverage: 90
+          min_coverage: 94

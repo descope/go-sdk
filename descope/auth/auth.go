@@ -146,7 +146,10 @@ func validateTokenError(err error) (bool, error) {
 	return true, nil
 }
 
-func (auth *Auth) AuthenticationMiddleware(onFailure func(http.ResponseWriter, *http.Request, error)) func(next http.Handler) http.Handler {
+// AuthenticationMiddleware - middleware used to validate session and invoke if provided a failure and
+// success callbacks after calling ValidateSession().
+// onFailure will be called when the authentication failed, if empty, will write unauthorized (401) on the response writer.
+func AuthenticationMiddleware(auth IAuth, onFailure func(http.ResponseWriter, *http.Request, error)) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if ok, _, err := auth.ValidateSession(RequestJWTProvider(r), WithResponseOption(w)); ok {

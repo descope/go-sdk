@@ -510,7 +510,7 @@ func TestValidateSessionNotYet(t *testing.T) {
 func TestAuthenticationMiddlewareFailure(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
 	require.NoError(t, err)
-	handlerToTest := a.AuthenticationMiddleware(func(w http.ResponseWriter, r *http.Request, err error) {
+	handlerToTest := AuthenticationMiddleware(a, func(w http.ResponseWriter, r *http.Request, err error) {
 		assert.Error(t, err)
 		w.WriteHeader(http.StatusBadGateway)
 	})(nil)
@@ -525,7 +525,7 @@ func TestAuthenticationMiddlewareFailure(t *testing.T) {
 func TestAuthenticationMiddlewareFailureDefault(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
 	require.NoError(t, err)
-	handlerToTest := a.AuthenticationMiddleware(nil)(nil)
+	handlerToTest := AuthenticationMiddleware(a, nil)(nil)
 
 	req := httptest.NewRequest("GET", "http://testing", nil)
 
@@ -537,7 +537,7 @@ func TestAuthenticationMiddlewareFailureDefault(t *testing.T) {
 func TestAuthenticationMiddlewareSuccess(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
 	require.NoError(t, err)
-	handlerToTest := a.AuthenticationMiddleware(nil)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handlerToTest := AuthenticationMiddleware(a, nil)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusTeapot)
 	}))
 

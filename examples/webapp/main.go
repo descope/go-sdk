@@ -33,7 +33,7 @@ func main() {
 	router.HandleFunc("/signup", handleSignUp).Methods(http.MethodGet)
 	router.HandleFunc("/verify", handleVerify).Methods(http.MethodGet)
 	authRouter := router.Methods(http.MethodGet).Subrouter()
-	authRouter.Use(client.Auth.AuthenticationMiddleware(func(w http.ResponseWriter, r *http.Request, err error) { setResponse(w, http.StatusUnauthorized, "Unauthorized") }))
+	authRouter.Use(auth.AuthenticationMiddleware(client.Auth, func(w http.ResponseWriter, r *http.Request, err error) { setResponse(w, http.StatusUnauthorized, "Unauthorized") }))
 	authRouter.HandleFunc("/health", handleIsHealthy)
 
 	server := &http.Server{Addr: fmt.Sprintf(":%s", port), Handler: router}

@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/descope/go-sdk v0.0.0-20220523175209-be942a3ff876
+	github.com/descope/go-sdk/descope/gin v0.0.0-00010101000000-000000000000
 	github.com/gin-gonic/gin v1.7.7
 )
 
@@ -21,7 +22,7 @@ require (
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect
 	github.com/lestrrat-go/httprc v1.0.1 // indirect
 	github.com/lestrrat-go/iter v1.0.2 // indirect
-	github.com/lestrrat-go/jwx/v2 v2.0.1 // indirect
+	github.com/lestrrat-go/jwx/v2 v2.0.2 // indirect
 	github.com/lestrrat-go/option v1.0.0 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -32,4 +33,10 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+)
+
+// will be removed after merge to main
+replace (
+	github.com/descope/go-sdk => ../../
+	github.com/descope/go-sdk/descope/gin => ../../descope/gin
 )
