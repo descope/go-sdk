@@ -3,7 +3,7 @@
 
 # IDE files
 .idea/
-.vscode/
+.vscode/*.log
 .history/
 *.vsix
 .ionide
@@ -30,9 +30,6 @@ vendor/
 
 local_test.go
 .test/
-
-# Go workspace file
-go.work
 
 THIRD_PARTY_LICENSE
 

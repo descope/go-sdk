@@ -313,6 +313,28 @@ func TestVerifyCodeWhatsApp(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestVerifyCodeEmailResponseOption(t *testing.T) {
+	email := "test@email.com"
+	code := "4914"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeVerifyCodeURL(MethodEmail), r.URL.RequestURI())
+
+		body, err := readBody(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, email, body["email"])
+		assert.EqualValues(t, code, body["code"])
+		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Set-Cookie": []string{mockAuthSessionCookie.String()}}}, nil
+	})
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	_, err = a.VerifyCodeEmail(email, code, WithResponseOption(w))
+	require.Nil(t, err)
+	assert.Len(t, w.Result().Cookies(), 1)
+	sessionCookie := w.Result().Cookies()[0]
+	require.NoError(t, err)
+	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
+}
+
 func TestAuthDefaultURL(t *testing.T) {
 	url := "http://test.com"
 	a, err := newTestAuthConf(nil, &api.ClientParams{BaseURL: url}, DoOk(func(r *http.Request) {
@@ -404,9 +426,10 @@ func TestValidateSessionRequest(t *testing.T) {
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenValid})
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	ok, err := a.ValidateSessionRequest(request)
+	ok, cookies, err := a.ValidateSession(RequestJWTProvider(request))
 	require.NoError(t, err)
 	require.True(t, ok)
+	require.Empty(t, cookies)
 }
 
 func TestValidateSessionRequestMissingRefreshCookie(t *testing.T) {
@@ -414,9 +437,10 @@ func TestValidateSessionRequestMissingRefreshCookie(t *testing.T) {
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenValid})
-	ok, err := a.ValidateSessionRequest(request)
+	ok, cookies, err := a.ValidateSession(RequestJWTProvider(request))
 	require.Error(t, err)
 	require.False(t, ok)
+	require.Empty(t, cookies)
 }
 
 func TestValidateSessionRequestRefreshSession(t *testing.T) {
@@ -426,21 +450,43 @@ func TestValidateSessionRequestRefreshSession(t *testing.T) {
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	ok, err := a.ValidateSessionRequest(request)
+
+	b := httptest.NewRecorder()
+	ok, cookies, err := a.ValidateSession(RequestJWTProvider(request), WithResponseOption(b))
 	require.NoError(t, err)
 	require.True(t, ok)
-	sessionCookie, err := request.Cookie(SessionCookieName)
+	require.Len(t, cookies, 1)
+	sessionCookie := cookies[0]
 	require.NoError(t, err)
-	assert.NotEmpty(t, sessionCookie.Value)
+	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
+	assert.Len(t, b.Result().Cookies(), 1)
+	sessionCookie = b.Result().Cookies()[0]
+	require.NoError(t, err)
+	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
+}
+
+func TestValidateSessionRequestFailRefreshSession(t *testing.T) {
+	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusInternalServerError}, nil
+	})
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+	ok, cookies, err := a.ValidateSession(RequestJWTProvider(request))
+	require.Error(t, err)
+	assert.ErrorIs(t, err, errors.FailedToRefreshToken)
+	require.False(t, ok)
+	require.Empty(t, cookies)
 }
 
 func TestValidateSessionRequestNoCookie(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
-	ok, err := a.ValidateSessionRequest(request)
+	ok, cookies, err := a.ValidateSession(RequestJWTProvider(request))
 	require.Error(t, err)
 	require.False(t, ok)
+	require.Empty(t, cookies)
 }
 
 func TestValidateSessionExpired(t *testing.T) {

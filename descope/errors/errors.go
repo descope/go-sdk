@@ -7,7 +7,8 @@ const (
 )
 
 var (
-	NoPublicKeyError = NewPublicKeyValidationError("no public key was found for this project")
+	NoPublicKeyError     = NewPublicKeyValidationError("no public key was found for this project")
+	FailedToRefreshToken = NewValidationError("refresh token not found")
 )
 
 type WebError struct {

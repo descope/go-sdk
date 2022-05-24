@@ -38,7 +38,7 @@ func main() {
 
 	server := &http.Server{Addr: fmt.Sprintf(":%s", port), Handler: router}
 	go func() {
-		if err := server.ListenAndServeTLS("server.crt", "server.key"); err != nil {
+		if err := server.ListenAndServeTLS("../server.crt", "../server.key"); err != nil {
 			log.Println("server error " + err.Error())
 		}
 	}()

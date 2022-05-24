@@ -16,27 +16,27 @@ type IAuth interface {
 	// VerifyCode - Use to verify a SignIn/SignUp based on the given identifier either an email or a phone
 	// followed by the code used to verify and authenticate the user.
 	// returns a list of set-cookie data or an error upon failure.
-	VerifyCode(method DeliveryMethod, identifier string, code string) ([]*http.Cookie, error)
+	VerifyCode(method DeliveryMethod, identifier string, code string, options ...Option) ([]*http.Cookie, error)
 	// VerifyCodeEmail - Use to verify a SignIn/SignUp based on the email identifier
 	// followed by the code used to verify and authenticate the user.
 	// returns a list of set-cookie data or an error upon failure.
-	VerifyCodeEmail(identifier string, code string) ([]*http.Cookie, error)
+	VerifyCodeEmail(identifier string, code string, options ...Option) ([]*http.Cookie, error)
 	// VerifyCodeSMS - Use to verify a SignIn/SignUp based on the phone identifier
 	// followed by the code used to verify and authenticate the user.
 	// returns a list of set-cookie data or an error upon failure.
-	VerifyCodeSMS(identifier string, code string) ([]*http.Cookie, error)
+	VerifyCodeSMS(identifier string, code string, options ...Option) ([]*http.Cookie, error)
 	// VerifyCodeWhatsApp - Use to verify a SignIn/SignUp based on the phone identifier
 	// followed by the code used to verify and authenticate the user.
 	// returns a list of set-cookie data or an error upon failure.
-	VerifyCodeWhatsApp(identifier string, code string) ([]*http.Cookie, error)
+	VerifyCodeWhatsApp(identifier string, code string, options ...Option) ([]*http.Cookie, error)
 
-	// ValidateSessionRequest - Use to validate a session of a given request.
+	// ValidateSession - Use to validate a session of a given request.
 	// Should be called before any private API call that requires authorization.
 	// returns true upon success or false and/or error upon failure.
-	ValidateSessionRequest(request *http.Request) (bool, error)
+	ValidateSession(provider IJWTProvider, options ...Option) (bool, []*http.Cookie, error)
 
 	// AuthenticationMiddleware - middleware used to validate session and invoke if provided a failure and
-	// success callbacks after calling ValidateSessionRequest().
+	// success callbacks after calling ValidateSession().
 	// onFailure will be called when the authentication failed, if empty, will write unauthorized (401) on the response writer.
 	AuthenticationMiddleware(onFailure func(http.ResponseWriter, *http.Request, error)) func(next http.Handler) http.Handler
 }

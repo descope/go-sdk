@@ -1,8 +1,59 @@
 package auth
 
 import (
+	"net/http"
 	"regexp"
 )
+
+type IJWTProvider interface {
+	ProvideTokens() (string, string)
+}
+
+type requestJWTProvider struct {
+	r *http.Request
+}
+
+var RequestJWTProvider = func(r *http.Request) *requestJWTProvider {
+	return &requestJWTProvider{r: r}
+}
+
+func (p *requestJWTProvider) ProvideTokens() (sessionToken string, refreshToken string) {
+	if sessionCookie, _ := p.r.Cookie(SessionCookieName); sessionCookie != nil {
+		sessionToken = sessionCookie.Value
+	}
+
+	refreshCookie, err := p.r.Cookie(RefreshCookieName)
+	if err != nil {
+		return sessionToken, ""
+	}
+	return sessionToken, refreshCookie.Value
+}
+
+type Option interface {
+}
+
+type Options []Option
+
+func (options Options) SetCookies(cookies []*http.Cookie) {
+	for _, option := range options {
+		switch o := option.(type) {
+		case responseOption:
+			for i := range cookies {
+				http.SetCookie(o, cookies[i])
+			}
+		}
+	}
+}
+
+type responseOption struct {
+	http.ResponseWriter
+}
+
+// WithResponseOption - adds a response option to supported functions to allow
+// automatic apply and renewal of the tokens to the response sent to the client.
+func WithResponseOption(w http.ResponseWriter) responseOption {
+	return responseOption{ResponseWriter: w}
+}
 
 type User struct {
 	Username string `json:"username,omitempty"`
@@ -58,6 +109,7 @@ const (
 	signInV1AuthOTPPath  = "/v1/auth/signin/otp"
 	signUpV1AuthOTPPath  = "/v1/auth/signup/otp"
 	verifyCodeV1AuthPath = "/v1/auth/code/verify"
+	logoutV1AuthPath     = "/v1/logoutall"
 
 	publicKeyV1Path    = "/v1/keys/"
 	refreshTokenV1Path = "/v1/refresh"

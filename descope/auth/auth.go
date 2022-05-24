@@ -46,7 +46,7 @@ func (auth *Auth) SignUpOTP(method DeliveryMethod, identifier string, user *User
 	return err
 }
 
-func (auth *Auth) VerifyCode(method DeliveryMethod, identifier string, code string) ([]*http.Cookie, error) {
+func (auth *Auth) VerifyCode(method DeliveryMethod, identifier string, code string, options ...Option) ([]*http.Cookie, error) {
 	if method == "" {
 		if phoneRegex.MatchString(identifier) {
 			method = MethodSMS
@@ -67,41 +67,36 @@ func (auth *Auth) VerifyCode(method DeliveryMethod, identifier string, code stri
 	cookies := []*http.Cookie{}
 	if httpResponse != nil {
 		cookies = httpResponse.Res.Cookies()
+		Options(options).SetCookies(cookies)
 	}
 	return cookies, err
 }
 
-func (auth *Auth) VerifyCodeEmail(identifier string, code string) ([]*http.Cookie, error) {
-	return auth.VerifyCode(MethodEmail, identifier, code)
+func (auth *Auth) VerifyCodeEmail(identifier string, code string, options ...Option) ([]*http.Cookie, error) {
+	return auth.VerifyCode(MethodEmail, identifier, code, options...)
 }
 
-func (auth *Auth) VerifyCodeSMS(identifier string, code string) ([]*http.Cookie, error) {
-	return auth.VerifyCode(MethodSMS, identifier, code)
+func (auth *Auth) VerifyCodeSMS(identifier string, code string, options ...Option) ([]*http.Cookie, error) {
+	return auth.VerifyCode(MethodSMS, identifier, code, options...)
 }
 
-func (auth *Auth) VerifyCodeWhatsApp(identifier string, code string) ([]*http.Cookie, error) {
-	return auth.VerifyCode(MethodWhatsApp, identifier, code)
+func (auth *Auth) VerifyCodeWhatsApp(identifier string, code string, options ...Option) ([]*http.Cookie, error) {
+	return auth.VerifyCode(MethodWhatsApp, identifier, code, options...)
 }
 
-func (auth *Auth) ValidateSessionRequest(r *http.Request) (bool, error) {
-	sessionToken := ""
-	if sessionCookie, _ := r.Cookie(SessionCookieName); sessionCookie != nil {
-		sessionToken = sessionCookie.Value
-	}
-	refreshCookie, err := r.Cookie(RefreshCookieName)
-	if err != nil {
-		logger.LogDebug("unable to find refresh cookie")
-		return false, err
+func (auth *Auth) ValidateSession(provider IJWTProvider, options ...Option) (bool, []*http.Cookie, error) {
+	sessionToken, refreshToken := provider.ProvideTokens()
+	if refreshToken == "" {
+		logger.LogDebug("unable to find refresh cookie using given provider [%T]", provider)
+		return false, nil, errors.NewValidationError("refresh token not found")
 	}
 
-	ok, cookies, err := auth.validateSession(sessionToken, refreshCookie.Value)
+	ok, cookies, err := auth.validateSession(sessionToken, refreshToken)
 	if ok {
-		for _, cookie := range cookies {
-			r.AddCookie(cookie)
-		}
-		return true, nil
+		Options(options).SetCookies(cookies)
+		return true, cookies, nil
 	}
-	return false, err
+	return false, cookies, err
 }
 
 func (auth *Auth) validateSession(sessionToken string, refreshToken string) (bool, []*http.Cookie, error) {
@@ -120,7 +115,7 @@ func (auth *Auth) validateSession(sessionToken string, refreshToken string) (boo
 			Cookies: []*http.Cookie{{Name: SessionCookieName, Value: sessionToken}, {Name: RefreshCookieName, Value: refreshToken}},
 		})
 		if err != nil {
-			return false, nil, errors.NewValidationError("Failed to auto-refresh token")
+			return false, nil, errors.FailedToRefreshToken
 		}
 		return true, httpResponse.Res.Cookies(), nil
 	}
@@ -154,7 +149,7 @@ func validateTokenError(err error) (bool, error) {
 func (auth *Auth) AuthenticationMiddleware(onFailure func(http.ResponseWriter, *http.Request, error)) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if ok, err := auth.ValidateSessionRequest(r); ok {
+			if ok, _, err := auth.ValidateSession(RequestJWTProvider(r), WithResponseOption(w)); ok {
 				next.ServeHTTP(w, r)
 			} else {
 				logger.LogDebug("request failed because token is invalid error: " + err.Error())
