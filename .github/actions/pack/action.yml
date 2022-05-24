@@ -11,3 +11,4 @@ runs:
       uses: ./.github/actions/setup
       with:
         go_version: ${{ inputs.go_version }}
+        token: ${{ secrets.CI_READ_COMMON }}

@@ -1,6 +1,9 @@
 name: Setup repo
 description: "Setup repo"
 inputs:
+  token:
+    description: 'Token for the common repo'
+    required: true
   go_version:
     description: "Go version to use"
     required: true
