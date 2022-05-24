@@ -16,6 +16,7 @@ jobs:
         uses: ./.github/actions/build
         with:
           go_version: ${{ env.GO_VERSION }}
+          token: ${{ secrets.CI_READ_COMMON }}
 
   lint:
     name: Lint and more checks
@@ -27,6 +28,7 @@ jobs:
         uses: ./.github/actions/lint
         with:
           go_version: ${{ env.GO_VERSION }}
+          token: ${{ secrets.CI_READ_COMMON }}
 
   test:
     name: Run Tests
@@ -38,4 +40,5 @@ jobs:
         uses: ./.github/actions/tests
         with:
           go_version: ${{ env.GO_VERSION }}
+          token: ${{ secrets.CI_READ_COMMON }}
           min_coverage: 90

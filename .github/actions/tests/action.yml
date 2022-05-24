@@ -1,6 +1,9 @@
 name: Run Tests
 description: 'Run Tests'
 inputs:
+  token:
+    description: 'Token for the common repo'
+    required: true
   min_coverage:
     description: 'Minimum coverage'
     required: true
@@ -14,7 +17,7 @@ runs:
       uses: ./.github/actions/setup
       with:
         go_version: ${{ inputs.go_version }}
-        token: ${{ secrets.CI_READ_COMMON }}
+        token: ${{ inputs.token }}
 
     - name: Run tests
       run: |
