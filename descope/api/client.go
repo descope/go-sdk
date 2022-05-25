@@ -170,7 +170,7 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 	url := fmt.Sprintf("%s/%s", base, strings.TrimLeft(uriPath, "/"))
 	req, err := http.NewRequest(method, url, body)
 	if err != nil {
-		return nil, errors.NewFromError("", err)
+		return nil, err
 	}
 
 	for key, value := range c.headers {
@@ -190,7 +190,7 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 	response, err := c.httpClient.Do(req)
 	if err != nil {
 		logger.LogInfo("failed sending request to [%s]", url)
-		return nil, errors.NewFromError("", err)
+		return nil, err
 	}
 
 	if response.Body != nil {
@@ -225,7 +225,7 @@ func (c *Client) parseBody(response *http.Response) (resBytes []byte, err error)
 		resBytes, err = ioutil.ReadAll(response.Body)
 		if err != nil {
 			logger.LogInfo("failed reading body from request to [%s]", response.Request.URL.String())
-			return nil, errors.NewFromError("", err)
+			return nil, err
 		}
 	}
 	return

@@ -560,6 +560,19 @@ func TestLogoutEmptyRequest(t *testing.T) {
 	assert.Len(t, cookies, 0)
 }
 
+func TestLogoutMissingToken(t *testing.T) {
+	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusBadGateway}, nil
+	})
+	require.NoError(t, err)
+
+	request := &http.Request{Header: http.Header{}}
+	cookies, err := a.Logout(request)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, errors.RefreshTokenError)
+	assert.Len(t, cookies, 0)
+}
+
 func TestAuthenticationMiddlewareFailure(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
 	require.NoError(t, err)

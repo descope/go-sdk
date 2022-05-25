@@ -92,7 +92,7 @@ func (auth *Auth) Logout(request *http.Request, options ...Option) ([]*http.Cook
 	sessionToken, refreshToken := provideTokens(request)
 	if refreshToken == "" {
 		logger.LogDebug("unable to find tokens from cookies")
-		return nil, errors.NewValidationError("refresh token not found")
+		return nil, errors.RefreshTokenError
 	}
 
 	httpResponse, err := auth.client.DoGetRequest(api.Routes.Logout(), &api.HTTPRequest{
@@ -130,7 +130,7 @@ func (auth *Auth) ValidateSession(request *http.Request, options ...Option) (boo
 	sessionToken, refreshToken := provideTokens(request)
 	if refreshToken == "" {
 		logger.LogDebug("unable to find tokens from cookies")
-		return false, nil, errors.NewValidationError("refresh token not found")
+		return false, nil, errors.RefreshTokenError
 	}
 
 	ok, cookies, err := auth.validateSession(sessionToken, refreshToken)

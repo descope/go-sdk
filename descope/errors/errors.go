@@ -8,7 +8,8 @@ const (
 
 var (
 	NoPublicKeyError          = NewPublicKeyValidationError("no public key was found for this project")
-	FailedToRefreshTokenError = NewValidationError("refresh token not found")
+	FailedToRefreshTokenError = NewValidationError("fail to refresh token")
+	RefreshTokenError         = NewValidationError("refresh token invalid or not found")
 	MissingProviderError      = NewValidationError("missing JWT provider implementation, use a built-in implementation or custom")
 )
 
@@ -35,10 +36,6 @@ func NewUnauthorizedError() *WebError {
 
 func NewNoPublicKeyError() *PublicKeyValidationError {
 	return NoPublicKeyError
-}
-
-func NewPublicKeyDoesNotMatchError() *WebError {
-	return NewError(BadRequestErrorCode, "public key found is not compatible for given tokens")
 }
 
 func (e *WebError) Error() string {
