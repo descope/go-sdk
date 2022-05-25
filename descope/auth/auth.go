@@ -84,6 +84,31 @@ func (auth *Auth) VerifyCodeWhatsApp(identifier string, code string, options ...
 	return auth.VerifyCode(MethodWhatsApp, identifier, code, options...)
 }
 
+func (auth *Auth) Logout(request *http.Request, options ...Option) ([]*http.Cookie, error) {
+	if request == nil {
+		return nil, errors.MissingProviderError
+	}
+
+	sessionToken, refreshToken := provideTokens(request)
+	if refreshToken == "" {
+		logger.LogDebug("unable to find tokens from cookies")
+		return nil, errors.NewValidationError("refresh token not found")
+	}
+
+	httpResponse, err := auth.client.DoGetRequest(api.Routes.Logout(), &api.HTTPRequest{
+		Cookies: []*http.Cookie{{Name: SessionCookieName, Value: sessionToken}, {Name: RefreshCookieName, Value: refreshToken}},
+	})
+	if err != nil {
+		return nil, err
+	}
+	cookies := []*http.Cookie{}
+	if httpResponse != nil {
+		cookies = httpResponse.Res.Cookies()
+		Options(options).SetCookies(cookies)
+	}
+	return cookies, nil
+}
+
 func provideTokens(r *http.Request) (string, string) {
 	sessionToken := ""
 	if sessionCookie, _ := r.Cookie(SessionCookieName); sessionCookie != nil {
@@ -128,7 +153,7 @@ func (auth *Auth) validateSession(sessionToken string, refreshToken string) (boo
 			return false, nil, err
 		}
 		// auto-refresh session token
-		httpResponse, err := auth.client.DoGetRequest(refreshTokenV1Path, &api.HTTPRequest{
+		httpResponse, err := auth.client.DoGetRequest(api.Routes.RefreshToken(), &api.HTTPRequest{
 			Cookies: []*http.Cookie{{Name: SessionCookieName, Value: sessionToken}, {Name: RefreshCookieName, Value: refreshToken}},
 		})
 		if err != nil {
@@ -210,13 +235,13 @@ func composeURLMethod(base string, method DeliveryMethod) string {
 }
 
 func composeSignInURL(method DeliveryMethod) string {
-	return composeURLMethod(signInV1AuthOTPPath, method)
+	return composeURLMethod(api.Routes.SignInOTP(), method)
 }
 
 func composeSignUpURL(method DeliveryMethod) string {
-	return composeURLMethod(signUpV1AuthOTPPath, method)
+	return composeURLMethod(api.Routes.SignUpOTP(), method)
 }
 
 func composeVerifyCodeURL(method DeliveryMethod) string {
-	return composeURLMethod(verifyCodeV1AuthPath, method)
+	return composeURLMethod(api.Routes.VerifyCode(), method)
 }

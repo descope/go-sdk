@@ -134,3 +134,8 @@ func TestPostNotFoundError(t *testing.T) {
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "404")
 }
+
+func TestRoutesSignInOTP(t *testing.T) {
+	r := Routes.SignInOTP()
+	assert.EqualValues(t, "/v1/auth/signin/otp", r)
+}

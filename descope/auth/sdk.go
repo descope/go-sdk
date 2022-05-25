@@ -34,4 +34,8 @@ type IAuth interface {
 	// Should be called before any private API call that requires authorization.
 	// returns true upon success or false and/or error upon failure.
 	ValidateSession(request *http.Request, options ...Option) (bool, []*http.Cookie, error)
+
+	// Logout - Use to perform logout from all active devices. This will revoke the given tokens
+	// and if given options will also remove existing session on the given response.
+	Logout(request *http.Request, options ...Option) ([]*http.Cookie, error)
 }

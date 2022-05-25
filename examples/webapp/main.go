@@ -54,6 +54,7 @@ func main() {
 		setResponse(w, http.StatusUnauthorized, "Unauthorized")
 	}))
 	authRouter.HandleFunc("/health", handleIsHealthy)
+	authRouter.HandleFunc("/logout", handleLogout)
 
 	server := &http.Server{Addr: fmt.Sprintf(":%s", port), Handler: router}
 	go func() {
@@ -77,6 +78,15 @@ func main() {
 
 func handleIsHealthy(w http.ResponseWriter, r *http.Request) {
 	setOK(w)
+}
+
+func handleLogout(w http.ResponseWriter, r *http.Request) {
+	_, err := client.Auth.Logout(r, auth.WithResponseOption(w))
+	if err != nil {
+		setError(w, err.Error())
+	} else {
+		setOK(w)
+	}
 }
 
 func handleSignUp(w http.ResponseWriter, r *http.Request) {

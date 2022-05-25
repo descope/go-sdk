@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"path"
 	"strings"
 	"time"
 
@@ -18,6 +19,55 @@ import (
 const (
 	defaultURL = "https://descope.com"
 )
+
+var (
+	Routes = endpoints{
+		version: "/v1/",
+		auth: struct {
+			signInOTP  string
+			signUpOTP  string
+			verifyCode string
+		}{
+			signInOTP:  "auth/signin/otp",
+			signUpOTP:  "auth/signup/otp",
+			verifyCode: "auth/code/verify",
+		},
+		logoutAll: "/logoutall",
+		keys:      "/keys/",
+		refresh:   "/refresh",
+	}
+)
+
+type endpoints struct {
+	version string
+	auth    struct {
+		signInOTP  string
+		signUpOTP  string
+		verifyCode string
+	}
+	logoutAll string
+	keys      string
+	refresh   string
+}
+
+func (e *endpoints) SignInOTP() string {
+	return path.Join(e.version, e.auth.signInOTP)
+}
+func (e *endpoints) SignUpOTP() string {
+	return path.Join(e.version, e.auth.signUpOTP)
+}
+func (e *endpoints) VerifyCode() string {
+	return path.Join(e.version, e.auth.verifyCode)
+}
+func (e *endpoints) Logout() string {
+	return path.Join(e.version, e.logoutAll)
+}
+func (e *endpoints) GetKeys() string {
+	return path.Join(e.version, e.keys)
+}
+func (e *endpoints) RefreshToken() string {
+	return path.Join(e.version, e.refresh)
+}
 
 type ClientParams struct {
 	BaseURL              string
