@@ -1,0 +1,27 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run Example: Web App",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/examples/webapp",
+            "env": {
+                "DESCOPE_PROJECT_ID": "<insert here>"
+            },
+            "showGlobalVariables": true
+        },
+        {
+            "name": "Run Example: Gin App",
+            "type": "go",
+            "request": "launch",
+            "mode": "auto",
+            "program": "${workspaceFolder}/examples/ginwebapp",
+            "env": {
+                "DESCOPE_PROJECT_ID": "<insert here>"
+            },
+            "showGlobalVariables": true
+        }
+    ]
+}

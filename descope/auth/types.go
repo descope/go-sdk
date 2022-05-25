@@ -1,8 +1,56 @@
 package auth
 
 import (
+	"net/http"
 	"regexp"
 )
+
+type Option interface {
+	Kind() interface{}
+	Value() interface{}
+}
+
+type pair struct {
+	kind  interface{}
+	value interface{}
+}
+
+func (p *pair) Kind() interface{} {
+	return p.kind
+}
+
+func (p *pair) Value() interface{} {
+	return p.value
+}
+
+func newOption(kind, value interface{}) Option {
+	return &pair{
+		kind:  kind,
+		value: value,
+	}
+}
+
+type Options []Option
+
+func (options Options) SetCookies(cookies []*http.Cookie) {
+	for _, option := range options {
+		switch option.Kind().(type) {
+		case responseOption:
+			w := option.Value().(http.ResponseWriter)
+			for i := range cookies {
+				http.SetCookie(w, cookies[i])
+			}
+		}
+	}
+}
+
+type responseOption struct{}
+
+// WithResponseOption - adds a response option to supported functions to allow
+// automatic apply and renewal of the tokens to the response sent to the client.
+func WithResponseOption(w http.ResponseWriter) Option {
+	return newOption(responseOption{}, w)
+}
 
 type User struct {
 	Username string `json:"username,omitempty"`
@@ -58,6 +106,7 @@ const (
 	signInV1AuthOTPPath  = "/v1/auth/signin/otp"
 	signUpV1AuthOTPPath  = "/v1/auth/signup/otp"
 	verifyCodeV1AuthPath = "/v1/auth/code/verify"
+	logoutV1AuthPath     = "/v1/logoutall"
 
 	publicKeyV1Path    = "/v1/keys/"
 	refreshTokenV1Path = "/v1/refresh"

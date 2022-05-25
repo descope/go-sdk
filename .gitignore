@@ -3,7 +3,7 @@
 
 # IDE files
 .idea/
-.vscode/
+.vscode/*
 .history/
 *.vsix
 .ionide
@@ -29,13 +29,15 @@ coverage.html
 vendor/
 
 local_test.go
-.test/
 
 # Go workspace file
 go.work
+
+.test/
 
 THIRD_PARTY_LICENSE
 
 __debug_bin
 *.crt
 *.key
+*.pem

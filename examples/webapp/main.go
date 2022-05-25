@@ -2,8 +2,15 @@ package main
 
 import (
 	"context"
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"fmt"
 	"log"
+	"math/big"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,6 +22,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+const (
+	TLSkeyPath  = "../key.pem"
+	TLSCertPath = "../cert.pem"
+)
+
 var client *descope.API
 
 func main() {
@@ -23,22 +35,29 @@ func main() {
 	var err error
 	router := mux.NewRouter()
 	client, err = descope.NewDescopeClient(descope.Config{LogLevel: logger.LogDebugLevel, DescopeBaseURL: "http://localhost:8191"})
-
 	if err != nil {
 		log.Println("failed to init: " + err.Error())
 		os.Exit(1)
 	}
+	err = generateKeysIfNeeded()
+	if err != nil {
+		log.Println("failed to generate keys for TLS server: " + err.Error())
+		os.Exit(1)
+	}
+
 	router.Use(loggingMiddleware)
 	router.HandleFunc("/signin", handleSignIn).Methods(http.MethodGet)
 	router.HandleFunc("/signup", handleSignUp).Methods(http.MethodGet)
 	router.HandleFunc("/verify", handleVerify).Methods(http.MethodGet)
 	authRouter := router.Methods(http.MethodGet).Subrouter()
-	authRouter.Use(client.Auth.AuthenticationMiddleware(func(w http.ResponseWriter, r *http.Request, err error) { setResponse(w, http.StatusUnauthorized, "Unauthorized") }))
+	authRouter.Use(auth.AuthenticationMiddleware(client.Auth, func(w http.ResponseWriter, r *http.Request, err error) {
+		setResponse(w, http.StatusUnauthorized, "Unauthorized")
+	}))
 	authRouter.HandleFunc("/health", handleIsHealthy)
 
 	server := &http.Server{Addr: fmt.Sprintf(":%s", port), Handler: router}
 	go func() {
-		if err := server.ListenAndServeTLS("server.crt", "server.key"); err != nil {
+		if err := server.ListenAndServeTLS(TLSCertPath, TLSkeyPath); err != nil {
 			log.Println("server error " + err.Error())
 		}
 	}()
@@ -135,4 +154,62 @@ func setError(w http.ResponseWriter, message string) {
 func setResponse(w http.ResponseWriter, status int, message string) {
 	w.WriteHeader(status)
 	w.Write([]byte(message))
+}
+
+func generateKeysIfNeeded() error {
+	if _, err := os.Stat(TLSkeyPath); err == nil {
+		return nil
+	}
+	if _, err := os.Stat(TLSCertPath); err == nil {
+		return nil
+	}
+
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		return err
+	}
+	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
+	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
+	if err != nil {
+		return err
+	}
+
+	template := x509.Certificate{
+		SerialNumber: serialNumber,
+		Subject: pkix.Name{
+			Organization: []string{"My Corp"},
+		},
+		DNSNames:  []string{"localhost"},
+		NotBefore: time.Now(),
+		NotAfter:  time.Now().Add(3 * time.Hour),
+
+		KeyUsage:              x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+	}
+	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &privateKey.PublicKey, privateKey)
+	if err != nil {
+		return err
+	}
+	pemCert := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
+	if pemCert == nil {
+		return err
+	}
+	if err := os.WriteFile(TLSCertPath, pemCert, 0644); err != nil {
+		log.Fatal(err)
+	}
+
+	privBytes, err := x509.MarshalPKCS8PrivateKey(privateKey)
+	if err != nil {
+		return err
+	}
+	pemKey := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privBytes})
+	if pemKey == nil {
+		return err
+	}
+	if err := os.WriteFile(TLSkeyPath, pemKey, 0600); err != nil {
+		return err
+	}
+	log.Println("self signed certificates generated.")
+	return nil
 }

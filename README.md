@@ -30,7 +30,10 @@ Use the following code snippets or the example in the example package for a more
 ```
 package myapp
 
-import github.com/descope/go-sdk/descope
+import (
+    github.com/descope/go-sdk/descope
+    github.com/descope/go-sdk/descope/auth
+)
 
 client, err = descope.NewDescopeClient(descope.Config{ProjectID: "myprojectid"})
 ...
@@ -48,27 +51,29 @@ for i := range tokens {
 }
 ...
 
-if authorized, err := client.Auth.ValidateSessionRequest(r); !authorized {
+if authorized, err := client.Auth.ValidateSession(r); !authorized {
     // unauthorized error
 }
 ```
 
 ## Run The Example
 
-1. Clone repo locally `git clone github.com/descope/go-sdk`
-1. Download prerequisites and compile `make build`
-1. Set a self signed local private and public key using:
+1. Clone repository locally `git clone github.com/descope/go-sdk`
+2. Download prerequisites and build `make build`
+3. Navigate to examples folder `cd examples`
+4. export your project id:
 
 ```
-openssl genrsa -out server.key 2048
-openssl req -new -x509 -sha256 -key server.key -out server.crt -days 3650
+export DESCOPE_PROJECT_ID=<insert here>
 ```
 
-4. export your project id and public key for the project:
-
-```
-export DESCOPE_PROJECT_ID=<insert here> && export DESCOPE_PUBLIC_KEY=<insert here>
-```
-
-5. Run the example application `make run-example`
+5. Run one of our example applications:
+    - Gin web app: `make run-gin-example`
+    - HTTP web app: `make run-example`
 6. Application runs on `http://localhost:8085`
+
+### Run the Example: VS Code
+Alternatively you can run the example using a predefined launch configurations by following the below simple steps
+1. Follow steps 1-4 above
+1. Open `.vscode/launch.json` and replace `<insert here>` to your project id
+1. Run/Debug using VS Code
