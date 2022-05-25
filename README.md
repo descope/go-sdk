@@ -25,7 +25,7 @@ Use the authentication API to provide an easy sign up or sign in options for Gol
 
 ### Usage
 
-Use the following code snippets or the example in the example package for a more depth how to use.
+Use the following code snippets for an quick and easy usage or check out our examples in the examples package for a more in depth how to use.
 
 ```
 package myapp
@@ -53,6 +53,11 @@ for i := range tokens {
 
 if authorized, err := client.Auth.ValidateSession(r); !authorized {
     // unauthorized error
+}
+...
+
+if _, err := client.Auth.Logout(r); err != nil {
+    // handle error
 }
 ```
 

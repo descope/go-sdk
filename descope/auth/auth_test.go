@@ -516,6 +516,63 @@ func TestValidateSessionNotYet(t *testing.T) {
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
 
+func TestLogout(t *testing.T) {
+	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Set-Cookie": []string{(&http.Cookie{Name: RefreshCookieName}).String()}}}, nil
+	})
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+
+	w := httptest.NewRecorder()
+	cookies, err := a.Logout(request, WithResponseOption(w))
+	require.NoError(t, err)
+	assert.Len(t, w.Result().Cookies(), 1)
+	sessionCookie := w.Result().Cookies()[0]
+	assert.Empty(t, sessionCookie.Value)
+	assert.Len(t, cookies, 1)
+	sessionCookie = cookies[0]
+	assert.Empty(t, sessionCookie.Value)
+}
+
+func TestLogoutFailure(t *testing.T) {
+	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusBadGateway}, nil
+	})
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+
+	cookies, err := a.Logout(request, nil)
+	require.Error(t, err)
+	assert.Len(t, cookies, 0)
+}
+
+func TestLogoutEmptyRequest(t *testing.T) {
+	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusBadGateway}, nil
+	})
+	require.NoError(t, err)
+
+	cookies, err := a.Logout(nil)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, errors.MissingProviderError)
+	assert.Len(t, cookies, 0)
+}
+
+func TestLogoutMissingToken(t *testing.T) {
+	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusBadGateway}, nil
+	})
+	require.NoError(t, err)
+
+	request := &http.Request{Header: http.Header{}}
+	cookies, err := a.Logout(request)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, errors.RefreshTokenError)
+	assert.Len(t, cookies, 0)
+}
+
 func TestAuthenticationMiddlewareFailure(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
 	require.NoError(t, err)

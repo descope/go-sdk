@@ -103,14 +103,6 @@ const (
 	MethodSMS      DeliveryMethod = "sms"
 	MethodEmail    DeliveryMethod = "email"
 
-	signInV1AuthOTPPath  = "/v1/auth/signin/otp"
-	signUpV1AuthOTPPath  = "/v1/auth/signup/otp"
-	verifyCodeV1AuthPath = "/v1/auth/code/verify"
-	logoutV1AuthPath     = "/v1/logoutall"
-
-	publicKeyV1Path    = "/v1/keys/"
-	refreshTokenV1Path = "/v1/refresh"
-
 	SessionCookieName = "DS"
 	RefreshCookieName = "DSR"
 )

@@ -48,11 +48,21 @@ func main() {
 	authorized := r.Group("/")
 	authorized.Use(descopegin.AuthneticationMiddleware(client.Auth, nil))
 	authorized.GET("/health", handleIsHealthy)
+	authorized.GET("/logout", handleLogout)
 	r.RunTLS(":8085", TLSCertPath, TLSkeyPath)
 }
 
 func handleIsHealthy(c *gin.Context) {
 	setOK(c)
+}
+
+func handleLogout(c *gin.Context) {
+	_, err := client.Auth.Logout(c.Request, auth.WithResponseOption(c.Writer))
+	if err != nil {
+		setError(c, err.Error())
+	} else {
+		setOK(c)
+	}
 }
 
 func handleSignUp(c *gin.Context) {
