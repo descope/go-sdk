@@ -1,15 +1,28 @@
 package main
 
 import (
+	"crypto/ecdsa"
+	"crypto/elliptic"
+	"crypto/rand"
+	"crypto/x509"
+	"crypto/x509/pkix"
+	"encoding/pem"
 	"log"
+	"math/big"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/auth"
 	descopegin "github.com/descope/go-sdk/descope/gin"
 	"github.com/descope/go-sdk/descope/logger"
 	"github.com/gin-gonic/gin"
+)
+
+const (
+	TLSkeyPath  = "../key.pem"
+	TLSCertPath = "../cert.pem"
 )
 
 var client *descope.API
@@ -22,6 +35,11 @@ func main() {
 		log.Println("failed to init: " + err.Error())
 		os.Exit(1)
 	}
+	err = generateKeysIfNeeded()
+	if err != nil {
+		log.Println("failed to generate keys for TLS server: " + err.Error())
+		os.Exit(1)
+	}
 
 	r.GET("/signup", handleSignUp)
 	r.GET("/signin", handleSignIn)
@@ -30,7 +48,7 @@ func main() {
 	authorized := r.Group("/")
 	authorized.Use(descopegin.AuthneticationMiddleware(client.Auth, nil))
 	authorized.GET("/health", handleIsHealthy)
-	r.RunTLS(":8085", "../server.crt", "../server.key")
+	r.RunTLS(":8085", TLSCertPath, TLSkeyPath)
 }
 
 func handleIsHealthy(c *gin.Context) {
@@ -97,4 +115,62 @@ func setError(c *gin.Context, message string) {
 
 func setResponse(c *gin.Context, status int, message string) {
 	c.String(status, message)
+}
+
+func generateKeysIfNeeded() error {
+	if _, err := os.Stat(TLSkeyPath); err == nil {
+		return nil
+	}
+	if _, err := os.Stat(TLSCertPath); err == nil {
+		return nil
+	}
+
+	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	if err != nil {
+		return err
+	}
+	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
+	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
+	if err != nil {
+		return err
+	}
+
+	template := x509.Certificate{
+		SerialNumber: serialNumber,
+		Subject: pkix.Name{
+			Organization: []string{"My Corp"},
+		},
+		DNSNames:  []string{"localhost"},
+		NotBefore: time.Now(),
+		NotAfter:  time.Now().Add(3 * time.Hour),
+
+		KeyUsage:              x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		BasicConstraintsValid: true,
+	}
+	derBytes, err := x509.CreateCertificate(rand.Reader, &template, &template, &privateKey.PublicKey, privateKey)
+	if err != nil {
+		return err
+	}
+	pemCert := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
+	if pemCert == nil {
+		return err
+	}
+	if err := os.WriteFile(TLSCertPath, pemCert, 0644); err != nil {
+		log.Fatal(err)
+	}
+
+	privBytes, err := x509.MarshalPKCS8PrivateKey(privateKey)
+	if err != nil {
+		return err
+	}
+	pemKey := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privBytes})
+	if pemKey == nil {
+		return err
+	}
+	if err := os.WriteFile(TLSkeyPath, pemKey, 0600); err != nil {
+		return err
+	}
+	log.Println("self signed certificates generated.")
+	return nil
 }

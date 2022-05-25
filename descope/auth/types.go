@@ -5,7 +5,7 @@ import (
 	"regexp"
 )
 
-type IJWTProvider interface {
+type JWTProvider interface {
 	ProvideTokens() (string, string)
 }
 

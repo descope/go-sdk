@@ -4,7 +4,7 @@
 # IDE files
 .idea/
 .vscode/*
-!.vscode/launch.json
+!.vscode/lau
 .history/
 *.vsix
 .ionide
@@ -41,3 +41,4 @@ THIRD_PARTY_LICENSE
 __debug_bin
 *.crt
 *.key
+*.pem

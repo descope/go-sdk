@@ -84,7 +84,7 @@ func (auth *Auth) VerifyCodeWhatsApp(identifier string, code string, options ...
 	return auth.VerifyCode(MethodWhatsApp, identifier, code, options...)
 }
 
-func (auth *Auth) ValidateSession(provider IJWTProvider, options ...Option) (bool, []*http.Cookie, error) {
+func (auth *Auth) ValidateSession(provider JWTProvider, options ...Option) (bool, []*http.Cookie, error) {
 	if provider == nil {
 		return false, nil, errors.MissingProviderError
 	}
