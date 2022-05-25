@@ -10,7 +10,7 @@ import (
 
 func AuthneticationMiddleware(client auth.IAuth, onFailure func(*gin.Context, error)) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if ok, _, err := client.ValidateSession(auth.RequestJWTProvider(c.Request), auth.WithResponseOption(c.Writer)); ok {
+		if ok, _, err := client.ValidateSession(c.Request, auth.WithResponseOption(c.Writer)); ok {
 			c.Next()
 		} else {
 			if onFailure != nil {

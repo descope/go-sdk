@@ -5,30 +5,6 @@ import (
 	"regexp"
 )
 
-type JWTProvider interface {
-	ProvideTokens() (string, string)
-}
-
-type requestJWTProvider struct {
-	r *http.Request
-}
-
-var RequestJWTProvider = func(r *http.Request) *requestJWTProvider {
-	return &requestJWTProvider{r: r}
-}
-
-func (p *requestJWTProvider) ProvideTokens() (sessionToken string, refreshToken string) {
-	if sessionCookie, _ := p.r.Cookie(SessionCookieName); sessionCookie != nil {
-		sessionToken = sessionCookie.Value
-	}
-
-	refreshCookie, err := p.r.Cookie(RefreshCookieName)
-	if err != nil {
-		return sessionToken, ""
-	}
-	return sessionToken, refreshCookie.Value
-}
-
 type Option interface {
 	Kind() interface{}
 	Value() interface{}

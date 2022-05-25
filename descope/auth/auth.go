@@ -84,14 +84,27 @@ func (auth *Auth) VerifyCodeWhatsApp(identifier string, code string, options ...
 	return auth.VerifyCode(MethodWhatsApp, identifier, code, options...)
 }
 
-func (auth *Auth) ValidateSession(provider JWTProvider, options ...Option) (bool, []*http.Cookie, error) {
-	if provider == nil {
+func provideTokens(r *http.Request) (string, string) {
+	sessionToken := ""
+	if sessionCookie, _ := r.Cookie(SessionCookieName); sessionCookie != nil {
+		sessionToken = sessionCookie.Value
+	}
+
+	refreshCookie, err := r.Cookie(RefreshCookieName)
+	if err != nil {
+		return sessionToken, ""
+	}
+	return sessionToken, refreshCookie.Value
+}
+
+func (auth *Auth) ValidateSession(request *http.Request, options ...Option) (bool, []*http.Cookie, error) {
+	if request == nil {
 		return false, nil, errors.MissingProviderError
 	}
 
-	sessionToken, refreshToken := provider.ProvideTokens()
+	sessionToken, refreshToken := provideTokens(request)
 	if refreshToken == "" {
-		logger.LogDebug("unable to find refresh cookie using given provider [%T]", provider)
+		logger.LogDebug("unable to find tokens from cookies")
 		return false, nil, errors.NewValidationError("refresh token not found")
 	}
 
@@ -156,7 +169,7 @@ func validateTokenError(err error) (bool, error) {
 func AuthenticationMiddleware(auth IAuth, onFailure func(http.ResponseWriter, *http.Request, error)) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if ok, _, err := auth.ValidateSession(RequestJWTProvider(r), WithResponseOption(w)); ok {
+			if ok, _, err := auth.ValidateSession(r, WithResponseOption(w)); ok {
 				next.ServeHTTP(w, r)
 			} else {
 				logger.LogDebug("request failed because token is invalid error: " + err.Error())

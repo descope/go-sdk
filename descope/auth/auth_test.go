@@ -426,7 +426,7 @@ func TestValidateSessionRequest(t *testing.T) {
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenValid})
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	ok, cookies, err := a.ValidateSession(RequestJWTProvider(request))
+	ok, cookies, err := a.ValidateSession(request)
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.Empty(t, cookies)
@@ -437,7 +437,7 @@ func TestValidateSessionRequestMissingRefreshCookie(t *testing.T) {
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenValid})
-	ok, cookies, err := a.ValidateSession(RequestJWTProvider(request))
+	ok, cookies, err := a.ValidateSession(request)
 	require.Error(t, err)
 	require.False(t, ok)
 	require.Empty(t, cookies)
@@ -452,7 +452,7 @@ func TestValidateSessionRequestRefreshSession(t *testing.T) {
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
 
 	b := httptest.NewRecorder()
-	ok, cookies, err := a.ValidateSession(RequestJWTProvider(request), WithResponseOption(b))
+	ok, cookies, err := a.ValidateSession(request, WithResponseOption(b))
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.Len(t, cookies, 1)
@@ -472,7 +472,7 @@ func TestValidateSessionRequestFailRefreshSession(t *testing.T) {
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	ok, cookies, err := a.ValidateSession(RequestJWTProvider(request))
+	ok, cookies, err := a.ValidateSession(request)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, errors.FailedToRefreshTokenError)
 	require.False(t, ok)
@@ -483,7 +483,7 @@ func TestValidateSessionRequestNoCookie(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
-	ok, cookies, err := a.ValidateSession(RequestJWTProvider(request))
+	ok, cookies, err := a.ValidateSession(request)
 	require.Error(t, err)
 	require.False(t, ok)
 	require.Empty(t, cookies)

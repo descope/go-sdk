@@ -33,5 +33,5 @@ type IAuth interface {
 	// ValidateSession - Use to validate a session of a given request.
 	// Should be called before any private API call that requires authorization.
 	// returns true upon success or false and/or error upon failure.
-	ValidateSession(provider JWTProvider, options ...Option) (bool, []*http.Cookie, error)
+	ValidateSession(request *http.Request, options ...Option) (bool, []*http.Cookie, error)
 }

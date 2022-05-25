@@ -4,7 +4,6 @@
 # IDE files
 .idea/
 .vscode/*
-!.vscode/lau
 .history/
 *.vsix
 .ionide

@@ -51,7 +51,7 @@ for i := range tokens {
 }
 ...
 
-if authorized, err := client.Auth.ValidateSession(auth.RequestJWTProvider(r)); !authorized {
+if authorized, err := client.Auth.ValidateSession(r); !authorized {
     // unauthorized error
 }
 ```
