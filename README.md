@@ -58,12 +58,12 @@ if err := client.Auth.Logout(r, w); err != nil {
 }
 ...
 
-// Put this in your routes middleware for any request which requires authentication, Or use the builtin middleware.
+// Put this in your routes middleware for any request which requires authentication, Or use the builtin middleware. (see below example)
 if authorized, userToken, err := client.Auth.ValidateSession(r, w); !authorized {
     // unauthorized error
 }
 
-// Use the builtin middleware to authenticate selected routes invoke myCustomFailureCallback on authentication failure.
+// Use the builtin middleware to authenticate selected routes, invokes myCustomFailureCallback on authentication failure.
 r.Use(auth.AuthenticationMiddleware(client.Auth, myCustomFailureCallback)
 ```
 
