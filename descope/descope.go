@@ -51,12 +51,12 @@ func (c *Config) setPublicKey() string {
 	return c.PublicKey
 }
 
-type API struct {
+type DescopeClient struct {
 	Auth   auth.IAuth
 	config *Config
 }
 
-func NewDescopeClient(config Config) (*API, error) {
+func NewDescopeClient(config Config) (*DescopeClient, error) {
 	logger.Init(config.LogLevel, config.Logger)
 
 	if config.setProjectID() == "" {
@@ -71,5 +71,5 @@ func NewDescopeClient(config Config) (*API, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &API{Auth: authService, config: &config}, nil
+	return &DescopeClient{Auth: authService, config: &config}, nil
 }

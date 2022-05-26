@@ -27,7 +27,7 @@ const (
 	TLSCertPath = "../cert.pem"
 )
 
-var client *descope.API
+var client *descope.DescopeClient
 
 func main() {
 	port := "8085"
@@ -81,7 +81,7 @@ func handleIsHealthy(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleLogout(w http.ResponseWriter, r *http.Request) {
-	_, err := client.Auth.Logout(r, w)
+	err := client.Auth.Logout(r, w)
 	if err != nil {
 		setError(w, err.Error())
 	} else {
