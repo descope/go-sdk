@@ -3,6 +3,8 @@ package auth
 import (
 	"net/http"
 	"regexp"
+
+	"github.com/descope/go-sdk/descope/logger"
 )
 
 // WithResponseOption - adds a response option to supported functions to allow
@@ -45,9 +47,12 @@ func (options Options) SetCookies(cookies []*http.Cookie) {
 			case responseOption:
 				val := option.Value()
 				if val != nil {
-					w := option.Value().(http.ResponseWriter)
-					for i := range cookies {
-						http.SetCookie(w, cookies[i])
+					if w, ok := option.Value().(http.ResponseWriter); ok {
+						for i := range cookies {
+							http.SetCookie(w, cookies[i])
+						}
+					} else {
+						logger.LogDebug("Unexpected option value [%T]", option.Value())
 					}
 				}
 			}
