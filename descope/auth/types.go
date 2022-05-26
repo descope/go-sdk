@@ -8,9 +8,6 @@ import (
 // WithResponseOption - adds a response option to supported functions to allow
 // automatic apply and renewal of the tokens to the response sent to the client.
 func WithResponseOption(w http.ResponseWriter) Option {
-	if w == nil {
-		return nil
-	}
 	return newOption(responseOption{}, w)
 }
 
@@ -43,13 +40,15 @@ type Options []Option
 
 func (options Options) SetCookies(cookies []*http.Cookie) {
 	for _, option := range options {
-		switch option.Kind().(type) {
-		case responseOption:
-			val := option.Value()
-			if val != nil {
-				w := option.Value().(http.ResponseWriter)
-				for i := range cookies {
-					http.SetCookie(w, cookies[i])
+		if option != nil {
+			switch option.Kind().(type) {
+			case responseOption:
+				val := option.Value()
+				if val != nil {
+					w := option.Value().(http.ResponseWriter)
+					for i := range cookies {
+						http.SetCookie(w, cookies[i])
+					}
 				}
 			}
 		}
