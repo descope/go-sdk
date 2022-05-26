@@ -59,7 +59,7 @@ if err := client.Auth.Logout(r, w); err != nil {
 ...
 
 // Put this in your routes middleware for any request which requires authentication, Or use the builtin middleware.
-if authorized, refreshedToken, err := client.Auth.ValidateSession(r, w); !authorized {
+if authorized, userToken, err := client.Auth.ValidateSession(r, w); !authorized {
     // unauthorized error
 }
 // Use the builtin middleware to authenticate selected routes invoke myCustomFailureCallback on authentication failure.
