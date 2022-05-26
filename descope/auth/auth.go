@@ -120,7 +120,7 @@ func (auth *Auth) ValidateSessionWithOptions(request *http.Request, options ...O
 	ok, cookies, err := auth.validateSession(sessionToken, refreshToken)
 	if ok {
 		userToken := ""
-		for	_, cookie := range cookies {
+		for _, cookie := range cookies {
 			if cookie.Name == SessionCookieName {
 				userToken = cookie.Value
 			}

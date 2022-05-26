@@ -3,14 +3,14 @@ package auth
 import "net/http"
 
 type MockDescopeAuth struct {
-	SignInOTPResponseError         error
-	SignUpOTPResponseError         error
-	VerifyCodeResponseCookies      []*http.Cookie
-	VerifyCodeResponseError        error
-	ValidateSessionResponseNotOK   bool
+	SignInOTPResponseError       error
+	SignUpOTPResponseError       error
+	VerifyCodeResponseCookies    []*http.Cookie
+	VerifyCodeResponseError      error
+	ValidateSessionResponseNotOK bool
 	ValidateSessionResponseToken string
-	ValidateSessionResponseError   error
-	LogoutResponseError            error
+	ValidateSessionResponseError error
+	LogoutResponseError          error
 }
 
 func (m MockDescopeAuth) SignInOTP(_ DeliveryMethod, _ string) error {

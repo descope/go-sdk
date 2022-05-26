@@ -46,9 +46,9 @@ func TestEmptyProjectID(t *testing.T) {
 func TestDescopeSDKMock(t *testing.T) {
 	api := API{
 		Auth: auth.MockDescopeAuth{
-			ValidateSessionResponseNotOK:   true,
+			ValidateSessionResponseNotOK: true,
 			ValidateSessionResponseToken: "test",
-			ValidateSessionResponseError:   errors.NoPublicKeyError,
+			ValidateSessionResponseError: errors.NoPublicKeyError,
 		},
 	}
 	ok, token, err := api.Auth.ValidateSession(nil, nil)
