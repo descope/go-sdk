@@ -11,21 +11,36 @@ type MockDescopeAuth struct {
 	ValidateSessionResponseToken string
 	ValidateSessionResponseError error
 	LogoutResponseError          error
+	AssertSignInOTP              func(method DeliveryMethod, identifier string)
+	AssertSignUpOTP              func(method DeliveryMethod, identifier string, user *User)
+	AssertVerifyCode             func(method DeliveryMethod, identifier string, code string)
 }
 
-func (m MockDescopeAuth) SignInOTP(_ DeliveryMethod, _ string) error {
+func (m MockDescopeAuth) SignInOTP(method DeliveryMethod, identifier string) error {
+	if m.AssertSignInOTP != nil {
+		m.AssertSignInOTP(method, identifier)
+	}
 	return m.SignInOTPResponseError
 }
 
-func (m MockDescopeAuth) SignUpOTP(_ DeliveryMethod, _ string, _ *User) error {
+func (m MockDescopeAuth) SignUpOTP(method DeliveryMethod, identifier string, user *User) error {
+	if m.AssertSignUpOTP != nil {
+		m.AssertSignUpOTP(method, identifier, user)
+	}
 	return m.SignUpOTPResponseError
 }
 
-func (m MockDescopeAuth) VerifyCode(_ DeliveryMethod, _ string, _ string, _ http.ResponseWriter) ([]*http.Cookie, error) {
+func (m MockDescopeAuth) VerifyCode(method DeliveryMethod, identifier string, code string, _ http.ResponseWriter) ([]*http.Cookie, error) {
+	if m.AssertVerifyCode != nil {
+		m.AssertVerifyCode(method, identifier, code)
+	}
 	return m.VerifyCodeResponseCookies, m.VerifyCodeResponseError
 }
 
-func (m MockDescopeAuth) VerifyCodeWithOptions(_ DeliveryMethod, _ string, _ string, _ ...Option) ([]*http.Cookie, error) {
+func (m MockDescopeAuth) VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, _ ...Option) ([]*http.Cookie, error) {
+	if m.AssertVerifyCode != nil {
+		m.AssertVerifyCode(method, identifier, code)
+	}
 	return m.VerifyCodeResponseCookies, m.VerifyCodeResponseError
 }
 
