@@ -53,13 +53,13 @@ if _, err := client.Auth.VerifyCode(auth.MethodEmail, "mytestmail@test.com", cod
 ...
 
 // In your logout route
-if _, err := client.Auth.Logout(r, w); err != nil {
+if err := client.Auth.Logout(r, w); err != nil {
     // handle error
 }
 ...
 
 // Put this in your routes middleware for any request which requires authentication, Or use the builtin middleware.
-if authorized, err := client.Auth.ValidateSession(r, w); !authorized {
+if authorized, refreshedToken, err := client.Auth.ValidateSession(r, w); !authorized {
     // unauthorized error
 }
 // Use the builtin middleware to authenticate selected routes invoke myCustomFailureCallback on authentication failure.
@@ -94,7 +94,7 @@ After integrating Descope SDK, you might want to unit test your app, for that we
 api := descope.API{
 	Auth: auth.MockDescopeAuth{
 		ValidateSessionResponseNotOK:   true,
-		ValidateSessionResponseCookies: []*http.Cookie{{}},
+		ValidateSessionResponseToken:   "newtoken",
 		ValidateSessionResponseError:   errors.BadRequest,
 	},
 }
