@@ -46,7 +46,7 @@ if err := client.Auth.SignInOTP(auth.MethodEmail, "mytestmail@test.com"); err !=
 }
 ...
 
-// In your verify code route or after a sucessful sign-in route
+// In your verify code route
 if _, err := client.Auth.VerifyCode(auth.MethodEmail, "mytestmail@test.com", code, w); err != nil {
     // handle error
 }
@@ -59,9 +59,10 @@ if err := client.Auth.Logout(r, w); err != nil {
 ...
 
 // Put this in your routes middleware for any request which requires authentication, Or use the builtin middleware.
-if authorized, refreshedToken, err := client.Auth.ValidateSession(r, w); !authorized {
+if authorized, userToken, err := client.Auth.ValidateSession(r, w); !authorized {
     // unauthorized error
 }
+
 // Use the builtin middleware to authenticate selected routes invoke myCustomFailureCallback on authentication failure.
 r.Use(auth.AuthenticationMiddleware(client.Auth, myCustomFailureCallback)
 ```
