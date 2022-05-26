@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/descope/common/pkg/common/errors"
 	"github.com/descope/go-sdk/descope/auth"
+	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -49,11 +49,11 @@ func TestDescopeSDKMock(t *testing.T) {
 		Auth: auth.MockDescopeAuth{
 			ValidateSessionResponseNotOK:   true,
 			ValidateSessionResponseCookies: []*http.Cookie{{}},
-			ValidateSessionResponseError:   errors.BadRequest,
+			ValidateSessionResponseError:   errors.NoPublicKeyError,
 		},
 	}
 	ok, cookies, err := api.Auth.ValidateSession(nil, nil)
 	assert.False(t, ok)
 	assert.NotEmpty(t, cookies)
-	assert.ErrorIs(t, err, errors.BadRequest)
+	assert.ErrorIs(t, err, errors.NoPublicKeyError)
 }
