@@ -23,42 +23,47 @@ Use the authentication API to provide an easy sign up or sign in options for Gol
    - Set the PublicKey in the Conf{} on initialize.
    - Or keep empty to fetch matching public keys from descope services.
 
-### Usage
+### Code Usage
 
 Use the following code snippets for an quick and easy usage or check out our examples in the examples package for a more in depth how to use.
 
 ```
-package myapp
+package mygreatapp
 
 import (
     github.com/descope/go-sdk/descope
     github.com/descope/go-sdk/descope/auth
 )
 
+// Init Descope client when starting your app, provide your project ID (from your Descope account).
+// Store the client so you can easily access it later in the router level.
 client, err = descope.NewDescopeClient(descope.Config{ProjectID: "myprojectid"})
 ...
 
+// In your sign-in route
 if err := client.Auth.SignInOTP(auth.MethodEmail, "mytestmail@test.com"); err != nil {
     // handle error
 }
 ...
 
-if tokens, err := client.Auth.VerifyCodeEmail("mytestmail@test.com", code); err != nil {
+// In your verify code route or after a sucessful sign-in route
+if _, err := client.Auth.VerifyCode(auth.MethodEmail, "mytestmail@test.com", code, w); err != nil {
     // handle error
-}
-for i := range tokens {
-    http.SetCookie(w, tokens[i])
 }
 ...
 
-if authorized, err := client.Auth.ValidateSession(r); !authorized {
+// In your logout route
+if _, err := client.Auth.Logout(r, w); err != nil {
+    // handle error
+}
+...
+
+// Put this in your routes middleware for any request which requires authentication, Or use the builtin middleware.
+if authorized, err := client.Auth.ValidateSession(r, w); !authorized {
     // unauthorized error
 }
-...
-
-if _, err := client.Auth.Logout(r); err != nil {
-    // handle error
-}
+// Use the builtin middleware to authenticate selected routes invoke myCustomFailureCallback on authentication failure.
+r.Use(auth.AuthenticationMiddleware(client.Auth, myCustomFailureCallback)
 ```
 
 ## Run The Example

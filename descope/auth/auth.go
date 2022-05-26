@@ -46,7 +46,11 @@ func (auth *Auth) SignUpOTP(method DeliveryMethod, identifier string, user *User
 	return err
 }
 
-func (auth *Auth) VerifyCode(method DeliveryMethod, identifier string, code string, options ...Option) ([]*http.Cookie, error) {
+func (auth *Auth) VerifyCode(method DeliveryMethod, identifier string, code string, w http.ResponseWriter) ([]*http.Cookie, error) {
+	return auth.VerifyCodeWithOptions(method, identifier, code, WithResponseOption(w))
+}
+
+func (auth *Auth) VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, options ...Option) ([]*http.Cookie, error) {
 	if method == "" {
 		if phoneRegex.MatchString(identifier) {
 			method = MethodSMS
@@ -72,19 +76,11 @@ func (auth *Auth) VerifyCode(method DeliveryMethod, identifier string, code stri
 	return cookies, err
 }
 
-func (auth *Auth) VerifyCodeEmail(identifier string, code string, options ...Option) ([]*http.Cookie, error) {
-	return auth.VerifyCode(MethodEmail, identifier, code, options...)
+func (auth *Auth) Logout(request *http.Request, w http.ResponseWriter) ([]*http.Cookie, error) {
+	return auth.LogoutWithOptions(request, WithResponseOption(w))
 }
 
-func (auth *Auth) VerifyCodeSMS(identifier string, code string, options ...Option) ([]*http.Cookie, error) {
-	return auth.VerifyCode(MethodSMS, identifier, code, options...)
-}
-
-func (auth *Auth) VerifyCodeWhatsApp(identifier string, code string, options ...Option) ([]*http.Cookie, error) {
-	return auth.VerifyCode(MethodWhatsApp, identifier, code, options...)
-}
-
-func (auth *Auth) Logout(request *http.Request, options ...Option) ([]*http.Cookie, error) {
+func (auth *Auth) LogoutWithOptions(request *http.Request, options ...Option) ([]*http.Cookie, error) {
 	if request == nil {
 		return nil, errors.MissingProviderError
 	}
@@ -109,20 +105,11 @@ func (auth *Auth) Logout(request *http.Request, options ...Option) ([]*http.Cook
 	return cookies, nil
 }
 
-func provideTokens(r *http.Request) (string, string) {
-	sessionToken := ""
-	if sessionCookie, _ := r.Cookie(SessionCookieName); sessionCookie != nil {
-		sessionToken = sessionCookie.Value
-	}
-
-	refreshCookie, err := r.Cookie(RefreshCookieName)
-	if err != nil {
-		return sessionToken, ""
-	}
-	return sessionToken, refreshCookie.Value
+func (auth *Auth) ValidateSession(request *http.Request, w http.ResponseWriter) (bool, []*http.Cookie, error) {
+	return auth.ValidateSessionWithOptions(request, WithResponseOption(w))
 }
 
-func (auth *Auth) ValidateSession(request *http.Request, options ...Option) (bool, []*http.Cookie, error) {
+func (auth *Auth) ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, []*http.Cookie, error) {
 	if request == nil {
 		return false, nil, errors.MissingProviderError
 	}
@@ -139,6 +126,26 @@ func (auth *Auth) ValidateSession(request *http.Request, options ...Option) (boo
 		return true, cookies, nil
 	}
 	return false, cookies, err
+}
+
+// AuthenticationMiddleware - middleware used to validate session and invoke if provided a failure and
+// success callbacks after calling ValidateSession().
+// onFailure will be called when the authentication failed, if empty, will write unauthorized (401) on the response writer.
+func AuthenticationMiddleware(auth IAuth, onFailure func(http.ResponseWriter, *http.Request, error)) func(next http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if ok, _, err := auth.ValidateSession(r, w); ok {
+				next.ServeHTTP(w, r)
+			} else {
+				logger.LogDebug("request failed because token is invalid error: " + err.Error())
+				if onFailure != nil {
+					onFailure(w, r, err)
+				} else {
+					w.WriteHeader(http.StatusUnauthorized)
+				}
+			}
+		})
+	}
 }
 
 func (auth *Auth) validateSession(sessionToken string, refreshToken string) (bool, []*http.Cookie, error) {
@@ -172,6 +179,19 @@ func (auth *Auth) validateJWT(JWT string) (jwt.Token, error) {
 	return jwt.Parse([]byte(JWT), jwt.WithKeyProvider(auth.publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true))
 }
 
+func provideTokens(r *http.Request) (string, string) {
+	sessionToken := ""
+	if sessionCookie, _ := r.Cookie(SessionCookieName); sessionCookie != nil {
+		sessionToken = sessionCookie.Value
+	}
+
+	refreshCookie, err := r.Cookie(RefreshCookieName)
+	if err != nil {
+		return sessionToken, ""
+	}
+	return sessionToken, refreshCookie.Value
+}
+
 func validateTokenError(err error) (bool, error) {
 	if goErrors.Is(err, jwt.ErrTokenExpired()) {
 		logger.LogDebug("token has expired")
@@ -186,26 +206,6 @@ func validateTokenError(err error) (bool, error) {
 		return false, errors.NewUnauthorizedError()
 	}
 	return true, nil
-}
-
-// AuthenticationMiddleware - middleware used to validate session and invoke if provided a failure and
-// success callbacks after calling ValidateSession().
-// onFailure will be called when the authentication failed, if empty, will write unauthorized (401) on the response writer.
-func AuthenticationMiddleware(auth IAuth, onFailure func(http.ResponseWriter, *http.Request, error)) func(next http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if ok, _, err := auth.ValidateSession(r, WithResponseOption(w)); ok {
-				next.ServeHTTP(w, r)
-			} else {
-				logger.LogDebug("request failed because token is invalid error: " + err.Error())
-				if onFailure != nil {
-					onFailure(w, r, err)
-				} else {
-					w.WriteHeader(http.StatusUnauthorized)
-				}
-			}
-		})
-	}
 }
 
 func (*Auth) verifyDeliveryMethod(method DeliveryMethod, identifier string) *errors.WebError {

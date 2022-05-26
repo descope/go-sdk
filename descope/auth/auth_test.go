@@ -199,7 +199,7 @@ func TestInvalidEmailVerifyCodeEmail(t *testing.T) {
 	email := "943248329844"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.VerifyCodeEmail(email, "4444")
+	_, err = a.VerifyCodeWithOptions(MethodEmail, email, "4444")
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -208,7 +208,7 @@ func TestInvalidPhoneVerifyCodeSMS(t *testing.T) {
 	phone := "ahaatest"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.VerifyCodeSMS(phone, "4444")
+	_, err = a.VerifyCodeWithOptions(MethodSMS, phone, "4444")
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -217,7 +217,7 @@ func TestInvalidVerifyCode(t *testing.T) {
 	email := "a"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.VerifyCode("", email, "4444")
+	_, err = a.VerifyCodeWithOptions("", email, "4444")
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -232,7 +232,7 @@ func TestVerifyCodeDetectEmail(t *testing.T) {
 		assert.EqualValues(t, email, body["email"])
 	}))
 	require.NoError(t, err)
-	_, err = a.VerifyCode("", email, "555")
+	_, err = a.VerifyCodeWithOptions("", email, "555")
 	require.NoError(t, err)
 }
 
@@ -246,7 +246,7 @@ func TestVerifyCodeDetectPhone(t *testing.T) {
 		assert.EqualValues(t, phone, body["phone"])
 	}))
 	require.NoError(t, err)
-	_, err = a.VerifyCode("", phone, "555")
+	_, err = a.VerifyCodeWithOptions("", phone, "555")
 	require.NoError(t, err)
 }
 
@@ -261,7 +261,7 @@ func TestVerifyCodeWithPhone(t *testing.T) {
 		assert.EqualValues(t, "4444", body["code"])
 	}))
 	require.NoError(t, err)
-	_, err = a.VerifyCode(MethodSMS, phone, "4444")
+	_, err = a.VerifyCodeWithOptions(MethodSMS, phone, "4444")
 	require.NoError(t, err)
 }
 
@@ -277,7 +277,7 @@ func TestVerifyCodeEmail(t *testing.T) {
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
-	_, err = a.VerifyCodeEmail(email, code)
+	_, err = a.VerifyCodeWithOptions(MethodEmail, email, code)
 	require.Nil(t, err)
 }
 
@@ -293,7 +293,7 @@ func TestVerifyCodeSMS(t *testing.T) {
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
-	_, err = a.VerifyCodeSMS(phone, code)
+	_, err = a.VerifyCodeWithOptions(MethodSMS, phone, code)
 	require.NoError(t, err)
 }
 
@@ -309,7 +309,7 @@ func TestVerifyCodeWhatsApp(t *testing.T) {
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
-	_, err = a.VerifyCodeWhatsApp(phone, code)
+	_, err = a.VerifyCodeWithOptions(MethodWhatsApp, phone, code)
 	require.NoError(t, err)
 }
 
@@ -327,7 +327,7 @@ func TestVerifyCodeEmailResponseOption(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	_, err = a.VerifyCodeEmail(email, code, WithResponseOption(w))
+	_, err = a.VerifyCode(MethodEmail, email, code, w)
 	require.Nil(t, err)
 	assert.Len(t, w.Result().Cookies(), 1)
 	sessionCookie := w.Result().Cookies()[0]
@@ -341,7 +341,7 @@ func TestAuthDefaultURL(t *testing.T) {
 		assert.Contains(t, r.URL.String(), url)
 	}))
 	require.NoError(t, err)
-	_, err = a.VerifyCodeWhatsApp("4444", "444")
+	_, err = a.VerifyCodeWithOptions(MethodWhatsApp, "4444", "444")
 	require.NoError(t, err)
 }
 
@@ -426,7 +426,7 @@ func TestValidateSessionRequest(t *testing.T) {
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenValid})
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	ok, cookies, err := a.ValidateSession(request)
+	ok, cookies, err := a.ValidateSessionWithOptions(request)
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.Empty(t, cookies)
@@ -437,7 +437,7 @@ func TestValidateSessionRequestMissingRefreshCookie(t *testing.T) {
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenValid})
-	ok, cookies, err := a.ValidateSession(request)
+	ok, cookies, err := a.ValidateSessionWithOptions(request)
 	require.Error(t, err)
 	require.False(t, ok)
 	require.Empty(t, cookies)
@@ -452,7 +452,7 @@ func TestValidateSessionRequestRefreshSession(t *testing.T) {
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
 
 	b := httptest.NewRecorder()
-	ok, cookies, err := a.ValidateSession(request, WithResponseOption(b))
+	ok, cookies, err := a.ValidateSession(request, b)
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.Len(t, cookies, 1)
@@ -472,7 +472,7 @@ func TestValidateSessionRequestFailRefreshSession(t *testing.T) {
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	ok, cookies, err := a.ValidateSession(request)
+	ok, cookies, err := a.ValidateSessionWithOptions(request)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, errors.FailedToRefreshTokenError)
 	require.False(t, ok)
@@ -483,7 +483,7 @@ func TestValidateSessionRequestNoCookie(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
-	ok, cookies, err := a.ValidateSession(request)
+	ok, cookies, err := a.ValidateSessionWithOptions(request)
 	require.Error(t, err)
 	require.False(t, ok)
 	require.Empty(t, cookies)
@@ -501,7 +501,7 @@ func TestValidateSessionExpired(t *testing.T) {
 func TestValidateSessionNoProvider(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateSession(nil)
+	ok, _, err := a.ValidateSessionWithOptions(nil)
 	require.Error(t, err)
 	require.ErrorIs(t, err, errors.MissingProviderError)
 	require.False(t, ok)
@@ -525,7 +525,7 @@ func TestLogout(t *testing.T) {
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
 
 	w := httptest.NewRecorder()
-	cookies, err := a.Logout(request, WithResponseOption(w))
+	cookies, err := a.Logout(request, w)
 	require.NoError(t, err)
 	assert.Len(t, w.Result().Cookies(), 1)
 	sessionCookie := w.Result().Cookies()[0]
@@ -554,7 +554,7 @@ func TestLogoutEmptyRequest(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	cookies, err := a.Logout(nil)
+	cookies, err := a.LogoutWithOptions(nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, errors.MissingProviderError)
 	assert.Len(t, cookies, 0)
@@ -567,7 +567,7 @@ func TestLogoutMissingToken(t *testing.T) {
 	require.NoError(t, err)
 
 	request := &http.Request{Header: http.Header{}}
-	cookies, err := a.Logout(request)
+	cookies, err := a.LogoutWithOptions(request)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, errors.RefreshTokenError)
 	assert.Len(t, cookies, 0)
