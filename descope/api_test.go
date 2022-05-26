@@ -1,7 +1,6 @@
 package descope
 
 import (
-	"net/http"
 	"os"
 	"testing"
 
@@ -48,12 +47,12 @@ func TestDescopeSDKMock(t *testing.T) {
 	api := API{
 		Auth: auth.MockDescopeAuth{
 			ValidateSessionResponseNotOK:   true,
-			ValidateSessionResponseCookies: []*http.Cookie{{}},
+			ValidateSessionResponseToken: "test",
 			ValidateSessionResponseError:   errors.NoPublicKeyError,
 		},
 	}
-	ok, cookies, err := api.Auth.ValidateSession(nil, nil)
+	ok, token, err := api.Auth.ValidateSession(nil, nil)
 	assert.False(t, ok)
-	assert.NotEmpty(t, cookies)
+	assert.NotEmpty(t, token)
 	assert.ErrorIs(t, err, errors.NoPublicKeyError)
 }

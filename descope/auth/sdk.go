@@ -33,14 +33,14 @@ type IAuth interface {
 	// Use the ResponseWriter to apply the cookies to the response automatically.
 	// returns true upon success or false and an error upon failure.
 	// This is a shortcut for ValidateSessionWithOptions(r, WithResponseOption(w))
-	ValidateSession(request *http.Request, w http.ResponseWriter) (bool, []*http.Cookie, error)
-	ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, []*http.Cookie, error)
+	ValidateSession(request *http.Request, w http.ResponseWriter) (bool, string, error)
+	ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, string, error)
 
 	// Logout - Use to perform logout from all active devices. This will revoke the given tokens
-	// and if given options will also remove existing session on the given response.
+	// and if given options will also remove existing session on the given response sent to the client.
 	// This is a shortcut for LogoutWithOptions(r, WithResponseOption(w))
-	Logout(request *http.Request, w http.ResponseWriter) ([]*http.Cookie, error)
+	Logout(request *http.Request, w http.ResponseWriter) error
 	// LogoutWithOptions - Use to perform logout from all active devices. This will revoke the given tokens
 	// and if given options will also remove existing session on the given response.
-	LogoutWithOptions(request *http.Request, options ...Option) ([]*http.Cookie, error)
+	LogoutWithOptions(request *http.Request, options ...Option) error
 }

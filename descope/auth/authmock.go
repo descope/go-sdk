@@ -8,9 +8,8 @@ type MockDescopeAuth struct {
 	VerifyCodeResponseCookies      []*http.Cookie
 	VerifyCodeResponseError        error
 	ValidateSessionResponseNotOK   bool
-	ValidateSessionResponseCookies []*http.Cookie
+	ValidateSessionResponseToken string
 	ValidateSessionResponseError   error
-	LogoutResponseCookies          []*http.Cookie
 	LogoutResponseError            error
 }
 
@@ -30,18 +29,18 @@ func (m MockDescopeAuth) VerifyCodeWithOptions(_ DeliveryMethod, _ string, _ str
 	return m.VerifyCodeResponseCookies, m.VerifyCodeResponseError
 }
 
-func (m MockDescopeAuth) ValidateSession(_ *http.Request, _ http.ResponseWriter) (bool, []*http.Cookie, error) {
-	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseCookies, m.ValidateSessionResponseError
+func (m MockDescopeAuth) ValidateSession(_ *http.Request, _ http.ResponseWriter) (bool, string, error) {
+	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseToken, m.ValidateSessionResponseError
 }
 
-func (m MockDescopeAuth) ValidateSessionWithOptions(_ *http.Request, _ ...Option) (bool, []*http.Cookie, error) {
-	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseCookies, m.ValidateSessionResponseError
+func (m MockDescopeAuth) ValidateSessionWithOptions(_ *http.Request, _ ...Option) (bool, string, error) {
+	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseToken, m.ValidateSessionResponseError
 }
 
-func (m MockDescopeAuth) Logout(_ *http.Request, _ http.ResponseWriter) ([]*http.Cookie, error) {
-	return m.LogoutResponseCookies, m.LogoutResponseError
+func (m MockDescopeAuth) Logout(_ *http.Request, _ http.ResponseWriter) error {
+	return m.LogoutResponseError
 }
 
-func (m MockDescopeAuth) LogoutWithOptions(_ *http.Request, _ ...Option) ([]*http.Cookie, error) {
-	return m.LogoutResponseCookies, m.LogoutResponseError
+func (m MockDescopeAuth) LogoutWithOptions(_ *http.Request, _ ...Option) error {
+	return m.LogoutResponseError
 }

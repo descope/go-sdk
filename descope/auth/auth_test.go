@@ -461,15 +461,12 @@ func TestValidateSessionRequestRefreshSession(t *testing.T) {
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
 
 	b := httptest.NewRecorder()
-	ok, cookies, err := a.ValidateSession(request, b)
+	ok, userToken, err := a.ValidateSession(request, b)
 	require.NoError(t, err)
 	require.True(t, ok)
-	require.Len(t, cookies, 1)
-	sessionCookie := cookies[0]
-	require.NoError(t, err)
-	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
+	assert.EqualValues(t, mockAuthSessionCookie.Value, userToken)
 	assert.Len(t, b.Result().Cookies(), 1)
-	sessionCookie = b.Result().Cookies()[0]
+	sessionCookie := b.Result().Cookies()[0]
 	require.NoError(t, err)
 	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
 }
@@ -534,13 +531,10 @@ func TestLogout(t *testing.T) {
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
 
 	w := httptest.NewRecorder()
-	cookies, err := a.Logout(request, w)
+	err = a.Logout(request, w)
 	require.NoError(t, err)
 	assert.Len(t, w.Result().Cookies(), 1)
 	sessionCookie := w.Result().Cookies()[0]
-	assert.Empty(t, sessionCookie.Value)
-	assert.Len(t, cookies, 1)
-	sessionCookie = cookies[0]
 	assert.Empty(t, sessionCookie.Value)
 }
 
@@ -552,9 +546,8 @@ func TestLogoutFailure(t *testing.T) {
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
 
-	cookies, err := a.Logout(request, nil)
+	err = a.Logout(request, nil)
 	require.Error(t, err)
-	assert.Len(t, cookies, 0)
 }
 
 func TestLogoutEmptyRequest(t *testing.T) {
@@ -563,10 +556,9 @@ func TestLogoutEmptyRequest(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	cookies, err := a.LogoutWithOptions(nil)
+	err = a.LogoutWithOptions(nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, errors.MissingProviderError)
-	assert.Len(t, cookies, 0)
 }
 
 func TestLogoutMissingToken(t *testing.T) {
@@ -576,10 +568,9 @@ func TestLogoutMissingToken(t *testing.T) {
 	require.NoError(t, err)
 
 	request := &http.Request{Header: http.Header{}}
-	cookies, err := a.LogoutWithOptions(request)
+	err = a.LogoutWithOptions(request)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, errors.RefreshTokenError)
-	assert.Len(t, cookies, 0)
 }
 
 func TestAuthenticationMiddlewareFailure(t *testing.T) {
