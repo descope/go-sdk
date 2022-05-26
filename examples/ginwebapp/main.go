@@ -25,7 +25,7 @@ const (
 	TLSCertPath = "../cert.pem"
 )
 
-var client *descope.API
+var client *descope.DescopeClient
 
 func main() {
 	r := gin.Default()
@@ -57,7 +57,7 @@ func handleIsHealthy(c *gin.Context) {
 }
 
 func handleLogout(c *gin.Context) {
-	_, err := client.Auth.Logout(c.Request, c.Writer)
+	err := client.Auth.Logout(c.Request, c.Writer)
 	if err != nil {
 		setError(c, err.Error())
 	} else {

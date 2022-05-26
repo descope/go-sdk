@@ -184,6 +184,28 @@ func (auth *Auth) validateJWT(JWT string) (jwt.Token, error) {
 	return jwt.Parse([]byte(JWT), jwt.WithKeyProvider(auth.publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true))
 }
 
+func (*Auth) verifyDeliveryMethod(method DeliveryMethod, identifier string) *errors.WebError {
+	if identifier == "" {
+		return errors.NewError(errors.BadRequestErrorCode, "bad request")
+	}
+
+	switch method {
+	case MethodEmail:
+		if !emailRegex.MatchString(identifier) {
+			return errors.NewInvalidArgumentError("identifier")
+		}
+	case MethodSMS:
+		if !phoneRegex.MatchString(identifier) {
+			return errors.NewInvalidArgumentError("identifier")
+		}
+	case MethodWhatsApp:
+		if !phoneRegex.MatchString(identifier) {
+			return errors.NewInvalidArgumentError("identifier")
+		}
+	}
+	return nil
+}
+
 func provideTokens(r *http.Request) (string, string) {
 	sessionToken := ""
 	if sessionCookie, _ := r.Cookie(SessionCookieName); sessionCookie != nil {
@@ -211,28 +233,6 @@ func validateTokenError(err error) (bool, error) {
 		return false, errors.NewUnauthorizedError()
 	}
 	return true, nil
-}
-
-func (*Auth) verifyDeliveryMethod(method DeliveryMethod, identifier string) *errors.WebError {
-	if identifier == "" {
-		return errors.NewError(errors.BadRequestErrorCode, "bad request")
-	}
-
-	switch method {
-	case MethodEmail:
-		if !emailRegex.MatchString(identifier) {
-			return errors.NewInvalidArgumentError("identifier")
-		}
-	case MethodSMS:
-		if !phoneRegex.MatchString(identifier) {
-			return errors.NewInvalidArgumentError("identifier")
-		}
-	case MethodWhatsApp:
-		if !phoneRegex.MatchString(identifier) {
-			return errors.NewInvalidArgumentError("identifier")
-		}
-	}
-	return nil
 }
 
 func composeURLMethod(base string, method DeliveryMethod) string {
