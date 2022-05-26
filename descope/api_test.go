@@ -1,9 +1,12 @@
 package descope
 
 import (
+	"net/http"
 	"os"
 	"testing"
 
+	"github.com/descope/common/pkg/common/errors"
+	"github.com/descope/go-sdk/descope/auth"
 	"github.com/descope/go-sdk/descope/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -39,4 +42,18 @@ func TestEmptyProjectID(t *testing.T) {
 	_, err := NewDescopeClient(Config{})
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "project id is missing")
+}
+
+func TestDescopeSDKMock(t *testing.T) {
+	api := API{
+		Auth: auth.MockDescopeAuth{
+			ValidateSessionResponseNotOK:   true,
+			ValidateSessionResponseCookies: []*http.Cookie{{}},
+			ValidateSessionResponseError:   errors.BadRequest,
+		},
+	}
+	ok, cookies, err := api.Auth.ValidateSession(nil, nil)
+	assert.False(t, ok)
+	assert.NotEmpty(t, cookies)
+	assert.ErrorIs(t, err, errors.BadRequest)
 }

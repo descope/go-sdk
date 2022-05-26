@@ -3,9 +3,8 @@ package gin
 import (
 	"net/http"
 
-	"github.com/gin-gonic/gin"
-
 	"github.com/descope/go-sdk/descope/auth"
+	"github.com/gin-gonic/gin"
 )
 
 func AuthneticationMiddleware(client auth.IAuth, onFailure func(*gin.Context, error)) gin.HandlerFunc {
