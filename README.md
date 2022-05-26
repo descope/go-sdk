@@ -87,3 +87,22 @@ Alternatively you can run the example using a predefined launch configurations b
 1. Follow steps 1-4 above
 1. Open `.vscode/launch.json` and replace `<insert here>` to your project id
 1. Run/Debug using VS Code
+
+## Unit Testing and Mocking
+After integrating Descope SDK, you might want to unit test your app, for that we added mocks, so you can easily do the following:
+```
+api := descope.API{
+	Auth: auth.MockDescopeAuth{
+		ValidateSessionResponseNotOK:   true,
+		ValidateSessionResponseCookies: []*http.Cookie{{}},
+		ValidateSessionResponseError:   errors.BadRequest,
+	},
+}
+
+ok, cookies, err := api.Auth.ValidateSession(nil, nil)
+
+assert.False(t, ok)
+assert.NotEmpty(t, cookies)
+assert.ErrorIs(t, err, errors.BadRequest)
+``` 
+In this example we mocked the Auth APIs and changed the response of the ValidateSession
