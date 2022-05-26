@@ -81,7 +81,7 @@ func handleIsHealthy(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleLogout(w http.ResponseWriter, r *http.Request) {
-	_, err := client.Auth.Logout(r, auth.WithResponseOption(w))
+	_, err := client.Auth.Logout(r, w)
 	if err != nil {
 		setError(w, err.Error())
 	} else {
@@ -134,13 +134,10 @@ func handleVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	cookies, err := client.Auth.VerifyCode(method, identifier, code)
+	_, err := client.Auth.VerifyCode(method, identifier, code, w)
 	if err != nil {
 		setError(w, err.Error())
 		return
-	}
-	for i := range cookies {
-		http.SetCookie(w, cookies[i])
 	}
 	setOK(w)
 }

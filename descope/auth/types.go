@@ -5,6 +5,12 @@ import (
 	"regexp"
 )
 
+// WithResponseOption - adds a response option to supported functions to allow
+// automatic apply and renewal of the tokens to the response sent to the client.
+func WithResponseOption(w http.ResponseWriter) Option {
+	return newOption(responseOption{}, w)
+}
+
 type Option interface {
 	Kind() interface{}
 	Value() interface{}
@@ -45,12 +51,6 @@ func (options Options) SetCookies(cookies []*http.Cookie) {
 }
 
 type responseOption struct{}
-
-// WithResponseOption - adds a response option to supported functions to allow
-// automatic apply and renewal of the tokens to the response sent to the client.
-func WithResponseOption(w http.ResponseWriter) Option {
-	return newOption(responseOption{}, w)
-}
 
 type User struct {
 	Username string `json:"username,omitempty"`
