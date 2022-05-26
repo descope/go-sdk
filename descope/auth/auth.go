@@ -76,56 +76,59 @@ func (auth *Auth) VerifyCodeWithOptions(method DeliveryMethod, identifier string
 	return cookies, err
 }
 
-func (auth *Auth) Logout(request *http.Request, w http.ResponseWriter) ([]*http.Cookie, error) {
+func (auth *Auth) Logout(request *http.Request, w http.ResponseWriter) error {
 	return auth.LogoutWithOptions(request, WithResponseOption(w))
 }
 
-func (auth *Auth) LogoutWithOptions(request *http.Request, options ...Option) ([]*http.Cookie, error) {
+func (auth *Auth) LogoutWithOptions(request *http.Request, options ...Option) error {
 	if request == nil {
-		return nil, errors.MissingProviderError
+		return errors.MissingProviderError
 	}
 
 	sessionToken, refreshToken := provideTokens(request)
 	if refreshToken == "" {
 		logger.LogDebug("unable to find tokens from cookies")
-		return nil, errors.RefreshTokenError
+		return errors.RefreshTokenError
 	}
 
 	httpResponse, err := auth.client.DoGetRequest(api.Routes.Logout(), &api.HTTPRequest{
 		Cookies: []*http.Cookie{{Name: SessionCookieName, Value: sessionToken}, {Name: RefreshCookieName, Value: refreshToken}},
 	})
 	if err != nil {
-		return nil, err
+		return err
 	}
-	cookies := []*http.Cookie{}
-	if httpResponse != nil {
-		cookies = httpResponse.Res.Cookies()
-		Options(options).SetCookies(cookies)
-	}
-	return cookies, nil
+	cookies := httpResponse.Res.Cookies()
+	Options(options).SetCookies(cookies)
+	return nil
 }
 
-func (auth *Auth) ValidateSession(request *http.Request, w http.ResponseWriter) (bool, []*http.Cookie, error) {
+func (auth *Auth) ValidateSession(request *http.Request, w http.ResponseWriter) (bool, string, error) {
 	return auth.ValidateSessionWithOptions(request, WithResponseOption(w))
 }
 
-func (auth *Auth) ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, []*http.Cookie, error) {
+func (auth *Auth) ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, string, error) {
 	if request == nil {
-		return false, nil, errors.MissingProviderError
+		return false, "", errors.MissingProviderError
 	}
 
 	sessionToken, refreshToken := provideTokens(request)
 	if refreshToken == "" {
 		logger.LogDebug("unable to find tokens from cookies")
-		return false, nil, errors.RefreshTokenError
+		return false, "", errors.RefreshTokenError
 	}
 
 	ok, cookies, err := auth.validateSession(sessionToken, refreshToken)
 	if ok {
+		userToken := ""
+		for _, cookie := range cookies {
+			if cookie.Name == SessionCookieName {
+				userToken = cookie.Value
+			}
+		}
 		Options(options).SetCookies(cookies)
-		return true, cookies, nil
+		return true, userToken, nil
 	}
-	return false, cookies, err
+	return false, "", err
 }
 
 // AuthenticationMiddleware - middleware used to validate session and invoke if provided a failure and

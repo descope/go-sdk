@@ -46,23 +46,24 @@ if err := client.Auth.SignInOTP(auth.MethodEmail, "mytestmail@test.com"); err !=
 }
 ...
 
-// In your verify code route or after a sucessful sign-in route
+// In your verify code route
 if _, err := client.Auth.VerifyCode(auth.MethodEmail, "mytestmail@test.com", code, w); err != nil {
     // handle error
 }
 ...
 
 // In your logout route
-if _, err := client.Auth.Logout(r, w); err != nil {
+if err := client.Auth.Logout(r, w); err != nil {
     // handle error
 }
 ...
 
-// Put this in your routes middleware for any request which requires authentication, Or use the builtin middleware.
-if authorized, err := client.Auth.ValidateSession(r, w); !authorized {
+// Put this in your routes middleware for any request which requires authentication, Or use the builtin middleware. (see below example)
+if authorized, userToken, err := client.Auth.ValidateSession(r, w); !authorized {
     // unauthorized error
 }
-// Use the builtin middleware to authenticate selected routes invoke myCustomFailureCallback on authentication failure.
+
+// Use the builtin middleware to authenticate selected routes, invokes myCustomFailureCallback on authentication failure. Example with Chi router:
 r.Use(auth.AuthenticationMiddleware(client.Auth, myCustomFailureCallback)
 ```
 
@@ -94,7 +95,7 @@ After integrating Descope SDK, you might want to unit test your app, for that we
 api := descope.API{
 	Auth: auth.MockDescopeAuth{
 		ValidateSessionResponseNotOK:   true,
-		ValidateSessionResponseCookies: []*http.Cookie{{}},
+		ValidateSessionResponseToken:   "newtoken",
 		ValidateSessionResponseError:   errors.BadRequest,
 	},
 }
