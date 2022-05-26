@@ -63,7 +63,7 @@ if authorized, userToken, err := client.Auth.ValidateSession(r, w); !authorized 
     // unauthorized error
 }
 
-// Use the builtin middleware to authenticate selected routes, invokes myCustomFailureCallback on authentication failure.
+// Use the builtin middleware to authenticate selected routes, invokes myCustomFailureCallback on authentication failure. Example with Chi router:
 r.Use(auth.AuthenticationMiddleware(client.Auth, myCustomFailureCallback)
 ```
 
