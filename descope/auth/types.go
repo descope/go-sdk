@@ -5,6 +5,7 @@ import (
 	"regexp"
 )
 
+// Add information about the options and where is the impl
 type Option interface {
 	Kind() interface{}
 	Value() interface{}

@@ -25,38 +25,47 @@ Use the authentication API to provide an easy sign up or sign in options for Gol
 
 ### Usage
 
+`go get -u github.com/descope/go-sdk`
+
 Use the following code snippets for an quick and easy usage or check out our examples in the examples package for a more in depth how to use.
 
 ```
-package myapp
+package yourgreatapp
 
 import (
     github.com/descope/go-sdk/descope
     github.com/descope/go-sdk/descope/auth
 )
 
+// Init Descope client when starting your app, provide your project ID (from your Descope account)
 client, err = descope.NewDescopeClient(descope.Config{ProjectID: "myprojectid"})
+
+// Store the client so you can easily access it later in the router level
 ...
 
+// In your sign-in route
 if err := client.Auth.SignInOTP(auth.MethodEmail, "mytestmail@test.com"); err != nil {
     // handle error
 }
 ...
 
-if tokens, err := client.Auth.VerifyCodeEmail("mytestmail@test.com", code); err != nil {
+// In your verify code route
+if cookies, err := client.Auth.VerifyCodeEmail("mytestmail@test.com", code, w); err != nil {
     // handle error
 }
-for i := range tokens {
-    http.SetCookie(w, tokens[i])
+for i := range cookies {
+    http.SetCookie(w, cookies[i])
 }
 ...
 
-if authorized, err := client.Auth.ValidateSession(r); !authorized {
+// Put this in your routes middleware for any request which requires authentication. (w is http.ResponseWriter and r is *http.Request)
+if authorized, _, _ := client.Auth.ValidateSession(r); !authorized {
     // unauthorized error
 }
 ...
 
-if _, err := client.Auth.Logout(r); err != nil {
+// In your logout route (w is http.ResponseWriter and r is *http.Request)
+if _, err := client.Auth.Logout(r, w); err != nil {
     // handle error
 }
 ```
