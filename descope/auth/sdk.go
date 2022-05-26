@@ -17,7 +17,7 @@ type IAuth interface {
 	// VerifyCode - used to verify a SignIn/SignUp based on the given identifier either an email or a phone
 	// followed by the code used to verify and authenticate the user.
 	// In case the request cookie can be renewed an automatic renewal is called and returns a new set of cookies to use.
-	// Use the ResponseWriter to apply the cookies to the response automatically.
+	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	// returns a list of cookies or an error upon failure.
 	// This is a shortcut for VerifyCodeWithOptions(method, identifier, code, WithResponseOption(w))
 	VerifyCode(method DeliveryMethod, identifier string, code string, w http.ResponseWriter) ([]*http.Cookie, error)
@@ -30,7 +30,7 @@ type IAuth interface {
 	// ValidateSession - Use to validate a session of a given request.
 	// Should be called before any private API call that requires authorization.
 	// In case the request cookie can be renewed an automatic renewal is called and returns a new set of cookies to use.
-	// Use the ResponseWriter to apply the cookies to the response automatically.
+	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	// returns true upon success or false and an error upon failure.
 	// This is a shortcut for ValidateSessionWithOptions(r, WithResponseOption(w))
 	ValidateSession(request *http.Request, w http.ResponseWriter) (bool, string, error)
@@ -38,6 +38,7 @@ type IAuth interface {
 
 	// Logout - Use to perform logout from all active devices. This will revoke the given tokens
 	// and if given options will also remove existing session on the given response sent to the client.
+	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	// This is a shortcut for LogoutWithOptions(r, WithResponseOption(w))
 	Logout(request *http.Request, w http.ResponseWriter) error
 	// LogoutWithOptions - Use to perform logout from all active devices. This will revoke the given tokens
