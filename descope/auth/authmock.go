@@ -14,34 +14,34 @@ type MockDescopeAuth struct {
 	LogoutResponseError            error
 }
 
-func (m MockDescopeAuth) SignInOTP(method DeliveryMethod, identifier string) error {
+func (m MockDescopeAuth) SignInOTP(_ DeliveryMethod, _ string) error {
 	return m.SignInOTPResponseError
 }
 
-func (m MockDescopeAuth) SignUpOTP(method DeliveryMethod, identifier string, user *User) error {
+func (m MockDescopeAuth) SignUpOTP(_ DeliveryMethod, _ string, _ *User) error {
 	return m.SignUpOTPResponseError
 }
 
-func (m MockDescopeAuth) VerifyCode(method DeliveryMethod, identifier string, code string, w http.ResponseWriter) ([]*http.Cookie, error) {
+func (m MockDescopeAuth) VerifyCode(_ DeliveryMethod, _ string, _ string, _ http.ResponseWriter) ([]*http.Cookie, error) {
 	return m.VerifyCodeResponseCookies, m.VerifyCodeResponseError
 }
 
-func (m MockDescopeAuth) VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, options ...Option) ([]*http.Cookie, error) {
+func (m MockDescopeAuth) VerifyCodeWithOptions(_ DeliveryMethod, _ string, _ string, _ ...Option) ([]*http.Cookie, error) {
 	return m.VerifyCodeResponseCookies, m.VerifyCodeResponseError
 }
 
-func (m MockDescopeAuth) ValidateSession(request *http.Request, w http.ResponseWriter) (bool, []*http.Cookie, error) {
+func (m MockDescopeAuth) ValidateSession(_ *http.Request, _ http.ResponseWriter) (bool, []*http.Cookie, error) {
 	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseCookies, m.ValidateSessionResponseError
 }
 
-func (m MockDescopeAuth) ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, []*http.Cookie, error) {
+func (m MockDescopeAuth) ValidateSessionWithOptions(_ *http.Request, _ ...Option) (bool, []*http.Cookie, error) {
 	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseCookies, m.ValidateSessionResponseError
 }
 
-func (m MockDescopeAuth) Logout(request *http.Request, w http.ResponseWriter) ([]*http.Cookie, error) {
+func (m MockDescopeAuth) Logout(_ *http.Request, _ http.ResponseWriter) ([]*http.Cookie, error) {
 	return m.LogoutResponseCookies, m.LogoutResponseError
 }
 
-func (m MockDescopeAuth) LogoutWithOptions(request *http.Request, options ...Option) ([]*http.Cookie, error) {
+func (m MockDescopeAuth) LogoutWithOptions(_ *http.Request, _ ...Option) ([]*http.Cookie, error) {
 	return m.LogoutResponseCookies, m.LogoutResponseError
 }
