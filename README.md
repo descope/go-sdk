@@ -27,7 +27,7 @@ Use the authentication API to provide an easy sign up or sign in options for Gol
 
 Use the following code snippets for an quick and easy usage or check out our examples in the examples package for a more in depth how to use.
 
-```
+```golang
 package mygreatapp
 
 import (
@@ -37,34 +37,50 @@ import (
 
 // Init Descope client when starting your app, provide your project ID (from your Descope account).
 // Store the client so you can easily access it later in the router level.
-client, err = descope.NewDescopeClient(descope.Config{ProjectID: "myprojectid"})
+descopeClient, err = descope.NewDescopeClient(descope.Config{ProjectID: "myprojectid"})
 ...
 
-// In your sign-in route
-if err := client.Auth.SignInOTP(auth.MethodEmail, "mytestmail@test.com"); err != nil {
+// In your sign-in route for OTP
+if err := descopeClient.Auth.SignInOTP(auth.MethodEmail, "mytestmail@test.com"); err != nil {
     // handle error
 }
 ...
 
-// In your verify code route
-if _, err := client.Auth.VerifyCode(auth.MethodEmail, "mytestmail@test.com", code, w); err != nil {
+// In your verify OTP code route
+if _, err := descopeClient.Auth.VerifyCode(auth.MethodEmail, "mytestmail@test.com", code, w); err != nil {
     // handle error
 }
 ...
 
 // In your logout route
-if err := client.Auth.Logout(r, w); err != nil {
+if err := descopeClient.Auth.Logout(r, w); err != nil {
     // handle error
 }
 ...
 
-// Put this in your routes middleware for any request which requires authentication, Or use the builtin middleware. (see below example)
-if authorized, userToken, err := client.Auth.ValidateSession(r, w); !authorized {
+// Put the following in your routes middleware for any request that requires authentication, or use the builtin middleware. (see below example)
+if authorized, userToken, err := descopeClient.Auth.ValidateSession(r, w); !authorized {
     // unauthorized error
 }
 
-// Use the builtin middleware to authenticate selected routes, invokes myCustomFailureCallback on authentication failure. Example with Chi router:
-r.Use(auth.AuthenticationMiddleware(client.Auth, myCustomFailureCallback)
+// Use the builtin middleware to protect your application routes, invokes failure callback on authentication failure.
+
+// Example with Chi / Mux routers:
+r.Use(auth.AuthenticationMiddleware(descopeClient.Auth, nil))
+
+// Example with httprouter and alice:
+r := httprouter.New()
+authMiddleware := alice.New(auth.AuthenticationMiddleware(descopeClient.Auth, nil))
+r.GET("/hello", handlerToHandle(authMiddleware.ThenFunc(helloHandler)))
+
+// Example of customer failure callback:
+r.Use(auth.AuthenticationMiddleware(descopeClient.Auth, func(w http.ResponseWriter, r *http.Request, err error) {
+    w.WriteHeader(http.StatusUnauthorized)
+	w.Write([]byte("Unauthorized"))
+}))
+
+// For full Gin example, see "examples/ginwebapp/main.go"
+// For full mux example, see "examples/webapp/main.go"
 ```
 
 ## Run The Example
@@ -74,7 +90,7 @@ r.Use(auth.AuthenticationMiddleware(client.Auth, myCustomFailureCallback)
 3. Navigate to examples folder `cd examples`
 4. export your project id:
 
-```
+```bash
 export DESCOPE_PROJECT_ID=<insert here>
 ```
 
@@ -90,9 +106,9 @@ Alternatively you can run the example using a predefined launch configurations b
 1. Run/Debug using VS Code
 
 ## Unit Testing and Mocking
-After integrating Descope SDK, you might want to unit test your app, for that we added mocks, so you can easily do the following:
-```
-api := descope.API{
+After integrating with Descope SDK, you might want to add unit tests to your app, for that we added mocks, so you can easily do the following:
+```golang
+descopeClient := descope.DescopeClient{
 	Auth: auth.MockDescopeAuth{
 		ValidateSessionResponseNotOK:   true,
 		ValidateSessionResponseToken:   "newtoken",
@@ -100,10 +116,10 @@ api := descope.API{
 	},
 }
 
-ok, cookies, err := api.Auth.ValidateSession(nil, nil)
+ok, userToken, err := descopeClient.Auth.ValidateSession(nil, nil)
 
 assert.False(t, ok)
-assert.NotEmpty(t, cookies)
+assert.NotEmpty(t, userToken)
 assert.ErrorIs(t, err, errors.BadRequest)
 ``` 
-In this example we mocked the Auth APIs and changed the response of the ValidateSession
+In this example we mocked the Descope Auth and changed the response of the ValidateSession
