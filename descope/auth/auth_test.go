@@ -287,7 +287,7 @@ func TestVerifyCodeEmail(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	_, err = a.VerifyCodeWithOptions(MethodEmail, email, code)
-	require.Nil(t, err)
+	require.NoError(t, err)
 }
 
 func TestVerifyCodeSMS(t *testing.T) {
@@ -337,11 +337,30 @@ func TestVerifyCodeEmailResponseOption(t *testing.T) {
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
 	_, err = a.VerifyCode(MethodEmail, email, code, w)
-	require.Nil(t, err)
-	assert.Len(t, w.Result().Cookies(), 1)
+	require.NoError(t, err)
+	require.Len(t, w.Result().Cookies(), 1)
 	sessionCookie := w.Result().Cookies()[0]
 	require.NoError(t, err)
 	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
+}
+
+func TestVerifyCodeEmailResponseNil(t *testing.T) {
+	email := "test@email.com"
+	code := "4914"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeVerifyCodeURL(MethodEmail), r.URL.RequestURI())
+
+		body, err := readBody(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, email, body["email"])
+		assert.EqualValues(t, code, body["code"])
+		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Set-Cookie": []string{mockAuthSessionCookie.String()}}}, nil
+	})
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	_, err = a.VerifyCode(MethodEmail, email, code, nil)
+	require.NoError(t, err)
+	assert.Len(t, w.Result().Cookies(), 0)
 }
 
 func TestAuthDefaultURL(t *testing.T) {
@@ -465,7 +484,7 @@ func TestValidateSessionRequestRefreshSession(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, ok)
 	assert.EqualValues(t, mockAuthSessionCookie.Value, userToken)
-	assert.Len(t, b.Result().Cookies(), 1)
+	require.Len(t, b.Result().Cookies(), 1)
 	sessionCookie := b.Result().Cookies()[0]
 	require.NoError(t, err)
 	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
@@ -533,7 +552,7 @@ func TestLogout(t *testing.T) {
 	w := httptest.NewRecorder()
 	err = a.Logout(request, w)
 	require.NoError(t, err)
-	assert.Len(t, w.Result().Cookies(), 1)
+	require.Len(t, w.Result().Cookies(), 1)
 	sessionCookie := w.Result().Cookies()[0]
 	assert.Empty(t, sessionCookie.Value)
 }
