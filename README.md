@@ -2,15 +2,11 @@
 
 # Golang SDK
 
-Go library used to integrate with Descope
-
-## API
-
-https://github.com/descope/go-sdk/blob/main/descope/api.go#L12
+Go library used to integrate with Descope.
 
 ## How To Use
 
-Use the authentication API to provide an easy sign up or sign in options for Golang.
+Use Descope client to get a quick and simple authentication options for your Golang applications.
 
 ### Prerequisites
 
@@ -83,7 +79,7 @@ r.Use(auth.AuthenticationMiddleware(descopeClient.Auth, func(w http.ResponseWrit
 // For full mux example, see "examples/webapp/main.go"
 ```
 
-## Run The Example
+## Run web apps examples locally
 
 1. Clone repository locally `git clone github.com/descope/go-sdk`
 2. Download prerequisites and build `make build`
@@ -96,14 +92,14 @@ export DESCOPE_PROJECT_ID=<insert here>
 
 5. Run one of our example applications:
     - Gin web app: `make run-gin-example`
-    - HTTP web app: `make run-example`
+    - HTTP mux web app: `make run-example`
 6. Application runs on `http://localhost:8085`
 
-### Run the Example: VS Code
-Alternatively you can run the example using a predefined launch configurations by following the below simple steps
+### Run examples in Visual Studio Code
+Alternatively you can run the example using a predefined launch configurations with the following simple steps:
 1. Follow steps 1-4 above
 1. Open `.vscode/launch.json` and replace `<insert here>` to your project id
-1. Run/Debug using VS Code
+1. Run & Debug using Visual Studio Code
 
 ## Unit Testing and Mocking
 After integrating with Descope SDK, you might want to add unit tests to your app, for that we added mocks, so you can easily do the following:
