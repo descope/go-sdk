@@ -47,12 +47,12 @@ func (options Options) SetCookies(cookies []*http.Cookie) {
 			case responseOption:
 				val := option.Value()
 				if val != nil {
-					if w, ok := option.Value().(http.ResponseWriter); ok {
+					if w, ok := val.(http.ResponseWriter); ok {
 						for i := range cookies {
 							http.SetCookie(w, cookies[i])
 						}
 					} else {
-						logger.LogDebug("Unexpected option value [%T]", option.Value())
+						logger.LogDebug("Unexpected option value [%T]", val)
 					}
 				}
 			}
