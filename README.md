@@ -1,4 +1,11 @@
+[![GitHub go.mod Go version of a Go module](https://img.shields.io/github/go-mod/go-version/gomods/athens.svg)](https://github.com/gomods/athens)
 [![CI](https://github.com/descope/go-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/descope/go-sdk/actions/workflows/ci.yml)
+[![License](https://badgen.net/github/license/Naereen/Strapdown.js)](https://github.com/Naereen/StrapDown.js/blob/master/LICENSE)
+[![GitHub commits](https://badgen.net/github/commits/Naereen/Strapdown.js)](https://GitHub.com/Naereen/StrapDown.js/commit/)
+[![GitHub latest commit](https://badgen.net/github/last-commit/Naereen/Strapdown.js)](https://GitHub.com/Naereen/StrapDown.js/commit/)
+
+
+
 
 # Golang SDK
 
@@ -119,3 +126,7 @@ assert.NotEmpty(t, userToken)
 assert.ErrorIs(t, err, errors.BadRequest)
 ``` 
 In this example we mocked the Descope Auth and changed the response of the ValidateSession
+
+### License
+
+Descope go-sdk is [MIT licensed](./LICENSE).
