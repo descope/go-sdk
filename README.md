@@ -85,9 +85,9 @@ r.Use(auth.AuthenticationMiddleware(descopeClient.Auth, func(w http.ResponseWrit
 1. Download prerequisites and build `make build`
 1. Navigate to examples folder `cd examples`
 1. export your project id:
-```bash
-export DESCOPE_PROJECT_ID=<insert here>
-```
+    ```bash
+    export DESCOPE_PROJECT_ID=<insert here>
+    ```
 1. Run one of our example applications:
     - Gin web app: `make run-gin-example`
     - Gorilla Mux web app: `make run-example`
