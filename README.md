@@ -2,15 +2,11 @@
 
 # Golang SDK
 
-Go library used to integrate with Descope
-
-## API
-
-https://github.com/descope/go-sdk/blob/main/descope/api.go#L12
+Go library used to integrate with Descope.
 
 ## How To Use
 
-Use the authentication API to provide an easy sign up or sign in options for Golang.
+Use Descope client to get a quick and simple authentication options for your Golang applications.
 
 ### Prerequisites
 
@@ -27,7 +23,7 @@ Use the authentication API to provide an easy sign up or sign in options for Gol
 
 Use the following code snippets for an quick and easy usage or check out our examples in the examples package for a more in depth how to use.
 
-```
+```golang
 package mygreatapp
 
 import (
@@ -37,62 +33,76 @@ import (
 
 // Init Descope client when starting your app, provide your project ID (from your Descope account).
 // Store the client so you can easily access it later in the router level.
-client, err = descope.NewDescopeClient(descope.Config{ProjectID: "myprojectid"})
+descopeClient, err := descope.NewDescopeClient(descope.Config{ProjectID: "myprojectid"})
 ...
 
-// In your sign-in route
-if err := client.Auth.SignInOTP(auth.MethodEmail, "mytestmail@test.com"); err != nil {
+// In your sign-in route for OTP
+if err := descopeClient.Auth.SignInOTP(auth.MethodEmail, "mytestmail@test.com"); err != nil {
     // handle error
 }
 ...
 
-// In your verify code route
-if _, err := client.Auth.VerifyCode(auth.MethodEmail, "mytestmail@test.com", code, w); err != nil {
+// In your verify OTP code route
+if _, err := descopeClient.Auth.VerifyCode(auth.MethodEmail, "mytestmail@test.com", code, w); err != nil {
     // handle error
 }
 ...
 
 // In your logout route
-if err := client.Auth.Logout(r, w); err != nil {
+if err := descopeClient.Auth.Logout(r, w); err != nil {
     // handle error
 }
 ...
 
-// Put this in your routes middleware for any request which requires authentication, Or use the builtin middleware. (see below example)
-if authorized, userToken, err := client.Auth.ValidateSession(r, w); !authorized {
+// Put the following in your routes middleware for any request that requires authentication, or use the builtin middleware. (see below example)
+if authorized, userToken, err := descopeClient.Auth.ValidateSession(r, w); !authorized {
     // unauthorized error
 }
 
-// Use the builtin middleware to authenticate selected routes, invokes myCustomFailureCallback on authentication failure. Example with Chi router:
-r.Use(auth.AuthenticationMiddleware(client.Auth, myCustomFailureCallback)
+// Use the builtin middleware to protect your application routes, invokes failure callback on authentication failure.
+
+// Example with Chi / Mux routers:
+r.Use(auth.AuthenticationMiddleware(descopeClient.Auth, nil))
+
+// Example with httprouter and alice:
+r := httprouter.New()
+authMiddleware := alice.New(auth.AuthenticationMiddleware(descopeClient.Auth, nil))
+r.GET("/hello", handlerToHandle(authMiddleware.ThenFunc(helloHandler)))
+
+// Example of customer failure callback:
+r.Use(auth.AuthenticationMiddleware(descopeClient.Auth, func(w http.ResponseWriter, r *http.Request, err error) {
+    w.WriteHeader(http.StatusUnauthorized)
+	w.Write([]byte("Unauthorized"))
+}))
+
+// For full Gin example, see "examples/ginwebapp/main.go"
+// For full Mux example, see "examples/webapp/main.go"
 ```
 
-## Run The Example
+## Run web apps examples locally
 
 1. Clone repository locally `git clone github.com/descope/go-sdk`
-2. Download prerequisites and build `make build`
-3. Navigate to examples folder `cd examples`
-4. export your project id:
-
-```
-export DESCOPE_PROJECT_ID=<insert here>
-```
-
-5. Run one of our example applications:
+1. Download prerequisites and build `make build`
+1. Navigate to examples folder `cd examples`
+1. export your project id:
+    ```bash
+    export DESCOPE_PROJECT_ID=<insert here>
+    ```
+1. Run one of our example applications:
     - Gin web app: `make run-gin-example`
-    - HTTP web app: `make run-example`
-6. Application runs on `http://localhost:8085`
+    - Gorilla Mux web app: `make run-example`
+1. Application runs on `http://localhost:8085`
 
-### Run the Example: VS Code
-Alternatively you can run the example using a predefined launch configurations by following the below simple steps
+### Run examples in Visual Studio Code
+Alternatively you can run the example using a predefined launch configurations with the following simple steps:
 1. Follow steps 1-4 above
 1. Open `.vscode/launch.json` and replace `<insert here>` to your project id
-1. Run/Debug using VS Code
+1. Run & Debug using Visual Studio Code
 
 ## Unit Testing and Mocking
-After integrating Descope SDK, you might want to unit test your app, for that we added mocks, so you can easily do the following:
-```
-api := descope.API{
+After integrating with Descope SDK, you might want to add unit tests to your app, for that we added mocks, so you can easily do the following:
+```golang
+descopeClient := descope.DescopeClient{
 	Auth: auth.MockDescopeAuth{
 		ValidateSessionResponseNotOK:   true,
 		ValidateSessionResponseToken:   "newtoken",
@@ -100,10 +110,14 @@ api := descope.API{
 	},
 }
 
-ok, cookies, err := api.Auth.ValidateSession(nil, nil)
+ok, userToken, err := descopeClient.Auth.ValidateSession(nil, nil)
 
 assert.False(t, ok)
-assert.NotEmpty(t, cookies)
+assert.NotEmpty(t, userToken)
 assert.ErrorIs(t, err, errors.BadRequest)
 ``` 
-In this example we mocked the Auth APIs and changed the response of the ValidateSession
+In this example we mocked the Descope Auth and changed the response of the ValidateSession
+
+### License
+
+Descope go-sdk is [MIT licensed](./LICENSE).
