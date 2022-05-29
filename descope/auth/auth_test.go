@@ -458,9 +458,7 @@ func TestValidateSessionRequest(t *testing.T) {
 	ok, info, err := a.ValidateSessionWithOptions(request)
 	require.NoError(t, err)
 	require.True(t, ok)
-	require.Len(t, info.Cookies, 2)
-	require.EqualValues(t, jwtTokenValid, info.Cookies[0].Value)
-	require.EqualValues(t, jwtTokenValid, info.Cookies[1].Value)
+	require.EqualValues(t, jwtTokenValid, info.SessionToken.JWT)
 }
 
 func TestValidateSessionRequestMissingRefreshCookie(t *testing.T) {
