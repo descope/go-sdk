@@ -1,6 +1,9 @@
 package auth
 
-import "net/http"
+import (
+	"net/http"
+	"time"
+)
 
 // Implementation in descope/auth/auth.go
 type IAuth interface {
@@ -20,12 +23,12 @@ type IAuth interface {
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	// returns a list of cookies or an error upon failure.
 	// This is a shortcut for VerifyCodeWithOptions(method, identifier, code, WithResponseOption(w))
-	VerifyCode(method DeliveryMethod, identifier string, code string, w http.ResponseWriter) ([]*http.Cookie, error)
+	VerifyCode(method DeliveryMethod, identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error)
 
 	// VerifyCodeWithOptions - used to verify a SignIn/SignUp based on the given identifier either an email or a phone
 	// followed by the code used to verify and authenticate the user.
 	// returns a list of cookies or an error upon failure.
-	VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, options ...Option) ([]*http.Cookie, error)
+	VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, options ...Option) (*AuthenticationInfo, error)
 
 	// ValidateSession - Use to validate a session of a given request.
 	// Should be called before any private API call that requires authorization.
@@ -33,8 +36,8 @@ type IAuth interface {
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	// returns true upon success or false and an error upon failure.
 	// This is a shortcut for ValidateSessionWithOptions(r, WithResponseOption(w))
-	ValidateSession(request *http.Request, w http.ResponseWriter) (bool, string, error)
-	ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, string, error)
+	ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *AuthenticationInfo, error)
+	ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, *AuthenticationInfo, error)
 
 	// Logout - Use to perform logout from all active devices. This will revoke the given tokens
 	// and if given options will also remove existing session on the given response sent to the client.
@@ -44,4 +47,17 @@ type IAuth interface {
 	// LogoutWithOptions - Use to perform logout from all active devices. This will revoke the given tokens
 	// and if given options will also remove existing session on the given response.
 	LogoutWithOptions(request *http.Request, options ...Option) error
+}
+
+type AuthenticationInfo struct {
+	SessionToken Token
+	Cookies []*http.Cookie
+}
+
+type Token struct {
+	Expiration time.Time
+	JWT        string
+	ID         string
+	Subject    string
+	Claims     map[string]interface{}
 }

@@ -46,11 +46,11 @@ func (auth *Auth) SignUpOTP(method DeliveryMethod, identifier string, user *User
 	return err
 }
 
-func (auth *Auth) VerifyCode(method DeliveryMethod, identifier string, code string, w http.ResponseWriter) ([]*http.Cookie, error) {
+func (auth *Auth) VerifyCode(method DeliveryMethod, identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
 	return auth.VerifyCodeWithOptions(method, identifier, code, WithResponseOption(w))
 }
 
-func (auth *Auth) VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, options ...Option) ([]*http.Cookie, error) {
+func (auth *Auth) VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, options ...Option) (*AuthenticationInfo, error) {
 	if method == "" {
 		if phoneRegex.MatchString(identifier) {
 			method = MethodSMS
@@ -68,12 +68,17 @@ func (auth *Auth) VerifyCodeWithOptions(method DeliveryMethod, identifier string
 	}
 
 	httpResponse, err := auth.client.DoPostRequest(composeVerifyCodeURL(method), newAuthenticationVerifyRequestBody(method, identifier, code), nil)
+	if err != nil {
+		return nil, err
+	}
 	cookies := []*http.Cookie{}
 	if httpResponse != nil {
 		cookies = httpResponse.Res.Cookies()
 		Options(options).SetCookies(cookies)
 	}
-	return cookies, err
+	sessionToken := getSessionToken(cookies)
+	token, err := auth.validateJWT(sessionToken)
+	return NewAuthenticationInfo(token, cookies), err
 }
 
 func (auth *Auth) Logout(request *http.Request, w http.ResponseWriter) error {
@@ -102,33 +107,22 @@ func (auth *Auth) LogoutWithOptions(request *http.Request, options ...Option) er
 	return nil
 }
 
-func (auth *Auth) ValidateSession(request *http.Request, w http.ResponseWriter) (bool, string, error) {
+func (auth *Auth) ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *AuthenticationInfo, error) {
 	return auth.ValidateSessionWithOptions(request, WithResponseOption(w))
 }
 
-func (auth *Auth) ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, string, error) {
+func (auth *Auth) ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, *AuthenticationInfo, error) {
 	if request == nil {
-		return false, "", errors.MissingProviderError
+		return false, nil, errors.MissingProviderError
 	}
 
 	sessionToken, refreshToken := provideTokens(request)
 	if refreshToken == "" {
 		logger.LogDebug("unable to find tokens from cookies")
-		return false, "", errors.RefreshTokenError
+		return false, nil, errors.RefreshTokenError
 	}
 
-	ok, cookies, err := auth.validateSession(sessionToken, refreshToken)
-	if ok {
-		userToken := ""
-		for _, cookie := range cookies {
-			if cookie.Name == SessionCookieName {
-				userToken = cookie.Value
-			}
-		}
-		Options(options).SetCookies(cookies)
-		return true, userToken, nil
-	}
-	return false, "", err
+	return auth.validateSession(sessionToken, refreshToken, options...)
 }
 
 // AuthenticationMiddleware - middleware used to validate session and invoke if provided a failure and
@@ -153,8 +147,12 @@ func AuthenticationMiddleware(auth IAuth, onFailure func(http.ResponseWriter, *h
 	}
 }
 
-func (auth *Auth) validateSession(sessionToken string, refreshToken string) (bool, []*http.Cookie, error) {
-	_, err := auth.validateJWT(sessionToken)
+func (auth *Auth) validateSession(sessionToken string, refreshToken string, options ...Option) (bool, *AuthenticationInfo, error) {
+	if sessionToken == "" {
+		return false, nil, errors.NewValidationError("empty sessionToken")
+	}
+
+	token, err := auth.validateJWT(sessionToken)
 	if sessionToken != "" && !auth.publicKeysProvider.publicKeyExists() {
 		return false, nil, errors.NewNoPublicKeyError()
 	}
@@ -171,17 +169,40 @@ func (auth *Auth) validateSession(sessionToken string, refreshToken string) (boo
 		if err != nil {
 			return false, nil, errors.FailedToRefreshTokenError
 		}
-		return true, httpResponse.Res.Cookies(), nil
-	}
-	if ok, err := validateTokenError(err); !ok {
-		return false, nil, err
+		newSessionToken := ""
+		var cookies []*http.Cookie
+		if httpResponse != nil {
+			cookies = httpResponse.Res.Cookies()
+			newSessionToken = getSessionToken(cookies)
+			Options(options).SetCookies(cookies)
+		}
+		token, err = auth.validateJWT(newSessionToken)
+		return true, NewAuthenticationInfo(token, cookies), err
 	}
 
-	return true, nil, nil
+	return true, NewAuthenticationInfo(token, []*http.Cookie{{Name: SessionCookieName, Value: sessionToken}, {Name: RefreshCookieName, Value: refreshToken}}), nil
 }
 
-func (auth *Auth) validateJWT(JWT string) (jwt.Token, error) {
-	return jwt.Parse([]byte(JWT), jwt.WithKeyProvider(auth.publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true))
+func getSessionToken(cookies []*http.Cookie) string {
+	for _, cookie := range cookies {
+		if cookie.Name == SessionCookieName {
+			return cookie.Value
+		}
+	}
+	return ""
+}
+
+func (auth *Auth) validateJWT(JWT string) (Token, error) {
+	token, err := jwt.Parse([]byte(JWT), jwt.WithKeyProvider(auth.publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true))
+	if err != nil {
+		var parseErr error
+		token, parseErr = jwt.Parse([]byte(JWT), jwt.WithKeyProvider(auth.publicKeysProvider), jwt.WithVerify(false), jwt.WithValidate(false))
+		if parseErr != nil {
+			err = parseErr
+		}
+	}
+
+	return NewToken(JWT, token), err
 }
 
 func (*Auth) verifyDeliveryMethod(method DeliveryMethod, identifier string) *errors.WebError {

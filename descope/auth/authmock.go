@@ -5,10 +5,10 @@ import "net/http"
 type MockDescopeAuth struct {
 	SignInOTPResponseError       error
 	SignUpOTPResponseError       error
-	VerifyCodeResponseCookies    []*http.Cookie
+	VerifyCodeResponseInfo       *AuthenticationInfo
 	VerifyCodeResponseError      error
 	ValidateSessionResponseNotOK bool
-	ValidateSessionResponseToken string
+	ValidateSessionResponseInfo  *AuthenticationInfo
 	ValidateSessionResponseError error
 	LogoutResponseError          error
 	AssertSignInOTP              func(method DeliveryMethod, identifier string)
@@ -30,26 +30,26 @@ func (m MockDescopeAuth) SignUpOTP(method DeliveryMethod, identifier string, use
 	return m.SignUpOTPResponseError
 }
 
-func (m MockDescopeAuth) VerifyCode(method DeliveryMethod, identifier string, code string, _ http.ResponseWriter) ([]*http.Cookie, error) {
+func (m MockDescopeAuth) VerifyCode(method DeliveryMethod, identifier string, code string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
 	if m.AssertVerifyCode != nil {
 		m.AssertVerifyCode(method, identifier, code)
 	}
-	return m.VerifyCodeResponseCookies, m.VerifyCodeResponseError
+	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
 }
 
-func (m MockDescopeAuth) VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, _ ...Option) ([]*http.Cookie, error) {
+func (m MockDescopeAuth) VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, _ ...Option) (*AuthenticationInfo, error) {
 	if m.AssertVerifyCode != nil {
 		m.AssertVerifyCode(method, identifier, code)
 	}
-	return m.VerifyCodeResponseCookies, m.VerifyCodeResponseError
+	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
 }
 
-func (m MockDescopeAuth) ValidateSession(_ *http.Request, _ http.ResponseWriter) (bool, string, error) {
-	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseToken, m.ValidateSessionResponseError
+func (m MockDescopeAuth) ValidateSession(_ *http.Request, _ http.ResponseWriter) (bool, *AuthenticationInfo, error) {
+	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseInfo, m.ValidateSessionResponseError
 }
 
-func (m MockDescopeAuth) ValidateSessionWithOptions(_ *http.Request, _ ...Option) (bool, string, error) {
-	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseToken, m.ValidateSessionResponseError
+func (m MockDescopeAuth) ValidateSessionWithOptions(_ *http.Request, _ ...Option) (bool, *AuthenticationInfo, error) {
+	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseInfo, m.ValidateSessionResponseError
 }
 
 func (m MockDescopeAuth) Logout(_ *http.Request, _ http.ResponseWriter) error {

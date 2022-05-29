@@ -5,6 +5,7 @@ import (
 	"regexp"
 
 	"github.com/descope/go-sdk/descope/logger"
+	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
 // WithResponseOption - adds a response option to supported functions to allow
@@ -62,6 +63,23 @@ func (options Options) SetCookies(cookies []*http.Cookie) {
 
 type responseOption struct{}
 
+func NewAuthenticationInfo(token Token, cookies []*http.Cookie) *AuthenticationInfo {
+	return &AuthenticationInfo{SessionToken: token, Cookies: cookies}
+}
+
+func NewToken(JWT string, token jwt.Token) Token {
+	if token == nil {
+		return Token{}
+	}
+
+	return Token{
+		JWT:        JWT,
+		ID:         token.Issuer(),
+		Subject:    token.Subject(),
+		Expiration: token.Expiration(),
+		Claims:     token.PrivateClaims(),
+	}
+}
 type User struct {
 	Username string `json:"username,omitempty"`
 	Name     string `json:"name,omitempty"`

@@ -18,10 +18,6 @@ type WebError struct {
 	Message string `json:"message,omitempty"`
 }
 
-func NewFromError(code string, err error) *WebError {
-	return NewError(code, err.Error())
-}
-
 func NewError(code, message string) *WebError {
 	return &WebError{Code: code, Message: message}
 }
