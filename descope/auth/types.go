@@ -63,8 +63,8 @@ func (options Options) SetCookies(cookies []*http.Cookie) {
 
 type responseOption struct{}
 
-func NewAuthenticationInfo(token Token, cookies []*http.Cookie) *AuthenticationInfo {
-	return &AuthenticationInfo{SessionToken: token, Cookies: cookies}
+func NewAuthenticationInfo(token Token) *AuthenticationInfo {
+	return &AuthenticationInfo{SessionToken: token}
 }
 
 func NewToken(JWT string, token jwt.Token) Token {
@@ -80,6 +80,7 @@ func NewToken(JWT string, token jwt.Token) Token {
 		Claims:     token.PrivateClaims(),
 	}
 }
+
 type User struct {
 	Username string `json:"username,omitempty"`
 	Name     string `json:"name,omitempty"`

@@ -78,7 +78,7 @@ func (auth *Auth) VerifyCodeWithOptions(method DeliveryMethod, identifier string
 	}
 	sessionToken := getSessionToken(cookies)
 	token, err := auth.validateJWT(sessionToken)
-	return NewAuthenticationInfo(token, cookies), err
+	return NewAuthenticationInfo(token), err
 }
 
 func (auth *Auth) Logout(request *http.Request, w http.ResponseWriter) error {
@@ -177,10 +177,10 @@ func (auth *Auth) validateSession(sessionToken string, refreshToken string, opti
 			Options(options).SetCookies(cookies)
 		}
 		token, err = auth.validateJWT(newSessionToken)
-		return true, NewAuthenticationInfo(token, cookies), err
+		return true, NewAuthenticationInfo(token), err
 	}
 
-	return true, NewAuthenticationInfo(token, []*http.Cookie{{Name: SessionCookieName, Value: sessionToken}, {Name: RefreshCookieName, Value: refreshToken}}), nil
+	return true, NewAuthenticationInfo(token), nil
 }
 
 func getSessionToken(cookies []*http.Cookie) string {

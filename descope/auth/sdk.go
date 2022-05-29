@@ -51,7 +51,6 @@ type IAuth interface {
 
 type AuthenticationInfo struct {
 	SessionToken Token
-	Cookies []*http.Cookie
 }
 
 type Token struct {
