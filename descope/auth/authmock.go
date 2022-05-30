@@ -2,13 +2,13 @@ package auth
 
 import "net/http"
 
-type MockDescopeAuth struct {
+type MockDescopeAuthentication struct {
 	SignInOTPResponseError       error
 	SignUpOTPResponseError       error
-	VerifyCodeResponseCookies    []*http.Cookie
+	VerifyCodeResponseInfo       *AuthenticationInfo
 	VerifyCodeResponseError      error
 	ValidateSessionResponseNotOK bool
-	ValidateSessionResponseToken string
+	ValidateSessionResponseInfo  *AuthenticationInfo
 	ValidateSessionResponseError error
 	LogoutResponseError          error
 	AssertSignInOTP              func(method DeliveryMethod, identifier string)
@@ -16,46 +16,46 @@ type MockDescopeAuth struct {
 	AssertVerifyCode             func(method DeliveryMethod, identifier string, code string)
 }
 
-func (m MockDescopeAuth) SignInOTP(method DeliveryMethod, identifier string) error {
+func (m MockDescopeAuthentication) SignInOTP(method DeliveryMethod, identifier string) error {
 	if m.AssertSignInOTP != nil {
 		m.AssertSignInOTP(method, identifier)
 	}
 	return m.SignInOTPResponseError
 }
 
-func (m MockDescopeAuth) SignUpOTP(method DeliveryMethod, identifier string, user *User) error {
+func (m MockDescopeAuthentication) SignUpOTP(method DeliveryMethod, identifier string, user *User) error {
 	if m.AssertSignUpOTP != nil {
 		m.AssertSignUpOTP(method, identifier, user)
 	}
 	return m.SignUpOTPResponseError
 }
 
-func (m MockDescopeAuth) VerifyCode(method DeliveryMethod, identifier string, code string, _ http.ResponseWriter) ([]*http.Cookie, error) {
+func (m MockDescopeAuthentication) VerifyCode(method DeliveryMethod, identifier string, code string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
 	if m.AssertVerifyCode != nil {
 		m.AssertVerifyCode(method, identifier, code)
 	}
-	return m.VerifyCodeResponseCookies, m.VerifyCodeResponseError
+	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
 }
 
-func (m MockDescopeAuth) VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, _ ...Option) ([]*http.Cookie, error) {
+func (m MockDescopeAuthentication) VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, _ ...Option) (*AuthenticationInfo, error) {
 	if m.AssertVerifyCode != nil {
 		m.AssertVerifyCode(method, identifier, code)
 	}
-	return m.VerifyCodeResponseCookies, m.VerifyCodeResponseError
+	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
 }
 
-func (m MockDescopeAuth) ValidateSession(_ *http.Request, _ http.ResponseWriter) (bool, string, error) {
-	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseToken, m.ValidateSessionResponseError
+func (m MockDescopeAuthentication) ValidateSession(_ *http.Request, _ http.ResponseWriter) (bool, *AuthenticationInfo, error) {
+	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseInfo, m.ValidateSessionResponseError
 }
 
-func (m MockDescopeAuth) ValidateSessionWithOptions(_ *http.Request, _ ...Option) (bool, string, error) {
-	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseToken, m.ValidateSessionResponseError
+func (m MockDescopeAuthentication) ValidateSessionWithOptions(_ *http.Request, _ ...Option) (bool, *AuthenticationInfo, error) {
+	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseInfo, m.ValidateSessionResponseError
 }
 
-func (m MockDescopeAuth) Logout(_ *http.Request, _ http.ResponseWriter) error {
+func (m MockDescopeAuthentication) Logout(_ *http.Request, _ http.ResponseWriter) error {
 	return m.LogoutResponseError
 }
 
-func (m MockDescopeAuth) LogoutWithOptions(_ *http.Request, _ ...Option) error {
+func (m MockDescopeAuthentication) LogoutWithOptions(_ *http.Request, _ ...Option) error {
 	return m.LogoutResponseError
 }

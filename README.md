@@ -103,7 +103,7 @@ Alternatively you can run the example using a predefined launch configurations w
 After integrating with Descope SDK, you might want to add unit tests to your app, for that we added mocks, so you can easily do the following:
 ```golang
 descopeClient := descope.DescopeClient{
-	Auth: auth.MockDescopeAuth{
+	Auth: auth.MockDescopeAuthentication{
 		ValidateSessionResponseNotOK:   true,
 		ValidateSessionResponseToken:   "newtoken",
 		ValidateSessionResponseError:   errors.BadRequest,
@@ -116,7 +116,7 @@ assert.False(t, ok)
 assert.NotEmpty(t, userToken)
 assert.ErrorIs(t, err, errors.BadRequest)
 ``` 
-In this example we mocked the Descope Auth and changed the response of the ValidateSession
+In this example we mocked the Descope Authentication and changed the response of the ValidateSession
 
 ### License
 

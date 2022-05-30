@@ -50,7 +50,7 @@ func (c *Config) setPublicKey() string {
 }
 
 type DescopeClient struct {
-	Auth   auth.IAuth
+	Auth   auth.Authentication
 	config *Config
 }
 
