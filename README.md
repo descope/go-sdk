@@ -10,14 +10,14 @@ Use Descope client to get a quick and simple authentication options for your Gol
 
 ### Prerequisites
 
-1. Import the package by running `go get -u github.com/descope/go-sdk`
-1. In order to use any of the authentication API you must specify the project ID given by Descope either by:
-   - Set the `DESCOPE_PROJECT_ID` environment variable.
-   - Set the ProjectID in the Conf{} on initialize.
-1. When using the session validation API you may specify the public key given by Descope either by:
-   - Set the `DESCOPE_PUBLIC_KEY` environment variable.
-   - Set the PublicKey in the Conf{} on initialize.
-   - Or keep empty to fetch matching public keys from descope services.
+1. Import Descope package by running `go get -u github.com/descope/go-sdk`
+1. In order to use any of the authentication API you must specify the project ID given by Descope. There are two options:
+   - Set the `DESCOPE_PROJECT_ID` environment variable
+   - Set the ProjectID in `descope.Config{ProjectID: "<your_project_id>"}` upon Descope Client initialization
+1. When using the session validation you might need to specify your project public key. There are three options:
+   - Keep empty to auto fetch matching public keys from Descope
+   - Set the `DESCOPE_PUBLIC_KEY` environment variable
+   - Set the PublicKey in `descope.Config{PublicKey: "<your_project_public_key>"}` upon Descope Client initialization
 
 ### Code Usage
 
