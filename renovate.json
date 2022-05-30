@@ -2,12 +2,5 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "local>descope/renovate-config"
-  ],
-  "packageRules": [
-    {
-      "automerge": true,
-      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
-      "automergeType": "branch"
-    }
   ]
 }
