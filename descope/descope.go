@@ -15,14 +15,12 @@ type Config struct {
 	// PublicKey (optional, "") - used to override or implicitly use a dedicated public key in order to decrypt and validate the JWT tokens
 	// during ValidateSessionRequest(). If empty, will attempt to fetch all public keys from the specified project id.
 	PublicKey string
-
 	// DescopeBaseURL (optional, "https://descope.com") - override the default base URL used to communicate with descope services.
 	DescopeBaseURL string
 	// DefaultClient (optional, http.DefaultClient) - override the default client used to Do the actual http request.
 	DefaultClient api.IHttpClient
 	// CustomDefaultHeaders (optional, nil) - add custom headers to all requests used to communicate with descope services.
 	CustomDefaultHeaders map[string]string
-
 	// LogLevel (optional, LogNone) - set a log level (Debug/Info/None) for the sdk to use when logging.
 	LogLevel logger.LogLevel
 	// LoggerInterface (optional, log.Default()) - set the logger instance to use for logging with the sdk.
