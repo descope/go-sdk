@@ -16,19 +16,19 @@ type AuthParams struct {
 	PublicKey string
 }
 
-type Auth struct {
+type authenticationService struct {
 	client             *api.Client
 	conf               *AuthParams
 	publicKeysProvider *provider
 }
 
-func NewAuth(conf AuthParams, c *api.Client) (*Auth, error) {
-	authenticationObject := &Auth{conf: &conf, client: c}
+func NewAuth(conf AuthParams, c *api.Client) (*authenticationService, error) {
+	authenticationObject := &authenticationService{conf: &conf, client: c}
 	authenticationObject.publicKeysProvider = newProvider(c, authenticationObject.conf)
 	return authenticationObject, nil
 }
 
-func (auth *Auth) SignInOTP(method DeliveryMethod, identifier string) error {
+func (auth *authenticationService) SignInOTP(method DeliveryMethod, identifier string) error {
 	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
 		return err
 	}
@@ -37,7 +37,7 @@ func (auth *Auth) SignInOTP(method DeliveryMethod, identifier string) error {
 	return err
 }
 
-func (auth *Auth) SignUpOTP(method DeliveryMethod, identifier string, user *User) error {
+func (auth *authenticationService) SignUpOTP(method DeliveryMethod, identifier string, user *User) error {
 	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
 		return err
 	}
@@ -46,11 +46,11 @@ func (auth *Auth) SignUpOTP(method DeliveryMethod, identifier string, user *User
 	return err
 }
 
-func (auth *Auth) VerifyCode(method DeliveryMethod, identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+func (auth *authenticationService) VerifyCode(method DeliveryMethod, identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
 	return auth.VerifyCodeWithOptions(method, identifier, code, WithResponseOption(w))
 }
 
-func (auth *Auth) VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, options ...Option) (*AuthenticationInfo, error) {
+func (auth *authenticationService) VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, options ...Option) (*AuthenticationInfo, error) {
 	if method == "" {
 		if phoneRegex.MatchString(identifier) {
 			method = MethodSMS
@@ -78,14 +78,18 @@ func (auth *Auth) VerifyCodeWithOptions(method DeliveryMethod, identifier string
 	}
 	sessionToken := getSessionToken(cookies)
 	token, err := auth.validateJWT(sessionToken)
+	if err != nil {
+		logger.LogError("unable to validate refreshed token", err)
+		return nil, err
+	}
 	return NewAuthenticationInfo(token), err
 }
 
-func (auth *Auth) Logout(request *http.Request, w http.ResponseWriter) error {
+func (auth *authenticationService) Logout(request *http.Request, w http.ResponseWriter) error {
 	return auth.LogoutWithOptions(request, WithResponseOption(w))
 }
 
-func (auth *Auth) LogoutWithOptions(request *http.Request, options ...Option) error {
+func (auth *authenticationService) LogoutWithOptions(request *http.Request, options ...Option) error {
 	if request == nil {
 		return errors.MissingProviderError
 	}
@@ -107,11 +111,11 @@ func (auth *Auth) LogoutWithOptions(request *http.Request, options ...Option) er
 	return nil
 }
 
-func (auth *Auth) ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *AuthenticationInfo, error) {
+func (auth *authenticationService) ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *AuthenticationInfo, error) {
 	return auth.ValidateSessionWithOptions(request, WithResponseOption(w))
 }
 
-func (auth *Auth) ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, *AuthenticationInfo, error) {
+func (auth *authenticationService) ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, *AuthenticationInfo, error) {
 	if request == nil {
 		return false, nil, errors.MissingProviderError
 	}
@@ -128,14 +132,14 @@ func (auth *Auth) ValidateSessionWithOptions(request *http.Request, options ...O
 // AuthenticationMiddleware - middleware used to validate session and invoke if provided a failure and
 // success callbacks after calling ValidateSession().
 // onFailure will be called when the authentication failed, if empty, will write unauthorized (401) on the response writer.
-func AuthenticationMiddleware(auth IAuth, onFailure func(http.ResponseWriter, *http.Request, error)) func(next http.Handler) http.Handler {
+func AuthenticationMiddleware(auth Authentication, onFailure func(http.ResponseWriter, *http.Request, error)) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if ok, _, err := auth.ValidateSession(r, w); ok {
 				next.ServeHTTP(w, r)
 			} else {
 				if err != nil {
-					logger.LogDebug("request failed because token is invalid error: " + err.Error())
+					logger.LogError("request failed because token is invalid", err)
 				}
 				if onFailure != nil {
 					onFailure(w, r, err)
@@ -147,7 +151,7 @@ func AuthenticationMiddleware(auth IAuth, onFailure func(http.ResponseWriter, *h
 	}
 }
 
-func (auth *Auth) validateSession(sessionToken string, refreshToken string, options ...Option) (bool, *AuthenticationInfo, error) {
+func (auth *authenticationService) validateSession(sessionToken string, refreshToken string, options ...Option) (bool, *AuthenticationInfo, error) {
 	if sessionToken == "" {
 		return false, nil, errors.NewValidationError("empty sessionToken")
 	}
@@ -177,6 +181,10 @@ func (auth *Auth) validateSession(sessionToken string, refreshToken string, opti
 			Options(options).SetCookies(cookies)
 		}
 		token, err = auth.validateJWT(newSessionToken)
+		if err != nil {
+			logger.LogError("unable to validate refreshed token", err)
+			return false, nil, err
+		}
 		return true, NewAuthenticationInfo(token), err
 	}
 
@@ -192,7 +200,7 @@ func getSessionToken(cookies []*http.Cookie) string {
 	return ""
 }
 
-func (auth *Auth) validateJWT(JWT string) (Token, error) {
+func (auth *authenticationService) validateJWT(JWT string) (*Token, error) {
 	token, err := jwt.Parse([]byte(JWT), jwt.WithKeyProvider(auth.publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true))
 	if err != nil {
 		var parseErr error
@@ -205,7 +213,7 @@ func (auth *Auth) validateJWT(JWT string) (Token, error) {
 	return NewToken(JWT, token), err
 }
 
-func (*Auth) verifyDeliveryMethod(method DeliveryMethod, identifier string) *errors.WebError {
+func (*authenticationService) verifyDeliveryMethod(method DeliveryMethod, identifier string) *errors.WebError {
 	if identifier == "" {
 		return errors.NewError(errors.BadRequestErrorCode, "bad request")
 	}
@@ -250,7 +258,7 @@ func validateTokenError(err error) (bool, error) {
 		return false, errors.NewUnauthorizedError()
 	}
 	if err != nil {
-		logger.LogDebug("failed to verify token [%s]", err)
+		logger.LogError("failed to verify token", err)
 		return false, errors.NewUnauthorizedError()
 	}
 	return true, nil

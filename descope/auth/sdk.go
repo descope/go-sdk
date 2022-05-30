@@ -2,11 +2,10 @@ package auth
 
 import (
 	"net/http"
-	"time"
 )
 
 // Implementation in descope/auth/auth.go
-type IAuth interface {
+type Authentication interface {
 	// SignInOTP - used to login a user based on the given identifier either email or a phone
 	// and choose the selected delivery method for verification. (see auth/DeliveryMethod)
 	// returns an error upon failure.
@@ -47,16 +46,4 @@ type IAuth interface {
 	// LogoutWithOptions - Use to perform logout from all active devices. This will revoke the given tokens
 	// and if given options will also remove existing session on the given response.
 	LogoutWithOptions(request *http.Request, options ...Option) error
-}
-
-type AuthenticationInfo struct {
-	SessionToken Token
-}
-
-type Token struct {
-	Expiration time.Time
-	JWT        string
-	ID         string
-	Subject    string
-	Claims     map[string]interface{}
 }

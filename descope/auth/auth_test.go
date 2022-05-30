@@ -71,11 +71,11 @@ func DoOk(checks func(*http.Request)) mocks.Do {
 	}
 }
 
-func newTestAuth(clientParams *api.ClientParams, callback mocks.Do) (*Auth, error) {
+func newTestAuth(clientParams *api.ClientParams, callback mocks.Do) (*authenticationService, error) {
 	return newTestAuthConf(nil, clientParams, callback)
 }
 
-func newTestAuthConf(authParams *AuthParams, clientParams *api.ClientParams, callback mocks.Do) (*Auth, error) {
+func newTestAuthConf(authParams *AuthParams, clientParams *api.ClientParams, callback mocks.Do) (*authenticationService, error) {
 	if clientParams == nil {
 		clientParams = &api.ClientParams{}
 	}
