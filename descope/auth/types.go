@@ -123,7 +123,7 @@ type magicLinkAuthenticationRequestBody struct {
 	WhatsApp string `json:"whatsapp,omitempty"`
 	Phone    string `json:"phone,omitempty"`
 	Email    string `json:"email,omitempty"`
-	URI      string `json:"uri,omitempty"`
+	URI      string `json:"URI,omitempty"`
 }
 
 type magicLinkAuthenticationSignInRequestBody struct {
