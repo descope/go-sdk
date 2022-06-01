@@ -85,6 +85,47 @@ func (auth *authenticationService) VerifyCodeWithOptions(method DeliveryMethod, 
 	return NewAuthenticationInfo(token), err
 }
 
+func (auth *authenticationService) SignInMagicLink(method DeliveryMethod, identifier, URI string) error {
+	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
+		return err
+	}
+
+	_, err := auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(method, identifier, URI), nil)
+	return err
+}
+
+func (auth *authenticationService) SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User) error {
+	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
+		return err
+	}
+
+	_, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, identifier, URI, user), nil)
+	return err
+}
+
+func (auth *authenticationService) VerifyMagicLink(token string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	return auth.VerifyMagicLinkWithOptions(token, WithResponseOption(w))
+}
+
+func (auth *authenticationService) VerifyMagicLinkWithOptions(code string, options ...Option) (*AuthenticationInfo, error) {
+	httpResponse, err := auth.client.DoPostRequest(composeVerifyMagicLinkURL(), newMagicLinkAuthenticationVerifyRequestBody(code), nil)
+	if err != nil {
+		return nil, err
+	}
+	cookies := []*http.Cookie{}
+	if httpResponse != nil {
+		cookies = httpResponse.Res.Cookies()
+		Options(options).SetCookies(cookies)
+	}
+	sessionToken := getSessionToken(cookies)
+	token, err := auth.validateJWT(sessionToken)
+	if err != nil {
+		logger.LogError("unable to validate refreshed token", err)
+		return nil, err
+	}
+	return NewAuthenticationInfo(token), err
+}
+
 func (auth *authenticationService) Logout(request *http.Request, w http.ResponseWriter) error {
 	return auth.LogoutWithOptions(request, WithResponseOption(w))
 }
@@ -278,4 +319,16 @@ func composeSignUpURL(method DeliveryMethod) string {
 
 func composeVerifyCodeURL(method DeliveryMethod) string {
 	return composeURLMethod(api.Routes.VerifyCode(), method)
+}
+
+func composeMagicLinkSignInURL(method DeliveryMethod) string {
+	return composeURLMethod(api.Routes.SignInMagicLink(), method)
+}
+
+func composeMagicLinkSignUpURL(method DeliveryMethod) string {
+	return composeURLMethod(api.Routes.SignUpMagicLink(), method)
+}
+
+func composeVerifyMagicLinkURL() string {
+	return api.Routes.VerifyMagicLink()
 }

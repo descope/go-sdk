@@ -100,6 +100,10 @@ func TestInvalidEmailSignInEmail(t *testing.T) {
 	err = a.SignInOTP(MethodEmail, email)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+
+	err = a.SignInMagicLink(MethodEmail, email, "http://test.me")
+	require.Error(t, err)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
 
 func TestInvalidPhoneSignInSMS(t *testing.T) {
@@ -109,6 +113,10 @@ func TestInvalidPhoneSignInSMS(t *testing.T) {
 	err = a.SignInOTP(MethodSMS, phone)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+
+	err = a.SignInMagicLink(MethodSMS, phone, "http://test.me")
+	require.Error(t, err)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
 
 func TestInvalidPhoneSignInWhatsApp(t *testing.T) {
@@ -116,6 +124,10 @@ func TestInvalidPhoneSignInWhatsApp(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
 	err = a.SignInOTP(MethodWhatsApp, phone)
+	require.Error(t, err)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+
+	err = a.SignInMagicLink(MethodWhatsApp, phone, "http://test.me")
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -133,11 +145,30 @@ func TestValidEmailSignInEmail(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestValidEmailMagicLinkSignInEmail(t *testing.T) {
+	email := "test@email.com"
+	uri := "http://test.me"
+
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeMagicLinkSignInURL(MethodEmail), r.URL.RequestURI())
+		body, err := readBody(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, email, body["email"])
+		assert.EqualValues(t, uri, body["uri"])
+	}))
+	require.NoError(t, err)
+	err = a.SignInMagicLink(MethodEmail, email, uri)
+	require.NoError(t, err)
+}
 func TestInvalidPhoneSignUpSMS(t *testing.T) {
 	phone := "thisisemail@af.com"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
 	err = a.SignUpOTP(MethodSMS, phone, &User{Username: "test"})
+	require.Error(t, err)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+
+	err = a.SignUpMagicLink(MethodSMS, phone, "http://test.me", &User{Username: "test"})
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -149,6 +180,10 @@ func TestInvalidPhoneSignUpWhatsApp(t *testing.T) {
 	err = a.SignUpOTP(MethodSMS, phone, &User{Username: "test"})
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+
+	err = a.SignUpMagicLink(MethodSMS, phone, "http://test.me", &User{Username: "test"})
+	require.Error(t, err)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
 
 func TestInvalidEmailSignUpEmail(t *testing.T) {
@@ -156,6 +191,10 @@ func TestInvalidEmailSignUpEmail(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
 	err = a.SignUpOTP(MethodEmail, email, &User{Username: "test"})
+	require.Error(t, err)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+
+	err = a.SignUpMagicLink(MethodEmail, email, "http://test.me", &User{Username: "test"})
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -175,6 +214,23 @@ func TestSignUpEmail(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestSignUpMagicLinkEmail(t *testing.T) {
+	email := "test@email.com"
+	uri := "http://test.me"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeMagicLinkSignUpURL(MethodEmail), r.URL.RequestURI())
+
+		m, err := readBody(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, email, m["email"])
+		assert.EqualValues(t, uri, m["uri"])
+		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["username"])
+	}))
+	require.NoError(t, err)
+	err = a.SignUpMagicLink(MethodEmail, email, uri, &User{Username: "test"})
+	require.NoError(t, err)
+}
+
 func TestSignUpSMS(t *testing.T) {
 	phone := "943248329844"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
@@ -190,6 +246,23 @@ func TestSignUpSMS(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestSignUpMagicLinkSMS(t *testing.T) {
+	phone := "943248329844"
+	uri := "http://test.me"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeMagicLinkSignUpURL(MethodSMS), r.URL.RequestURI())
+
+		body, err := readBody(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, body["phone"])
+		assert.EqualValues(t, uri, body["uri"])
+		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["username"])
+	}))
+	require.NoError(t, err)
+	err = a.SignUpMagicLink(MethodSMS, phone, uri, &User{Username: "test"})
+	require.NoError(t, err)
+}
+
 func TestSignUpWhatsApp(t *testing.T) {
 	phone := "943248329844"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
@@ -202,6 +275,37 @@ func TestSignUpWhatsApp(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	err = a.SignUpOTP(MethodWhatsApp, phone, &User{Username: "test"})
+	require.NoError(t, err)
+}
+
+func TestSignUpMagicLinkWhatsApp(t *testing.T) {
+	phone := "943248329844"
+	uri := "http://test.me"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeMagicLinkSignUpURL(MethodWhatsApp), r.URL.RequestURI())
+
+		body, err := readBody(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, body["whatsapp"])
+		assert.EqualValues(t, uri, body["uri"])
+		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["username"])
+	}))
+	require.NoError(t, err)
+	err = a.SignUpMagicLink(MethodWhatsApp, phone, uri, &User{Username: "test"})
+	require.NoError(t, err)
+}
+
+func TestVerifyMagicLinkCode(t *testing.T) {
+	code := "4444"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeVerifyMagicLinkURL(), r.URL.RequestURI())
+
+		body, err := readBody(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, code, body["token"])
+	}))
+	require.NoError(t, err)
+	_, err = a.VerifyMagicLinkWithOptions(code)
 	require.NoError(t, err)
 }
 

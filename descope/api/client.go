@@ -24,13 +24,19 @@ var (
 	Routes = endpoints{
 		version: "/v1/",
 		auth: struct {
-			signInOTP  string
-			signUpOTP  string
-			verifyCode string
+			signInOTP       string
+			signUpOTP       string
+			verifyCode      string
+			signInMagicLink string
+			signUpMagicLink string
+			verifyMagicLink string
 		}{
-			signInOTP:  "auth/signin/otp",
-			signUpOTP:  "auth/signup/otp",
-			verifyCode: "auth/code/verify",
+			signInOTP:       "auth/signin/otp",
+			signUpOTP:       "auth/signup/otp",
+			verifyCode:      "auth/code/verify",
+			signInMagicLink: "auth/signin/magiclink",
+			signUpMagicLink: "auth/signup/magiclink",
+			verifyMagicLink: "/auth/magiclink/verify",
 		},
 		logoutAll: "/logoutall",
 		keys:      "/keys/",
@@ -41,9 +47,12 @@ var (
 type endpoints struct {
 	version string
 	auth    struct {
-		signInOTP  string
-		signUpOTP  string
-		verifyCode string
+		signInOTP       string
+		signUpOTP       string
+		verifyCode      string
+		signInMagicLink string
+		signUpMagicLink string
+		verifyMagicLink string
 	}
 	logoutAll string
 	keys      string
@@ -58,6 +67,15 @@ func (e *endpoints) SignUpOTP() string {
 }
 func (e *endpoints) VerifyCode() string {
 	return path.Join(e.version, e.auth.verifyCode)
+}
+func (e *endpoints) SignInMagicLink() string {
+	return path.Join(e.version, e.auth.signInMagicLink)
+}
+func (e *endpoints) SignUpMagicLink() string {
+	return path.Join(e.version, e.auth.signUpMagicLink)
+}
+func (e *endpoints) VerifyMagicLink() string {
+	return path.Join(e.version, e.auth.verifyMagicLink)
 }
 func (e *endpoints) Logout() string {
 	return path.Join(e.version, e.logoutAll)
