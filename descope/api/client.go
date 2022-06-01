@@ -36,7 +36,7 @@ var (
 			verifyCode:      "auth/code/verify",
 			signInMagicLink: "auth/signin/magiclink",
 			signUpMagicLink: "auth/signup/magiclink",
-			verifyMagicLink: "/auth/magiclink/verify",
+			verifyMagicLink: "auth/magiclink/verify",
 		},
 		logoutAll: "/logoutall",
 		keys:      "/keys/",
