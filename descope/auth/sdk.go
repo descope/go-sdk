@@ -29,6 +29,23 @@ type Authentication interface {
 	// returns a list of cookies or an error upon failure.
 	VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, options ...Option) (*AuthenticationInfo, error)
 
+	// SignInMagicLink - used to login a user based on a magic link that will be sent either email or a phone
+	// and choose the selected delivery method for verification. (see auth/DeliveryMethod)
+	// returns an error upon failure.
+	SignInMagicLink(method DeliveryMethod, identifier, URI string) error
+	// SignUpMagicLink - used to create a new user based on the given identifier either email or a phone.
+	// choose the selected delivery method for verification. (see auth/DeliveryMethod)
+	// optional to add user metadata for farther user details such as name and more.
+	// returns an error upon failure.
+	SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User) error
+
+	// VerifyMagicLink - used to verify a SignInMagicLink/SignUpMagicLink request, based on the magic link token generated.
+	// This is a shortcut for VerifyMagicLinkWithOptions(method, code, WithResponseOption(w))
+	VerifyMagicLink(code string, w http.ResponseWriter) (*AuthenticationInfo, error)
+
+	// VerifyMagicLinkWithOptions - used to verify a SignInMagicLink/SignUpMagicLink request, based on the magic link token generated.
+	VerifyMagicLinkWithOptions(code string, options ...Option) (*AuthenticationInfo, error)
+
 	// ValidateSession - Use to validate a session of a given request.
 	// Should be called before any private API call that requires authorization.
 	// In case the request cookie can be renewed an automatic renewal is called and returns a new set of cookies to use.

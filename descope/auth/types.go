@@ -119,6 +119,22 @@ type authenticationVerifyRequestBody struct {
 	Code                      string `json:"code"`
 }
 
+type magicLinkAuthenticationRequestBody struct {
+	WhatsApp string `json:"whatsapp,omitempty"`
+	Phone    string `json:"phone,omitempty"`
+	Email    string `json:"email,omitempty"`
+	URI      string `json:"uri,omitempty"`
+}
+
+type magicLinkAuthenticationSignInRequestBody struct {
+	magicLinkAuthenticationRequestBody `json:",inline"`
+	User                               *User `json:"user"`
+}
+
+type magicLinkAuthenticationVerifyRequestBody struct {
+	Token string `json:"token"`
+}
+
 func newAuthenticationRequestBody(method DeliveryMethod, value string) authenticationRequestBody {
 	switch method {
 	case MethodSMS:
@@ -128,6 +144,26 @@ func newAuthenticationRequestBody(method DeliveryMethod, value string) authentic
 	}
 
 	return authenticationRequestBody{Email: value}
+}
+
+func newMagicLinkAuthenticationRequestBody(method DeliveryMethod, value, URI string) magicLinkAuthenticationRequestBody {
+	switch method {
+	case MethodSMS:
+		return magicLinkAuthenticationRequestBody{Phone: value, URI: URI}
+	case MethodWhatsApp:
+		return magicLinkAuthenticationRequestBody{WhatsApp: value, URI: URI}
+	}
+
+	return magicLinkAuthenticationRequestBody{Email: value, URI: URI}
+}
+
+func newMagicLinkAuthenticationSignUpRequestBody(method DeliveryMethod, value, URI string, user *User) magicLinkAuthenticationSignInRequestBody {
+	b := newMagicLinkAuthenticationRequestBody(method, value, URI)
+	return magicLinkAuthenticationSignInRequestBody{magicLinkAuthenticationRequestBody: b, User: user}
+}
+
+func newMagicLinkAuthenticationVerifyRequestBody(code string) magicLinkAuthenticationVerifyRequestBody {
+	return magicLinkAuthenticationVerifyRequestBody{Token: code}
 }
 
 func newAuthenticationSignUpRequestBody(method DeliveryMethod, value string, user *User) authenticationSignInRequestBody {
