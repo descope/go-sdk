@@ -42,7 +42,6 @@ type Authentication interface {
 	// VerifyMagicLink - used to verify a SignInMagicLink/SignUpMagicLink request, based on the magic link token generated.
 	// This is a shortcut for VerifyMagicLinkWithOptions(method, code, WithResponseOption(w))
 	VerifyMagicLink(code string, w http.ResponseWriter) (*AuthenticationInfo, error)
-
 	// VerifyMagicLinkWithOptions - used to verify a SignInMagicLink/SignUpMagicLink request, based on the magic link token generated.
 	VerifyMagicLinkWithOptions(code string, options ...Option) (*AuthenticationInfo, error)
 

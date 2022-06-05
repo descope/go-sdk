@@ -36,6 +36,12 @@ import (
 descopeClient, err := descope.NewDescopeClient(descope.Config{ProjectID: "myprojectid"})
 ...
 
+// In your sign-up route for OTP
+if err := descopeClient.Auth.SignUpOTP(auth.MethodEmail, "mytestmail@test.com", &auth.User{Name: "newusername"}); err != nil {
+    // handle error
+}
+...
+
 // In your sign-in route for OTP
 if err := descopeClient.Auth.SignInOTP(auth.MethodEmail, "mytestmail@test.com"); err != nil {
     // handle error
@@ -48,15 +54,15 @@ if _, err := descopeClient.Auth.VerifyCode(auth.MethodEmail, "mytestmail@test.co
 }
 ...
 
-// In your logout route
-if err := descopeClient.Auth.Logout(r, w); err != nil {
-    // handle error
-}
-...
-
 // Put the following in your routes middleware for any request that requires authentication, or use the builtin middleware. (see below example)
 if authorized, userToken, err := descopeClient.Auth.ValidateSession(r, w); !authorized {
     // unauthorized error
+}
+...
+
+// In your logout route
+if err := descopeClient.Auth.Logout(r, w); err != nil {
+    // handle error
 }
 
 // Use the builtin middleware to protect your application routes, invokes failure callback on authentication failure.
@@ -99,7 +105,7 @@ Alternatively you can run the example using a predefined launch configurations w
 1. Open `.vscode/launch.json` and replace `<insert here>` to your project id
 1. Run & Debug using Visual Studio Code
 
-## Unit Testing and Mocking
+## Unit Testing and Data Mocks
 After integrating with Descope SDK, you might want to add unit tests to your app, for that we added mocks, so you can easily do the following:
 ```golang
 descopeClient := descope.DescopeClient{
@@ -116,7 +122,7 @@ assert.False(t, ok)
 assert.NotEmpty(t, userToken)
 assert.ErrorIs(t, err, errors.BadRequest)
 ``` 
-In this example we mocked the Descope Authentication and changed the response of the ValidateSession
+In this example we mocked the Descope Authentication to change the response of the ValidateSession
 
 ### License
 
