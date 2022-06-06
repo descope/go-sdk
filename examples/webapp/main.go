@@ -134,7 +134,7 @@ func handleVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	_, err := client.Auth.VerifyCode(method, identifier, code, w)
+	_, err := client.Auth.VerifyCodeWithOptions(method, identifier, code)
 	if err != nil {
 		setError(w, err.Error())
 		return
