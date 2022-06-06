@@ -92,7 +92,7 @@ func handleVerify(c *gin.Context) {
 		setError(c, "code is empty")
 		return
 	}
-	_, err := client.Auth.VerifyCode(method, identifier, code, c)
+	_, err := client.Auth.VerifyCodeWithOptions(method, identifier, code, descopegin.WithResponseOption(c))
 	if err != nil {
 		setError(c, err.Error())
 		return
