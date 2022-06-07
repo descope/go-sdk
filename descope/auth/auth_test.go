@@ -66,20 +66,21 @@ func DoOk(checks func(*http.Request)) mocks.Do {
 		if checks != nil {
 			checks(r)
 		}
-		return &http.Response{StatusCode: http.StatusOK}, nil
+		res := &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Set-Cookie": []string{mockAuthSessionCookie.String(), mockAuthRefreshCookie.String()}}}
+		return res, nil
 	}
 }
 
-func newTestAuth(clientParams *api.ClientParams, callback mocks.Do) (*Auth, error) {
+func newTestAuth(clientParams *api.ClientParams, callback mocks.Do) (*authenticationService, error) {
 	return newTestAuthConf(nil, clientParams, callback)
 }
 
-func newTestAuthConf(authParams *AuthParams, clientParams *api.ClientParams, callback mocks.Do) (*Auth, error) {
+func newTestAuthConf(authParams *AuthParams, clientParams *api.ClientParams, callback mocks.Do) (*authenticationService, error) {
 	if clientParams == nil {
 		clientParams = &api.ClientParams{}
 	}
 	if authParams == nil {
-		authParams = &AuthParams{ProjectID: "a"}
+		authParams = &AuthParams{ProjectID: "a", PublicKey: publicKey}
 	}
 	clientParams.DefaultClient = mocks.NewTestClient(callback)
 	return NewAuth(*authParams, api.NewClient(*clientParams))
@@ -99,6 +100,10 @@ func TestInvalidEmailSignInEmail(t *testing.T) {
 	err = a.SignInOTP(MethodEmail, email)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+
+	err = a.SignInMagicLink(MethodEmail, email, "http://test.me")
+	require.Error(t, err)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
 
 func TestInvalidPhoneSignInSMS(t *testing.T) {
@@ -108,6 +113,10 @@ func TestInvalidPhoneSignInSMS(t *testing.T) {
 	err = a.SignInOTP(MethodSMS, phone)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+
+	err = a.SignInMagicLink(MethodSMS, phone, "http://test.me")
+	require.Error(t, err)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
 
 func TestInvalidPhoneSignInWhatsApp(t *testing.T) {
@@ -115,6 +124,10 @@ func TestInvalidPhoneSignInWhatsApp(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
 	err = a.SignInOTP(MethodWhatsApp, phone)
+	require.Error(t, err)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+
+	err = a.SignInMagicLink(MethodWhatsApp, phone, "http://test.me")
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -132,11 +145,30 @@ func TestValidEmailSignInEmail(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestValidEmailMagicLinkSignInEmail(t *testing.T) {
+	email := "test@email.com"
+	uri := "http://test.me"
+
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeMagicLinkSignInURL(MethodEmail), r.URL.RequestURI())
+		body, err := readBody(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, email, body["email"])
+		assert.EqualValues(t, uri, body["URI"])
+	}))
+	require.NoError(t, err)
+	err = a.SignInMagicLink(MethodEmail, email, uri)
+	require.NoError(t, err)
+}
 func TestInvalidPhoneSignUpSMS(t *testing.T) {
 	phone := "thisisemail@af.com"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
 	err = a.SignUpOTP(MethodSMS, phone, &User{Username: "test"})
+	require.Error(t, err)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+
+	err = a.SignUpMagicLink(MethodSMS, phone, "http://test.me", &User{Username: "test"})
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -148,6 +180,10 @@ func TestInvalidPhoneSignUpWhatsApp(t *testing.T) {
 	err = a.SignUpOTP(MethodSMS, phone, &User{Username: "test"})
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+
+	err = a.SignUpMagicLink(MethodSMS, phone, "http://test.me", &User{Username: "test"})
+	require.Error(t, err)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
 
 func TestInvalidEmailSignUpEmail(t *testing.T) {
@@ -155,6 +191,10 @@ func TestInvalidEmailSignUpEmail(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
 	err = a.SignUpOTP(MethodEmail, email, &User{Username: "test"})
+	require.Error(t, err)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+
+	err = a.SignUpMagicLink(MethodEmail, email, "http://test.me", &User{Username: "test"})
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -174,6 +214,23 @@ func TestSignUpEmail(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestSignUpMagicLinkEmail(t *testing.T) {
+	email := "test@email.com"
+	uri := "http://test.me"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeMagicLinkSignUpURL(MethodEmail), r.URL.RequestURI())
+
+		m, err := readBody(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, email, m["email"])
+		assert.EqualValues(t, uri, m["URI"])
+		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["username"])
+	}))
+	require.NoError(t, err)
+	err = a.SignUpMagicLink(MethodEmail, email, uri, &User{Username: "test"})
+	require.NoError(t, err)
+}
+
 func TestSignUpSMS(t *testing.T) {
 	phone := "943248329844"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
@@ -189,6 +246,23 @@ func TestSignUpSMS(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestSignUpMagicLinkSMS(t *testing.T) {
+	phone := "943248329844"
+	uri := "http://test.me"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeMagicLinkSignUpURL(MethodSMS), r.URL.RequestURI())
+
+		body, err := readBody(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, body["phone"])
+		assert.EqualValues(t, uri, body["URI"])
+		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["username"])
+	}))
+	require.NoError(t, err)
+	err = a.SignUpMagicLink(MethodSMS, phone, uri, &User{Username: "test"})
+	require.NoError(t, err)
+}
+
 func TestSignUpWhatsApp(t *testing.T) {
 	phone := "943248329844"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
@@ -201,6 +275,37 @@ func TestSignUpWhatsApp(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	err = a.SignUpOTP(MethodWhatsApp, phone, &User{Username: "test"})
+	require.NoError(t, err)
+}
+
+func TestSignUpMagicLinkWhatsApp(t *testing.T) {
+	phone := "943248329844"
+	uri := "http://test.me"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeMagicLinkSignUpURL(MethodWhatsApp), r.URL.RequestURI())
+
+		body, err := readBody(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, body["whatsapp"])
+		assert.EqualValues(t, uri, body["URI"])
+		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["username"])
+	}))
+	require.NoError(t, err)
+	err = a.SignUpMagicLink(MethodWhatsApp, phone, uri, &User{Username: "test"})
+	require.NoError(t, err)
+}
+
+func TestVerifyMagicLinkCode(t *testing.T) {
+	code := "4444"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeVerifyMagicLinkURL(), r.URL.RequestURI())
+
+		body, err := readBody(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, code, body["token"])
+	}))
+	require.NoError(t, err)
+	_, err = a.VerifyMagicLinkWithOptions(code)
 	require.NoError(t, err)
 }
 
@@ -374,7 +479,7 @@ func TestAuthDefaultURL(t *testing.T) {
 }
 
 func TestEmptyPublicKey(t *testing.T) {
-	a, err := newTestAuth(nil, mocks.Do(func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, mocks.Do(func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("[]"))}, nil
 	}))
 	require.NoError(t, err)
@@ -385,7 +490,7 @@ func TestEmptyPublicKey(t *testing.T) {
 }
 
 func TestErrorFetchPublicKey(t *testing.T) {
-	a, err := newTestAuth(nil, mocks.Do(func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, mocks.Do(func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusInternalServerError, Body: io.NopCloser(strings.NewReader("what"))}, nil
 	}))
 	require.NoError(t, err)
@@ -396,7 +501,7 @@ func TestErrorFetchPublicKey(t *testing.T) {
 }
 
 func TestValidateSession(t *testing.T) {
-	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
+	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	ok, _, err := a.validateSession(jwtTokenValid, "")
 	require.NoError(t, err)
@@ -408,7 +513,7 @@ func TestValidateSession(t *testing.T) {
 
 func TestValidateSessionFetchKeyCalledOnce(t *testing.T) {
 	count := 0
-	a, err := newTestAuth(nil, mocks.Do(func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, mocks.Do(func(r *http.Request) (*http.Response, error) {
 		count++
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", publicKey)))}, nil
 	}))
@@ -424,7 +529,7 @@ func TestValidateSessionFetchKeyCalledOnce(t *testing.T) {
 }
 
 func TestValidateSessionFetchKeyMalformed(t *testing.T) {
-	a, err := newTestAuth(nil, mocks.Do(func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, mocks.Do(func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", unknownPublicKey)))}, nil
 	}))
 	require.NoError(t, err)
@@ -449,19 +554,19 @@ func TestValidateSessionFailWithInvalidKey(t *testing.T) {
 }
 
 func TestValidateSessionRequest(t *testing.T) {
-	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
+	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenValid})
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	ok, cookies, err := a.ValidateSessionWithOptions(request)
+	ok, info, err := a.ValidateSessionWithOptions(request)
 	require.NoError(t, err)
 	require.True(t, ok)
-	require.Empty(t, cookies)
+	require.EqualValues(t, jwtTokenValid, info.SessionToken.JWT)
 }
 
 func TestValidateSessionRequestMissingRefreshCookie(t *testing.T) {
-	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
+	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenValid})
@@ -472,7 +577,27 @@ func TestValidateSessionRequestMissingRefreshCookie(t *testing.T) {
 }
 
 func TestValidateSessionRequestRefreshSession(t *testing.T) {
-	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Set-Cookie": []string{mockAuthSessionCookie.String()}}}, nil
+	})
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenExpired})
+
+	b := httptest.NewRecorder()
+	ok, userToken, err := a.ValidateSession(request, b)
+	require.NoError(t, err)
+	require.True(t, ok)
+	assert.EqualValues(t, mockAuthSessionCookie.Value, userToken.SessionToken.JWT)
+	require.Len(t, b.Result().Cookies(), 1)
+	sessionCookie := b.Result().Cookies()[0]
+	require.NoError(t, err)
+	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
+}
+
+func TestValidateSessionRequestMissingSessionToken(t *testing.T) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Set-Cookie": []string{mockAuthSessionCookie.String()}}}, nil
 	})
 	require.NoError(t, err)
@@ -480,23 +605,20 @@ func TestValidateSessionRequestRefreshSession(t *testing.T) {
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
 
 	b := httptest.NewRecorder()
-	ok, userToken, err := a.ValidateSession(request, b)
-	require.NoError(t, err)
-	require.True(t, ok)
-	assert.EqualValues(t, mockAuthSessionCookie.Value, userToken)
-	require.Len(t, b.Result().Cookies(), 1)
-	sessionCookie := b.Result().Cookies()[0]
-	require.NoError(t, err)
-	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
+	ok, info, err := a.ValidateSession(request, b)
+	require.IsType(t, &errors.ValidationError{}, err)
+	require.False(t, ok)
+	require.Empty(t, info)
 }
 
 func TestValidateSessionRequestFailRefreshSession(t *testing.T) {
-	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusInternalServerError}, nil
 	})
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenExpired})
 	ok, cookies, err := a.ValidateSessionWithOptions(request)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, errors.FailedToRefreshTokenError)
@@ -505,7 +627,7 @@ func TestValidateSessionRequestFailRefreshSession(t *testing.T) {
 }
 
 func TestValidateSessionRequestNoCookie(t *testing.T) {
-	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
+	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	ok, cookies, err := a.ValidateSessionWithOptions(request)
@@ -515,7 +637,7 @@ func TestValidateSessionRequestNoCookie(t *testing.T) {
 }
 
 func TestValidateSessionExpired(t *testing.T) {
-	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
+	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	ok, _, err := a.validateSession(jwtTokenExpired, jwtTokenExpired)
 	require.Error(t, err)
@@ -524,7 +646,7 @@ func TestValidateSessionExpired(t *testing.T) {
 }
 
 func TestValidateSessionNoProvider(t *testing.T) {
-	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
+	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	ok, _, err := a.ValidateSessionWithOptions(nil)
 	require.Error(t, err)
@@ -533,7 +655,7 @@ func TestValidateSessionNoProvider(t *testing.T) {
 }
 
 func TestValidateSessionNotYet(t *testing.T) {
-	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
+	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	ok, _, err := a.validateSession(jwtTokenNotYet, jwtTokenNotYet)
 	require.Error(t, err)
@@ -542,7 +664,7 @@ func TestValidateSessionNotYet(t *testing.T) {
 }
 
 func TestLogout(t *testing.T) {
-	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Set-Cookie": []string{(&http.Cookie{Name: RefreshCookieName}).String()}}}, nil
 	})
 	require.NoError(t, err)
@@ -558,7 +680,7 @@ func TestLogout(t *testing.T) {
 }
 
 func TestLogoutFailure(t *testing.T) {
-	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusBadGateway}, nil
 	})
 	require.NoError(t, err)
@@ -570,7 +692,7 @@ func TestLogoutFailure(t *testing.T) {
 }
 
 func TestLogoutEmptyRequest(t *testing.T) {
-	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusBadGateway}, nil
 	})
 	require.NoError(t, err)
@@ -581,7 +703,7 @@ func TestLogoutEmptyRequest(t *testing.T) {
 }
 
 func TestLogoutMissingToken(t *testing.T) {
-	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusBadGateway}, nil
 	})
 	require.NoError(t, err)
@@ -593,7 +715,7 @@ func TestLogoutMissingToken(t *testing.T) {
 }
 
 func TestAuthenticationMiddlewareFailure(t *testing.T) {
-	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
+	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	handlerToTest := AuthenticationMiddleware(a, func(w http.ResponseWriter, r *http.Request, err error) {
 		assert.Error(t, err)
@@ -608,7 +730,7 @@ func TestAuthenticationMiddlewareFailure(t *testing.T) {
 }
 
 func TestAuthenticationMiddlewareFailureDefault(t *testing.T) {
-	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
+	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	handlerToTest := AuthenticationMiddleware(a, nil)(nil)
 
@@ -620,7 +742,7 @@ func TestAuthenticationMiddlewareFailureDefault(t *testing.T) {
 }
 
 func TestAuthenticationMiddlewareSuccess(t *testing.T) {
-	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
+	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	handlerToTest := AuthenticationMiddleware(a, nil)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusTeapot)
@@ -636,7 +758,7 @@ func TestAuthenticationMiddlewareSuccess(t *testing.T) {
 }
 
 func BenchmarkValidateSession(b *testing.B) {
-	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKey}, nil, DoOk(nil))
+	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(b, err)
 
 	for n := 0; n < b.N; n++ {

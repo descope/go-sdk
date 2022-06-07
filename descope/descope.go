@@ -1,6 +1,8 @@
 package descope
 
 import (
+	"strings"
+
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/auth"
 	"github.com/descope/go-sdk/descope/errors"
@@ -15,14 +17,12 @@ type Config struct {
 	// PublicKey (optional, "") - used to override or implicitly use a dedicated public key in order to decrypt and validate the JWT tokens
 	// during ValidateSessionRequest(). If empty, will attempt to fetch all public keys from the specified project id.
 	PublicKey string
-
 	// DescopeBaseURL (optional, "https://descope.com") - override the default base URL used to communicate with descope services.
 	DescopeBaseURL string
 	// DefaultClient (optional, http.DefaultClient) - override the default client used to Do the actual http request.
 	DefaultClient api.IHttpClient
 	// CustomDefaultHeaders (optional, nil) - add custom headers to all requests used to communicate with descope services.
 	CustomDefaultHeaders map[string]string
-
 	// LogLevel (optional, LogNone) - set a log level (Debug/Info/None) for the sdk to use when logging.
 	LogLevel logger.LogLevel
 	// LoggerInterface (optional, log.Default()) - set the logger instance to use for logging with the sdk.
@@ -52,14 +52,14 @@ func (c *Config) setPublicKey() string {
 }
 
 type DescopeClient struct {
-	Auth   auth.IAuth
+	Auth   auth.Authentication
 	config *Config
 }
 
 func NewDescopeClient(config Config) (*DescopeClient, error) {
 	logger.Init(config.LogLevel, config.Logger)
 
-	if config.setProjectID() == "" {
+	if strings.TrimSpace(config.setProjectID()) == "" {
 		return nil, errors.NewValidationError("project id is missing. Make sure to add it in the Config struct or the environment variable \"%s\"", utils.EnvironmentVariableProjectID)
 	}
 	if config.setPublicKey() != "" {

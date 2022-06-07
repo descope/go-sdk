@@ -45,14 +45,14 @@ func TestEmptyProjectID(t *testing.T) {
 
 func TestDescopeSDKMock(t *testing.T) {
 	api := DescopeClient{
-		Auth: auth.MockDescopeAuth{
+		Auth: auth.MockDescopeAuthentication{
 			ValidateSessionResponseNotOK: true,
-			ValidateSessionResponseToken: "test",
+			ValidateSessionResponseInfo:  &auth.AuthenticationInfo{SessionToken: &auth.Token{JWT: "test"}},
 			ValidateSessionResponseError: errors.NoPublicKeyError,
 		},
 	}
-	ok, token, err := api.Auth.ValidateSession(nil, nil)
+	ok, info, err := api.Auth.ValidateSession(nil, nil)
 	assert.False(t, ok)
-	assert.NotEmpty(t, token)
+	assert.NotEmpty(t, info)
 	assert.ErrorIs(t, err, errors.NoPublicKeyError)
 }

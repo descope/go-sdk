@@ -3,9 +3,27 @@ package auth
 import (
 	"net/http"
 	"regexp"
+	"time"
 
 	"github.com/descope/go-sdk/descope/logger"
+	"github.com/lestrrat-go/jwx/v2/jwt"
 )
+
+type AuthenticationInfo struct {
+	SessionToken *Token
+}
+
+type Token struct {
+	Expiration time.Time
+	JWT        string
+	ID         string
+	Subject    string
+	Claims     map[string]interface{}
+}
+
+func NewAuthenticationInfo(token *Token) *AuthenticationInfo {
+	return &AuthenticationInfo{SessionToken: token}
+}
 
 // WithResponseOption - adds a response option to supported functions to allow
 // automatic apply and renewal of the tokens to the response sent to the client.
@@ -62,6 +80,20 @@ func (options Options) SetCookies(cookies []*http.Cookie) {
 
 type responseOption struct{}
 
+func NewToken(JWT string, token jwt.Token) *Token {
+	if token == nil {
+		return nil
+	}
+
+	return &Token{
+		JWT:        JWT,
+		ID:         token.Issuer(),
+		Subject:    token.Subject(),
+		Expiration: token.Expiration(),
+		Claims:     token.PrivateClaims(),
+	}
+}
+
 type User struct {
 	Username string `json:"username,omitempty"`
 	Name     string `json:"name,omitempty"`
@@ -87,6 +119,22 @@ type authenticationVerifyRequestBody struct {
 	Code                      string `json:"code"`
 }
 
+type magicLinkAuthenticationRequestBody struct {
+	WhatsApp string `json:"whatsapp,omitempty"`
+	Phone    string `json:"phone,omitempty"`
+	Email    string `json:"email,omitempty"`
+	URI      string `json:"URI,omitempty"`
+}
+
+type magicLinkAuthenticationSignInRequestBody struct {
+	magicLinkAuthenticationRequestBody `json:",inline"`
+	User                               *User `json:"user"`
+}
+
+type magicLinkAuthenticationVerifyRequestBody struct {
+	Token string `json:"token"`
+}
+
 func newAuthenticationRequestBody(method DeliveryMethod, value string) authenticationRequestBody {
 	switch method {
 	case MethodSMS:
@@ -96,6 +144,26 @@ func newAuthenticationRequestBody(method DeliveryMethod, value string) authentic
 	}
 
 	return authenticationRequestBody{Email: value}
+}
+
+func newMagicLinkAuthenticationRequestBody(method DeliveryMethod, value, URI string) magicLinkAuthenticationRequestBody {
+	switch method {
+	case MethodSMS:
+		return magicLinkAuthenticationRequestBody{Phone: value, URI: URI}
+	case MethodWhatsApp:
+		return magicLinkAuthenticationRequestBody{WhatsApp: value, URI: URI}
+	}
+
+	return magicLinkAuthenticationRequestBody{Email: value, URI: URI}
+}
+
+func newMagicLinkAuthenticationSignUpRequestBody(method DeliveryMethod, value, URI string, user *User) magicLinkAuthenticationSignInRequestBody {
+	b := newMagicLinkAuthenticationRequestBody(method, value, URI)
+	return magicLinkAuthenticationSignInRequestBody{magicLinkAuthenticationRequestBody: b, User: user}
+}
+
+func newMagicLinkAuthenticationVerifyRequestBody(code string) magicLinkAuthenticationVerifyRequestBody {
+	return magicLinkAuthenticationVerifyRequestBody{Token: code}
 }
 
 func newAuthenticationSignUpRequestBody(method DeliveryMethod, value string, user *User) authenticationSignInRequestBody {
