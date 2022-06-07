@@ -71,6 +71,16 @@ func DoOk(checks func(*http.Request)) mocks.Do {
 	}
 }
 
+func DoRedirect(url string, checks func(*http.Request)) mocks.Do {
+	return func(r *http.Request) (*http.Response, error) {
+		if checks != nil {
+			checks(r)
+		}
+		res := &http.Response{StatusCode: http.StatusTemporaryRedirect, Header: http.Header{RedirectLocationCookieName: []string{url}}}
+		return res, nil
+	}
+}
+
 func newTestAuth(clientParams *api.ClientParams, callback mocks.Do) (*authenticationService, error) {
 	return newTestAuthConf(nil, clientParams, callback)
 }
@@ -246,6 +256,33 @@ func TestSignUpSMS(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestOAuthStartForwardResponse(t *testing.T) {
+	uri := "http://test.me"
+	provider := OAuthGithub
+	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {
+		assert.EqualValues(t, fmt.Sprintf("%s?provider=%s", composeOAuthURL(), provider), r.URL.RequestURI())
+	}))
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	urlStr, err := a.OAuthStart(provider, w)
+	require.NoError(t, err)
+	assert.EqualValues(t, uri, urlStr)
+	assert.EqualValues(t, urlStr, w.Result().Header.Get(RedirectLocationCookieName))
+	assert.EqualValues(t, http.StatusTemporaryRedirect, w.Result().StatusCode)
+}
+
+func TestOAuthStartInvalidForwardResponse(t *testing.T) {
+	provider := OAuthGithub
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, fmt.Sprintf("%s?provider=%s", composeOAuthURL(), provider), r.URL.RequestURI())
+	}))
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	urlStr, err := a.OAuthStart(provider, w)
+	require.Error(t, err)
+	assert.Empty(t, urlStr)
+}
+
 func TestSignUpMagicLinkSMS(t *testing.T) {
 	phone := "943248329844"
 	uri := "http://test.me"
@@ -297,16 +334,23 @@ func TestSignUpMagicLinkWhatsApp(t *testing.T) {
 
 func TestVerifyMagicLinkCode(t *testing.T) {
 	code := "4444"
-	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeVerifyMagicLinkURL(), r.URL.RequestURI())
 
 		body, err := readBody(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, code, body["token"])
-	}))
+		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Set-Cookie": []string{mockAuthSessionCookie.String()}}}, nil
+	})
 	require.NoError(t, err)
-	_, err = a.VerifyMagicLinkWithOptions(code)
+	w := httptest.NewRecorder()
+	info, err := a.VerifyMagicLink(code, w)
 	require.NoError(t, err)
+	assert.NotEmpty(t, info.SessionToken.JWT)
+	require.Len(t, w.Result().Cookies(), 1)
+	sessionCookie := w.Result().Cookies()[0]
+	require.NoError(t, err)
+	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
 }
 
 func TestInvalidEmailVerifyCodeEmail(t *testing.T) {

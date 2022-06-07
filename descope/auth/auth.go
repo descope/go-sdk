@@ -3,6 +3,7 @@ package auth
 import (
 	goErrors "errors"
 	"net/http"
+	"net/url"
 	"path"
 
 	"github.com/descope/go-sdk/descope/api"
@@ -124,6 +125,30 @@ func (auth *authenticationService) VerifyMagicLinkWithOptions(code string, optio
 		return nil, err
 	}
 	return NewAuthenticationInfo(token), err
+}
+
+func (auth *authenticationService) OAuthStart(provider OAuthProvider, w http.ResponseWriter) (string, error) {
+	return auth.OAuthStartWithOptions(provider, WithResponseOption(w))
+}
+
+func (auth *authenticationService) OAuthStartWithOptions(provider OAuthProvider, options ...Option) (string, error) {
+	httpResponse, err := auth.client.DoGetRequest(composeOAuthURL(), &api.HTTPRequest{QueryParams: map[string]string{"provider": string(provider)}})
+	if err != nil {
+		return "", err
+	}
+
+	var url *url.URL
+	if httpResponse.Res != nil {
+		url, err = httpResponse.Res.Location()
+		if err != nil {
+			logger.LogError("failed to parse location from response for [%s]", err, provider)
+			return "", err
+		}
+
+		Options(options).CopyResponse(httpResponse.Res, httpResponse.BodyStr)
+	}
+
+	return url.String(), nil
 }
 
 func (auth *authenticationService) Logout(request *http.Request, w http.ResponseWriter) error {
@@ -331,4 +356,8 @@ func composeMagicLinkSignUpURL(method DeliveryMethod) string {
 
 func composeVerifyMagicLinkURL() string {
 	return api.Routes.VerifyMagicLink()
+}
+
+func composeOAuthURL() string {
+	return api.Routes.OAuthStart()
 }

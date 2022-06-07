@@ -21,12 +21,13 @@ func TestGetRequest(t *testing.T) {
 	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
 		assert.Nil(t, r.Body)
 		assert.EqualValues(t, "/path", r.URL.Path)
+		assert.EqualValues(t, "test=1", r.URL.RawQuery)
 		actualProject, _, ok := r.BasicAuth()
 		assert.True(t, ok)
 		assert.EqualValues(t, projectID, actualProject)
 		return &http.Response{Body: io.NopCloser(strings.NewReader(expectedResponse)), StatusCode: http.StatusOK}, nil
 	})})
-	res, err := c.DoGetRequest("path", nil)
+	res, err := c.DoGetRequest("path", &HTTPRequest{QueryParams: map[string]string{"test": "1"}})
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedResponse, res.BodyStr)
 }
