@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"strings"
 
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/errors"
@@ -154,12 +155,18 @@ func (auth *authenticationService) OAuthStartWithOptions(provider OAuthProvider,
 
 func (auth *authenticationService) OAuthFinish(r *http.Request) (err error) {
 	newRequest := r.Clone(context.Background())
+	urlParts := strings.Split(r.URL.Hostname(), ".")
+	if len(urlParts) != 2 {
+		return errors.NewInvalidArgumentError("could not determine provider from request url")
+	}
+
+	provider := urlParts[0]
 	if newRequest.Method == http.MethodPost {
-		_, err = auth.client.DoPostRequest(composeOAuthFinishURL(), newRequest.Body, &api.HTTPRequest{
+		_, err = auth.client.DoPostRequest(composeOAuthFinishURL(OAuthProvider(provider)), newRequest.Body, &api.HTTPRequest{
 			Request: newRequest,
 		})
 	} else if newRequest.Method == http.MethodGet {
-		_, err = auth.client.DoGetRequest(composeOAuthFinishURL(), &api.HTTPRequest{
+		_, err = auth.client.DoGetRequest(composeOAuthFinishURL(OAuthProvider(provider)), &api.HTTPRequest{
 			Request: newRequest,
 		})
 	}
@@ -377,6 +384,6 @@ func composeOAuthURL() string {
 	return api.Routes.OAuthStart()
 }
 
-func composeOAuthFinishURL() string {
-	return api.Routes.OAuthFinish()
+func composeOAuthFinishURL(provider OAuthProvider) string {
+	return api.Routes.OAuthFinish(string(provider))
 }

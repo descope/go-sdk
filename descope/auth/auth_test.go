@@ -290,7 +290,7 @@ func TestOAuthFinishForwardPostRequest(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
 		assert.EqualValues(t, vals["Value"][0], r.PostForm.Get("Value"))
 		assert.EqualValues(t, vals["Value"], r.Header.Values("Value"))
-		assert.EqualValues(t, fmt.Sprintf("%s?test=1", composeOAuthFinishURL()), r.URL.RequestURI())
+		assert.EqualValues(t, fmt.Sprintf("%s?test=1", composeOAuthFinishURL(OAuthProvider("hello"))), r.URL.RequestURI())
 		times++
 	}))
 	require.NoError(t, err)
@@ -306,15 +306,25 @@ func TestOAuthFinishForwardGetRequest(t *testing.T) {
 	times := 0
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
 		assert.EqualValues(t, vals["Value"], r.Header.Values("Value"))
-		assert.EqualValues(t, fmt.Sprintf("%s?s=123", composeOAuthFinishURL()), r.URL.RequestURI())
+		assert.EqualValues(t, fmt.Sprintf("%s?s=123", composeOAuthFinishURL(OAuthFacebook)), r.URL.RequestURI())
 		times++
 	}))
 	require.NoError(t, err)
-	expectedURL, err := url.Parse("http://test.com?s=123")
+	expectedURL, err := url.Parse("http://facebook.com?s=123")
 	require.NoError(t, err)
 	err = a.OAuthFinish(&http.Request{Header: vals, Method: http.MethodGet, URL: expectedURL})
 	require.NoError(t, err)
 	require.EqualValues(t, 1, times)
+}
+
+func TestOAuthFinishForwardInvalidURL(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	url, err := url.Parse("http://hello?test=1")
+	require.NoError(t, err)
+	err = a.OAuthFinish(&http.Request{Method: http.MethodPost, URL: url})
+	require.Error(t, err)
+	require.ErrorContains(t, err, errors.NewInvalidArgumentError("").Error())
 }
 
 func TestSignUpMagicLinkSMS(t *testing.T) {

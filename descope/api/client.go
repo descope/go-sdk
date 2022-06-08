@@ -87,8 +87,8 @@ func (e *endpoints) VerifyMagicLink() string {
 func (e *endpoints) OAuthStart() string {
 	return path.Join(e.version, e.auth.oauthStart)
 }
-func (e *endpoints) OAuthFinish() string {
-	return path.Join(e.version, e.auth.oauthFinish)
+func (e *endpoints) OAuthFinish(provider string) string {
+	return path.Join(e.version, e.auth.oauthFinish, provider)
 }
 func (e *endpoints) Logout() string {
 	return path.Join(e.version, e.logoutAll)
