@@ -81,7 +81,7 @@ func (m MockDescopeAuthentication) OAuthStartWithOptions(provider OAuthProvider,
 }
 
 func (m MockDescopeAuthentication) OAuthFinish(r *http.Request) error {
-	if m.AssertOAuthStart != nil {
+	if m.AssertOAuthFinish != nil {
 		m.AssertOAuthFinish(r)
 	}
 	return m.OAuthFinishResponseError

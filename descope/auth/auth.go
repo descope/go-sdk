@@ -4,7 +4,6 @@ import (
 	"context"
 	goErrors "errors"
 	"net/http"
-	"net/url"
 	"path"
 	"strings"
 
@@ -133,24 +132,23 @@ func (auth *authenticationService) OAuthStart(provider OAuthProvider, w http.Res
 	return auth.OAuthStartWithOptions(provider, WithResponseOption(w))
 }
 
-func (auth *authenticationService) OAuthStartWithOptions(provider OAuthProvider, options ...Option) (string, error) {
+func (auth *authenticationService) OAuthStartWithOptions(provider OAuthProvider, options ...Option) (url string, err error) {
 	httpResponse, err := auth.client.DoGetRequest(composeOAuthURL(), &api.HTTPRequest{QueryParams: map[string]string{"provider": string(provider)}})
 	if err != nil {
-		return "", err
+		return
 	}
 
-	var url *url.URL
 	if httpResponse.Res != nil {
-		url, err = httpResponse.Res.Location()
+		urlObj, err := httpResponse.Res.Location()
 		if err != nil {
 			logger.LogError("failed to parse location from response for [%s]", err, provider)
 			return "", err
 		}
-
+		url = urlObj.String()
 		Options(options).CopyResponse(httpResponse.Res, httpResponse.BodyStr)
 	}
 
-	return url.String(), nil
+	return
 }
 
 func (auth *authenticationService) OAuthFinish(r *http.Request) (err error) {
