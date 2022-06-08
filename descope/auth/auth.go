@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	goErrors "errors"
 	"net/http"
 	"net/url"
@@ -149,6 +150,20 @@ func (auth *authenticationService) OAuthStartWithOptions(provider OAuthProvider,
 	}
 
 	return url.String(), nil
+}
+
+func (auth *authenticationService) OAuthFinish(r *http.Request) (err error) {
+	newRequest := r.Clone(context.Background())
+	if newRequest.Method == http.MethodPost {
+		_, err = auth.client.DoPostRequest(composeOAuthFinishURL(), newRequest.Body, &api.HTTPRequest{
+			Request: newRequest,
+		})
+	} else if newRequest.Method == http.MethodGet {
+		_, err = auth.client.DoGetRequest(composeOAuthFinishURL(), &api.HTTPRequest{
+			Request: newRequest,
+		})
+	}
+	return
 }
 
 func (auth *authenticationService) Logout(request *http.Request, w http.ResponseWriter) error {
@@ -360,4 +375,8 @@ func composeVerifyMagicLinkURL() string {
 
 func composeOAuthURL() string {
 	return api.Routes.OAuthStart()
+}
+
+func composeOAuthFinishURL() string {
+	return api.Routes.OAuthFinish()
 }

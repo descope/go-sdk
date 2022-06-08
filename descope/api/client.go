@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	urlpkg "net/url"
 	"path"
 	"strings"
 	"time"
@@ -31,6 +32,7 @@ var (
 			signUpMagicLink string
 			verifyMagicLink string
 			oauthStart      string
+			oauthFinish     string
 		}{
 			signInOTP:       "auth/signin/otp",
 			signUpOTP:       "auth/signup/otp",
@@ -39,6 +41,7 @@ var (
 			signUpMagicLink: "auth/signup/magiclink",
 			verifyMagicLink: "auth/magiclink/verify",
 			oauthStart:      "oauth/authorize",
+			oauthFinish:     "oauth/callback",
 		},
 		logoutAll: "/logoutall",
 		keys:      "/keys/",
@@ -56,6 +59,7 @@ type endpoints struct {
 		signUpMagicLink string
 		verifyMagicLink string
 		oauthStart      string
+		oauthFinish     string
 	}
 	logoutAll string
 	keys      string
@@ -82,6 +86,9 @@ func (e *endpoints) VerifyMagicLink() string {
 }
 func (e *endpoints) OAuthStart() string {
 	return path.Join(e.version, e.auth.oauthStart)
+}
+func (e *endpoints) OAuthFinish() string {
+	return path.Join(e.version, e.auth.oauthFinish)
 }
 func (e *endpoints) Logout() string {
 	return path.Join(e.version, e.logoutAll)
@@ -121,6 +128,7 @@ type HTTPRequest struct {
 	QueryParams map[string]string
 	BaseURL     string
 	ResBodyObj  interface{}
+	Request     *http.Request
 	Cookies     []*http.Cookie
 }
 
@@ -196,9 +204,24 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 	}
 
 	url := fmt.Sprintf("%s/%s", base, strings.TrimLeft(uriPath, "/"))
-	req, err := http.NewRequest(method, url, body)
-	if err != nil {
-		return nil, err
+	req := options.Request
+	if req == nil {
+		var err error
+		req, err = http.NewRequest(method, url, body)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		query := req.URL.Query().Encode()
+		if query != "" {
+			url = fmt.Sprintf("%s?%s", url, query)
+		}
+		parsedURL, err := urlpkg.Parse(url)
+		if err != nil {
+			return nil, err
+		}
+		parsedURL.Query().Encode()
+		req.URL = parsedURL
 	}
 
 	queryString := req.URL.Query()
