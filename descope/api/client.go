@@ -41,9 +41,9 @@ var (
 			verifyMagicLink: "auth/magiclink/verify",
 			oauthStart:      "oauth/authorize",
 		},
-		logoutAll: "/logoutall",
+		logoutAll: "auth/logoutall",
 		keys:      "/keys/",
-		refresh:   "/refresh",
+		refresh:   "auth/refresh",
 	}
 )
 
