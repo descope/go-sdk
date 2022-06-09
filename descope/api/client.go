@@ -38,9 +38,9 @@ var (
 			signUpMagicLink: "auth/signup/magiclink",
 			verifyMagicLink: "auth/magiclink/verify",
 		},
-		logoutAll: "/logoutall",
+		logoutAll: "auth/logoutall",
 		keys:      "/keys/",
-		refresh:   "/refresh",
+		refresh:   "auth/refresh",
 	}
 )
 
