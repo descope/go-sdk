@@ -78,6 +78,30 @@ func (options Options) SetCookies(cookies []*http.Cookie) {
 	}
 }
 
+func (options Options) CopyResponse(res *http.Response, body string) {
+	for _, option := range options {
+		if option != nil {
+			switch option.Kind().(type) {
+			case responseOption:
+				val := option.Value()
+				if val != nil {
+					if w, ok := val.(http.ResponseWriter); ok {
+						for key, header := range res.Header.Clone() {
+							for i := range header {
+								w.Header().Set(key, header[i])
+							}
+						}
+						w.WriteHeader(res.StatusCode)
+						w.Write([]byte(body))
+					} else {
+						logger.LogDebug("Unexpected option value [%T]", val)
+					}
+				}
+			}
+		}
+	}
+}
+
 type responseOption struct{}
 
 func NewToken(JWT string, token jwt.Token) *Token {
@@ -100,8 +124,6 @@ type User struct {
 	Phone    string `json:"phone,omitempty"`
 	Email    string `json:"email,omitempty"`
 }
-
-type DeliveryMethod string
 
 type authenticationRequestBody struct {
 	WhatsApp string `json:"whatsapp,omitempty"`
@@ -176,13 +198,26 @@ func newAuthenticationVerifyRequestBody(method DeliveryMethod, value string, cod
 	return authenticationVerifyRequestBody{authenticationRequestBody: b, Code: code}
 }
 
+type DeliveryMethod string
+
+type OAuthProvider string
+
 const (
 	MethodWhatsApp DeliveryMethod = "whatsapp"
 	MethodSMS      DeliveryMethod = "sms"
 	MethodEmail    DeliveryMethod = "email"
 
+	OAuthFacebook  OAuthProvider = "facebook"
+	OAuthGithub    OAuthProvider = "github"
+	OAuthGoogle    OAuthProvider = "google"
+	OAuthMicrosoft OAuthProvider = "microsoft"
+	OAuthGitlab    OAuthProvider = "gitlab"
+	OAuthApple     OAuthProvider = "apple"
+
 	SessionCookieName = "DS"
 	RefreshCookieName = "DSR"
+
+	RedirectLocationCookieName = "Location"
 )
 
 var (

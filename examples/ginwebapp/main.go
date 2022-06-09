@@ -44,6 +44,7 @@ func main() {
 	r.GET("/signup", handleSignUp)
 	r.GET("/signin", handleSignIn)
 	r.GET("/verify", handleVerify)
+	r.GET("/oauth", handleOAuth)
 
 	authorized := r.Group("/")
 	authorized.Use(descopegin.AuthneticationMiddleware(client.Auth, nil))
@@ -98,6 +99,17 @@ func handleVerify(c *gin.Context) {
 		return
 	}
 	setOK(c)
+}
+
+func handleOAuth(c *gin.Context) {
+	provider := auth.OAuthProvider(c.Query("provider"))
+	if provider == "" {
+		provider = auth.OAuthFacebook
+	}
+	_, err := client.Auth.OAuthStartWithOptions(provider, descopegin.WithResponseOption(c))
+	if err != nil {
+		setError(c, err.Error())
+	}
 }
 
 func getMethodAndIdentifier(c *gin.Context) (auth.DeliveryMethod, string) {

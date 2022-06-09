@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	urlpkg "net/url"
 	"path"
 	"strings"
 	"time"
@@ -30,6 +31,7 @@ var (
 			signInMagicLink string
 			signUpMagicLink string
 			verifyMagicLink string
+			oauthStart      string
 		}{
 			signInOTP:       "auth/signin/otp",
 			signUpOTP:       "auth/signup/otp",
@@ -37,6 +39,7 @@ var (
 			signInMagicLink: "auth/signin/magiclink",
 			signUpMagicLink: "auth/signup/magiclink",
 			verifyMagicLink: "auth/magiclink/verify",
+			oauthStart:      "oauth/authorize",
 		},
 		logoutAll: "/logoutall",
 		keys:      "/keys/",
@@ -53,6 +56,7 @@ type endpoints struct {
 		signInMagicLink string
 		signUpMagicLink string
 		verifyMagicLink string
+		oauthStart      string
 	}
 	logoutAll string
 	keys      string
@@ -76,6 +80,9 @@ func (e *endpoints) SignUpMagicLink() string {
 }
 func (e *endpoints) VerifyMagicLink() string {
 	return path.Join(e.version, e.auth.verifyMagicLink)
+}
+func (e *endpoints) OAuthStart() string {
+	return path.Join(e.version, e.auth.oauthStart)
 }
 func (e *endpoints) Logout() string {
 	return path.Join(e.version, e.logoutAll)
@@ -111,10 +118,12 @@ type HTTPResponse struct {
 	BodyStr string
 }
 type HTTPRequest struct {
-	Headers    map[string]string
-	BaseURL    string
-	ResBodyObj interface{}
-	Cookies    []*http.Cookie
+	Headers     map[string]string
+	QueryParams map[string]string
+	BaseURL     string
+	ResBodyObj  interface{}
+	Request     *http.Request
+	Cookies     []*http.Cookie
 }
 
 func NewClient(conf ClientParams) *Client {
@@ -128,6 +137,9 @@ func NewClient(conf ClientParams) *Client {
 		httpClient = &http.Client{
 			Timeout:   time.Second * 10,
 			Transport: t,
+			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+				return http.ErrUseLastResponse
+			},
 		}
 	}
 	defaultHeaders := map[string]string{}
@@ -186,10 +198,31 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 	}
 
 	url := fmt.Sprintf("%s/%s", base, strings.TrimLeft(uriPath, "/"))
-	req, err := http.NewRequest(method, url, body)
-	if err != nil {
-		return nil, err
+	req := options.Request
+	if req == nil {
+		var err error
+		req, err = http.NewRequest(method, url, body)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		query := req.URL.Query().Encode()
+		if query != "" {
+			url = fmt.Sprintf("%s?%s", url, query)
+		}
+		parsedURL, err := urlpkg.Parse(url)
+		if err != nil {
+			return nil, err
+		}
+		parsedURL.Query().Encode()
+		req.URL = parsedURL
 	}
+
+	queryString := req.URL.Query()
+	for key, value := range options.QueryParams {
+		queryString.Set(key, value)
+	}
+	req.URL.RawQuery = queryString.Encode()
 
 	for key, value := range c.headers {
 		req.Header.Add(key, value)
@@ -271,5 +304,5 @@ func (c *Client) parseResponseError(response *http.Response) error {
 }
 
 func isResponseOK(response *http.Response) bool {
-	return response.StatusCode >= http.StatusOK && response.StatusCode < http.StatusMultipleChoices
+	return response.StatusCode >= http.StatusOK && response.StatusCode < http.StatusMultipleChoices || response.StatusCode == http.StatusTemporaryRedirect
 }

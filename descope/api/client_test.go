@@ -15,18 +15,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestClient(t *testing.T) {
+	c := NewClient(ClientParams{})
+	assert.NotNil(t, c.httpClient)
+	assert.NotNil(t, c.headers)
+}
+
 func TestGetRequest(t *testing.T) {
 	projectID := "test"
 	expectedResponse := "hey"
 	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
 		assert.Nil(t, r.Body)
 		assert.EqualValues(t, "/path", r.URL.Path)
+		assert.EqualValues(t, "test=1", r.URL.RawQuery)
 		actualProject, _, ok := r.BasicAuth()
 		assert.True(t, ok)
 		assert.EqualValues(t, projectID, actualProject)
 		return &http.Response{Body: io.NopCloser(strings.NewReader(expectedResponse)), StatusCode: http.StatusOK}, nil
 	})})
-	res, err := c.DoGetRequest("path", nil)
+	res, err := c.DoGetRequest("path", &HTTPRequest{QueryParams: map[string]string{"test": "1"}})
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedResponse, res.BodyStr)
 }
@@ -70,6 +77,36 @@ func TestPostCustomHeaders(t *testing.T) {
 
 	_, err := c.DoPostRequest("path", nil, nil)
 	require.NoError(t, err)
+}
+
+func TestPostCustomURL(t *testing.T) {
+	projectID := "test"
+	body := "aaaa"
+	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+		b, err := io.ReadAll(r.Body)
+		require.NoError(t, err)
+		assert.EqualValues(t, body, string(b))
+		return &http.Response{StatusCode: http.StatusOK}, nil
+	})})
+
+	req, err := http.NewRequest(http.MethodPost, "hello.com", bytes.NewBufferString(body))
+	require.NoError(t, err)
+	res, err := c.DoPostRequest("path", nil, &HTTPRequest{Request: req})
+	require.NoError(t, err)
+	assert.EqualValues(t, http.StatusOK, res.Res.StatusCode)
+}
+
+func TestPostCustomBaseURL(t *testing.T) {
+	projectID := "test"
+	url := "http://test.com"
+	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, fmt.Sprintf("%s/path", url), r.URL.String())
+		return &http.Response{StatusCode: http.StatusOK}, nil
+	})})
+
+	res, err := c.DoPostRequest("path", nil, &HTTPRequest{BaseURL: url})
+	require.NoError(t, err)
+	assert.EqualValues(t, http.StatusOK, res.Res.StatusCode)
 }
 
 func TestPostUnauthorized(t *testing.T) {
