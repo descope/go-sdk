@@ -17,8 +17,8 @@ type MockDescopeAuthentication struct {
 	AssertOAuthStart             func(provider OAuthProvider)
 	AssertOAuthResponseURL       string
 	OAuthStartResponseError      error
-	AssertSignInMagicLink        func(method DeliveryMethod, identifier, URI string)
-	AssertSignUpMagicLink        func(method DeliveryMethod, identifier, URI string, user *User)
+	AssertSignInMagicLink        func(method DeliveryMethod, identifier, URI string, crossDevice bool)
+	AssertSignUpMagicLink        func(method DeliveryMethod, identifier, URI string, user *User, crossDevice bool)
 	AssertVerifyMagicLink        func(code string)
 }
 
@@ -50,16 +50,16 @@ func (m MockDescopeAuthentication) VerifyCodeWithOptions(method DeliveryMethod, 
 	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
 }
 
-func (m MockDescopeAuthentication) SignInMagicLink(method DeliveryMethod, identifier, URI string) error {
+func (m MockDescopeAuthentication) SignInMagicLink(method DeliveryMethod, identifier, URI string, crossDevice bool) error {
 	if m.AssertSignInOTP != nil {
-		m.AssertSignInMagicLink(method, identifier, URI)
+		m.AssertSignInMagicLink(method, identifier, URI, crossDevice)
 	}
 	return m.SignInOTPResponseError
 }
 
-func (m MockDescopeAuthentication) SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User) error {
+func (m MockDescopeAuthentication) SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User, crossDevice bool) error {
 	if m.AssertSignUpOTP != nil {
-		m.AssertSignUpMagicLink(method, identifier, URI, user)
+		m.AssertSignUpMagicLink(method, identifier, URI, user, crossDevice)
 	}
 	return m.SignUpOTPResponseError
 }

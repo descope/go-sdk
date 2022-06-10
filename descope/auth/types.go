@@ -142,10 +142,11 @@ type authenticationVerifyRequestBody struct {
 }
 
 type magicLinkAuthenticationRequestBody struct {
-	WhatsApp string `json:"whatsapp,omitempty"`
-	Phone    string `json:"phone,omitempty"`
-	Email    string `json:"email,omitempty"`
-	URI      string `json:"URI,omitempty"`
+	WhatsApp    string `json:"whatsapp,omitempty"`
+	Phone       string `json:"phone,omitempty"`
+	Email       string `json:"email,omitempty"`
+	URI         string `json:"URI,omitempty"`
+	CrossDevice bool   `json"crossDevice,omitempty"`
 }
 
 type magicLinkAuthenticationSignInRequestBody struct {
@@ -168,7 +169,7 @@ func newAuthenticationRequestBody(method DeliveryMethod, value string) authentic
 	return authenticationRequestBody{Email: value}
 }
 
-func newMagicLinkAuthenticationRequestBody(method DeliveryMethod, value, URI string) magicLinkAuthenticationRequestBody {
+func newMagicLinkAuthenticationRequestBody(method DeliveryMethod, value, URI string, crossDevice bool) magicLinkAuthenticationRequestBody {
 	switch method {
 	case MethodSMS:
 		return magicLinkAuthenticationRequestBody{Phone: value, URI: URI}
@@ -176,11 +177,11 @@ func newMagicLinkAuthenticationRequestBody(method DeliveryMethod, value, URI str
 		return magicLinkAuthenticationRequestBody{WhatsApp: value, URI: URI}
 	}
 
-	return magicLinkAuthenticationRequestBody{Email: value, URI: URI}
+	return magicLinkAuthenticationRequestBody{Email: value, URI: URI, CrossDevice: crossDevice}
 }
 
-func newMagicLinkAuthenticationSignUpRequestBody(method DeliveryMethod, value, URI string, user *User) magicLinkAuthenticationSignInRequestBody {
-	b := newMagicLinkAuthenticationRequestBody(method, value, URI)
+func newMagicLinkAuthenticationSignUpRequestBody(method DeliveryMethod, value, URI string, user *User, crossDevice bool) magicLinkAuthenticationSignInRequestBody {
+	b := newMagicLinkAuthenticationRequestBody(method, value, URI, crossDevice)
 	return magicLinkAuthenticationSignInRequestBody{magicLinkAuthenticationRequestBody: b, User: user}
 }
 

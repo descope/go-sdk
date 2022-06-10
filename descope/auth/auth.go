@@ -85,21 +85,21 @@ func (auth *authenticationService) VerifyCodeWithOptions(method DeliveryMethod, 
 	return NewAuthenticationInfo(token), err
 }
 
-func (auth *authenticationService) SignInMagicLink(method DeliveryMethod, identifier, URI string) error {
+func (auth *authenticationService) SignInMagicLink(method DeliveryMethod, identifier, URI string, crossDevice bool) error {
 	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
 		return err
 	}
 
-	_, err := auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(method, identifier, URI), nil)
+	_, err := auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(method, identifier, URI, crossDevice), nil)
 	return err
 }
 
-func (auth *authenticationService) SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User) error {
+func (auth *authenticationService) SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User, crossDevice bool) error {
 	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
 		return err
 	}
 
-	_, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, identifier, URI, user), nil)
+	_, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, identifier, URI, user, crossDevice), nil)
 	return err
 }
 
@@ -118,12 +118,18 @@ func (auth *authenticationService) VerifyMagicLinkWithOptions(code string, optio
 		Options(options).SetCookies(cookies)
 	}
 	sessionToken := getSessionToken(cookies)
-	token, err := auth.validateJWT(sessionToken)
-	if err != nil {
-		logger.LogError("unable to validate refreshed token", err)
-		return nil, err
+	if sessionToken != "" {
+		// magic link was created in non cross device mode
+		token, err := auth.validateJWT(sessionToken)
+		if err != nil {
+			logger.LogError("unable to validate refreshed token", err)
+			return nil, err
+		}
+		return NewAuthenticationInfo(token), err
 	}
-	return NewAuthenticationInfo(token), err
+
+	// magic link was created in non cross device mode, no authentication info is returned
+	return nil, nil
 }
 
 func (auth *authenticationService) OAuthStart(provider OAuthProvider, w http.ResponseWriter) (string, error) {
