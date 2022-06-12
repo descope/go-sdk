@@ -21,6 +21,10 @@ type Token struct {
 	Claims     map[string]interface{}
 }
 
+type MagicLinkResponse struct {
+	PendingRef string `json:"pendingRef"` // Pending referral code used to poll magic link authentication status
+}
+
 func NewAuthenticationInfo(token *Token) *AuthenticationInfo {
 	return &AuthenticationInfo{SessionToken: token}
 }

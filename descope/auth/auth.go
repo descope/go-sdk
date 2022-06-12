@@ -8,6 +8,7 @@ import (
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/logger"
+	"github.com/descope/go-sdk/descope/utils"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
@@ -85,22 +86,38 @@ func (auth *authenticationService) VerifyCodeWithOptions(method DeliveryMethod, 
 	return NewAuthenticationInfo(token), err
 }
 
-func (auth *authenticationService) SignInMagicLink(method DeliveryMethod, identifier, URI string, crossDevice bool) error {
-	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
-		return err
+func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (string, error) {
+	var response MagicLinkResponse
+	if err := utils.Unmarshal([]byte(httpResponse.BodyStr), &response); err != nil {
+		logger.LogError("failed to load pending reference from response", err)
+		return "", errors.NewValidationError(httpResponse.BodyStr)
 	}
-
-	_, err := auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(method, identifier, URI, crossDevice), nil)
-	return err
+	return response.PendingRef, nil
 }
 
-func (auth *authenticationService) SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User, crossDevice bool) error {
+func (auth *authenticationService) SignInMagicLink(method DeliveryMethod, identifier, URI string, crossDevice bool) (string, error) {
 	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
-		return err
+		return "", err
 	}
 
-	_, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, identifier, URI, user, crossDevice), nil)
-	return err
+	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(method, identifier, URI, crossDevice), nil)
+	if err == nil && crossDevice {
+		return getPendingRefFromResponse(httpResponse)
+	}
+
+	return "", err
+}
+
+func (auth *authenticationService) SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User, crossDevice bool) (string, error) {
+	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
+		return "", err
+	}
+
+	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, identifier, URI, user, crossDevice), nil)
+	if err == nil && crossDevice {
+		return getPendingRefFromResponse(httpResponse)
+	}
+	return "", err
 }
 
 func (auth *authenticationService) VerifyMagicLink(token string, w http.ResponseWriter) (*AuthenticationInfo, error) {

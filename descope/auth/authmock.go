@@ -50,18 +50,18 @@ func (m MockDescopeAuthentication) VerifyCodeWithOptions(method DeliveryMethod, 
 	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
 }
 
-func (m MockDescopeAuthentication) SignInMagicLink(method DeliveryMethod, identifier, URI string, crossDevice bool) error {
+func (m MockDescopeAuthentication) SignInMagicLink(method DeliveryMethod, identifier, URI string, crossDevice bool) (string, error) {
 	if m.AssertSignInOTP != nil {
 		m.AssertSignInMagicLink(method, identifier, URI, crossDevice)
 	}
-	return m.SignInOTPResponseError
+	return "", m.SignInOTPResponseError
 }
 
-func (m MockDescopeAuthentication) SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User, crossDevice bool) error {
+func (m MockDescopeAuthentication) SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User, crossDevice bool) (string, error) {
 	if m.AssertSignUpOTP != nil {
 		m.AssertSignUpMagicLink(method, identifier, URI, user, crossDevice)
 	}
-	return m.SignUpOTPResponseError
+	return "", m.SignUpOTPResponseError
 }
 
 func (m MockDescopeAuthentication) OAuthStart(provider OAuthProvider, _ http.ResponseWriter) (string, error) {

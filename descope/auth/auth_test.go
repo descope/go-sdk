@@ -111,7 +111,7 @@ func TestInvalidEmailSignInEmail(t *testing.T) {
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 
-	err = a.SignInMagicLink(MethodEmail, email, "http://test.me", false)
+	_, err = a.SignInMagicLink(MethodEmail, email, "http://test.me", false)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -124,7 +124,7 @@ func TestInvalidPhoneSignInSMS(t *testing.T) {
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 
-	err = a.SignInMagicLink(MethodSMS, phone, "http://test.me", false)
+	_, err = a.SignInMagicLink(MethodSMS, phone, "http://test.me", false)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -137,7 +137,7 @@ func TestInvalidPhoneSignInWhatsApp(t *testing.T) {
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 
-	err = a.SignInMagicLink(MethodWhatsApp, phone, "http://test.me", false)
+	_, err = a.SignInMagicLink(MethodWhatsApp, phone, "http://test.me", false)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -167,7 +167,7 @@ func TestValidEmailMagicLinkSignInEmail(t *testing.T) {
 		assert.EqualValues(t, uri, body["URI"])
 	}))
 	require.NoError(t, err)
-	err = a.SignInMagicLink(MethodEmail, email, uri, false)
+	_, err = a.SignInMagicLink(MethodEmail, email, uri, false)
 	require.NoError(t, err)
 }
 func TestInvalidPhoneSignUpSMS(t *testing.T) {
@@ -178,7 +178,7 @@ func TestInvalidPhoneSignUpSMS(t *testing.T) {
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 
-	err = a.SignUpMagicLink(MethodSMS, phone, "http://test.me", &User{Username: "test"}, false)
+	_, err = a.SignUpMagicLink(MethodSMS, phone, "http://test.me", &User{Username: "test"}, false)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -191,7 +191,7 @@ func TestInvalidPhoneSignUpWhatsApp(t *testing.T) {
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 
-	err = a.SignUpMagicLink(MethodSMS, phone, "http://test.me", &User{Username: "test"}, false)
+	_, err = a.SignUpMagicLink(MethodSMS, phone, "http://test.me", &User{Username: "test"}, false)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -204,7 +204,7 @@ func TestInvalidEmailSignUpEmail(t *testing.T) {
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 
-	err = a.SignUpMagicLink(MethodEmail, email, "http://test.me", &User{Username: "test"}, false)
+	_, err = a.SignUpMagicLink(MethodEmail, email, "http://test.me", &User{Username: "test"}, false)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -237,7 +237,7 @@ func TestSignUpMagicLinkEmail(t *testing.T) {
 		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["username"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpMagicLink(MethodEmail, email, uri, &User{Username: "test"}, false)
+	_, err = a.SignUpMagicLink(MethodEmail, email, uri, &User{Username: "test"}, false)
 	require.NoError(t, err)
 }
 
@@ -296,7 +296,7 @@ func TestSignUpMagicLinkSMS(t *testing.T) {
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["username"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpMagicLink(MethodSMS, phone, uri, &User{Username: "test"}, false)
+	_, err = a.SignUpMagicLink(MethodSMS, phone, uri, &User{Username: "test"}, false)
 	require.NoError(t, err)
 }
 
@@ -328,7 +328,7 @@ func TestSignUpMagicLinkWhatsApp(t *testing.T) {
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["username"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpMagicLink(MethodWhatsApp, phone, uri, &User{Username: "test"}, false)
+	_, err = a.SignUpMagicLink(MethodWhatsApp, phone, uri, &User{Username: "test"}, false)
 	require.NoError(t, err)
 }
 

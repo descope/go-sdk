@@ -31,13 +31,15 @@ type Authentication interface {
 
 	// SignInMagicLink - Use to login a user based on a magic link that will be sent either email or a phone
 	// and choose the selected delivery method for verification. (see auth/DeliveryMethod)
+	// if crossDevice is true - returns pending reference which should be used to poll for an authentication session.
 	// returns an error upon failure.
-	SignInMagicLink(method DeliveryMethod, identifier, URI string, crossDevice bool) error
+	SignInMagicLink(method DeliveryMethod, identifier, URI string, crossDevice bool) (string, error)
 	// SignUpMagicLink - Use to create a new user based on the given identifier either email or a phone.
 	// choose the selected delivery method for verification. (see auth/DeliveryMethod)
 	// optional to add user metadata for farther user details such as name and more.
+	// if crossDevice is true - returns pending reference which should be used to poll for an authentication session.
 	// returns an error upon failure.
-	SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User, crossDevice bool) error
+	SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User, crossDevice bool) (string, error)
 
 	// VerifyMagicLink - Use to verify a SignInMagicLink/SignUpMagicLink request, based on the magic link token generated.
 	// This is a shortcut for VerifyMagicLinkWithOptions(method, code, WithResponseOption(w))
