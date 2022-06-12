@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/descope/go-sdk v0.0.0-20220606092453-a85cfc62a87d
-	github.com/gin-gonic/gin v1.8.0
+	github.com/gin-gonic/gin v1.8.1
 )
 
 require (
