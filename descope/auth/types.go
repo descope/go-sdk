@@ -150,7 +150,7 @@ type magicLinkAuthenticationRequestBody struct {
 	Phone       string `json:"phone,omitempty"`
 	Email       string `json:"email,omitempty"`
 	URI         string `json:"URI,omitempty"`
-	CrossDevice bool   `json"crossDevice,omitempty"`
+	CrossDevice bool   `json:"crossDevice,omitempty"`
 }
 
 type magicLinkAuthenticationSignInRequestBody struct {
