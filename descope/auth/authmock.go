@@ -14,6 +14,9 @@ type MockDescopeAuthentication struct {
 	AssertSignInOTP              func(method DeliveryMethod, identifier string)
 	AssertSignUpOTP              func(method DeliveryMethod, identifier string, user *User)
 	AssertVerifyCode             func(method DeliveryMethod, identifier string, code string)
+	AssertOAuthStart             func(provider OAuthProvider)
+	AssertOAuthResponseURL       string
+	OAuthStartResponseError      error
 	AssertSignInMagicLink        func(method DeliveryMethod, identifier, URI string)
 	AssertSignUpMagicLink        func(method DeliveryMethod, identifier, URI string, user *User)
 	AssertVerifyMagicLink        func(code string)
@@ -59,6 +62,20 @@ func (m MockDescopeAuthentication) SignUpMagicLink(method DeliveryMethod, identi
 		m.AssertSignUpMagicLink(method, identifier, URI, user)
 	}
 	return m.SignUpOTPResponseError
+}
+
+func (m MockDescopeAuthentication) OAuthStart(provider OAuthProvider, _ http.ResponseWriter) (string, error) {
+	if m.AssertOAuthStart != nil {
+		m.AssertOAuthStart(provider)
+	}
+	return m.AssertOAuthResponseURL, m.OAuthStartResponseError
+}
+
+func (m MockDescopeAuthentication) OAuthStartWithOptions(provider OAuthProvider, _ ...Option) (string, error) {
+	if m.AssertOAuthStart != nil {
+		m.AssertOAuthStart(provider)
+	}
+	return m.AssertOAuthResponseURL, m.OAuthStartResponseError
 }
 
 func (m MockDescopeAuthentication) VerifyMagicLink(code string, _ http.ResponseWriter) (*AuthenticationInfo, error) {

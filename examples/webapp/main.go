@@ -48,6 +48,7 @@ func main() {
 	router.Use(loggingMiddleware)
 	router.HandleFunc("/signin", handleSignIn).Methods(http.MethodGet)
 	router.HandleFunc("/signup", handleSignUp).Methods(http.MethodGet)
+	router.HandleFunc("/oauth", handleOAuth).Methods(http.MethodGet)
 	router.HandleFunc("/verify", handleVerify).Methods(http.MethodGet)
 	authRouter := router.Methods(http.MethodGet).Subrouter()
 	authRouter.Use(auth.AuthenticationMiddleware(client.Auth, func(w http.ResponseWriter, r *http.Request, err error) {
@@ -96,6 +97,17 @@ func handleSignUp(w http.ResponseWriter, r *http.Request) {
 		setError(w, err.Error())
 	} else {
 		setOK(w)
+	}
+}
+
+func handleOAuth(w http.ResponseWriter, r *http.Request) {
+	provider := auth.OAuthFacebook
+	if p, ok := r.URL.Query()["provider"]; ok {
+		provider = auth.OAuthProvider(p[0])
+	}
+	_, err := client.Auth.OAuthStart(provider, w)
+	if err != nil {
+		setError(w, err.Error())
 	}
 }
 
