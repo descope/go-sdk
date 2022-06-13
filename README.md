@@ -59,19 +59,19 @@ if _, err := descopeClient.Auth.VerifyCode(auth.MethodEmail, "mytestmail@test.co
 ## Running the Example
 
 1. Clone repository locally `git clone github.com/descope/go-sdk`
-## Run Manually
+### Run Manually
 1. Download prerequisites and build `make build`
 1. setup all prerequisites
 1. Run one of our example applications:
     - Gin web app: `make run-gin-example`
     - Gorilla Mux web app: `make run-example`
 
-1. Application runs on `http://localhost:8085`
-
 ### Debug in Visual Studio Code
 
 1. Open `.vscode/launch.json` and replace `<insert here>` with your project id
 1. Run and Debug using Visual Studio Code "Run Example: Gorilla Mux Web App" or "Run Example: Gin Web App"
+
+The examples runs on TLS at `https://localhost:8085`.
 
 ## Unit Testing and Data Mocks
 After integrating with Descope SDK, you might want to add unit tests to your app, for that we added mocks, so you can easily do the following:
@@ -91,9 +91,10 @@ assert.ErrorIs(t, err, errors.BadRequest)
 ``` 
 In this example we mocked the Descope Authentication to change the response of the ValidateSession
 
-### License
-
+## License
 Descope go-sdk is [MIT licensed](./LICENSE).
+
+-----
 
 ```golang
 // Put the following in your routes middleware for any request that requires authentication, or use the builtin middleware. (see below example)

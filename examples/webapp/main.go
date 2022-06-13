@@ -25,12 +25,12 @@ import (
 const (
 	TLSkeyPath  = "../key.pem"
 	TLSCertPath = "../cert.pem"
+	port        = "8085"
 )
 
 var client *descope.DescopeClient
 
 func main() {
-	port := "8085"
 	log.Println("starting server on port " + port)
 	var err error
 	router := mux.NewRouter()

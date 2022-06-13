@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"fmt"
 	"log"
 	"math/big"
 	"net/http"
@@ -23,11 +24,13 @@ import (
 const (
 	TLSkeyPath  = "../key.pem"
 	TLSCertPath = "../cert.pem"
+	port = "8085"
 )
 
 var client *descope.DescopeClient
 
 func main() {
+	log.Println("starting server on port " + port)
 	r := gin.Default()
 	var err error
 	client, err = descope.NewDescopeClient(descope.Config{LogLevel: logger.LogDebugLevel, DescopeBaseURL: "http://localhost:8191"})
@@ -50,7 +53,7 @@ func main() {
 	authorized.Use(descopegin.AuthneticationMiddleware(client.Auth, nil))
 	authorized.GET("/health", handleIsHealthy)
 	authorized.GET("/logout", handleLogout)
-	r.RunTLS(":8085", TLSCertPath, TLSkeyPath)
+	r.RunTLS(fmt.Sprintf(":%s", port), TLSCertPath, TLSkeyPath)
 }
 
 func handleIsHealthy(c *gin.Context) {
