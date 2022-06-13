@@ -95,22 +95,20 @@ func (auth *authenticationService) getPendingRefFromResponse(httpResponse *api.H
 	pendingRef := response.PendingRef
 
 	var authInfo *AuthenticationInfo
-	if pendingRef == "" {
-		utils.RunWithRetries(24, 5, "get-pending-session", func() error {
-			_, err := auth.client.DoPostRequest(composeGetPendingSession(), newAuthenticationGetPendingSessionBody(pendingRef), nil)
-			if err != nil {
-				return err
-			}
-			response, err := auth.getAuthenticationInfoFromResponse(httpResponse, options...)
-			if err != nil {
-				return err
-			}
-			authInfo = response
-			return nil
-		})
-	}
+	err := utils.RunWithRetries(24, 5, "get-pending-session", func() error {
+		_, err := auth.client.DoPostRequest(composeGetPendingSession(), newAuthenticationGetPendingSessionBody(pendingRef), nil)
+		if err != nil {
+			return err
+		}
+		response, err := auth.getAuthenticationInfoFromResponse(httpResponse, options...)
+		if err != nil {
+			return err
+		}
+		authInfo = response
+		return nil
+	})
 
-	return authInfo, nil
+	return authInfo, err
 }
 
 func (auth *authenticationService) SignInMagicLink(method DeliveryMethod, identifier, URI string) error {
