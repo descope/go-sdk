@@ -48,8 +48,9 @@ func main() {
 	router.Use(loggingMiddleware)
 	router.HandleFunc("/signin", handleSignIn).Methods(http.MethodGet)
 	router.HandleFunc("/signup", handleSignUp).Methods(http.MethodGet)
-	router.HandleFunc("/oauth", handleOAuth).Methods(http.MethodGet)
 	router.HandleFunc("/verify", handleVerify).Methods(http.MethodGet)
+	router.HandleFunc("/oauth", handleOAuth).Methods(http.MethodGet)
+
 	authRouter := router.Methods(http.MethodGet).Subrouter()
 	authRouter.Use(auth.AuthenticationMiddleware(client.Auth, func(w http.ResponseWriter, r *http.Request, err error) {
 		setResponse(w, http.StatusUnauthorized, "Unauthorized")
@@ -81,15 +82,6 @@ func handleIsHealthy(w http.ResponseWriter, r *http.Request) {
 	setOK(w)
 }
 
-func handleLogout(w http.ResponseWriter, r *http.Request) {
-	err := client.Auth.Logout(r, w)
-	if err != nil {
-		setError(w, err.Error())
-	} else {
-		setOK(w)
-	}
-}
-
 func handleSignUp(w http.ResponseWriter, r *http.Request) {
 	method, identifier := getMethodAndIdentifier(r)
 	err := client.Auth.SignUpOTP(method, identifier, &auth.User{Name: "test"})
@@ -98,6 +90,34 @@ func handleSignUp(w http.ResponseWriter, r *http.Request) {
 	} else {
 		setOK(w)
 	}
+}
+
+func handleSignIn(w http.ResponseWriter, r *http.Request) {
+	method, identifier := getMethodAndIdentifier(r)
+	err := client.Auth.SignInOTP(method, identifier)
+	if err != nil {
+		setError(w, err.Error())
+	} else {
+		setOK(w)
+	}
+}
+
+func handleVerify(w http.ResponseWriter, r *http.Request) {
+	code := ""
+	method, identifier := getMethodAndIdentifier(r)
+	if codes, ok := r.URL.Query()["code"]; ok {
+		code = codes[0]
+	}
+	if code == "" {
+		setError(w, "code is empty")
+		return
+	}
+	_, err := client.Auth.VerifyCode(method, identifier, code, w)
+	if err != nil {
+		setError(w, err.Error())
+		return
+	}
+	setOK(w)
 }
 
 func handleOAuth(w http.ResponseWriter, r *http.Request) {
@@ -111,9 +131,8 @@ func handleOAuth(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleSignIn(w http.ResponseWriter, r *http.Request) {
-	method, identifier := getMethodAndIdentifier(r)
-	err := client.Auth.SignInOTP(method, identifier)
+func handleLogout(w http.ResponseWriter, r *http.Request) {
+	err := client.Auth.Logout(r, w)
 	if err != nil {
 		setError(w, err.Error())
 	} else {
@@ -134,24 +153,6 @@ func getMethodAndIdentifier(r *http.Request) (auth.DeliveryMethod, string) {
 		identifier = whatsapp[0]
 	}
 	return method, identifier
-}
-
-func handleVerify(w http.ResponseWriter, r *http.Request) {
-	code := ""
-	method, identifier := getMethodAndIdentifier(r)
-	if codes, ok := r.URL.Query()["code"]; ok {
-		code = codes[0]
-	}
-	if code == "" {
-		setError(w, "code is empty")
-		return
-	}
-	_, err := client.Auth.VerifyCode(method, identifier, code, w)
-	if err != nil {
-		setError(w, err.Error())
-		return
-	}
-	setOK(w)
 }
 
 func loggingMiddleware(next http.Handler) http.Handler {
