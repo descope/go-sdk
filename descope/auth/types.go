@@ -162,6 +162,10 @@ type magicLinkAuthenticationVerifyRequestBody struct {
 	Token string `json:"token"`
 }
 
+type authenticationGetPendingSessionBody struct {
+	PendingRef string `json:"pendingRef"`
+}
+
 func newAuthenticationRequestBody(method DeliveryMethod, value string) authenticationRequestBody {
 	switch method {
 	case MethodSMS:
@@ -201,6 +205,10 @@ func newAuthenticationSignUpRequestBody(method DeliveryMethod, value string, use
 func newAuthenticationVerifyRequestBody(method DeliveryMethod, value string, code string) authenticationVerifyRequestBody {
 	b := newAuthenticationRequestBody(method, value)
 	return authenticationVerifyRequestBody{authenticationRequestBody: b, Code: code}
+}
+
+func newAuthenticationGetPendingSessionBody(pendingRef string) authenticationGetPendingSessionBody {
+	return authenticationGetPendingSessionBody{PendingRef: pendingRef}
 }
 
 type DeliveryMethod string
