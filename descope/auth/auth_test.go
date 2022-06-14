@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -155,7 +156,7 @@ func TestValidEmailSignInEmail(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestValidEmailMagicLinkSignInEmail(t *testing.T) {
+func TestSignInMagicLinkEmail(t *testing.T) {
 	email := "test@email.com"
 	uri := "http://test.me"
 
@@ -167,9 +168,47 @@ func TestValidEmailMagicLinkSignInEmail(t *testing.T) {
 		assert.EqualValues(t, uri, body["URI"])
 	}))
 	require.NoError(t, err)
-	_, err = a.SignInMagicLink(MethodEmail, email, uri, false)
+	pendingRef, err := a.SignInMagicLink(MethodEmail, email, uri, false)
 	require.NoError(t, err)
+	require.Empty(t, pendingRef)
 }
+
+func TestSignInMagicLinkEmailCrossDevice(t *testing.T) {
+	email := "test@email.com"
+	uri := "http://test.me"
+	pendingRefResponse := "pending_ref"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeMagicLinkSignInURL(MethodEmail), r.URL.RequestURI())
+
+		m, err := readBody(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, email, m["email"])
+		assert.EqualValues(t, uri, m["URI"])
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s"}`, pendingRefResponse))),
+		}, nil
+	})
+	require.NoError(t, err)
+	pendingRef, err := a.SignInMagicLink(MethodEmail, email, uri, true)
+	require.NoError(t, err)
+	require.Equal(t, pendingRefResponse, pendingRef)
+}
+
+func TestSignInMagicLinkEmailCrossDeviceInvalidResponse(t *testing.T) {
+	email := "test@email.com"
+	uri := "http://test.me"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(`{"pendingRef"`)),
+		}, nil
+	})
+	require.NoError(t, err)
+	_, err = a.SignInMagicLink(MethodEmail, email, uri, true)
+	require.Error(t, err)
+}
+
 func TestInvalidPhoneSignUpSMS(t *testing.T) {
 	phone := "thisisemail@af.com"
 	a, err := newTestAuth(nil, nil)
@@ -237,8 +276,64 @@ func TestSignUpMagicLinkEmail(t *testing.T) {
 		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["username"])
 	}))
 	require.NoError(t, err)
-	_, err = a.SignUpMagicLink(MethodEmail, email, uri, &User{Username: "test"}, false)
+	pendingRef, err := a.SignUpMagicLink(MethodEmail, email, uri, &User{Username: "test"}, false)
 	require.NoError(t, err)
+	require.Empty(t, pendingRef)
+}
+
+func TestSignUpMagicLinkEmailCrossDevice(t *testing.T) {
+	email := "test@email.com"
+	uri := "http://test.me"
+	pendingRefResponse := "pending_ref"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeMagicLinkSignUpURL(MethodEmail), r.URL.RequestURI())
+
+		m, err := readBody(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, email, m["email"])
+		assert.EqualValues(t, uri, m["URI"])
+		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["username"])
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s"}`, pendingRefResponse))),
+		}, nil
+	})
+	require.NoError(t, err)
+	pendingRef, err := a.SignUpMagicLink(MethodEmail, email, uri, &User{Username: "test"}, true)
+	require.NoError(t, err)
+	require.Equal(t, pendingRefResponse, pendingRef)
+}
+
+func TestGetPendingSession(t *testing.T) {
+	pendingRef := "pending_ref"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeGetPendingSession(), r.URL.RequestURI())
+
+		body, err := readBody(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, pendingRef, body["pendingRef"])
+		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Set-Cookie": []string{mockAuthSessionCookie.String()}}}, nil
+	})
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	info, err := a.GetPendingSession(pendingRef, w)
+	require.NoError(t, err)
+	assert.NotEmpty(t, info.SessionToken.JWT)
+	require.Len(t, w.Result().Cookies(), 1)
+	sessionCookie := w.Result().Cookies()[0]
+	require.NoError(t, err)
+	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
+}
+
+func TestGetPendingSessionError(t *testing.T) {
+	pendingRef := "pending_ref"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusBadGateway}, nil
+	})
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	_, err = a.GetPendingSession(pendingRef, w)
+	require.Error(t, err)
 }
 
 func TestSignUpSMS(t *testing.T) {
@@ -332,7 +427,7 @@ func TestSignUpMagicLinkWhatsApp(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestVerifyMagicLinkCode(t *testing.T) {
+func TestVerifyMagicLinkCodeWithSession(t *testing.T) {
 	code := "4444"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeVerifyMagicLinkURL(), r.URL.RequestURI())
@@ -351,6 +446,23 @@ func TestVerifyMagicLinkCode(t *testing.T) {
 	sessionCookie := w.Result().Cookies()[0]
 	require.NoError(t, err)
 	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
+}
+
+func TestVerifyMagicLinkCodeNoSession(t *testing.T) {
+	code := "4444"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeVerifyMagicLinkURL(), r.URL.RequestURI())
+
+		body, err := readBody(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, code, body["token"])
+		return &http.Response{StatusCode: http.StatusOK}, nil
+	})
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	info, err := a.VerifyMagicLink(code, w)
+	require.NoError(t, err)
+	assert.Empty(t, info)
 }
 
 func TestInvalidEmailVerifyCodeEmail(t *testing.T) {

@@ -130,26 +130,30 @@ func (auth *authenticationService) GetPendingSessionWithOptions(pendingRef strin
 	if err != nil {
 		return nil, err
 	}
-	return auth.getAuthenticationInfoFromResponse(httpResponse, options...)
+	return auth.authenticationInfoFromResponse(httpResponse, options...)
 }
 
 func (auth *authenticationService) VerifyMagicLink(token string, w http.ResponseWriter) (*AuthenticationInfo, error) {
 	return auth.VerifyMagicLinkWithOptions(token, WithResponseOption(w))
 }
 
-func (auth *authenticationService) getAuthenticationInfoFromResponse(httpResponse *api.HTTPResponse, options ...Option) (*AuthenticationInfo, error) {
+// extracts authentication info from response cookies, and set it on options
+func (auth *authenticationService) authenticationInfoFromResponse(httpResponse *api.HTTPResponse, options ...Option) (*AuthenticationInfo, error) {
 	cookies := []*http.Cookie{}
 	if httpResponse != nil {
 		cookies = httpResponse.Res.Cookies()
 		Options(options).SetCookies(cookies)
 	}
 	sessionToken := getSessionToken(cookies)
+	if sessionToken == "" {
+		return nil, errors.MissingSessionToken
+	}
 	token, err := auth.validateJWT(sessionToken)
 	if err != nil {
 		logger.LogError("unable to validate refreshed token", err)
 		return nil, err
 	}
-	return NewAuthenticationInfo(token), err
+	return NewAuthenticationInfo(token), nil
 }
 
 func (auth *authenticationService) VerifyMagicLinkWithOptions(code string, options ...Option) (*AuthenticationInfo, error) {
@@ -157,13 +161,13 @@ func (auth *authenticationService) VerifyMagicLinkWithOptions(code string, optio
 	if err != nil {
 		return nil, err
 	}
-	if httpResponse != nil {
-		// magic link was created in non cross device mode
-		return auth.getAuthenticationInfoFromResponse(httpResponse, options...)
+	authInfo, err := auth.authenticationInfoFromResponse(httpResponse, options...)
+	if err == errors.MissingSessionToken {
+		// magic link was created in non cross device mode, no authentication info is returned
+		return nil, nil
 	}
 
-	// magic link was created in non cross device mode, no authentication info is returned
-	return nil, nil
+	return authInfo, err
 }
 
 func (auth *authenticationService) OAuthStart(provider OAuthProvider, w http.ResponseWriter) (string, error) {

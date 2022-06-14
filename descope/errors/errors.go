@@ -11,6 +11,7 @@ var (
 	FailedToRefreshTokenError = NewValidationError("fail to refresh token")
 	RefreshTokenError         = NewValidationError("refresh token invalid or not found")
 	MissingProviderError      = NewValidationError("missing JWT provider implementation, use a built-in implementation or custom")
+	MissingSessionToken       = NewValidationError("missing session token")
 )
 
 type WebError struct {
