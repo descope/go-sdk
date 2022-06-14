@@ -3,8 +3,7 @@ package errors
 import "fmt"
 
 const (
-	BadRequestErrorCode     = "E01000"
-	PendingSessionErrorCode = "E01001"
+	BadRequestErrorCode = "E01000"
 )
 
 var (
@@ -14,6 +13,7 @@ var (
 	MissingProviderError      = NewValidationError("missing JWT provider implementation, use a built-in implementation or custom")
 	InvalidPendingRefError    = NewValidationError("Invalid pending reference")
 	MissingSessionTokenError  = NewValidationError("missing session token")
+	PendingSessionTokenError  = NewValidationError("pending session token")
 )
 
 type WebError struct {
@@ -31,10 +31,6 @@ func NewInvalidArgumentError(arg string) *WebError {
 
 func NewUnauthorizedError() *WebError {
 	return NewError(BadRequestErrorCode, "unauthorized access")
-}
-
-func NewPendingSessionTokenError() *WebError {
-	return NewError(PendingSessionErrorCode, "pending session token")
 }
 
 func NewNoPublicKeyError() *PublicKeyValidationError {

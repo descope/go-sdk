@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	goErrors "errors"
 	"log"
 	"math/big"
 	"net/http"
@@ -29,10 +30,6 @@ const (
 	trueStr            = "true"
 	verifyMagicLinkURI = "https://localhost:8085/verify"
 )
-
-type magicLinkResponse struct {
-	PendingRef string `json:"pendingRef"`
-}
 
 var client *descope.DescopeClient
 
@@ -101,14 +98,12 @@ func handleSignIn(c *gin.Context) {
 func handleMagicLinkSignIn(c *gin.Context) {
 	method, identifier := getMethodAndIdentifier(c)
 	crossDevice := queryBool(c, "crossDevice")
-	pendingRef, err := client.Auth.SignInMagicLink(method, identifier, verifyMagicLinkURI, crossDevice)
+	magicLinkResponse, err := client.Auth.SignInMagicLink(method, identifier, verifyMagicLinkURI, crossDevice)
 	if err != nil {
 		setError(c, err.Error())
-	} else if pendingRef != "" {
-		c.JSON(http.StatusOK, &magicLinkResponse{PendingRef: pendingRef})
-	} else {
-		setOK(c)
 	}
+	c.JSON(http.StatusOK, magicLinkResponse)
+
 }
 
 func handleMagicLinkSignUp(c *gin.Context) {
@@ -131,7 +126,7 @@ func handleGetPendingSession(c *gin.Context) {
 		return
 	}
 	_, err := client.Auth.GetPendingSessionWithOptions(pendingRef, descopegin.WithResponseOption(c))
-	if descopeerrors.IsError(err, descopeerrors.PendingSessionErrorCode) {
+	if goErrors.Is(err, descopeerrors.PendingSessionTokenError) {
 		setUnauthorized(c, err.Error())
 	}
 	if err != nil {

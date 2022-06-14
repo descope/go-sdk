@@ -86,37 +86,37 @@ func (auth *authenticationService) VerifyCodeWithOptions(method DeliveryMethod, 
 	return NewAuthenticationInfo(token), err
 }
 
-func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (string, error) {
+func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (MagicLinkResponse, error) {
 	var response MagicLinkResponse
 	if err := utils.Unmarshal([]byte(httpResponse.BodyStr), &response); err != nil {
 		logger.LogError("failed to load pending reference from response", err)
-		return "", errors.InvalidPendingRefError
+		return response, errors.InvalidPendingRefError
 	}
-	return response.PendingRef, nil
+	return response, nil
 }
 
-func (auth *authenticationService) SignInMagicLink(method DeliveryMethod, identifier, URI string, crossDevice bool) (string, error) {
+func (auth *authenticationService) SignInMagicLink(method DeliveryMethod, identifier, URI string, crossDevice bool) (MagicLinkResponse, error) {
 	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
-		return "", err
+		return MagicLinkResponse{}, err
 	}
 
 	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(method, identifier, URI, crossDevice), nil)
 	if err == nil && crossDevice {
 		return getPendingRefFromResponse(httpResponse)
 	}
-	return "", err
+	return MagicLinkResponse{}, err
 }
 
-func (auth *authenticationService) SignUpMagicLink(method DeliveryMethod, identifier, URI string, crossDevice bool, user *User) (string, error) {
+func (auth *authenticationService) SignUpMagicLink(method DeliveryMethod, identifier, URI string, crossDevice bool, user *User) (MagicLinkResponse, error) {
 	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
-		return "", err
+		return MagicLinkResponse{}, err
 	}
 
 	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, identifier, URI, user, crossDevice), nil)
 	if err == nil && crossDevice {
 		return getPendingRefFromResponse(httpResponse)
 	}
-	return "", err
+	return MagicLinkResponse{}, err
 }
 
 func (auth *authenticationService) GetPendingSession(pendingRef string, w http.ResponseWriter) (*AuthenticationInfo, error) {
@@ -129,7 +129,7 @@ func (auth *authenticationService) GetPendingSessionWithOptions(pendingRef strin
 		return nil, err
 	}
 	if httpResponse.Res.StatusCode == http.StatusAccepted {
-		return nil, errors.NewPendingSessionTokenError()
+		return nil, errors.PendingSessionTokenError
 	}
 	return auth.authenticationInfoFromResponse(httpResponse, options...)
 }

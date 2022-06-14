@@ -42,4 +42,4 @@ THIRD_PARTY_LICENSE
 __debug_bin
 *.crt
 *.key
-*.pemn
+*.pem

@@ -168,9 +168,9 @@ func TestSignInMagicLinkEmail(t *testing.T) {
 		assert.EqualValues(t, uri, body["URI"])
 	}))
 	require.NoError(t, err)
-	pendingRef, err := a.SignInMagicLink(MethodEmail, email, uri, false)
+	res, err := a.SignInMagicLink(MethodEmail, email, uri, false)
 	require.NoError(t, err)
-	require.Empty(t, pendingRef)
+	require.Empty(t, res)
 }
 
 func TestSignInMagicLinkEmailCrossDevice(t *testing.T) {
@@ -190,9 +190,9 @@ func TestSignInMagicLinkEmailCrossDevice(t *testing.T) {
 		}, nil
 	})
 	require.NoError(t, err)
-	pendingRef, err := a.SignInMagicLink(MethodEmail, email, uri, true)
+	response, err := a.SignInMagicLink(MethodEmail, email, uri, true)
 	require.NoError(t, err)
-	require.Equal(t, pendingRefResponse, pendingRef)
+	require.Equal(t, pendingRefResponse, response.PendingRef)
 }
 
 func TestSignInMagicLinkEmailCrossDeviceInvalidResponse(t *testing.T) {
@@ -299,9 +299,9 @@ func TestSignUpMagicLinkEmailCrossDevice(t *testing.T) {
 		}, nil
 	})
 	require.NoError(t, err)
-	pendingRef, err := a.SignUpMagicLink(MethodEmail, email, uri, true, &User{Username: "test"})
+	response, err := a.SignUpMagicLink(MethodEmail, email, uri, true, &User{Username: "test"})
 	require.NoError(t, err)
-	require.Equal(t, pendingRefResponse, pendingRef)
+	require.Equal(t, pendingRefResponse, response.PendingRef)
 }
 
 func TestGetPendingSession(t *testing.T) {
