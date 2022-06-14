@@ -691,7 +691,7 @@ func TestValidateSessionFetchKeyMalformed(t *testing.T) {
 	require.NoError(t, err)
 	ok, _, err := a.validateSession(jwtTokenValid, jwtTokenValid)
 	require.Error(t, err)
-	assert.EqualValues(t, errors.UnauthorizedRequestErrorCode, err.(*errors.WebError).Code)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 	require.False(t, ok)
 }
 
@@ -704,7 +704,7 @@ func TestValidateSessionFailWithInvalidKey(t *testing.T) {
 	require.NoError(t, err)
 	ok, _, err := a.validateSession(jwtTokenValid, "")
 	require.Error(t, err)
-	assert.EqualValues(t, errors.UnauthorizedRequestErrorCode, err.(*errors.WebError).Code)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 	require.False(t, ok)
 	require.Zero(t, count)
 }
@@ -798,7 +798,7 @@ func TestValidateSessionExpired(t *testing.T) {
 	ok, _, err := a.validateSession(jwtTokenExpired, jwtTokenExpired)
 	require.Error(t, err)
 	require.False(t, ok)
-	assert.EqualValues(t, errors.UnauthorizedRequestErrorCode, err.(*errors.WebError).Code)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
 
 func TestValidateSessionNoProvider(t *testing.T) {
@@ -816,7 +816,7 @@ func TestValidateSessionNotYet(t *testing.T) {
 	ok, _, err := a.validateSession(jwtTokenNotYet, jwtTokenNotYet)
 	require.Error(t, err)
 	require.False(t, ok)
-	assert.EqualValues(t, errors.UnauthorizedRequestErrorCode, err.(*errors.WebError).Code)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
 
 func TestLogout(t *testing.T) {

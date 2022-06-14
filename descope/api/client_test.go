@@ -118,7 +118,7 @@ func TestPostUnauthorized(t *testing.T) {
 
 	_, err := c.DoPostRequest("path", nil, nil)
 	require.Error(t, err)
-	assert.EqualValues(t, errors.UnauthorizedRequestErrorCode, err.(*errors.WebError).Code)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
 
 func TestPostWebError(t *testing.T) {

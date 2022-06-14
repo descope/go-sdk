@@ -128,6 +128,9 @@ func (auth *authenticationService) GetPendingSessionWithOptions(pendingRef strin
 	if err != nil {
 		return nil, err
 	}
+	if httpResponse.Res.StatusCode == http.StatusAccepted {
+		return nil, errors.NewPendingSessionTokenError()
+	}
 	return auth.authenticationInfoFromResponse(httpResponse, options...)
 }
 

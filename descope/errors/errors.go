@@ -3,8 +3,8 @@ package errors
 import "fmt"
 
 const (
-	BadRequestErrorCode          = "E01000"
-	UnauthorizedRequestErrorCode = "E01001"
+	BadRequestErrorCode     = "E01000"
+	PendingSessionErrorCode = "E01001"
 )
 
 var (
@@ -30,7 +30,11 @@ func NewInvalidArgumentError(arg string) *WebError {
 }
 
 func NewUnauthorizedError() *WebError {
-	return NewError(UnauthorizedRequestErrorCode, "unauthorized access")
+	return NewError(BadRequestErrorCode, "unauthorized access")
+}
+
+func NewPendingSessionTokenError() *WebError {
+	return NewError(PendingSessionErrorCode, "pending session token")
 }
 
 func NewNoPublicKeyError() *PublicKeyValidationError {

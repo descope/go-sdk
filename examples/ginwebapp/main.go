@@ -131,7 +131,7 @@ func handleGetPendingSession(c *gin.Context) {
 		return
 	}
 	_, err := client.Auth.GetPendingSessionWithOptions(pendingRef, descopegin.WithResponseOption(c))
-	if descopeerrors.IsError(err, descopeerrors.UnauthorizedRequestErrorCode) {
+	if descopeerrors.IsError(err, descopeerrors.PendingSessionErrorCode) {
 		setUnauthorized(c, err.Error())
 	}
 	if err != nil {
