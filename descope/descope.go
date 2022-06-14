@@ -56,7 +56,11 @@ type DescopeClient struct {
 	config *Config
 }
 
-func NewDescopeClient(config Config) (*DescopeClient, error) {
+func NewDescopeClient() (*DescopeClient, error) {
+	return NewDescopeClientWithConfig(Config{})
+}
+
+func NewDescopeClientWithConfig(config Config) (*DescopeClient, error) {
 	logger.Init(config.LogLevel, config.Logger)
 
 	if strings.TrimSpace(config.setProjectID()) == "" {
