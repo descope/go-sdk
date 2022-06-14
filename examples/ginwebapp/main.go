@@ -109,14 +109,12 @@ func handleMagicLinkSignIn(c *gin.Context) {
 func handleMagicLinkSignUp(c *gin.Context) {
 	method, identifier := getMethodAndIdentifier(c)
 	crossDevice := queryBool(c, "crossDevice")
-	pendingRef, err := client.Auth.SignUpMagicLink(method, identifier, verifyMagicLinkURI, crossDevice, &auth.User{Name: "test"})
+	magicLinkResponse, err := client.Auth.SignUpMagicLink(method, identifier, verifyMagicLinkURI, crossDevice, &auth.User{Name: "test"})
 	if err != nil {
 		setError(c, err.Error())
-	} else if pendingRef != "" {
-		setResponse(c, http.StatusOK, pendingRef)
-	} else {
-		setOK(c)
 	}
+
+	c.JSON(http.StatusOK, magicLinkResponse)
 }
 
 func handleGetPendingSession(c *gin.Context) {
