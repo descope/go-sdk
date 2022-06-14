@@ -22,7 +22,7 @@ type MockDescopeAuthentication struct {
 	AssertSignInMagicLink          func(method DeliveryMethod, identifier, URI string, crossDevice bool)
 	AssertSignUpMagicLink          func(method DeliveryMethod, identifier, URI string, user *User, crossDevice bool)
 	MagicLinkPendingLinkResponse   string
-	AssertVerifyMagicLink          func(code string)
+	AssertVerifyMagicLink          func(token string)
 }
 
 func (m MockDescopeAuthentication) SignInOTP(method DeliveryMethod, identifier string) error {
@@ -60,7 +60,7 @@ func (m MockDescopeAuthentication) SignInMagicLink(method DeliveryMethod, identi
 	return m.MagicLinkPendingLinkResponse, m.SignInOTPResponseError
 }
 
-func (m MockDescopeAuthentication) SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User, crossDevice bool) (string, error) {
+func (m MockDescopeAuthentication) SignUpMagicLink(method DeliveryMethod, identifier, URI string, crossDevice bool, user *User) (string, error) {
 	if m.AssertSignUpOTP != nil {
 		m.AssertSignUpMagicLink(method, identifier, URI, user, crossDevice)
 	}
@@ -89,16 +89,16 @@ func (m MockDescopeAuthentication) OAuthStartWithOptions(provider OAuthProvider,
 	return m.AssertOAuthResponseURL, m.OAuthStartResponseError
 }
 
-func (m MockDescopeAuthentication) VerifyMagicLink(code string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthentication) VerifyMagicLink(token string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
 	if m.AssertVerifyCode != nil {
-		m.AssertVerifyMagicLink(code)
+		m.AssertVerifyMagicLink(token)
 	}
 	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
 }
 
-func (m MockDescopeAuthentication) VerifyMagicLinkWithOptions(code string, _ ...Option) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthentication) VerifyMagicLinkWithOptions(token string, _ ...Option) (*AuthenticationInfo, error) {
 	if m.AssertVerifyCode != nil {
-		m.AssertVerifyMagicLink(code)
+		m.AssertVerifyMagicLink(token)
 	}
 	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
 }

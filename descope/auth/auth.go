@@ -107,7 +107,7 @@ func (auth *authenticationService) SignInMagicLink(method DeliveryMethod, identi
 	return "", err
 }
 
-func (auth *authenticationService) SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User, crossDevice bool) (string, error) {
+func (auth *authenticationService) SignUpMagicLink(method DeliveryMethod, identifier, URI string, crossDevice bool, user *User) (string, error) {
 	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
 		return "", err
 	}
@@ -154,8 +154,8 @@ func (auth *authenticationService) authenticationInfoFromResponse(httpResponse *
 	return NewAuthenticationInfo(token), nil
 }
 
-func (auth *authenticationService) VerifyMagicLinkWithOptions(code string, options ...Option) (*AuthenticationInfo, error) {
-	httpResponse, err := auth.client.DoPostRequest(composeVerifyMagicLinkURL(), newMagicLinkAuthenticationVerifyRequestBody(code), nil)
+func (auth *authenticationService) VerifyMagicLinkWithOptions(token string, options ...Option) (*AuthenticationInfo, error) {
+	httpResponse, err := auth.client.DoPostRequest(composeVerifyMagicLinkURL(), newMagicLinkAuthenticationVerifyRequestBody(token), nil)
 	if err != nil {
 		return nil, err
 	}

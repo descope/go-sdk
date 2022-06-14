@@ -193,8 +193,8 @@ func newMagicLinkAuthenticationSignUpRequestBody(method DeliveryMethod, value, U
 	return magicLinkAuthenticationSignInRequestBody{magicLinkAuthenticationRequestBody: b, User: user}
 }
 
-func newMagicLinkAuthenticationVerifyRequestBody(code string) magicLinkAuthenticationVerifyRequestBody {
-	return magicLinkAuthenticationVerifyRequestBody{Token: code}
+func newMagicLinkAuthenticationVerifyRequestBody(token string) magicLinkAuthenticationVerifyRequestBody {
+	return magicLinkAuthenticationVerifyRequestBody{Token: token}
 }
 
 func newAuthenticationSignUpRequestBody(method DeliveryMethod, value string, user *User) authenticationSignInRequestBody {
