@@ -3,23 +3,26 @@ package auth
 import "net/http"
 
 type MockDescopeAuthentication struct {
-	SignInOTPResponseError       error
-	SignUpOTPResponseError       error
-	VerifyCodeResponseInfo       *AuthenticationInfo
-	VerifyCodeResponseError      error
-	ValidateSessionResponseNotOK bool
-	ValidateSessionResponseInfo  *AuthenticationInfo
-	ValidateSessionResponseError error
-	LogoutResponseError          error
-	AssertSignInOTP              func(method DeliveryMethod, identifier string)
-	AssertSignUpOTP              func(method DeliveryMethod, identifier string, user *User)
-	AssertVerifyCode             func(method DeliveryMethod, identifier string, code string)
-	AssertOAuthStart             func(provider OAuthProvider)
-	AssertOAuthResponseURL       string
-	OAuthStartResponseError      error
-	AssertSignInMagicLink        func(method DeliveryMethod, identifier, URI string)
-	AssertSignUpMagicLink        func(method DeliveryMethod, identifier, URI string, user *User)
-	AssertVerifyMagicLink        func(code string)
+	SignInOTPResponseError         error
+	SignUpOTPResponseError         error
+	VerifyCodeResponseInfo         *AuthenticationInfo
+	VerifyCodeResponseError        error
+	ValidateSessionResponseNotOK   bool
+	ValidateSessionResponseInfo    *AuthenticationInfo
+	ValidateSessionResponseError   error
+	GetPendingSessionResponseInfo  *AuthenticationInfo
+	GetPendingSessionResponseError error
+	LogoutResponseError            error
+	AssertSignInOTP                func(method DeliveryMethod, identifier string)
+	AssertSignUpOTP                func(method DeliveryMethod, identifier string, user *User)
+	AssertVerifyCode               func(method DeliveryMethod, identifier string, code string)
+	AssertOAuthStart               func(provider OAuthProvider)
+	AssertOAuthResponseURL         string
+	OAuthStartResponseError        error
+	AssertSignInMagicLink          func(method DeliveryMethod, identifier, URI string, crossDevice bool)
+	AssertSignUpMagicLink          func(method DeliveryMethod, identifier, URI string, user *User, crossDevice bool)
+	MagicLinkPendingLinkResponse   string
+	AssertVerifyMagicLink          func(code string)
 }
 
 func (m MockDescopeAuthentication) SignInOTP(method DeliveryMethod, identifier string) error {
@@ -50,46 +53,26 @@ func (m MockDescopeAuthentication) VerifyCodeWithOptions(method DeliveryMethod, 
 	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
 }
 
-func (m MockDescopeAuthentication) SignInMagicLink(method DeliveryMethod, identifier, URI string) error {
+func (m MockDescopeAuthentication) SignInMagicLink(method DeliveryMethod, identifier, URI string, crossDevice bool) (string, error) {
 	if m.AssertSignInOTP != nil {
-		m.AssertSignInMagicLink(method, identifier, URI)
+		m.AssertSignInMagicLink(method, identifier, URI, crossDevice)
 	}
-	return m.SignInOTPResponseError
+	return m.MagicLinkPendingLinkResponse, m.SignInOTPResponseError
 }
 
-func (m MockDescopeAuthentication) SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User) error {
+func (m MockDescopeAuthentication) SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User, crossDevice bool) (string, error) {
 	if m.AssertSignUpOTP != nil {
-		m.AssertSignUpMagicLink(method, identifier, URI, user)
+		m.AssertSignUpMagicLink(method, identifier, URI, user, crossDevice)
 	}
-	return m.SignUpOTPResponseError
+	return m.MagicLinkPendingLinkResponse, m.SignUpOTPResponseError
 }
 
-func (m MockDescopeAuthentication) SignInEnchantedLink(method DeliveryMethod, identifier, URI string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
-	if m.AssertSignInOTP != nil {
-		m.AssertSignInMagicLink(method, identifier, URI)
-	}
-	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
+func (m MockDescopeAuthentication) GetPendingSession(_ string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+	return m.GetPendingSessionResponseInfo, m.GetPendingSessionResponseError
 }
 
-func (m MockDescopeAuthentication) SignInEnchantedLinkWithOptions(method DeliveryMethod, identifier, URI string, _ ...Option) (*AuthenticationInfo, error) {
-	if m.AssertSignInOTP != nil {
-		m.AssertSignInMagicLink(method, identifier, URI)
-	}
-	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
-}
-
-func (m MockDescopeAuthentication) SignUpEnchantedLink(method DeliveryMethod, identifier, URI string, user *User, _ http.ResponseWriter) (*AuthenticationInfo, error) {
-	if m.AssertSignInOTP != nil {
-		m.AssertSignUpMagicLink(method, identifier, URI, user)
-	}
-	return m.VerifyCodeResponseInfo, m.SignUpOTPResponseError
-}
-
-func (m MockDescopeAuthentication) SignUpEnchantedLinkWithOptions(method DeliveryMethod, identifier, URI string, user *User, _ ...Option) (*AuthenticationInfo, error) {
-	if m.AssertSignUpOTP != nil {
-		m.AssertSignUpMagicLink(method, identifier, URI, user)
-	}
-	return m.VerifyCodeResponseInfo, m.SignUpOTPResponseError
+func (m MockDescopeAuthentication) GetPendingSessionWithOptions(_ string, _ ...Option) (*AuthenticationInfo, error) {
+	return m.GetPendingSessionResponseInfo, m.GetPendingSessionResponseError
 }
 
 func (m MockDescopeAuthentication) OAuthStart(provider OAuthProvider, _ http.ResponseWriter) (string, error) {

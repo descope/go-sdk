@@ -32,19 +32,15 @@ type Authentication interface {
 	// SignInMagicLink - Use to login a user based on a magic link that will be sent either email or a phone
 	// and choose the selected delivery method for verification. (see auth/DeliveryMethod)
 	// returns an error upon failure.
-	SignInMagicLink(method DeliveryMethod, identifier, URI string) error
+	SignInMagicLink(method DeliveryMethod, identifier, URI string, crossDevice bool) (string, error)
 	// SignUpMagicLink - Use to create a new user based on the given identifier either email or a phone.
 	// choose the selected delivery method for verification. (see auth/DeliveryMethod)
 	// optional to add user metadata for farther user details such as name and more.
-	// if crossDevice is true - it will poll until the magic link is validated.
 	// returns an error upon failure.
-	SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User) error
+	SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User, crossDevice bool) (string, error)
 
-	SignInEnchantedLink(method DeliveryMethod, identifier, URI string, w http.ResponseWriter) (*AuthenticationInfo, error)
-	SignInEnchantedLinkWithOptions(method DeliveryMethod, identifier, URI string, options ...Option) (*AuthenticationInfo, error)
-
-	SignUpEnchantedLink(method DeliveryMethod, identifier, URI string, user *User, w http.ResponseWriter) (*AuthenticationInfo, error)
-	SignUpEnchantedLinkWithOptions(method DeliveryMethod, identifier, URI string, user *User, options ...Option) (*AuthenticationInfo, error)
+	GetPendingSession(pendingRef string, w http.ResponseWriter) (*AuthenticationInfo, error)
+	GetPendingSessionWithOptions(pendingRef string, options ...Option) (*AuthenticationInfo, error)
 
 	// VerifyMagicLink - Use to verify a SignInMagicLink/SignUpMagicLink request, based on the magic link token generated.
 	// This is a shortcut for VerifyMagicLinkWithOptions(method, code, WithResponseOption(w))
