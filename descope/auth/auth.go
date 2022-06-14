@@ -90,7 +90,7 @@ func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (string, error) {
 	var response MagicLinkResponse
 	if err := utils.Unmarshal([]byte(httpResponse.BodyStr), &response); err != nil {
 		logger.LogError("failed to load pending reference from response", err)
-		return "", errors.NewValidationError(httpResponse.BodyStr)
+		return "", errors.InvalidPendingRefError
 	}
 	return response.PendingRef, nil
 }
@@ -102,7 +102,6 @@ func (auth *authenticationService) SignInMagicLink(method DeliveryMethod, identi
 
 	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(method, identifier, URI, crossDevice), nil)
 	if err == nil && crossDevice {
-		// return pending reference
 		return getPendingRefFromResponse(httpResponse)
 	}
 	return "", err
@@ -115,7 +114,6 @@ func (auth *authenticationService) SignUpMagicLink(method DeliveryMethod, identi
 
 	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, identifier, URI, user, crossDevice), nil)
 	if err == nil && crossDevice {
-		// return pending reference
 		return getPendingRefFromResponse(httpResponse)
 	}
 	return "", err
@@ -146,7 +144,7 @@ func (auth *authenticationService) authenticationInfoFromResponse(httpResponse *
 	}
 	sessionToken := getSessionToken(cookies)
 	if sessionToken == "" {
-		return nil, errors.MissingSessionToken
+		return nil, errors.MissingSessionTokenError
 	}
 	token, err := auth.validateJWT(sessionToken)
 	if err != nil {
@@ -162,7 +160,7 @@ func (auth *authenticationService) VerifyMagicLinkWithOptions(code string, optio
 		return nil, err
 	}
 	authInfo, err := auth.authenticationInfoFromResponse(httpResponse, options...)
-	if err == errors.MissingSessionToken {
+	if err == errors.MissingSessionTokenError {
 		// magic link was created in non cross device mode, no authentication info is returned
 		return nil, nil
 	}
