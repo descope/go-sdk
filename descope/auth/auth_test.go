@@ -313,7 +313,7 @@ func TestGetPendingSessionError(t *testing.T) {
 func TestGetPendingSessionStillPending(t *testing.T) {
 	pendingRef := "pending_ref"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
-		return &http.Response{StatusCode: http.StatusAccepted}, nil
+		return &http.Response{StatusCode: http.StatusUnauthorized}, nil
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()

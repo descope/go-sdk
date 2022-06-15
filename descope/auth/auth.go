@@ -128,7 +128,7 @@ func (auth *authenticationService) GetPendingSessionWithOptions(pendingRef strin
 	if err != nil {
 		return nil, err
 	}
-	if httpResponse.Res.StatusCode == http.StatusAccepted {
+	if httpResponse.Res.StatusCode == http.StatusUnauthorized {
 		return nil, errors.PendingSessionTokenError
 	}
 	return auth.authenticationInfoFromResponse(httpResponse, options...)
