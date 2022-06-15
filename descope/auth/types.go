@@ -130,14 +130,14 @@ type User struct {
 }
 
 type authenticationRequestBody struct {
+	ExternalID string `json:"externalID,omitempty"`
+}
+
+type authenticationSignUpRequestBody struct {
 	WhatsApp string `json:"whatsapp,omitempty"`
 	Phone    string `json:"phone,omitempty"`
 	Email    string `json:"email,omitempty"`
-}
-
-type authenticationSignInRequestBody struct {
-	authenticationRequestBody `json:",inline"`
-	User                      *User `json:"user"`
+	User     *User  `json:"user"`
 }
 
 type authenticationVerifyRequestBody struct {
@@ -146,16 +146,15 @@ type authenticationVerifyRequestBody struct {
 }
 
 type magicLinkAuthenticationRequestBody struct {
-	WhatsApp    string `json:"whatsapp,omitempty"`
-	Phone       string `json:"phone,omitempty"`
-	Email       string `json:"email,omitempty"`
-	URI         string `json:"URI,omitempty"`
-	CrossDevice bool   `json:"crossDevice,omitempty"`
+	authenticationRequestBody `json:",inline"`
+	URI                       string `json:"URI,omitempty"`
+	CrossDevice               bool   `json:"crossDevice,omitempty"`
 }
 
-type magicLinkAuthenticationSignInRequestBody struct {
-	magicLinkAuthenticationRequestBody `json:",inline"`
-	User                               *User `json:"user"`
+type magicLinkAuthenticationSignUpRequestBody struct {
+	authenticationSignUpRequestBody `json:",inline"`
+	URI                             string `json:"URI,omitempty"`
+	CrossDevice                     bool   `json:"crossDevice,omitempty"`
 }
 
 type magicLinkAuthenticationVerifyRequestBody struct {
@@ -166,45 +165,43 @@ type authenticationGetPendingSessionBody struct {
 	PendingRef string `json:"pendingRef"`
 }
 
-func newAuthenticationRequestBody(method DeliveryMethod, value string) authenticationRequestBody {
-	switch method {
-	case MethodSMS:
-		return authenticationRequestBody{Phone: value}
-	case MethodWhatsApp:
-		return authenticationRequestBody{WhatsApp: value}
-	}
-
-	return authenticationRequestBody{Email: value}
+func newSignInRequestBody(externalID string) authenticationRequestBody {
+	return authenticationRequestBody{ExternalID: externalID}
 }
 
-func newMagicLinkAuthenticationRequestBody(method DeliveryMethod, value, URI string, crossDevice bool) magicLinkAuthenticationRequestBody {
+func newSignUpRequestBody(method DeliveryMethod, value string) authenticationSignUpRequestBody {
 	switch method {
 	case MethodSMS:
-		return magicLinkAuthenticationRequestBody{Phone: value, URI: URI}
+		return authenticationSignUpRequestBody{Phone: value}
 	case MethodWhatsApp:
-		return magicLinkAuthenticationRequestBody{WhatsApp: value, URI: URI}
+		return authenticationSignUpRequestBody{WhatsApp: value}
 	}
 
-	return magicLinkAuthenticationRequestBody{Email: value, URI: URI, CrossDevice: crossDevice}
+	return authenticationSignUpRequestBody{Email: value}
 }
 
-func newMagicLinkAuthenticationSignUpRequestBody(method DeliveryMethod, value, URI string, user *User, crossDevice bool) magicLinkAuthenticationSignInRequestBody {
-	b := newMagicLinkAuthenticationRequestBody(method, value, URI, crossDevice)
-	return magicLinkAuthenticationSignInRequestBody{magicLinkAuthenticationRequestBody: b, User: user}
+func newMagicLinkAuthenticationRequestBody(value, URI string, crossDevice bool) magicLinkAuthenticationRequestBody {
+	return magicLinkAuthenticationRequestBody{authenticationRequestBody: newSignInRequestBody(value), URI: URI, CrossDevice: crossDevice}
+}
+
+func newMagicLinkAuthenticationSignUpRequestBody(method DeliveryMethod, value, URI string, user *User, crossDevice bool) magicLinkAuthenticationSignUpRequestBody {
+	b := newSignUpRequestBody(method, value)
+	b.User = user
+	return magicLinkAuthenticationSignUpRequestBody{authenticationSignUpRequestBody: b, CrossDevice: crossDevice, URI: URI}
 }
 
 func newMagicLinkAuthenticationVerifyRequestBody(token string) magicLinkAuthenticationVerifyRequestBody {
 	return magicLinkAuthenticationVerifyRequestBody{Token: token}
 }
 
-func newAuthenticationSignUpRequestBody(method DeliveryMethod, value string, user *User) authenticationSignInRequestBody {
-	b := newAuthenticationRequestBody(method, value)
-	return authenticationSignInRequestBody{authenticationRequestBody: b, User: user}
+func newAuthenticationSignUpRequestBody(method DeliveryMethod, value string, user *User) authenticationSignUpRequestBody {
+	b := newSignUpRequestBody(method, value)
+	b.User = user
+	return b
 }
 
-func newAuthenticationVerifyRequestBody(method DeliveryMethod, value string, code string) authenticationVerifyRequestBody {
-	b := newAuthenticationRequestBody(method, value)
-	return authenticationVerifyRequestBody{authenticationRequestBody: b, Code: code}
+func newAuthenticationVerifyRequestBody(value string, code string) authenticationVerifyRequestBody {
+	return authenticationVerifyRequestBody{authenticationRequestBody: newSignInRequestBody(value), Code: code}
 }
 
 func newAuthenticationGetPendingSessionBody(pendingRef string) authenticationGetPendingSessionBody {

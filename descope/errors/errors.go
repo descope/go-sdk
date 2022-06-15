@@ -64,16 +64,3 @@ func (e *ValidationError) Error() string {
 func NewValidationError(message string, args ...interface{}) *ValidationError {
 	return &ValidationError{Message: fmt.Sprintf(message, args...)}
 }
-
-func IsError(err error, code string) bool {
-	if err == nil {
-		return false
-	}
-	if err.Error() == code {
-		return true
-	}
-	if e, ok := err.(*WebError); ok {
-		return e.Code == code
-	}
-	return false
-}
