@@ -123,7 +123,7 @@ func TestValidEmailSignInEmail(t *testing.T) {
 		assert.EqualValues(t, composeSignInURL(MethodEmail), r.URL.RequestURI())
 		body, err := readBody(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, body["externalId"])
+		assert.EqualValues(t, email, body["externalID"])
 	}))
 	require.NoError(t, err)
 	err = a.SignInOTP(MethodEmail, email)
@@ -138,7 +138,7 @@ func TestSignInMagicLinkEmail(t *testing.T) {
 		assert.EqualValues(t, composeMagicLinkSignInURL(MethodEmail), r.URL.RequestURI())
 		body, err := readBody(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, body["externalId"])
+		assert.EqualValues(t, email, body["externalID"])
 		assert.EqualValues(t, uri, body["URI"])
 	}))
 	require.NoError(t, err)
@@ -156,7 +156,7 @@ func TestSignInMagicLinkEmailCrossDevice(t *testing.T) {
 
 		m, err := readBody(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, m["externalId"])
+		assert.EqualValues(t, email, m["externalID"])
 		assert.EqualValues(t, uri, m["URI"])
 		return &http.Response{
 			StatusCode: http.StatusOK,
@@ -476,7 +476,7 @@ func TestVerifyCodeDetectEmail(t *testing.T) {
 
 		body, err := readBody(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, body["externalId"])
+		assert.EqualValues(t, email, body["externalID"])
 	}))
 	require.NoError(t, err)
 	_, err = a.VerifyCodeWithOptions("", email, "555")
@@ -490,7 +490,7 @@ func TestVerifyCodeDetectPhone(t *testing.T) {
 
 		body, err := readBody(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, phone, body["externalId"])
+		assert.EqualValues(t, phone, body["externalID"])
 	}))
 	require.NoError(t, err)
 	_, err = a.VerifyCodeWithOptions("", phone, "555")
@@ -504,7 +504,7 @@ func TestVerifyCodeWithPhone(t *testing.T) {
 
 		body, err := readBody(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, phone, body["externalId"])
+		assert.EqualValues(t, phone, body["externalID"])
 		assert.EqualValues(t, "4444", body["code"])
 	}))
 	require.NoError(t, err)
@@ -520,7 +520,7 @@ func TestVerifyCodeEmail(t *testing.T) {
 
 		body, err := readBody(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, body["externalId"])
+		assert.EqualValues(t, email, body["externalID"])
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
@@ -536,7 +536,7 @@ func TestVerifyCodeSMS(t *testing.T) {
 
 		body, err := readBody(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, phone, body["externalId"])
+		assert.EqualValues(t, phone, body["externalID"])
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
@@ -552,7 +552,7 @@ func TestVerifyCodeWhatsApp(t *testing.T) {
 
 		body, err := readBody(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, phone, body["externalId"])
+		assert.EqualValues(t, phone, body["externalID"])
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
@@ -568,7 +568,7 @@ func TestVerifyCodeEmailResponseOption(t *testing.T) {
 
 		body, err := readBody(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, body["externalId"])
+		assert.EqualValues(t, email, body["externalID"])
 		assert.EqualValues(t, code, body["code"])
 		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Set-Cookie": []string{mockAuthSessionCookie.String()}}}, nil
 	})
@@ -590,7 +590,7 @@ func TestVerifyCodeEmailResponseNil(t *testing.T) {
 
 		body, err := readBody(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, body["externalId"])
+		assert.EqualValues(t, email, body["externalID"])
 		assert.EqualValues(t, code, body["code"])
 		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Set-Cookie": []string{mockAuthSessionCookie.String()}}}, nil
 	})
