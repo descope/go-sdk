@@ -126,10 +126,10 @@ func (auth *authenticationService) GetPendingSession(pendingRef string, w http.R
 func (auth *authenticationService) GetPendingSessionWithOptions(pendingRef string, options ...Option) (*AuthenticationInfo, error) {
 	httpResponse, err := auth.client.DoPostRequest(composeGetPendingSession(), newAuthenticationGetPendingSessionBody(pendingRef), nil)
 	if err != nil {
+		if err == errors.UnauthorizedError {
+			return nil, errors.PendingSessionTokenError
+		}
 		return nil, err
-	}
-	if httpResponse.Res.StatusCode == http.StatusUnauthorized {
-		return nil, errors.PendingSessionTokenError
 	}
 	return auth.authenticationInfoFromResponse(httpResponse, options...)
 }
