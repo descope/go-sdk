@@ -11,6 +11,9 @@ var (
 	FailedToRefreshTokenError = NewValidationError("fail to refresh token")
 	RefreshTokenError         = NewValidationError("refresh token invalid or not found")
 	MissingProviderError      = NewValidationError("missing JWT provider implementation, use a built-in implementation or custom")
+	InvalidPendingRefError    = NewValidationError("Invalid pending reference")
+	MissingSessionTokenError  = NewValidationError("missing session token")
+	PendingSessionTokenError  = NewValidationError("pending session token")
 )
 
 type WebError struct {
@@ -60,4 +63,17 @@ func (e *ValidationError) Error() string {
 
 func NewValidationError(message string, args ...interface{}) *ValidationError {
 	return &ValidationError{Message: fmt.Sprintf(message, args...)}
+}
+
+func IsError(err error, code string) bool {
+	if err == nil {
+		return false
+	}
+	if err.Error() == code {
+		return true
+	}
+	if e, ok := err.(*WebError); ok {
+		return e.Code == code
+	}
+	return false
 }
