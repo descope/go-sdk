@@ -14,6 +14,7 @@ var (
 	InvalidPendingRefError    = NewValidationError("Invalid pending reference")
 	MissingSessionTokenError  = NewValidationError("missing session token")
 	PendingSessionTokenError  = NewValidationError("pending session token")
+	UnauthorizedError         = NewError(BadRequestErrorCode, "unauthorized access")
 )
 
 type WebError struct {
@@ -30,7 +31,7 @@ func NewInvalidArgumentError(arg string) *WebError {
 }
 
 func NewUnauthorizedError() *WebError {
-	return NewError(BadRequestErrorCode, "unauthorized access")
+	return UnauthorizedError
 }
 
 func NewNoPublicKeyError() *PublicKeyValidationError {
@@ -63,17 +64,4 @@ func (e *ValidationError) Error() string {
 
 func NewValidationError(message string, args ...interface{}) *ValidationError {
 	return &ValidationError{Message: fmt.Sprintf(message, args...)}
-}
-
-func IsError(err error, code string) bool {
-	if err == nil {
-		return false
-	}
-	if err.Error() == code {
-		return true
-	}
-	if e, ok := err.(*WebError); ok {
-		return e.Code == code
-	}
-	return false
 }

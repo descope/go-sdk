@@ -83,15 +83,18 @@ func TestPostCustomURL(t *testing.T) {
 	projectID := "test"
 	body := "aaaa"
 	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, "overriden.com", r.URL.Hostname())
+		assert.EqualValues(t, "/path", r.URL.Path)
+		assert.EqualValues(t, "test=1", r.URL.RawQuery)
 		b, err := io.ReadAll(r.Body)
 		require.NoError(t, err)
 		assert.EqualValues(t, body, string(b))
 		return &http.Response{StatusCode: http.StatusOK}, nil
 	})})
 
-	req, err := http.NewRequest(http.MethodPost, "hello.com", bytes.NewBufferString(body))
+	req, err := http.NewRequest(http.MethodPost, "hello.com/path?test=1", bytes.NewBufferString(body))
 	require.NoError(t, err)
-	res, err := c.DoPostRequest("path", nil, &HTTPRequest{Request: req})
+	res, err := c.DoPostRequest("path", nil, &HTTPRequest{Request: req, BaseURL: "https://overriden.com"})
 	require.NoError(t, err)
 	assert.EqualValues(t, http.StatusOK, res.Res.StatusCode)
 }
