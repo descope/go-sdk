@@ -233,7 +233,7 @@ func generateKeysIfNeeded() error {
 	if pemCert == nil {
 		return err
 	}
-	if err := os.WriteFile(TLSCertPath, pemCert, 0644); err != nil {
+	if err := os.WriteFile(TLSCertPath, pemCert, 0600); err != nil {
 		log.Fatal(err)
 	}
 
