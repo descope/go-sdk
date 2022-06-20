@@ -112,7 +112,7 @@ func (p *provider) findKey(kid string) (jwk.Key, error) {
 	}
 
 	if err := p.requestKeys(); err != nil {
-		logger.LogDebug("failed to retreive public keys from API [%s]", err)
+		logger.LogDebug("failed to retrieve public keys from API [%s]", err)
 		return nil, err
 	}
 
