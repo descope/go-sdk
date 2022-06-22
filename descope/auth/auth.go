@@ -73,16 +73,15 @@ func (auth *authenticationService) VerifyCodeWithOptions(method DeliveryMethod, 
 	if err != nil {
 		return nil, err
 	}
-	cookies := []*http.Cookie{}
-	if httpResponse != nil {
-		cookies = httpResponse.Res.Cookies()
-		Options(options).SetCookies(cookies)
-	}
-	sessionToken := getSessionToken(cookies)
-	token, err := auth.validateJWT(sessionToken)
+	token, err := auth.extractToken(httpResponse.BodyStr)
 	if err != nil {
 		logger.LogError("unable to validate refreshed token", err)
 		return nil, err
+	}
+	if httpResponse.Res != nil {
+		cookies := httpResponse.Res.Cookies()
+		cookies = append(cookies, createSessionCookie(token))
+		Options(options).SetCookies(cookies)
 	}
 	return NewAuthenticationInfo(token), err
 }
@@ -157,19 +156,15 @@ func (auth *authenticationService) VerifyMagicLink(token string, w http.Response
 
 // extracts authentication info from response cookies, and set it on options
 func (auth *authenticationService) authenticationInfoFromResponse(httpResponse *api.HTTPResponse, options ...Option) (*AuthenticationInfo, error) {
-	cookies := []*http.Cookie{}
-	if httpResponse != nil {
-		cookies = httpResponse.Res.Cookies()
-		Options(options).SetCookies(cookies)
-	}
-	sessionToken := getSessionToken(cookies)
-	if sessionToken == "" {
-		return nil, errors.MissingSessionTokenError
-	}
-	token, err := auth.validateJWT(sessionToken)
+	token, err := auth.extractToken(httpResponse.BodyStr)
 	if err != nil {
 		logger.LogError("unable to validate refreshed token", err)
 		return nil, err
+	}
+	if httpResponse.Res != nil {
+		cookies := httpResponse.Res.Cookies()
+		cookies = append(cookies, createSessionCookie(token))
+		Options(options).SetCookies(cookies)
 	}
 	return NewAuthenticationInfo(token), nil
 }
@@ -179,13 +174,7 @@ func (auth *authenticationService) VerifyMagicLinkWithOptions(token string, opti
 	if err != nil {
 		return nil, err
 	}
-	authInfo, err := auth.authenticationInfoFromResponse(httpResponse, options...)
-	if err == errors.MissingSessionTokenError {
-		// magic link was created in non cross device mode, no authentication info is returned
-		return nil, nil
-	}
-
-	return authInfo, err
+	return auth.authenticationInfoFromResponse(httpResponse, options...)
 }
 
 func (auth *authenticationService) OAuthStart(provider OAuthProvider, w http.ResponseWriter) (string, error) {
@@ -233,6 +222,7 @@ func (auth *authenticationService) LogoutWithOptions(request *http.Request, opti
 		return err
 	}
 	cookies := httpResponse.Res.Cookies()
+	cookies = append(cookies, createSessionCookie(nil))
 	Options(options).SetCookies(cookies)
 	return nil
 }
@@ -317,13 +307,19 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 	return true, NewAuthenticationInfo(token), nil
 }
 
-func getSessionToken(cookies []*http.Cookie) string {
-	for _, cookie := range cookies {
-		if cookie.Name == SessionCookieName {
-			return cookie.Value
-		}
+func (auth *authenticationService) extractToken(bodyStr string) (*Token, error) {
+	if bodyStr == "" {
+		return nil, nil
 	}
-	return ""
+
+	var t struct{ JWT string }
+	err := utils.Unmarshal([]byte(bodyStr), &t)
+	if err != nil {
+		logger.LogError("unable to parse token from response", err)
+		return nil, err
+	}
+
+	return auth.validateJWT(t.JWT)
 }
 
 func (auth *authenticationService) validateJWT(JWT string) (*Token, error) {
@@ -359,6 +355,23 @@ func (*authenticationService) verifyDeliveryMethod(method DeliveryMethod, identi
 		}
 	}
 	return nil
+}
+
+func createSessionCookie(token *Token) *http.Cookie {
+	cookie := &http.Cookie{Path: "/", Name: SessionCookieName, Value: ""}
+	if token != nil {
+		cookie.Value = token.JWT
+	}
+	return cookie
+}
+
+func getSessionToken(cookies []*http.Cookie) string {
+	for _, cookie := range cookies {
+		if cookie.Name == SessionCookieName {
+			return cookie.Value
+		}
+	}
+	return ""
 }
 
 func provideTokens(r *http.Request) (string, string) {

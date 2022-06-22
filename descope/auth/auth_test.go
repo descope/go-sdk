@@ -51,6 +51,8 @@ const (
 var (
 	mockAuthSessionCookie = &http.Cookie{Value: jwtTokenValid, Name: SessionCookieName}
 	mockAuthRefreshCookie = &http.Cookie{Value: jwtTokenValid, Name: RefreshCookieName}
+
+	mockAuthSessionBody = fmt.Sprintf(`{"jwt": "%s"}`, jwtTokenValid)
 )
 
 func readBody(r *http.Request) (m map[string]interface{}, err error) {
@@ -104,7 +106,7 @@ func TestVerifyDeliveryMethodEmptyIdentifier(t *testing.T) {
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
 
-func TestSignInEmptyExternalID(t *testing.T) {
+func TestSignInMagicLinkEmptyExternalID(t *testing.T) {
 	email := ""
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
@@ -115,6 +117,20 @@ func TestSignInEmptyExternalID(t *testing.T) {
 	err = a.SignInMagicLink(MethodEmail, email, "http://test.me")
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+}
+
+func TestSignInMagicLinkCrossDeviceEmptyExternalID(t *testing.T) {
+	email := ""
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	err = a.SignInOTP(MethodEmail, email)
+	require.Error(t, err)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+
+	info, err := a.SignInMagicLinkCrossDevice(MethodEmail, email, "http://test.me")
+	require.Error(t, err)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	require.Empty(t, info)
 }
 
 func TestValidEmailSignInEmail(t *testing.T) {
@@ -285,7 +301,7 @@ func TestGetPendingSession(t *testing.T) {
 		body, err := readBody(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, pendingRef, body["pendingRef"])
-		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Set-Cookie": []string{mockAuthSessionCookie.String()}}}, nil
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
@@ -420,7 +436,7 @@ func TestVerifyMagicLinkCodeWithSession(t *testing.T) {
 		body, err := readBody(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, token, body["token"])
-		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Set-Cookie": []string{mockAuthSessionCookie.String()}}}, nil
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
@@ -569,7 +585,7 @@ func TestVerifyCodeEmailResponseOption(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, email, body["externalID"])
 		assert.EqualValues(t, code, body["code"])
-		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Set-Cookie": []string{mockAuthSessionCookie.String()}}}, nil
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
@@ -591,13 +607,16 @@ func TestVerifyCodeEmailResponseNil(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, email, body["externalID"])
 		assert.EqualValues(t, code, body["code"])
-		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Set-Cookie": []string{mockAuthSessionCookie.String()}}}, nil
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	_, err = a.VerifyCode(MethodEmail, email, code, nil)
+	info, err := a.VerifyCode(MethodEmail, email, code, nil)
 	require.NoError(t, err)
 	assert.Len(t, w.Result().Cookies(), 0)
+	require.NotEmpty(t, info)
+	require.NotEmpty(t, info.SessionToken)
+	assert.EqualValues(t, jwtTokenValid, info.SessionToken.JWT)
 }
 
 func TestAuthDefaultURL(t *testing.T) {
@@ -806,9 +825,13 @@ func TestLogout(t *testing.T) {
 	w := httptest.NewRecorder()
 	err = a.Logout(request, w)
 	require.NoError(t, err)
-	require.Len(t, w.Result().Cookies(), 1)
-	sessionCookie := w.Result().Cookies()[0]
-	assert.Empty(t, sessionCookie.Value)
+	require.Len(t, w.Result().Cookies(), 2)
+	c1 := w.Result().Cookies()[0]
+	assert.Empty(t, c1.Value)
+	assert.EqualValues(t, RefreshCookieName, c1.Name)
+	c2 := w.Result().Cookies()[1]
+	assert.Empty(t, c2.Value)
+	assert.EqualValues(t, SessionCookieName, c2.Name)
 }
 
 func TestLogoutFailure(t *testing.T) {
