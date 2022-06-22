@@ -96,27 +96,44 @@ func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (*MagicLinkRespon
 	return response, nil
 }
 
-func (auth *authenticationService) SignInMagicLink(method DeliveryMethod, identifier, URI string, crossDevice bool) (*MagicLinkResponse, error) {
+func (auth *authenticationService) SignInMagicLink(method DeliveryMethod, identifier, URI string) error {
+	if identifier == "" {
+		return errors.NewInvalidArgumentError("identifier")
+	}
+	_, err := auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(identifier, URI, false), nil)
+	return err
+}
+
+func (auth *authenticationService) SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User) error {
+	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
+		return err
+	}
+
+	_, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, identifier, URI, user, false), nil)
+	return err
+}
+
+func (auth *authenticationService) SignInMagicLinkCrossDevice(method DeliveryMethod, identifier, URI string) (*MagicLinkResponse, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
-	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(identifier, URI, crossDevice), nil)
-	if err == nil && crossDevice {
-		return getPendingRefFromResponse(httpResponse)
+	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(identifier, URI, true), nil)
+	if err != nil {
+		return nil, err
 	}
-	return nil, err
+	return getPendingRefFromResponse(httpResponse)
 }
 
-func (auth *authenticationService) SignUpMagicLink(method DeliveryMethod, identifier, URI string, crossDevice bool, user *User) (*MagicLinkResponse, error) {
+func (auth *authenticationService) SignUpMagicLinkCrossDevice(method DeliveryMethod, identifier, URI string, user *User) (*MagicLinkResponse, error) {
 	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
 		return nil, err
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, identifier, URI, user, crossDevice), nil)
-	if err == nil && crossDevice {
-		return getPendingRefFromResponse(httpResponse)
+	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, identifier, URI, user, true), nil)
+	if err != nil {
+		return nil, err
 	}
-	return nil, err
+	return getPendingRefFromResponse(httpResponse)
 }
 
 func (auth *authenticationService) GetPendingSession(pendingRef string, w http.ResponseWriter) (*AuthenticationInfo, error) {

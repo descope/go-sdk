@@ -28,7 +28,7 @@ const (
 	TLSCertPath = "../cert.pem"
 
 	trueStr            = "true"
-	verifyMagicLinkURI = "https://localhost:8085/verify"
+	verifyMagicLinkURI = "https://localhost:8085/magiclink/verify"
 )
 
 var client *descope.DescopeClient
@@ -47,17 +47,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	r.GET("/signup", handleSignUp)
-	r.GET("/signin", handleSignIn)
+	r.GET("/otp/signup", handleSignUp)
+	r.GET("/otp/signin", handleSignIn)
+	r.GET("/otp/verify", handleOTPVerify)
+
+	r.GET("/oauth", handleOAuth)
+
 	r.GET("/magiclink/signin", handleMagicLinkSignIn)
 	r.GET("/magiclink/signup", handleMagicLinkSignUp)
 	r.GET("/session/pending", handleGetPendingSession)
-	r.GET("/verify", handleVerify)
-	r.GET("/oauth", handleOAuth)
+	r.GET("/magiclink/verify", handleMagicLinkVerify)
 
 	authorized := r.Group("/")
 	authorized.Use(descopegin.AuthneticationMiddleware(client.Auth, nil))
-	authorized.GET("/health", handleIsHealthy)
+	authorized.GET("/private", handleIsHealthy)
 	authorized.GET("/logout", handleLogout)
 	r.RunTLS(":8085", TLSCertPath, TLSkeyPath)
 }
@@ -97,8 +100,14 @@ func handleSignIn(c *gin.Context) {
 
 func handleMagicLinkSignIn(c *gin.Context) {
 	method, identifier := getMethodAndIdentifier(c)
-	crossDevice := queryBool(c, "crossDevice")
-	magicLinkResponse, err := client.Auth.SignInMagicLink(method, identifier, verifyMagicLinkURI, crossDevice)
+	var err error
+	var magicLinkResponse *auth.MagicLinkResponse
+
+	if crossDevice := queryBool(c, "crossDevice"); crossDevice {
+		magicLinkResponse, err = client.Auth.SignInMagicLinkCrossDevice(method, identifier, verifyMagicLinkURI)
+	} else {
+		err = client.Auth.SignInMagicLink(method, identifier, verifyMagicLinkURI)
+	}
 	if err != nil {
 		setError(c, err.Error())
 	}
@@ -108,8 +117,15 @@ func handleMagicLinkSignIn(c *gin.Context) {
 
 func handleMagicLinkSignUp(c *gin.Context) {
 	method, identifier := getMethodAndIdentifier(c)
-	crossDevice := queryBool(c, "crossDevice")
-	magicLinkResponse, err := client.Auth.SignUpMagicLink(method, identifier, verifyMagicLinkURI, crossDevice, &auth.User{Name: "test"})
+	var err error
+	var magicLinkResponse *auth.MagicLinkResponse
+
+	user := &auth.User{Name: "test"}
+	if crossDevice := queryBool(c, "crossDevice"); crossDevice {
+		magicLinkResponse, err = client.Auth.SignUpMagicLinkCrossDevice(method, identifier, verifyMagicLinkURI, user)
+	} else {
+		err = client.Auth.SignUpMagicLink(method, identifier, verifyMagicLinkURI, user)
+	}
 	if err != nil {
 		setError(c, err.Error())
 	}
@@ -134,7 +150,7 @@ func handleGetPendingSession(c *gin.Context) {
 	setOK(c)
 }
 
-func handleVerify(c *gin.Context) {
+func handleMagicLinkVerify(c *gin.Context) {
 	token := c.Query("t")
 	if token == "" {
 		setError(c, "token is empty")
@@ -146,6 +162,21 @@ func handleVerify(c *gin.Context) {
 		return
 	}
 	setOK(c)
+}
+
+func handleOTPVerify(c *gin.Context) {
+	method, identifier := getMethodAndIdentifier(c)
+	code := c.Query("code")
+	if code == "" {
+		setError(c, "code is empty")
+		return
+	}
+	_, err := client.Auth.VerifyCodeWithOptions(method, identifier, code, descopegin.WithResponseOption(c))
+	if err != nil {
+		setError(c, err.Error())
+		return
+   }
+   setOK(c)
 }
 
 func handleOAuth(c *gin.Context) {
