@@ -25,6 +25,9 @@ type MagicLinkResponse struct {
 }
 
 func NewAuthenticationInfo(token *Token) *AuthenticationInfo {
+	if token == nil {
+		return nil
+	}
 	return &AuthenticationInfo{SessionToken: token}
 }
 

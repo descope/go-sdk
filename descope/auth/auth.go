@@ -319,6 +319,10 @@ func (auth *authenticationService) extractToken(bodyStr string) (*Token, error) 
 		return nil, err
 	}
 
+	if t.JWT == "" {
+		return nil, nil
+	}
+
 	return auth.validateJWT(t.JWT)
 }
 
