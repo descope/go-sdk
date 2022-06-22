@@ -3,7 +3,6 @@ package auth
 import (
 	"net/http"
 	"regexp"
-	"time"
 
 	"github.com/descope/go-sdk/descope/logger"
 	"github.com/lestrrat-go/jwx/v2/jwt"
@@ -14,7 +13,7 @@ type AuthenticationInfo struct {
 }
 
 type Token struct {
-	Expiration time.Time
+	Expiration int64
 	JWT        string
 	ID         string
 	Subject    string
@@ -117,7 +116,7 @@ func NewToken(JWT string, token jwt.Token) *Token {
 		JWT:        JWT,
 		ID:         token.Issuer(),
 		Subject:    token.Subject(),
-		Expiration: token.Expiration(),
+		Expiration: token.Expiration().Unix(),
 		Claims:     token.PrivateClaims(),
 	}
 }
