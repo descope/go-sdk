@@ -312,7 +312,7 @@ func (auth *authenticationService) extractToken(bodyStr string) (*Token, error) 
 		return nil, nil
 	}
 
-	var t struct{JWT string}
+	var t struct{ JWT string }
 	err := utils.Unmarshal([]byte(bodyStr), &t)
 	if err != nil {
 		logger.LogError("unable to parse token from response", err)
