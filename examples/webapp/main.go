@@ -181,24 +181,6 @@ func handleMagicLinkSignUp(w http.ResponseWriter, r *http.Request) {
 	setOK(w)
 }
 
-func handleVerify(w http.ResponseWriter, r *http.Request) {
-	code := ""
-	method, identifier := getMethodAndIdentifier(r)
-	if codes, ok := r.URL.Query()["code"]; ok {
-		code = codes[0]
-	}
-	if code == "" {
-		setError(w, "code is empty")
-		return
-	}
-	_, err := client.Auth.VerifyCode(method, identifier, code, w)
-	if err != nil {
-		setError(w, err.Error())
-		return
-	}
-	setOK(w)
-}
-
 func handleMagicLinkVerify(w http.ResponseWriter, r *http.Request) {
 	tokens := r.URL.Query()["t"]
 	if len(tokens) == 0 {
