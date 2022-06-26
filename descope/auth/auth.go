@@ -34,7 +34,7 @@ func (auth *authenticationService) SignInOTP(method DeliveryMethod, identifier s
 		return errors.NewInvalidArgumentError("identifier")
 	}
 
-	_, err := auth.client.DoPostRequest(composeSignInURL(method), newSignInRequestBody(identifier), nil)
+	_, err := auth.client.DoPostRequest(composeSignInURL(method), newSignInRequestBody(identifier), nil, "")
 	return err
 }
 
@@ -43,7 +43,7 @@ func (auth *authenticationService) SignUpOTP(method DeliveryMethod, identifier s
 		return err
 	}
 
-	_, err := auth.client.DoPostRequest(composeSignUpURL(method), newAuthenticationSignUpRequestBody(method, identifier, user), nil)
+	_, err := auth.client.DoPostRequest(composeSignUpURL(method), newAuthenticationSignUpRequestBody(method, identifier, user), nil, "")
 	return err
 }
 
@@ -69,7 +69,7 @@ func (auth *authenticationService) VerifyCodeWithOptions(method DeliveryMethod, 
 		}
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(composeVerifyCodeURL(method), newAuthenticationVerifyRequestBody(identifier, code), nil)
+	httpResponse, err := auth.client.DoPostRequest(composeVerifyCodeURL(method), newAuthenticationVerifyRequestBody(identifier, code), nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -106,7 +106,7 @@ func (auth *authenticationService) SignInMagicLink(method DeliveryMethod, identi
 	if identifier == "" {
 		return errors.NewInvalidArgumentError("identifier")
 	}
-	_, err := auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(identifier, URI, false), nil)
+	_, err := auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(identifier, URI, false), nil, "")
 	return err
 }
 
@@ -115,7 +115,7 @@ func (auth *authenticationService) SignUpMagicLink(method DeliveryMethod, identi
 		return err
 	}
 
-	_, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, identifier, URI, user, false), nil)
+	_, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, identifier, URI, user, false), nil, "")
 	return err
 }
 
@@ -123,7 +123,7 @@ func (auth *authenticationService) SignInMagicLinkCrossDevice(method DeliveryMet
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
-	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(identifier, URI, true), nil)
+	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(identifier, URI, true), nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -135,7 +135,7 @@ func (auth *authenticationService) SignUpMagicLinkCrossDevice(method DeliveryMet
 		return nil, err
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, identifier, URI, user, true), nil)
+	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, identifier, URI, user, true), nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -147,7 +147,7 @@ func (auth *authenticationService) GetPendingSession(pendingRef string, w http.R
 }
 
 func (auth *authenticationService) GetPendingSessionWithOptions(pendingRef string, options ...Option) (*AuthenticationInfo, error) {
-	httpResponse, err := auth.client.DoPostRequest(composeGetPendingSession(), newAuthenticationGetPendingSessionBody(pendingRef), nil)
+	httpResponse, err := auth.client.DoPostRequest(composeGetPendingSession(), newAuthenticationGetPendingSessionBody(pendingRef), nil, "")
 	if err != nil {
 		if err == errors.UnauthorizedError {
 			return nil, errors.PendingSessionTokenError
@@ -184,7 +184,7 @@ func (auth *authenticationService) authenticationInfoFromResponse(httpResponse *
 }
 
 func (auth *authenticationService) VerifyMagicLinkWithOptions(token string, options ...Option) (*AuthenticationInfo, error) {
-	httpResponse, err := auth.client.DoPostRequest(composeVerifyMagicLinkURL(), newMagicLinkAuthenticationVerifyRequestBody(token), nil)
+	httpResponse, err := auth.client.DoPostRequest(composeVerifyMagicLinkURL(), newMagicLinkAuthenticationVerifyRequestBody(token), nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +196,7 @@ func (auth *authenticationService) OAuthStart(provider OAuthProvider, w http.Res
 }
 
 func (auth *authenticationService) OAuthStartWithOptions(provider OAuthProvider, options ...Option) (url string, err error) {
-	httpResponse, err := auth.client.DoGetRequest(composeOAuthURL(), &api.HTTPRequest{QueryParams: map[string]string{"provider": string(provider)}})
+	httpResponse, err := auth.client.DoGetRequest(composeOAuthURL(), &api.HTTPRequest{QueryParams: map[string]string{"provider": string(provider)}}, "")
 	if err != nil {
 		return
 	}
@@ -223,15 +223,13 @@ func (auth *authenticationService) LogoutWithOptions(request *http.Request, opti
 		return errors.MissingProviderError
 	}
 
-	sessionToken, refreshToken := provideTokens(request)
+	_, refreshToken := provideTokens(request)
 	if refreshToken == "" {
 		logger.LogDebug("unable to find tokens from cookies")
 		return errors.RefreshTokenError
 	}
 
-	httpResponse, err := auth.client.DoGetRequest(api.Routes.Logout(), &api.HTTPRequest{
-		Cookies: []*http.Cookie{{Name: SessionCookieName, Value: sessionToken}, {Name: RefreshCookieName, Value: refreshToken}},
-	})
+	httpResponse, err := auth.client.DoGetRequest(api.Routes.Logout(), &api.HTTPRequest{}, refreshToken)
 	if err != nil {
 		return err
 	}
@@ -306,9 +304,7 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 			return false, nil, err
 		}
 		// auto-refresh session token
-		httpResponse, err := auth.client.DoGetRequest(api.Routes.RefreshToken(), &api.HTTPRequest{
-			Cookies: []*http.Cookie{{Name: SessionCookieName, Value: sessionToken}, {Name: RefreshCookieName, Value: refreshToken}},
-		})
+		httpResponse, err := auth.client.DoGetRequest(api.Routes.RefreshToken(), &api.HTTPRequest{}, refreshToken)
 		if err != nil {
 			return false, nil, errors.FailedToRefreshTokenError
 		}
