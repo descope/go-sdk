@@ -38,4 +38,4 @@ jobs:
         uses: ./.github/actions/tests
         with:
           go_version: ${{ env.GO_VERSION }}
-          min_coverage: 94
+          min_coverage: 95

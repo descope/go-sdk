@@ -30,11 +30,11 @@ func NewAuth(conf AuthParams, c *api.Client) (*authenticationService, error) {
 }
 
 func (auth *authenticationService) SignInOTP(method DeliveryMethod, identifier string) error {
-	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
-		return err
+	if identifier == "" {
+		return errors.NewInvalidArgumentError("identifier")
 	}
 
-	_, err := auth.client.DoPostRequest(composeSignInURL(method), newAuthenticationRequestBody(method, identifier), nil)
+	_, err := auth.client.DoPostRequest(composeSignInURL(method), newSignInRequestBody(identifier), nil)
 	return err
 }
 
@@ -52,6 +52,9 @@ func (auth *authenticationService) VerifyCode(method DeliveryMethod, identifier 
 }
 
 func (auth *authenticationService) VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, options ...Option) (*AuthenticationInfo, error) {
+	if identifier == "" {
+		return nil, errors.NewInvalidArgumentError("identifier")
+	}
 	if method == "" {
 		if phoneRegex.MatchString(identifier) {
 			method = MethodSMS
@@ -62,32 +65,29 @@ func (auth *authenticationService) VerifyCodeWithOptions(method DeliveryMethod, 
 		}
 
 		if method == "" {
-			return nil, errors.NewInvalidArgumentError("identifier")
+			return nil, errors.NewInvalidArgumentError("method")
 		}
-	} else if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
-		return nil, err
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(composeVerifyCodeURL(method), newAuthenticationVerifyRequestBody(method, identifier, code), nil)
+	httpResponse, err := auth.client.DoPostRequest(composeVerifyCodeURL(method), newAuthenticationVerifyRequestBody(identifier, code), nil)
 	if err != nil {
 		return nil, err
 	}
-	cookies := []*http.Cookie{}
-	if httpResponse != nil {
-		cookies = httpResponse.Res.Cookies()
-		Options(options).SetCookies(cookies)
-	}
-	sessionToken := getSessionToken(cookies)
-	token, err := auth.validateJWT(sessionToken)
+	token, err := auth.extractToken(httpResponse.BodyStr)
 	if err != nil {
 		logger.LogError("unable to validate refreshed token", err)
 		return nil, err
 	}
+	if httpResponse.Res != nil {
+		cookies := httpResponse.Res.Cookies()
+		cookies = append(cookies, createSessionCookie(token))
+		Options(options).SetCookies(cookies)
+	}
 	return NewAuthenticationInfo(token), err
 }
 
-func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (MagicLinkResponse, error) {
-	var response MagicLinkResponse
+func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (*MagicLinkResponse, error) {
+	var response *MagicLinkResponse
 	if err := utils.Unmarshal([]byte(httpResponse.BodyStr), &response); err != nil {
 		logger.LogError("failed to load pending reference from response", err)
 		return response, errors.InvalidPendingRefError
@@ -95,28 +95,44 @@ func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (MagicLinkRespons
 	return response, nil
 }
 
-func (auth *authenticationService) SignInMagicLink(method DeliveryMethod, identifier, URI string, crossDevice bool) (MagicLinkResponse, error) {
-	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
-		return MagicLinkResponse{}, err
+func (auth *authenticationService) SignInMagicLink(method DeliveryMethod, identifier, URI string) error {
+	if identifier == "" {
+		return errors.NewInvalidArgumentError("identifier")
 	}
-
-	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(method, identifier, URI, crossDevice), nil)
-	if err == nil && crossDevice {
-		return getPendingRefFromResponse(httpResponse)
-	}
-	return MagicLinkResponse{}, err
+	_, err := auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(identifier, URI, false), nil)
+	return err
 }
 
-func (auth *authenticationService) SignUpMagicLink(method DeliveryMethod, identifier, URI string, crossDevice bool, user *User) (MagicLinkResponse, error) {
+func (auth *authenticationService) SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User) error {
 	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
-		return MagicLinkResponse{}, err
+		return err
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, identifier, URI, user, crossDevice), nil)
-	if err == nil && crossDevice {
-		return getPendingRefFromResponse(httpResponse)
+	_, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, identifier, URI, user, false), nil)
+	return err
+}
+
+func (auth *authenticationService) SignInMagicLinkCrossDevice(method DeliveryMethod, identifier, URI string) (*MagicLinkResponse, error) {
+	if identifier == "" {
+		return nil, errors.NewInvalidArgumentError("identifier")
 	}
-	return MagicLinkResponse{}, err
+	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(identifier, URI, true), nil)
+	if err != nil {
+		return nil, err
+	}
+	return getPendingRefFromResponse(httpResponse)
+}
+
+func (auth *authenticationService) SignUpMagicLinkCrossDevice(method DeliveryMethod, identifier, URI string, user *User) (*MagicLinkResponse, error) {
+	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
+		return nil, err
+	}
+
+	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, identifier, URI, user, true), nil)
+	if err != nil {
+		return nil, err
+	}
+	return getPendingRefFromResponse(httpResponse)
 }
 
 func (auth *authenticationService) GetPendingSession(pendingRef string, w http.ResponseWriter) (*AuthenticationInfo, error) {
@@ -126,10 +142,10 @@ func (auth *authenticationService) GetPendingSession(pendingRef string, w http.R
 func (auth *authenticationService) GetPendingSessionWithOptions(pendingRef string, options ...Option) (*AuthenticationInfo, error) {
 	httpResponse, err := auth.client.DoPostRequest(composeGetPendingSession(), newAuthenticationGetPendingSessionBody(pendingRef), nil)
 	if err != nil {
+		if err == errors.UnauthorizedError {
+			return nil, errors.PendingSessionTokenError
+		}
 		return nil, err
-	}
-	if httpResponse.Res.StatusCode == http.StatusAccepted {
-		return nil, errors.PendingSessionTokenError
 	}
 	return auth.authenticationInfoFromResponse(httpResponse, options...)
 }
@@ -140,19 +156,15 @@ func (auth *authenticationService) VerifyMagicLink(token string, w http.Response
 
 // extracts authentication info from response cookies, and set it on options
 func (auth *authenticationService) authenticationInfoFromResponse(httpResponse *api.HTTPResponse, options ...Option) (*AuthenticationInfo, error) {
-	cookies := []*http.Cookie{}
-	if httpResponse != nil {
-		cookies = httpResponse.Res.Cookies()
-		Options(options).SetCookies(cookies)
-	}
-	sessionToken := getSessionToken(cookies)
-	if sessionToken == "" {
-		return nil, errors.MissingSessionTokenError
-	}
-	token, err := auth.validateJWT(sessionToken)
+	token, err := auth.extractToken(httpResponse.BodyStr)
 	if err != nil {
 		logger.LogError("unable to validate refreshed token", err)
 		return nil, err
+	}
+	if httpResponse.Res != nil {
+		cookies := httpResponse.Res.Cookies()
+		cookies = append(cookies, createSessionCookie(token))
+		Options(options).SetCookies(cookies)
 	}
 	return NewAuthenticationInfo(token), nil
 }
@@ -162,13 +174,7 @@ func (auth *authenticationService) VerifyMagicLinkWithOptions(token string, opti
 	if err != nil {
 		return nil, err
 	}
-	authInfo, err := auth.authenticationInfoFromResponse(httpResponse, options...)
-	if err == errors.MissingSessionTokenError {
-		// magic link was created in non cross device mode, no authentication info is returned
-		return nil, nil
-	}
-
-	return authInfo, err
+	return auth.authenticationInfoFromResponse(httpResponse, options...)
 }
 
 func (auth *authenticationService) OAuthStart(provider OAuthProvider, w http.ResponseWriter) (string, error) {
@@ -216,6 +222,7 @@ func (auth *authenticationService) LogoutWithOptions(request *http.Request, opti
 		return err
 	}
 	cookies := httpResponse.Res.Cookies()
+	cookies = append(cookies, createSessionCookie(nil))
 	Options(options).SetCookies(cookies)
 	return nil
 }
@@ -300,13 +307,23 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 	return true, NewAuthenticationInfo(token), nil
 }
 
-func getSessionToken(cookies []*http.Cookie) string {
-	for _, cookie := range cookies {
-		if cookie.Name == SessionCookieName {
-			return cookie.Value
-		}
+func (auth *authenticationService) extractToken(bodyStr string) (*Token, error) {
+	if bodyStr == "" {
+		return nil, nil
 	}
-	return ""
+
+	var t struct{ JWT string }
+	err := utils.Unmarshal([]byte(bodyStr), &t)
+	if err != nil {
+		logger.LogError("unable to parse token from response", err)
+		return nil, err
+	}
+
+	if t.JWT == "" {
+		return nil, nil
+	}
+
+	return auth.validateJWT(t.JWT)
 }
 
 func (auth *authenticationService) validateJWT(JWT string) (*Token, error) {
@@ -342,6 +359,23 @@ func (*authenticationService) verifyDeliveryMethod(method DeliveryMethod, identi
 		}
 	}
 	return nil
+}
+
+func createSessionCookie(token *Token) *http.Cookie {
+	cookie := &http.Cookie{Path: "/", Name: SessionCookieName, Value: ""}
+	if token != nil {
+		cookie.Value = token.JWT
+	}
+	return cookie
+}
+
+func getSessionToken(cookies []*http.Cookie) string {
+	for _, cookie := range cookies {
+		if cookie.Name == SessionCookieName {
+			return cookie.Value
+		}
+	}
+	return ""
 }
 
 func provideTokens(r *http.Request) (string, string) {

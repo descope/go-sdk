@@ -3,7 +3,7 @@ module github.com/descope/go-sdk
 go 1.18
 
 require (
-	github.com/lestrrat-go/jwx/v2 v2.0.2
+	github.com/lestrrat-go/jwx/v2 v2.0.3
 	github.com/stretchr/testify v1.7.2
 )
 
@@ -14,7 +14,7 @@ require (
 	github.com/kr/pretty v0.3.0 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.1 // indirect
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect
-	github.com/lestrrat-go/httprc v1.0.1 // indirect
+	github.com/lestrrat-go/httprc v1.0.2 // indirect
 	github.com/lestrrat-go/iter v1.0.2 // indirect
 	github.com/lestrrat-go/option v1.0.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect

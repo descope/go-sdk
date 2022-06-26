@@ -8,6 +8,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	goErrors "errors"
 	"fmt"
 	"log"
 	"math/big"
@@ -18,6 +19,7 @@ import (
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/auth"
+	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/logger"
 	"github.com/gorilla/mux"
 )
@@ -25,7 +27,8 @@ import (
 const (
 	TLSkeyPath  = "../key.pem"
 	TLSCertPath = "../cert.pem"
-	port        = "8085"
+
+	verifyMagicLinkURI = "https://localhost:8085/magiclink/verify"
 )
 
 var client *descope.DescopeClient
@@ -46,16 +49,22 @@ func main() {
 	}
 
 	router.Use(loggingMiddleware)
-	router.HandleFunc("/signin", handleSignIn).Methods(http.MethodGet)
-	router.HandleFunc("/signup", handleSignUp).Methods(http.MethodGet)
-	router.HandleFunc("/verify", handleVerify).Methods(http.MethodGet)
+	router.HandleFunc("/otp/signin", handleSignIn).Methods(http.MethodGet)
+	router.HandleFunc("/otp/signup", handleSignUp).Methods(http.MethodGet)
+	router.HandleFunc("/otp/verify", handleVerify).Methods(http.MethodGet)
+
 	router.HandleFunc("/oauth", handleOAuth).Methods(http.MethodGet)
+
+	router.HandleFunc("/magiclink/signin", handleMagicLinkSignIn).Methods(http.MethodGet)
+	router.HandleFunc("/magiclink/signup", handleMagicLinkSignUp).Methods(http.MethodGet)
+	router.HandleFunc("/magiclink/verify", handleMagicLinkVerify).Methods(http.MethodGet)
+	router.HandleFunc("/session/pending", handleGetPendingSession).Methods(http.MethodGet)
 
 	authRouter := router.Methods(http.MethodGet).Subrouter()
 	authRouter.Use(auth.AuthenticationMiddleware(client.Auth, func(w http.ResponseWriter, r *http.Request, err error) {
 		setResponse(w, http.StatusUnauthorized, "Unauthorized")
 	}))
-	authRouter.HandleFunc("/health", handleIsHealthy)
+	authRouter.HandleFunc("/private", handleIsHealthy)
 	authRouter.HandleFunc("/logout", handleLogout)
 
 	server := &http.Server{Addr: fmt.Sprintf(":%s", port), Handler: router}
@@ -140,19 +149,103 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func getMethodAndIdentifier(r *http.Request) (auth.DeliveryMethod, string) {
-	method := auth.MethodEmail
-	identifier := ""
-	if email, ok := r.URL.Query()["email"]; ok {
-		identifier = email[0]
-	} else if sms, ok := r.URL.Query()["sms"]; ok {
-		method = auth.MethodSMS
-		identifier = sms[0]
-	} else if whatsapp, ok := r.URL.Query()["whatsapp"]; ok {
-		method = auth.MethodWhatsApp
-		identifier = whatsapp[0]
+func handleMagicLinkSignIn(w http.ResponseWriter, r *http.Request) {
+	method, identifier := getMethodAndIdentifier(r)
+	var err error
+
+	if crossDevice := queryBool(r, "crossDevice"); crossDevice {
+		_, err = client.Auth.SignInMagicLinkCrossDevice(method, identifier, verifyMagicLinkURI)
+	} else {
+		err = client.Auth.SignInMagicLink(method, identifier, verifyMagicLinkURI)
 	}
-	return method, identifier
+	if err != nil {
+		setError(w, err.Error())
+	}
+	setOK(w)
+}
+
+func handleMagicLinkSignUp(w http.ResponseWriter, r *http.Request) {
+	method, identifier := getMethodAndIdentifier(r)
+	var err error
+
+	user := &auth.User{Name: "test"}
+	if crossDevice := queryBool(r, "crossDevice"); crossDevice {
+		_, err = client.Auth.SignUpMagicLinkCrossDevice(method, identifier, verifyMagicLinkURI, user)
+	} else {
+		err = client.Auth.SignUpMagicLink(method, identifier, verifyMagicLinkURI, user)
+	}
+	if err != nil {
+		setError(w, err.Error())
+	}
+
+	setOK(w)
+}
+
+func handleVerify(w http.ResponseWriter, r *http.Request) {
+	code := ""
+	method, identifier := getMethodAndIdentifier(r)
+	if codes, ok := r.URL.Query()["code"]; ok {
+		code = codes[0]
+	}
+	if code == "" {
+		setError(w, "code is empty")
+		return
+	}
+	_, err := client.Auth.VerifyCode(method, identifier, code, w)
+	if err != nil {
+		setError(w, err.Error())
+		return
+	}
+	setOK(w)
+}
+
+func handleMagicLinkVerify(w http.ResponseWriter, r *http.Request) {
+	tokens := r.URL.Query()["t"]
+	if len(tokens) == 0 {
+		setError(w, "token is empty")
+		return
+	}
+	token := tokens[0]
+	if token == "" {
+		setError(w, "token is empty")
+		return
+	}
+	_, err := client.Auth.VerifyMagicLink(token, w)
+	if err != nil {
+		setError(w, err.Error())
+		return
+	}
+	setOK(w)
+}
+
+func handleGetPendingSession(w http.ResponseWriter, r *http.Request) {
+	pendingRef := getQuery(r, "pendingRef")
+	if pendingRef == "" {
+		setError(w, "pending reference is empty")
+		return
+	}
+	_, err := client.Auth.GetPendingSession(pendingRef, w)
+	if goErrors.Is(err, errors.PendingSessionTokenError) {
+		setUnauthorized(w, err.Error())
+	}
+	if err != nil {
+		setError(w, err.Error())
+		return
+	}
+	setOK(w)
+}
+
+func queryBool(r *http.Request, key string) bool {
+	values := r.URL.Query()[key]
+	return len(values) > 0
+}
+
+func getQuery(r *http.Request, key string) string {
+	values := r.URL.Query()[key]
+	if len(values) == 0 {
+		return ""
+	}
+	return values[0]
 }
 
 func loggingMiddleware(next http.Handler) http.Handler {
@@ -167,6 +260,10 @@ func setOK(w http.ResponseWriter) {
 	setResponse(w, http.StatusOK, "OK")
 }
 
+func setUnauthorized(w http.ResponseWriter, message string) {
+	setResponse(w, http.StatusUnauthorized, message)
+}
+
 func setError(w http.ResponseWriter, message string) {
 	setResponse(w, http.StatusInternalServerError, message)
 }
@@ -174,6 +271,21 @@ func setError(w http.ResponseWriter, message string) {
 func setResponse(w http.ResponseWriter, status int, message string) {
 	w.WriteHeader(status)
 	w.Write([]byte(message))
+}
+
+func getMethodAndIdentifier(r *http.Request) (auth.DeliveryMethod, string) {
+	method := auth.MethodEmail
+	identifier := ""
+	if email, ok := r.URL.Query()["email"]; ok {
+		identifier = email[0]
+	} else if sms, ok := r.URL.Query()["sms"]; ok {
+		method = auth.MethodSMS
+		identifier = sms[0]
+	} else if whatsapp, ok := r.URL.Query()["whatsapp"]; ok {
+		method = auth.MethodWhatsApp
+		identifier = whatsapp[0]
+	}
+	return method, identifier
 }
 
 func generateKeysIfNeeded() error {
@@ -215,7 +327,7 @@ func generateKeysIfNeeded() error {
 	if pemCert == nil {
 		return err
 	}
-	if err := os.WriteFile(TLSCertPath, pemCert, 0644); err != nil {
+	if err := os.WriteFile(TLSCertPath, pemCert, 0600); err != nil {
 		log.Fatal(err)
 	}
 
