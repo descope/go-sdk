@@ -293,10 +293,10 @@ func TestSignUpMagicLinkEmailCrossDevice(t *testing.T) {
 	require.Equal(t, pendingRefResponse, response.PendingRef)
 }
 
-func TestGetPendingSession(t *testing.T) {
+func TestGetMagicLinkSession(t *testing.T) {
 	pendingRef := "pending_ref"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
-		assert.EqualValues(t, composeGetPendingSession(), r.URL.RequestURI())
+		assert.EqualValues(t, composeGetMagicLinkSession(), r.URL.RequestURI())
 
 		body, err := readBody(r)
 		require.NoError(t, err)
@@ -305,7 +305,7 @@ func TestGetPendingSession(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	info, err := a.GetPendingSession(pendingRef, w)
+	info, err := a.GetMagicLinkSession(pendingRef, w)
 	require.NoError(t, err)
 	assert.NotEmpty(t, info.SessionToken.JWT)
 	require.Len(t, w.Result().Cookies(), 1)
@@ -314,25 +314,25 @@ func TestGetPendingSession(t *testing.T) {
 	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
 }
 
-func TestGetPendingSessionError(t *testing.T) {
+func TestGetMagicLinkSessionError(t *testing.T) {
 	pendingRef := "pending_ref"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusBadGateway}, nil
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	_, err = a.GetPendingSession(pendingRef, w)
+	_, err = a.GetMagicLinkSession(pendingRef, w)
 	require.Error(t, err)
 }
 
-func TestGetPendingSessionStillPending(t *testing.T) {
+func TestGetMagicLinkSessionStillPending(t *testing.T) {
 	pendingRef := "pending_ref"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusUnauthorized}, nil
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	_, err = a.GetPendingSession(pendingRef, w)
+	_, err = a.GetMagicLinkSession(pendingRef, w)
 	require.Error(t, err)
 	require.ErrorIs(t, err, errors.PendingSessionTokenError)
 }

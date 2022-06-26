@@ -10,8 +10,8 @@ type MockDescopeAuthentication struct {
 	ValidateSessionResponseNotOK            bool
 	ValidateSessionResponseInfo             *AuthenticationInfo
 	ValidateSessionResponseError            error
-	GetPendingSessionResponseInfo           *AuthenticationInfo
-	GetPendingSessionResponseError          error
+	GetMagicLinkSessionResponseInfo         *AuthenticationInfo
+	GetMagicLinkSessionResponseError        error
 	LogoutResponseError                     error
 	AssertSignInOTP                         func(method DeliveryMethod, identifier string)
 	AssertSignUpOTP                         func(method DeliveryMethod, identifier string, user *User)
@@ -87,12 +87,12 @@ func (m MockDescopeAuthentication) SignUpMagicLinkCrossDevice(method DeliveryMet
 	return m.MagicLinkPendingLinkCrossDeviceResponse, m.SignUpMagicLinkCrossDeviceResponseError
 }
 
-func (m MockDescopeAuthentication) GetPendingSession(_ string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
-	return m.GetPendingSessionResponseInfo, m.GetPendingSessionResponseError
+func (m MockDescopeAuthentication) GetMagicLinkSession(_ string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+	return m.GetMagicLinkSessionResponseInfo, m.GetMagicLinkSessionResponseError
 }
 
-func (m MockDescopeAuthentication) GetPendingSessionWithOptions(_ string, _ ...Option) (*AuthenticationInfo, error) {
-	return m.GetPendingSessionResponseInfo, m.GetPendingSessionResponseError
+func (m MockDescopeAuthentication) GetMagicLinkSessionWithOptions(_ string, _ ...Option) (*AuthenticationInfo, error) {
+	return m.GetMagicLinkSessionResponseInfo, m.GetMagicLinkSessionResponseError
 }
 
 func (m MockDescopeAuthentication) OAuthStart(provider OAuthProvider, _ http.ResponseWriter) (string, error) {

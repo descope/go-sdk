@@ -163,7 +163,7 @@ type magicLinkAuthenticationVerifyRequestBody struct {
 	Token string `json:"token"`
 }
 
-type authenticationGetPendingSessionBody struct {
+type authenticationGetMagicLinkSessionBody struct {
 	PendingRef string `json:"pendingRef"`
 }
 
@@ -206,8 +206,8 @@ func newAuthenticationVerifyRequestBody(value string, code string) authenticatio
 	return authenticationVerifyRequestBody{authenticationRequestBody: newSignInRequestBody(value), Code: code}
 }
 
-func newAuthenticationGetPendingSessionBody(pendingRef string) authenticationGetPendingSessionBody {
-	return authenticationGetPendingSessionBody{PendingRef: pendingRef}
+func newAuthenticationGetMagicLinkSessionBody(pendingRef string) authenticationGetMagicLinkSessionBody {
+	return authenticationGetMagicLinkSessionBody{PendingRef: pendingRef}
 }
 
 type DeliveryMethod string
