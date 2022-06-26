@@ -73,16 +73,23 @@ func (auth *authenticationService) VerifyCodeWithOptions(method DeliveryMethod, 
 	if err != nil {
 		return nil, err
 	}
-	token, err := auth.extractToken(httpResponse.BodyStr)
+	tokens, err := auth.extractTokens(httpResponse.BodyStr)
 	if err != nil {
-		logger.LogError("unable to validate refreshed token", err)
+		logger.LogError("unable to extract tokens", err)
 		return nil, err
 	}
-	if httpResponse.Res != nil {
-		cookies := httpResponse.Res.Cookies()
-		cookies = append(cookies, createSessionCookie(token))
-		Options(options).SetCookies(cookies)
+	cookies := httpResponse.Res.Cookies()
+	var token *Token
+	for i := range tokens {
+		ck := createCookie(tokens[i])
+		if ck != nil {
+			cookies = append(cookies, ck)
+		}
+		if tokens[i].Claims["cookieName"] == SessionCookieName {
+			token = tokens[i]
+		}
 	}
+	Options(options).SetCookies(cookies)
 	return NewAuthenticationInfo(token), err
 }
 
@@ -156,16 +163,23 @@ func (auth *authenticationService) VerifyMagicLink(token string, w http.Response
 
 // extracts authentication info from response cookies, and set it on options
 func (auth *authenticationService) authenticationInfoFromResponse(httpResponse *api.HTTPResponse, options ...Option) (*AuthenticationInfo, error) {
-	token, err := auth.extractToken(httpResponse.BodyStr)
+	tokens, err := auth.extractTokens(httpResponse.BodyStr)
 	if err != nil {
 		logger.LogError("unable to validate refreshed token", err)
 		return nil, err
 	}
-	if httpResponse.Res != nil {
-		cookies := httpResponse.Res.Cookies()
-		cookies = append(cookies, createSessionCookie(token))
-		Options(options).SetCookies(cookies)
+	cookies := httpResponse.Res.Cookies()
+	var token *Token
+	for i := range tokens {
+		ck := createCookie(tokens[i])
+		if ck != nil {
+			cookies = append(cookies, ck)
+		}
+		if tokens[i].Claims["cookieName"] == SessionCookieName {
+			token = tokens[i]
+		}
 	}
+	Options(options).SetCookies(cookies)
 	return NewAuthenticationInfo(token), nil
 }
 
@@ -222,7 +236,16 @@ func (auth *authenticationService) LogoutWithOptions(request *http.Request, opti
 		return err
 	}
 	cookies := httpResponse.Res.Cookies()
-	cookies = append(cookies, createSessionCookie(nil))
+	cookies = append(cookies, createCookie(&Token{JWT: "", Claims: map[string]interface{}{
+		"cookieName": SessionCookieName,
+		"path":       "/",
+		"domain":     "",
+	}}))
+	cookies = append(cookies, createCookie(&Token{JWT: "", Claims: map[string]interface{}{
+		"cookieName": RefreshCookieName,
+		"path":       "/",
+		"domain":     "",
+	}}))
 	Options(options).SetCookies(cookies)
 	return nil
 }
@@ -289,14 +312,26 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 		if err != nil {
 			return false, nil, errors.FailedToRefreshTokenError
 		}
-		newSessionToken := ""
-		var cookies []*http.Cookie
-		if httpResponse != nil {
-			cookies = httpResponse.Res.Cookies()
-			newSessionToken = getSessionToken(cookies)
-			Options(options).SetCookies(cookies)
+		tokens, err := auth.extractTokens(httpResponse.BodyStr)
+		if err != nil {
+			logger.LogError("unable to extract tokens after refresh", err)
+			return false, nil, err
 		}
-		token, err = auth.validateJWT(newSessionToken)
+		cookies := httpResponse.Res.Cookies()
+		var token *Token
+		sessionJWT := ""
+		for i := range tokens {
+			ck := createCookie(tokens[i])
+			if ck != nil {
+				cookies = append(cookies, ck)
+			}
+			if tokens[i].Claims["cookieName"] == SessionCookieName {
+				token = tokens[i]
+				sessionJWT = token.JWT
+			}
+		}
+		Options(options).SetCookies(cookies)
+		token, err = auth.validateJWT(sessionJWT)
 		if err != nil {
 			logger.LogError("unable to validate refreshed token", err)
 			return false, nil, err
@@ -307,23 +342,29 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 	return true, NewAuthenticationInfo(token), nil
 }
 
-func (auth *authenticationService) extractToken(bodyStr string) (*Token, error) {
+func (auth *authenticationService) extractTokens(bodyStr string) ([]*Token, error) {
 	if bodyStr == "" {
 		return nil, nil
 	}
-
-	var t struct{ JWT string }
+	t := JWTResponse{}
 	err := utils.Unmarshal([]byte(bodyStr), &t)
 	if err != nil {
 		logger.LogError("unable to parse token from response", err)
 		return nil, err
 	}
 
-	if t.JWT == "" {
+	if len(t.JWTS) == 0 {
 		return nil, nil
 	}
-
-	return auth.validateJWT(t.JWT)
+	var tokens []*Token
+	for i := range t.JWTS {
+		token, err := auth.validateJWT(t.JWTS[i])
+		if err != nil {
+			return nil, err
+		}
+		tokens = append(tokens, token)
+	}
+	return tokens, nil
 }
 
 func (auth *authenticationService) validateJWT(JWT string) (*Token, error) {
@@ -335,7 +376,6 @@ func (auth *authenticationService) validateJWT(JWT string) (*Token, error) {
 			err = parseErr
 		}
 	}
-
 	return NewToken(JWT, token), err
 }
 
@@ -361,12 +401,14 @@ func (*authenticationService) verifyDeliveryMethod(method DeliveryMethod, identi
 	return nil
 }
 
-func createSessionCookie(token *Token) *http.Cookie {
-	cookie := &http.Cookie{Path: "/", Name: SessionCookieName, Value: ""}
+func createCookie(token *Token) *http.Cookie {
 	if token != nil {
-		cookie.Value = token.JWT
+		path, _ := token.Claims["path"].(string)
+		domain, _ := token.Claims["domain"].(string)
+		name, _ := token.Claims["cookieName"].(string)
+		return &http.Cookie{Path: path, Domain: domain, Name: name, Value: token.JWT, HttpOnly: true}
 	}
-	return cookie
+	return nil
 }
 
 func getSessionToken(cookies []*http.Cookie) string {
