@@ -407,15 +407,6 @@ func createCookie(token *Token) *http.Cookie {
 	return nil
 }
 
-func getSessionToken(cookies []*http.Cookie) string {
-	for _, cookie := range cookies {
-		if cookie.Name == SessionCookieName {
-			return cookie.Value
-		}
-	}
-	return ""
-}
-
 func provideTokens(r *http.Request) (string, string) {
 	sessionToken := ""
 	if sessionCookie, _ := r.Cookie(SessionCookieName); sessionCookie != nil {
