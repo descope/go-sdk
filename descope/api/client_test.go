@@ -33,7 +33,7 @@ func TestGetRequest(t *testing.T) {
 		assert.EqualValues(t, projectID, actualProject)
 		return &http.Response{Body: io.NopCloser(strings.NewReader(expectedResponse)), StatusCode: http.StatusOK}, nil
 	})})
-	res, err := c.DoGetRequest("path", &HTTPRequest{QueryParams: map[string]string{"test": "1"}})
+	res, err := c.DoGetRequest("path", &HTTPRequest{QueryParams: map[string]string{"test": "1"}}, "")
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedResponse, res.BodyStr)
 }
@@ -58,7 +58,7 @@ func TestPostRequest(t *testing.T) {
 	})})
 
 	actualOutput := &dummy{}
-	res, err := c.DoPostRequest("path", strings.NewReader("test"), &HTTPRequest{ResBodyObj: actualOutput, Headers: expectedHeaders})
+	res, err := c.DoPostRequest("path", strings.NewReader("test"), &HTTPRequest{ResBodyObj: actualOutput, Headers: expectedHeaders}, "")
 	require.NoError(t, err)
 	assert.EqualValues(t, string(outputBytes), res.BodyStr)
 	assert.EqualValues(t, expectedOutput, actualOutput)
@@ -75,7 +75,7 @@ func TestPostCustomHeaders(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK}, nil
 	})})
 
-	_, err := c.DoPostRequest("path", nil, nil)
+	_, err := c.DoPostRequest("path", nil, nil, "")
 	require.NoError(t, err)
 }
 
@@ -94,7 +94,7 @@ func TestPostCustomURL(t *testing.T) {
 
 	req, err := http.NewRequest(http.MethodPost, "hello.com/path?test=1", bytes.NewBufferString(body))
 	require.NoError(t, err)
-	res, err := c.DoPostRequest("path", nil, &HTTPRequest{Request: req, BaseURL: "https://overriden.com"})
+	res, err := c.DoPostRequest("path", nil, &HTTPRequest{Request: req, BaseURL: "https://overriden.com"}, "")
 	require.NoError(t, err)
 	assert.EqualValues(t, http.StatusOK, res.Res.StatusCode)
 }
@@ -107,7 +107,7 @@ func TestPostCustomBaseURL(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK}, nil
 	})})
 
-	res, err := c.DoPostRequest("path", nil, &HTTPRequest{BaseURL: url})
+	res, err := c.DoPostRequest("path", nil, &HTTPRequest{BaseURL: url}, "")
 	require.NoError(t, err)
 	assert.EqualValues(t, http.StatusOK, res.Res.StatusCode)
 }
@@ -119,7 +119,7 @@ func TestPostUnauthorized(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusUnauthorized}, nil
 	})})
 
-	_, err := c.DoPostRequest("path", nil, nil)
+	_, err := c.DoPostRequest("path", nil, nil, "")
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -132,7 +132,7 @@ func TestPostWebError(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusBadRequest, Body: io.NopCloser(strings.NewReader(fmt.Sprintf(`{ "error": "%s" }`, code)))}, nil
 	})})
 
-	_, err := c.DoPostRequest("path", nil, nil)
+	_, err := c.DoPostRequest("path", nil, nil, "")
 	require.Error(t, err)
 	assert.EqualValues(t, code, err.(*errors.WebError).Code)
 }
@@ -145,7 +145,7 @@ func TestPostError(t *testing.T) {
 		return nil, fmt.Errorf(expectedErr)
 	})})
 
-	_, err := c.DoPostRequest("path", nil, nil)
+	_, err := c.DoPostRequest("path", nil, nil, "")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), expectedErr)
 }
@@ -158,7 +158,7 @@ func TestPostUnknownError(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusBadRequest, Body: io.NopCloser(strings.NewReader(code))}, nil
 	})})
 
-	_, err := c.DoPostRequest("path", nil, nil)
+	_, err := c.DoPostRequest("path", nil, nil, "")
 	require.Error(t, err)
 	assert.EqualValues(t, code, err.Error())
 }
@@ -170,7 +170,7 @@ func TestPostNotFoundError(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusNotFound, Request: r}, nil
 	})})
 
-	_, err := c.DoPostRequest("path", nil, nil)
+	_, err := c.DoPostRequest("path", nil, nil, "")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "404")
 }

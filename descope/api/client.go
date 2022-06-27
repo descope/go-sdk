@@ -166,11 +166,11 @@ func NewClient(conf ClientParams) *Client {
 	}
 }
 
-func (c *Client) DoGetRequest(uri string, options *HTTPRequest) (*HTTPResponse, error) {
-	return c.DoRequest(http.MethodGet, uri, nil, options)
+func (c *Client) DoGetRequest(uri string, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
+	return c.DoRequest(http.MethodGet, uri, nil, options, pswd)
 }
 
-func (c *Client) DoPostRequest(uri string, body interface{}, options *HTTPRequest) (*HTTPResponse, error) {
+func (c *Client) DoPostRequest(uri string, body interface{}, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
 	if options == nil {
 		options = &HTTPRequest{}
 	}
@@ -190,10 +190,10 @@ func (c *Client) DoPostRequest(uri string, body interface{}, options *HTTPReques
 		}
 	}
 
-	return c.DoRequest(http.MethodPost, uri, payload, options)
+	return c.DoRequest(http.MethodPost, uri, payload, options, pswd)
 }
 
-func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTPRequest) (*HTTPResponse, error) {
+func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
 	if options == nil {
 		options = &HTTPRequest{}
 	}
@@ -241,7 +241,7 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 		req.AddCookie(cookie)
 	}
 
-	req.SetBasicAuth(c.conf.ProjectID, "")
+	req.SetBasicAuth(c.conf.ProjectID, pswd)
 
 	logger.LogDebug("sending request to [%s]", url)
 	response, err := c.httpClient.Do(req)
