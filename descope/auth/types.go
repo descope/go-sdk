@@ -20,6 +20,10 @@ type Token struct {
 	Claims     map[string]interface{}
 }
 
+type JWTResponse struct {
+	JWTS []string `json:"jwts"`
+}
+
 type MagicLinkResponse struct {
 	PendingRef string `json:"pendingRef"` // Pending referral code used to poll magic link authentication status
 }
