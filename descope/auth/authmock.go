@@ -29,6 +29,14 @@ type MockDescopeAuthentication struct {
 	SignInMagicLinkCrossDeviceResponseError error
 	MagicLinkPendingLinkCrossDeviceResponse *MagicLinkResponse
 	AssertVerifyMagicLink                   func(token string)
+	SignUpWebAuthnStartResponseError        error
+	SignUpWebAuthnStartResponseTransaction  *WebAuthnTransactionResponse
+	SignUpWebAuthnFinishResponseError       error
+	SignUpWebAuthnFinishResponseInfo        *AuthenticationInfo
+	SignInWebAuthnStartResponseError        error
+	SignInWebAuthnStartResponseTransaction  *WebAuthnTransactionResponse
+	SignInWebAuthnFinishResponseError       error
+	SignInWebAuthnFinishResponseInfo        *AuthenticationInfo
 }
 
 func (m MockDescopeAuthentication) SignInOTP(method DeliveryMethod, identifier string) error {
@@ -137,4 +145,20 @@ func (m MockDescopeAuthentication) Logout(_ *http.Request, _ http.ResponseWriter
 
 func (m MockDescopeAuthentication) LogoutWithOptions(_ *http.Request, _ ...Option) error {
 	return m.LogoutResponseError
+}
+
+func (m MockDescopeAuthentication) SignUpWebAuthnStart(user *User) (*WebAuthnTransactionResponse, error) {
+	return m.SignUpWebAuthnStartResponseTransaction, m.SignUpWebAuthnStartResponseError
+}
+
+func (m MockDescopeAuthentication) SignUpWebAuthnFinish(r *WebAuthnFinishRequest) (*AuthenticationInfo, error) {
+	return m.SignUpWebAuthnFinishResponseInfo, m.SignUpWebAuthnFinishResponseError
+}
+
+func (m MockDescopeAuthentication) SignInWebAuthnStart(string) (*WebAuthnTransactionResponse, error) {
+	return m.SignInWebAuthnStartResponseTransaction, m.SignInWebAuthnStartResponseError
+}
+
+func (m MockDescopeAuthentication) SignInWebAuthnFinish(*WebAuthnFinishRequest) (*AuthenticationInfo, error) {
+	return m.SignInWebAuthnFinishResponseInfo, m.SignInWebAuthnFinishResponseError
 }

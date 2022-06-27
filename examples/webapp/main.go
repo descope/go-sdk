@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/json"
 	"encoding/pem"
 	goErrors "errors"
 	"fmt"
@@ -60,6 +61,70 @@ func main() {
 	router.HandleFunc("/magiclink/signup", handleMagicLinkSignUp).Methods(http.MethodGet)
 	router.HandleFunc("/magiclink/verify", handleMagicLinkVerify).Methods(http.MethodGet)
 	router.HandleFunc("/magiclink/session", handleGetMagicLinkSession).Methods(http.MethodGet)
+
+	router.HandleFunc("/webauthn", func(w http.ResponseWriter, r *http.Request) {
+							file, _ := os.ReadFile("../demo.html")
+							w.WriteHeader(http.StatusOK)
+							w.Write(file)
+						}).Methods(http.MethodGet)
+
+	router.HandleFunc("/webauthn/signup/start", func(w http.ResponseWriter, r *http.Request) {
+		decoder := json.NewDecoder(r.Body)
+		var t *auth.User
+		err := decoder.Decode(&t)
+		if err != nil {
+			setError(w, err.Error())
+			return
+		}
+	
+		res, err := client.Auth.SignUpWebAuthnStart(t)
+		if err != nil {
+			setError(w, err.Error())
+		}
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(res)
+	}).Methods(http.MethodPost)
+	router.HandleFunc("/webauthn/signup/finish", func(w http.ResponseWriter, r *http.Request) {
+		decoder := json.NewDecoder(r.Body)
+		var t *auth.WebAuthnFinishRequest
+		err := decoder.Decode(&t)
+		if err != nil {
+			setError(w, err.Error())
+			return
+		}
+	
+		_, err = client.Auth.SignUpWebAuthnFinish(t)
+		if err != nil {
+			setError(w, err.Error())
+		}
+		setOK(w)
+	}).Methods(http.MethodPost)
+
+	router.HandleFunc("/webauthn/signin/start", func(w http.ResponseWriter, r *http.Request) {
+		res, err := client.Auth.SignInWebAuthnStart(getQuery(r, "id"))
+		if err != nil {
+			setError(w, err.Error())
+		}
+		w.Header().Add("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(res)
+	}).Methods(http.MethodPost)
+	router.HandleFunc("/webauthn/signin/finish", func(w http.ResponseWriter, r *http.Request) {
+		decoder := json.NewDecoder(r.Body)
+		var t *auth.WebAuthnFinishRequest
+		err := decoder.Decode(&t)
+		if err != nil {
+			setError(w, err.Error())
+			return
+		}
+	
+		_, err = client.Auth.SignUpWebAuthnFinish(t)
+		if err != nil {
+			setError(w, err.Error())
+		}
+		setOK(w)
+	}).Methods(http.MethodPost)
 
 	authRouter := router.Methods(http.MethodGet).Subrouter()
 	authRouter.Use(auth.AuthenticationMiddleware(client.Auth, func(w http.ResponseWriter, r *http.Request, err error) {

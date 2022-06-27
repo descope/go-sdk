@@ -25,23 +25,31 @@ var (
 	Routes = endpoints{
 		version: "/v1/",
 		auth: struct {
-			signInOTP           string
-			signUpOTP           string
-			verifyCode          string
-			signInMagicLink     string
-			signUpMagicLink     string
-			verifyMagicLink     string
-			oauthStart          string
-			getMagicLinkSession string
+			signInOTP            string
+			signUpOTP            string
+			verifyCode           string
+			signInMagicLink      string
+			signUpMagicLink      string
+			verifyMagicLink      string
+			oauthStart           string
+			webauthnSignupStart  string
+			webauthnSignupFinish string
+			webauthnSigninStart  string
+			webauthnSigninFinish string
+			getMagicLinkSession  string
 		}{
-			signInOTP:           "auth/signin/otp",
-			signUpOTP:           "auth/signup/otp",
-			verifyCode:          "auth/code/verify",
-			signInMagicLink:     "auth/signin/magiclink",
-			signUpMagicLink:     "auth/signup/magiclink",
-			verifyMagicLink:     "auth/magiclink/verify",
-			oauthStart:          "oauth/authorize",
-			getMagicLinkSession: "auth/magiclink/session",
+			signInOTP:            "auth/signin/otp",
+			signUpOTP:            "auth/signup/otp",
+			verifyCode:           "auth/code/verify",
+			signInMagicLink:      "auth/signin/magiclink",
+			signUpMagicLink:      "auth/signup/magiclink",
+			verifyMagicLink:      "auth/magiclink/verify",
+			oauthStart:           "oauth/authorize",
+			webauthnSigninStart:  "webauthn/signin/start",
+			webauthnSigninFinish: "webauthn/signin/finish",
+			webauthnSignupStart:  "webauthn/signup/start",
+			webauthnSignupFinish: "webauthn/signup/finish",
+			getMagicLinkSession:  "auth/magiclink/session",
 		},
 		logoutAll: "auth/logoutall",
 		keys:      "/keys/",
@@ -52,14 +60,18 @@ var (
 type endpoints struct {
 	version string
 	auth    struct {
-		signInOTP           string
-		signUpOTP           string
-		verifyCode          string
-		signInMagicLink     string
-		signUpMagicLink     string
-		verifyMagicLink     string
-		oauthStart          string
-		getMagicLinkSession string
+		signInOTP            string
+		signUpOTP            string
+		verifyCode           string
+		signInMagicLink      string
+		signUpMagicLink      string
+		verifyMagicLink      string
+		oauthStart           string
+		webauthnSignupStart  string
+		webauthnSignupFinish string
+		webauthnSigninStart  string
+		webauthnSigninFinish string
+		getMagicLinkSession  string
 	}
 	logoutAll string
 	keys      string
@@ -86,6 +98,18 @@ func (e *endpoints) VerifyMagicLink() string {
 }
 func (e *endpoints) OAuthStart() string {
 	return path.Join(e.version, e.auth.oauthStart)
+}
+func (e *endpoints) WebAuthnSignupStart() string {
+	return path.Join(e.version, e.auth.webauthnSignupStart)
+}
+func (e *endpoints) WebAuthnSignupFinish() string {
+	return path.Join(e.version, e.auth.webauthnSignupFinish)
+}
+func (e *endpoints) WebAuthnSigninStart() string {
+	return path.Join(e.version, e.auth.webauthnSigninStart)
+}
+func (e *endpoints) WebAuthnSigninFinish() string {
+	return path.Join(e.version, e.auth.webauthnSigninFinish)
 }
 func (e *endpoints) GetMagicLinkSession() string {
 	return path.Join(e.version, e.auth.getMagicLinkSession)
