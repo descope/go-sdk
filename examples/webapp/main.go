@@ -208,7 +208,7 @@ func handleGetMagicLinkSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	_, err := client.Auth.GetMagicLinkSession(pendingRef, w)
-	if goErrors.Is(err, errors.PendingSessionTokenError) {
+	if goErrors.Is(err, errors.MagicLinkUnauthorized) {
 		setUnauthorized(w, err.Error())
 	}
 	if err != nil {

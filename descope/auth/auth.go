@@ -150,7 +150,7 @@ func (auth *authenticationService) GetMagicLinkSessionWithOptions(pendingRef str
 	httpResponse, err := auth.client.DoPostRequest(composeGetMagicLinkSession(), newAuthenticationGetMagicLinkSessionBody(pendingRef), nil, "")
 	if err != nil {
 		if err == errors.UnauthorizedError {
-			return nil, errors.PendingSessionTokenError
+			return nil, errors.MagicLinkUnauthorized
 		}
 		return nil, err
 	}

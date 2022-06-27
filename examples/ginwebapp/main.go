@@ -140,7 +140,7 @@ func handleGetMagicLinkSession(c *gin.Context) {
 		return
 	}
 	_, err := client.Auth.GetMagicLinkSessionWithOptions(pendingRef, descopegin.WithResponseOption(c))
-	if goErrors.Is(err, descopeerrors.PendingSessionTokenError) {
+	if goErrors.Is(err, descopeerrors.MagicLinkUnauthorized) {
 		setUnauthorized(c, err.Error())
 	}
 	if err != nil {
