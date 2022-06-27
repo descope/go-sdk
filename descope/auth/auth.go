@@ -142,15 +142,15 @@ func (auth *authenticationService) SignUpMagicLinkCrossDevice(method DeliveryMet
 	return getPendingRefFromResponse(httpResponse)
 }
 
-func (auth *authenticationService) GetPendingSession(pendingRef string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.GetPendingSessionWithOptions(pendingRef, WithResponseOption(w))
+func (auth *authenticationService) GetMagicLinkSession(pendingRef string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	return auth.GetMagicLinkSessionWithOptions(pendingRef, WithResponseOption(w))
 }
 
-func (auth *authenticationService) GetPendingSessionWithOptions(pendingRef string, options ...Option) (*AuthenticationInfo, error) {
-	httpResponse, err := auth.client.DoPostRequest(composeGetPendingSession(), newAuthenticationGetPendingSessionBody(pendingRef), nil, "")
+func (auth *authenticationService) GetMagicLinkSessionWithOptions(pendingRef string, options ...Option) (*AuthenticationInfo, error) {
+	httpResponse, err := auth.client.DoPostRequest(composeGetMagicLinkSession(), newAuthenticationGetMagicLinkSessionBody(pendingRef), nil, "")
 	if err != nil {
 		if err == errors.UnauthorizedError {
-			return nil, errors.PendingSessionTokenError
+			return nil, errors.MagicLinkUnauthorized
 		}
 		return nil, err
 	}
@@ -468,6 +468,6 @@ func composeOAuthURL() string {
 	return api.Routes.OAuthStart()
 }
 
-func composeGetPendingSession() string {
-	return api.Routes.GetPendingSession()
+func composeGetMagicLinkSession() string {
+	return api.Routes.GetMagicLinkSession()
 }

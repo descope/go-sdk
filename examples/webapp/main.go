@@ -59,7 +59,7 @@ func main() {
 	router.HandleFunc("/magiclink/signin", handleMagicLinkSignIn).Methods(http.MethodGet)
 	router.HandleFunc("/magiclink/signup", handleMagicLinkSignUp).Methods(http.MethodGet)
 	router.HandleFunc("/magiclink/verify", handleMagicLinkVerify).Methods(http.MethodGet)
-	router.HandleFunc("/session/pending", handleGetPendingSession).Methods(http.MethodGet)
+	router.HandleFunc("/magiclink/session", handleGetMagicLinkSession).Methods(http.MethodGet)
 
 	authRouter := router.Methods(http.MethodGet).Subrouter()
 	authRouter.Use(auth.AuthenticationMiddleware(client.Auth, func(w http.ResponseWriter, r *http.Request, err error) {
@@ -201,14 +201,14 @@ func handleMagicLinkVerify(w http.ResponseWriter, r *http.Request) {
 	setOK(w)
 }
 
-func handleGetPendingSession(w http.ResponseWriter, r *http.Request) {
+func handleGetMagicLinkSession(w http.ResponseWriter, r *http.Request) {
 	pendingRef := getQuery(r, "pendingRef")
 	if pendingRef == "" {
 		setError(w, "pending reference is empty")
 		return
 	}
-	_, err := client.Auth.GetPendingSession(pendingRef, w)
-	if goErrors.Is(err, errors.PendingSessionTokenError) {
+	_, err := client.Auth.GetMagicLinkSession(pendingRef, w)
+	if goErrors.Is(err, errors.MagicLinkUnauthorized) {
 		setUnauthorized(w, err.Error())
 	}
 	if err != nil {

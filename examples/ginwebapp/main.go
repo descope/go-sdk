@@ -55,7 +55,7 @@ func main() {
 
 	r.GET("/magiclink/signin", handleMagicLinkSignIn)
 	r.GET("/magiclink/signup", handleMagicLinkSignUp)
-	r.GET("/session/pending", handleGetPendingSession)
+	r.GET("/magiclink/session", handleGetMagicLinkSession)
 	r.GET("/magiclink/verify", handleMagicLinkVerify)
 
 	authorized := r.Group("/")
@@ -133,14 +133,14 @@ func handleMagicLinkSignUp(c *gin.Context) {
 	c.JSON(http.StatusOK, magicLinkResponse)
 }
 
-func handleGetPendingSession(c *gin.Context) {
+func handleGetMagicLinkSession(c *gin.Context) {
 	pendingRef := c.Query("pendingRef")
 	if pendingRef == "" {
 		setError(c, "pending reference is empty")
 		return
 	}
-	_, err := client.Auth.GetPendingSessionWithOptions(pendingRef, descopegin.WithResponseOption(c))
-	if goErrors.Is(err, descopeerrors.PendingSessionTokenError) {
+	_, err := client.Auth.GetMagicLinkSessionWithOptions(pendingRef, descopegin.WithResponseOption(c))
+	if goErrors.Is(err, descopeerrors.MagicLinkUnauthorized) {
 		setUnauthorized(c, err.Error())
 	}
 	if err != nil {
@@ -175,8 +175,8 @@ func handleOTPVerify(c *gin.Context) {
 	if err != nil {
 		setError(c, err.Error())
 		return
-   }
-   setOK(c)
+	}
+	setOK(c)
 }
 
 func handleOAuth(c *gin.Context) {
