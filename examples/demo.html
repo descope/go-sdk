@@ -10,21 +10,9 @@
     body {
       font-family: sans-serif;
       background: #3498db;
-      margin: 0 auto 0 auto;
+      margin: 0 auto;
       width: 100%;
       text-align: center;
-      margin: 20px 0px 20px 0px;
-    }
-
-    p {
-      font-size: 12px;
-      text-decoration: none;
-      color: #ffffff;
-    }
-
-    h1 {
-      font-size: 1.5em;
-      color: #525252;
     }
 
     .box {
@@ -32,95 +20,35 @@
       width: 300px;
       border-radius: 6px;
       margin: 0 auto 0 auto;
-      padding: 0px 0px 70px 0px;
+      padding: 10px;
       border: #2980b9 4px solid;
+      display: flex;
+      flex-direction: column;
     }
 
-    .email {
-      background: #ecf0f1;
-      border: #ccc 1px solid;
-      border-bottom: #ccc 2px solid;
+    input {
+      height: 20px;
       padding: 8px;
-      width: 250px;
-      color: #606060;
-      margin-top: 10px;
       font-size: 1em;
-      border-radius: 4px;
+      border: 1px solid;
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 5px;
+      width: 125px;
+      color: white;
     }
 
     #register {
       background: #2ecc71;
-      width: 125px;
-      padding-top: 5px;
-      padding-bottom: 5px;
-      color: white;
-      border-radius: 4px;
-      border: #27ae60 1px solid;
-      margin-top: 20px;
-      margin-bottom: 20px;
-      float: left;
-      margin-left: 16px;
-      font-weight: 800;
-      font-size: 0.8em;
-    }
-
-    #register:hover {
-      background: #2CC06B;
     }
 
     #login {
-      float: left;
       background: #3498db;
-      width: 125px;
-      padding-top: 5px;
-      padding-bottom: 5px;
-      color: white;
-      border-radius: 4px;
-      border: #2980b9 1px solid;
-      margin-top: 20px;
-      margin-bottom: 20px;
-      margin-left: 10px;
-      font-weight: 800;
-      font-size: 0.8em;
-    }
-
-    #login:hover {
-      background: #3594D2;
     }
   </style>
-
-</head>
-
-<body>
-  <form>
-    <div class="box">
-      <h1>Webauthn</h1>
-      <input id="email" class="email" type="email" name="email" placeholder="email" value="gil@descope.com" />
-      <a href="#">
-        <div id="register">Register</div>
-      </a>
-      <a href="#">
-        <div id="login">Login</div>
-      </a>
-    </div>
-  </form>
-
   <script>
-    $(document).ready(() => {
-      $('.box').hide().fadeIn(1000)
-      ensureWebauthn()
-    })
-
-    $('#register').click((event) => {
-      event.preventDefault()
-      performRegister()
-    })
-
-    $('#login').click((event) => {
-      event.preventDefault()
-      performLogin()
-    })
-
     /// Actions
 
     function ensureWebauthn() {
@@ -281,10 +209,34 @@
       if (!response.ok) {
         throw Error(`Server returned status code ${response.status}`)
       }
-      const json = await response.json()
-      return json
+      try {
+        const json = await response.json()
+        return json
+      } catch (error) {
+        console.log(error)
+      }
     }
+
+    ensureWebauthn()
   </script>
+
+</head>
+
+<body>
+  <form>
+    <div class="box">
+      <h1>Webauthn</h1>
+      <input id="email" class="email" type="email" name="email" placeholder="email" value="" required />
+      <div class="actions">
+        <button id="register" onclick="performRegister()">
+          Register
+        </button>
+        <button id="login" onclick="performLogin()">
+          Login
+        </button>
+      </div>
+    </div>
+  </form>
 </body>
 
 </html>

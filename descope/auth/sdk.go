@@ -84,10 +84,10 @@ type Authentication interface {
 	ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, *AuthenticationInfo, error)
 
 	SignUpWebAuthnStart(user *User) (*WebAuthnTransactionResponse, error)
-	SignUpWebAuthnFinish(*WebAuthnFinishRequest) (*AuthenticationInfo, error)
+	SignUpWebAuthnFinish(finishRequest *WebAuthnFinishRequest, options ...Option) (*AuthenticationInfo, error)
 
 	SignInWebAuthnStart(identifier string) (*WebAuthnTransactionResponse, error)
-	SignInWebAuthnFinish(*WebAuthnFinishRequest) (*AuthenticationInfo, error)
+	SignInWebAuthnFinish(finishRequest *WebAuthnFinishRequest, options ...Option) (*AuthenticationInfo, error)
 
 	// Logout - Use to perform logout from all active devices. This will revoke the given tokens
 	// and if given options will also remove existing session on the given response sent to the client.

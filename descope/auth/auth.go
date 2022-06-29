@@ -38,28 +38,6 @@ func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (*MagicLinkRespon
 	return response, nil
 }
 
-// extracts authentication info from response cookies, and set it on options
-func (auth *authenticationService) authenticationInfoFromResponse(httpResponse *api.HTTPResponse, options ...Option) (*AuthenticationInfo, error) {
-	tokens, err := auth.extractTokens(httpResponse.BodyStr)
-	if err != nil {
-		logger.LogError("unable to validate refreshed token", err)
-		return nil, err
-	}
-	cookies := httpResponse.Res.Cookies()
-	var token *Token
-	for i := range tokens {
-		ck := createCookie(tokens[i])
-		if ck != nil {
-			cookies = append(cookies, ck)
-		}
-		if tokens[i].Claims["cookieName"] == SessionCookieName {
-			token = tokens[i]
-		}
-	}
-	Options(options).SetCookies(cookies)
-	return NewAuthenticationInfo(token), nil
-}
-
 func (auth *authenticationService) OAuthStart(provider OAuthProvider, w http.ResponseWriter) (string, error) {
 	return auth.OAuthStartWithOptions(provider, WithResponseOption(w))
 }
@@ -264,6 +242,27 @@ func (*authenticationService) verifyDeliveryMethod(method DeliveryMethod, identi
 		}
 	}
 	return nil
+}
+
+func (auth *authenticationService) generateAuthenticationInfo(httpResponse *api.HTTPResponse, options ...Option) (*AuthenticationInfo, error) {
+	tokens, err := auth.extractTokens(httpResponse.BodyStr)
+	if err != nil {
+		logger.LogError("unable to extract tokens from request [%s]", err, httpResponse.Req.URL)
+		return nil, err
+	}
+	cookies := httpResponse.Res.Cookies()
+	var token *Token
+	for i := range tokens {
+		ck := createCookie(tokens[i])
+		if ck != nil {
+			cookies = append(cookies, ck)
+		}
+		if tokens[i].Claims["cookieName"] == SessionCookieName {
+			token = tokens[i]
+		}
+	}
+	Options(options).SetCookies(cookies)
+	return NewAuthenticationInfo(token), err
 }
 
 func createCookie(token *Token) *http.Cookie {

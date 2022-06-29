@@ -13,6 +13,7 @@ import (
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/tests/mocks"
+	"github.com/descope/go-sdk/descope/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -59,10 +60,20 @@ var (
 	mockAuthSessionBody = fmt.Sprintf(`{"jwts": ["%s"]}`, jwtTokenValid)
 )
 
-func readBody(r *http.Request) (m map[string]interface{}, err error) {
-	res, err := io.ReadAll(r.Body)
+func readBodyMap(r *http.Request) (m map[string]interface{}, err error) {
+	m = map[string]interface{}{}
+	err = readBody(r, &m)
+	return m, err
+}
+
+func readBody(r *http.Request, m interface{}) (err error) {
+	reader, err := r.GetBody()
 	if err != nil {
-		return nil, err
+		return err
+	}
+	res, err := io.ReadAll(reader)
+	if err != nil {
+		return err
 	}
 	err = json.Unmarshal(res, &m)
 	return
@@ -73,7 +84,22 @@ func DoOk(checks func(*http.Request)) mocks.Do {
 		if checks != nil {
 			checks(r)
 		}
-		res := &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Set-Cookie": []string{mockAuthSessionCookie.String(), mockAuthRefreshCookie.String()}}}
+		res := &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}
+		return res, nil
+	}
+}
+
+func DoOkWithBody(checks func(*http.Request), body interface{}) mocks.Do {
+	return func(r *http.Request) (*http.Response, error) {
+		if checks != nil {
+			checks(r)
+		}
+
+		b, err := utils.Marshal(body)
+		if err != nil {
+			return nil, err
+		}
+		res := &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(b))}
 		return res, nil
 	}
 }
@@ -141,7 +167,7 @@ func TestValidEmailSignInEmail(t *testing.T) {
 	email := "test@email.com"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeSignInURL(MethodEmail), r.URL.RequestURI())
-		body, err := readBody(r)
+		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, email, body["externalID"])
 	}))
@@ -156,7 +182,7 @@ func TestSignInMagicLinkEmail(t *testing.T) {
 
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeMagicLinkSignInURL(MethodEmail), r.URL.RequestURI())
-		body, err := readBody(r)
+		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, email, body["externalID"])
 		assert.EqualValues(t, uri, body["URI"])
@@ -173,7 +199,7 @@ func TestSignInMagicLinkEmailCrossDevice(t *testing.T) {
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeMagicLinkSignInURL(MethodEmail), r.URL.RequestURI())
 
-		m, err := readBody(r)
+		m, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, email, m["externalID"])
 		assert.EqualValues(t, uri, m["URI"])
@@ -247,7 +273,7 @@ func TestSignUpEmail(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeSignUpURL(MethodEmail), r.URL.RequestURI())
 
-		m, err := readBody(r)
+		m, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["username"])
@@ -263,7 +289,7 @@ func TestSignUpMagicLinkEmail(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeMagicLinkSignUpURL(MethodEmail), r.URL.RequestURI())
 
-		m, err := readBody(r)
+		m, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, uri, m["URI"])
@@ -281,7 +307,7 @@ func TestSignUpMagicLinkEmailCrossDevice(t *testing.T) {
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeMagicLinkSignUpURL(MethodEmail), r.URL.RequestURI())
 
-		m, err := readBody(r)
+		m, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, uri, m["URI"])
@@ -299,14 +325,13 @@ func TestSignUpMagicLinkEmailCrossDevice(t *testing.T) {
 
 func TestGetMagicLinkSession(t *testing.T) {
 	pendingRef := "pending_ref"
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeGetMagicLinkSession(), r.URL.RequestURI())
 
-		body, err := readBody(r)
+		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, pendingRef, body["pendingRef"])
-		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
-	})
+	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
 	info, err := a.GetMagicLinkSession(pendingRef, w)
@@ -346,7 +371,7 @@ func TestSignUpSMS(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeSignUpURL(MethodSMS), r.URL.RequestURI())
 
-		body, err := readBody(r)
+		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["phone"])
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["username"])
@@ -389,7 +414,7 @@ func TestSignUpMagicLinkSMS(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeMagicLinkSignUpURL(MethodSMS), r.URL.RequestURI())
 
-		body, err := readBody(r)
+		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["phone"])
 		assert.EqualValues(t, uri, body["URI"])
@@ -405,7 +430,7 @@ func TestSignUpWhatsApp(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeSignUpURL(MethodWhatsApp), r.URL.RequestURI())
 
-		body, err := readBody(r)
+		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["whatsapp"])
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["username"])
@@ -421,7 +446,7 @@ func TestSignUpMagicLinkWhatsApp(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeMagicLinkSignUpURL(MethodWhatsApp), r.URL.RequestURI())
 
-		body, err := readBody(r)
+		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["whatsapp"])
 		assert.EqualValues(t, uri, body["URI"])
@@ -437,7 +462,7 @@ func TestVerifyMagicLinkCodeWithSession(t *testing.T) {
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeVerifyMagicLinkURL(), r.URL.RequestURI())
 
-		body, err := readBody(r)
+		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, token, body["token"])
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
@@ -458,7 +483,7 @@ func TestVerifyMagicLinkCodeNoSession(t *testing.T) {
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeVerifyMagicLinkURL(), r.URL.RequestURI())
 
-		body, err := readBody(r)
+		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, token, body["token"])
 		return &http.Response{StatusCode: http.StatusOK}, nil
@@ -493,7 +518,7 @@ func TestVerifyCodeDetectEmail(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeVerifyCodeURL(MethodEmail), r.URL.RequestURI())
 
-		body, err := readBody(r)
+		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, email, body["externalID"])
 	}))
@@ -507,7 +532,7 @@ func TestVerifyCodeDetectPhone(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeVerifyCodeURL(MethodSMS), r.URL.RequestURI())
 
-		body, err := readBody(r)
+		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["externalID"])
 	}))
@@ -521,7 +546,7 @@ func TestVerifyCodeWithPhone(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeVerifyCodeURL(MethodSMS), r.URL.RequestURI())
 
-		body, err := readBody(r)
+		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["externalID"])
 		assert.EqualValues(t, "4444", body["code"])
@@ -537,7 +562,7 @@ func TestVerifyCodeEmail(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeVerifyCodeURL(MethodEmail), r.URL.RequestURI())
 
-		body, err := readBody(r)
+		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, email, body["externalID"])
 		assert.EqualValues(t, code, body["code"])
@@ -553,7 +578,7 @@ func TestVerifyCodeSMS(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeVerifyCodeURL(MethodSMS), r.URL.RequestURI())
 
-		body, err := readBody(r)
+		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["externalID"])
 		assert.EqualValues(t, code, body["code"])
@@ -569,7 +594,7 @@ func TestVerifyCodeWhatsApp(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeVerifyCodeURL(MethodWhatsApp), r.URL.RequestURI())
 
-		body, err := readBody(r)
+		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["externalID"])
 		assert.EqualValues(t, code, body["code"])
@@ -585,7 +610,7 @@ func TestVerifyCodeEmailResponseOption(t *testing.T) {
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeVerifyCodeURL(MethodEmail), r.URL.RequestURI())
 
-		body, err := readBody(r)
+		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, email, body["externalID"])
 		assert.EqualValues(t, code, body["code"])
@@ -607,7 +632,7 @@ func TestVerifyCodeEmailResponseNil(t *testing.T) {
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeVerifyCodeURL(MethodEmail), r.URL.RequestURI())
 
-		body, err := readBody(r)
+		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, email, body["externalID"])
 		assert.EqualValues(t, code, body["code"])
@@ -621,6 +646,61 @@ func TestVerifyCodeEmailResponseNil(t *testing.T) {
 	require.NotEmpty(t, info)
 	require.NotEmpty(t, info.SessionToken)
 	assert.EqualValues(t, jwtTokenValid, info.SessionToken.JWT)
+}
+
+func TestSignUpWebAuthnStart(t *testing.T) {
+	expectedResponse := WebAuthnTransactionResponse{TransactionID: "a"}
+	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
+		req := authenticationWebAuthnSignUpRequestBody{}
+		err := readBody(r, &req)
+		require.NoError(t, err)
+		assert.EqualValues(t, "test@test.com", req.User.Email)
+	}, expectedResponse))
+	require.NoError(t, err)
+	res, err := a.SignUpWebAuthnStart(&User{Email: "test@test.com"})
+	require.NoError(t, err)
+	assert.EqualValues(t, expectedResponse.TransactionID, res.TransactionID)
+}
+
+func TestSignInWebAuthnFinish(t *testing.T) {
+	expectedResponse := &WebAuthnFinishRequest{TransactionID: "a"}
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	res, err := a.SignInWebAuthnFinish(expectedResponse)
+	require.NoError(t, err)
+	assert.EqualValues(t, jwtTokenValid, res.SessionToken.JWT)
+}
+
+func TestSignInWebAuthnStart(t *testing.T) {
+	expectedResponse := WebAuthnTransactionResponse{TransactionID: "a"}
+	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
+		req := authenticationRequestBody{}
+		err := readBody(r, &req)
+		require.NoError(t, err)
+		assert.EqualValues(t, "a", req.ExternalID)
+	}, expectedResponse))
+	require.NoError(t, err)
+	res, err := a.SignInWebAuthnStart("a")
+	require.NoError(t, err)
+	assert.EqualValues(t, expectedResponse.TransactionID, res.TransactionID)
+}
+
+func TestSignInWebAuthnStartEmpty(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	res, err := a.SignInWebAuthnStart("")
+	require.Error(t, err)
+	assert.Empty(t, res)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+}
+
+func TestSignUpWebAuthnFinish(t *testing.T) {
+	expectedResponse := &WebAuthnFinishRequest{TransactionID: "a"}
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	res, err := a.SignUpWebAuthnFinish(expectedResponse)
+	require.NoError(t, err)
+	assert.EqualValues(t, jwtTokenValid, res.SessionToken.JWT)
 }
 
 func TestAuthDefaultURL(t *testing.T) {
@@ -914,6 +994,22 @@ func TestAuthenticationMiddlewareSuccess(t *testing.T) {
 	res := httptest.NewRecorder()
 	handlerToTest.ServeHTTP(res, req)
 	assert.EqualValues(t, http.StatusTeapot, res.Result().StatusCode)
+}
+
+func TestExtractTokensEmpty(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	tokens, err := a.extractTokens(`{ "jwts": [] }`)
+	require.NoError(t, err)
+	require.Len(t, tokens, 0)
+}
+
+func TestExtractTokensInvalid(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	tokens, err := a.extractTokens(`{ "jwts": ["aaaaaa"] }`)
+	require.Error(t, err)
+	require.Empty(t, tokens)
 }
 
 func BenchmarkValidateSession(b *testing.B) {

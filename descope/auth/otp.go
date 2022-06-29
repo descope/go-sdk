@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/descope/go-sdk/descope/errors"
-	"github.com/descope/go-sdk/descope/logger"
 )
 
 func (auth *authenticationService) SignInOTP(method DeliveryMethod, identifier string) error {
@@ -51,22 +50,5 @@ func (auth *authenticationService) VerifyCodeWithOptions(method DeliveryMethod, 
 	if err != nil {
 		return nil, err
 	}
-	tokens, err := auth.extractTokens(httpResponse.BodyStr)
-	if err != nil {
-		logger.LogError("unable to extract tokens", err)
-		return nil, err
-	}
-	cookies := httpResponse.Res.Cookies()
-	var token *Token
-	for i := range tokens {
-		ck := createCookie(tokens[i])
-		if ck != nil {
-			cookies = append(cookies, ck)
-		}
-		if tokens[i].Claims["cookieName"] == SessionCookieName {
-			token = tokens[i]
-		}
-	}
-	Options(options).SetCookies(cookies)
-	return NewAuthenticationInfo(token), err
+	return auth.generateAuthenticationInfo(httpResponse, options...)
 }

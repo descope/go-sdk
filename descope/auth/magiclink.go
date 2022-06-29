@@ -58,7 +58,7 @@ func (auth *authenticationService) GetMagicLinkSessionWithOptions(pendingRef str
 		}
 		return nil, err
 	}
-	return auth.authenticationInfoFromResponse(httpResponse, options...)
+	return auth.generateAuthenticationInfo(httpResponse, options...)
 }
 
 func (auth *authenticationService) VerifyMagicLink(token string, w http.ResponseWriter) (*AuthenticationInfo, error) {
@@ -70,5 +70,5 @@ func (auth *authenticationService) VerifyMagicLinkWithOptions(token string, opti
 	if err != nil {
 		return nil, err
 	}
-	return auth.authenticationInfoFromResponse(httpResponse, options...)
+	return auth.generateAuthenticationInfo(httpResponse, options...)
 }

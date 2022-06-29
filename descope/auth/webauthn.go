@@ -1,8 +1,6 @@
 package auth
 
 import (
-	"fmt"
-
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/utils"
@@ -19,13 +17,12 @@ func (auth *authenticationService) SignUpWebAuthnStart(user *User) (*WebAuthnTra
 	return webAuthnResponse, err
 }
 
-func (auth *authenticationService) SignUpWebAuthnFinish(request *WebAuthnFinishRequest) (*AuthenticationInfo, error) {
+func (auth *authenticationService) SignUpWebAuthnFinish(request *WebAuthnFinishRequest, options ...Option) (*AuthenticationInfo, error) {
 	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignupFinish(), request, &api.HTTPRequest{BaseURL: "http://localhost:8181"}, "")
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(res.BodyStr)
-	return NewAuthenticationInfo(nil), nil
+	return auth.generateAuthenticationInfo(res, options...)
 }
 
 func (auth *authenticationService) SignInWebAuthnStart(identifier string) (*WebAuthnTransactionResponse, error) {
@@ -44,11 +41,10 @@ func (auth *authenticationService) SignInWebAuthnStart(identifier string) (*WebA
 
 }
 
-func (auth *authenticationService) SignInWebAuthnFinish(request *WebAuthnFinishRequest) (*AuthenticationInfo, error) {
+func (auth *authenticationService) SignInWebAuthnFinish(request *WebAuthnFinishRequest, options ...Option) (*AuthenticationInfo, error) {
 	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSigninFinish(), request, &api.HTTPRequest{BaseURL: "http://localhost:8181"}, "")
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(res.BodyStr)
-	return NewAuthenticationInfo(nil), nil
+	return auth.generateAuthenticationInfo(res, options...)
 }
