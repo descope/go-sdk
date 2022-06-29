@@ -119,7 +119,7 @@ func main() {
 			return
 		}
 	
-		_, err = client.Auth.SignUpWebAuthnFinish(t, auth.WithResponseOption(w))
+		_, err = client.Auth.SignInWebAuthnFinish(t, auth.WithResponseOption(w))
 		if err != nil {
 			setError(w, err.Error())
 		}
