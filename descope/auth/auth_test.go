@@ -800,13 +800,20 @@ func TestValidateSessionRequest(t *testing.T) {
 	require.EqualValues(t, jwtTokenValid, info.SessionToken.JWT)
 }
 
-func TestValidateSessionRequestMissingRefreshCookie(t *testing.T) {
+func TestValidateSessionRequestMissingCookie(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenValid})
 	ok, cookies, err := a.ValidateSessionWithOptions(request)
-	require.Error(t, err)
+	require.NoError(t, err)
+	require.False(t, ok)
+	require.Empty(t, cookies)
+
+	request = &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+	ok, cookies, err = a.ValidateSessionWithOptions(request)
+	require.NoError(t, err)
 	require.False(t, ok)
 	require.Empty(t, cookies)
 }
@@ -957,7 +964,7 @@ func TestAuthenticationMiddlewareFailure(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	handlerToTest := AuthenticationMiddleware(a, func(w http.ResponseWriter, r *http.Request, err error) {
-		assert.Error(t, err)
+		assert.NoError(t, err)
 		w.WriteHeader(http.StatusBadGateway)
 	})(nil)
 

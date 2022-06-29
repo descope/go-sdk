@@ -105,9 +105,9 @@ func (auth *authenticationService) ValidateSessionWithOptions(request *http.Requ
 	}
 
 	sessionToken, refreshToken := provideTokens(request)
-	if refreshToken == "" {
+	if refreshToken == "" || sessionToken == "" {
 		logger.LogDebug("unable to find tokens from cookies")
-		return false, nil, errors.RefreshTokenError
+		return false, nil, nil
 	}
 
 	return auth.validateSession(sessionToken, refreshToken, options...)
@@ -136,10 +136,6 @@ func AuthenticationMiddleware(auth Authentication, onFailure func(http.ResponseW
 }
 
 func (auth *authenticationService) validateSession(sessionToken string, refreshToken string, options ...Option) (bool, *AuthenticationInfo, error) {
-	if sessionToken == "" {
-		return false, nil, errors.NewValidationError("empty sessionToken")
-	}
-
 	token, err := auth.validateJWT(sessionToken)
 	if sessionToken != "" && !auth.publicKeysProvider.publicKeyExists() {
 		return false, nil, errors.NewNoPublicKeyError()

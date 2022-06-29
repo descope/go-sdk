@@ -147,7 +147,7 @@ func (m MockDescopeAuthentication) LogoutWithOptions(_ *http.Request, _ ...Optio
 	return m.LogoutResponseError
 }
 
-func (m MockDescopeAuthentication) SignUpWebAuthnStart(user *User) (*WebAuthnTransactionResponse, error) {
+func (m MockDescopeAuthentication) SignUpWebAuthnStart(_ *User) (*WebAuthnTransactionResponse, error) {
 	return m.SignUpWebAuthnStartResponseTransaction, m.SignUpWebAuthnStartResponseError
 }
 
