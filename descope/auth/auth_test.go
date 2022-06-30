@@ -136,15 +136,6 @@ func TestVerifyDeliveryMethodEmptyIdentifier(t *testing.T) {
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
 
-func TestSignUpWebAuthnFinish(t *testing.T) {
-	expectedResponse := &WebAuthnFinishRequest{TransactionID: "a"}
-	a, err := newTestAuth(nil, DoOk(nil))
-	require.NoError(t, err)
-	res, err := a.SignUpWebAuthnFinish(expectedResponse)
-	require.NoError(t, err)
-	assert.EqualValues(t, jwtTokenValid, res.SessionToken.JWT)
-}
-
 func TestAuthDefaultURL(t *testing.T) {
 	url := "http://test.com"
 	a, err := newTestAuthConf(nil, &api.ClientParams{BaseURL: url}, DoOk(func(r *http.Request) {

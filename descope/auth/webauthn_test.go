@@ -2,6 +2,7 @@ package auth
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/descope/go-sdk/descope/errors"
@@ -27,9 +28,11 @@ func TestSignInWebAuthnFinish(t *testing.T) {
 	expectedResponse := &WebAuthnFinishRequest{TransactionID: "a"}
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	res, err := a.SignInWebAuthnFinish(expectedResponse)
+	w := httptest.NewRecorder()
+	res, err := a.SignInWebAuthnFinish(expectedResponse, w)
 	require.NoError(t, err)
 	assert.EqualValues(t, jwtTokenValid, res.SessionToken.JWT)
+	require.Len(t, w.Result().Cookies(), 1)
 }
 
 func TestSignInWebAuthnStart(t *testing.T) {
@@ -53,4 +56,13 @@ func TestSignInWebAuthnStartEmpty(t *testing.T) {
 	require.Error(t, err)
 	assert.Empty(t, res)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+}
+
+func TestSignUpWebAuthnFinish(t *testing.T) {
+	expectedResponse := &WebAuthnFinishRequest{TransactionID: "a"}
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	res, err := a.SignUpWebAuthnFinishWithOptions(expectedResponse)
+	require.NoError(t, err)
+	assert.EqualValues(t, jwtTokenValid, res.SessionToken.JWT)
 }

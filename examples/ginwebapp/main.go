@@ -90,7 +90,7 @@ func main() {
 			return
 		}
 	
-		_, err = client.Auth.SignUpWebAuthnFinish(t, descopegin.WithResponseOption(c))
+		_, err = client.Auth.SignUpWebAuthnFinishWithOptions(t, descopegin.WithResponseOption(c))
 		if err != nil {
 			setError(c, err.Error())
 		}
@@ -114,7 +114,7 @@ func main() {
 			return
 		}
 	
-		_, err = client.Auth.SignInWebAuthnFinish(t, descopegin.WithResponseOption(c))
+		_, err = client.Auth.SignInWebAuthnFinishWithOptions(t, descopegin.WithResponseOption(c))
 		if err != nil {
 			setError(c, err.Error())
 		}

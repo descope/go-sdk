@@ -1,13 +1,15 @@
 package auth
 
 import (
+	"net/http"
+
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/utils"
 )
 
 func (auth *authenticationService) SignUpWebAuthnStart(user *User) (*WebAuthnTransactionResponse, error) {
-	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignupStart(), authenticationWebAuthnSignUpRequestBody{User: user}, &api.HTTPRequest{BaseURL: "http://localhost:8181"}, "")
+	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignupStart(), authenticationWebAuthnSignUpRequestBody{User: user}, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -17,8 +19,12 @@ func (auth *authenticationService) SignUpWebAuthnStart(user *User) (*WebAuthnTra
 	return webAuthnResponse, err
 }
 
-func (auth *authenticationService) SignUpWebAuthnFinish(request *WebAuthnFinishRequest, options ...Option) (*AuthenticationInfo, error) {
-	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignupFinish(), request, &api.HTTPRequest{BaseURL: "http://localhost:8181"}, "")
+func (auth *authenticationService) SignUpWebAuthnFinish(request *WebAuthnFinishRequest, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	return auth.SignUpWebAuthnFinishWithOptions(request, WithResponseOption(w))
+}
+
+func (auth *authenticationService) SignUpWebAuthnFinishWithOptions(request *WebAuthnFinishRequest, options ...Option) (*AuthenticationInfo, error) {
+	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignupFinish(), request, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +36,7 @@ func (auth *authenticationService) SignInWebAuthnStart(identifier string) (*WebA
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
 
-	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSigninStart(), authenticationRequestBody{ExternalID: identifier}, &api.HTTPRequest{BaseURL: "http://localhost:8181"}, "")
+	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSigninStart(), authenticationRequestBody{ExternalID: identifier}, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -41,8 +47,12 @@ func (auth *authenticationService) SignInWebAuthnStart(identifier string) (*WebA
 
 }
 
-func (auth *authenticationService) SignInWebAuthnFinish(request *WebAuthnFinishRequest, options ...Option) (*AuthenticationInfo, error) {
-	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSigninFinish(), request, &api.HTTPRequest{BaseURL: "http://localhost:8181"}, "")
+func (auth *authenticationService) SignInWebAuthnFinish(request *WebAuthnFinishRequest, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	return auth.SignInWebAuthnFinishWithOptions(request, WithResponseOption(w))
+}
+
+func (auth *authenticationService) SignInWebAuthnFinishWithOptions(request *WebAuthnFinishRequest, options ...Option) (*AuthenticationInfo, error) {
+	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSigninFinish(), request, nil, "")
 	if err != nil {
 		return nil, err
 	}

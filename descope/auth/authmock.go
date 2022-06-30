@@ -151,7 +151,11 @@ func (m MockDescopeAuthentication) SignUpWebAuthnStart(_ *User) (*WebAuthnTransa
 	return m.SignUpWebAuthnStartResponseTransaction, m.SignUpWebAuthnStartResponseError
 }
 
-func (m MockDescopeAuthentication) SignUpWebAuthnFinish(_ *WebAuthnFinishRequest, _ ...Option) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthentication) SignUpWebAuthnFinish(_ *WebAuthnFinishRequest, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+	return m.SignUpWebAuthnFinishResponseInfo, m.SignUpWebAuthnFinishResponseError
+}
+
+func (m MockDescopeAuthentication) SignUpWebAuthnFinishWithOptions(_ *WebAuthnFinishRequest, _ ...Option) (*AuthenticationInfo, error) {
 	return m.SignUpWebAuthnFinishResponseInfo, m.SignUpWebAuthnFinishResponseError
 }
 
@@ -159,6 +163,10 @@ func (m MockDescopeAuthentication) SignInWebAuthnStart(string) (*WebAuthnTransac
 	return m.SignInWebAuthnStartResponseTransaction, m.SignInWebAuthnStartResponseError
 }
 
-func (m MockDescopeAuthentication) SignInWebAuthnFinish(_ *WebAuthnFinishRequest, _ ...Option) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthentication) SignInWebAuthnFinish(_ *WebAuthnFinishRequest, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+	return m.SignInWebAuthnFinishResponseInfo, m.SignInWebAuthnFinishResponseError
+}
+
+func (m MockDescopeAuthentication) SignInWebAuthnFinishWithOptions(_ *WebAuthnFinishRequest, _ ...Option) (*AuthenticationInfo, error) {
 	return m.SignInWebAuthnFinishResponseInfo, m.SignInWebAuthnFinishResponseError
 }
