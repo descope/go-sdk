@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/json"
 	"encoding/pem"
 	goErrors "errors"
 	"log"
@@ -57,6 +58,68 @@ func main() {
 	r.GET("/magiclink/signup", handleMagicLinkSignUp)
 	r.GET("/magiclink/session", handleGetMagicLinkSession)
 	r.GET("/magiclink/verify", handleMagicLinkVerify)
+
+	r.GET("/webauthn", func(c *gin.Context) {
+							file, _ := os.ReadFile("../demo.html")
+							setOK(c)
+							c.Writer.Write(file)
+						})
+
+	r.POST("/webauthn/signup/start", func(c *gin.Context) {
+		decoder := json.NewDecoder(c.Request.Body)
+		var t *auth.User
+		err := decoder.Decode(&t)
+		if err != nil {
+			setError(c, err.Error())
+			return
+		}
+	
+		res, err := client.Auth.SignUpWebAuthnStart(t)
+		if err != nil {
+			setError(c, err.Error())
+		}
+		c.Writer.Header().Add("Content-Type", "application/json")
+		c.PureJSON(http.StatusOK, res)
+	})
+	r.POST("/webauthn/signup/finish", func(c *gin.Context) {
+		decoder := json.NewDecoder(c.Request.Body)
+		var t *auth.WebAuthnFinishRequest
+		err := decoder.Decode(&t)
+		if err != nil {
+			setError(c, err.Error())
+			return
+		}
+	
+		_, err = client.Auth.SignUpWebAuthnFinishWithOptions(t, descopegin.WithResponseOption(c))
+		if err != nil {
+			setError(c, err.Error())
+		}
+		setOK(c)
+	})
+
+	r.POST("/webauthn/signin/start", func(c *gin.Context) {
+		res, err := client.Auth.SignInWebAuthnStart(c.Query("id"))
+		if err != nil {
+			setError(c, err.Error())
+		}
+		c.Writer.Header().Add("Content-Type", "application/json")
+		c.PureJSON(http.StatusOK, res)
+	})
+	r.POST("/webauthn/signin/finish", func(c *gin.Context) {
+		decoder := json.NewDecoder(c.Request.Body)
+		var t *auth.WebAuthnFinishRequest
+		err := decoder.Decode(&t)
+		if err != nil {
+			setError(c, err.Error())
+			return
+		}
+	
+		_, err = client.Auth.SignInWebAuthnFinishWithOptions(t, descopegin.WithResponseOption(c))
+		if err != nil {
+			setError(c, err.Error())
+		}
+		setOK(c)
+	})
 
 	authorized := r.Group("/")
 	authorized.Use(descopegin.AuthneticationMiddleware(client.Auth, nil))

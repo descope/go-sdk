@@ -12,6 +12,16 @@ type AuthenticationInfo struct {
 	SessionToken *Token
 }
 
+type WebAuthnTransactionResponse struct {
+	TransactionID string `json:"transactionId"`
+	Options       string `json:"options"`
+}
+
+type WebAuthnFinishRequest struct {
+	TransactionID string `json:"transactionID"`
+	Response      string `json:"response"`
+}
+
 type Token struct {
 	Expiration int64
 	JWT        string
@@ -129,10 +139,11 @@ func NewToken(JWT string, token jwt.Token) *Token {
 }
 
 type User struct {
-	Username string `json:"username,omitempty"`
-	Name     string `json:"name,omitempty"`
-	Phone    string `json:"phone,omitempty"`
-	Email    string `json:"email,omitempty"`
+	Username   string `json:"username,omitempty"`
+	Name       string `json:"displayName,omitempty"`
+	Phone      string `json:"phone,omitempty"`
+	Email      string `json:"email,omitempty"`
+	ExternalID string `json:"externalID,omitempty"`
 }
 
 type authenticationRequestBody struct {
@@ -144,6 +155,10 @@ type authenticationSignUpRequestBody struct {
 	Phone    string `json:"phone,omitempty"`
 	Email    string `json:"email,omitempty"`
 	User     *User  `json:"user"`
+}
+
+type authenticationWebAuthnSignUpRequestBody struct {
+	User *User `json:"user"`
 }
 
 type authenticationVerifyRequestBody struct {
