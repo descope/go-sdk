@@ -9,40 +9,43 @@ import (
 )
 
 type AuthenticationInfo struct {
-	SessionToken *Token
+	SessionToken *Token `json:"token,omitempty"`
+	User         *User  `json:"user,omitempty"`
+	FirstSeen    bool   `json:"firstSeen,omitempty"`
 }
 
 type WebAuthnTransactionResponse struct {
-	TransactionID string `json:"transactionId"`
-	Options       string `json:"options"`
+	TransactionID string `json:"transactionId,omitempty"`
+	Options       string `json:"options,omitempty"`
 }
 
 type WebAuthnFinishRequest struct {
-	TransactionID string `json:"transactionID"`
-	Response      string `json:"response"`
+	TransactionID string `json:"transactionID,omitempty"`
+	Response      string `json:"response,omitempty"`
 }
 
 type Token struct {
-	Expiration int64
-	JWT        string
-	ID         string
-	Subject    string
-	Claims     map[string]interface{}
+	Expiration int64                  `json:"expiration,omitempty"`
+	JWT        string                 `json:"jwt,omitempty"`
+	ID         string                 `json:"id,omitempty"`
+	Subject    string                 `json:"subject,omitempty"`
+	Claims     map[string]interface{} `json:"claims,omitempty"`
 }
-
 type JWTResponse struct {
-	JWTS []string `json:"jwts"`
+	JWTS      []string `json:"jwts,omitempty"`
+	User      *User    `json:"user,omitempty"`
+	FirstSeen bool     `json:"firstSeen,omitempty"`
 }
 
 type MagicLinkResponse struct {
-	PendingRef string `json:"pendingRef"` // Pending referral code used to poll magic link authentication status
+	PendingRef string `json:"pendingRef,omitempty"` // Pending referral code used to poll magic link authentication status
 }
 
-func NewAuthenticationInfo(token *Token) *AuthenticationInfo {
-	if token == nil {
-		return nil
+func NewAuthenticationInfo(jRes *JWTResponse, token *Token) *AuthenticationInfo {
+	if jRes == nil {
+		jRes = &JWTResponse{}
 	}
-	return &AuthenticationInfo{SessionToken: token}
+	return &AuthenticationInfo{SessionToken: token, User: jRes.User, FirstSeen: jRes.FirstSeen}
 }
 
 // WithResponseOption - adds a response option to supported functions to allow
@@ -139,11 +142,12 @@ func NewToken(JWT string, token jwt.Token) *Token {
 }
 
 type User struct {
-	Username   string `json:"username,omitempty"`
-	Name       string `json:"displayName,omitempty"`
-	Phone      string `json:"phone,omitempty"`
-	Email      string `json:"email,omitempty"`
-	ExternalID string `json:"externalID,omitempty"`
+	Name          string `json:"name,omitempty"`
+	Phone         string `json:"phone,omitempty"`
+	Email         string `json:"email,omitempty"`
+	ExternalID    string `json:"externalID,omitempty"`
+	VerifiedEmail bool   `json:"verifiedEmail,omitempty"`
+	VerifiedPhone bool   `json:"verifiedPhone,omitempty"`
 }
 
 type authenticationRequestBody struct {

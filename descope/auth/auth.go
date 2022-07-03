@@ -135,26 +135,30 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 		return true, info, nil
 	}
 
-	return true, NewAuthenticationInfo(token), nil
+	return true, NewAuthenticationInfo(nil, token), nil
 }
 
-func (auth *authenticationService) extractTokens(bodyStr string) ([]*Token, error) {
+func (auth *authenticationService) extractJWTResponse(bodyStr string) (*JWTResponse, error) {
 	if bodyStr == "" {
 		return nil, nil
 	}
-	t := JWTResponse{}
-	err := utils.Unmarshal([]byte(bodyStr), &t)
+	jRes := JWTResponse{}
+	err := utils.Unmarshal([]byte(bodyStr), &jRes)
 	if err != nil {
-		logger.LogError("unable to parse token from response", err)
+		logger.LogError("unable to parse jwt response", err)
 		return nil, err
 	}
+	return &jRes, nil
+}
 
-	if len(t.JWTS) == 0 {
+func (auth *authenticationService) extractTokens(jRes *JWTResponse) ([]*Token, error) {
+
+	if jRes == nil || len(jRes.JWTS) == 0 {
 		return nil, nil
 	}
 	var tokens []*Token
-	for i := range t.JWTS {
-		token, err := auth.validateJWT(t.JWTS[i])
+	for i := range jRes.JWTS {
+		token, err := auth.validateJWT(jRes.JWTS[i])
 		if err != nil {
 			return nil, err
 		}
@@ -198,7 +202,11 @@ func (*authenticationService) verifyDeliveryMethod(method DeliveryMethod, identi
 }
 
 func (auth *authenticationService) generateAuthenticationInfo(httpResponse *api.HTTPResponse, options ...Option) (*AuthenticationInfo, error) {
-	tokens, err := auth.extractTokens(httpResponse.BodyStr)
+	jwtResponse, err := auth.extractJWTResponse(httpResponse.BodyStr)
+	if err != nil {
+		return nil, err
+	}
+	tokens, err := auth.extractTokens(jwtResponse)
 	if err != nil {
 		logger.LogError("unable to extract tokens from request [%s]", err, httpResponse.Req.URL)
 		return nil, err
@@ -215,7 +223,7 @@ func (auth *authenticationService) generateAuthenticationInfo(httpResponse *api.
 		}
 	}
 	Options(options).SetCookies(cookies)
-	return NewAuthenticationInfo(token), err
+	return NewAuthenticationInfo(jwtResponse, token), err
 }
 
 func createCookie(token *Token) *http.Cookie {
@@ -269,6 +277,10 @@ func composeSignUpURL(method DeliveryMethod) string {
 	return composeURLMethod(api.Routes.SignUpOTP(), method)
 }
 
+func composeSignUpOrInURL(method DeliveryMethod) string {
+	return composeURLMethod(api.Routes.SignUpOrInOTP(), method)
+}
+
 func composeVerifyCodeURL(method DeliveryMethod) string {
 	return composeURLMethod(api.Routes.VerifyCode(), method)
 }
@@ -279,6 +291,10 @@ func composeMagicLinkSignInURL(method DeliveryMethod) string {
 
 func composeMagicLinkSignUpURL(method DeliveryMethod) string {
 	return composeURLMethod(api.Routes.SignUpMagicLink(), method)
+}
+
+func composeMagicLinkSignUpOrInURL(method DeliveryMethod) string {
+	return composeURLMethod(api.Routes.SignUpOrInMagicLink(), method)
 }
 
 func composeVerifyMagicLinkURL() string {

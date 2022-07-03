@@ -23,6 +23,14 @@ func (auth *authenticationService) SignUpMagicLink(method DeliveryMethod, identi
 	return err
 }
 
+func (auth *authenticationService) SignUpOrInMagicLink(method DeliveryMethod, identifier, URI string) error {
+	if identifier == "" {
+		return errors.NewInvalidArgumentError("identifier")
+	}
+	_, err := auth.client.DoPostRequest(composeMagicLinkSignUpOrInURL(method), newMagicLinkAuthenticationRequestBody(identifier, URI, false), nil, "")
+	return err
+}
+
 func (auth *authenticationService) SignInMagicLinkCrossDevice(method DeliveryMethod, identifier, URI string) (*MagicLinkResponse, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
@@ -40,6 +48,17 @@ func (auth *authenticationService) SignUpMagicLinkCrossDevice(method DeliveryMet
 	}
 
 	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, identifier, URI, user, true), nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return getPendingRefFromResponse(httpResponse)
+}
+
+func (auth *authenticationService) SignUpOrInMagicLinkCrossDevice(method DeliveryMethod, identifier, URI string) (*MagicLinkResponse, error) {
+	if identifier == "" {
+		return nil, errors.NewInvalidArgumentError("identifier")
+	}
+	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignUpOrInURL(method), newMagicLinkAuthenticationRequestBody(identifier, URI, true), nil, "")
 	if err != nil {
 		return nil, err
 	}

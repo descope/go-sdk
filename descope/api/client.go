@@ -27,9 +27,11 @@ var (
 		auth: struct {
 			signInOTP            string
 			signUpOTP            string
+			signUpOrInOTP        string
 			verifyCode           string
 			signInMagicLink      string
 			signUpMagicLink      string
+			signUpOrInMagicLink  string
 			verifyMagicLink      string
 			oauthStart           string
 			webauthnSignupStart  string
@@ -40,9 +42,11 @@ var (
 		}{
 			signInOTP:            "auth/signin/otp",
 			signUpOTP:            "auth/signup/otp",
+			signUpOrInOTP:        "auth/sign-up-or-in/otp",
 			verifyCode:           "auth/code/verify",
 			signInMagicLink:      "auth/signin/magiclink",
 			signUpMagicLink:      "auth/signup/magiclink",
+			signUpOrInMagicLink:  "auth/sign-up-or-in/magiclink",
 			verifyMagicLink:      "auth/magiclink/verify",
 			oauthStart:           "oauth/authorize",
 			webauthnSigninStart:  "webauthn/signin/start",
@@ -62,9 +66,11 @@ type endpoints struct {
 	auth    struct {
 		signInOTP            string
 		signUpOTP            string
+		signUpOrInOTP        string
 		verifyCode           string
 		signInMagicLink      string
 		signUpMagicLink      string
+		signUpOrInMagicLink  string
 		verifyMagicLink      string
 		oauthStart           string
 		webauthnSignupStart  string
@@ -84,6 +90,9 @@ func (e *endpoints) SignInOTP() string {
 func (e *endpoints) SignUpOTP() string {
 	return path.Join(e.version, e.auth.signUpOTP)
 }
+func (e *endpoints) SignUpOrInOTP() string {
+	return path.Join(e.version, e.auth.signUpOrInOTP)
+}
 func (e *endpoints) VerifyCode() string {
 	return path.Join(e.version, e.auth.verifyCode)
 }
@@ -92,6 +101,9 @@ func (e *endpoints) SignInMagicLink() string {
 }
 func (e *endpoints) SignUpMagicLink() string {
 	return path.Join(e.version, e.auth.signUpMagicLink)
+}
+func (e *endpoints) SignUpOrInMagicLink() string {
+	return path.Join(e.version, e.auth.signUpOrInMagicLink)
 }
 func (e *endpoints) VerifyMagicLink() string {
 	return path.Join(e.version, e.auth.verifyMagicLink)
