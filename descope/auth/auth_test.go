@@ -56,6 +56,8 @@ const (
 var (
 	mockAuthSessionCookie = &http.Cookie{Value: jwtTokenValid, Name: SessionCookieName}
 	mockAuthRefreshCookie = &http.Cookie{Value: jwtTokenValid, Name: RefreshCookieName}
+	mockAuthInvalidSessionCookie = &http.Cookie{Value: jwtTokenExpired, Name: SessionCookieName}
+	mockAuthInvalidRefreshCookie = &http.Cookie{Value: jwtTokenExpired, Name: RefreshCookieName}
 
 	mockAuthSessionBody = fmt.Sprintf(`{"jwts": ["%s"]}`, jwtTokenValid)
 )
@@ -129,10 +131,13 @@ func newTestAuthConf(authParams *AuthParams, clientParams *api.ClientParams, cal
 	return NewAuth(*authParams, api.NewClient(*clientParams))
 }
 
-func TestVerifyDeliveryMethodEmptyIdentifier(t *testing.T) {
+func TestVerifyDeliveryMethod(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
 	err = a.verifyDeliveryMethod(MethodEmail, "")
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+
+	err = a.verifyDeliveryMethod(MethodSMS, "abc@notaphone.com")
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
 
@@ -397,11 +402,13 @@ func TestAuthenticationMiddlewareFailure(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	handlerToTest := AuthenticationMiddleware(a, func(w http.ResponseWriter, r *http.Request, err error) {
-		assert.NoError(t, err)
+		assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 		w.WriteHeader(http.StatusBadGateway)
 	})(nil)
 
 	req := httptest.NewRequest("GET", "http://testing", nil)
+	req.AddCookie(mockAuthInvalidSessionCookie)
+	req.AddCookie(mockAuthInvalidRefreshCookie)
 
 	res := httptest.NewRecorder()
 	handlerToTest.ServeHTTP(res, req)

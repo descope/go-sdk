@@ -59,14 +59,14 @@
     }
 
     async function performRegister() {
-      const username = $("#email").val()
-      if (!username) {
+      const username = document.getElementById('email');
+      if (!username || !username.value) {
         alert("Please enter a username")
         return
       }
 
       try {
-        await register(username)
+        await register(username.value)
         alert('Register succeeded')
       } catch (err) {
         console.error('Register failed', err)
@@ -75,14 +75,14 @@
     }
 
     async function performLogin() {
-      const username = $("#email").val()
-      if (!username) {
+      const username = document.getElementById('email');
+      if (!username || !username.value) {
         alert("Please enter a username")
         return
       }
 
       try {
-        await login(username)
+        await login(username.value)
         alert('Login succeeded')
       } catch (err) {
         console.error('Login failed', err)
