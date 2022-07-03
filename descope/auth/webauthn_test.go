@@ -33,6 +33,7 @@ func TestSignInWebAuthnFinish(t *testing.T) {
 	require.NoError(t, err)
 	assert.EqualValues(t, jwtTokenValid, res.SessionToken.JWT)
 	require.Len(t, w.Result().Cookies(), 1)
+	assert.EqualValues(t, jwtTokenValid, w.Result().Cookies()[0].Value)
 }
 
 func TestSignInWebAuthnStart(t *testing.T) {
@@ -62,7 +63,10 @@ func TestSignUpWebAuthnFinish(t *testing.T) {
 	expectedResponse := &WebAuthnFinishRequest{TransactionID: "a"}
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	res, err := a.SignUpWebAuthnFinishWithOptions(expectedResponse)
+	w := httptest.NewRecorder()
+	res, err := a.SignUpWebAuthnFinish(expectedResponse, w)
 	require.NoError(t, err)
 	assert.EqualValues(t, jwtTokenValid, res.SessionToken.JWT)
+	require.Len(t, w.Result().Cookies(), 1)
+	assert.EqualValues(t, jwtTokenValid, w.Result().Cookies()[0].Value)
 }
