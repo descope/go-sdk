@@ -398,7 +398,7 @@ func TestUpdateUserEmailMagicLink(t *testing.T) {
 		assert.EqualValues(t, externalID, body["externalID"])
 		assert.EqualValues(t, email, body["email"])
 		assert.EqualValues(t, uri, body["URI"])
-		assert.False(t, body["crossDevice"].(bool))
+		assert.Nil(t, body["crossDevice"])
 	}))
 	require.NoError(t, err)
 	err = a.UpdateUserEmailMagicLink(externalID, email, uri)
