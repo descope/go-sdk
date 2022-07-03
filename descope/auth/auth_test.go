@@ -54,8 +54,8 @@ const (
 )
 
 var (
-	mockAuthSessionCookie = &http.Cookie{Value: jwtTokenValid, Name: SessionCookieName}
-	mockAuthRefreshCookie = &http.Cookie{Value: jwtTokenValid, Name: RefreshCookieName}
+	mockAuthSessionCookie        = &http.Cookie{Value: jwtTokenValid, Name: SessionCookieName}
+	mockAuthRefreshCookie        = &http.Cookie{Value: jwtTokenValid, Name: RefreshCookieName}
 	mockAuthInvalidSessionCookie = &http.Cookie{Value: jwtTokenExpired, Name: SessionCookieName}
 	mockAuthInvalidRefreshCookie = &http.Cookie{Value: jwtTokenExpired, Name: RefreshCookieName}
 
