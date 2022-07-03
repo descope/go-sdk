@@ -128,31 +128,11 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 		if err != nil {
 			return false, nil, errors.FailedToRefreshTokenError
 		}
-		tokens, err := auth.extractTokens(httpResponse.BodyStr)
+		info, err := auth.generateAuthenticationInfo(httpResponse, options...)
 		if err != nil {
-			logger.LogError("unable to extract tokens after refresh", err)
 			return false, nil, err
 		}
-		cookies := httpResponse.Res.Cookies()
-		var token *Token
-		sessionJWT := ""
-		for i := range tokens {
-			ck := createCookie(tokens[i])
-			if ck != nil {
-				cookies = append(cookies, ck)
-			}
-			if tokens[i].Claims["cookieName"] == SessionCookieName {
-				token = tokens[i]
-				sessionJWT = token.JWT
-			}
-		}
-		Options(options).SetCookies(cookies)
-		token, err = auth.validateJWT(sessionJWT)
-		if err != nil {
-			logger.LogError("unable to validate refreshed token", err)
-			return false, nil, err
-		}
-		return true, NewAuthenticationInfo(token), err
+		return true, info, nil
 	}
 
 	return true, NewAuthenticationInfo(token), nil
