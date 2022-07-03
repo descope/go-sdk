@@ -102,14 +102,14 @@ func (m MockDescopeAuthentication) SignUpOrInMagicLink(method DeliveryMethod, id
 }
 
 func (m MockDescopeAuthentication) SignInMagicLinkCrossDevice(method DeliveryMethod, identifier, URI string) (*MagicLinkResponse, error) {
-	if m.AssertSignInOTP != nil {
+	if m.AssertSignInMagicLinkCrossDevice != nil {
 		m.AssertSignInMagicLinkCrossDevice(method, identifier, URI)
 	}
 	return m.MagicLinkPendingLinkCrossDeviceResponse, m.SignInMagicLinkCrossDeviceResponseError
 }
 
 func (m MockDescopeAuthentication) SignUpMagicLinkCrossDevice(method DeliveryMethod, identifier, URI string, user *User) (*MagicLinkResponse, error) {
-	if m.AssertSignUpOTP != nil {
+	if m.AssertSignUpMagicLinkCrossDevice != nil {
 		m.AssertSignUpMagicLinkCrossDevice(method, identifier, URI, user)
 	}
 	return m.MagicLinkPendingLinkCrossDeviceResponse, m.SignUpMagicLinkCrossDeviceResponseError
@@ -145,14 +145,14 @@ func (m MockDescopeAuthentication) OAuthStartWithOptions(provider OAuthProvider,
 }
 
 func (m MockDescopeAuthentication) VerifyMagicLink(token string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
-	if m.AssertVerifyCode != nil {
+	if m.AssertVerifyMagicLink != nil {
 		m.AssertVerifyMagicLink(token)
 	}
 	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
 }
 
 func (m MockDescopeAuthentication) VerifyMagicLinkWithOptions(token string, _ ...Option) (*AuthenticationInfo, error) {
-	if m.AssertVerifyCode != nil {
+	if m.AssertVerifyMagicLink != nil {
 		m.AssertVerifyMagicLink(token)
 	}
 	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
