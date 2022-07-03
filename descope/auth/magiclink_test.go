@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/descope/go-sdk/descope/errors"
@@ -422,4 +423,94 @@ func TestUpdateUserEmailMagicLinkCrossDevice(t *testing.T) {
 	require.NoError(t, err)
 	_, err = a.UpdateUserEmailMagicLinkCrossDevice(externalID, email, uri)
 	require.NoError(t, err)
+}
+
+func TestUpdateEmailMagicLinkFailures(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	err = a.UpdateUserEmailMagicLink("", "email@email.com", "")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "identifier"))
+	err = a.UpdateUserEmailMagicLink("id", "", "")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "email"))
+	err = a.UpdateUserEmailMagicLink("id", "email", "")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "email"))
+	_, err = a.UpdateUserEmailMagicLinkCrossDevice("", "email@email.com", "")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "identifier"))
+	_, err = a.UpdateUserEmailMagicLinkCrossDevice("id", "", "")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "email"))
+	_, err = a.UpdateUserEmailMagicLinkCrossDevice("id", "email", "")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "email"))
+}
+
+func TestUpdateUserPhoneMagicLink(t *testing.T) {
+	externalID := "943248329844"
+	phone := "+111111111111"
+	uri := "https://some.url.com"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeUpdateUserPhoneMagicLink(MethodSMS), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, externalID, body["externalID"])
+		assert.EqualValues(t, phone, body["phone"])
+		assert.EqualValues(t, uri, body["URI"])
+		assert.Nil(t, body["crossDevice"])
+	}))
+	require.NoError(t, err)
+	err = a.UpdateUserPhoneMagicLink(MethodSMS, externalID, phone, uri)
+	require.NoError(t, err)
+}
+
+func TestUpdateUserPhoneMagicLinkCrossDevice(t *testing.T) {
+	externalID := "943248329844"
+	phone := "+1111111111"
+	uri := "https://some.url.com"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeUpdateUserPhoneMagicLink(MethodWhatsApp), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, externalID, body["externalID"])
+		assert.EqualValues(t, phone, body["phone"])
+		assert.EqualValues(t, uri, body["URI"])
+		assert.True(t, body["crossDevice"].(bool))
+	}))
+	require.NoError(t, err)
+	_, err = a.UpdateUserPhoneMagicLinkCrossDevice(MethodWhatsApp, externalID, phone, uri)
+	require.NoError(t, err)
+}
+
+func TestUpdatePhoneMagicLinkFailures(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	err = a.UpdateUserPhoneMagicLink(MethodSMS, "", "+1111111111", "")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "identifier"))
+	err = a.UpdateUserPhoneMagicLink(MethodSMS, "id", "", "")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "phone"))
+	err = a.UpdateUserPhoneMagicLink(MethodSMS, "id", "phone", "")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "phone"))
+	err = a.UpdateUserPhoneMagicLink(MethodEmail, "id", "+1111111111", "")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "method"))
+	_, err = a.UpdateUserPhoneMagicLinkCrossDevice(MethodSMS, "", "+1111111111", "")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "identifier"))
+	_, err = a.UpdateUserPhoneMagicLinkCrossDevice(MethodSMS, "id", "", "")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "phone"))
+	_, err = a.UpdateUserPhoneMagicLinkCrossDevice(MethodSMS, "id", "phone", "")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "phone"))
+	_, err = a.UpdateUserPhoneMagicLinkCrossDevice(MethodEmail, "id", "+111111111111", "")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "method"))
 }

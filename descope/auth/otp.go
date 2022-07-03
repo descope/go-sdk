@@ -69,7 +69,26 @@ func (auth *authenticationService) UpdateUserEmailOTP(identifier, email string) 
 	if email == "" {
 		return errors.NewInvalidArgumentError("email")
 	}
-
+	if !emailRegex.MatchString(email) {
+		return errors.NewInvalidArgumentError("email")
+	}
 	_, err := auth.client.DoPostRequest(composeUpdateUserEmailOTP(), newOTPUpdateEmailRequestBody(identifier, email), nil, "")
+	return err
+}
+
+func (auth *authenticationService) UpdateUserPhoneOTP(method DeliveryMethod, identifier, phone string) error {
+	if identifier == "" {
+		return errors.NewInvalidArgumentError("identifier")
+	}
+	if phone == "" {
+		return errors.NewInvalidArgumentError("phone")
+	}
+	if !phoneRegex.MatchString(phone) {
+		return errors.NewInvalidArgumentError("phone")
+	}
+	if method != MethodSMS && method != MethodWhatsApp {
+		return errors.NewInvalidArgumentError("method")
+	}
+	_, err := auth.client.DoPostRequest(composeUpdateUserPhoneOTP(method), newOTPUpdatePhoneRequestBody(identifier, phone), nil, "")
 	return err
 }

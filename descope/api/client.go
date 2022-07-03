@@ -161,7 +161,7 @@ func (e *endpoints) UpdateUserPhoneMagicLink() string {
 }
 
 func (e *endpoints) UpdateUserPhoneOTP() string {
-	return path.Join(e.version, e.auth.updateUserEmailOTP)
+	return path.Join(e.version, e.auth.updateUserPhoneOTP)
 }
 
 type ClientParams struct {

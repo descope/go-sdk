@@ -99,6 +99,9 @@ func (auth *authenticationService) UpdateUserEmailMagicLink(identifier, email, U
 	if email == "" {
 		return errors.NewInvalidArgumentError("email")
 	}
+	if !emailRegex.MatchString(email) {
+		return errors.NewInvalidArgumentError("email")
+	}
 
 	_, err := auth.client.DoPostRequest(composeUpdateUserEmailMagicLink(), newMagicLinkUpdateEmailRequestBody(identifier, email, URI, false), nil, "")
 	return err
@@ -111,8 +114,49 @@ func (auth *authenticationService) UpdateUserEmailMagicLinkCrossDevice(identifie
 	if email == "" {
 		return nil, errors.NewInvalidArgumentError("email")
 	}
-
+	if !emailRegex.MatchString(email) {
+		return nil, errors.NewInvalidArgumentError("email")
+	}
 	httpResponse, err := auth.client.DoPostRequest(composeUpdateUserEmailMagicLink(), newMagicLinkUpdateEmailRequestBody(identifier, email, URI, true), nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return getPendingRefFromResponse(httpResponse)
+}
+
+func (auth *authenticationService) UpdateUserPhoneMagicLink(method DeliveryMethod, identifier, phone, URI string) error {
+	if identifier == "" {
+		return errors.NewInvalidArgumentError("identifier")
+	}
+	if phone == "" {
+		return errors.NewInvalidArgumentError("phone")
+	}
+	if !phoneRegex.MatchString(phone) {
+		return errors.NewInvalidArgumentError("phone")
+	}
+
+	if method != MethodSMS && method != MethodWhatsApp {
+		return errors.NewInvalidArgumentError("method")
+	}
+	_, err := auth.client.DoPostRequest(composeUpdateUserPhoneMagicLink(method), newMagicLinkUpdatePhoneRequestBody(identifier, phone, URI, false), nil, "")
+	return err
+}
+
+func (auth *authenticationService) UpdateUserPhoneMagicLinkCrossDevice(method DeliveryMethod, identifier, phone, URI string) (*MagicLinkResponse, error) {
+	if identifier == "" {
+		return nil, errors.NewInvalidArgumentError("identifier")
+	}
+	if phone == "" {
+		return nil, errors.NewInvalidArgumentError("phone")
+	}
+	if !phoneRegex.MatchString(phone) {
+		return nil, errors.NewInvalidArgumentError("phone")
+	}
+
+	if method != MethodSMS && method != MethodWhatsApp {
+		return nil, errors.NewInvalidArgumentError("method")
+	}
+	httpResponse, err := auth.client.DoPostRequest(composeUpdateUserPhoneMagicLink(method), newMagicLinkUpdatePhoneRequestBody(identifier, phone, URI, true), nil, "")
 	if err != nil {
 		return nil, err
 	}
