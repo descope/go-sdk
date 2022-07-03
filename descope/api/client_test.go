@@ -79,6 +79,20 @@ func TestPostCustomHeaders(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestPostCustomCookies(t *testing.T) {
+	projectID := "test"
+	expectedCookie := &http.Cookie{Name: "test", Value: "value"}
+	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+		assert.Nil(t, r.Body)
+		assert.NotEmpty(t, r.Header.Get("Cookie"))
+		assert.Contains(t, r.Header.Get("Cookie"), expectedCookie.Value)
+		return &http.Response{StatusCode: http.StatusOK}, nil
+	})})
+
+	_, err := c.DoPostRequest("path", nil, &HTTPRequest{Cookies: []*http.Cookie{expectedCookie}}, "")
+	require.NoError(t, err)
+}
+
 func TestPostCustomURL(t *testing.T) {
 	projectID := "test"
 	body := "aaaa"
@@ -173,6 +187,17 @@ func TestPostNotFoundError(t *testing.T) {
 	_, err := c.DoPostRequest("path", nil, nil, "")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "404")
+}
+
+func TestDoRequestDefault(t *testing.T) {
+	projectID := "test"
+	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+		assert.Nil(t, r.Body)
+		return &http.Response{StatusCode: http.StatusOK}, nil
+	})})
+
+	_, err := c.DoRequest(http.MethodGet, "path", nil, nil, "")
+	require.NoError(t, err)
 }
 
 func TestRoutesSignInOTP(t *testing.T) {

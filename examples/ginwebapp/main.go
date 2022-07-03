@@ -61,8 +61,7 @@ func main() {
 
 	r.GET("/webauthn", func(c *gin.Context) {
 							file, _ := os.ReadFile("../demo.html")
-							setOK(c)
-							c.Writer.Write(file)
+							c.Data(http.StatusOK, "text/html; charset=utf-8", file)
 						})
 
 	r.POST("/webauthn/signup/start", func(c *gin.Context) {
