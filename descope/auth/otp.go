@@ -24,6 +24,15 @@ func (auth *authenticationService) SignUpOTP(method DeliveryMethod, identifier s
 	return err
 }
 
+func (auth *authenticationService) SignUpOrInOTP(method DeliveryMethod, identifier string) error {
+	if identifier == "" {
+		return errors.NewInvalidArgumentError("identifier")
+	}
+
+	_, err := auth.client.DoPostRequest(composeSignUpOrInURL(method), newSignInRequestBody(identifier), nil, "")
+	return err
+}
+
 func (auth *authenticationService) VerifyCode(method DeliveryMethod, identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
 	return auth.VerifyCodeWithOptions(method, identifier, code, WithResponseOption(w))
 }

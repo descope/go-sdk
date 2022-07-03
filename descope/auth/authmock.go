@@ -3,40 +3,46 @@ package auth
 import "net/http"
 
 type MockDescopeAuthentication struct {
-	SignInOTPResponseError                  error
-	SignUpOTPResponseError                  error
-	VerifyCodeResponseInfo                  *AuthenticationInfo
-	VerifyCodeResponseError                 error
-	ValidateSessionResponseNotOK            bool
-	ValidateSessionResponseInfo             *AuthenticationInfo
-	ValidateSessionResponseError            error
-	GetMagicLinkSessionResponseInfo         *AuthenticationInfo
-	GetMagicLinkSessionResponseError        error
-	LogoutResponseError                     error
-	AssertSignInOTP                         func(method DeliveryMethod, identifier string)
-	AssertSignUpOTP                         func(method DeliveryMethod, identifier string, user *User)
-	AssertVerifyCode                        func(method DeliveryMethod, identifier string, code string)
-	AssertOAuthStart                        func(provider OAuthProvider)
-	AssertOAuthResponseURL                  string
-	OAuthStartResponseError                 error
-	AssertSignInMagicLink                   func(method DeliveryMethod, identifier, URI string)
-	AssertSignUpMagicLink                   func(method DeliveryMethod, identifier, URI string, user *User)
-	SignUpMagicLinkResponseError            error
-	SignInMagicLinkResponseError            error
-	AssertSignInMagicLinkCrossDevice        func(method DeliveryMethod, identifier, URI string)
-	AssertSignUpMagicLinkCrossDevice        func(method DeliveryMethod, identifier, URI string, user *User)
-	SignUpMagicLinkCrossDeviceResponseError error
-	SignInMagicLinkCrossDeviceResponseError error
-	MagicLinkPendingLinkCrossDeviceResponse *MagicLinkResponse
-	AssertVerifyMagicLink                   func(token string)
-	SignUpWebAuthnStartResponseError        error
-	SignUpWebAuthnStartResponseTransaction  *WebAuthnTransactionResponse
-	SignUpWebAuthnFinishResponseError       error
-	SignUpWebAuthnFinishResponseInfo        *AuthenticationInfo
-	SignInWebAuthnStartResponseError        error
-	SignInWebAuthnStartResponseTransaction  *WebAuthnTransactionResponse
-	SignInWebAuthnFinishResponseError       error
-	SignInWebAuthnFinishResponseInfo        *AuthenticationInfo
+	SignInOTPResponseError                      error
+	SignUpOTPResponseError                      error
+	SignUpOrInOTPResponseError                  error
+	VerifyCodeResponseInfo                      *AuthenticationInfo
+	VerifyCodeResponseError                     error
+	ValidateSessionResponseNotOK                bool
+	ValidateSessionResponseInfo                 *AuthenticationInfo
+	ValidateSessionResponseError                error
+	GetMagicLinkSessionResponseInfo             *AuthenticationInfo
+	GetMagicLinkSessionResponseError            error
+	LogoutResponseError                         error
+	AssertSignInOTP                             func(method DeliveryMethod, identifier string)
+	AssertSignUpOTP                             func(method DeliveryMethod, identifier string, user *User)
+	AssertSignUpOrInOTP                         func(method DeliveryMethod, identifier string)
+	AssertVerifyCode                            func(method DeliveryMethod, identifier string, code string)
+	AssertOAuthStart                            func(provider OAuthProvider)
+	AssertOAuthResponseURL                      string
+	OAuthStartResponseError                     error
+	AssertSignInMagicLink                       func(method DeliveryMethod, identifier, URI string)
+	AssertSignUpMagicLink                       func(method DeliveryMethod, identifier, URI string, user *User)
+	AssertSignUpOrInMagicLink                   func(method DeliveryMethod, identifier, URI string)
+	SignUpMagicLinkResponseError                error
+	SignInMagicLinkResponseError                error
+	SignUpOrInMagicLinkResponseError            error
+	AssertSignInMagicLinkCrossDevice            func(method DeliveryMethod, identifier, URI string)
+	AssertSignUpMagicLinkCrossDevice            func(method DeliveryMethod, identifier, URI string, user *User)
+	AssertSignUpOrInMagicLinkCrossDevice        func(method DeliveryMethod, identifier, URI string)
+	SignUpMagicLinkCrossDeviceResponseError     error
+	SignInMagicLinkCrossDeviceResponseError     error
+	SignUpOrInMagicLinkCrossDeviceResponseError error
+	MagicLinkPendingLinkCrossDeviceResponse     *MagicLinkResponse
+	AssertVerifyMagicLink                       func(token string)
+	SignUpWebAuthnStartResponseError            error
+	SignUpWebAuthnStartResponseTransaction      *WebAuthnTransactionResponse
+	SignUpWebAuthnFinishResponseError           error
+	SignUpWebAuthnFinishResponseInfo            *AuthenticationInfo
+	SignInWebAuthnStartResponseError            error
+	SignInWebAuthnStartResponseTransaction      *WebAuthnTransactionResponse
+	SignInWebAuthnFinishResponseError           error
+	SignInWebAuthnFinishResponseInfo            *AuthenticationInfo
 }
 
 func (m MockDescopeAuthentication) SignInOTP(method DeliveryMethod, identifier string) error {
@@ -51,6 +57,13 @@ func (m MockDescopeAuthentication) SignUpOTP(method DeliveryMethod, identifier s
 		m.AssertSignUpOTP(method, identifier, user)
 	}
 	return m.SignUpOTPResponseError
+}
+
+func (m MockDescopeAuthentication) SignUpOrInOTP(method DeliveryMethod, identifier string) error {
+	if m.AssertSignUpOrInOTP != nil {
+		m.AssertSignUpOrInOTP(method, identifier)
+	}
+	return m.SignUpOrInOTPResponseError
 }
 
 func (m MockDescopeAuthentication) VerifyCode(method DeliveryMethod, identifier string, code string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
@@ -68,17 +81,24 @@ func (m MockDescopeAuthentication) VerifyCodeWithOptions(method DeliveryMethod, 
 }
 
 func (m MockDescopeAuthentication) SignInMagicLink(method DeliveryMethod, identifier, URI string) error {
-	if m.AssertSignInOTP != nil {
+	if m.AssertSignInMagicLink != nil {
 		m.AssertSignInMagicLink(method, identifier, URI)
 	}
 	return m.SignInMagicLinkResponseError
 }
 
 func (m MockDescopeAuthentication) SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User) error {
-	if m.AssertSignUpOTP != nil {
+	if m.AssertSignUpMagicLink != nil {
 		m.AssertSignUpMagicLink(method, identifier, URI, user)
 	}
 	return m.SignUpMagicLinkResponseError
+}
+
+func (m MockDescopeAuthentication) SignUpOrInMagicLink(method DeliveryMethod, identifier string, URI string) error {
+	if m.AssertSignUpOrInMagicLink != nil {
+		m.AssertSignUpOrInMagicLink(method, identifier, URI)
+	}
+	return m.SignUpOrInMagicLinkResponseError
 }
 
 func (m MockDescopeAuthentication) SignInMagicLinkCrossDevice(method DeliveryMethod, identifier, URI string) (*MagicLinkResponse, error) {
@@ -93,6 +113,13 @@ func (m MockDescopeAuthentication) SignUpMagicLinkCrossDevice(method DeliveryMet
 		m.AssertSignUpMagicLinkCrossDevice(method, identifier, URI, user)
 	}
 	return m.MagicLinkPendingLinkCrossDeviceResponse, m.SignUpMagicLinkCrossDeviceResponseError
+}
+
+func (m MockDescopeAuthentication) SignUpOrInMagicLinkCrossDevice(method DeliveryMethod, identifier string, URI string) (*MagicLinkResponse, error) {
+	if m.AssertSignUpOrInMagicLinkCrossDevice != nil {
+		m.AssertSignUpOrInMagicLinkCrossDevice(method, identifier, URI)
+	}
+	return m.MagicLinkPendingLinkCrossDeviceResponse, m.SignUpOrInMagicLinkCrossDeviceResponseError
 }
 
 func (m MockDescopeAuthentication) GetMagicLinkSession(_ string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
