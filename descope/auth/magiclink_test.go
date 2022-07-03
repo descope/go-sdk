@@ -385,3 +385,41 @@ func TestVerifyMagicLinkCodeNoSession(t *testing.T) {
 	require.NoError(t, err)
 	assert.Empty(t, info)
 }
+
+func TestUpdateUserEmailMagicLink(t *testing.T) {
+	externalID := "943248329844"
+	email := "test@test.com"
+	uri := "https://some.url.com"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeUpdateUserEmailMagicLink(), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, externalID, body["externalID"])
+		assert.EqualValues(t, email, body["email"])
+		assert.EqualValues(t, uri, body["URI"])
+		assert.False(t, body["crossDevice"].(bool))
+	}))
+	require.NoError(t, err)
+	err = a.UpdateUserEmailMagicLink(externalID, email, uri)
+	require.NoError(t, err)
+}
+
+func TestUpdateUserEmailMagicLinkCrossDevice(t *testing.T) {
+	externalID := "943248329844"
+	email := "test@test.com"
+	uri := "https://some.url.com"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeUpdateUserEmailMagicLink(), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, externalID, body["externalID"])
+		assert.EqualValues(t, email, body["email"])
+		assert.EqualValues(t, uri, body["URI"])
+		assert.True(t, body["crossDevice"].(bool))
+	}))
+	require.NoError(t, err)
+	_, err = a.UpdateUserEmailMagicLinkCrossDevice(externalID, email, uri)
+	require.NoError(t, err)
+}

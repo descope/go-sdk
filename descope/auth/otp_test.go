@@ -284,3 +284,19 @@ func TestVerifyCodeEmailResponseNil(t *testing.T) {
 	require.NotEmpty(t, info.SessionToken)
 	assert.EqualValues(t, jwtTokenValid, info.SessionToken.JWT)
 }
+
+func TestUpdateEmailOTP(t *testing.T) {
+	externalID := "943248329844"
+	email := "test@test.com"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeUpdateUserEmailOTP(), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, externalID, body["externalID"])
+		assert.EqualValues(t, email, body["email"])
+	}))
+	require.NoError(t, err)
+	err = a.UpdateUserEmailOTP(externalID, email)
+	require.NoError(t, err)
+}

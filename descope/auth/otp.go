@@ -61,3 +61,15 @@ func (auth *authenticationService) VerifyCodeWithOptions(method DeliveryMethod, 
 	}
 	return auth.generateAuthenticationInfo(httpResponse, options...)
 }
+
+func (auth *authenticationService) UpdateUserEmailOTP(identifier, email string) error {
+	if identifier == "" {
+		return errors.NewInvalidArgumentError("identifier")
+	}
+	if email == "" {
+		return errors.NewInvalidArgumentError("email")
+	}
+
+	_, err := auth.client.DoPostRequest(composeUpdateUserEmailOTP(), newOTPUpdateEmailRequestBody(identifier, email), nil, "")
+	return err
+}
