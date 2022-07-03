@@ -439,7 +439,7 @@ func TestAuthenticationMiddlewareSuccess(t *testing.T) {
 func TestExtractTokensEmpty(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	tokens, err := a.extractTokens(`{ "jwts": [] }`)
+	tokens, err := a.extractTokens(&JWTResponse{})
 	require.NoError(t, err)
 	require.Len(t, tokens, 0)
 }
@@ -447,7 +447,7 @@ func TestExtractTokensEmpty(t *testing.T) {
 func TestExtractTokensInvalid(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	tokens, err := a.extractTokens(`{ "jwts": ["aaaaaa"] }`)
+	tokens, err := a.extractTokens(&JWTResponse{JWTS: []string{"aaaaa"}})
 	require.Error(t, err)
 	require.Empty(t, tokens)
 }

@@ -33,10 +33,10 @@ func TestSignUpEmail(t *testing.T) {
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, email, m["email"])
-		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["username"])
+		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["externalID"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpOTP(MethodEmail, email, &User{Username: "test"})
+	err = a.SignUpOTP(MethodEmail, email, &User{ExternalID: "test"})
 	require.NoError(t, err)
 }
 
@@ -48,10 +48,10 @@ func TestSignUpSMS(t *testing.T) {
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["phone"])
-		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["username"])
+		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["externalID"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpOTP(MethodSMS, phone, &User{Username: "test"})
+	err = a.SignUpOTP(MethodSMS, phone, &User{ExternalID: "test"})
 	require.NoError(t, err)
 }
 
@@ -63,10 +63,10 @@ func TestSignUpWhatsApp(t *testing.T) {
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["whatsapp"])
-		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["username"])
+		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["externalID"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpOTP(MethodWhatsApp, phone, &User{Username: "test"})
+	err = a.SignUpOTP(MethodWhatsApp, phone, &User{ExternalID: "test"})
 	require.NoError(t, err)
 }
 
