@@ -122,7 +122,7 @@ func newTestAuth(clientParams *api.ClientParams, callback mocks.Do) (*authentica
 
 func newTestAuthConf(authParams *AuthParams, clientParams *api.ClientParams, callback mocks.Do) (*authenticationService, error) {
 	if clientParams == nil {
-		clientParams = &api.ClientParams{}
+		clientParams = &api.ClientParams{ProjectID: "a"}
 	}
 	if authParams == nil {
 		authParams = &AuthParams{ProjectID: "a", PublicKey: publicKey}

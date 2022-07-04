@@ -7,9 +7,9 @@ type MockDescopeAuthentication struct {
 	SignUpOTPResponseError                      error
 	SignUpOrInOTPResponseError                  error
 	VerifyCodeResponseInfo                      *AuthenticationInfo
-	AssertUpdateUserEmailOTP                    func(identifier string, email string)
+	AssertUpdateUserEmailOTP                    func(identifier string, email string, request *http.Request)
 	UpdateUserEmailOTPResponseError             error
-	AssertUpdateUserPhoneOTP                    func(method DeliveryMethod, identifier string, email string)
+	AssertUpdateUserPhoneOTP                    func(method DeliveryMethod, identifier string, email string, request *http.Request)
 	UpdateUserPhoneOTPResponseError             error
 	VerifyCodeResponseError                     error
 	ValidateSessionResponseNotOK                bool
@@ -38,14 +38,14 @@ type MockDescopeAuthentication struct {
 	SignInMagicLinkCrossDeviceResponseError     error
 	SignUpOrInMagicLinkCrossDeviceResponseError error
 	MagicLinkPendingLinkCrossDeviceResponse     *MagicLinkResponse
-	AssertUpdateUserEmailMagicLink              func(identifier, email, URI string)
+	AssertUpdateUserEmailMagicLink              func(identifier, email, URI string, request *http.Request)
 	UpdateUserEmailMagicLinkResponseError       error
-	AssertUpdateUserEmailMagicLinkCrossDevice   func(identifier, email, URI string)
+	AssertUpdateUserEmailMagicLinkCrossDevice   func(identifier, email, URI string, request *http.Request)
 	UpdateUserEmailMagicLinkCrossDeviceError    error
 	UpdateUserEmailMagicLinkCrossDeviceResponse *MagicLinkResponse
-	AssertUpdateUserPhoneMagicLink              func(method DeliveryMethod, identifier, email, URI string)
+	AssertUpdateUserPhoneMagicLink              func(method DeliveryMethod, identifier, email, URI string, request *http.Request)
 	UpdateUserPhoneMagicLinkResponseError       error
-	AssertUpdateUserPhoneMagicLinkCrossDevice   func(method DeliveryMethod, identifier, email, URI string)
+	AssertUpdateUserPhoneMagicLinkCrossDevice   func(method DeliveryMethod, identifier, email, URI string, request *http.Request)
 	UpdateUserPhoneMagicLinkCrossDeviceError    error
 	UpdateUserPhoneMagicLinkCrossDeviceResponse *MagicLinkResponse
 	AssertVerifyMagicLink                       func(token string)
@@ -80,16 +80,16 @@ func (m MockDescopeAuthentication) SignUpOrInOTP(method DeliveryMethod, identifi
 	return m.SignUpOrInOTPResponseError
 }
 
-func (m MockDescopeAuthentication) UpdateUserEmailOTP(identifier, email string) error {
+func (m MockDescopeAuthentication) UpdateUserEmailOTP(identifier, email string, request *http.Request) error {
 	if m.AssertUpdateUserEmailOTP != nil {
-		m.AssertUpdateUserEmailOTP(identifier, email)
+		m.AssertUpdateUserEmailOTP(identifier, email, request)
 	}
 	return m.UpdateUserEmailOTPResponseError
 }
 
-func (m MockDescopeAuthentication) UpdateUserPhoneOTP(method DeliveryMethod, identifier, email string) error {
+func (m MockDescopeAuthentication) UpdateUserPhoneOTP(method DeliveryMethod, identifier, email string, request *http.Request) error {
 	if m.AssertUpdateUserPhoneOTP != nil {
-		m.AssertUpdateUserPhoneOTP(method, identifier, email)
+		m.AssertUpdateUserPhoneOTP(method, identifier, email, request)
 	}
 	return m.UpdateUserPhoneOTPResponseError
 }
@@ -150,30 +150,30 @@ func (m MockDescopeAuthentication) SignUpOrInMagicLinkCrossDevice(method Deliver
 	return m.MagicLinkPendingLinkCrossDeviceResponse, m.SignUpOrInMagicLinkCrossDeviceResponseError
 }
 
-func (m MockDescopeAuthentication) UpdateUserEmailMagicLink(identifier, email, URI string) error {
+func (m MockDescopeAuthentication) UpdateUserEmailMagicLink(identifier, email, URI string, request *http.Request) error {
 	if m.AssertUpdateUserEmailMagicLink != nil {
-		m.AssertUpdateUserEmailMagicLink(identifier, email, URI)
+		m.AssertUpdateUserEmailMagicLink(identifier, email, URI, request)
 	}
 	return m.UpdateUserEmailMagicLinkResponseError
 }
 
-func (m MockDescopeAuthentication) UpdateUserEmailMagicLinkCrossDevice(identifier, email, URI string) (*MagicLinkResponse, error) {
+func (m MockDescopeAuthentication) UpdateUserEmailMagicLinkCrossDevice(identifier, email, URI string, request *http.Request) (*MagicLinkResponse, error) {
 	if m.AssertUpdateUserEmailMagicLinkCrossDevice != nil {
-		m.AssertUpdateUserEmailMagicLinkCrossDevice(identifier, email, URI)
+		m.AssertUpdateUserEmailMagicLinkCrossDevice(identifier, email, URI, request)
 	}
 	return m.UpdateUserEmailMagicLinkCrossDeviceResponse, m.UpdateUserEmailMagicLinkCrossDeviceError
 }
 
-func (m MockDescopeAuthentication) UpdateUserPhoneMagicLink(method DeliveryMethod, identifier, email, URI string) error {
+func (m MockDescopeAuthentication) UpdateUserPhoneMagicLink(method DeliveryMethod, identifier, email, URI string, request *http.Request) error {
 	if m.AssertUpdateUserPhoneMagicLink != nil {
-		m.AssertUpdateUserPhoneMagicLink(method, identifier, email, URI)
+		m.AssertUpdateUserPhoneMagicLink(method, identifier, email, URI, request)
 	}
 	return m.UpdateUserPhoneMagicLinkResponseError
 }
 
-func (m MockDescopeAuthentication) UpdateUserPhoneMagicLinkCrossDevice(method DeliveryMethod, identifier, email, URI string) (*MagicLinkResponse, error) {
+func (m MockDescopeAuthentication) UpdateUserPhoneMagicLinkCrossDevice(method DeliveryMethod, identifier, email, URI string, request *http.Request) (*MagicLinkResponse, error) {
 	if m.AssertUpdateUserPhoneMagicLinkCrossDevice != nil {
-		m.AssertUpdateUserPhoneMagicLinkCrossDevice(method, identifier, email, URI)
+		m.AssertUpdateUserPhoneMagicLinkCrossDevice(method, identifier, email, URI, request)
 	}
 	return m.UpdateUserPhoneMagicLinkCrossDeviceResponse, m.UpdateUserPhoneMagicLinkCrossDeviceError
 }

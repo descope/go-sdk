@@ -226,6 +226,15 @@ func (auth *authenticationService) generateAuthenticationInfo(httpResponse *api.
 	return NewAuthenticationInfo(jwtResponse, token), err
 }
 
+func getValidRefreshToken(r *http.Request) (string, error) {
+	_, refreshToken := provideTokens(r)
+	if refreshToken == "" {
+		logger.LogDebug("unable to find tokens from cookies")
+		return "", errors.RefreshTokenError
+	}
+	return refreshToken, nil
+}
+
 func createCookie(token *Token) *http.Cookie {
 	if token != nil {
 		path, _ := token.Claims["path"].(string)

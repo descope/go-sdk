@@ -296,24 +296,39 @@ func TestUpdateEmailOTP(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, externalID, body["externalID"])
 		assert.EqualValues(t, email, body["email"])
+		u, p, ok := r.BasicAuth()
+		assert.True(t, ok)
+		assert.NotEmpty(t, u)
+		assert.NotEmpty(t, p)
 	}))
 	require.NoError(t, err)
-	err = a.UpdateUserEmailOTP(externalID, email)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+	err = a.UpdateUserEmailOTP(externalID, email, r)
 	require.NoError(t, err)
 }
 
 func TestUpdateEmailOTPFailures(t *testing.T) {
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.UpdateUserEmailOTP("", "email")
+	err = a.UpdateUserEmailOTP("", "email", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "identifier"))
-	err = a.UpdateUserEmailOTP("id", "")
+	err = a.UpdateUserEmailOTP("id", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "email"))
-	err = a.UpdateUserEmailOTP("id", "email")
+	err = a.UpdateUserEmailOTP("id", "email", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "email"))
+
+	r = &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: "somename", Value: jwtTokenValid})
+	err = a.UpdateUserEmailOTP("id", "test@test.com", r)
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, errors.RefreshTokenError)
 }
 
 func TestUpdatePhoneOTP(t *testing.T) {
@@ -326,25 +341,38 @@ func TestUpdatePhoneOTP(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, externalID, body["externalID"])
 		assert.EqualValues(t, phone, body["phone"])
+		u, p, ok := r.BasicAuth()
+		assert.True(t, ok)
+		assert.NotEmpty(t, u)
+		assert.NotEmpty(t, p)
 	}))
 	require.NoError(t, err)
-	err = a.UpdateUserPhoneOTP(MethodSMS, externalID, phone)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+	err = a.UpdateUserPhoneOTP(MethodSMS, externalID, phone, r)
 	require.NoError(t, err)
 }
 
 func TestUpdatePhoneOTPFailures(t *testing.T) {
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.UpdateUserPhoneOTP(MethodSMS, "", "+11111111111")
+	err = a.UpdateUserPhoneOTP(MethodSMS, "", "+11111111111", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "identifier"))
-	err = a.UpdateUserPhoneOTP(MethodSMS, "id", "")
+	err = a.UpdateUserPhoneOTP(MethodSMS, "id", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "phone"))
-	err = a.UpdateUserPhoneOTP(MethodSMS, "id", "aaaaa")
+	err = a.UpdateUserPhoneOTP(MethodSMS, "id", "aaaaa", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "phone"))
-	err = a.UpdateUserPhoneOTP(MethodEmail, "id", "+11111111111")
+	err = a.UpdateUserPhoneOTP(MethodEmail, "id", "+11111111111", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "method"))
+	r = &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: "somename", Value: jwtTokenValid})
+	err = a.UpdateUserPhoneOTP(MethodSMS, "id", "+11111111111", r)
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, errors.RefreshTokenError)
 }
