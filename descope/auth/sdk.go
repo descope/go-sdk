@@ -131,4 +131,26 @@ type Authentication interface {
 	// LogoutWithOptions - Use to perform logout from all active devices. This will revoke the given tokens
 	// and if given options will also remove existing session on the given response.
 	LogoutWithOptions(request *http.Request, options ...Option) error
+
+	// UpdateUserEmailOTP - Use to a logged in user email
+	// ExternalID needs to be supplies, and JWT will be taken from cookie, to ensure user updates its own data
+	UpdateUserEmailOTP(identifier, email string) error
+	// UpdateUserEmailMagicLink - Use to a logged in user email
+	// ExternalID needs to be supplies, and JWT will be taken from cookie, to ensure user updates its own data
+	UpdateUserEmailMagicLink(identifier, email, URI string) error
+	// UpdateUserEmailMagicLinkCrossDevice - Use to a logged in user email
+	// ExternalID needs to be supplies, and JWT will be taken from cookie, to ensure user updates its own data
+	UpdateUserEmailMagicLinkCrossDevice(identifier, email, URI string) (*MagicLinkResponse, error)
+	// UpdateUserPhoneOTP - Use to a logged in user phone
+	// allowed methods are phone based methods - whatsapp and SMS
+	// ExternalID needs to be supplies, and JWT will be taken from cookie, to ensure user updates its own data
+	UpdateUserPhoneOTP(method DeliveryMethod, identifier, phone string) error
+	// UpdateUserPhoneMagicLink - Use to a logged in user phone
+	// allowed methods are phone based methods - whatsapp and SMS
+	// ExternalID needs to be supplies, and JWT will be taken from cookie, to ensure user updates its own data
+	UpdateUserPhoneMagicLink(method DeliveryMethod, identifier, phone, URI string) error
+	// UpdateUserPhoneMagicLinkCrossDevice - Use to a logged in user phone
+	// allowed methods are phone based methods - whatsapp and SMS
+	// ExternalID needs to be supplies, and JWT will be taken from cookie, to ensure user updates its own data
+	UpdateUserPhoneMagicLinkCrossDevice(method DeliveryMethod, identifier, phone, URI string) (*MagicLinkResponse, error)
 }
