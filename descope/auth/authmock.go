@@ -30,6 +30,7 @@ type MockDescopeAuthentication struct {
 	AssertSignInMagicLinkCrossDevice            func(method DeliveryMethod, identifier, URI string)
 	AssertSignUpMagicLinkCrossDevice            func(method DeliveryMethod, identifier, URI string, user *User)
 	AssertSignUpOrInMagicLinkCrossDevice        func(method DeliveryMethod, identifier, URI string)
+	AssertGetMagicLinkSession                   func(pendingRef string)
 	SignUpMagicLinkCrossDeviceResponseError     error
 	SignInMagicLinkCrossDeviceResponseError     error
 	SignUpOrInMagicLinkCrossDeviceResponseError error
@@ -122,7 +123,10 @@ func (m MockDescopeAuthentication) SignUpOrInMagicLinkCrossDevice(method Deliver
 	return m.MagicLinkPendingLinkCrossDeviceResponse, m.SignUpOrInMagicLinkCrossDeviceResponseError
 }
 
-func (m MockDescopeAuthentication) GetMagicLinkSession(_ string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthentication) GetMagicLinkSession(pendingRef string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+	if m.AssertGetMagicLinkSession != nil {
+		m.AssertGetMagicLinkSession(pendingRef)
+	}
 	return m.GetMagicLinkSessionResponseInfo, m.GetMagicLinkSessionResponseError
 }
 
