@@ -62,7 +62,7 @@ func (auth *authenticationService) VerifyCodeWithOptions(method DeliveryMethod, 
 	return auth.generateAuthenticationInfo(httpResponse, options...)
 }
 
-func (auth *authenticationService) UpdateUserEmailOTP(identifier, email string) error {
+func (auth *authenticationService) UpdateUserEmailOTP(identifier, email string, r *http.Request) error {
 	if identifier == "" {
 		return errors.NewInvalidArgumentError("identifier")
 	}
@@ -72,11 +72,15 @@ func (auth *authenticationService) UpdateUserEmailOTP(identifier, email string) 
 	if !emailRegex.MatchString(email) {
 		return errors.NewInvalidArgumentError("email")
 	}
-	_, err := auth.client.DoPostRequest(composeUpdateUserEmailOTP(), newOTPUpdateEmailRequestBody(identifier, email), nil, "")
+	pswd, err := getValidRefreshToken(r)
+	if err != nil {
+		return err
+	}
+	_, err = auth.client.DoPostRequest(composeUpdateUserEmailOTP(), newOTPUpdateEmailRequestBody(identifier, email), nil, pswd)
 	return err
 }
 
-func (auth *authenticationService) UpdateUserPhoneOTP(method DeliveryMethod, identifier, phone string) error {
+func (auth *authenticationService) UpdateUserPhoneOTP(method DeliveryMethod, identifier, phone string, r *http.Request) error {
 	if identifier == "" {
 		return errors.NewInvalidArgumentError("identifier")
 	}
@@ -89,6 +93,10 @@ func (auth *authenticationService) UpdateUserPhoneOTP(method DeliveryMethod, ide
 	if method != MethodSMS && method != MethodWhatsApp {
 		return errors.NewInvalidArgumentError("method")
 	}
-	_, err := auth.client.DoPostRequest(composeUpdateUserPhoneOTP(method), newOTPUpdatePhoneRequestBody(identifier, phone), nil, "")
+	pswd, err := getValidRefreshToken(r)
+	if err != nil {
+		return err
+	}
+	_, err = auth.client.DoPostRequest(composeUpdateUserPhoneOTP(method), newOTPUpdatePhoneRequestBody(identifier, phone), nil, pswd)
 	return err
 }
