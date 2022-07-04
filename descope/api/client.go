@@ -25,35 +25,43 @@ var (
 	Routes = endpoints{
 		version: "/v1/",
 		auth: struct {
-			signInOTP            string
-			signUpOTP            string
-			signUpOrInOTP        string
-			verifyCode           string
-			signInMagicLink      string
-			signUpMagicLink      string
-			signUpOrInMagicLink  string
-			verifyMagicLink      string
-			oauthStart           string
-			webauthnSignupStart  string
-			webauthnSignupFinish string
-			webauthnSigninStart  string
-			webauthnSigninFinish string
-			getMagicLinkSession  string
+			signInOTP                string
+			signUpOTP                string
+			signUpOrInOTP            string
+			verifyCode               string
+			signInMagicLink          string
+			signUpMagicLink          string
+			signUpOrInMagicLink      string
+			verifyMagicLink          string
+			oauthStart               string
+			webauthnSignupStart      string
+			webauthnSignupFinish     string
+			webauthnSigninStart      string
+			webauthnSigninFinish     string
+			getMagicLinkSession      string
+			updateUserEmailMagicLink string
+			updateUserEmailOTP       string
+			updateUserPhoneMagicLink string
+			updateUserPhoneOTP       string
 		}{
-			signInOTP:            "auth/signin/otp",
-			signUpOTP:            "auth/signup/otp",
-			signUpOrInOTP:        "auth/sign-up-or-in/otp",
-			verifyCode:           "auth/code/verify",
-			signInMagicLink:      "auth/signin/magiclink",
-			signUpMagicLink:      "auth/signup/magiclink",
-			signUpOrInMagicLink:  "auth/sign-up-or-in/magiclink",
-			verifyMagicLink:      "auth/magiclink/verify",
-			oauthStart:           "oauth/authorize",
-			webauthnSigninStart:  "webauthn/signin/start",
-			webauthnSigninFinish: "webauthn/signin/finish",
-			webauthnSignupStart:  "webauthn/signup/start",
-			webauthnSignupFinish: "webauthn/signup/finish",
-			getMagicLinkSession:  "auth/magiclink/session",
+			signInOTP:                "auth/signin/otp",
+			signUpOTP:                "auth/signup/otp",
+			signUpOrInOTP:            "auth/sign-up-or-in/otp",
+			verifyCode:               "auth/code/verify",
+			signInMagicLink:          "auth/signin/magiclink",
+			signUpMagicLink:          "auth/signup/magiclink",
+			signUpOrInMagicLink:      "auth/sign-up-or-in/magiclink",
+			verifyMagicLink:          "auth/magiclink/verify",
+			oauthStart:               "oauth/authorize",
+			webauthnSigninStart:      "webauthn/signin/start",
+			webauthnSigninFinish:     "webauthn/signin/finish",
+			webauthnSignupStart:      "webauthn/signup/start",
+			webauthnSignupFinish:     "webauthn/signup/finish",
+			getMagicLinkSession:      "auth/magiclink/session",
+			updateUserEmailMagicLink: "/user/update/email/magiclink",
+			updateUserEmailOTP:       "/user/update/email/otp",
+			updateUserPhoneMagicLink: "user/update/phone/magiclink",
+			updateUserPhoneOTP:       "user/update/phone/otp",
 		},
 		logoutAll: "auth/logoutall",
 		keys:      "/keys/",
@@ -64,20 +72,24 @@ var (
 type endpoints struct {
 	version string
 	auth    struct {
-		signInOTP            string
-		signUpOTP            string
-		signUpOrInOTP        string
-		verifyCode           string
-		signInMagicLink      string
-		signUpMagicLink      string
-		signUpOrInMagicLink  string
-		verifyMagicLink      string
-		oauthStart           string
-		webauthnSignupStart  string
-		webauthnSignupFinish string
-		webauthnSigninStart  string
-		webauthnSigninFinish string
-		getMagicLinkSession  string
+		signInOTP                string
+		signUpOTP                string
+		signUpOrInOTP            string
+		verifyCode               string
+		signInMagicLink          string
+		signUpMagicLink          string
+		signUpOrInMagicLink      string
+		verifyMagicLink          string
+		oauthStart               string
+		webauthnSignupStart      string
+		webauthnSignupFinish     string
+		webauthnSigninStart      string
+		webauthnSigninFinish     string
+		getMagicLinkSession      string
+		updateUserEmailMagicLink string
+		updateUserEmailOTP       string
+		updateUserPhoneMagicLink string
+		updateUserPhoneOTP       string
 	}
 	logoutAll string
 	keys      string
@@ -134,6 +146,22 @@ func (e *endpoints) GetKeys() string {
 }
 func (e *endpoints) RefreshToken() string {
 	return path.Join(e.version, e.refresh)
+}
+
+func (e *endpoints) UpdateUserEmailMagiclink() string {
+	return path.Join(e.version, e.auth.updateUserEmailMagicLink)
+}
+
+func (e *endpoints) UpdateUserEmailOTP() string {
+	return path.Join(e.version, e.auth.updateUserEmailOTP)
+}
+
+func (e *endpoints) UpdateUserPhoneMagicLink() string {
+	return path.Join(e.version, e.auth.updateUserPhoneMagicLink)
+}
+
+func (e *endpoints) UpdateUserPhoneOTP() string {
+	return path.Join(e.version, e.auth.updateUserPhoneOTP)
 }
 
 type ClientParams struct {

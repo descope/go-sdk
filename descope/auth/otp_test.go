@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/descope/go-sdk/descope/errors"
@@ -283,4 +284,67 @@ func TestVerifyCodeEmailResponseNil(t *testing.T) {
 	require.NotEmpty(t, info)
 	require.NotEmpty(t, info.SessionToken)
 	assert.EqualValues(t, jwtTokenValid, info.SessionToken.JWT)
+}
+
+func TestUpdateEmailOTP(t *testing.T) {
+	externalID := "943248329844"
+	email := "test@test.com"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeUpdateUserEmailOTP(), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, externalID, body["externalID"])
+		assert.EqualValues(t, email, body["email"])
+	}))
+	require.NoError(t, err)
+	err = a.UpdateUserEmailOTP(externalID, email)
+	require.NoError(t, err)
+}
+
+func TestUpdateEmailOTPFailures(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	err = a.UpdateUserEmailOTP("", "email")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "identifier"))
+	err = a.UpdateUserEmailOTP("id", "")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "email"))
+	err = a.UpdateUserEmailOTP("id", "email")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "email"))
+}
+
+func TestUpdatePhoneOTP(t *testing.T) {
+	externalID := "943248329844"
+	phone := "+111111111111"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeUpdateUserPhoneOTP(MethodSMS), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, externalID, body["externalID"])
+		assert.EqualValues(t, phone, body["phone"])
+	}))
+	require.NoError(t, err)
+	err = a.UpdateUserPhoneOTP(MethodSMS, externalID, phone)
+	require.NoError(t, err)
+}
+
+func TestUpdatePhoneOTPFailures(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	err = a.UpdateUserPhoneOTP(MethodSMS, "", "+11111111111")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "identifier"))
+	err = a.UpdateUserPhoneOTP(MethodSMS, "id", "")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "phone"))
+	err = a.UpdateUserPhoneOTP(MethodSMS, "id", "aaaaa")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "phone"))
+	err = a.UpdateUserPhoneOTP(MethodEmail, "id", "+11111111111")
+	assert.Error(t, err)
+	assert.True(t, strings.Contains(err.Error(), "method"))
 }

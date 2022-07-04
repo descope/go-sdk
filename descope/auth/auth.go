@@ -308,3 +308,19 @@ func composeOAuthURL() string {
 func composeGetMagicLinkSession() string {
 	return api.Routes.GetMagicLinkSession()
 }
+
+func composeUpdateUserEmailOTP() string {
+	return api.Routes.UpdateUserEmailOTP()
+}
+
+func composeUpdateUserEmailMagicLink() string {
+	return api.Routes.UpdateUserEmailMagiclink()
+}
+
+func composeUpdateUserPhoneOTP(method DeliveryMethod) string {
+	return composeURLMethod(api.Routes.UpdateUserPhoneOTP(), method)
+}
+
+func composeUpdateUserPhoneMagicLink(method DeliveryMethod) string {
+	return composeURLMethod(api.Routes.UpdateUserPhoneMagicLink(), method)
+}
