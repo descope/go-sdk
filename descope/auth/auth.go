@@ -4,6 +4,7 @@ import (
 	goErrors "errors"
 	"net/http"
 	"path"
+	"time"
 
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/errors"
@@ -238,8 +239,23 @@ func getValidRefreshToken(r *http.Request) (string, error) {
 func createCookie(token *Token) *http.Cookie {
 	if token != nil {
 		path, _ := token.Claims["cookiePath"].(string)
+		domain, _ := token.Claims["cookieDomain"].(string)
 		name, _ := token.Claims["cookieName"].(string)
-		return &http.Cookie{Path: path, Domain: "172.17.30.138:3333", Name: name, Value: token.JWT, HttpOnly: true}
+		maxAge, _ := token.Claims["cookieMaxAge"].(int)
+		expiration, _ := token.Claims["cookieExpiration"].(int64)
+		logger.LogDebug("!!!!! path", path)
+		logger.LogDebug("!!!!! name", name)
+		logger.LogDebug("!!!!! maxAge", maxAge)
+		logger.LogDebug("!!!!! expiration", expiration)
+		return &http.Cookie{
+			Path:     path,
+			Domain:   domain,
+			Name:     name,
+			Value:    token.JWT,
+			HttpOnly: true,
+			MaxAge:   maxAge,
+			Expires:  time.UnixMilli(expiration),
+		}
 	}
 	return nil
 }
