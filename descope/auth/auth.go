@@ -251,6 +251,7 @@ func createCookie(token *Token) *http.Cookie {
 			HttpOnly: true,
 			MaxAge:   int(maxAge),
 			Expires:  time.Unix(int64(expiration), 0),
+			SameSite: http.SameSiteNoneMode,
 		}
 	}
 	return nil
