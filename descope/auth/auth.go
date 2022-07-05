@@ -327,6 +327,10 @@ func composeOAuthURL() string {
 	return api.Routes.OAuthStart()
 }
 
+func composeExchangeTokenURL() string {
+	return api.Routes.ExchangeToken()
+}
+
 func composeGetMagicLinkSession() string {
 	return api.Routes.GetMagicLinkSession()
 }

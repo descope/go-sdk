@@ -49,6 +49,9 @@ type MockDescopeAuthentication struct {
 	AssertUpdateUserPhoneMagicLinkCrossDevice   func(method DeliveryMethod, identifier, email, URI string, request *http.Request)
 	UpdateUserPhoneMagicLinkCrossDeviceError    error
 	UpdateUserPhoneMagicLinkCrossDeviceResponse *MagicLinkResponse
+	AssertExchangeToken                         func(code string, options ...Option)
+	ExchangeTokenResponseInfo                   *AuthenticationInfo
+	ExchangeTokenResponseError                  error
 	AssertVerifyMagicLink                       func(token string)
 	SignUpWebAuthnStartResponseError            error
 	SignUpWebAuthnStartResponseTransaction      *WebAuthnTransactionResponse
@@ -202,6 +205,17 @@ func (m MockDescopeAuthentication) OAuthStartWithOptions(provider OAuthProvider,
 		m.AssertOAuthStart(provider)
 	}
 	return m.AssertOAuthResponseURL, m.OAuthStartResponseError
+}
+
+func (m MockDescopeAuthentication) ExchangeToken(code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	return m.ExchangeTokenWithOptions(code, WithResponseOption(w))
+}
+
+func (m MockDescopeAuthentication) ExchangeTokenWithOptions(code string, options ...Option) (*AuthenticationInfo, error) {
+	if m.AssertExchangeToken != nil {
+		m.AssertExchangeToken(code, options...)
+	}
+	return m.ExchangeTokenResponseInfo, m.ExchangeTokenResponseError
 }
 
 func (m MockDescopeAuthentication) VerifyMagicLink(token string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
