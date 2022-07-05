@@ -237,8 +237,8 @@ func getValidRefreshToken(r *http.Request) (string, error) {
 
 func createCookie(token *Token) *http.Cookie {
 	if token != nil {
-		path, _ := token.Claims["path"].(string)
-		domain, _ := token.Claims["domain"].(string)
+		path, _ := token.Claims["cookiePath"].(string)
+		domain, _ := token.Claims["cookieDomain"].(string)
 		name, _ := token.Claims["cookieName"].(string)
 		return &http.Cookie{Path: path, Domain: domain, Name: name, Value: token.JWT, HttpOnly: true}
 	}
