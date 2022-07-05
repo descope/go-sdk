@@ -241,20 +241,16 @@ func createCookie(token *Token) *http.Cookie {
 		path, _ := token.Claims["cookiePath"].(string)
 		domain, _ := token.Claims["cookieDomain"].(string)
 		name, _ := token.Claims["cookieName"].(string)
-		maxAge, _ := token.Claims["cookieMaxAge"].(int)
-		expiration, _ := token.Claims["cookieExpiration"].(int64)
-		logger.LogDebug("!!!!! path", path)
-		logger.LogDebug("!!!!! name", name)
-		logger.LogDebug("!!!!! maxAge", maxAge)
-		logger.LogDebug("!!!!! expiration", expiration)
+		maxAge, _ := token.Claims["cookieMaxAge"].(float64)
+		expiration, _ := token.Claims["cookieExpiration"].(float64)
 		return &http.Cookie{
 			Path:     path,
 			Domain:   domain,
 			Name:     name,
 			Value:    token.JWT,
 			HttpOnly: true,
-			MaxAge:   maxAge,
-			Expires:  time.UnixMilli(expiration),
+			MaxAge:   int(maxAge),
+			Expires:  time.Unix(int64(expiration), 0),
 		}
 	}
 	return nil
