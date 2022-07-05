@@ -89,6 +89,12 @@ type Authentication interface {
 	OAuthStart(provider OAuthProvider, w http.ResponseWriter) (string, error)
 	// OAuthStartWithOptions - use to start an OAuth authentication using the given OAuthProvider and options.
 	OAuthStartWithOptions(provider OAuthProvider, options ...Option) (string, error)
+	// ExchangeToken - Finalize OAuth or SAML authentication
+	// code should be extracted from the redirect URL of OAth/SAML authentication flow
+	ExchangeToken(code string, w http.ResponseWriter) (*AuthenticationInfo, error)
+	// ExchangeTokenWithOptions - Finalize OAuth or SAML authentication
+	// code should be extracted from the redirect URL of OAth/SAML authentication flow
+	ExchangeTokenWithOptions(code string, options ...Option) (*AuthenticationInfo, error)
 
 	// ValidateSession - Use to validate a session of a given request.
 	// Should be called before any private API call that requires authorization.
