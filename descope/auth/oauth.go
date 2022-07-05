@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/descope/go-sdk/descope/api"
+	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/logger"
 )
 
@@ -28,4 +29,20 @@ func (auth *authenticationService) OAuthStartWithOptions(provider OAuthProvider,
 	}
 
 	return
+}
+
+func (auth *authenticationService) ExchangeToken(code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	return auth.ExchangeTokenWithOptions(code, WithResponseOption(w))
+}
+
+func (auth *authenticationService) ExchangeTokenWithOptions(code string, options ...Option) (*AuthenticationInfo, error) {
+	if code == "" {
+		return nil, errors.NewInvalidArgumentError("code")
+	}
+
+	httpResponse, err := auth.client.DoPostRequest(composeExchangeTokenURL(), newExchangeTokenRequest(code), nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return auth.generateAuthenticationInfo(httpResponse, options...)
 }
