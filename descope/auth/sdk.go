@@ -96,6 +96,16 @@ type Authentication interface {
 	// code should be extracted from the redirect URL of OAth/SAML authentication flow
 	ExchangeTokenWithOptions(code string, options ...Option) (*AuthenticationInfo, error)
 
+	// SAMLStart will initiate a SAML login flow
+	// return will be the redirect URL that needs to return to client
+	// and finalize with the ExchangeToken call
+	SAMLStart(tenant string, w http.ResponseWriter) (redirectURL string, err error)
+	// SAMLStartWithOptions will initiate a SAML login flow
+	// options are the options to return the data to front end
+	// return will be the redirect URL that needs to return to client
+	// and finalize with the ExchangeToken call
+	SAMLStartWithOptions(tenant string, options ...Option) (redirectURL string, err error)
+
 	// ValidateSession - Use to validate a session of a given request.
 	// Should be called before any private API call that requires authorization.
 	// In case the request cookie can be renewed an automatic renewal is called and returns a new set of cookies to use.

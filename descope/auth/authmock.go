@@ -52,6 +52,9 @@ type MockDescopeAuthentication struct {
 	AssertExchangeToken                         func(code string, options ...Option)
 	ExchangeTokenResponseInfo                   *AuthenticationInfo
 	ExchangeTokenResponseError                  error
+	AssertSAMLStart                             func(tenant string, options ...Option)
+	AssertSAMLStartResponseURL                  string
+	SAMLStartResponseError                      error
 	AssertVerifyMagicLink                       func(token string)
 	SignUpWebAuthnStartResponseError            error
 	SignUpWebAuthnStartResponseTransaction      *WebAuthnTransactionResponse
@@ -216,6 +219,17 @@ func (m MockDescopeAuthentication) ExchangeTokenWithOptions(code string, options
 		m.AssertExchangeToken(code, options...)
 	}
 	return m.ExchangeTokenResponseInfo, m.ExchangeTokenResponseError
+}
+
+func (m MockDescopeAuthentication) SAMLStart(tenant string, w http.ResponseWriter) (string, error) {
+	return m.SAMLStartWithOptions(tenant, WithResponseOption(w))
+}
+
+func (m MockDescopeAuthentication) SAMLStartWithOptions(tenant string, option ...Option) (string, error) {
+	if m.AssertSAMLStart != nil {
+		m.AssertSAMLStart(tenant, option...)
+	}
+	return m.AssertSAMLStartResponseURL, m.SAMLStartResponseError
 }
 
 func (m MockDescopeAuthentication) VerifyMagicLink(token string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
