@@ -4,6 +4,7 @@ import (
 	goErrors "errors"
 	"net/http"
 	"path"
+	"time"
 
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/errors"
@@ -240,7 +241,19 @@ func createCookie(token *Token) *http.Cookie {
 		path, _ := token.Claims["cookiePath"].(string)
 		domain, _ := token.Claims["cookieDomain"].(string)
 		name, _ := token.Claims["cookieName"].(string)
-		return &http.Cookie{Path: path, Domain: domain, Name: name, Value: token.JWT, HttpOnly: true}
+		maxAge, _ := token.Claims["cookieMaxAge"].(float64)
+		expiration, _ := token.Claims["cookieExpiration"].(float64)
+		return &http.Cookie{
+			Path:     path,
+			Domain:   domain,
+			Name:     name,
+			Value:    token.JWT,
+			HttpOnly: true,
+			MaxAge:   int(maxAge),
+			Expires:  time.Unix(int64(expiration), 0),
+			SameSite: http.SameSiteNoneMode,
+			Secure:   true,
+		}
 	}
 	return nil
 }
