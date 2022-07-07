@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	jwtTokenValid    = `eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzM4NCIsImtpZCI6ImU0YTU3Y2M5ZGZiNDAyYTNlNTNjNDJhNjQyMmY3M2FmIiwiZXhwIjoyNjU2MjU4NjkxfQ.eyJjb29raWVOYW1lIjoiRFMifQ.TyOg1RVbYzY2u5PPyZ-ogzLS15lBROtwQEzNCbOojEdAoQct-yr5RQLBhAejbgUnLjDqWNUj_Dj4t37N6Dl4II-P5ZHeqV0rVppntjGiKNehvE8x6KR_JV5xi59_OFg7xBbUEW7iWPGPxTYumb91GKddnYgyEppaeQDgIjNJAgHp6-bcZ5kKYTABbXqeDzXLKCx7NqVrSB86ZkUmJ09uTIkRcifyz4EZfJzxUhm1jJULmlDpI_q3JZxfrVViBlKuPH18qm9i68GXMiwcBRsunok0bP1zMjhoolu748pLUTYVGpzr67Styg5FcLYLV2dNEFahJYQfWvWg1CyU5cHXktxyPdr9ANlhPmkzcKGYvdL6cVYB5ynmfAE8RgrwiyCWgIl6Bt_OFn3ArraEo6YSCVSdNhRf0N3_aHkXwQUjACtpyGx35VuiUgrU-9UT43YPllIUmTLeASXNEQpWZ9FvlU1KeYyMNx9UkkXzc_c3tcyW9XZ1Ib8QOW1BEAREA1y_`
+	jwtTokenValid    = `eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzM4NCIsImtpZCI6ImU0YTU3Y2M5ZGZiNDAyYTNlNTNjNDJhNjQyMmY3M2FmIiwiZXhwIjoyNjU2MjU4NjkxfQ.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxOTk3MTkwOTY4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEUyIsImNvb2tpZVBhdGgiOiIvIiwiZXhwIjoxOTU3MTkwOTY4LCJpYXQiOjE2NTcxOTAzNjgsImlzcyI6InRlc3QiLCJzdWIiOiJleHRlcm5hbGlkIn0.whK9QcEmGRSghYv_Orhgg3ln_XaJs7efTbsSneWAf-QrT_ASo1s8pwkjgHYL-LtU7sAEdTGl1l1z49CNoEN7B6GUYOhwu_d8emLrTcpxgfnYlzhn_4wfuvi6gfOdgTPjbfb-0Hw9Gq8vsjziq37f6wkDurMF5HFhl0rCM43ywvZT6ocT1Fy4fNyCHa5ijf4-xNYut6AU23AauxE0ztOnLRzebLz_3kLB4cMqGQEXZC_uGyEu3O283JkaY-hYKJ05gt_8ltYw4vCu_IHSN2xHZYgC977XdQwWIULWZip_JYmO1DiGRTXXuxNqtPk6hV8HSkYtZoI7TxpiY95sR4abXtn6vzU6InUA1_fUfyAmyjBtr03KI9opTG9UTr-blMlQgKke3w_aVgHAJAYTFSKlniYcUyLyuDmtclQfUveaBQxVYfUFU29T4D6XK-l1epM3jBkKeSHfqB1FPZO4dfX1XbvwGpLzAoERwo6l9XjoZzJHXIAIix4UdZx_GBrN3hDc`
 	jwtTokenExpired  = `eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzM4NCIsImtpZCI6ImU0YTU3Y2M5ZGZiNDAyYTNlNTNjNDJhNjQyMmY3M2FmIn0.eyJjb29raWVOYW1lIjoiRFMiLCJleHAiOjEyNTYyNTg2OTF9.AvU50pkQt8F000JqpVy7vCbcV-pwGqyi_GENqmmqrRMVswk5Y5VfSjP7axBnZ55xJ85sP6ozawbs_g1FdGtzvgrHEIJVRJSe73EwWTV9yZwiUD8kU-QAtUqP_Vk-rf-3zzE1lmI3DubXZYGTE4tMUsIQ-2NI3-Q9R89yzjLMv9z7_0TaDB28LMCJPlmjTA-7x_FoWqxmCs0z00dZ6sthtppbo25DiO3EW7D35gE1CPOgITjktWSRt035TR0iV91YoPyPAkmEo3mxI4XXu-1fLcZdFFTZOOU4TmA-_wbXevf0kIaQ9Kl4jPEK9lSUHEhLG59nu_0aPVxUXqE-Y8Qo7Ed-Gri5fPhZarDtMRRpVc1pc7D8zYMyKEHvCqkdjV9MDfIK3eCVuCGUxytgEe4Px-sgPSS_7Ne8hZ1T7K3TbcoMlRl--fI6rbmcOj-2srCcofr9NX2pxeUdWU8g6ZfFFxADSfJNb0MbZz55QGN8yz-54jZR3nT7i7kXX0ylrDQw`
 	jwtTokenNotYet   = `eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzM4NCIsImtpZCI6ImU0YTU3Y2M5ZGZiNDAyYTNlNTNjNDJhNjQyMmY3M2FmIn0.eyJjb29raWVOYW1lIjoiRFMiLCJuYmYiOjI2NTYyNTg2OTF9.dvkNfmyUgbhlwv2eW_qC8VfcKYaMKaS8aDM2XdgYxnLuOhQUNnlY87H8bQGw7RChvqyJtciFo74KFhTZkAWqKDpdisIPDnydJ7SzY-NOv6Mtg0DAl99nDuItsYDoSIHVV_3h6feZC353ziQIEoktPf9dnyYpN0IumGMg-g5ww7foDglpwbIP9c6SxxDIOIMh5fGlT7tG79-i_QJ3zsDuYo0v8aNFd7QcP5tA8Kj9Tthp2pHTacu0WDSq39p6XEvDaKiLRhhVOfyd_jTTC2xzmkXRzt2KOy1ObRvhOiItQCoISn66QO4dm8febSagA2_GtDd1VYxwT0zW7usK4CwKfoSej_UMp-BZZ8Q1fDqMWfG9qWjeinfty7ePQwV2Y_kiNCjyTvKlbPnTINL_VXemb0pIaAITfROlzWtXGGnP3soFczgWe4WXC_Q7wx3uCkyN5BIKLajxCF3EAfPzDi7YbYnQXEk-imGoqWpYXw0SXMkYo2wkd9Qul4uXH_mGh50l`
 	unknownPublicKey = `{
@@ -404,7 +404,7 @@ func TestAuthenticationMiddlewareFailure(t *testing.T) {
 	handlerToTest := AuthenticationMiddleware(a, func(w http.ResponseWriter, r *http.Request, err error) {
 		assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 		w.WriteHeader(http.StatusBadGateway)
-	})(nil)
+	}, nil)(nil)
 
 	req := httptest.NewRequest("GET", "http://testing", nil)
 	req.AddCookie(mockAuthInvalidSessionCookie)
@@ -418,19 +418,42 @@ func TestAuthenticationMiddlewareFailure(t *testing.T) {
 func TestAuthenticationMiddlewareFailureDefault(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	handlerToTest := AuthenticationMiddleware(a, nil)(nil)
+	handlerToTest := AuthenticationMiddleware(a, nil, nil)(nil)
 
 	req := httptest.NewRequest("GET", "http://testing", nil)
 
 	res := httptest.NewRecorder()
 	handlerToTest.ServeHTTP(res, req)
+	
 	assert.EqualValues(t, http.StatusUnauthorized, res.Result().StatusCode)
+}
+
+func TestAuthenticationMiddlewareSuccessDefault(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	handlerToTest := AuthenticationMiddleware(a, nil, nil)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		s, ok := r.Context().Value(ContextUserIDProperty).(string)
+		require.True(t, ok)
+		assert.EqualValues(t, "externalid", s)
+		w.WriteHeader(http.StatusTeapot)
+	}))
+
+	req := httptest.NewRequest("GET", "http://testing", nil)
+	req.AddCookie(mockAuthSessionCookie)
+	req.AddCookie(mockAuthRefreshCookie)
+
+	res := httptest.NewRecorder()
+	handlerToTest.ServeHTTP(res, req)
+	assert.EqualValues(t, http.StatusTeapot, res.Result().StatusCode)
 }
 
 func TestAuthenticationMiddlewareSuccess(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	handlerToTest := AuthenticationMiddleware(a, nil)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handlerToTest := AuthenticationMiddleware(a, nil, func(w http.ResponseWriter, r *http.Request, next http.Handler, token *Token) {
+		assert.EqualValues(t, "externalid", token.Subject)
+		next.ServeHTTP(w, r)
+	})(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusTeapot)
 	}))
 

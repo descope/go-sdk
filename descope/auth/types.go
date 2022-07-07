@@ -285,6 +285,8 @@ type DeliveryMethod string
 
 type OAuthProvider string
 
+type ContextKey string
+
 const (
 	MethodWhatsApp DeliveryMethod = "whatsapp"
 	MethodSMS      DeliveryMethod = "sms"
@@ -301,6 +303,8 @@ const (
 	RefreshCookieName = "DSR"
 
 	RedirectLocationCookieName = "Location"
+
+	ContextUserIDProperty = "DESCOPE_EXTERNAL_ID"
 )
 
 var (

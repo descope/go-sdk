@@ -77,7 +77,7 @@ func main() {
 	authRouter := router.Methods(http.MethodGet).Subrouter()
 	authRouter.Use(auth.AuthenticationMiddleware(client.Auth, func(w http.ResponseWriter, r *http.Request, err error) {
 		setResponse(w, http.StatusUnauthorized, "Unauthorized")
-	}))
+	}, nil))
 	authRouter.HandleFunc("/private", handleIsHealthy)
 	authRouter.HandleFunc("/logout", handleLogout)
 

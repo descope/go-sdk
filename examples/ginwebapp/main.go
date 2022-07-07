@@ -121,7 +121,7 @@ func main() {
 	})
 
 	authorized := r.Group("/")
-	authorized.Use(descopegin.AuthneticationMiddleware(client.Auth, nil))
+	authorized.Use(descopegin.AuthneticationMiddleware(client.Auth, nil, nil))
 	authorized.GET("/private", handleIsHealthy)
 	authorized.GET("/logout", handleLogout)
 	r.RunTLS(":8085", TLSCertPath, TLSkeyPath)
