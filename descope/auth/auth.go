@@ -103,7 +103,7 @@ func AuthenticationMiddleware(auth Authentication, onFailure func(http.ResponseW
 				if onSuccess != nil {
 					onSuccess(w, r, next, token)
 				} else {
-					newCtx := context.WithValue(r.Context(), ContextUserIDProperty, token.Subject)
+					newCtx := context.WithValue(r.Context(), ContextUserIDPropertyKey, token.Subject)
 					r = r.WithContext(newCtx)
 					next.ServeHTTP(w, r)
 				}
