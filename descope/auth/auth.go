@@ -331,6 +331,10 @@ func composeExchangeTokenURL() string {
 	return api.Routes.ExchangeToken()
 }
 
+func composeSAMLStartURL() string {
+	return api.Routes.SAMLStart()
+}
+
 func composeGetMagicLinkSession() string {
 	return api.Routes.GetMagicLinkSession()
 }

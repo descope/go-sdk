@@ -35,6 +35,7 @@ var (
 			verifyMagicLink          string
 			oauthStart               string
 			exchangeToken            string
+			samlStart                string
 			webauthnSignupStart      string
 			webauthnSignupFinish     string
 			webauthnSigninStart      string
@@ -55,6 +56,7 @@ var (
 			verifyMagicLink:          "auth/magiclink/verify",
 			oauthStart:               "oauth/authorize",
 			exchangeToken:            "auth/exchange",
+			samlStart:                "auth/saml/authorize",
 			webauthnSigninStart:      "webauthn/signin/start",
 			webauthnSigninFinish:     "webauthn/signin/finish",
 			webauthnSignupStart:      "webauthn/signup/start",
@@ -84,6 +86,7 @@ type endpoints struct {
 		verifyMagicLink          string
 		oauthStart               string
 		exchangeToken            string
+		samlStart                string
 		webauthnSignupStart      string
 		webauthnSignupFinish     string
 		webauthnSigninStart      string
@@ -128,6 +131,10 @@ func (e *endpoints) OAuthStart() string {
 }
 func (e *endpoints) ExchangeToken() string {
 	return path.Join(e.version, e.auth.exchangeToken)
+
+}
+func (e *endpoints) SAMLStart() string {
+	return path.Join(e.version, e.auth.samlStart)
 }
 func (e *endpoints) WebAuthnSignupStart() string {
 	return path.Join(e.version, e.auth.webauthnSignupStart)
