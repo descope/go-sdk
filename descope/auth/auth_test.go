@@ -232,10 +232,10 @@ func TestValidateSessionRequest(t *testing.T) {
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenValid})
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	ok, info, err := a.ValidateSessionWithOptions(request)
+	ok, token, err := a.ValidateSessionWithOptions(request)
 	require.NoError(t, err)
 	require.True(t, ok)
-	require.EqualValues(t, jwtTokenValid, info.SessionToken.JWT)
+	require.EqualValues(t, jwtTokenValid, token.JWT)
 }
 
 func TestValidateSessionRequestMissingCookie(t *testing.T) {
@@ -269,7 +269,7 @@ func TestValidateSessionRequestRefreshSession(t *testing.T) {
 	ok, userToken, err := a.ValidateSession(request, b)
 	require.NoError(t, err)
 	require.True(t, ok)
-	assert.EqualValues(t, mockAuthSessionCookie.Value, userToken.SessionToken.JWT)
+	assert.EqualValues(t, mockAuthSessionCookie.Value, userToken.JWT)
 	require.Len(t, b.Result().Cookies(), 1)
 	sessionCookie := b.Result().Cookies()[0]
 	require.NoError(t, err)
