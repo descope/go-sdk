@@ -112,8 +112,8 @@ type Authentication interface {
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	// returns true upon success or false and an error upon failure.
 	// This is a shortcut for ValidateSessionWithOptions(r, WithResponseOption(w))
-	ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *AuthenticationInfo, error)
-	ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, *AuthenticationInfo, error)
+	ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *Token, error)
+	ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, *Token, error)
 
 	// SignUpWebAuthnStart - Use to start an authentication process with webauthn for the new user argument.
 	// returns a transaction id response on successs and error upon failure.

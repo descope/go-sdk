@@ -73,11 +73,11 @@ func (auth *authenticationService) LogoutWithOptions(request *http.Request, opti
 	return nil
 }
 
-func (auth *authenticationService) ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *AuthenticationInfo, error) {
+func (auth *authenticationService) ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *Token, error) {
 	return auth.ValidateSessionWithOptions(request, WithResponseOption(w))
 }
 
-func (auth *authenticationService) ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, *AuthenticationInfo, error) {
+func (auth *authenticationService) ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, *Token, error) {
 	if request == nil {
 		return false, nil, errors.MissingProviderError
 	}
@@ -113,7 +113,7 @@ func AuthenticationMiddleware(auth Authentication, onFailure func(http.ResponseW
 	}
 }
 
-func (auth *authenticationService) validateSession(sessionToken string, refreshToken string, options ...Option) (bool, *AuthenticationInfo, error) {
+func (auth *authenticationService) validateSession(sessionToken string, refreshToken string, options ...Option) (bool, *Token, error) {
 	token, err := auth.validateJWT(sessionToken)
 	if sessionToken != "" && !auth.publicKeysProvider.publicKeyExists() {
 		return false, nil, errors.NewNoPublicKeyError()
@@ -133,10 +133,10 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 		if err != nil {
 			return false, nil, err
 		}
-		return true, info, nil
+		return true, info.SessionToken, nil
 	}
 
-	return true, NewAuthenticationInfo(nil, token), nil
+	return true, token, nil
 }
 
 func (auth *authenticationService) extractJWTResponse(bodyStr string) (*JWTResponse, error) {

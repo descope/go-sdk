@@ -47,7 +47,7 @@ func TestDescopeSDKMock(t *testing.T) {
 	api := DescopeClient{
 		Auth: auth.MockDescopeAuthentication{
 			ValidateSessionResponseNotOK: true,
-			ValidateSessionResponseInfo:  &auth.AuthenticationInfo{SessionToken: &auth.Token{JWT: "test"}},
+			ValidateSessionResponseInfo:  &auth.Token{JWT: "test"},
 			ValidateSessionResponseError: errors.NoPublicKeyError,
 		},
 	}

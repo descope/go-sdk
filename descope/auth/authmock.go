@@ -13,7 +13,7 @@ type MockDescopeAuthentication struct {
 	UpdateUserPhoneOTPResponseError             error
 	VerifyCodeResponseError                     error
 	ValidateSessionResponseNotOK                bool
-	ValidateSessionResponseInfo                 *AuthenticationInfo
+	ValidateSessionResponseInfo                 *Token
 	ValidateSessionResponseError                error
 	GetMagicLinkSessionResponseInfo             *AuthenticationInfo
 	GetMagicLinkSessionResponseError            error
@@ -246,11 +246,11 @@ func (m MockDescopeAuthentication) VerifyMagicLinkWithOptions(token string, _ ..
 	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
 }
 
-func (m MockDescopeAuthentication) ValidateSession(_ *http.Request, _ http.ResponseWriter) (bool, *AuthenticationInfo, error) {
+func (m MockDescopeAuthentication) ValidateSession(_ *http.Request, _ http.ResponseWriter) (bool, *Token, error) {
 	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseInfo, m.ValidateSessionResponseError
 }
 
-func (m MockDescopeAuthentication) ValidateSessionWithOptions(_ *http.Request, _ ...Option) (bool, *AuthenticationInfo, error) {
+func (m MockDescopeAuthentication) ValidateSessionWithOptions(_ *http.Request, _ ...Option) (bool, *Token, error) {
 	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseInfo, m.ValidateSessionResponseError
 }
 
