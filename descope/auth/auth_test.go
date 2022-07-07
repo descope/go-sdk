@@ -424,7 +424,7 @@ func TestAuthenticationMiddlewareFailureDefault(t *testing.T) {
 
 	res := httptest.NewRecorder()
 	handlerToTest.ServeHTTP(res, req)
-	
+
 	assert.EqualValues(t, http.StatusUnauthorized, res.Result().StatusCode)
 }
 
@@ -432,7 +432,7 @@ func TestAuthenticationMiddlewareSuccessDefault(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	handlerToTest := AuthenticationMiddleware(a, nil, nil)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		s, ok := r.Context().Value(ContextUserIDProperty).(string)
+		s, ok := r.Context().Value(ContextUserIDPropertyKey).(string)
 		require.True(t, ok)
 		assert.EqualValues(t, "externalid", s)
 		w.WriteHeader(http.StatusTeapot)

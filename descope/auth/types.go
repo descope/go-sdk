@@ -304,7 +304,7 @@ const (
 
 	RedirectLocationCookieName = "Location"
 
-	ContextUserIDProperty = "DESCOPE_EXTERNAL_ID"
+	ContextUserIDProperty               = "DESCOPE_EXTERNAL_ID"
 	ContextUserIDPropertyKey ContextKey = ContextUserIDProperty
 )
 
