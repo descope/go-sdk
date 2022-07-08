@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	goErrors "errors"
 	"net/http"
 	"path"
@@ -94,11 +95,18 @@ func (auth *authenticationService) ValidateSessionWithOptions(request *http.Requ
 // AuthenticationMiddleware - middleware used to validate session and invoke if provided a failure and
 // success callbacks after calling ValidateSession().
 // onFailure will be called when the authentication failed, if empty, will write unauthorized (401) on the response writer.
-func AuthenticationMiddleware(auth Authentication, onFailure func(http.ResponseWriter, *http.Request, error)) func(next http.Handler) http.Handler {
+// onSuccess will be called when the authentication suceeded, if empty, it will generate a new context with the descope user id associated with the given token and runs next.
+func AuthenticationMiddleware(auth Authentication, onFailure func(http.ResponseWriter, *http.Request, error), onSuccess func(http.ResponseWriter, *http.Request, http.Handler, *Token)) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if ok, _, err := auth.ValidateSession(r, w); ok {
-				next.ServeHTTP(w, r)
+			if ok, token, err := auth.ValidateSession(r, w); ok {
+				if onSuccess != nil {
+					onSuccess(w, r, next, token)
+				} else {
+					newCtx := context.WithValue(r.Context(), ContextUserIDPropertyKey, token.Subject)
+					r = r.WithContext(newCtx)
+					next.ServeHTTP(w, r)
+				}
 			} else {
 				if err != nil {
 					logger.LogError("request failed because token is invalid", err)
