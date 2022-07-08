@@ -29,6 +29,7 @@ type Token struct {
 	JWT        string                 `json:"jwt,omitempty"`
 	ID         string                 `json:"id,omitempty"`
 	Subject    string                 `json:"subject,omitempty"`
+	Issuer     string                 `json:"issuer,omitempty"`
 	Claims     map[string]interface{} `json:"claims,omitempty"`
 }
 type JWTResponse struct {
@@ -136,6 +137,7 @@ func NewToken(JWT string, token jwt.Token) *Token {
 		JWT:        JWT,
 		ID:         token.Issuer(),
 		Subject:    token.Subject(),
+		Issuer:     token.Issuer(),
 		Expiration: token.Expiration().Unix(),
 		Claims:     token.PrivateClaims(),
 	}
