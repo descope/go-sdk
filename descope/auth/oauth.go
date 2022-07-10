@@ -40,7 +40,7 @@ func (auth *authenticationService) ExchangeTokenWithOptions(code string, options
 		return nil, errors.NewInvalidArgumentError("code")
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(composeExchangeTokenURL(), newExchangeTokenRequest(code), nil, "")
+	httpResponse, err := auth.client.DoGetRequest(composeExchangeTokenURL(), &api.HTTPRequest{QueryParams: map[string]string{"code": string(code)}}, "")
 	if err != nil {
 		return nil, err
 	}
