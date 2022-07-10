@@ -83,9 +83,10 @@ if authorized, userToken, err := descopeClient.Auth.ValidateSession(r, w); !auth
 
 ##### Session Validation Using Middleware
 Alternativly, you can validate the session using any supported builtin Go middleware (for example Chi or Mux) instead of using the ValidateSessions function.
+This middleware will automatically detect the cookies from the request and save the current user id in the context for farther usage, on failure, it will return 401 Unauthorized.
 
 ```golang
-r.Use(auth.AuthenticationMiddleware(descopeClient.Auth, nil))
+r.Use(auth.AuthenticationMiddleware(descopeClient.Auth, nil, nil))
 ```
 
 ## ExpressStart with MagicLink Authentication
@@ -166,9 +167,10 @@ if authorized, userToken, err := descopeClient.Auth.ValidateSession(r, w); !auth
 
 ##### Session Validation Using Middleware
 Alternativly, you can validate the session using any supported builtin Go middleware (for example Chi or Mux) instead of using the ValidateSessions function.
+This middleware will automatically detect the cookies from the request and save the current user id in the context for farther usage, on failure, it will return 401 Unauthorized.
 
 ```golang
-r.Use(auth.AuthenticationMiddleware(descopeClient.Auth, nil))
+r.Use(auth.AuthenticationMiddleware(descopeClient.Auth, nil, nil))
 ```
 
 ## ExpressStart with Oauth
@@ -232,7 +234,7 @@ Simplify your unit testing by using the predefined mocks and mock objects provid
 descopeClient := descope.DescopeClient{
 	Auth: auth.MockDescopeAuthentication{
 		ValidateSessionResponseNotOK:   true,
-		ValidateSessionResponseToken:   "newtoken",
+		ValidateSessionResponseToken:   &auth.Token{JWT: "test"},
 		ValidateSessionResponseError:   errors.BadRequest,
 	},
 }
@@ -240,6 +242,7 @@ descopeClient := descope.DescopeClient{
 ok, userToken, err := descopeClient.Auth.ValidateSession("my token", "another token")
 assert.False(t, ok)
 assert.NotEmpty(t, userToken)
+assert.EqualValues(t, "test", userToken.JWT)
 assert.ErrorIs(t, err, errors.BadRequest)
 ``` 
 In this example we mocked the Descope Authentication to change the response of the ValidateSession
