@@ -43,11 +43,7 @@ func TestOAuthStartInvalidForwardResponse(t *testing.T) {
 func TestExchangeToken(t *testing.T) {
 	code := "code"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
-		assert.EqualValues(t, composeExchangeTokenURL(), r.URL.RequestURI())
-
-		body, err := readBodyMap(r)
-		require.NoError(t, err)
-		assert.EqualValues(t, code, body["code"])
+		assert.EqualValues(t, composeExchangeTokenURL()+"?code="+code, r.URL.RequestURI())
 		resp := &JWTResponse{
 			JWTS: []string{jwtTokenValid},
 			User: &User{
