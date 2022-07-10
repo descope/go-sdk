@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/json"
 	"encoding/pem"
 	goErrors "errors"
 	"fmt"
@@ -58,12 +59,24 @@ func main() {
 	router.HandleFunc("/magiclink/signin", handleMagicLinkSignIn).Methods(http.MethodGet)
 	router.HandleFunc("/magiclink/signup", handleMagicLinkSignUp).Methods(http.MethodGet)
 	router.HandleFunc("/magiclink/verify", handleMagicLinkVerify).Methods(http.MethodGet)
-	router.HandleFunc("/session/pending", handleGetPendingSession).Methods(http.MethodGet)
+	router.HandleFunc("/magiclink/session", handleGetMagicLinkSession).Methods(http.MethodGet)
+
+	router.HandleFunc("/webauthn", func(w http.ResponseWriter, r *http.Request) {
+							file, _ := os.ReadFile("../demo.html")
+							w.WriteHeader(http.StatusOK)
+							w.Write(file)
+						}).Methods(http.MethodGet)
+
+	router.HandleFunc("/webauthn/signup/start", handleWebauthnSignupStart).Methods(http.MethodPost)
+	router.HandleFunc("/webauthn/signup/finish", handleWebauthnSignupFinish).Methods(http.MethodPost)
+
+	router.HandleFunc("/webauthn/signin/start", handleWebauthnSigninStart).Methods(http.MethodPost)
+	router.HandleFunc("/webauthn/signin/finish", handleWebauthnSigninFinish).Methods(http.MethodPost)
 
 	authRouter := router.Methods(http.MethodGet).Subrouter()
 	authRouter.Use(auth.AuthenticationMiddleware(client.Auth, func(w http.ResponseWriter, r *http.Request, err error) {
 		setResponse(w, http.StatusUnauthorized, "Unauthorized")
-	}))
+	}, nil))
 	authRouter.HandleFunc("/private", handleIsHealthy)
 	authRouter.HandleFunc("/logout", handleLogout)
 
@@ -200,19 +213,79 @@ func handleMagicLinkVerify(w http.ResponseWriter, r *http.Request) {
 	setOK(w)
 }
 
-func handleGetPendingSession(w http.ResponseWriter, r *http.Request) {
+func handleGetMagicLinkSession(w http.ResponseWriter, r *http.Request) {
 	pendingRef := getQuery(r, "pendingRef")
 	if pendingRef == "" {
 		setError(w, "pending reference is empty")
 		return
 	}
-	_, err := client.Auth.GetPendingSession(pendingRef, w)
-	if goErrors.Is(err, errors.PendingSessionTokenError) {
+	_, err := client.Auth.GetMagicLinkSession(pendingRef, w)
+	if goErrors.Is(err, errors.MagicLinkUnauthorized) {
 		setUnauthorized(w, err.Error())
 	}
 	if err != nil {
 		setError(w, err.Error())
 		return
+	}
+	setOK(w)
+}
+
+func handleWebauthnSigninFinish(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var t *auth.WebAuthnFinishRequest
+	err := decoder.Decode(&t)
+	if err != nil {
+		setError(w, err.Error())
+		return
+	}
+
+	_, err = client.Auth.SignInWebAuthnFinish(t, w)
+	if err != nil {
+		setError(w, err.Error())
+	}
+	setOK(w)
+}
+
+func handleWebauthnSigninStart(w http.ResponseWriter, r *http.Request) {
+	res, err := client.Auth.SignInWebAuthnStart(getQuery(r, "id"))
+	if err != nil {
+		setError(w, err.Error())
+	}
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(res)
+}
+
+func handleWebauthnSignupStart(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var t *auth.User
+	err := decoder.Decode(&t)
+	if err != nil {
+		setError(w, err.Error())
+		return
+	}
+
+	res, err := client.Auth.SignUpWebAuthnStart(t)
+	if err != nil {
+		setError(w, err.Error())
+	}
+	w.Header().Add("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(res)
+}
+
+func handleWebauthnSignupFinish(w http.ResponseWriter, r *http.Request) {
+	decoder := json.NewDecoder(r.Body)
+	var t *auth.WebAuthnFinishRequest
+	err := decoder.Decode(&t)
+	if err != nil {
+		setError(w, err.Error())
+		return
+	}
+
+	_, err = client.Auth.SignUpWebAuthnFinish(t, w)
+	if err != nil {
+		setError(w, err.Error())
 	}
 	setOK(w)
 }

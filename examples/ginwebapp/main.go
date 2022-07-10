@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"encoding/json"
 	"encoding/pem"
 	"fmt"
 	goErrors "errors"
@@ -58,11 +59,72 @@ func main() {
 
 	r.GET("/magiclink/signin", handleMagicLinkSignIn)
 	r.GET("/magiclink/signup", handleMagicLinkSignUp)
-	r.GET("/session/pending", handleGetPendingSession)
+	r.GET("/magiclink/session", handleGetMagicLinkSession)
 	r.GET("/magiclink/verify", handleMagicLinkVerify)
 
+	r.GET("/webauthn", func(c *gin.Context) {
+							file, _ := os.ReadFile("../demo.html")
+							c.Data(http.StatusOK, "text/html; charset=utf-8", file)
+						})
+
+	r.POST("/webauthn/signup/start", func(c *gin.Context) {
+		decoder := json.NewDecoder(c.Request.Body)
+		var t *auth.User
+		err := decoder.Decode(&t)
+		if err != nil {
+			setError(c, err.Error())
+			return
+		}
+	
+		res, err := client.Auth.SignUpWebAuthnStart(t)
+		if err != nil {
+			setError(c, err.Error())
+		}
+		c.Writer.Header().Add("Content-Type", "application/json")
+		c.PureJSON(http.StatusOK, res)
+	})
+	r.POST("/webauthn/signup/finish", func(c *gin.Context) {
+		decoder := json.NewDecoder(c.Request.Body)
+		var t *auth.WebAuthnFinishRequest
+		err := decoder.Decode(&t)
+		if err != nil {
+			setError(c, err.Error())
+			return
+		}
+	
+		_, err = client.Auth.SignUpWebAuthnFinishWithOptions(t, descopegin.WithResponseOption(c))
+		if err != nil {
+			setError(c, err.Error())
+		}
+		setOK(c)
+	})
+
+	r.POST("/webauthn/signin/start", func(c *gin.Context) {
+		res, err := client.Auth.SignInWebAuthnStart(c.Query("id"))
+		if err != nil {
+			setError(c, err.Error())
+		}
+		c.Writer.Header().Add("Content-Type", "application/json")
+		c.PureJSON(http.StatusOK, res)
+	})
+	r.POST("/webauthn/signin/finish", func(c *gin.Context) {
+		decoder := json.NewDecoder(c.Request.Body)
+		var t *auth.WebAuthnFinishRequest
+		err := decoder.Decode(&t)
+		if err != nil {
+			setError(c, err.Error())
+			return
+		}
+	
+		_, err = client.Auth.SignInWebAuthnFinishWithOptions(t, descopegin.WithResponseOption(c))
+		if err != nil {
+			setError(c, err.Error())
+		}
+		setOK(c)
+	})
+
 	authorized := r.Group("/")
-	authorized.Use(descopegin.AuthneticationMiddleware(client.Auth, nil))
+	authorized.Use(descopegin.AuthneticationMiddleware(client.Auth, nil, nil))
 	authorized.GET("/private", handleIsHealthy)
 	authorized.GET("/logout", handleLogout)
 	r.RunTLS(fmt.Sprintf(":%s", port), TLSCertPath, TLSkeyPath)
@@ -136,14 +198,14 @@ func handleMagicLinkSignUp(c *gin.Context) {
 	c.JSON(http.StatusOK, magicLinkResponse)
 }
 
-func handleGetPendingSession(c *gin.Context) {
+func handleGetMagicLinkSession(c *gin.Context) {
 	pendingRef := c.Query("pendingRef")
 	if pendingRef == "" {
 		setError(c, "pending reference is empty")
 		return
 	}
-	_, err := client.Auth.GetPendingSessionWithOptions(pendingRef, descopegin.WithResponseOption(c))
-	if goErrors.Is(err, descopeerrors.PendingSessionTokenError) {
+	_, err := client.Auth.GetMagicLinkSessionWithOptions(pendingRef, descopegin.WithResponseOption(c))
+	if goErrors.Is(err, descopeerrors.MagicLinkUnauthorized) {
 		setUnauthorized(c, err.Error())
 	}
 	if err != nil {
@@ -178,8 +240,8 @@ func handleOTPVerify(c *gin.Context) {
 	if err != nil {
 		setError(c, err.Error())
 		return
-   }
-   setOK(c)
+	}
+	setOK(c)
 }
 
 func handleOAuth(c *gin.Context) {

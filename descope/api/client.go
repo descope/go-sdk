@@ -25,23 +25,47 @@ var (
 	Routes = endpoints{
 		version: "/v1/",
 		auth: struct {
-			signInOTP         string
-			signUpOTP         string
-			verifyCode        string
-			signInMagicLink   string
-			signUpMagicLink   string
-			verifyMagicLink   string
-			oauthStart        string
-			getPendingSession string
+			signInOTP                string
+			signUpOTP                string
+			signUpOrInOTP            string
+			verifyCode               string
+			signInMagicLink          string
+			signUpMagicLink          string
+			signUpOrInMagicLink      string
+			verifyMagicLink          string
+			oauthStart               string
+			exchangeToken            string
+			samlStart                string
+			webauthnSignupStart      string
+			webauthnSignupFinish     string
+			webauthnSigninStart      string
+			webauthnSigninFinish     string
+			getMagicLinkSession      string
+			updateUserEmailMagicLink string
+			updateUserEmailOTP       string
+			updateUserPhoneMagicLink string
+			updateUserPhoneOTP       string
 		}{
-			signInOTP:         "auth/signin/otp",
-			signUpOTP:         "auth/signup/otp",
-			verifyCode:        "auth/code/verify",
-			signInMagicLink:   "auth/signin/magiclink",
-			signUpMagicLink:   "auth/signup/magiclink",
-			verifyMagicLink:   "auth/magiclink/verify",
-			oauthStart:        "oauth/authorize",
-			getPendingSession: "auth/session/pending",
+			signInOTP:                "auth/signin/otp",
+			signUpOTP:                "auth/signup/otp",
+			signUpOrInOTP:            "auth/sign-up-or-in/otp",
+			verifyCode:               "auth/code/verify",
+			signInMagicLink:          "auth/signin/magiclink",
+			signUpMagicLink:          "auth/signup/magiclink",
+			signUpOrInMagicLink:      "auth/sign-up-or-in/magiclink",
+			verifyMagicLink:          "auth/magiclink/verify",
+			oauthStart:               "oauth/authorize",
+			exchangeToken:            "auth/exchange",
+			samlStart:                "auth/saml/authorize",
+			webauthnSigninStart:      "webauthn/signin/start",
+			webauthnSigninFinish:     "webauthn/signin/finish",
+			webauthnSignupStart:      "webauthn/signup/start",
+			webauthnSignupFinish:     "webauthn/signup/finish",
+			getMagicLinkSession:      "auth/magiclink/session",
+			updateUserEmailMagicLink: "/user/update/email/magiclink",
+			updateUserEmailOTP:       "/user/update/email/otp",
+			updateUserPhoneMagicLink: "user/update/phone/magiclink",
+			updateUserPhoneOTP:       "user/update/phone/otp",
 		},
 		logoutAll: "auth/logoutall",
 		keys:      "/keys/",
@@ -52,14 +76,26 @@ var (
 type endpoints struct {
 	version string
 	auth    struct {
-		signInOTP         string
-		signUpOTP         string
-		verifyCode        string
-		signInMagicLink   string
-		signUpMagicLink   string
-		verifyMagicLink   string
-		oauthStart        string
-		getPendingSession string
+		signInOTP                string
+		signUpOTP                string
+		signUpOrInOTP            string
+		verifyCode               string
+		signInMagicLink          string
+		signUpMagicLink          string
+		signUpOrInMagicLink      string
+		verifyMagicLink          string
+		oauthStart               string
+		exchangeToken            string
+		samlStart                string
+		webauthnSignupStart      string
+		webauthnSignupFinish     string
+		webauthnSigninStart      string
+		webauthnSigninFinish     string
+		getMagicLinkSession      string
+		updateUserEmailMagicLink string
+		updateUserEmailOTP       string
+		updateUserPhoneMagicLink string
+		updateUserPhoneOTP       string
 	}
 	logoutAll string
 	keys      string
@@ -72,6 +108,9 @@ func (e *endpoints) SignInOTP() string {
 func (e *endpoints) SignUpOTP() string {
 	return path.Join(e.version, e.auth.signUpOTP)
 }
+func (e *endpoints) SignUpOrInOTP() string {
+	return path.Join(e.version, e.auth.signUpOrInOTP)
+}
 func (e *endpoints) VerifyCode() string {
 	return path.Join(e.version, e.auth.verifyCode)
 }
@@ -81,14 +120,36 @@ func (e *endpoints) SignInMagicLink() string {
 func (e *endpoints) SignUpMagicLink() string {
 	return path.Join(e.version, e.auth.signUpMagicLink)
 }
+func (e *endpoints) SignUpOrInMagicLink() string {
+	return path.Join(e.version, e.auth.signUpOrInMagicLink)
+}
 func (e *endpoints) VerifyMagicLink() string {
 	return path.Join(e.version, e.auth.verifyMagicLink)
 }
 func (e *endpoints) OAuthStart() string {
 	return path.Join(e.version, e.auth.oauthStart)
 }
-func (e *endpoints) GetPendingSession() string {
-	return path.Join(e.version, e.auth.getPendingSession)
+func (e *endpoints) ExchangeToken() string {
+	return path.Join(e.version, e.auth.exchangeToken)
+
+}
+func (e *endpoints) SAMLStart() string {
+	return path.Join(e.version, e.auth.samlStart)
+}
+func (e *endpoints) WebAuthnSignupStart() string {
+	return path.Join(e.version, e.auth.webauthnSignupStart)
+}
+func (e *endpoints) WebAuthnSignupFinish() string {
+	return path.Join(e.version, e.auth.webauthnSignupFinish)
+}
+func (e *endpoints) WebAuthnSigninStart() string {
+	return path.Join(e.version, e.auth.webauthnSigninStart)
+}
+func (e *endpoints) WebAuthnSigninFinish() string {
+	return path.Join(e.version, e.auth.webauthnSigninFinish)
+}
+func (e *endpoints) GetMagicLinkSession() string {
+	return path.Join(e.version, e.auth.getMagicLinkSession)
 }
 func (e *endpoints) Logout() string {
 	return path.Join(e.version, e.logoutAll)
@@ -98,6 +159,22 @@ func (e *endpoints) GetKeys() string {
 }
 func (e *endpoints) RefreshToken() string {
 	return path.Join(e.version, e.refresh)
+}
+
+func (e *endpoints) UpdateUserEmailMagiclink() string {
+	return path.Join(e.version, e.auth.updateUserEmailMagicLink)
+}
+
+func (e *endpoints) UpdateUserEmailOTP() string {
+	return path.Join(e.version, e.auth.updateUserEmailOTP)
+}
+
+func (e *endpoints) UpdateUserPhoneMagicLink() string {
+	return path.Join(e.version, e.auth.updateUserPhoneMagicLink)
+}
+
+func (e *endpoints) UpdateUserPhoneOTP() string {
+	return path.Join(e.version, e.auth.updateUserPhoneOTP)
 }
 
 type ClientParams struct {
@@ -166,11 +243,11 @@ func NewClient(conf ClientParams) *Client {
 	}
 }
 
-func (c *Client) DoGetRequest(uri string, options *HTTPRequest) (*HTTPResponse, error) {
-	return c.DoRequest(http.MethodGet, uri, nil, options)
+func (c *Client) DoGetRequest(uri string, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
+	return c.DoRequest(http.MethodGet, uri, nil, options, pswd)
 }
 
-func (c *Client) DoPostRequest(uri string, body interface{}, options *HTTPRequest) (*HTTPResponse, error) {
+func (c *Client) DoPostRequest(uri string, body interface{}, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
 	if options == nil {
 		options = &HTTPRequest{}
 	}
@@ -190,10 +267,10 @@ func (c *Client) DoPostRequest(uri string, body interface{}, options *HTTPReques
 		}
 	}
 
-	return c.DoRequest(http.MethodPost, uri, payload, options)
+	return c.DoRequest(http.MethodPost, uri, payload, options, pswd)
 }
 
-func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTPRequest) (*HTTPResponse, error) {
+func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
 	if options == nil {
 		options = &HTTPRequest{}
 	}
@@ -241,7 +318,7 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 		req.AddCookie(cookie)
 	}
 
-	req.SetBasicAuth(c.conf.ProjectID, "")
+	req.SetBasicAuth(c.conf.ProjectID, pswd)
 
 	logger.LogDebug("sending request to [%s]", url)
 	response, err := c.httpClient.Do(req)

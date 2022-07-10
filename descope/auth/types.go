@@ -9,26 +9,44 @@ import (
 )
 
 type AuthenticationInfo struct {
-	SessionToken *Token
+	SessionToken *Token `json:"token,omitempty"`
+	User         *User  `json:"user,omitempty"`
+	FirstSeen    bool   `json:"firstSeen,omitempty"`
+}
+
+type WebAuthnTransactionResponse struct {
+	TransactionID string `json:"transactionId,omitempty"`
+	Options       string `json:"options,omitempty"`
+}
+
+type WebAuthnFinishRequest struct {
+	TransactionID string `json:"transactionID,omitempty"`
+	Response      string `json:"response,omitempty"`
 }
 
 type Token struct {
-	Expiration int64
-	JWT        string
-	ID         string
-	Subject    string
-	Claims     map[string]interface{}
+	Expiration int64                  `json:"expiration,omitempty"`
+	JWT        string                 `json:"jwt,omitempty"`
+	ID         string                 `json:"id,omitempty"`
+	Subject    string                 `json:"subject,omitempty"`
+	Issuer     string                 `json:"issuer,omitempty"`
+	Claims     map[string]interface{} `json:"claims,omitempty"`
+}
+type JWTResponse struct {
+	JWTS      []string `json:"jwts,omitempty"`
+	User      *User    `json:"user,omitempty"`
+	FirstSeen bool     `json:"firstSeen,omitempty"`
 }
 
 type MagicLinkResponse struct {
-	PendingRef string `json:"pendingRef"` // Pending referral code used to poll magic link authentication status
+	PendingRef string `json:"pendingRef,omitempty"` // Pending referral code used to poll magic link authentication status
 }
 
-func NewAuthenticationInfo(token *Token) *AuthenticationInfo {
-	if token == nil {
-		return nil
+func NewAuthenticationInfo(jRes *JWTResponse, token *Token) *AuthenticationInfo {
+	if jRes == nil {
+		jRes = &JWTResponse{}
 	}
-	return &AuthenticationInfo{SessionToken: token}
+	return &AuthenticationInfo{SessionToken: token, User: jRes.User, FirstSeen: jRes.FirstSeen}
 }
 
 // WithResponseOption - adds a response option to supported functions to allow
@@ -119,16 +137,19 @@ func NewToken(JWT string, token jwt.Token) *Token {
 		JWT:        JWT,
 		ID:         token.Issuer(),
 		Subject:    token.Subject(),
+		Issuer:     token.Issuer(),
 		Expiration: token.Expiration().Unix(),
 		Claims:     token.PrivateClaims(),
 	}
 }
 
 type User struct {
-	Username string `json:"username,omitempty"`
-	Name     string `json:"name,omitempty"`
-	Phone    string `json:"phone,omitempty"`
-	Email    string `json:"email,omitempty"`
+	Name          string `json:"name,omitempty"`
+	Phone         string `json:"phone,omitempty"`
+	Email         string `json:"email,omitempty"`
+	ExternalID    string `json:"externalID,omitempty"`
+	VerifiedEmail bool   `json:"verifiedEmail,omitempty"`
+	VerifiedPhone bool   `json:"verifiedPhone,omitempty"`
 }
 
 type authenticationRequestBody struct {
@@ -142,77 +163,131 @@ type authenticationSignUpRequestBody struct {
 	User     *User  `json:"user"`
 }
 
+type authenticationWebAuthnSignUpRequestBody struct {
+	User *User `json:"user"`
+}
+
 type authenticationVerifyRequestBody struct {
-	authenticationRequestBody `json:",inline"`
-	Code                      string `json:"code"`
+	*authenticationRequestBody `json:",inline"`
+	Code                       string `json:"code"`
+}
+
+type otpUpdateEmailRequestBody struct {
+	ExternalID string `json:"externalID,omitempty"`
+	Email      string `json:"email,omitempty"`
+}
+
+type otpUpdatePhoneRequestBody struct {
+	ExternalID string `json:"externalID,omitempty"`
+	Phone      string `json:"phone,omitempty"`
 }
 
 type magicLinkAuthenticationRequestBody struct {
-	authenticationRequestBody `json:",inline"`
-	URI                       string `json:"URI,omitempty"`
-	CrossDevice               bool   `json:"crossDevice,omitempty"`
+	*authenticationRequestBody `json:",inline"`
+	URI                        string `json:"URI,omitempty"`
+	CrossDevice                bool   `json:"crossDevice,omitempty"`
 }
 
 type magicLinkAuthenticationSignUpRequestBody struct {
-	authenticationSignUpRequestBody `json:",inline"`
-	URI                             string `json:"URI,omitempty"`
-	CrossDevice                     bool   `json:"crossDevice,omitempty"`
+	*authenticationSignUpRequestBody `json:",inline"`
+	URI                              string `json:"URI,omitempty"`
+	CrossDevice                      bool   `json:"crossDevice,omitempty"`
+}
+
+type magicLinkUpdateEmailRequestBody struct {
+	Email       string `json:"email,inline"`
+	ExternalID  string `json:"externalID,inline"`
+	URI         string `json:"URI,omitempty"`
+	CrossDevice bool   `json:"crossDevice,omitempty"`
+}
+
+type magicLinkUpdatePhoneRequestBody struct {
+	Phone       string `json:"phone,inline"`
+	ExternalID  string `json:"externalID,inline"`
+	URI         string `json:"URI,omitempty"`
+	CrossDevice bool   `json:"crossDevice,omitempty"`
 }
 
 type magicLinkAuthenticationVerifyRequestBody struct {
 	Token string `json:"token"`
 }
 
-type authenticationGetPendingSessionBody struct {
+type authenticationGetMagicLinkSessionBody struct {
 	PendingRef string `json:"pendingRef"`
 }
 
-func newSignInRequestBody(externalID string) authenticationRequestBody {
-	return authenticationRequestBody{ExternalID: externalID}
+type exchangeTokenRequestBody struct {
+	Code string `json:"code"`
 }
 
-func newSignUpRequestBody(method DeliveryMethod, value string) authenticationSignUpRequestBody {
+func newSignInRequestBody(externalID string) *authenticationRequestBody {
+	return &authenticationRequestBody{ExternalID: externalID}
+}
+
+func newSignUpRequestBody(method DeliveryMethod, value string) *authenticationSignUpRequestBody {
 	switch method {
 	case MethodSMS:
-		return authenticationSignUpRequestBody{Phone: value}
+		return &authenticationSignUpRequestBody{Phone: value}
 	case MethodWhatsApp:
-		return authenticationSignUpRequestBody{WhatsApp: value}
+		return &authenticationSignUpRequestBody{WhatsApp: value}
 	}
 
-	return authenticationSignUpRequestBody{Email: value}
+	return &authenticationSignUpRequestBody{Email: value}
 }
 
-func newMagicLinkAuthenticationRequestBody(value, URI string, crossDevice bool) magicLinkAuthenticationRequestBody {
-	return magicLinkAuthenticationRequestBody{authenticationRequestBody: newSignInRequestBody(value), URI: URI, CrossDevice: crossDevice}
+func newOTPUpdateEmailRequestBody(externalID, email string) *otpUpdateEmailRequestBody {
+	return &otpUpdateEmailRequestBody{ExternalID: externalID, Email: email}
 }
 
-func newMagicLinkAuthenticationSignUpRequestBody(method DeliveryMethod, value, URI string, user *User, crossDevice bool) magicLinkAuthenticationSignUpRequestBody {
+func newOTPUpdatePhoneRequestBody(externalID, phone string) *otpUpdatePhoneRequestBody {
+	return &otpUpdatePhoneRequestBody{ExternalID: externalID, Phone: phone}
+}
+
+func newMagicLinkAuthenticationRequestBody(value, URI string, crossDevice bool) *magicLinkAuthenticationRequestBody {
+	return &magicLinkAuthenticationRequestBody{authenticationRequestBody: newSignInRequestBody(value), URI: URI, CrossDevice: crossDevice}
+}
+
+func newMagicLinkAuthenticationSignUpRequestBody(method DeliveryMethod, value, URI string, user *User, crossDevice bool) *magicLinkAuthenticationSignUpRequestBody {
 	b := newSignUpRequestBody(method, value)
 	b.User = user
-	return magicLinkAuthenticationSignUpRequestBody{authenticationSignUpRequestBody: b, CrossDevice: crossDevice, URI: URI}
+	return &magicLinkAuthenticationSignUpRequestBody{authenticationSignUpRequestBody: b, CrossDevice: crossDevice, URI: URI}
 }
 
-func newMagicLinkAuthenticationVerifyRequestBody(token string) magicLinkAuthenticationVerifyRequestBody {
-	return magicLinkAuthenticationVerifyRequestBody{Token: token}
+func newMagicLinkAuthenticationVerifyRequestBody(token string) *magicLinkAuthenticationVerifyRequestBody {
+	return &magicLinkAuthenticationVerifyRequestBody{Token: token}
 }
 
-func newAuthenticationSignUpRequestBody(method DeliveryMethod, value string, user *User) authenticationSignUpRequestBody {
+func newAuthenticationSignUpRequestBody(method DeliveryMethod, value string, user *User) *authenticationSignUpRequestBody {
 	b := newSignUpRequestBody(method, value)
 	b.User = user
 	return b
 }
 
-func newAuthenticationVerifyRequestBody(value string, code string) authenticationVerifyRequestBody {
-	return authenticationVerifyRequestBody{authenticationRequestBody: newSignInRequestBody(value), Code: code}
+func newAuthenticationVerifyRequestBody(value string, code string) *authenticationVerifyRequestBody {
+	return &authenticationVerifyRequestBody{authenticationRequestBody: newSignInRequestBody(value), Code: code}
 }
 
-func newAuthenticationGetPendingSessionBody(pendingRef string) authenticationGetPendingSessionBody {
-	return authenticationGetPendingSessionBody{PendingRef: pendingRef}
+func newMagicLinkUpdateEmailRequestBody(externalID, email string, URI string, crossDevice bool) *magicLinkUpdateEmailRequestBody {
+	return &magicLinkUpdateEmailRequestBody{ExternalID: externalID, Email: email, URI: URI, CrossDevice: crossDevice}
+}
+
+func newMagicLinkUpdatePhoneRequestBody(externalID, phone string, URI string, crossDevice bool) *magicLinkUpdatePhoneRequestBody {
+	return &magicLinkUpdatePhoneRequestBody{ExternalID: externalID, Phone: phone, URI: URI, CrossDevice: crossDevice}
+}
+
+func newAuthenticationGetMagicLinkSessionBody(pendingRef string) *authenticationGetMagicLinkSessionBody {
+	return &authenticationGetMagicLinkSessionBody{PendingRef: pendingRef}
+}
+
+func newExchangeTokenRequest(code string) *exchangeTokenRequestBody {
+	return &exchangeTokenRequestBody{Code: code}
 }
 
 type DeliveryMethod string
 
 type OAuthProvider string
+
+type ContextKey string
 
 const (
 	MethodWhatsApp DeliveryMethod = "whatsapp"
@@ -230,6 +305,9 @@ const (
 	RefreshCookieName = "DSR"
 
 	RedirectLocationCookieName = "Location"
+
+	ContextUserIDProperty               = "DESCOPE_USER_ID"
+	ContextUserIDPropertyKey ContextKey = ContextUserIDProperty
 )
 
 var (

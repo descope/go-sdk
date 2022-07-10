@@ -1,9 +1,11 @@
 package auth
 
 import (
+	"context"
 	goErrors "errors"
 	"net/http"
 	"path"
+	"time"
 
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/errors"
@@ -29,63 +31,6 @@ func NewAuth(conf AuthParams, c *api.Client) (*authenticationService, error) {
 	return authenticationObject, nil
 }
 
-func (auth *authenticationService) SignInOTP(method DeliveryMethod, identifier string) error {
-	if identifier == "" {
-		return errors.NewInvalidArgumentError("identifier")
-	}
-
-	_, err := auth.client.DoPostRequest(composeSignInURL(method), newSignInRequestBody(identifier), nil)
-	return err
-}
-
-func (auth *authenticationService) SignUpOTP(method DeliveryMethod, identifier string, user *User) error {
-	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
-		return err
-	}
-
-	_, err := auth.client.DoPostRequest(composeSignUpURL(method), newAuthenticationSignUpRequestBody(method, identifier, user), nil)
-	return err
-}
-
-func (auth *authenticationService) VerifyCode(method DeliveryMethod, identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.VerifyCodeWithOptions(method, identifier, code, WithResponseOption(w))
-}
-
-func (auth *authenticationService) VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, options ...Option) (*AuthenticationInfo, error) {
-	if identifier == "" {
-		return nil, errors.NewInvalidArgumentError("identifier")
-	}
-	if method == "" {
-		if phoneRegex.MatchString(identifier) {
-			method = MethodSMS
-		}
-
-		if emailRegex.MatchString(identifier) {
-			method = MethodEmail
-		}
-
-		if method == "" {
-			return nil, errors.NewInvalidArgumentError("method")
-		}
-	}
-
-	httpResponse, err := auth.client.DoPostRequest(composeVerifyCodeURL(method), newAuthenticationVerifyRequestBody(identifier, code), nil)
-	if err != nil {
-		return nil, err
-	}
-	token, err := auth.extractToken(httpResponse.BodyStr)
-	if err != nil {
-		logger.LogError("unable to validate refreshed token", err)
-		return nil, err
-	}
-	if httpResponse.Res != nil {
-		cookies := httpResponse.Res.Cookies()
-		cookies = append(cookies, createSessionCookie(token))
-		Options(options).SetCookies(cookies)
-	}
-	return NewAuthenticationInfo(token), err
-}
-
 func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (*MagicLinkResponse, error) {
 	var response *MagicLinkResponse
 	if err := utils.Unmarshal([]byte(httpResponse.BodyStr), &response); err != nil {
@@ -93,111 +38,6 @@ func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (*MagicLinkRespon
 		return response, errors.InvalidPendingRefError
 	}
 	return response, nil
-}
-
-func (auth *authenticationService) SignInMagicLink(method DeliveryMethod, identifier, URI string) error {
-	if identifier == "" {
-		return errors.NewInvalidArgumentError("identifier")
-	}
-	_, err := auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(identifier, URI, false), nil)
-	return err
-}
-
-func (auth *authenticationService) SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User) error {
-	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
-		return err
-	}
-
-	_, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, identifier, URI, user, false), nil)
-	return err
-}
-
-func (auth *authenticationService) SignInMagicLinkCrossDevice(method DeliveryMethod, identifier, URI string) (*MagicLinkResponse, error) {
-	if identifier == "" {
-		return nil, errors.NewInvalidArgumentError("identifier")
-	}
-	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(identifier, URI, true), nil)
-	if err != nil {
-		return nil, err
-	}
-	return getPendingRefFromResponse(httpResponse)
-}
-
-func (auth *authenticationService) SignUpMagicLinkCrossDevice(method DeliveryMethod, identifier, URI string, user *User) (*MagicLinkResponse, error) {
-	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
-		return nil, err
-	}
-
-	httpResponse, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, identifier, URI, user, true), nil)
-	if err != nil {
-		return nil, err
-	}
-	return getPendingRefFromResponse(httpResponse)
-}
-
-func (auth *authenticationService) GetPendingSession(pendingRef string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.GetPendingSessionWithOptions(pendingRef, WithResponseOption(w))
-}
-
-func (auth *authenticationService) GetPendingSessionWithOptions(pendingRef string, options ...Option) (*AuthenticationInfo, error) {
-	httpResponse, err := auth.client.DoPostRequest(composeGetPendingSession(), newAuthenticationGetPendingSessionBody(pendingRef), nil)
-	if err != nil {
-		if err == errors.UnauthorizedError {
-			return nil, errors.PendingSessionTokenError
-		}
-		return nil, err
-	}
-	return auth.authenticationInfoFromResponse(httpResponse, options...)
-}
-
-func (auth *authenticationService) VerifyMagicLink(token string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.VerifyMagicLinkWithOptions(token, WithResponseOption(w))
-}
-
-// extracts authentication info from response cookies, and set it on options
-func (auth *authenticationService) authenticationInfoFromResponse(httpResponse *api.HTTPResponse, options ...Option) (*AuthenticationInfo, error) {
-	token, err := auth.extractToken(httpResponse.BodyStr)
-	if err != nil {
-		logger.LogError("unable to validate refreshed token", err)
-		return nil, err
-	}
-	if httpResponse.Res != nil {
-		cookies := httpResponse.Res.Cookies()
-		cookies = append(cookies, createSessionCookie(token))
-		Options(options).SetCookies(cookies)
-	}
-	return NewAuthenticationInfo(token), nil
-}
-
-func (auth *authenticationService) VerifyMagicLinkWithOptions(token string, options ...Option) (*AuthenticationInfo, error) {
-	httpResponse, err := auth.client.DoPostRequest(composeVerifyMagicLinkURL(), newMagicLinkAuthenticationVerifyRequestBody(token), nil)
-	if err != nil {
-		return nil, err
-	}
-	return auth.authenticationInfoFromResponse(httpResponse, options...)
-}
-
-func (auth *authenticationService) OAuthStart(provider OAuthProvider, w http.ResponseWriter) (string, error) {
-	return auth.OAuthStartWithOptions(provider, WithResponseOption(w))
-}
-
-func (auth *authenticationService) OAuthStartWithOptions(provider OAuthProvider, options ...Option) (url string, err error) {
-	httpResponse, err := auth.client.DoGetRequest(composeOAuthURL(), &api.HTTPRequest{QueryParams: map[string]string{"provider": string(provider)}})
-	if err != nil {
-		return
-	}
-
-	if httpResponse.Res != nil {
-		urlObj, err := httpResponse.Res.Location()
-		if err != nil {
-			logger.LogError("failed to parse location from response for [%s]", err, provider)
-			return "", err
-		}
-		url = urlObj.String()
-		Options(options).CopyResponse(httpResponse.Res, httpResponse.BodyStr)
-	}
-
-	return
 }
 
 func (auth *authenticationService) Logout(request *http.Request, w http.ResponseWriter) error {
@@ -209,37 +49,44 @@ func (auth *authenticationService) LogoutWithOptions(request *http.Request, opti
 		return errors.MissingProviderError
 	}
 
-	sessionToken, refreshToken := provideTokens(request)
+	_, refreshToken := provideTokens(request)
 	if refreshToken == "" {
 		logger.LogDebug("unable to find tokens from cookies")
 		return errors.RefreshTokenError
 	}
 
-	httpResponse, err := auth.client.DoGetRequest(api.Routes.Logout(), &api.HTTPRequest{
-		Cookies: []*http.Cookie{{Name: SessionCookieName, Value: sessionToken}, {Name: RefreshCookieName, Value: refreshToken}},
-	})
+	httpResponse, err := auth.client.DoGetRequest(api.Routes.Logout(), &api.HTTPRequest{}, refreshToken)
 	if err != nil {
 		return err
 	}
 	cookies := httpResponse.Res.Cookies()
-	cookies = append(cookies, createSessionCookie(nil))
+	cookies = append(cookies, createCookie(&Token{JWT: "", Claims: map[string]interface{}{
+		"cookieName": SessionCookieName,
+		"path":       "/",
+		"domain":     "",
+	}}))
+	cookies = append(cookies, createCookie(&Token{JWT: "", Claims: map[string]interface{}{
+		"cookieName": RefreshCookieName,
+		"path":       "/",
+		"domain":     "",
+	}}))
 	Options(options).SetCookies(cookies)
 	return nil
 }
 
-func (auth *authenticationService) ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *AuthenticationInfo, error) {
+func (auth *authenticationService) ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *Token, error) {
 	return auth.ValidateSessionWithOptions(request, WithResponseOption(w))
 }
 
-func (auth *authenticationService) ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, *AuthenticationInfo, error) {
+func (auth *authenticationService) ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, *Token, error) {
 	if request == nil {
 		return false, nil, errors.MissingProviderError
 	}
 
 	sessionToken, refreshToken := provideTokens(request)
-	if refreshToken == "" {
+	if refreshToken == "" || sessionToken == "" {
 		logger.LogDebug("unable to find tokens from cookies")
-		return false, nil, errors.RefreshTokenError
+		return false, nil, nil
 	}
 
 	return auth.validateSession(sessionToken, refreshToken, options...)
@@ -248,11 +95,18 @@ func (auth *authenticationService) ValidateSessionWithOptions(request *http.Requ
 // AuthenticationMiddleware - middleware used to validate session and invoke if provided a failure and
 // success callbacks after calling ValidateSession().
 // onFailure will be called when the authentication failed, if empty, will write unauthorized (401) on the response writer.
-func AuthenticationMiddleware(auth Authentication, onFailure func(http.ResponseWriter, *http.Request, error)) func(next http.Handler) http.Handler {
+// onSuccess will be called when the authentication suceeded, if empty, it will generate a new context with the descope user id associated with the given token and runs next.
+func AuthenticationMiddleware(auth Authentication, onFailure func(http.ResponseWriter, *http.Request, error), onSuccess func(http.ResponseWriter, *http.Request, http.Handler, *Token)) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if ok, _, err := auth.ValidateSession(r, w); ok {
-				next.ServeHTTP(w, r)
+			if ok, token, err := auth.ValidateSession(r, w); ok {
+				if onSuccess != nil {
+					onSuccess(w, r, next, token)
+				} else {
+					newCtx := context.WithValue(r.Context(), ContextUserIDPropertyKey, token.Subject)
+					r = r.WithContext(newCtx)
+					next.ServeHTTP(w, r)
+				}
 			} else {
 				if err != nil {
 					logger.LogError("request failed because token is invalid", err)
@@ -267,11 +121,7 @@ func AuthenticationMiddleware(auth Authentication, onFailure func(http.ResponseW
 	}
 }
 
-func (auth *authenticationService) validateSession(sessionToken string, refreshToken string, options ...Option) (bool, *AuthenticationInfo, error) {
-	if sessionToken == "" {
-		return false, nil, errors.NewValidationError("empty sessionToken")
-	}
-
+func (auth *authenticationService) validateSession(sessionToken string, refreshToken string, options ...Option) (bool, *Token, error) {
 	token, err := auth.validateJWT(sessionToken)
 	if sessionToken != "" && !auth.publicKeysProvider.publicKeyExists() {
 		return false, nil, errors.NewNoPublicKeyError()
@@ -283,47 +133,47 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 			return false, nil, err
 		}
 		// auto-refresh session token
-		httpResponse, err := auth.client.DoGetRequest(api.Routes.RefreshToken(), &api.HTTPRequest{
-			Cookies: []*http.Cookie{{Name: SessionCookieName, Value: sessionToken}, {Name: RefreshCookieName, Value: refreshToken}},
-		})
+		httpResponse, err := auth.client.DoGetRequest(api.Routes.RefreshToken(), &api.HTTPRequest{}, refreshToken)
 		if err != nil {
 			return false, nil, errors.FailedToRefreshTokenError
 		}
-		newSessionToken := ""
-		var cookies []*http.Cookie
-		if httpResponse != nil {
-			cookies = httpResponse.Res.Cookies()
-			newSessionToken = getSessionToken(cookies)
-			Options(options).SetCookies(cookies)
-		}
-		token, err = auth.validateJWT(newSessionToken)
+		info, err := auth.generateAuthenticationInfo(httpResponse, options...)
 		if err != nil {
-			logger.LogError("unable to validate refreshed token", err)
 			return false, nil, err
 		}
-		return true, NewAuthenticationInfo(token), err
+		return true, info.SessionToken, nil
 	}
 
-	return true, NewAuthenticationInfo(token), nil
+	return true, token, nil
 }
 
-func (auth *authenticationService) extractToken(bodyStr string) (*Token, error) {
+func (auth *authenticationService) extractJWTResponse(bodyStr string) (*JWTResponse, error) {
 	if bodyStr == "" {
 		return nil, nil
 	}
-
-	var t struct{ JWT string }
-	err := utils.Unmarshal([]byte(bodyStr), &t)
+	jRes := JWTResponse{}
+	err := utils.Unmarshal([]byte(bodyStr), &jRes)
 	if err != nil {
-		logger.LogError("unable to parse token from response", err)
+		logger.LogError("unable to parse jwt response", err)
 		return nil, err
 	}
+	return &jRes, nil
+}
 
-	if t.JWT == "" {
+func (auth *authenticationService) extractTokens(jRes *JWTResponse) ([]*Token, error) {
+
+	if jRes == nil || len(jRes.JWTS) == 0 {
 		return nil, nil
 	}
-
-	return auth.validateJWT(t.JWT)
+	var tokens []*Token
+	for i := range jRes.JWTS {
+		token, err := auth.validateJWT(jRes.JWTS[i])
+		if err != nil {
+			return nil, err
+		}
+		tokens = append(tokens, token)
+	}
+	return tokens, nil
 }
 
 func (auth *authenticationService) validateJWT(JWT string) (*Token, error) {
@@ -335,13 +185,12 @@ func (auth *authenticationService) validateJWT(JWT string) (*Token, error) {
 			err = parseErr
 		}
 	}
-
 	return NewToken(JWT, token), err
 }
 
 func (*authenticationService) verifyDeliveryMethod(method DeliveryMethod, identifier string) *errors.WebError {
 	if identifier == "" {
-		return errors.NewError(errors.BadRequestErrorCode, "bad request")
+		return errors.NewInvalidArgumentError("identifier")
 	}
 
 	switch method {
@@ -361,21 +210,60 @@ func (*authenticationService) verifyDeliveryMethod(method DeliveryMethod, identi
 	return nil
 }
 
-func createSessionCookie(token *Token) *http.Cookie {
-	cookie := &http.Cookie{Path: "/", Name: SessionCookieName, Value: ""}
-	if token != nil {
-		cookie.Value = token.JWT
+func (auth *authenticationService) generateAuthenticationInfo(httpResponse *api.HTTPResponse, options ...Option) (*AuthenticationInfo, error) {
+	jwtResponse, err := auth.extractJWTResponse(httpResponse.BodyStr)
+	if err != nil {
+		return nil, err
 	}
-	return cookie
-}
-
-func getSessionToken(cookies []*http.Cookie) string {
-	for _, cookie := range cookies {
-		if cookie.Name == SessionCookieName {
-			return cookie.Value
+	tokens, err := auth.extractTokens(jwtResponse)
+	if err != nil {
+		logger.LogError("unable to extract tokens from request [%s]", err, httpResponse.Req.URL)
+		return nil, err
+	}
+	cookies := httpResponse.Res.Cookies()
+	var token *Token
+	for i := range tokens {
+		ck := createCookie(tokens[i])
+		if ck != nil {
+			cookies = append(cookies, ck)
+		}
+		if tokens[i].Claims["cookieName"] == SessionCookieName {
+			token = tokens[i]
 		}
 	}
-	return ""
+	Options(options).SetCookies(cookies)
+	return NewAuthenticationInfo(jwtResponse, token), err
+}
+
+func getValidRefreshToken(r *http.Request) (string, error) {
+	_, refreshToken := provideTokens(r)
+	if refreshToken == "" {
+		logger.LogDebug("unable to find tokens from cookies")
+		return "", errors.RefreshTokenError
+	}
+	return refreshToken, nil
+}
+
+func createCookie(token *Token) *http.Cookie {
+	if token != nil {
+		path, _ := token.Claims["cookiePath"].(string)
+		domain, _ := token.Claims["cookieDomain"].(string)
+		name, _ := token.Claims["cookieName"].(string)
+		maxAge, _ := token.Claims["cookieMaxAge"].(float64)
+		expiration, _ := token.Claims["cookieExpiration"].(float64)
+		return &http.Cookie{
+			Path:     path,
+			Domain:   domain,
+			Name:     name,
+			Value:    token.JWT,
+			HttpOnly: true,
+			MaxAge:   int(maxAge),
+			Expires:  time.Unix(int64(expiration), 0),
+			SameSite: http.SameSiteNoneMode,
+			Secure:   true,
+		}
+	}
+	return nil
 }
 
 func provideTokens(r *http.Request) (string, string) {
@@ -419,6 +307,10 @@ func composeSignUpURL(method DeliveryMethod) string {
 	return composeURLMethod(api.Routes.SignUpOTP(), method)
 }
 
+func composeSignUpOrInURL(method DeliveryMethod) string {
+	return composeURLMethod(api.Routes.SignUpOrInOTP(), method)
+}
+
 func composeVerifyCodeURL(method DeliveryMethod) string {
 	return composeURLMethod(api.Routes.VerifyCode(), method)
 }
@@ -431,6 +323,10 @@ func composeMagicLinkSignUpURL(method DeliveryMethod) string {
 	return composeURLMethod(api.Routes.SignUpMagicLink(), method)
 }
 
+func composeMagicLinkSignUpOrInURL(method DeliveryMethod) string {
+	return composeURLMethod(api.Routes.SignUpOrInMagicLink(), method)
+}
+
 func composeVerifyMagicLinkURL() string {
 	return api.Routes.VerifyMagicLink()
 }
@@ -439,6 +335,30 @@ func composeOAuthURL() string {
 	return api.Routes.OAuthStart()
 }
 
-func composeGetPendingSession() string {
-	return api.Routes.GetPendingSession()
+func composeExchangeTokenURL() string {
+	return api.Routes.ExchangeToken()
+}
+
+func composeSAMLStartURL() string {
+	return api.Routes.SAMLStart()
+}
+
+func composeGetMagicLinkSession() string {
+	return api.Routes.GetMagicLinkSession()
+}
+
+func composeUpdateUserEmailOTP() string {
+	return api.Routes.UpdateUserEmailOTP()
+}
+
+func composeUpdateUserEmailMagicLink() string {
+	return api.Routes.UpdateUserEmailMagiclink()
+}
+
+func composeUpdateUserPhoneOTP(method DeliveryMethod) string {
+	return composeURLMethod(api.Routes.UpdateUserPhoneOTP(), method)
+}
+
+func composeUpdateUserPhoneMagicLink(method DeliveryMethod) string {
+	return composeURLMethod(api.Routes.UpdateUserPhoneMagicLink(), method)
 }
