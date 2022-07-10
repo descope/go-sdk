@@ -35,11 +35,10 @@ const (
 var client *descope.DescopeClient
 
 func main() {
-	port := "8085"
 	log.Println("starting server on port " + port)
 	var err error
 	router := mux.NewRouter()
-	client, err = descope.NewDescopeClient(descope.Config{LogLevel: logger.LogDebugLevel, DescopeBaseURL: "http://localhost:8191"})
+	client, err = descope.NewDescopeClientWithConfig(descope.Config{LogLevel: logger.LogDebugLevel, DescopeBaseURL: "http://localhost:8191"})
 	if err != nil {
 		log.Println("failed to init: " + err.Error())
 		os.Exit(1)
@@ -105,15 +104,6 @@ func handleIsHealthy(w http.ResponseWriter, r *http.Request) {
 	setOK(w)
 }
 
-func handleLogout(w http.ResponseWriter, r *http.Request) {
-	err := client.Auth.Logout(r, w)
-	if err != nil {
-		setError(w, err.Error())
-	} else {
-		setOK(w)
-	}
-}
-
 func handleSignUp(w http.ResponseWriter, r *http.Request) {
 	method, identifier := getMethodAndIdentifier(r)
 	err := client.Auth.SignUpOTP(method, identifier, &auth.User{Name: "test"})
@@ -122,6 +112,34 @@ func handleSignUp(w http.ResponseWriter, r *http.Request) {
 	} else {
 		setOK(w)
 	}
+}
+
+func handleSignIn(w http.ResponseWriter, r *http.Request) {
+	method, identifier := getMethodAndIdentifier(r)
+	err := client.Auth.SignInOTP(method, identifier)
+	if err != nil {
+		setError(w, err.Error())
+	} else {
+		setOK(w)
+	}
+}
+
+func handleVerify(w http.ResponseWriter, r *http.Request) {
+	code := ""
+	method, identifier := getMethodAndIdentifier(r)
+	if codes, ok := r.URL.Query()["code"]; ok {
+		code = codes[0]
+	}
+	if code == "" {
+		setError(w, "code is empty")
+		return
+	}
+	_, err := client.Auth.VerifyCode(method, identifier, code, w)
+	if err != nil {
+		setError(w, err.Error())
+		return
+	}
+	setOK(w)
 }
 
 func handleOAuth(w http.ResponseWriter, r *http.Request) {
@@ -135,9 +153,8 @@ func handleOAuth(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func handleSignIn(w http.ResponseWriter, r *http.Request) {
-	method, identifier := getMethodAndIdentifier(r)
-	err := client.Auth.SignInOTP(method, identifier)
+func handleLogout(w http.ResponseWriter, r *http.Request) {
+	err := client.Auth.Logout(r, w)
 	if err != nil {
 		setError(w, err.Error())
 	} else {
@@ -174,24 +191,6 @@ func handleMagicLinkSignUp(w http.ResponseWriter, r *http.Request) {
 		setError(w, err.Error())
 	}
 
-	setOK(w)
-}
-
-func handleVerify(w http.ResponseWriter, r *http.Request) {
-	code := ""
-	method, identifier := getMethodAndIdentifier(r)
-	if codes, ok := r.URL.Query()["code"]; ok {
-		code = codes[0]
-	}
-	if code == "" {
-		setError(w, "code is empty")
-		return
-	}
-	_, err := client.Auth.VerifyCode(method, identifier, code, w)
-	if err != nil {
-		setError(w, err.Error())
-		return
-	}
 	setOK(w)
 }
 

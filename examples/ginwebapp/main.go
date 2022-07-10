@@ -8,6 +8,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/json"
 	"encoding/pem"
+	"fmt"
 	goErrors "errors"
 	"log"
 	"math/big"
@@ -27,6 +28,7 @@ import (
 const (
 	TLSkeyPath  = "../key.pem"
 	TLSCertPath = "../cert.pem"
+	port = "8085"
 
 	trueStr            = "true"
 	verifyMagicLinkURI = "https://localhost:8085/magiclink/verify"
@@ -35,9 +37,10 @@ const (
 var client *descope.DescopeClient
 
 func main() {
+	log.Println("starting server on port " + port)
 	r := gin.Default()
 	var err error
-	client, err = descope.NewDescopeClient(descope.Config{LogLevel: logger.LogDebugLevel, DescopeBaseURL: "http://localhost:8191"})
+	client, err = descope.NewDescopeClientWithConfig(descope.Config{LogLevel: logger.LogDebugLevel, DescopeBaseURL: "http://localhost:8191"})
 	if err != nil {
 		log.Println("failed to init: " + err.Error())
 		os.Exit(1)
@@ -124,7 +127,7 @@ func main() {
 	authorized.Use(descopegin.AuthneticationMiddleware(client.Auth, nil, nil))
 	authorized.GET("/private", handleIsHealthy)
 	authorized.GET("/logout", handleLogout)
-	r.RunTLS(":8085", TLSCertPath, TLSkeyPath)
+	r.RunTLS(fmt.Sprintf(":%s", port), TLSCertPath, TLSkeyPath)
 }
 
 func handleIsHealthy(c *gin.Context) {
