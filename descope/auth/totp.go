@@ -1,10 +1,10 @@
 package auth
 
 import (
-	"encoding/json"
 	"net/http"
 
 	"github.com/descope/go-sdk/descope/errors"
+	"github.com/descope/go-sdk/descope/utils"
 )
 
 func (auth *authenticationService) SignUpTOTP(identifier string, user *User) (*TOTPResponse, error) {
@@ -17,7 +17,27 @@ func (auth *authenticationService) SignUpTOTP(identifier string, user *User) (*T
 		return nil, err
 	}
 	totpResponse := &TOTPResponse{}
-	err = json.Unmarshal([]byte(httpResponse.BodyStr), totpResponse)
+	err = utils.Unmarshal([]byte(httpResponse.BodyStr), totpResponse)
+	if err != nil {
+		return nil, err
+	}
+	return totpResponse, nil
+}
+
+func (auth *authenticationService) UpdateUserTOTP(identifier string, r *http.Request) (*TOTPResponse, error) {
+	if identifier == "" {
+		return nil, errors.NewInvalidArgumentError("identifier")
+	}
+	pswd, err := getValidRefreshToken(r)
+	if err != nil {
+		return nil, err
+	}
+	httpResponse, err := auth.client.DoPostRequest(composeUpdateTOTPURL(), newSignUPTOTPRequestBody(identifier, nil), nil, pswd)
+	if err != nil {
+		return nil, err
+	}
+	totpResponse := &TOTPResponse{}
+	err = utils.Unmarshal([]byte(httpResponse.BodyStr), totpResponse)
 	if err != nil {
 		return nil, err
 	}
@@ -27,6 +47,7 @@ func (auth *authenticationService) SignUpTOTP(identifier string, user *User) (*T
 func (auth *authenticationService) VerifyTOTPCode(identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
 	return auth.VerifyTOTPCodeWithOptions(identifier, code, WithResponseOption(w))
 }
+
 func (auth *authenticationService) VerifyTOTPCodeWithOptions(identifier, code string, options ...Option) (*AuthenticationInfo, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")

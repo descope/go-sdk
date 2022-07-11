@@ -43,6 +43,46 @@ func TestSignUpTOTPFailure(t *testing.T) {
 	assert.Error(t, err)
 }
 
+func TestUpdateTOTP(t *testing.T) {
+	externalID := "someID"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeUpdateTOTPURL(), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, externalID, body["externalID"])
+		assert.Nil(t, body["user"])
+
+		u, p, ok := r.BasicAuth()
+		assert.True(t, ok)
+		assert.NotEmpty(t, u)
+		assert.NotEmpty(t, p)
+
+		resp := &TOTPResponse{
+			ProvisioningURL: "someurl.com",
+			Image:           "image",
+			Key:             "my key",
+		}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+	token, err := a.UpdateUserTOTP(externalID, r)
+	require.NoError(t, err)
+	assert.NotNil(t, token)
+}
+
+func TestUpodateTOTPFailure(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	_, err = a.UpdateUserTOTP("", r)
+	assert.Error(t, err)
+}
+
 func TestVerifyTOTP(t *testing.T) {
 	externalID := "someID"
 	code := "123456"

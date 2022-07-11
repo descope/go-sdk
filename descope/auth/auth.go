@@ -315,6 +315,10 @@ func composeSignUpTOTPURL() string {
 	return api.Routes.SignUpTOTP()
 }
 
+func composeUpdateTOTPURL() string {
+	return api.Routes.UpdateTOTP()
+}
+
 func composeVerifyCodeURL(method DeliveryMethod) string {
 	return composeURLMethod(api.Routes.VerifyCode(), method)
 }
