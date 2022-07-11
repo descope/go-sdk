@@ -27,6 +27,9 @@ type MockDescopeAuthentication struct {
 	AssertSignUpTOTP                            func(identifier string, user *User)
 	SignUpTOTPResponse                          *TOTPResponse
 	SignUpTOTPResponseError                     error
+	AssertUpdateTOTP                            func(identifier string)
+	UpdateTOTPResponse                          *TOTPResponse
+	UpdateTOTPResponseError                     error
 	AssertVerifyTOTPCode                        func(identifier string, code string)
 	VerifyTOTPCodeResponseInfo                  *AuthenticationInfo
 	VerifyTOTPCodeResponseError                 error
@@ -100,6 +103,13 @@ func (m MockDescopeAuthentication) SignUpTOTP(identifier string, user *User) (*T
 		m.AssertSignUpTOTP(identifier, user)
 	}
 	return m.SignUpTOTPResponse, m.SignUpTOTPResponseError
+}
+
+func (m MockDescopeAuthentication) UpdateUserTOTP(identifier string, _ *http.Request) (*TOTPResponse, error) {
+	if m.AssertUpdateTOTP != nil {
+		m.AssertUpdateTOTP(identifier)
+	}
+	return m.UpdateTOTPResponse, m.UpdateTOTPResponseError
 }
 
 func (m MockDescopeAuthentication) VerifyTOTPCode(identifier string, code string, _ http.ResponseWriter) (*AuthenticationInfo, error) {

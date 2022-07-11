@@ -188,4 +188,7 @@ type Authentication interface {
 	// ExternalID of user whom we want to update
 	// Request is needed to obtain JWT and send it to Descope, for verification
 	UpdateUserPhoneMagicLinkCrossDevice(method DeliveryMethod, identifier, phone, URI string, request *http.Request) (*MagicLinkResponse, error)
+
+	// UpdateUserTOTP - set a seed to an existing user, so the user can use an authenticator app
+	UpdateUserTOTP(identifier string, request *http.Request) (*TOTPResponse, error)
 }

@@ -181,8 +181,8 @@ type authenticationVerifyRequestBody struct {
 }
 
 type totpSignUpRequestBody struct {
-	ExternalID string `json:"externalID"`
-	User       *User  `json:"user"`
+	ExternalID string `json:"externalID,omitempty"`
+	User       *User  `json:"user,omitempty"`
 }
 
 type otpUpdateEmailRequestBody struct {
