@@ -1,6 +1,8 @@
 package auth
 
-import "net/http"
+import (
+	"net/http"
+)
 
 type MockDescopeAuthentication struct {
 	SignInOTPResponseError                      error
@@ -25,6 +27,9 @@ type MockDescopeAuthentication struct {
 	AssertSignUpTOTP                            func(identifier string, user *User)
 	SignUpTOTPResponse                          *TOTPResponse
 	SignUpTOTPResponseError                     error
+	AssertVerifyTOTPCode                        func(identifier string, code string)
+	VerifyTOTPCodeResponseInfo                  *AuthenticationInfo
+	VerifyTOTPCodeResponseError                 error
 	AssertOAuthStart                            func(provider OAuthProvider)
 	AssertOAuthResponseURL                      string
 	OAuthStartResponseError                     error
@@ -95,6 +100,17 @@ func (m MockDescopeAuthentication) SignUpTOTP(identifier string, user *User) (*T
 		m.AssertSignUpTOTP(identifier, user)
 	}
 	return m.SignUpTOTPResponse, m.SignUpTOTPResponseError
+}
+
+func (m MockDescopeAuthentication) VerifyTOTPCode(identifier string, code string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+	return m.VerifyTOTPCodeWithOptions(identifier, code, nil)
+}
+
+func (m MockDescopeAuthentication) VerifyTOTPCodeWithOptions(identifier string, code string, _ ...Option) (*AuthenticationInfo, error) {
+	if m.AssertVerifyTOTPCode != nil {
+		m.AssertVerifyTOTPCode(identifier, code)
+	}
+	return m.VerifyTOTPCodeResponseInfo, m.VerifyTOTPCodeResponseError
 }
 
 func (m MockDescopeAuthentication) UpdateUserEmailOTP(identifier, email string, request *http.Request) error {

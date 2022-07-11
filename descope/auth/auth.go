@@ -319,6 +319,10 @@ func composeVerifyCodeURL(method DeliveryMethod) string {
 	return composeURLMethod(api.Routes.VerifyCode(), method)
 }
 
+func composeVerifyTOTPCodeURL() string {
+	return api.Routes.VerifyTOTPCode()
+}
+
 func composeMagicLinkSignInURL(method DeliveryMethod) string {
 	return composeURLMethod(api.Routes.SignInMagicLink(), method)
 }

@@ -23,6 +23,14 @@ type Authentication interface {
 	// PAY ATTENTION that this is a different flow than OTP
 	// The return value will allow to connect it to an authenticator app
 	SignUpTOTP(identifier string, user *User) (*TOTPResponse, error)
+	// VerifyTOTPCode - Use to verify a SignIn/SignUp based on the given identifier
+	// followed by the code used to verify and authenticate the user.
+	// In case the request cookie can be renewed an automatic renewal is called and returns a new set of cookies to use.
+	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
+	// returns a list of cookies or an error upon failure.
+	// This is a shortcut for VerifyTOTPCodeWithOptions(method, identifier, code, WithResponseOption(w))
+	VerifyTOTPCode(identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error)
+	VerifyTOTPCodeWithOptions(identifier, code string, options ...Option) (*AuthenticationInfo, error)
 
 	// VerifyCode - Use to verify a SignIn/SignUp based on the given identifier either an email or a phone
 	// followed by the code used to verify and authenticate the user.
