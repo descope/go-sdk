@@ -311,6 +311,10 @@ func composeSignUpOrInURL(method DeliveryMethod) string {
 	return composeURLMethod(api.Routes.SignUpOrInOTP(), method)
 }
 
+func composeSignUpTOTPURL() string {
+	return api.Routes.SignUpTOTP()
+}
+
 func composeVerifyCodeURL(method DeliveryMethod) string {
 	return composeURLMethod(api.Routes.VerifyCode(), method)
 }

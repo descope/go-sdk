@@ -117,6 +117,38 @@ func TestSignUpOrInEmail(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestSignUpTOTP(t *testing.T) {
+	externalID := "someID"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeSignUpTOTPURL(), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, externalID, body["externalID"])
+		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["externalID"])
+
+		resp := &TOTPResponse{
+			ProvisioningURL: "someurl.com",
+			Image:           "image",
+			Key:             "my key",
+		}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	token, err := a.SignUpTOTP(externalID, &User{ExternalID: "test"})
+	require.NoError(t, err)
+	assert.NotNil(t, token)
+}
+
+func TestSignUpTOTPFailure(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	_, err = a.SignUpTOTP("", &User{ExternalID: "test"})
+	assert.Error(t, err)
+}
+
 func TestEmptyEmailVerifyCodeEmail(t *testing.T) {
 	email := ""
 	a, err := newTestAuth(nil, nil)

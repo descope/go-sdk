@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"encoding/json"
 	"net/http"
 
 	"github.com/descope/go-sdk/descope/errors"
@@ -31,6 +32,23 @@ func (auth *authenticationService) SignUpOrInOTP(method DeliveryMethod, identifi
 
 	_, err := auth.client.DoPostRequest(composeSignUpOrInURL(method), newSignInRequestBody(identifier), nil, "")
 	return err
+}
+
+func (auth *authenticationService) SignUpTOTP(identifier string, user *User) (*TOTPResponse, error) {
+	if identifier == "" {
+		return nil, errors.NewInvalidArgumentError("identifier")
+	}
+
+	httpResponse, err := auth.client.DoPostRequest(composeSignUpTOTPURL(), newSignUPTOTPRequestBody(identifier, user), nil, "")
+	if err != nil {
+		return nil, err
+	}
+	totpResponse := &TOTPResponse{}
+	err = json.Unmarshal([]byte(httpResponse.BodyStr), totpResponse)
+	if err != nil {
+		return nil, err
+	}
+	return totpResponse, nil
 }
 
 func (auth *authenticationService) VerifyCode(method DeliveryMethod, identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error) {

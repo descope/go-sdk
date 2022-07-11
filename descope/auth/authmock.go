@@ -22,6 +22,9 @@ type MockDescopeAuthentication struct {
 	AssertSignUpOTP                             func(method DeliveryMethod, identifier string, user *User)
 	AssertSignUpOrInOTP                         func(method DeliveryMethod, identifier string)
 	AssertVerifyCode                            func(method DeliveryMethod, identifier string, code string)
+	AssertSignUpTOTP                            func(identifier string, user *User)
+	SignUpTOTPResponse                          *TOTPResponse
+	SignUpTOTPResponseError                     error
 	AssertOAuthStart                            func(provider OAuthProvider)
 	AssertOAuthResponseURL                      string
 	OAuthStartResponseError                     error
@@ -85,6 +88,13 @@ func (m MockDescopeAuthentication) SignUpOrInOTP(method DeliveryMethod, identifi
 		m.AssertSignUpOrInOTP(method, identifier)
 	}
 	return m.SignUpOrInOTPResponseError
+}
+
+func (m MockDescopeAuthentication) SignUpTOTP(identifier string, user *User) (*TOTPResponse, error) {
+	if m.AssertSignUpTOTP != nil {
+		m.AssertSignUpTOTP(identifier, user)
+	}
+	return m.SignUpTOTPResponse, m.SignUpTOTPResponseError
 }
 
 func (m MockDescopeAuthentication) UpdateUserEmailOTP(identifier, email string, request *http.Request) error {
