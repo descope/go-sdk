@@ -32,7 +32,7 @@ func TestEnvVariablePublicKey(t *testing.T) {
 		require.NoError(t, err)
 	}()
 	require.NoError(t, err)
-	a, err := NewDescopeClientWithConfig(Config{ProjectID: "a"})
+	a, err := NewDescopeClientWithConfig(&Config{ProjectID: "a"})
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedPublicKey, a.config.PublicKey)
 }

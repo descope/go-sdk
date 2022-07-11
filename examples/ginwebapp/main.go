@@ -8,8 +8,8 @@ import (
 	"crypto/x509/pkix"
 	"encoding/json"
 	"encoding/pem"
-	"fmt"
 	goErrors "errors"
+	"fmt"
 	"log"
 	"math/big"
 	"net/http"
@@ -28,7 +28,7 @@ import (
 const (
 	TLSkeyPath  = "../key.pem"
 	TLSCertPath = "../cert.pem"
-	port = "8085"
+	port        = "8085"
 
 	trueStr            = "true"
 	verifyMagicLinkURI = "https://localhost:8085/magiclink/verify"
@@ -40,7 +40,7 @@ func main() {
 	log.Println("starting server on port " + port)
 	r := gin.Default()
 	var err error
-	client, err = descope.NewDescopeClientWithConfig(descope.Config{LogLevel: logger.LogDebugLevel, DescopeBaseURL: "http://localhost:8191"})
+	client, err = descope.NewDescopeClientWithConfig(&descope.Config{LogLevel: logger.LogDebugLevel, DescopeBaseURL: "http://localhost:8191"})
 	if err != nil {
 		log.Println("failed to init: " + err.Error())
 		os.Exit(1)
@@ -63,9 +63,9 @@ func main() {
 	r.GET("/magiclink/verify", handleMagicLinkVerify)
 
 	r.GET("/webauthn", func(c *gin.Context) {
-							file, _ := os.ReadFile("../demo.html")
-							c.Data(http.StatusOK, "text/html; charset=utf-8", file)
-						})
+		file, _ := os.ReadFile("../demo.html")
+		c.Data(http.StatusOK, "text/html; charset=utf-8", file)
+	})
 
 	r.POST("/webauthn/signup/start", func(c *gin.Context) {
 		decoder := json.NewDecoder(c.Request.Body)
@@ -75,7 +75,7 @@ func main() {
 			setError(c, err.Error())
 			return
 		}
-	
+
 		res, err := client.Auth.SignUpWebAuthnStart(t)
 		if err != nil {
 			setError(c, err.Error())
@@ -91,7 +91,7 @@ func main() {
 			setError(c, err.Error())
 			return
 		}
-	
+
 		_, err = client.Auth.SignUpWebAuthnFinishWithOptions(t, descopegin.WithResponseOption(c))
 		if err != nil {
 			setError(c, err.Error())
@@ -115,7 +115,7 @@ func main() {
 			setError(c, err.Error())
 			return
 		}
-	
+
 		_, err = client.Auth.SignInWebAuthnFinishWithOptions(t, descopegin.WithResponseOption(c))
 		if err != nil {
 			setError(c, err.Error())

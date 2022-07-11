@@ -57,10 +57,13 @@ type DescopeClient struct {
 }
 
 func NewDescopeClient() (*DescopeClient, error) {
-	return NewDescopeClientWithConfig(Config{})
+	return NewDescopeClientWithConfig(&Config{})
 }
 
-func NewDescopeClientWithConfig(config Config) (*DescopeClient, error) {
+func NewDescopeClientWithConfig(config *Config) (*DescopeClient, error) {
+	if config == nil {
+		return nil, errors.NewInvalidArgumentError("config")
+	}
 	logger.Init(config.LogLevel, config.Logger)
 
 	if strings.TrimSpace(config.setProjectID()) == "" {
@@ -75,5 +78,5 @@ func NewDescopeClientWithConfig(config Config) (*DescopeClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &DescopeClient{Auth: authService, config: &config}, nil
+	return &DescopeClient{Auth: authService, config: config}, nil
 }

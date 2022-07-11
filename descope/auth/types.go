@@ -8,6 +8,14 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
+// TOTPResponse - returns all relevant data to complete a TOTP registration
+// One can select which method of registration to use for handshaking with an Authenticator app
+type TOTPResponse struct {
+	ProvisioningURL string `json:"provisioningURL,omitempty"`
+	Image           string `json:"image,omitempty"`
+	Key             string `json:"key,omitempty"`
+}
+
 type AuthenticationInfo struct {
 	SessionToken *Token `json:"token,omitempty"`
 	User         *User  `json:"user,omitempty"`
@@ -172,6 +180,11 @@ type authenticationVerifyRequestBody struct {
 	Code                       string `json:"code"`
 }
 
+type totpSignUpRequestBody struct {
+	ExternalID string `json:"externalID"`
+	User       *User  `json:"user"`
+}
+
 type otpUpdateEmailRequestBody struct {
 	ExternalID string `json:"externalID,omitempty"`
 	Email      string `json:"email,omitempty"`
@@ -233,6 +246,10 @@ func newSignUpRequestBody(method DeliveryMethod, value string) *authenticationSi
 	}
 
 	return &authenticationSignUpRequestBody{Email: value}
+}
+
+func newSignUPTOTPRequestBody(externalID string, user *User) *totpSignUpRequestBody {
+	return &totpSignUpRequestBody{ExternalID: externalID, User: user}
 }
 
 func newOTPUpdateEmailRequestBody(externalID, email string) *otpUpdateEmailRequestBody {

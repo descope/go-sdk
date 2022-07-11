@@ -33,12 +33,13 @@ const (
 )
 
 var client *descope.DescopeClient
+var port = "8085"
 
 func main() {
 	log.Println("starting server on port " + port)
 	var err error
 	router := mux.NewRouter()
-	client, err = descope.NewDescopeClientWithConfig(descope.Config{LogLevel: logger.LogDebugLevel, DescopeBaseURL: "http://localhost:8191"})
+	client, err = descope.NewDescopeClientWithConfig(&descope.Config{LogLevel: logger.LogDebugLevel, DescopeBaseURL: "http://localhost:8191"})
 	if err != nil {
 		log.Println("failed to init: " + err.Error())
 		os.Exit(1)
@@ -62,10 +63,10 @@ func main() {
 	router.HandleFunc("/magiclink/session", handleGetMagicLinkSession).Methods(http.MethodGet)
 
 	router.HandleFunc("/webauthn", func(w http.ResponseWriter, r *http.Request) {
-							file, _ := os.ReadFile("../demo.html")
-							w.WriteHeader(http.StatusOK)
-							w.Write(file)
-						}).Methods(http.MethodGet)
+		file, _ := os.ReadFile("../demo.html")
+		w.WriteHeader(http.StatusOK)
+		w.Write(file)
+	}).Methods(http.MethodGet)
 
 	router.HandleFunc("/webauthn/signup/start", handleWebauthnSignupStart).Methods(http.MethodPost)
 	router.HandleFunc("/webauthn/signup/finish", handleWebauthnSignupFinish).Methods(http.MethodPost)
