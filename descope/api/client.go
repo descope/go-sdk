@@ -53,7 +53,7 @@ var (
 			signUpOTP:                "auth/signup/otp",
 			signUpOrInOTP:            "auth/sign-up-or-in/otp",
 			signUpTOTP:               "auth/signup/totp",
-			updateTOTP:               "/v1/user/update/totp",
+			updateTOTP:               "user/update/totp",
 			verifyTOTPCode:           "auth/verify/totp",
 			verifyCode:               "auth/code/verify",
 			signInMagicLink:          "auth/signin/magiclink",
