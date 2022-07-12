@@ -13,12 +13,13 @@ func (auth *authenticationService) OAuthStart(provider OAuthProvider, landingURL
 }
 
 func (auth *authenticationService) OAuthStartWithOptions(provider OAuthProvider, landingURL string, options ...Option) (url string, err error) {
-	httpResponse, err := auth.client.DoGetRequest(composeOAuthURL(),
-		&api.HTTPRequest{QueryParams: map[string]string{
-			"provider":    string(provider),
-			"redirectURL": landingURL,
-		}},
-		"")
+	m := map[string]string{
+		"provider": string(provider),
+	}
+	if len(landingURL) > 0 {
+		m["redirectURL"] = landingURL
+	}
+	httpResponse, err := auth.client.DoGetRequest(composeOAuthURL(), &api.HTTPRequest{QueryParams: m}, "")
 	if err != nil {
 		return
 	}

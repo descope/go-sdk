@@ -16,12 +16,13 @@ func (auth *authenticationService) SAMLStartWithOptions(tenant string, landingUR
 	if tenant == "" {
 		return "", errors.NewInvalidArgumentError("tenant")
 	}
-	httpResponse, err := auth.client.DoGetRequest(composeSAMLStartURL(),
-		&api.HTTPRequest{QueryParams: map[string]string{
-			"tenant":      string(tenant),
-			"redirectURL": landingURL,
-		}},
-		"")
+	m := map[string]string{
+		"tenant": string(tenant),
+	}
+	if len(landingURL) > 0 {
+		m["redirectURL"] = landingURL
+	}
+	httpResponse, err := auth.client.DoGetRequest(composeSAMLStartURL(), &api.HTTPRequest{QueryParams: m}, "")
 	if err != nil {
 		return
 	}
