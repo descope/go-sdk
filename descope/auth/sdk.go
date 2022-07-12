@@ -99,9 +99,9 @@ type Authentication interface {
 	// Uses the response writer to automatically redirect the client to the provider url for authentication.
 	// A successful authentication will result in a callback to the url defined in the current project settings.
 	// This is a shortcut for OAuthStartWithOptions(provider, WithResponseOption(w))
-	OAuthStart(provider OAuthProvider, w http.ResponseWriter) (string, error)
+	OAuthStart(provider OAuthProvider, landingURL string, w http.ResponseWriter) (string, error)
 	// OAuthStartWithOptions - use to start an OAuth authentication using the given OAuthProvider and options.
-	OAuthStartWithOptions(provider OAuthProvider, options ...Option) (string, error)
+	OAuthStartWithOptions(provider OAuthProvider, landingURL string, options ...Option) (string, error)
 	// ExchangeToken - Finalize OAuth or SAML authentication
 	// code should be extracted from the redirect URL of OAth/SAML authentication flow
 	ExchangeToken(code string, w http.ResponseWriter) (*AuthenticationInfo, error)
@@ -112,12 +112,12 @@ type Authentication interface {
 	// SAMLStart will initiate a SAML login flow
 	// return will be the redirect URL that needs to return to client
 	// and finalize with the ExchangeToken call
-	SAMLStart(tenant string, w http.ResponseWriter) (redirectURL string, err error)
+	SAMLStart(tenant string, landingURL string, w http.ResponseWriter) (redirectURL string, err error)
 	// SAMLStartWithOptions will initiate a SAML login flow
 	// options are the options to return the data to front end
 	// return will be the redirect URL that needs to return to client
 	// and finalize with the ExchangeToken call
-	SAMLStartWithOptions(tenant string, options ...Option) (redirectURL string, err error)
+	SAMLStartWithOptions(tenant string, landingURL string, options ...Option) (redirectURL string, err error)
 
 	// ValidateSession - Use to validate a session of a given request.
 	// Should be called before any private API call that requires authorization.

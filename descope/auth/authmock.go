@@ -33,7 +33,7 @@ type MockDescopeAuthentication struct {
 	AssertVerifyTOTPCode                        func(identifier string, code string)
 	VerifyTOTPCodeResponseInfo                  *AuthenticationInfo
 	VerifyTOTPCodeResponseError                 error
-	AssertOAuthStart                            func(provider OAuthProvider)
+	AssertOAuthStart                            func(provider OAuthProvider, landingURL string)
 	AssertOAuthResponseURL                      string
 	OAuthStartResponseError                     error
 	AssertSignInMagicLink                       func(method DeliveryMethod, identifier, URI string)
@@ -63,7 +63,7 @@ type MockDescopeAuthentication struct {
 	AssertExchangeToken                         func(code string, options ...Option)
 	ExchangeTokenResponseInfo                   *AuthenticationInfo
 	ExchangeTokenResponseError                  error
-	AssertSAMLStart                             func(tenant string, options ...Option)
+	AssertSAMLStart                             func(tenant string, landingURL string, options ...Option)
 	AssertSAMLStartResponseURL                  string
 	SAMLStartResponseError                      error
 	AssertVerifyMagicLink                       func(token string)
@@ -232,16 +232,13 @@ func (m MockDescopeAuthentication) GetMagicLinkSessionWithOptions(_ string, _ ..
 	return m.GetMagicLinkSessionResponseInfo, m.GetMagicLinkSessionResponseError
 }
 
-func (m MockDescopeAuthentication) OAuthStart(provider OAuthProvider, _ http.ResponseWriter) (string, error) {
-	if m.AssertOAuthStart != nil {
-		m.AssertOAuthStart(provider)
-	}
-	return m.AssertOAuthResponseURL, m.OAuthStartResponseError
+func (m MockDescopeAuthentication) OAuthStart(provider OAuthProvider, landingURL string, w http.ResponseWriter) (string, error) {
+	return m.OAuthStartWithOptions(provider, landingURL, WithResponseOption(w))
 }
 
-func (m MockDescopeAuthentication) OAuthStartWithOptions(provider OAuthProvider, _ ...Option) (string, error) {
+func (m MockDescopeAuthentication) OAuthStartWithOptions(provider OAuthProvider, landingURL string, _ ...Option) (string, error) {
 	if m.AssertOAuthStart != nil {
-		m.AssertOAuthStart(provider)
+		m.AssertOAuthStart(provider, landingURL)
 	}
 	return m.AssertOAuthResponseURL, m.OAuthStartResponseError
 }
@@ -257,13 +254,13 @@ func (m MockDescopeAuthentication) ExchangeTokenWithOptions(code string, options
 	return m.ExchangeTokenResponseInfo, m.ExchangeTokenResponseError
 }
 
-func (m MockDescopeAuthentication) SAMLStart(tenant string, w http.ResponseWriter) (string, error) {
-	return m.SAMLStartWithOptions(tenant, WithResponseOption(w))
+func (m MockDescopeAuthentication) SAMLStart(tenant string, landingURL string, w http.ResponseWriter) (string, error) {
+	return m.SAMLStartWithOptions(tenant, landingURL, WithResponseOption(w))
 }
 
-func (m MockDescopeAuthentication) SAMLStartWithOptions(tenant string, option ...Option) (string, error) {
+func (m MockDescopeAuthentication) SAMLStartWithOptions(tenant string, landingURL string, option ...Option) (string, error) {
 	if m.AssertSAMLStart != nil {
-		m.AssertSAMLStart(tenant, option...)
+		m.AssertSAMLStart(tenant, landingURL, option...)
 	}
 	return m.AssertSAMLStartResponseURL, m.SAMLStartResponseError
 }

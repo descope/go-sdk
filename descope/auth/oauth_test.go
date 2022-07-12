@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/descope/go-sdk/descope/utils"
@@ -15,13 +16,14 @@ import (
 
 func TestOAuthStartForwardResponse(t *testing.T) {
 	uri := "http://test.me"
+	landingURL := "https://test.com"
 	provider := OAuthGithub
 	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {
-		assert.EqualValues(t, fmt.Sprintf("%s?provider=%s", composeOAuthURL(), provider), r.URL.RequestURI())
+		assert.EqualValues(t, fmt.Sprintf("%s?provider=%s&redirectURL=%s", composeOAuthURL(), provider, url.QueryEscape(landingURL)), r.URL.RequestURI())
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	urlStr, err := a.OAuthStart(provider, w)
+	urlStr, err := a.OAuthStart(provider, landingURL, w)
 	require.NoError(t, err)
 	assert.EqualValues(t, uri, urlStr)
 	assert.EqualValues(t, urlStr, w.Result().Header.Get(RedirectLocationCookieName))
@@ -35,7 +37,7 @@ func TestOAuthStartInvalidForwardResponse(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	urlStr, err := a.OAuthStart(provider, w)
+	urlStr, err := a.OAuthStart(provider, "", w)
 	require.Error(t, err)
 	assert.Empty(t, urlStr)
 }
