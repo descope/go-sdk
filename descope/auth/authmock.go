@@ -112,11 +112,11 @@ func (m MockDescopeAuthentication) UpdateUserTOTP(identifier string, _ *http.Req
 	return m.UpdateTOTPResponse, m.UpdateTOTPResponseError
 }
 
-func (m MockDescopeAuthentication) VerifyTOTPCode(identifier string, code string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
-	return m.VerifyTOTPCodeWithOptions(identifier, code, nil)
+func (m MockDescopeAuthentication) SignInTOTPCode(identifier string, code string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+	return m.SignInTOTPCodeWithOptions(identifier, code, nil)
 }
 
-func (m MockDescopeAuthentication) VerifyTOTPCodeWithOptions(identifier string, code string, _ ...Option) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthentication) SignInTOTPCodeWithOptions(identifier string, code string, _ ...Option) (*AuthenticationInfo, error) {
 	if m.AssertVerifyTOTPCode != nil {
 		m.AssertVerifyTOTPCode(identifier, code)
 	}
@@ -295,7 +295,7 @@ func (m MockDescopeAuthentication) LogoutWithOptions(_ *http.Request, _ ...Optio
 	return m.LogoutResponseError
 }
 
-func (m MockDescopeAuthentication) SignUpWebAuthnStart(_ *User) (*WebAuthnTransactionResponse, error) {
+func (m MockDescopeAuthentication) SignUpWebAuthnStart(_ string, _ *User) (*WebAuthnTransactionResponse, error) {
 	return m.SignUpWebAuthnStartResponseTransaction, m.SignUpWebAuthnStartResponseError
 }
 

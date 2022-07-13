@@ -19,7 +19,7 @@ func TestSignUpTOTP(t *testing.T) {
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, externalID, body["externalID"])
-		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["externalID"])
+		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
 
 		resp := &TOTPResponse{
 			ProvisioningURL: "someurl.com",
@@ -31,7 +31,7 @@ func TestSignUpTOTP(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	token, err := a.SignUpTOTP(externalID, &User{ExternalID: "test"})
+	token, err := a.SignUpTOTP(externalID, &User{Name: "test"})
 	require.NoError(t, err)
 	assert.NotNil(t, token)
 }
@@ -39,7 +39,7 @@ func TestSignUpTOTP(t *testing.T) {
 func TestSignUpTOTPFailure(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.SignUpTOTP("", &User{ExternalID: "test"})
+	_, err = a.SignUpTOTP("", &User{Name: "test"})
 	assert.Error(t, err)
 }
 
@@ -96,7 +96,7 @@ func TestVerifyTOTP(t *testing.T) {
 
 		resp := &JWTResponse{
 			JWTS: []string{jwtTokenValid},
-			User: &User{
+			User: &UserResponse{
 				ExternalID: externalID,
 			},
 			FirstSeen: true,
@@ -106,7 +106,7 @@ func TestVerifyTOTP(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	authInfo, err := a.VerifyTOTPCode(externalID, code, nil)
+	authInfo, err := a.SignInTOTPCode(externalID, code, nil)
 	require.NoError(t, err)
 	assert.NotNil(t, authInfo)
 	assert.True(t, authInfo.FirstSeen)
@@ -116,7 +116,7 @@ func TestVerifyTOTP(t *testing.T) {
 func TestVerifyTOTPFailure(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.VerifyTOTPCode("", "code", nil)
+	_, err = a.SignInTOTPCode("", "code", nil)
 	assert.Error(t, err)
 
 }

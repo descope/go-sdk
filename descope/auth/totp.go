@@ -44,11 +44,11 @@ func (auth *authenticationService) UpdateUserTOTP(identifier string, r *http.Req
 	return totpResponse, nil
 }
 
-func (auth *authenticationService) VerifyTOTPCode(identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.VerifyTOTPCodeWithOptions(identifier, code, WithResponseOption(w))
+func (auth *authenticationService) SignInTOTPCode(identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	return auth.SignInTOTPCodeWithOptions(identifier, code, WithResponseOption(w))
 }
 
-func (auth *authenticationService) VerifyTOTPCodeWithOptions(identifier, code string, options ...Option) (*AuthenticationInfo, error) {
+func (auth *authenticationService) SignInTOTPCodeWithOptions(identifier, code string, options ...Option) (*AuthenticationInfo, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}

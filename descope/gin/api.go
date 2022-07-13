@@ -13,7 +13,7 @@ func AuthneticationMiddleware(client auth.Authentication, onFailure func(*gin.Co
 			if onSuccess != nil {
 				onSuccess(c, token)
 			} else {
-				c.Set(auth.ContextUserIDProperty, token.Subject)
+				c.Set(auth.ContextUserIDProperty, token.ID)
 				c.Next()
 			}
 		} else {

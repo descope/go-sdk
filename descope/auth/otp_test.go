@@ -35,10 +35,11 @@ func TestSignUpEmail(t *testing.T) {
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, email, m["email"])
-		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["externalID"])
+		assert.EqualValues(t, email, m["externalID"])
+		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpOTP(MethodEmail, email, &User{ExternalID: "test"})
+	err = a.SignUpOTP(MethodEmail, email, &User{Name: "test"})
 	require.NoError(t, err)
 }
 
@@ -50,10 +51,11 @@ func TestSignUpSMS(t *testing.T) {
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["phone"])
-		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["externalID"])
+		assert.EqualValues(t, phone, body["externalID"])
+		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpOTP(MethodSMS, phone, &User{ExternalID: "test"})
+	err = a.SignUpOTP(MethodSMS, phone, &User{Name: "test"})
 	require.NoError(t, err)
 }
 
@@ -65,10 +67,11 @@ func TestSignUpWhatsApp(t *testing.T) {
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["whatsapp"])
-		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["externalID"])
+		assert.EqualValues(t, phone, body["externalID"])
+		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpOTP(MethodWhatsApp, phone, &User{ExternalID: "test"})
+	err = a.SignUpOTP(MethodWhatsApp, phone, &User{Name: "test"})
 	require.NoError(t, err)
 }
 
@@ -241,9 +244,11 @@ func TestVerifyCodeEmailResponseOption(t *testing.T) {
 		assert.EqualValues(t, code, body["code"])
 		resp := &JWTResponse{
 			JWTS: []string{jwtTokenValid},
-			User: &User{
-				Name:  name,
-				Phone: phone,
+			User: &UserResponse{
+				User: User{
+					Name:  name,
+					Phone: phone,
+				},
 			},
 			FirstSeen: firstSeen,
 		}
