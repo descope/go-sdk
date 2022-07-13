@@ -76,7 +76,7 @@ func main() {
 			return
 		}
 
-		res, err := client.Auth.SignUpWebAuthnStart(t)
+		res, err := client.Auth.SignUpWebAuthnStart(t.Name, t)
 		if err != nil {
 			setError(c, err.Error())
 		}
