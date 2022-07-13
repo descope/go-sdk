@@ -148,7 +148,7 @@ func handleOAuth(w http.ResponseWriter, r *http.Request) {
 	if p, ok := r.URL.Query()["provider"]; ok {
 		provider = auth.OAuthProvider(p[0])
 	}
-	_, err := client.Auth.OAuthStart(provider, w)
+	_, err := client.Auth.OAuthStart(provider, "", w)
 	if err != nil {
 		setError(w, err.Error())
 	}

@@ -249,7 +249,7 @@ func handleOAuth(c *gin.Context) {
 	if provider == "" {
 		provider = auth.OAuthFacebook
 	}
-	_, err := client.Auth.OAuthStartWithOptions(provider, descopegin.WithResponseOption(c))
+	_, err := client.Auth.OAuthStartWithOptions(provider, "", descopegin.WithResponseOption(c))
 	if err != nil {
 		setError(c, err.Error())
 	}
