@@ -232,13 +232,13 @@ func (m MockDescopeAuthentication) GetMagicLinkSessionWithOptions(_ string, _ ..
 	return m.GetMagicLinkSessionResponseInfo, m.GetMagicLinkSessionResponseError
 }
 
-func (m MockDescopeAuthentication) OAuthStart(provider OAuthProvider, landingURL string, w http.ResponseWriter) (string, error) {
-	return m.OAuthStartWithOptions(provider, landingURL, WithResponseOption(w))
+func (m MockDescopeAuthentication) OAuthStart(provider OAuthProvider, returnURL string, w http.ResponseWriter) (string, error) {
+	return m.OAuthStartWithOptions(provider, returnURL, WithResponseOption(w))
 }
 
-func (m MockDescopeAuthentication) OAuthStartWithOptions(provider OAuthProvider, landingURL string, _ ...Option) (string, error) {
+func (m MockDescopeAuthentication) OAuthStartWithOptions(provider OAuthProvider, returnURL string, _ ...Option) (string, error) {
 	if m.AssertOAuthStart != nil {
-		m.AssertOAuthStart(provider, landingURL)
+		m.AssertOAuthStart(provider, returnURL)
 	}
 	return m.AssertOAuthResponseURL, m.OAuthStartResponseError
 }
@@ -254,13 +254,13 @@ func (m MockDescopeAuthentication) ExchangeTokenWithOptions(code string, options
 	return m.ExchangeTokenResponseInfo, m.ExchangeTokenResponseError
 }
 
-func (m MockDescopeAuthentication) SAMLStart(tenant string, landingURL string, w http.ResponseWriter) (string, error) {
-	return m.SAMLStartWithOptions(tenant, landingURL, WithResponseOption(w))
+func (m MockDescopeAuthentication) SAMLStart(tenant string, returnURL string, w http.ResponseWriter) (string, error) {
+	return m.SAMLStartWithOptions(tenant, returnURL, WithResponseOption(w))
 }
 
-func (m MockDescopeAuthentication) SAMLStartWithOptions(tenant string, landingURL string, option ...Option) (string, error) {
+func (m MockDescopeAuthentication) SAMLStartWithOptions(tenant string, returnURL string, option ...Option) (string, error) {
 	if m.AssertSAMLStart != nil {
-		m.AssertSAMLStart(tenant, landingURL, option...)
+		m.AssertSAMLStart(tenant, returnURL, option...)
 	}
 	return m.AssertSAMLStartResponseURL, m.SAMLStartResponseError
 }

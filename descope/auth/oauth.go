@@ -8,16 +8,16 @@ import (
 	"github.com/descope/go-sdk/descope/logger"
 )
 
-func (auth *authenticationService) OAuthStart(provider OAuthProvider, landingURL string, w http.ResponseWriter) (string, error) {
-	return auth.OAuthStartWithOptions(provider, landingURL, WithResponseOption(w))
+func (auth *authenticationService) OAuthStart(provider OAuthProvider, returnURL string, w http.ResponseWriter) (string, error) {
+	return auth.OAuthStartWithOptions(provider, returnURL, WithResponseOption(w))
 }
 
-func (auth *authenticationService) OAuthStartWithOptions(provider OAuthProvider, landingURL string, options ...Option) (url string, err error) {
+func (auth *authenticationService) OAuthStartWithOptions(provider OAuthProvider, returnURL string, options ...Option) (url string, err error) {
 	m := map[string]string{
 		"provider": string(provider),
 	}
-	if len(landingURL) > 0 {
-		m["redirectURL"] = landingURL
+	if len(returnURL) > 0 {
+		m["redirectURL"] = returnURL
 	}
 	httpResponse, err := auth.client.DoGetRequest(composeOAuthURL(), &api.HTTPRequest{QueryParams: m}, "")
 	if err != nil {

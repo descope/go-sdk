@@ -8,19 +8,19 @@ import (
 	"github.com/descope/go-sdk/descope/logger"
 )
 
-func (auth *authenticationService) SAMLStart(tenant string, landingURL string, w http.ResponseWriter) (redirectURL string, err error) {
-	return auth.SAMLStartWithOptions(tenant, landingURL, WithResponseOption(w))
+func (auth *authenticationService) SAMLStart(tenant string, returnURL string, w http.ResponseWriter) (redirectURL string, err error) {
+	return auth.SAMLStartWithOptions(tenant, returnURL, WithResponseOption(w))
 }
 
-func (auth *authenticationService) SAMLStartWithOptions(tenant string, landingURL string, options ...Option) (redirectURL string, err error) {
+func (auth *authenticationService) SAMLStartWithOptions(tenant string, returnURL string, options ...Option) (redirectURL string, err error) {
 	if tenant == "" {
 		return "", errors.NewInvalidArgumentError("tenant")
 	}
 	m := map[string]string{
 		"tenant": string(tenant),
 	}
-	if len(landingURL) > 0 {
-		m["redirectURL"] = landingURL
+	if len(returnURL) > 0 {
+		m["redirectURL"] = returnURL
 	}
 	httpResponse, err := auth.client.DoGetRequest(composeSAMLStartURL(), &api.HTTPRequest{QueryParams: m}, "")
 	if err != nil {
