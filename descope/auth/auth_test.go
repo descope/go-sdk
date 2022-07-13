@@ -134,10 +134,10 @@ func newTestAuthConf(authParams *AuthParams, clientParams *api.ClientParams, cal
 func TestVerifyDeliveryMethod(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.verifyDeliveryMethod(MethodEmail, "")
+	err = a.verifyDeliveryMethod(MethodEmail, "", &User{})
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 
-	err = a.verifyDeliveryMethod(MethodSMS, "abc@notaphone.com")
+	err = a.verifyDeliveryMethod(MethodSMS, "abc@notaphone.com", &User{})
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
 
@@ -451,7 +451,7 @@ func TestAuthenticationMiddlewareSuccess(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	handlerToTest := AuthenticationMiddleware(a, nil, func(w http.ResponseWriter, r *http.Request, next http.Handler, token *Token) {
-		assert.EqualValues(t, "externalid", token.Subject)
+		assert.EqualValues(t, "externalid", token.ID)
 		next.ServeHTTP(w, r)
 	})(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusTeapot)

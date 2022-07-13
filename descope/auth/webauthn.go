@@ -8,8 +8,13 @@ import (
 	"github.com/descope/go-sdk/descope/utils"
 )
 
-func (auth *authenticationService) SignUpWebAuthnStart(user *User) (*WebAuthnTransactionResponse, error) {
-	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignupStart(), authenticationWebAuthnSignUpRequestBody{User: user}, nil, "")
+func (auth *authenticationService) SignUpWebAuthnStart(identifier string, user *User) (*WebAuthnTransactionResponse, error) {
+	if user == nil {
+		user = &User{}
+	}
+	uRes := &UserResponse{User: *user}
+	uRes.ExternalID = identifier
+	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignupStart(), authenticationWebAuthnSignUpRequestBody{User: uRes}, nil, "")
 	if err != nil {
 		return nil, err
 	}

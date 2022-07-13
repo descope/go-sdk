@@ -19,7 +19,7 @@ func TestSignUpWebAuthnStart(t *testing.T) {
 		assert.EqualValues(t, "test@test.com", req.User.Email)
 	}, expectedResponse))
 	require.NoError(t, err)
-	res, err := a.SignUpWebAuthnStart(&User{Email: "test@test.com"})
+	res, err := a.SignUpWebAuthnStart("test@test.com", &User{Email: "test@test.com"})
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedResponse.TransactionID, res.TransactionID)
 }

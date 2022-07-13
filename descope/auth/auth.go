@@ -103,7 +103,7 @@ func AuthenticationMiddleware(auth Authentication, onFailure func(http.ResponseW
 				if onSuccess != nil {
 					onSuccess(w, r, next, token)
 				} else {
-					newCtx := context.WithValue(r.Context(), ContextUserIDPropertyKey, token.Subject)
+					newCtx := context.WithValue(r.Context(), ContextUserIDPropertyKey, token.ID)
 					r = r.WithContext(newCtx)
 					next.ServeHTTP(w, r)
 				}
@@ -188,23 +188,39 @@ func (auth *authenticationService) validateJWT(JWT string) (*Token, error) {
 	return NewToken(JWT, token), err
 }
 
-func (*authenticationService) verifyDeliveryMethod(method DeliveryMethod, identifier string) *errors.WebError {
+func (*authenticationService) verifyDeliveryMethod(method DeliveryMethod, identifier string, user *User) *errors.WebError {
+	varName := "identifier"
 	if identifier == "" {
-		return errors.NewInvalidArgumentError("identifier")
+		return errors.NewInvalidArgumentError(varName)
 	}
 
 	switch method {
 	case MethodEmail:
-		if !emailRegex.MatchString(identifier) {
-			return errors.NewInvalidArgumentError("identifier")
+		if len(user.Email) == 0 {
+			user.Email = identifier
+		} else {
+			varName = "user.Email"
+		}
+		if !emailRegex.MatchString(user.Email) {
+			return errors.NewInvalidArgumentError(varName)
 		}
 	case MethodSMS:
-		if !phoneRegex.MatchString(identifier) {
-			return errors.NewInvalidArgumentError("identifier")
+		if len(user.Phone) == 0 {
+			user.Phone = identifier
+		} else {
+			varName = "user.Phone"
+		}
+		if !phoneRegex.MatchString(user.Phone) {
+			return errors.NewInvalidArgumentError(varName)
 		}
 	case MethodWhatsApp:
-		if !phoneRegex.MatchString(identifier) {
-			return errors.NewInvalidArgumentError("identifier")
+		if len(user.Phone) == 0 {
+			user.Phone = identifier
+		} else {
+			varName = "user.Phone"
+		}
+		if !phoneRegex.MatchString(user.Phone) {
+			return errors.NewInvalidArgumentError(varName)
 		}
 	}
 	return nil

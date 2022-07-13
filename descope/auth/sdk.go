@@ -19,19 +19,6 @@ type Authentication interface {
 	// with the given identifier.
 	SignUpOrInOTP(method DeliveryMethod, identifier string) error
 
-	// SignUpTOTP - create a new user, and create a seed for it,
-	// PAY ATTENTION that this is a different flow than OTP
-	// The return value will allow to connect it to an authenticator app
-	SignUpTOTP(identifier string, user *User) (*TOTPResponse, error)
-	// VerifyTOTPCode - Use to verify a SignIn/SignUp based on the given identifier
-	// followed by the code used to verify and authenticate the user.
-	// In case the request cookie can be renewed an automatic renewal is called and returns a new set of cookies to use.
-	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
-	// returns a list of cookies or an error upon failure.
-	// This is a shortcut for VerifyTOTPCodeWithOptions(method, identifier, code, WithResponseOption(w))
-	VerifyTOTPCode(identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error)
-	VerifyTOTPCodeWithOptions(identifier, code string, options ...Option) (*AuthenticationInfo, error)
-
 	// VerifyCode - Use to verify a SignIn/SignUp based on the given identifier either an email or a phone
 	// followed by the code used to verify and authenticate the user.
 	// In case the request cookie can be renewed an automatic renewal is called and returns a new set of cookies to use.
@@ -39,11 +26,23 @@ type Authentication interface {
 	// returns a list of cookies or an error upon failure.
 	// This is a shortcut for VerifyCodeWithOptions(method, identifier, code, WithResponseOption(w))
 	VerifyCode(method DeliveryMethod, identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error)
-
 	// VerifyCodeWithOptions - used to verify a SignIn/SignUp based on the given identifier either an email or a phone
 	// followed by the code used to verify and authenticate the user.
 	// returns a list of cookies or an error upon failure.
 	VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, options ...Option) (*AuthenticationInfo, error)
+
+	// SignUpTOTP - create a new user, and create a seed for it,
+	// PAY ATTENTION that this is a different flow than OTP
+	// The return value will allow to connect it to an authenticator app
+	SignUpTOTP(identifier string, user *User) (*TOTPResponse, error)
+	// SignInTOTPCode - Use to verify a SignIn/SignUp based on the given identifier
+	// followed by the code used to verify and authenticate the user.
+	// In case the request cookie can be renewed an automatic renewal is called and returns a new set of cookies to use.
+	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
+	// returns a list of cookies or an error upon failure.
+	// This is a shortcut for SignInTOTPCodeWithOptions(method, identifier, code, WithResponseOption(w))
+	SignInTOTPCode(identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error)
+	SignInTOTPCodeWithOptions(identifier, code string, options ...Option) (*AuthenticationInfo, error)
 
 	// SignInMagicLink - Use to login a user based on a magic link that will be sent either email or a phone
 	// and choose the selected delivery method for verification (see auth/DeliveryMethod).
@@ -129,8 +128,8 @@ type Authentication interface {
 	ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, *Token, error)
 
 	// SignUpWebAuthnStart - Use to start an authentication process with webauthn for the new user argument.
-	// returns a transaction id response on successs and error upon failure.
-	SignUpWebAuthnStart(user *User) (*WebAuthnTransactionResponse, error)
+	// returns a transaction id response on success and error upon failure.
+	SignUpWebAuthnStart(identifier string, user *User) (*WebAuthnTransactionResponse, error)
 	// SignUpWebAuthnFinish - Use to finish an authentication process with a given transaction id and credentials after been signed
 	// by the credentials navigator.
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
@@ -188,7 +187,6 @@ type Authentication interface {
 	// ExternalID of user whom we want to update
 	// Request is needed to obtain JWT and send it to Descope, for verification
 	UpdateUserPhoneMagicLinkCrossDevice(method DeliveryMethod, identifier, phone, URI string, request *http.Request) (*MagicLinkResponse, error)
-
 	// UpdateUserTOTP - set a seed to an existing user, so the user can use an authenticator app
 	UpdateUserTOTP(identifier string, request *http.Request) (*TOTPResponse, error)
 }

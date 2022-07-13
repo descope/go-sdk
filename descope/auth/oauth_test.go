@@ -48,8 +48,10 @@ func TestExchangeToken(t *testing.T) {
 		assert.EqualValues(t, composeExchangeTokenURL()+"?code="+code, r.URL.RequestURI())
 		resp := &JWTResponse{
 			JWTS: []string{jwtTokenValid},
-			User: &User{
-				Name: "name",
+			User: &UserResponse{
+				User: User{
+					Name: "name",
+				},
 			},
 			FirstSeen: true,
 		}

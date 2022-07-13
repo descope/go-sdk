@@ -16,7 +16,10 @@ func (auth *authenticationService) SignInOTP(method DeliveryMethod, identifier s
 }
 
 func (auth *authenticationService) SignUpOTP(method DeliveryMethod, identifier string, user *User) error {
-	if err := auth.verifyDeliveryMethod(method, identifier); err != nil {
+	if user == nil {
+		user = &User{}
+	}
+	if err := auth.verifyDeliveryMethod(method, identifier, user); err != nil {
 		return err
 	}
 

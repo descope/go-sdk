@@ -99,11 +99,11 @@ func TestInvalidPhoneSignUpSMS(t *testing.T) {
 	phone := "thisisemail@af.com"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.SignUpOTP(MethodSMS, phone, &User{ExternalID: "test"})
+	err = a.SignUpOTP(MethodSMS, phone, &User{Name: "test"})
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 
-	err = a.SignUpMagicLink(MethodSMS, phone, "http://test.me", &User{ExternalID: "test"})
+	err = a.SignUpMagicLink(MethodSMS, phone, "http://test.me", &User{Name: "test"})
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -112,11 +112,11 @@ func TestInvalidPhoneSignUpWhatsApp(t *testing.T) {
 	phone := "thisisemail@af.com"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.SignUpOTP(MethodSMS, phone, &User{ExternalID: "test"})
+	err = a.SignUpOTP(MethodSMS, phone, &User{Name: "test"})
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 
-	err = a.SignUpMagicLink(MethodSMS, phone, "http://test.me", &User{ExternalID: "test"})
+	err = a.SignUpMagicLink(MethodSMS, phone, "http://test.me", &User{Name: "test"})
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -125,11 +125,11 @@ func TestInvalidEmailSignUpEmail(t *testing.T) {
 	email := "943248329844"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.SignUpOTP(MethodEmail, email, &User{ExternalID: "test"})
+	err = a.SignUpOTP(MethodEmail, email, &User{Name: "test"})
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 
-	err = a.SignUpMagicLink(MethodEmail, email, "http://test.me", &User{ExternalID: "test"})
+	err = a.SignUpMagicLink(MethodEmail, email, "http://test.me", &User{Name: "test"})
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -144,10 +144,11 @@ func TestSignUpMagicLinkEmail(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, uri, m["URI"])
-		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["externalID"])
+		assert.EqualValues(t, email, m["externalID"])
+		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpMagicLink(MethodEmail, email, uri, &User{ExternalID: "test"})
+	err = a.SignUpMagicLink(MethodEmail, email, uri, &User{Name: "test"})
 	require.NoError(t, err)
 }
 
@@ -213,14 +214,15 @@ func TestSignUpMagicLinkEmailCrossDevice(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, uri, m["URI"])
-		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["externalID"])
+		assert.EqualValues(t, email, m["externalID"])
+		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
 		return &http.Response{
 			StatusCode: http.StatusOK,
 			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s"}`, pendingRefResponse))),
 		}, nil
 	})
 	require.NoError(t, err)
-	response, err := a.SignUpMagicLinkCrossDevice(MethodEmail, email, uri, &User{ExternalID: "test"})
+	response, err := a.SignUpMagicLinkCrossDevice(MethodEmail, email, uri, &User{Name: "test"})
 	require.NoError(t, err)
 	require.Equal(t, pendingRefResponse, response.PendingRef)
 }
@@ -251,7 +253,7 @@ func TestSignUpMagicLinkEmailCrossDeviceEmptyIdentifier(t *testing.T) {
 	uri := "http://test.me"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	response, err := a.SignUpMagicLinkCrossDevice(MethodEmail, "", uri, &User{ExternalID: "test"})
+	response, err := a.SignUpMagicLinkCrossDevice(MethodEmail, "", uri, &User{Name: "test"})
 	require.Error(t, err)
 	require.Empty(t, response)
 }
@@ -309,10 +311,11 @@ func TestSignUpMagicLinkSMS(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["phone"])
 		assert.EqualValues(t, uri, body["URI"])
-		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["externalID"])
+		assert.EqualValues(t, phone, body["externalID"])
+		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpMagicLink(MethodSMS, phone, uri, &User{ExternalID: "test"})
+	err = a.SignUpMagicLink(MethodSMS, phone, uri, &User{Name: "test"})
 	require.NoError(t, err)
 }
 
@@ -326,10 +329,11 @@ func TestSignUpMagicLinkWhatsApp(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["whatsapp"])
 		assert.EqualValues(t, uri, body["URI"])
-		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["externalID"])
+		assert.EqualValues(t, phone, body["externalID"])
+		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpMagicLink(MethodWhatsApp, phone, uri, &User{ExternalID: "test"})
+	err = a.SignUpMagicLink(MethodWhatsApp, phone, uri, &User{Name: "test"})
 	require.NoError(t, err)
 }
 
@@ -346,9 +350,11 @@ func TestVerifyMagicLinkCodeWithSession(t *testing.T) {
 		assert.EqualValues(t, token, body["token"])
 		resp := &JWTResponse{
 			JWTS: []string{jwtTokenValid},
-			User: &User{
-				Name:  name,
-				Phone: phone,
+			User: &UserResponse{
+				User: User{
+					Name:  name,
+					Phone: phone,
+				},
 			},
 			FirstSeen: firstSeen,
 		}
