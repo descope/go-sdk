@@ -266,7 +266,7 @@ func handleWebauthnSignupStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := client.Auth.SignUpWebAuthnStart(t, nil)
+	res, err := client.Auth.SignUpWebAuthnStart(t.Name, t)
 	if err != nil {
 		setError(w, err.Error())
 	}
