@@ -15,6 +15,9 @@ func (auth *authenticationService) SignInMagicLink(method DeliveryMethod, identi
 }
 
 func (auth *authenticationService) SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User) error {
+	if user == nil {
+		user = &User{}
+	}
 	if err := auth.verifyDeliveryMethod(method, identifier, user); err != nil {
 		return err
 	}
@@ -43,6 +46,9 @@ func (auth *authenticationService) SignInMagicLinkCrossDevice(method DeliveryMet
 }
 
 func (auth *authenticationService) SignUpMagicLinkCrossDevice(method DeliveryMethod, identifier, URI string, user *User) (*MagicLinkResponse, error) {
+	if user == nil {
+		user = &User{}
+	}
 	if err := auth.verifyDeliveryMethod(method, identifier, user); err != nil {
 		return nil, err
 	}

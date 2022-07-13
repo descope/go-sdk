@@ -139,6 +139,24 @@ func TestVerifyDeliveryMethod(t *testing.T) {
 
 	err = a.verifyDeliveryMethod(MethodSMS, "abc@notaphone.com", &User{})
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+
+	u := &User{}
+	err = a.verifyDeliveryMethod(MethodEmail, "abc@notaphone.com", u)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, u.Email)
+
+	u = &User{Email: "abc@notaphone.com"}
+	err = a.verifyDeliveryMethod(MethodEmail, "my username", u)
+	assert.Nil(t, err)
+
+	u = &User{}
+	err = a.verifyDeliveryMethod(MethodSMS, "+19999999999", u)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, u.Phone)
+
+	u = &User{Phone: "+19999999999"}
+	err = a.verifyDeliveryMethod(MethodSMS, "my username", u)
+	assert.Nil(t, err)
 }
 
 func TestAuthDefaultURL(t *testing.T) {
