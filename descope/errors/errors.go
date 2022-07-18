@@ -17,8 +17,9 @@ var (
 )
 
 type WebError struct {
-	Code    string `json:"error"`
-	Message string `json:"message,omitempty"`
+	Code        string `json:"errorCode,omitempty"`
+	Description string `json:"errorDescription,omitempty"`
+	Message     string `json:"message,omitempty"`
 }
 
 func NewError(code, message string) *WebError {
