@@ -36,7 +36,7 @@ type Token struct {
 	Expiration int64                  `json:"expiration,omitempty"`
 	JWT        string                 `json:"jwt,omitempty"`
 	ID         string                 `json:"id,omitempty"`
-	ProjectID  string                 `json:"projectID,omitempty"`
+	ProjectID  string                 `json:"projectId,omitempty"`
 	Claims     map[string]interface{} `json:"claims,omitempty"`
 }
 type JWTResponse struct {
@@ -157,20 +157,20 @@ type User struct {
 
 type UserResponse struct {
 	User          `json:",inline"`
-	ExternalID    string `json:"externalID,omitempty"`
+	ExternalID    string `json:"externalId,omitempty"`
 	VerifiedEmail bool   `json:"verifiedEmail,omitempty"`
 	VerifiedPhone bool   `json:"verifiedPhone,omitempty"`
 }
 
 type authenticationRequestBody struct {
-	ExternalID string `json:"externalID,omitempty"`
+	ExternalID string `json:"externalId,omitempty"`
 }
 
 type authenticationSignUpRequestBody struct {
 	WhatsApp   string `json:"whatsapp,omitempty"`
 	Phone      string `json:"phone,omitempty"`
 	Email      string `json:"email,omitempty"`
-	ExternalID string `json:"externalID,omitempty"`
+	ExternalID string `json:"externalId,omitempty"`
 	User       *User  `json:"user"`
 }
 
@@ -184,17 +184,17 @@ type authenticationVerifyRequestBody struct {
 }
 
 type totpSignUpRequestBody struct {
-	ExternalID string `json:"externalID,omitempty"`
+	ExternalID string `json:"externalId,omitempty"`
 	User       *User  `json:"user,omitempty"`
 }
 
 type otpUpdateEmailRequestBody struct {
-	ExternalID string `json:"externalID,omitempty"`
+	ExternalID string `json:"externalId,omitempty"`
 	Email      string `json:"email,omitempty"`
 }
 
 type otpUpdatePhoneRequestBody struct {
-	ExternalID string `json:"externalID,omitempty"`
+	ExternalID string `json:"externalId,omitempty"`
 	Phone      string `json:"phone,omitempty"`
 }
 
@@ -212,14 +212,14 @@ type magicLinkAuthenticationSignUpRequestBody struct {
 
 type magicLinkUpdateEmailRequestBody struct {
 	Email       string `json:"email,inline"`
-	ExternalID  string `json:"externalID,inline"`
+	ExternalID  string `json:"externalId,inline"`
 	URI         string `json:"URI,omitempty"`
 	CrossDevice bool   `json:"crossDevice,omitempty"`
 }
 
 type magicLinkUpdatePhoneRequestBody struct {
 	Phone       string `json:"phone,inline"`
-	ExternalID  string `json:"externalID,inline"`
+	ExternalID  string `json:"externalId,inline"`
 	URI         string `json:"URI,omitempty"`
 	CrossDevice bool   `json:"crossDevice,omitempty"`
 }

@@ -18,7 +18,7 @@ func TestSignUpTOTP(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, externalID, body["externalID"])
+		assert.EqualValues(t, externalID, body["externalId"])
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
 
 		resp := &TOTPResponse{
@@ -50,7 +50,7 @@ func TestUpdateTOTP(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, externalID, body["externalID"])
+		assert.EqualValues(t, externalID, body["externalId"])
 		assert.Nil(t, body["user"])
 
 		u, p, ok := r.BasicAuth()
@@ -91,7 +91,7 @@ func TestVerifyTOTP(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, externalID, body["externalID"])
+		assert.EqualValues(t, externalID, body["externalId"])
 		assert.EqualValues(t, code, body["code"])
 
 		resp := &JWTResponse{
