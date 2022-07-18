@@ -20,7 +20,7 @@ func TestValidEmailSignInEmail(t *testing.T) {
 		assert.EqualValues(t, composeSignInURL(MethodEmail), r.URL.RequestURI())
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, body["externalID"])
+		assert.EqualValues(t, email, body["externalId"])
 	}))
 	require.NoError(t, err)
 	err = a.SignInOTP(MethodEmail, email)
@@ -35,7 +35,7 @@ func TestSignUpEmail(t *testing.T) {
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, email, m["email"])
-		assert.EqualValues(t, email, m["externalID"])
+		assert.EqualValues(t, email, m["externalId"])
 		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
@@ -51,7 +51,7 @@ func TestSignUpSMS(t *testing.T) {
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["phone"])
-		assert.EqualValues(t, phone, body["externalID"])
+		assert.EqualValues(t, phone, body["externalId"])
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
@@ -67,7 +67,7 @@ func TestSignUpWhatsApp(t *testing.T) {
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["whatsapp"])
-		assert.EqualValues(t, phone, body["externalID"])
+		assert.EqualValues(t, phone, body["externalId"])
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
@@ -82,7 +82,7 @@ func TestSignUpOrInWhatsApp(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, externalID, body["externalID"])
+		assert.EqualValues(t, externalID, body["externalId"])
 		assert.Nil(t, body["user"])
 	}))
 	require.NoError(t, err)
@@ -97,7 +97,7 @@ func TestSignUpOrInSMS(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, externalID, body["externalID"])
+		assert.EqualValues(t, externalID, body["externalId"])
 		assert.Nil(t, body["user"])
 	}))
 	require.NoError(t, err)
@@ -112,7 +112,7 @@ func TestSignUpOrInEmail(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, externalID, body["externalID"])
+		assert.EqualValues(t, externalID, body["externalId"])
 		assert.Nil(t, body["user"])
 	}))
 	require.NoError(t, err)
@@ -145,7 +145,7 @@ func TestVerifyCodeDetectEmail(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, body["externalID"])
+		assert.EqualValues(t, email, body["externalId"])
 	}))
 	require.NoError(t, err)
 	_, err = a.VerifyCodeWithOptions("", email, "555")
@@ -159,7 +159,7 @@ func TestVerifyCodeDetectPhone(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, phone, body["externalID"])
+		assert.EqualValues(t, phone, body["externalId"])
 	}))
 	require.NoError(t, err)
 	_, err = a.VerifyCodeWithOptions("", phone, "555")
@@ -173,7 +173,7 @@ func TestVerifyCodeWithPhone(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, phone, body["externalID"])
+		assert.EqualValues(t, phone, body["externalId"])
 		assert.EqualValues(t, "4444", body["code"])
 	}))
 	require.NoError(t, err)
@@ -189,7 +189,7 @@ func TestVerifyCodeEmail(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, body["externalID"])
+		assert.EqualValues(t, email, body["externalId"])
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
@@ -205,7 +205,7 @@ func TestVerifyCodeSMS(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, phone, body["externalID"])
+		assert.EqualValues(t, phone, body["externalId"])
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
@@ -221,7 +221,7 @@ func TestVerifyCodeWhatsApp(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, phone, body["externalID"])
+		assert.EqualValues(t, phone, body["externalId"])
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
@@ -240,7 +240,7 @@ func TestVerifyCodeEmailResponseOption(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, body["externalID"])
+		assert.EqualValues(t, email, body["externalId"])
 		assert.EqualValues(t, code, body["code"])
 		resp := &JWTResponse{
 			JWTS: []string{jwtTokenValid},
@@ -277,7 +277,7 @@ func TestVerifyCodeEmailResponseNil(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, body["externalID"])
+		assert.EqualValues(t, email, body["externalId"])
 		assert.EqualValues(t, code, body["code"])
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
 	})
@@ -299,7 +299,7 @@ func TestUpdateEmailOTP(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, externalID, body["externalID"])
+		assert.EqualValues(t, externalID, body["externalId"])
 		assert.EqualValues(t, email, body["email"])
 		u, p, ok := r.BasicAuth()
 		assert.True(t, ok)
@@ -344,7 +344,7 @@ func TestUpdatePhoneOTP(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, externalID, body["externalID"])
+		assert.EqualValues(t, externalID, body["externalId"])
 		assert.EqualValues(t, phone, body["phone"])
 		u, p, ok := r.BasicAuth()
 		assert.True(t, ok)

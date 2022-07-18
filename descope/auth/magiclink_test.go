@@ -50,7 +50,7 @@ func TestSignInMagicLinkEmail(t *testing.T) {
 		assert.EqualValues(t, composeMagicLinkSignInURL(MethodEmail), r.URL.RequestURI())
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, body["externalID"])
+		assert.EqualValues(t, email, body["externalId"])
 		assert.EqualValues(t, uri, body["URI"])
 	}))
 	require.NoError(t, err)
@@ -67,7 +67,7 @@ func TestSignInMagicLinkEmailCrossDevice(t *testing.T) {
 
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, m["externalID"])
+		assert.EqualValues(t, email, m["externalId"])
 		assert.EqualValues(t, uri, m["URI"])
 		return &http.Response{
 			StatusCode: http.StatusOK,
@@ -144,7 +144,7 @@ func TestSignUpMagicLinkEmail(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, uri, m["URI"])
-		assert.EqualValues(t, email, m["externalID"])
+		assert.EqualValues(t, email, m["externalId"])
 		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
@@ -160,7 +160,7 @@ func TestSignUpOrInMagicLinkEmail(t *testing.T) {
 
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, m["externalID"])
+		assert.EqualValues(t, email, m["externalId"])
 		assert.EqualValues(t, uri, m["URI"])
 		assert.Nil(t, m["user"])
 	}))
@@ -177,7 +177,7 @@ func TestSignUpOrInMagicLinkSMS(t *testing.T) {
 
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, m["externalID"])
+		assert.EqualValues(t, email, m["externalId"])
 		assert.EqualValues(t, uri, m["URI"])
 		assert.Nil(t, m["user"])
 	}))
@@ -194,7 +194,7 @@ func TestSignUpOrInMagicLinkWhatsapp(t *testing.T) {
 
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, m["externalID"])
+		assert.EqualValues(t, email, m["externalId"])
 		assert.EqualValues(t, uri, m["URI"])
 		assert.Nil(t, m["user"])
 	}))
@@ -214,7 +214,7 @@ func TestSignUpMagicLinkEmailCrossDevice(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, uri, m["URI"])
-		assert.EqualValues(t, email, m["externalID"])
+		assert.EqualValues(t, email, m["externalId"])
 		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
 		return &http.Response{
 			StatusCode: http.StatusOK,
@@ -236,7 +236,7 @@ func TestSignUpOrInMagicLinkEmailCrossDevice(t *testing.T) {
 
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, m["externalID"])
+		assert.EqualValues(t, email, m["externalId"])
 		assert.EqualValues(t, uri, m["URI"])
 		return &http.Response{
 			StatusCode: http.StatusOK,
@@ -311,7 +311,7 @@ func TestSignUpMagicLinkSMS(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["phone"])
 		assert.EqualValues(t, uri, body["URI"])
-		assert.EqualValues(t, phone, body["externalID"])
+		assert.EqualValues(t, phone, body["externalId"])
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
@@ -329,7 +329,7 @@ func TestSignUpMagicLinkWhatsApp(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["whatsapp"])
 		assert.EqualValues(t, uri, body["URI"])
-		assert.EqualValues(t, phone, body["externalID"])
+		assert.EqualValues(t, phone, body["externalId"])
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
@@ -402,7 +402,7 @@ func TestUpdateUserEmailMagicLink(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, externalID, body["externalID"])
+		assert.EqualValues(t, externalID, body["externalId"])
 		assert.EqualValues(t, email, body["email"])
 		assert.EqualValues(t, uri, body["URI"])
 		assert.Nil(t, body["crossDevice"])
@@ -427,7 +427,7 @@ func TestUpdateUserEmailMagicLinkCrossDevice(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, externalID, body["externalID"])
+		assert.EqualValues(t, externalID, body["externalId"])
 		assert.EqualValues(t, email, body["email"])
 		assert.EqualValues(t, uri, body["URI"])
 		assert.True(t, body["crossDevice"].(bool))
@@ -482,7 +482,7 @@ func TestUpdateUserPhoneMagicLink(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, externalID, body["externalID"])
+		assert.EqualValues(t, externalID, body["externalId"])
 		assert.EqualValues(t, phone, body["phone"])
 		assert.EqualValues(t, uri, body["URI"])
 		assert.Nil(t, body["crossDevice"])
@@ -507,7 +507,7 @@ func TestUpdateUserPhoneMagicLinkCrossDevice(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, externalID, body["externalID"])
+		assert.EqualValues(t, externalID, body["externalId"])
 		assert.EqualValues(t, phone, body["phone"])
 		assert.EqualValues(t, uri, body["URI"])
 		assert.True(t, body["crossDevice"].(bool))
