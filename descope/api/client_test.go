@@ -143,7 +143,7 @@ func TestPostWebError(t *testing.T) {
 	code := "this is an error"
 	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
 		assert.Nil(t, r.Body)
-		return &http.Response{StatusCode: http.StatusBadRequest, Body: io.NopCloser(strings.NewReader(fmt.Sprintf(`{ "error": "%s" }`, code)))}, nil
+		return &http.Response{StatusCode: http.StatusBadRequest, Body: io.NopCloser(strings.NewReader(fmt.Sprintf(`{ "errorCode": "%s" }`, code)))}, nil
 	})})
 
 	_, err := c.DoPostRequest("path", nil, nil, "")
