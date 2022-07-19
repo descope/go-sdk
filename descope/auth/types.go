@@ -109,7 +109,7 @@ func (options Options) SetCookies(cookies []*http.Cookie) {
 	}
 }
 
-func (options Options) CopyResponse(res *http.Response, body string) {
+func (options Options) CreateRedirect(url string) {
 	for _, option := range options {
 		if option != nil {
 			switch option.Kind().(type) {
@@ -117,13 +117,8 @@ func (options Options) CopyResponse(res *http.Response, body string) {
 				val := option.Value()
 				if val != nil {
 					if w, ok := val.(http.ResponseWriter); ok {
-						for key, header := range res.Header.Clone() {
-							for i := range header {
-								w.Header().Set(key, header[i])
-							}
-						}
-						w.WriteHeader(res.StatusCode)
-						w.Write([]byte(body))
+						w.Header().Set(RedirectLocationCookieName, url)
+						w.WriteHeader(http.StatusTemporaryRedirect)
 					} else {
 						logger.LogDebug("Unexpected option value [%T]", val)
 					}

@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSignUpTOTP(t *testing.T) {
+func TestSignUp(t *testing.T) {
 	externalID := "someID"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeSignUpTOTPURL(), r.URL.RequestURI())
@@ -31,7 +31,7 @@ func TestSignUpTOTP(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	token, err := a.SignUpTOTP(externalID, &User{Name: "test"})
+	token, err := a.TOTP().SignUp(externalID, &User{Name: "test"})
 	require.NoError(t, err)
 	assert.NotNil(t, token)
 }
@@ -39,7 +39,7 @@ func TestSignUpTOTP(t *testing.T) {
 func TestSignUpTOTPFailure(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.SignUpTOTP("", &User{Name: "test"})
+	_, err = a.TOTP().SignUp("", &User{Name: "test"})
 	assert.Error(t, err)
 }
 
@@ -70,7 +70,7 @@ func TestUpdateTOTP(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	token, err := a.UpdateUserTOTP(externalID, r)
+	token, err := a.TOTP().UpdateUser(externalID, r)
 	require.NoError(t, err)
 	assert.NotNil(t, token)
 }
@@ -79,7 +79,7 @@ func TestUpodateTOTPFailure(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
-	_, err = a.UpdateUserTOTP("", r)
+	_, err = a.TOTP().UpdateUser("", r)
 	assert.Error(t, err)
 }
 
@@ -106,7 +106,7 @@ func TestVerifyTOTP(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	authInfo, err := a.SignInTOTPCode(externalID, code, nil)
+	authInfo, err := a.TOTP().SignInCode(externalID, code, nil)
 	require.NoError(t, err)
 	assert.NotNil(t, authInfo)
 	assert.True(t, authInfo.FirstSeen)
@@ -116,7 +116,7 @@ func TestVerifyTOTP(t *testing.T) {
 func TestVerifyTOTPFailure(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.SignInTOTPCode("", "code", nil)
+	_, err = a.TOTP().SignInCode("", "code", nil)
 	assert.Error(t, err)
 
 }

@@ -19,25 +19,59 @@ type AuthParams struct {
 	PublicKey string
 }
 
-type authenticationService struct {
+type authenticationsBase struct {
 	client             *api.Client
 	conf               *AuthParams
 	publicKeysProvider *provider
 }
 
-func NewAuth(conf AuthParams, c *api.Client) (*authenticationService, error) {
-	authenticationObject := &authenticationService{conf: &conf, client: c}
-	authenticationObject.publicKeysProvider = newProvider(c, authenticationObject.conf)
-	return authenticationObject, nil
+type authenticationService struct {
+	authenticationsBase
+
+	otp       OTP
+	magicLink MagicLink
+	totp      TOTP
+	webAuthn  WebAuthn
+	oauth     OAuth
+	saml      SAML
 }
 
-func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (*MagicLinkResponse, error) {
-	var response *MagicLinkResponse
-	if err := utils.Unmarshal([]byte(httpResponse.BodyStr), &response); err != nil {
-		logger.LogError("failed to load pending reference from response", err)
-		return response, errors.InvalidPendingRefError
-	}
-	return response, nil
+func NewAuth(conf AuthParams, c *api.Client) (*authenticationService, error) {
+	base := authenticationsBase{conf: &conf, client: c}
+	base.publicKeysProvider = newProvider(c, base.conf)
+	exchanger := exchangerBase{authenticationsBase: base}
+	authenticationService := &authenticationService{authenticationsBase: base}
+	authenticationService.otp = &otpService{authenticationsBase: base}
+	authenticationService.magicLink = &magicLinkService{authenticationsBase: base}
+	authenticationService.oauth = &oauthService{exchangerBase: exchanger}
+	authenticationService.saml = &samlService{exchangerBase: exchanger}
+	authenticationService.webAuthn = &webAuthnService{authenticationsBase: base}
+	authenticationService.totp = &totpService{authenticationsBase: base}
+	return authenticationService, nil
+}
+
+func (auth *authenticationService) MagicLink() MagicLink {
+	return auth.magicLink
+}
+
+func (auth *authenticationService) OTP() OTP {
+	return auth.otp
+}
+
+func (auth *authenticationService) TOTP() TOTP {
+	return auth.totp
+}
+
+func (auth *authenticationService) OAuth() OAuth {
+	return auth.oauth
+}
+
+func (auth *authenticationService) SAML() SAML {
+	return auth.saml
+}
+
+func (auth *authenticationService) WebAuthn() WebAuthn {
+	return auth.webAuthn
 }
 
 func (auth *authenticationService) Logout(request *http.Request, w http.ResponseWriter) error {
@@ -147,7 +181,7 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 	return true, token, nil
 }
 
-func (auth *authenticationService) extractJWTResponse(bodyStr string) (*JWTResponse, error) {
+func (auth *authenticationsBase) extractJWTResponse(bodyStr string) (*JWTResponse, error) {
 	if bodyStr == "" {
 		return nil, nil
 	}
@@ -160,7 +194,7 @@ func (auth *authenticationService) extractJWTResponse(bodyStr string) (*JWTRespo
 	return &jRes, nil
 }
 
-func (auth *authenticationService) extractTokens(jRes *JWTResponse) ([]*Token, error) {
+func (auth *authenticationsBase) extractTokens(jRes *JWTResponse) ([]*Token, error) {
 
 	if jRes == nil || len(jRes.JWTS) == 0 {
 		return nil, nil
@@ -176,7 +210,7 @@ func (auth *authenticationService) extractTokens(jRes *JWTResponse) ([]*Token, e
 	return tokens, nil
 }
 
-func (auth *authenticationService) validateJWT(JWT string) (*Token, error) {
+func (auth *authenticationsBase) validateJWT(JWT string) (*Token, error) {
 	token, err := jwt.Parse([]byte(JWT), jwt.WithKeyProvider(auth.publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true))
 	if err != nil {
 		var parseErr error
@@ -188,7 +222,7 @@ func (auth *authenticationService) validateJWT(JWT string) (*Token, error) {
 	return NewToken(JWT, token), err
 }
 
-func (*authenticationService) verifyDeliveryMethod(method DeliveryMethod, identifier string, user *User) *errors.WebError {
+func (*authenticationsBase) verifyDeliveryMethod(method DeliveryMethod, identifier string, user *User) *errors.WebError {
 	varName := "identifier"
 	if identifier == "" {
 		return errors.NewInvalidArgumentError(varName)
@@ -226,7 +260,7 @@ func (*authenticationService) verifyDeliveryMethod(method DeliveryMethod, identi
 	return nil
 }
 
-func (auth *authenticationService) generateAuthenticationInfo(httpResponse *api.HTTPResponse, options ...Option) (*AuthenticationInfo, error) {
+func (auth *authenticationsBase) generateAuthenticationInfo(httpResponse *api.HTTPResponse, options ...Option) (*AuthenticationInfo, error) {
 	jwtResponse, err := auth.extractJWTResponse(httpResponse.BodyStr)
 	if err != nil {
 		return nil, err
@@ -311,6 +345,15 @@ func validateTokenError(err error) (bool, error) {
 	return true, nil
 }
 
+func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (*MagicLinkResponse, error) {
+	var response *MagicLinkResponse
+	if err := utils.Unmarshal([]byte(httpResponse.BodyStr), &response); err != nil {
+		logger.LogError("failed to load pending reference from response", err)
+		return response, errors.InvalidPendingRefError
+	}
+	return response, nil
+}
+
 func composeURLMethod(base string, method DeliveryMethod) string {
 	return path.Join(base, string(method))
 }
@@ -371,22 +414,14 @@ func composeSAMLStartURL() string {
 	return api.Routes.SAMLStart()
 }
 
-func composeGetMagicLinkSession() string {
+func composeGetSession() string {
 	return api.Routes.GetMagicLinkSession()
 }
 
-func composeUpdateUserEmailOTP() string {
+func composeUpdateUserEmail() string {
 	return api.Routes.UpdateUserEmailOTP()
 }
 
-func composeUpdateUserEmailMagicLink() string {
-	return api.Routes.UpdateUserEmailMagiclink()
-}
-
-func composeUpdateUserPhoneOTP(method DeliveryMethod) string {
-	return composeURLMethod(api.Routes.UpdateUserPhoneOTP(), method)
-}
-
-func composeUpdateUserPhoneMagicLink(method DeliveryMethod) string {
+func composeUpdateUserPhone(method DeliveryMethod) string {
 	return composeURLMethod(api.Routes.UpdateUserPhoneMagicLink(), method)
 }

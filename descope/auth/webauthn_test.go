@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSignUpWebAuthnStart(t *testing.T) {
+func TestSignUpStart(t *testing.T) {
 	expectedResponse := WebAuthnTransactionResponse{TransactionID: "a"}
 	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
 		req := authenticationWebAuthnSignUpRequestBody{}
@@ -19,24 +19,24 @@ func TestSignUpWebAuthnStart(t *testing.T) {
 		assert.EqualValues(t, "test@test.com", req.User.Email)
 	}, expectedResponse))
 	require.NoError(t, err)
-	res, err := a.SignUpWebAuthnStart("test@test.com", &User{Email: "test@test.com"})
+	res, err := a.WebAuthn().SignUpStart("test@test.com", &User{Email: "test@test.com"})
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedResponse.TransactionID, res.TransactionID)
 }
 
-func TestSignInWebAuthnFinish(t *testing.T) {
+func TestSignInFinish(t *testing.T) {
 	expectedResponse := &WebAuthnFinishRequest{TransactionID: "a"}
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	res, err := a.SignInWebAuthnFinish(expectedResponse, w)
+	res, err := a.WebAuthn().SignInFinish(expectedResponse, w)
 	require.NoError(t, err)
 	assert.EqualValues(t, jwtTokenValid, res.SessionToken.JWT)
 	require.Len(t, w.Result().Cookies(), 1)
 	assert.EqualValues(t, jwtTokenValid, w.Result().Cookies()[0].Value)
 }
 
-func TestSignInWebAuthnStart(t *testing.T) {
+func TestSignInStart(t *testing.T) {
 	expectedResponse := WebAuthnTransactionResponse{TransactionID: "a"}
 	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
 		req := authenticationRequestBody{}
@@ -45,7 +45,7 @@ func TestSignInWebAuthnStart(t *testing.T) {
 		assert.EqualValues(t, "a", req.ExternalID)
 	}, expectedResponse))
 	require.NoError(t, err)
-	res, err := a.SignInWebAuthnStart("a")
+	res, err := a.WebAuthn().SignInStart("a")
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedResponse.TransactionID, res.TransactionID)
 }
@@ -53,18 +53,18 @@ func TestSignInWebAuthnStart(t *testing.T) {
 func TestSignInWebAuthnStartEmpty(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	res, err := a.SignInWebAuthnStart("")
+	res, err := a.WebAuthn().SignInStart("")
 	require.Error(t, err)
 	assert.Empty(t, res)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
 
-func TestSignUpWebAuthnFinish(t *testing.T) {
+func TestSignUpFinish(t *testing.T) {
 	expectedResponse := &WebAuthnFinishRequest{TransactionID: "a"}
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	res, err := a.SignUpWebAuthnFinish(expectedResponse, w)
+	res, err := a.WebAuthn().SignUpFinish(expectedResponse, w)
 	require.NoError(t, err)
 	assert.EqualValues(t, jwtTokenValid, res.SessionToken.JWT)
 	require.Len(t, w.Result().Cookies(), 1)

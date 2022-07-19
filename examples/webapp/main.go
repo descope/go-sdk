@@ -107,7 +107,7 @@ func handleIsHealthy(w http.ResponseWriter, r *http.Request) {
 
 func handleSignUp(w http.ResponseWriter, r *http.Request) {
 	method, identifier := getMethodAndIdentifier(r)
-	err := client.Auth.SignUpOTP(method, identifier, &auth.User{Name: "test"})
+	err := client.Auth.OTP().SignUp(method, identifier, &auth.User{Name: "test"})
 	if err != nil {
 		setError(w, err.Error())
 	} else {
@@ -117,7 +117,7 @@ func handleSignUp(w http.ResponseWriter, r *http.Request) {
 
 func handleSignIn(w http.ResponseWriter, r *http.Request) {
 	method, identifier := getMethodAndIdentifier(r)
-	err := client.Auth.SignInOTP(method, identifier)
+	err := client.Auth.OTP().SignIn(method, identifier)
 	if err != nil {
 		setError(w, err.Error())
 	} else {
@@ -135,7 +135,7 @@ func handleVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	_, err := client.Auth.VerifyCode(method, identifier, code, w)
+	_, err := client.Auth.OTP().VerifyCode(method, identifier, code, w)
 	if err != nil {
 		setError(w, err.Error())
 		return
@@ -148,7 +148,7 @@ func handleOAuth(w http.ResponseWriter, r *http.Request) {
 	if p, ok := r.URL.Query()["provider"]; ok {
 		provider = auth.OAuthProvider(p[0])
 	}
-	_, err := client.Auth.OAuthStart(provider, "", w)
+	_, err := client.Auth.OAuth().Start(provider, "", w)
 	if err != nil {
 		setError(w, err.Error())
 	}
@@ -168,9 +168,9 @@ func handleMagicLinkSignIn(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	if crossDevice := queryBool(r, "crossDevice"); crossDevice {
-		_, err = client.Auth.SignInMagicLinkCrossDevice(method, identifier, verifyMagicLinkURI)
+		_, err = client.Auth.MagicLink().SignInCrossDevice(method, identifier, verifyMagicLinkURI)
 	} else {
-		err = client.Auth.SignInMagicLink(method, identifier, verifyMagicLinkURI)
+		err = client.Auth.MagicLink().SignIn(method, identifier, verifyMagicLinkURI)
 	}
 	if err != nil {
 		setError(w, err.Error())
@@ -184,9 +184,9 @@ func handleMagicLinkSignUp(w http.ResponseWriter, r *http.Request) {
 
 	user := &auth.User{Name: "test"}
 	if crossDevice := queryBool(r, "crossDevice"); crossDevice {
-		_, err = client.Auth.SignUpMagicLinkCrossDevice(method, identifier, verifyMagicLinkURI, user)
+		_, err = client.Auth.MagicLink().SignUpCrossDevice(method, identifier, verifyMagicLinkURI, user)
 	} else {
-		err = client.Auth.SignUpMagicLink(method, identifier, verifyMagicLinkURI, user)
+		err = client.Auth.MagicLink().SignUp(method, identifier, verifyMagicLinkURI, user)
 	}
 	if err != nil {
 		setError(w, err.Error())
@@ -206,7 +206,7 @@ func handleMagicLinkVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "token is empty")
 		return
 	}
-	_, err := client.Auth.VerifyMagicLink(token, w)
+	_, err := client.Auth.MagicLink().Verify(token, w)
 	if err != nil {
 		setError(w, err.Error())
 		return
@@ -220,7 +220,7 @@ func handleGetMagicLinkSession(w http.ResponseWriter, r *http.Request) {
 		setError(w, "pending reference is empty")
 		return
 	}
-	_, err := client.Auth.GetMagicLinkSession(pendingRef, w)
+	_, err := client.Auth.MagicLink().GetSession(pendingRef, w)
 	if goErrors.Is(err, errors.MagicLinkUnauthorized) {
 		setUnauthorized(w, err.Error())
 	}
@@ -240,7 +240,7 @@ func handleWebauthnSigninFinish(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = client.Auth.SignInWebAuthnFinish(t, w)
+	_, err = client.Auth.WebAuthn().SignInFinish(t, w)
 	if err != nil {
 		setError(w, err.Error())
 	}
@@ -248,7 +248,7 @@ func handleWebauthnSigninFinish(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleWebauthnSigninStart(w http.ResponseWriter, r *http.Request) {
-	res, err := client.Auth.SignInWebAuthnStart(getQuery(r, "id"))
+	res, err := client.Auth.WebAuthn().SignInStart(getQuery(r, "id"))
 	if err != nil {
 		setError(w, err.Error())
 	}
@@ -266,7 +266,7 @@ func handleWebauthnSignupStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := client.Auth.SignUpWebAuthnStart(t.Name, t)
+	res, err := client.Auth.WebAuthn().SignUpStart(t.Name, t)
 	if err != nil {
 		setError(w, err.Error())
 	}
@@ -284,7 +284,7 @@ func handleWebauthnSignupFinish(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = client.Auth.SignUpWebAuthnFinish(t, w)
+	_, err = client.Auth.WebAuthn().SignUpFinish(t, w)
 	if err != nil {
 		setError(w, err.Error())
 	}

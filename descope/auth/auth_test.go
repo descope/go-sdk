@@ -91,6 +91,20 @@ func DoOk(checks func(*http.Request)) mocks.Do {
 	}
 }
 
+func DoBadRequest(checks func(*http.Request)) mocks.Do {
+	return func(r *http.Request) (*http.Response, error) {
+		if checks != nil {
+			checks(r)
+		}
+		b, err := utils.Marshal(map[string]interface{}{"error": errors.NewInvalidArgumentError("test")})
+		if err != nil {
+			return nil, err
+		}
+		res := &http.Response{StatusCode: http.StatusBadRequest, Body: io.NopCloser(bytes.NewBuffer(b))}
+		return res, nil
+	}
+}
+
 func DoOkWithBody(checks func(*http.Request), body interface{}) mocks.Do {
 	return func(r *http.Request) (*http.Response, error) {
 		if checks != nil {
@@ -107,13 +121,7 @@ func DoOkWithBody(checks func(*http.Request), body interface{}) mocks.Do {
 }
 
 func DoRedirect(url string, checks func(*http.Request)) mocks.Do {
-	return func(r *http.Request) (*http.Response, error) {
-		if checks != nil {
-			checks(r)
-		}
-		res := &http.Response{StatusCode: http.StatusTemporaryRedirect, Header: http.Header{RedirectLocationCookieName: []string{url}}}
-		return res, nil
-	}
+	return DoOkWithBody(checks, map[string]interface{}{"url": url})
 }
 
 func newTestAuth(clientParams *api.ClientParams, callback mocks.Do) (*authenticationService, error) {
@@ -165,7 +173,7 @@ func TestAuthDefaultURL(t *testing.T) {
 		assert.Contains(t, r.URL.String(), url)
 	}))
 	require.NoError(t, err)
-	_, err = a.VerifyCodeWithOptions(MethodWhatsApp, "4444", "444")
+	_, err = a.OTP().VerifyCodeWithOptions(MethodWhatsApp, "4444", "444")
 	require.NoError(t, err)
 }
 

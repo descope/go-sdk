@@ -6,7 +6,11 @@ import (
 	"github.com/descope/go-sdk/descope/errors"
 )
 
-func (auth *authenticationService) SignInMagicLink(method DeliveryMethod, identifier, URI string) error {
+type magicLinkService struct {
+	authenticationsBase
+}
+
+func (auth *magicLinkService) SignIn(method DeliveryMethod, identifier, URI string) error {
 	if identifier == "" {
 		return errors.NewInvalidArgumentError("identifier")
 	}
@@ -14,7 +18,7 @@ func (auth *authenticationService) SignInMagicLink(method DeliveryMethod, identi
 	return err
 }
 
-func (auth *authenticationService) SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User) error {
+func (auth *magicLinkService) SignUp(method DeliveryMethod, identifier, URI string, user *User) error {
 	if user == nil {
 		user = &User{}
 	}
@@ -26,7 +30,7 @@ func (auth *authenticationService) SignUpMagicLink(method DeliveryMethod, identi
 	return err
 }
 
-func (auth *authenticationService) SignUpOrInMagicLink(method DeliveryMethod, identifier, URI string) error {
+func (auth *magicLinkService) SignUpOrIn(method DeliveryMethod, identifier, URI string) error {
 	if identifier == "" {
 		return errors.NewInvalidArgumentError("identifier")
 	}
@@ -34,7 +38,7 @@ func (auth *authenticationService) SignUpOrInMagicLink(method DeliveryMethod, id
 	return err
 }
 
-func (auth *authenticationService) SignInMagicLinkCrossDevice(method DeliveryMethod, identifier, URI string) (*MagicLinkResponse, error) {
+func (auth *magicLinkService) SignInCrossDevice(method DeliveryMethod, identifier, URI string) (*MagicLinkResponse, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
@@ -45,7 +49,7 @@ func (auth *authenticationService) SignInMagicLinkCrossDevice(method DeliveryMet
 	return getPendingRefFromResponse(httpResponse)
 }
 
-func (auth *authenticationService) SignUpMagicLinkCrossDevice(method DeliveryMethod, identifier, URI string, user *User) (*MagicLinkResponse, error) {
+func (auth *magicLinkService) SignUpCrossDevice(method DeliveryMethod, identifier, URI string, user *User) (*MagicLinkResponse, error) {
 	if user == nil {
 		user = &User{}
 	}
@@ -60,7 +64,7 @@ func (auth *authenticationService) SignUpMagicLinkCrossDevice(method DeliveryMet
 	return getPendingRefFromResponse(httpResponse)
 }
 
-func (auth *authenticationService) SignUpOrInMagicLinkCrossDevice(method DeliveryMethod, identifier, URI string) (*MagicLinkResponse, error) {
+func (auth *magicLinkService) SignUpOrInCrossDevice(method DeliveryMethod, identifier, URI string) (*MagicLinkResponse, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
@@ -71,12 +75,12 @@ func (auth *authenticationService) SignUpOrInMagicLinkCrossDevice(method Deliver
 	return getPendingRefFromResponse(httpResponse)
 }
 
-func (auth *authenticationService) GetMagicLinkSession(pendingRef string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.GetMagicLinkSessionWithOptions(pendingRef, WithResponseOption(w))
+func (auth *magicLinkService) GetSession(pendingRef string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	return auth.GetSessionWithOptions(pendingRef, WithResponseOption(w))
 }
 
-func (auth *authenticationService) GetMagicLinkSessionWithOptions(pendingRef string, options ...Option) (*AuthenticationInfo, error) {
-	httpResponse, err := auth.client.DoPostRequest(composeGetMagicLinkSession(), newAuthenticationGetMagicLinkSessionBody(pendingRef), nil, "")
+func (auth *magicLinkService) GetSessionWithOptions(pendingRef string, options ...Option) (*AuthenticationInfo, error) {
+	httpResponse, err := auth.client.DoPostRequest(composeGetSession(), newAuthenticationGetMagicLinkSessionBody(pendingRef), nil, "")
 	if err != nil {
 		if err == errors.UnauthorizedError {
 			return nil, errors.MagicLinkUnauthorized
@@ -86,11 +90,11 @@ func (auth *authenticationService) GetMagicLinkSessionWithOptions(pendingRef str
 	return auth.generateAuthenticationInfo(httpResponse, options...)
 }
 
-func (auth *authenticationService) VerifyMagicLink(token string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.VerifyMagicLinkWithOptions(token, WithResponseOption(w))
+func (auth *magicLinkService) Verify(token string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	return auth.VerifyWithOptions(token, WithResponseOption(w))
 }
 
-func (auth *authenticationService) VerifyMagicLinkWithOptions(token string, options ...Option) (*AuthenticationInfo, error) {
+func (auth *magicLinkService) VerifyWithOptions(token string, options ...Option) (*AuthenticationInfo, error) {
 	httpResponse, err := auth.client.DoPostRequest(composeVerifyMagicLinkURL(), newMagicLinkAuthenticationVerifyRequestBody(token), nil, "")
 	if err != nil {
 		return nil, err
@@ -98,7 +102,7 @@ func (auth *authenticationService) VerifyMagicLinkWithOptions(token string, opti
 	return auth.generateAuthenticationInfo(httpResponse, options...)
 }
 
-func (auth *authenticationService) UpdateUserEmailMagicLink(identifier, email, URI string, r *http.Request) error {
+func (auth *magicLinkService) UpdateUserEmail(identifier, email, URI string, r *http.Request) error {
 	if identifier == "" {
 		return errors.NewInvalidArgumentError("identifier")
 	}
@@ -112,11 +116,11 @@ func (auth *authenticationService) UpdateUserEmailMagicLink(identifier, email, U
 	if err != nil {
 		return err
 	}
-	_, err = auth.client.DoPostRequest(composeUpdateUserEmailMagicLink(), newMagicLinkUpdateEmailRequestBody(identifier, email, URI, false), nil, pswd)
+	_, err = auth.client.DoPostRequest(composeUpdateUserEmail(), newMagicLinkUpdateEmailRequestBody(identifier, email, URI, false), nil, pswd)
 	return err
 }
 
-func (auth *authenticationService) UpdateUserEmailMagicLinkCrossDevice(identifier, email, URI string, r *http.Request) (*MagicLinkResponse, error) {
+func (auth *magicLinkService) UpdateUserEmailCrossDevice(identifier, email, URI string, r *http.Request) (*MagicLinkResponse, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
@@ -130,14 +134,14 @@ func (auth *authenticationService) UpdateUserEmailMagicLinkCrossDevice(identifie
 	if err != nil {
 		return nil, err
 	}
-	httpResponse, err := auth.client.DoPostRequest(composeUpdateUserEmailMagicLink(), newMagicLinkUpdateEmailRequestBody(identifier, email, URI, true), nil, pswd)
+	httpResponse, err := auth.client.DoPostRequest(composeUpdateUserEmail(), newMagicLinkUpdateEmailRequestBody(identifier, email, URI, true), nil, pswd)
 	if err != nil {
 		return nil, err
 	}
 	return getPendingRefFromResponse(httpResponse)
 }
 
-func (auth *authenticationService) UpdateUserPhoneMagicLink(method DeliveryMethod, identifier, phone, URI string, r *http.Request) error {
+func (auth *magicLinkService) UpdateUserPhone(method DeliveryMethod, identifier, phone, URI string, r *http.Request) error {
 	if identifier == "" {
 		return errors.NewInvalidArgumentError("identifier")
 	}
@@ -154,11 +158,11 @@ func (auth *authenticationService) UpdateUserPhoneMagicLink(method DeliveryMetho
 	if err != nil {
 		return err
 	}
-	_, err = auth.client.DoPostRequest(composeUpdateUserPhoneMagicLink(method), newMagicLinkUpdatePhoneRequestBody(identifier, phone, URI, false), nil, pswd)
+	_, err = auth.client.DoPostRequest(composeUpdateUserPhone(method), newMagicLinkUpdatePhoneRequestBody(identifier, phone, URI, false), nil, pswd)
 	return err
 }
 
-func (auth *authenticationService) UpdateUserPhoneMagicLinkCrossDevice(method DeliveryMethod, identifier, phone, URI string, r *http.Request) (*MagicLinkResponse, error) {
+func (auth *magicLinkService) UpdateUserPhoneCrossDevice(method DeliveryMethod, identifier, phone, URI string, r *http.Request) (*MagicLinkResponse, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
@@ -175,7 +179,7 @@ func (auth *authenticationService) UpdateUserPhoneMagicLinkCrossDevice(method De
 	if err != nil {
 		return nil, err
 	}
-	httpResponse, err := auth.client.DoPostRequest(composeUpdateUserPhoneMagicLink(method), newMagicLinkUpdatePhoneRequestBody(identifier, phone, URI, true), nil, pswd)
+	httpResponse, err := auth.client.DoPostRequest(composeUpdateUserPhone(method), newMagicLinkUpdatePhoneRequestBody(identifier, phone, URI, true), nil, pswd)
 	if err != nil {
 		return nil, err
 	}

@@ -44,7 +44,7 @@ Replace any instance of  `<ProjectID>` in the code below with your company's Pro
 In your sign-up route for OTP (for example, `myapp.com/signup`) generate a sign-up request and send the OTP verification code via the selected delivery method. In the example below an email is sent to "mytestmail@test.com". In additon, optional user data (for exmaple, a custom username in the code sample below) can be gathered during the sign-up process.
 
 ```golang
-if err := descopeClient.Auth.SignUpOTP(auth.MethodEmail, "mytestmail@test.com", &auth.User{Username: "newusername"}); err != nil {
+if err := descopeClient.Auth.OTP().SignUp(auth.MethodEmail, "mytestmail@test.com", &auth.User{Username: "newusername"}); err != nil {
     // handle error
 }
 ```
@@ -54,7 +54,7 @@ In your sign-in route for OTP (for exmaple, `myapp.com/login`) generate a sign-i
 
 ```golang
 identifier := "mytestmail@test.com"
-if err := descopeClient.Auth.SignInOTP(auth.MethodEmail, identifier); err != nil {
+if err := descopeClient.Auth.OTP().SignIn(auth.MethodEmail, identifier); err != nil {
     // handle error
 }
 ```
@@ -64,7 +64,7 @@ if err := descopeClient.Auth.SignInOTP(auth.MethodEmail, identifier); err != nil
 In your verify customer route for OTP (for example, `myapp.com/verify`) verify the OTP from either a customer sign-up or sign-in. The VerifyCode function call will write the necessary tokens and cookies to the response writer (`w`), which will be used by the Go client to validate each session interaction.
 
 ```golang
-if _, err := descopeClient.Auth.VerifyCode(auth.MethodEmail, "mytestmail@test.com", code, w); err != nil {
+if _, err := descopeClient.Auth.OTP().VerifyCode(auth.MethodEmail, "mytestmail@test.com", code, w); err != nil {
     // handle error
 }
 ```
@@ -128,7 +128,7 @@ Replace any instance of  `<ProjectID>` in the code below with your company's Pro
 In your sign-up route using magic link (for example, `myapp.com/signup`) generate a sign-up request and send the magic link via the selected delivery method. In the example below an email is sent to "mytestmail@test.com" containing the magic link and the link will automatically return back to the provided URL ("https://mydomain.com/verify"). In additon, optional user data (for exmaple, a custom username in the code sample below) can be gathered during the sign-up process.
 
 ```golang
-if err := descopeClient.Auth.SignUpMagicLink(auth.MethodEmail, "mytestmail@test.com", "https://mydomain.com/verify", &auth.User{Username: "newusername"}); err != nil {
+if err := descopeClient.Auth.MagicLink().SignUp(auth.MethodEmail, "mytestmail@test.com", "https://mydomain.com/verify", &auth.User{Username: "newusername"}); err != nil {
     // handle error
 }
 ```
@@ -138,7 +138,7 @@ In your sign-in route using magic link (for exmaple, `myapp.com/login`) generate
 
 ```golang
 identifier := "mytestmail@test.com"
-if err := descopeClient.Auth.SignInMagicLink(auth.MethodEmail, identifier, "https://mydomain.com/verify"); err != nil {
+if err := descopeClient.Auth.MagicLink().SignIn(auth.MethodEmail, identifier, "https://mydomain.com/verify"); err != nil {
     // handle error
 }
 ```
@@ -148,7 +148,7 @@ if err := descopeClient.Auth.SignInMagicLink(auth.MethodEmail, identifier, "http
 In your verify customer route for magic link (for example, `mydomain.com/verify`) verify the token from either a customer sign-up or sign-in. The VerifyMagicLink function call will write the necessary tokens and cookies to the response writer (`w`), which will be used by the Go client to validate each session interaction.
 
 ```golang
-if _, err := descopeClient.Auth.VerifyMagicLink(auth.MethodEmail, "mytestmail@test.com", token, w); err != nil {
+if _, err := descopeClient.Auth.MagicLink().Verify(auth.MethodEmail, "mytestmail@test.com", token, w); err != nil {
     // handle error
 }
 ```
@@ -172,19 +172,6 @@ This middleware will automatically detect the cookies from the request and save 
 ```golang
 r.Use(auth.AuthenticationMiddleware(descopeClient.Auth, nil, nil))
 ```
-
-## ExpressStart with Oauth
-
-:::warning placeholder
-placeholder for instanst-start OAuth example
-:::
-
-## ExpresStart for WebAuthn
-
-:::warning placeholder
-placeholder for instanst-start WebAuthn example
-:::
-
 
 ## Run the Go Examples
 

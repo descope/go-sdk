@@ -23,7 +23,7 @@ func TestValidEmailSignInEmail(t *testing.T) {
 		assert.EqualValues(t, email, body["externalId"])
 	}))
 	require.NoError(t, err)
-	err = a.SignInOTP(MethodEmail, email)
+	err = a.OTP().SignIn(MethodEmail, email)
 	require.NoError(t, err)
 }
 
@@ -39,7 +39,7 @@ func TestSignUpEmail(t *testing.T) {
 		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpOTP(MethodEmail, email, &User{Name: "test"})
+	err = a.OTP().SignUp(MethodEmail, email, &User{Name: "test"})
 	require.NoError(t, err)
 }
 
@@ -55,7 +55,7 @@ func TestSignUpSMS(t *testing.T) {
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpOTP(MethodSMS, phone, &User{Name: "test"})
+	err = a.OTP().SignUp(MethodSMS, phone, &User{Name: "test"})
 	require.NoError(t, err)
 }
 
@@ -71,7 +71,7 @@ func TestSignUpWhatsApp(t *testing.T) {
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpOTP(MethodWhatsApp, phone, &User{Name: "test"})
+	err = a.OTP().SignUp(MethodWhatsApp, phone, &User{Name: "test"})
 	require.NoError(t, err)
 }
 
@@ -86,7 +86,7 @@ func TestSignUpOrInWhatsApp(t *testing.T) {
 		assert.Nil(t, body["user"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpOrInOTP(MethodWhatsApp, externalID)
+	err = a.OTP().SignUpOrIn(MethodWhatsApp, externalID)
 	require.NoError(t, err)
 }
 
@@ -101,7 +101,7 @@ func TestSignUpOrInSMS(t *testing.T) {
 		assert.Nil(t, body["user"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpOrInOTP(MethodSMS, externalID)
+	err = a.OTP().SignUpOrIn(MethodSMS, externalID)
 	require.NoError(t, err)
 }
 
@@ -116,7 +116,7 @@ func TestSignUpOrInEmail(t *testing.T) {
 		assert.Nil(t, body["user"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpOrInOTP(MethodEmail, externalID)
+	err = a.OTP().SignUpOrIn(MethodEmail, externalID)
 	require.NoError(t, err)
 }
 
@@ -124,7 +124,7 @@ func TestEmptyEmailVerifyCodeEmail(t *testing.T) {
 	email := ""
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.VerifyCodeWithOptions(MethodEmail, email, "4444")
+	_, err = a.OTP().VerifyCodeWithOptions(MethodEmail, email, "4444")
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -133,7 +133,7 @@ func TestInvalidVerifyCode(t *testing.T) {
 	email := "a"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.VerifyCodeWithOptions("", email, "4444")
+	_, err = a.OTP().VerifyCodeWithOptions("", email, "4444")
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -148,7 +148,7 @@ func TestVerifyCodeDetectEmail(t *testing.T) {
 		assert.EqualValues(t, email, body["externalId"])
 	}))
 	require.NoError(t, err)
-	_, err = a.VerifyCodeWithOptions("", email, "555")
+	_, err = a.OTP().VerifyCodeWithOptions("", email, "555")
 	require.NoError(t, err)
 }
 
@@ -162,7 +162,7 @@ func TestVerifyCodeDetectPhone(t *testing.T) {
 		assert.EqualValues(t, phone, body["externalId"])
 	}))
 	require.NoError(t, err)
-	_, err = a.VerifyCodeWithOptions("", phone, "555")
+	_, err = a.OTP().VerifyCodeWithOptions("", phone, "555")
 	require.NoError(t, err)
 }
 
@@ -177,7 +177,7 @@ func TestVerifyCodeWithPhone(t *testing.T) {
 		assert.EqualValues(t, "4444", body["code"])
 	}))
 	require.NoError(t, err)
-	_, err = a.VerifyCodeWithOptions(MethodSMS, phone, "4444")
+	_, err = a.OTP().VerifyCodeWithOptions(MethodSMS, phone, "4444")
 	require.NoError(t, err)
 }
 
@@ -193,7 +193,7 @@ func TestVerifyCodeEmail(t *testing.T) {
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
-	_, err = a.VerifyCodeWithOptions(MethodEmail, email, code)
+	_, err = a.OTP().VerifyCodeWithOptions(MethodEmail, email, code)
 	require.NoError(t, err)
 }
 
@@ -209,7 +209,7 @@ func TestVerifyCodeSMS(t *testing.T) {
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
-	_, err = a.VerifyCodeWithOptions(MethodSMS, phone, code)
+	_, err = a.OTP().VerifyCodeWithOptions(MethodSMS, phone, code)
 	require.NoError(t, err)
 }
 
@@ -225,7 +225,7 @@ func TestVerifyCodeWhatsApp(t *testing.T) {
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
-	_, err = a.VerifyCodeWithOptions(MethodWhatsApp, phone, code)
+	_, err = a.OTP().VerifyCodeWithOptions(MethodWhatsApp, phone, code)
 	require.NoError(t, err)
 }
 
@@ -258,7 +258,7 @@ func TestVerifyCodeEmailResponseOption(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	info, err := a.VerifyCode(MethodEmail, email, code, w)
+	info, err := a.OTP().VerifyCode(MethodEmail, email, code, w)
 	require.NoError(t, err)
 	require.Len(t, w.Result().Cookies(), 1)
 	sessionCookie := w.Result().Cookies()[0]
@@ -283,7 +283,7 @@ func TestVerifyCodeEmailResponseNil(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	info, err := a.VerifyCode(MethodEmail, email, code, nil)
+	info, err := a.OTP().VerifyCode(MethodEmail, email, code, nil)
 	require.NoError(t, err)
 	assert.Len(t, w.Result().Cookies(), 0)
 	require.NotEmpty(t, info)
@@ -295,7 +295,7 @@ func TestUpdateEmailOTP(t *testing.T) {
 	externalID := "943248329844"
 	email := "test@test.com"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
-		assert.EqualValues(t, composeUpdateUserEmailOTP(), r.URL.RequestURI())
+		assert.EqualValues(t, composeUpdateUserEmail(), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
@@ -309,7 +309,7 @@ func TestUpdateEmailOTP(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	err = a.UpdateUserEmailOTP(externalID, email, r)
+	err = a.OTP().UpdateUserEmail(externalID, email, r)
 	require.NoError(t, err)
 }
 
@@ -319,19 +319,19 @@ func TestUpdateEmailOTPFailures(t *testing.T) {
 
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.UpdateUserEmailOTP("", "email", r)
+	err = a.OTP().UpdateUserEmail("", "email", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "identifier"))
-	err = a.UpdateUserEmailOTP("id", "", r)
+	err = a.OTP().UpdateUserEmail("id", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "email"))
-	err = a.UpdateUserEmailOTP("id", "email", r)
+	err = a.OTP().UpdateUserEmail("id", "email", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "email"))
 
 	r = &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: "somename", Value: jwtTokenValid})
-	err = a.UpdateUserEmailOTP("id", "test@test.com", r)
+	err = a.OTP().UpdateUserEmail("id", "test@test.com", r)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, errors.RefreshTokenError)
 }
@@ -340,7 +340,7 @@ func TestUpdatePhoneOTP(t *testing.T) {
 	externalID := "943248329844"
 	phone := "+111111111111"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
-		assert.EqualValues(t, composeUpdateUserPhoneOTP(MethodSMS), r.URL.RequestURI())
+		assert.EqualValues(t, composeUpdateUserPhone(MethodSMS), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
@@ -354,7 +354,7 @@ func TestUpdatePhoneOTP(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	err = a.UpdateUserPhoneOTP(MethodSMS, externalID, phone, r)
+	err = a.OTP().UpdateUserPhone(MethodSMS, externalID, phone, r)
 	require.NoError(t, err)
 }
 
@@ -363,21 +363,21 @@ func TestUpdatePhoneOTPFailures(t *testing.T) {
 	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.UpdateUserPhoneOTP(MethodSMS, "", "+11111111111", r)
+	err = a.OTP().UpdateUserPhone(MethodSMS, "", "+11111111111", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "identifier"))
-	err = a.UpdateUserPhoneOTP(MethodSMS, "id", "", r)
+	err = a.OTP().UpdateUserPhone(MethodSMS, "id", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "phone"))
-	err = a.UpdateUserPhoneOTP(MethodSMS, "id", "aaaaa", r)
+	err = a.OTP().UpdateUserPhone(MethodSMS, "id", "aaaaa", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "phone"))
-	err = a.UpdateUserPhoneOTP(MethodEmail, "id", "+11111111111", r)
+	err = a.OTP().UpdateUserPhone(MethodEmail, "id", "+11111111111", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "method"))
 	r = &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: "somename", Value: jwtTokenValid})
-	err = a.UpdateUserPhoneOTP(MethodSMS, "id", "+11111111111", r)
+	err = a.OTP().UpdateUserPhone(MethodSMS, "id", "+11111111111", r)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, errors.RefreshTokenError)
 }

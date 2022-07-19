@@ -3,7 +3,7 @@ description: 'Lint and more checks'
 inputs:
   go_version:
     description: 'Go version to use'
-    required: true
+    required: truexR
 runs:
   using: "composite"
   steps:

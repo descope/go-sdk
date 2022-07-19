@@ -6,13 +6,22 @@ import (
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/logger"
+	"github.com/descope/go-sdk/descope/utils"
 )
 
-func (auth *authenticationService) SAMLStart(tenant string, returnURL string, w http.ResponseWriter) (redirectURL string, err error) {
-	return auth.SAMLStartWithOptions(tenant, returnURL, WithResponseOption(w))
+type samlService struct {
+	exchangerBase
 }
 
-func (auth *authenticationService) SAMLStartWithOptions(tenant string, returnURL string, options ...Option) (redirectURL string, err error) {
+type samlStartResponse struct {
+	URL string `json:"url"`
+}
+
+func (auth *samlService) Start(tenant string, returnURL string, w http.ResponseWriter) (redirectURL string, err error) {
+	return auth.StartWithOptions(tenant, returnURL, WithResponseOption(w))
+}
+
+func (auth *samlService) StartWithOptions(tenant string, returnURL string, options ...Option) (redirectURL string, err error) {
 	if tenant == "" {
 		return "", errors.NewInvalidArgumentError("tenant")
 	}
@@ -28,13 +37,14 @@ func (auth *authenticationService) SAMLStartWithOptions(tenant string, returnURL
 	}
 
 	if httpResponse.Res != nil {
-		urlObj, err := httpResponse.Res.Location()
+		res := &samlStartResponse{}
+		err = utils.Unmarshal([]byte(httpResponse.BodyStr), res)
 		if err != nil {
 			logger.LogError("failed to parse saml location from response for [%s]", err, tenant)
 			return "", err
 		}
-		redirectURL = urlObj.String()
-		Options(options).CopyResponse(httpResponse.Res, httpResponse.BodyStr)
+		redirectURL = res.URL
+		Options(options).CreateRedirect(redirectURL)
 	}
 
 	return

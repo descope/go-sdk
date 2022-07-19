@@ -76,7 +76,7 @@ func main() {
 			return
 		}
 
-		res, err := client.Auth.SignUpWebAuthnStart(t.Name, t)
+		res, err := client.Auth.WebAuthn().SignUpStart(t.Name, t)
 		if err != nil {
 			setError(c, err.Error())
 		}
@@ -92,7 +92,7 @@ func main() {
 			return
 		}
 
-		_, err = client.Auth.SignUpWebAuthnFinishWithOptions(t, descopegin.WithResponseOption(c))
+		_, err = client.Auth.WebAuthn().SignUpFinishWithOptions(t, descopegin.WithResponseOption(c))
 		if err != nil {
 			setError(c, err.Error())
 		}
@@ -100,7 +100,7 @@ func main() {
 	})
 
 	r.POST("/webauthn/signin/start", func(c *gin.Context) {
-		res, err := client.Auth.SignInWebAuthnStart(c.Query("id"))
+		res, err := client.Auth.WebAuthn().SignInStart(c.Query("id"))
 		if err != nil {
 			setError(c, err.Error())
 		}
@@ -116,7 +116,7 @@ func main() {
 			return
 		}
 
-		_, err = client.Auth.SignInWebAuthnFinishWithOptions(t, descopegin.WithResponseOption(c))
+		_, err = client.Auth.WebAuthn().SignInFinishWithOptions(t, descopegin.WithResponseOption(c))
 		if err != nil {
 			setError(c, err.Error())
 		}
@@ -145,7 +145,7 @@ func handleLogout(c *gin.Context) {
 
 func handleSignUp(c *gin.Context) {
 	method, identifier := getMethodAndIdentifier(c)
-	err := client.Auth.SignUpOTP(method, identifier, &auth.User{Name: "test"})
+	err := client.Auth.OTP().SignUp(method, identifier, &auth.User{Name: "test"})
 	if err != nil {
 		setError(c, err.Error())
 	} else {
@@ -155,7 +155,7 @@ func handleSignUp(c *gin.Context) {
 
 func handleSignIn(c *gin.Context) {
 	method, identifier := getMethodAndIdentifier(c)
-	err := client.Auth.SignInOTP(method, identifier)
+	err := client.Auth.OTP().SignIn(method, identifier)
 	if err != nil {
 		setError(c, err.Error())
 	} else {
@@ -169,9 +169,9 @@ func handleMagicLinkSignIn(c *gin.Context) {
 	var magicLinkResponse *auth.MagicLinkResponse
 
 	if crossDevice := queryBool(c, "crossDevice"); crossDevice {
-		magicLinkResponse, err = client.Auth.SignInMagicLinkCrossDevice(method, identifier, verifyMagicLinkURI)
+		magicLinkResponse, err = client.Auth.MagicLink().SignInCrossDevice(method, identifier, verifyMagicLinkURI)
 	} else {
-		err = client.Auth.SignInMagicLink(method, identifier, verifyMagicLinkURI)
+		err = client.Auth.MagicLink().SignIn(method, identifier, verifyMagicLinkURI)
 	}
 	if err != nil {
 		setError(c, err.Error())
@@ -187,9 +187,9 @@ func handleMagicLinkSignUp(c *gin.Context) {
 
 	user := &auth.User{Name: "test"}
 	if crossDevice := queryBool(c, "crossDevice"); crossDevice {
-		magicLinkResponse, err = client.Auth.SignUpMagicLinkCrossDevice(method, identifier, verifyMagicLinkURI, user)
+		magicLinkResponse, err = client.Auth.MagicLink().SignUpCrossDevice(method, identifier, verifyMagicLinkURI, user)
 	} else {
-		err = client.Auth.SignUpMagicLink(method, identifier, verifyMagicLinkURI, user)
+		err = client.Auth.MagicLink().SignUp(method, identifier, verifyMagicLinkURI, user)
 	}
 	if err != nil {
 		setError(c, err.Error())
@@ -204,7 +204,7 @@ func handleGetMagicLinkSession(c *gin.Context) {
 		setError(c, "pending reference is empty")
 		return
 	}
-	_, err := client.Auth.GetMagicLinkSessionWithOptions(pendingRef, descopegin.WithResponseOption(c))
+	_, err := client.Auth.MagicLink().GetSessionWithOptions(pendingRef, descopegin.WithResponseOption(c))
 	if goErrors.Is(err, descopeerrors.MagicLinkUnauthorized) {
 		setUnauthorized(c, err.Error())
 	}
@@ -221,7 +221,7 @@ func handleMagicLinkVerify(c *gin.Context) {
 		setError(c, "token is empty")
 		return
 	}
-	_, err := client.Auth.VerifyMagicLinkWithOptions(token, descopegin.WithResponseOption(c))
+	_, err := client.Auth.MagicLink().VerifyWithOptions(token, descopegin.WithResponseOption(c))
 	if err != nil {
 		setError(c, err.Error())
 		return
@@ -236,7 +236,7 @@ func handleOTPVerify(c *gin.Context) {
 		setError(c, "code is empty")
 		return
 	}
-	_, err := client.Auth.VerifyCodeWithOptions(method, identifier, code, descopegin.WithResponseOption(c))
+	_, err := client.Auth.OTP().VerifyCodeWithOptions(method, identifier, code, descopegin.WithResponseOption(c))
 	if err != nil {
 		setError(c, err.Error())
 		return
@@ -249,7 +249,7 @@ func handleOAuth(c *gin.Context) {
 	if provider == "" {
 		provider = auth.OAuthFacebook
 	}
-	_, err := client.Auth.OAuthStartWithOptions(provider, "", descopegin.WithResponseOption(c))
+	_, err := client.Auth.OAuth().StartWithOptions(provider, "", descopegin.WithResponseOption(c))
 	if err != nil {
 		setError(c, err.Error())
 	}
