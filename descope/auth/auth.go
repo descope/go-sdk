@@ -41,12 +41,12 @@ func NewAuth(conf AuthParams, c *api.Client) (*authenticationService, error) {
 	base.publicKeysProvider = newProvider(c, base.conf)
 	exchanger := exchangerBase{authenticationsBase: base}
 	authenticationService := &authenticationService{authenticationsBase: base}
-	authenticationService.otp = &otpService{authenticationsBase: base}
-	authenticationService.magicLink = &magicLinkService{authenticationsBase: base}
-	authenticationService.oauth = &oauthService{exchangerBase: exchanger}
-	authenticationService.saml = &samlService{exchangerBase: exchanger}
-	authenticationService.webAuthn = &webAuthnService{authenticationsBase: base}
-	authenticationService.totp = &totpService{authenticationsBase: base}
+	authenticationService.otp = &otp{authenticationsBase: base}
+	authenticationService.magicLink = &magicLink{authenticationsBase: base}
+	authenticationService.oauth = &oauth{exchangerBase: exchanger}
+	authenticationService.saml = &saml{exchangerBase: exchanger}
+	authenticationService.webAuthn = &webAuthn{authenticationsBase: base}
+	authenticationService.totp = &totp{authenticationsBase: base}
 	return authenticationService, nil
 }
 

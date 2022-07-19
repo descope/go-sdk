@@ -8,11 +8,11 @@ import (
 	"github.com/descope/go-sdk/descope/utils"
 )
 
-type webAuthnService struct {
+type webAuthn struct {
 	authenticationsBase
 }
 
-func (auth *webAuthnService) SignUpStart(identifier string, user *User) (*WebAuthnTransactionResponse, error) {
+func (auth *webAuthn) SignUpStart(identifier string, user *User) (*WebAuthnTransactionResponse, error) {
 	if user == nil {
 		user = &User{}
 	}
@@ -28,11 +28,11 @@ func (auth *webAuthnService) SignUpStart(identifier string, user *User) (*WebAut
 	return webAuthnResponse, err
 }
 
-func (auth *webAuthnService) SignUpFinish(request *WebAuthnFinishRequest, w http.ResponseWriter) (*AuthenticationInfo, error) {
+func (auth *webAuthn) SignUpFinish(request *WebAuthnFinishRequest, w http.ResponseWriter) (*AuthenticationInfo, error) {
 	return auth.SignUpFinishWithOptions(request, WithResponseOption(w))
 }
 
-func (auth *webAuthnService) SignUpFinishWithOptions(request *WebAuthnFinishRequest, options ...Option) (*AuthenticationInfo, error) {
+func (auth *webAuthn) SignUpFinishWithOptions(request *WebAuthnFinishRequest, options ...Option) (*AuthenticationInfo, error) {
 	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignupFinish(), request, nil, "")
 	if err != nil {
 		return nil, err
@@ -40,7 +40,7 @@ func (auth *webAuthnService) SignUpFinishWithOptions(request *WebAuthnFinishRequ
 	return auth.generateAuthenticationInfo(res, options...)
 }
 
-func (auth *webAuthnService) SignInStart(identifier string) (*WebAuthnTransactionResponse, error) {
+func (auth *webAuthn) SignInStart(identifier string) (*WebAuthnTransactionResponse, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
@@ -56,11 +56,11 @@ func (auth *webAuthnService) SignInStart(identifier string) (*WebAuthnTransactio
 
 }
 
-func (auth *webAuthnService) SignInFinish(request *WebAuthnFinishRequest, w http.ResponseWriter) (*AuthenticationInfo, error) {
+func (auth *webAuthn) SignInFinish(request *WebAuthnFinishRequest, w http.ResponseWriter) (*AuthenticationInfo, error) {
 	return auth.SignInFinishWithOptions(request, WithResponseOption(w))
 }
 
-func (auth *webAuthnService) SignInFinishWithOptions(request *WebAuthnFinishRequest, options ...Option) (*AuthenticationInfo, error) {
+func (auth *webAuthn) SignInFinishWithOptions(request *WebAuthnFinishRequest, options ...Option) (*AuthenticationInfo, error) {
 	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSigninFinish(), request, nil, "")
 	if err != nil {
 		return nil, err

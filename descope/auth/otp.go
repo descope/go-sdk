@@ -6,11 +6,11 @@ import (
 	"github.com/descope/go-sdk/descope/errors"
 )
 
-type otpService struct {
+type otp struct {
 	authenticationsBase
 }
 
-func (auth *otpService) SignIn(method DeliveryMethod, identifier string) error {
+func (auth *otp) SignIn(method DeliveryMethod, identifier string) error {
 	if identifier == "" {
 		return errors.NewInvalidArgumentError("identifier")
 	}
@@ -19,7 +19,7 @@ func (auth *otpService) SignIn(method DeliveryMethod, identifier string) error {
 	return err
 }
 
-func (auth *otpService) SignUp(method DeliveryMethod, identifier string, user *User) error {
+func (auth *otp) SignUp(method DeliveryMethod, identifier string, user *User) error {
 	if user == nil {
 		user = &User{}
 	}
@@ -31,7 +31,7 @@ func (auth *otpService) SignUp(method DeliveryMethod, identifier string, user *U
 	return err
 }
 
-func (auth *otpService) SignUpOrIn(method DeliveryMethod, identifier string) error {
+func (auth *otp) SignUpOrIn(method DeliveryMethod, identifier string) error {
 	if identifier == "" {
 		return errors.NewInvalidArgumentError("identifier")
 	}
@@ -40,11 +40,11 @@ func (auth *otpService) SignUpOrIn(method DeliveryMethod, identifier string) err
 	return err
 }
 
-func (auth *otpService) VerifyCode(method DeliveryMethod, identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+func (auth *otp) VerifyCode(method DeliveryMethod, identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
 	return auth.VerifyCodeWithOptions(method, identifier, code, WithResponseOption(w))
 }
 
-func (auth *otpService) VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, options ...Option) (*AuthenticationInfo, error) {
+func (auth *otp) VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, options ...Option) (*AuthenticationInfo, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
@@ -69,7 +69,7 @@ func (auth *otpService) VerifyCodeWithOptions(method DeliveryMethod, identifier 
 	return auth.generateAuthenticationInfo(httpResponse, options...)
 }
 
-func (auth *otpService) UpdateUserEmail(identifier, email string, r *http.Request) error {
+func (auth *otp) UpdateUserEmail(identifier, email string, r *http.Request) error {
 	if identifier == "" {
 		return errors.NewInvalidArgumentError("identifier")
 	}
@@ -87,7 +87,7 @@ func (auth *otpService) UpdateUserEmail(identifier, email string, r *http.Reques
 	return err
 }
 
-func (auth *otpService) UpdateUserPhone(method DeliveryMethod, identifier, phone string, r *http.Request) error {
+func (auth *otp) UpdateUserPhone(method DeliveryMethod, identifier, phone string, r *http.Request) error {
 	if identifier == "" {
 		return errors.NewInvalidArgumentError("identifier")
 	}

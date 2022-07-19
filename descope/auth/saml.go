@@ -9,7 +9,7 @@ import (
 	"github.com/descope/go-sdk/descope/utils"
 )
 
-type samlService struct {
+type saml struct {
 	exchangerBase
 }
 
@@ -17,11 +17,11 @@ type samlStartResponse struct {
 	URL string `json:"url"`
 }
 
-func (auth *samlService) Start(tenant string, returnURL string, w http.ResponseWriter) (redirectURL string, err error) {
+func (auth *saml) Start(tenant string, returnURL string, w http.ResponseWriter) (redirectURL string, err error) {
 	return auth.StartWithOptions(tenant, returnURL, WithResponseOption(w))
 }
 
-func (auth *samlService) StartWithOptions(tenant string, returnURL string, options ...Option) (redirectURL string, err error) {
+func (auth *saml) StartWithOptions(tenant string, returnURL string, options ...Option) (redirectURL string, err error) {
 	if tenant == "" {
 		return "", errors.NewInvalidArgumentError("tenant")
 	}

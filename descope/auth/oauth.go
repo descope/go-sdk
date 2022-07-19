@@ -8,7 +8,7 @@ import (
 	"github.com/descope/go-sdk/descope/utils"
 )
 
-type oauthService struct {
+type oauth struct {
 	exchangerBase
 }
 
@@ -16,11 +16,11 @@ type oauthStartResponse struct {
 	URL string `json:"url"`
 }
 
-func (auth *oauthService) Start(provider OAuthProvider, returnURL string, w http.ResponseWriter) (string, error) {
+func (auth *oauth) Start(provider OAuthProvider, returnURL string, w http.ResponseWriter) (string, error) {
 	return auth.StartWithOptions(provider, returnURL, WithResponseOption(w))
 }
 
-func (auth *oauthService) StartWithOptions(provider OAuthProvider, returnURL string, options ...Option) (url string, err error) {
+func (auth *oauth) StartWithOptions(provider OAuthProvider, returnURL string, options ...Option) (url string, err error) {
 	m := map[string]string{
 		"provider": string(provider),
 	}

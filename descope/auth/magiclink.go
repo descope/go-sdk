@@ -6,11 +6,11 @@ import (
 	"github.com/descope/go-sdk/descope/errors"
 )
 
-type magicLinkService struct {
+type magicLink struct {
 	authenticationsBase
 }
 
-func (auth *magicLinkService) SignIn(method DeliveryMethod, identifier, URI string) error {
+func (auth *magicLink) SignIn(method DeliveryMethod, identifier, URI string) error {
 	if identifier == "" {
 		return errors.NewInvalidArgumentError("identifier")
 	}
@@ -18,7 +18,7 @@ func (auth *magicLinkService) SignIn(method DeliveryMethod, identifier, URI stri
 	return err
 }
 
-func (auth *magicLinkService) SignUp(method DeliveryMethod, identifier, URI string, user *User) error {
+func (auth *magicLink) SignUp(method DeliveryMethod, identifier, URI string, user *User) error {
 	if user == nil {
 		user = &User{}
 	}
@@ -30,7 +30,7 @@ func (auth *magicLinkService) SignUp(method DeliveryMethod, identifier, URI stri
 	return err
 }
 
-func (auth *magicLinkService) SignUpOrIn(method DeliveryMethod, identifier, URI string) error {
+func (auth *magicLink) SignUpOrIn(method DeliveryMethod, identifier, URI string) error {
 	if identifier == "" {
 		return errors.NewInvalidArgumentError("identifier")
 	}
@@ -38,7 +38,7 @@ func (auth *magicLinkService) SignUpOrIn(method DeliveryMethod, identifier, URI 
 	return err
 }
 
-func (auth *magicLinkService) SignInCrossDevice(method DeliveryMethod, identifier, URI string) (*MagicLinkResponse, error) {
+func (auth *magicLink) SignInCrossDevice(method DeliveryMethod, identifier, URI string) (*MagicLinkResponse, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
@@ -49,7 +49,7 @@ func (auth *magicLinkService) SignInCrossDevice(method DeliveryMethod, identifie
 	return getPendingRefFromResponse(httpResponse)
 }
 
-func (auth *magicLinkService) SignUpCrossDevice(method DeliveryMethod, identifier, URI string, user *User) (*MagicLinkResponse, error) {
+func (auth *magicLink) SignUpCrossDevice(method DeliveryMethod, identifier, URI string, user *User) (*MagicLinkResponse, error) {
 	if user == nil {
 		user = &User{}
 	}
@@ -64,7 +64,7 @@ func (auth *magicLinkService) SignUpCrossDevice(method DeliveryMethod, identifie
 	return getPendingRefFromResponse(httpResponse)
 }
 
-func (auth *magicLinkService) SignUpOrInCrossDevice(method DeliveryMethod, identifier, URI string) (*MagicLinkResponse, error) {
+func (auth *magicLink) SignUpOrInCrossDevice(method DeliveryMethod, identifier, URI string) (*MagicLinkResponse, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
@@ -75,11 +75,11 @@ func (auth *magicLinkService) SignUpOrInCrossDevice(method DeliveryMethod, ident
 	return getPendingRefFromResponse(httpResponse)
 }
 
-func (auth *magicLinkService) GetSession(pendingRef string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+func (auth *magicLink) GetSession(pendingRef string, w http.ResponseWriter) (*AuthenticationInfo, error) {
 	return auth.GetSessionWithOptions(pendingRef, WithResponseOption(w))
 }
 
-func (auth *magicLinkService) GetSessionWithOptions(pendingRef string, options ...Option) (*AuthenticationInfo, error) {
+func (auth *magicLink) GetSessionWithOptions(pendingRef string, options ...Option) (*AuthenticationInfo, error) {
 	httpResponse, err := auth.client.DoPostRequest(composeGetSession(), newAuthenticationGetMagicLinkSessionBody(pendingRef), nil, "")
 	if err != nil {
 		if err == errors.UnauthorizedError {
@@ -90,11 +90,11 @@ func (auth *magicLinkService) GetSessionWithOptions(pendingRef string, options .
 	return auth.generateAuthenticationInfo(httpResponse, options...)
 }
 
-func (auth *magicLinkService) Verify(token string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+func (auth *magicLink) Verify(token string, w http.ResponseWriter) (*AuthenticationInfo, error) {
 	return auth.VerifyWithOptions(token, WithResponseOption(w))
 }
 
-func (auth *magicLinkService) VerifyWithOptions(token string, options ...Option) (*AuthenticationInfo, error) {
+func (auth *magicLink) VerifyWithOptions(token string, options ...Option) (*AuthenticationInfo, error) {
 	httpResponse, err := auth.client.DoPostRequest(composeVerifyMagicLinkURL(), newMagicLinkAuthenticationVerifyRequestBody(token), nil, "")
 	if err != nil {
 		return nil, err
@@ -102,7 +102,7 @@ func (auth *magicLinkService) VerifyWithOptions(token string, options ...Option)
 	return auth.generateAuthenticationInfo(httpResponse, options...)
 }
 
-func (auth *magicLinkService) UpdateUserEmail(identifier, email, URI string, r *http.Request) error {
+func (auth *magicLink) UpdateUserEmail(identifier, email, URI string, r *http.Request) error {
 	if identifier == "" {
 		return errors.NewInvalidArgumentError("identifier")
 	}
@@ -120,7 +120,7 @@ func (auth *magicLinkService) UpdateUserEmail(identifier, email, URI string, r *
 	return err
 }
 
-func (auth *magicLinkService) UpdateUserEmailCrossDevice(identifier, email, URI string, r *http.Request) (*MagicLinkResponse, error) {
+func (auth *magicLink) UpdateUserEmailCrossDevice(identifier, email, URI string, r *http.Request) (*MagicLinkResponse, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
@@ -141,7 +141,7 @@ func (auth *magicLinkService) UpdateUserEmailCrossDevice(identifier, email, URI 
 	return getPendingRefFromResponse(httpResponse)
 }
 
-func (auth *magicLinkService) UpdateUserPhone(method DeliveryMethod, identifier, phone, URI string, r *http.Request) error {
+func (auth *magicLink) UpdateUserPhone(method DeliveryMethod, identifier, phone, URI string, r *http.Request) error {
 	if identifier == "" {
 		return errors.NewInvalidArgumentError("identifier")
 	}
@@ -162,7 +162,7 @@ func (auth *magicLinkService) UpdateUserPhone(method DeliveryMethod, identifier,
 	return err
 }
 
-func (auth *magicLinkService) UpdateUserPhoneCrossDevice(method DeliveryMethod, identifier, phone, URI string, r *http.Request) (*MagicLinkResponse, error) {
+func (auth *magicLink) UpdateUserPhoneCrossDevice(method DeliveryMethod, identifier, phone, URI string, r *http.Request) (*MagicLinkResponse, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
