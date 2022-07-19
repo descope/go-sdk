@@ -322,7 +322,7 @@ func TestUpdateEmailOTP(t *testing.T) {
 	externalID := "943248329844"
 	email := "test@test.com"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
-		assert.EqualValues(t, composeUpdateUserEmail(), r.URL.RequestURI())
+		assert.EqualValues(t, composeUpdateUserEmailOTP(), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)

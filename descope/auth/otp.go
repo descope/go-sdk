@@ -83,7 +83,7 @@ func (auth *otp) UpdateUserEmail(identifier, email string, r *http.Request) erro
 	if err != nil {
 		return err
 	}
-	_, err = auth.client.DoPostRequest(composeUpdateUserEmail(), newOTPUpdateEmailRequestBody(identifier, email), nil, pswd)
+	_, err = auth.client.DoPostRequest(composeUpdateUserEmailOTP(), newOTPUpdateEmailRequestBody(identifier, email), nil, pswd)
 	return err
 }
 

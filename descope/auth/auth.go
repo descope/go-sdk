@@ -418,8 +418,12 @@ func composeGetSession() string {
 	return api.Routes.GetMagicLinkSession()
 }
 
-func composeUpdateUserEmail() string {
+func composeUpdateUserEmailOTP() string {
 	return api.Routes.UpdateUserEmailOTP()
+}
+
+func composeUpdateUserEmailMagicLink() string {
+	return api.Routes.UpdateUserEmailMagiclink()
 }
 
 func composeUpdateUserPhone(method DeliveryMethod) string {

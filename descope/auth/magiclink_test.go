@@ -398,7 +398,7 @@ func TestUpdateUserEmail(t *testing.T) {
 	email := "test@test.com"
 	uri := "https://some.url.com"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
-		assert.EqualValues(t, composeUpdateUserEmail(), r.URL.RequestURI())
+		assert.EqualValues(t, composeUpdateUserEmailMagicLink(), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
@@ -423,7 +423,7 @@ func TestUpdateUserEmailCrossDevice(t *testing.T) {
 	email := "test@test.com"
 	uri := "https://some.url.com"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
-		assert.EqualValues(t, composeUpdateUserEmail(), r.URL.RequestURI())
+		assert.EqualValues(t, composeUpdateUserEmailMagicLink(), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
