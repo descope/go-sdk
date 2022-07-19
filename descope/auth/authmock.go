@@ -20,13 +20,21 @@ type MockDescopeAuthenticationOTP struct {
 	VerifyCodeResponseError         error
 }
 
+type MockDescopeAuthenticationExchanger struct {
+	AssertExchangeToken        func(code string, options ...Option)
+	ExchangeTokenResponseInfo  *AuthenticationInfo
+	ExchangeTokenResponseError error
+}
+
 type MockDescopeAuthenticationSAML struct {
+	MockDescopeAuthenticationExchanger
 	AssertSAMLStart            func(tenant string, landingURL string, options ...Option)
 	AssertSAMLStartResponseURL string
 	SAMLStartResponseError     error
 }
 
 type MockDescopeAuthenticationOAuth struct {
+	MockDescopeAuthenticationExchanger
 	AssertOAuthStart        func(provider OAuthProvider, landingURL string)
 	AssertOAuthResponseURL  string
 	OAuthStartResponseError error
@@ -90,20 +98,17 @@ type MockDescopeAuthenticationWebAuthn struct {
 }
 
 type MockDescopeAuthentication struct {
-	otp       OTP
-	magicLink MagicLink
-	saml      SAML
-	oauth     OAuth
-	totp      TOTP
-	webAuthn  WebAuthn
+	MockDescopeAuthenticationOTP
+	MockDescopeAuthenticationMagicLink
+	MockDescopeAuthenticationSAML
+	MockDescopeAuthenticationOAuth
+	MockDescopeAuthenticationTOTP
+	MockDescopeAuthenticationWebAuthn
 
 	ValidateSessionResponseNotOK bool
 	ValidateSessionResponseInfo  *Token
 	ValidateSessionResponseError error
 	LogoutResponseError          error
-	AssertExchangeToken          func(code string, options ...Option)
-	ExchangeTokenResponseInfo    *AuthenticationInfo
-	ExchangeTokenResponseError   error
 }
 
 func NewMockDescopeAuthentication() MockDescopeAuthentication {
@@ -111,27 +116,27 @@ func NewMockDescopeAuthentication() MockDescopeAuthentication {
 }
 
 func (m MockDescopeAuthentication) OTP() OTP {
-	return m.otp
+	return m.MockDescopeAuthenticationOTP
 }
 
 func (m MockDescopeAuthentication) MagicLink() MagicLink {
-	return m.magicLink
+	return m.MockDescopeAuthenticationMagicLink
 }
 
 func (m MockDescopeAuthentication) WebAuthn() WebAuthn {
-	return m.webAuthn
+	return m.MockDescopeAuthenticationWebAuthn
 }
 
 func (m MockDescopeAuthentication) TOTP() TOTP {
-	return m.totp
+	return m.MockDescopeAuthenticationTOTP
 }
 
 func (m MockDescopeAuthentication) SAML() SAML {
-	return m.saml
+	return m.MockDescopeAuthenticationSAML
 }
 
 func (m MockDescopeAuthentication) OAuth() OAuth {
-	return m.oauth
+	return m.MockDescopeAuthenticationOAuth
 }
 
 func (m MockDescopeAuthenticationOTP) SignIn(method DeliveryMethod, identifier string) error {
@@ -300,11 +305,11 @@ func (m MockDescopeAuthenticationOAuth) StartWithOptions(provider OAuthProvider,
 	return m.AssertOAuthResponseURL, m.OAuthStartResponseError
 }
 
-func (m MockDescopeAuthentication) ExchangeToken(code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthenticationExchanger) ExchangeToken(code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
 	return m.ExchangeTokenWithOptions(code, WithResponseOption(w))
 }
 
-func (m MockDescopeAuthentication) ExchangeTokenWithOptions(code string, options ...Option) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthenticationExchanger) ExchangeTokenWithOptions(code string, options ...Option) (*AuthenticationInfo, error) {
 	if m.AssertExchangeToken != nil {
 		m.AssertExchangeToken(code, options...)
 	}
