@@ -120,6 +120,33 @@ func TestSignUpOrInEmail(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestEmptyEmailSignIn(t *testing.T) {
+	email := ""
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	err = a.OTP().SignIn(MethodEmail, email)
+	require.Error(t, err)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+}
+
+func TestEmptyEmailSignUpOrIn(t *testing.T) {
+	email := ""
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	err = a.OTP().SignUpOrIn(MethodEmail, email)
+	require.Error(t, err)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+}
+
+func TestInvalidEmailSignUp(t *testing.T) {
+	email := "+8222941449"
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	err = a.OTP().SignUp(MethodEmail, email, nil)
+	require.Error(t, err)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+}
+
 func TestEmptyEmailVerifyCodeEmail(t *testing.T) {
 	email := ""
 	a, err := newTestAuth(nil, nil)
