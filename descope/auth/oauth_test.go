@@ -23,7 +23,7 @@ func TestOAuthStartForwardResponse(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	urlStr, err := a.OAuthStart(provider, landingURL, w)
+	urlStr, err := a.OAuth().Start(provider, landingURL, w)
 	require.NoError(t, err)
 	assert.EqualValues(t, uri, urlStr)
 	assert.EqualValues(t, urlStr, w.Result().Header.Get(RedirectLocationCookieName))
@@ -32,12 +32,12 @@ func TestOAuthStartForwardResponse(t *testing.T) {
 
 func TestOAuthStartInvalidForwardResponse(t *testing.T) {
 	provider := OAuthGithub
-	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+	a, err := newTestAuth(nil, DoBadRequest(func(r *http.Request) {
 		assert.EqualValues(t, fmt.Sprintf("%s?provider=%s", composeOAuthURL(), provider), r.URL.RequestURI())
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	urlStr, err := a.OAuthStart(provider, "", w)
+	urlStr, err := a.OAuth().Start(provider, "", w)
 	require.Error(t, err)
 	assert.Empty(t, urlStr)
 }
@@ -61,7 +61,7 @@ func TestExchangeToken(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	authInfo, err := a.ExchangeToken(code, w)
+	authInfo, err := a.OAuth().ExchangeToken(code, w)
 	require.NoError(t, err)
 	require.NotNil(t, authInfo)
 	assert.EqualValues(t, "name", authInfo.User.Name)
@@ -73,6 +73,6 @@ func TestExchangeTokenError(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	_, err = a.ExchangeToken(code, w)
+	_, err = a.OAuth().ExchangeToken(code, w)
 	require.Error(t, err)
 }

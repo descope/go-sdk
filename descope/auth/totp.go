@@ -7,7 +7,11 @@ import (
 	"github.com/descope/go-sdk/descope/utils"
 )
 
-func (auth *authenticationService) SignUpTOTP(identifier string, user *User) (*TOTPResponse, error) {
+type totp struct {
+	authenticationsBase
+}
+
+func (auth *totp) SignUp(identifier string, user *User) (*TOTPResponse, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
@@ -24,7 +28,7 @@ func (auth *authenticationService) SignUpTOTP(identifier string, user *User) (*T
 	return totpResponse, nil
 }
 
-func (auth *authenticationService) UpdateUserTOTP(identifier string, r *http.Request) (*TOTPResponse, error) {
+func (auth *totp) UpdateUser(identifier string, r *http.Request) (*TOTPResponse, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
@@ -44,11 +48,11 @@ func (auth *authenticationService) UpdateUserTOTP(identifier string, r *http.Req
 	return totpResponse, nil
 }
 
-func (auth *authenticationService) SignInTOTPCode(identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.SignInTOTPCodeWithOptions(identifier, code, WithResponseOption(w))
+func (auth *totp) SignInCode(identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	return auth.SignInCodeWithOptions(identifier, code, WithResponseOption(w))
 }
 
-func (auth *authenticationService) SignInTOTPCodeWithOptions(identifier, code string, options ...Option) (*AuthenticationInfo, error) {
+func (auth *totp) SignInCodeWithOptions(identifier, code string, options ...Option) (*AuthenticationInfo, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}

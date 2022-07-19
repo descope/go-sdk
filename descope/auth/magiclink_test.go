@@ -19,11 +19,11 @@ func TestSignInMagicLinkEmptyExternalID(t *testing.T) {
 	email := ""
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.SignInOTP(MethodEmail, email)
+	err = a.MagicLink().SignIn(MethodEmail, email, "")
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 
-	err = a.SignInMagicLink(MethodEmail, email, "http://test.me")
+	err = a.MagicLink().SignIn(MethodEmail, email, "http://test.me")
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -32,11 +32,11 @@ func TestSignInMagicLinkCrossDeviceEmptyExternalID(t *testing.T) {
 	email := ""
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.SignInOTP(MethodEmail, email)
+	err = a.MagicLink().SignIn(MethodEmail, email, "")
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 
-	info, err := a.SignInMagicLinkCrossDevice(MethodEmail, email, "http://test.me")
+	info, err := a.MagicLink().SignInCrossDevice(MethodEmail, email, "http://test.me")
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 	require.Empty(t, info)
@@ -54,7 +54,7 @@ func TestSignInMagicLinkEmail(t *testing.T) {
 		assert.EqualValues(t, uri, body["URI"])
 	}))
 	require.NoError(t, err)
-	err = a.SignInMagicLink(MethodEmail, email, uri)
+	err = a.MagicLink().SignIn(MethodEmail, email, uri)
 	require.NoError(t, err)
 }
 
@@ -75,7 +75,7 @@ func TestSignInMagicLinkEmailCrossDevice(t *testing.T) {
 		}, nil
 	})
 	require.NoError(t, err)
-	response, err := a.SignInMagicLinkCrossDevice(MethodEmail, email, uri)
+	response, err := a.MagicLink().SignInCrossDevice(MethodEmail, email, uri)
 	require.NoError(t, err)
 	require.Equal(t, pendingRefResponse, response.PendingRef)
 }
@@ -90,7 +90,7 @@ func TestSignInMagicLinkEmailCrossDeviceInvalidResponse(t *testing.T) {
 		}, nil
 	})
 	require.NoError(t, err)
-	res, err := a.SignInMagicLinkCrossDevice(MethodEmail, email, uri)
+	res, err := a.MagicLink().SignInCrossDevice(MethodEmail, email, uri)
 	require.Error(t, err)
 	require.Empty(t, res)
 }
@@ -99,11 +99,11 @@ func TestInvalidPhoneSignUpSMS(t *testing.T) {
 	phone := "thisisemail@af.com"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.SignUpOTP(MethodSMS, phone, &User{Name: "test"})
+	err = a.MagicLink().SignUp(MethodSMS, phone, "", &User{Name: "test"})
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 
-	err = a.SignUpMagicLink(MethodSMS, phone, "http://test.me", &User{Name: "test"})
+	err = a.MagicLink().SignUp(MethodSMS, phone, "http://test.me", &User{Name: "test"})
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -112,11 +112,11 @@ func TestInvalidPhoneSignUpWhatsApp(t *testing.T) {
 	phone := "thisisemail@af.com"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.SignUpOTP(MethodSMS, phone, &User{Name: "test"})
+	err = a.MagicLink().SignUp(MethodSMS, phone, "", &User{Name: "test"})
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 
-	err = a.SignUpMagicLink(MethodSMS, phone, "http://test.me", &User{Name: "test"})
+	err = a.MagicLink().SignUp(MethodSMS, phone, "http://test.me", &User{Name: "test"})
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -125,11 +125,11 @@ func TestInvalidEmailSignUpEmail(t *testing.T) {
 	email := "943248329844"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.SignUpOTP(MethodEmail, email, &User{Name: "test"})
+	err = a.MagicLink().SignUp(MethodEmail, email, "", &User{Name: "test"})
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 
-	err = a.SignUpMagicLink(MethodEmail, email, "http://test.me", &User{Name: "test"})
+	err = a.MagicLink().SignUp(MethodEmail, email, "http://test.me", &User{Name: "test"})
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -148,7 +148,7 @@ func TestSignUpMagicLinkEmail(t *testing.T) {
 		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpMagicLink(MethodEmail, email, uri, &User{Name: "test"})
+	err = a.MagicLink().SignUp(MethodEmail, email, uri, &User{Name: "test"})
 	require.NoError(t, err)
 }
 
@@ -165,7 +165,7 @@ func TestSignUpOrInMagicLinkEmail(t *testing.T) {
 		assert.Nil(t, m["user"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpOrInMagicLink(MethodEmail, email, uri)
+	err = a.MagicLink().SignUpOrIn(MethodEmail, email, uri)
 	require.NoError(t, err)
 }
 
@@ -182,7 +182,7 @@ func TestSignUpOrInMagicLinkSMS(t *testing.T) {
 		assert.Nil(t, m["user"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpOrInMagicLink(MethodSMS, email, uri)
+	err = a.MagicLink().SignUpOrIn(MethodSMS, email, uri)
 	require.NoError(t, err)
 }
 
@@ -199,7 +199,7 @@ func TestSignUpOrInMagicLinkWhatsapp(t *testing.T) {
 		assert.Nil(t, m["user"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpOrInMagicLink(MethodWhatsApp, email, uri)
+	err = a.MagicLink().SignUpOrIn(MethodWhatsApp, email, uri)
 	require.NoError(t, err)
 }
 
@@ -222,7 +222,7 @@ func TestSignUpMagicLinkEmailCrossDevice(t *testing.T) {
 		}, nil
 	})
 	require.NoError(t, err)
-	response, err := a.SignUpMagicLinkCrossDevice(MethodEmail, email, uri, &User{Name: "test"})
+	response, err := a.MagicLink().SignUpCrossDevice(MethodEmail, email, uri, &User{Name: "test"})
 	require.NoError(t, err)
 	require.Equal(t, pendingRefResponse, response.PendingRef)
 }
@@ -244,7 +244,7 @@ func TestSignUpOrInMagicLinkEmailCrossDevice(t *testing.T) {
 		}, nil
 	})
 	require.NoError(t, err)
-	response, err := a.SignUpOrInMagicLinkCrossDevice(MethodEmail, email, uri)
+	response, err := a.MagicLink().SignUpOrInCrossDevice(MethodEmail, email, uri)
 	require.NoError(t, err)
 	require.Equal(t, pendingRefResponse, response.PendingRef)
 }
@@ -253,15 +253,15 @@ func TestSignUpMagicLinkEmailCrossDeviceEmptyIdentifier(t *testing.T) {
 	uri := "http://test.me"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	response, err := a.SignUpMagicLinkCrossDevice(MethodEmail, "", uri, &User{Name: "test"})
+	response, err := a.MagicLink().SignUpCrossDevice(MethodEmail, "", uri, &User{Name: "test"})
 	require.Error(t, err)
 	require.Empty(t, response)
 }
 
-func TestGetMagicLinkSession(t *testing.T) {
+func TestGetSession(t *testing.T) {
 	pendingRef := "pending_ref"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
-		assert.EqualValues(t, composeGetMagicLinkSession(), r.URL.RequestURI())
+		assert.EqualValues(t, composeGetSession(), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
@@ -269,7 +269,7 @@ func TestGetMagicLinkSession(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	info, err := a.GetMagicLinkSession(pendingRef, w)
+	info, err := a.MagicLink().GetSession(pendingRef, w)
 	require.NoError(t, err)
 	assert.NotEmpty(t, info.SessionToken.JWT)
 	require.Len(t, w.Result().Cookies(), 1)
@@ -285,7 +285,7 @@ func TestGetMagicLinkSessionError(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	_, err = a.GetMagicLinkSession(pendingRef, w)
+	_, err = a.MagicLink().GetSession(pendingRef, w)
 	require.Error(t, err)
 }
 
@@ -296,7 +296,7 @@ func TestGetMagicLinkSessionStillPending(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	_, err = a.GetMagicLinkSession(pendingRef, w)
+	_, err = a.MagicLink().GetSession(pendingRef, w)
 	require.Error(t, err)
 	require.ErrorIs(t, err, errors.MagicLinkUnauthorized)
 }
@@ -315,7 +315,7 @@ func TestSignUpMagicLinkSMS(t *testing.T) {
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpMagicLink(MethodSMS, phone, uri, &User{Name: "test"})
+	err = a.MagicLink().SignUp(MethodSMS, phone, uri, &User{Name: "test"})
 	require.NoError(t, err)
 }
 
@@ -333,7 +333,7 @@ func TestSignUpMagicLinkWhatsApp(t *testing.T) {
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
-	err = a.SignUpMagicLink(MethodWhatsApp, phone, uri, &User{Name: "test"})
+	err = a.MagicLink().SignUp(MethodWhatsApp, phone, uri, &User{Name: "test"})
 	require.NoError(t, err)
 }
 
@@ -364,7 +364,7 @@ func TestVerifyMagicLinkCodeWithSession(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	info, err := a.VerifyMagicLink(token, w)
+	info, err := a.MagicLink().Verify(token, w)
 	require.NoError(t, err)
 	assert.NotEmpty(t, info.SessionToken.JWT)
 	require.Len(t, w.Result().Cookies(), 1)
@@ -388,17 +388,17 @@ func TestVerifyMagicLinkCodeNoSession(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	info, err := a.VerifyMagicLink(token, w)
+	info, err := a.MagicLink().Verify(token, w)
 	require.NoError(t, err)
 	assert.Empty(t, info)
 }
 
-func TestUpdateUserEmailMagicLink(t *testing.T) {
+func TestUpdateUserEmail(t *testing.T) {
 	externalID := "943248329844"
 	email := "test@test.com"
 	uri := "https://some.url.com"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
-		assert.EqualValues(t, composeUpdateUserEmailMagicLink(), r.URL.RequestURI())
+		assert.EqualValues(t, composeUpdateUserEmail(), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
@@ -414,16 +414,16 @@ func TestUpdateUserEmailMagicLink(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	err = a.UpdateUserEmailMagicLink(externalID, email, uri, r)
+	err = a.MagicLink().UpdateUserEmail(externalID, email, uri, r)
 	require.NoError(t, err)
 }
 
-func TestUpdateUserEmailMagicLinkCrossDevice(t *testing.T) {
+func TestUpdateUserEmailCrossDevice(t *testing.T) {
 	externalID := "943248329844"
 	email := "test@test.com"
 	uri := "https://some.url.com"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
-		assert.EqualValues(t, composeUpdateUserEmailMagicLink(), r.URL.RequestURI())
+		assert.EqualValues(t, composeUpdateUserEmail(), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
@@ -439,7 +439,7 @@ func TestUpdateUserEmailMagicLinkCrossDevice(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	_, err = a.UpdateUserEmailMagicLinkCrossDevice(externalID, email, uri, r)
+	_, err = a.MagicLink().UpdateUserEmailCrossDevice(externalID, email, uri, r)
 	require.NoError(t, err)
 }
 
@@ -448,37 +448,37 @@ func TestUpdateEmailMagicLinkFailures(t *testing.T) {
 	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.UpdateUserEmailMagicLink("", "email@email.com", "", r)
+	err = a.MagicLink().UpdateUserEmail("", "email@email.com", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "identifier"))
-	err = a.UpdateUserEmailMagicLink("id", "", "", r)
+	err = a.MagicLink().UpdateUserEmail("id", "", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "email"))
-	err = a.UpdateUserEmailMagicLink("id", "email", "", r)
+	err = a.MagicLink().UpdateUserEmail("id", "email", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "email"))
-	_, err = a.UpdateUserEmailMagicLinkCrossDevice("", "email@email.com", "", r)
+	_, err = a.MagicLink().UpdateUserEmailCrossDevice("", "email@email.com", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "identifier"))
-	_, err = a.UpdateUserEmailMagicLinkCrossDevice("id", "", "", r)
+	_, err = a.MagicLink().UpdateUserEmailCrossDevice("id", "", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "email"))
-	_, err = a.UpdateUserEmailMagicLinkCrossDevice("id", "email", "", r)
+	_, err = a.MagicLink().UpdateUserEmailCrossDevice("id", "email", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "email"))
 	r = &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: "somename", Value: jwtTokenValid})
-	_, err = a.UpdateUserEmailMagicLinkCrossDevice("id", "test@test.com", "", r)
+	_, err = a.MagicLink().UpdateUserEmailCrossDevice("id", "test@test.com", "", r)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, errors.RefreshTokenError)
 }
 
-func TestUpdateUserPhoneMagicLink(t *testing.T) {
+func TestUpdateUserPhone(t *testing.T) {
 	externalID := "943248329844"
 	phone := "+111111111111"
 	uri := "https://some.url.com"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
-		assert.EqualValues(t, composeUpdateUserPhoneMagicLink(MethodSMS), r.URL.RequestURI())
+		assert.EqualValues(t, composeUpdateUserPhone(MethodSMS), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
@@ -494,16 +494,16 @@ func TestUpdateUserPhoneMagicLink(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	err = a.UpdateUserPhoneMagicLink(MethodSMS, externalID, phone, uri, r)
+	err = a.MagicLink().UpdateUserPhone(MethodSMS, externalID, phone, uri, r)
 	require.NoError(t, err)
 }
 
-func TestUpdateUserPhoneMagicLinkCrossDevice(t *testing.T) {
+func TestUpdateUserPhoneCrossDevice(t *testing.T) {
 	externalID := "943248329844"
 	phone := "+1111111111"
 	uri := "https://some.url.com"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
-		assert.EqualValues(t, composeUpdateUserPhoneMagicLink(MethodWhatsApp), r.URL.RequestURI())
+		assert.EqualValues(t, composeUpdateUserPhone(MethodWhatsApp), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
@@ -519,7 +519,7 @@ func TestUpdateUserPhoneMagicLinkCrossDevice(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	_, err = a.UpdateUserPhoneMagicLinkCrossDevice(MethodWhatsApp, externalID, phone, uri, r)
+	_, err = a.MagicLink().UpdateUserPhoneCrossDevice(MethodWhatsApp, externalID, phone, uri, r)
 	require.NoError(t, err)
 }
 
@@ -528,41 +528,41 @@ func TestUpdatePhoneMagicLinkFailures(t *testing.T) {
 	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.UpdateUserPhoneMagicLink(MethodSMS, "", "+1111111111", "", r)
+	err = a.MagicLink().UpdateUserPhone(MethodSMS, "", "+1111111111", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "identifier"))
-	err = a.UpdateUserPhoneMagicLink(MethodSMS, "id", "", "", r)
+	err = a.MagicLink().UpdateUserPhone(MethodSMS, "id", "", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "phone"))
-	err = a.UpdateUserPhoneMagicLink(MethodSMS, "id", "phone", "", r)
+	err = a.MagicLink().UpdateUserPhone(MethodSMS, "id", "phone", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "phone"))
-	err = a.UpdateUserPhoneMagicLink(MethodEmail, "id", "+1111111111", "", r)
+	err = a.MagicLink().UpdateUserPhone(MethodEmail, "id", "+1111111111", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "method"))
 	r = &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: "somename", Value: jwtTokenValid})
-	err = a.UpdateUserPhoneMagicLink(MethodSMS, "id", "+111111111111", "", r)
+	err = a.MagicLink().UpdateUserPhone(MethodSMS, "id", "+111111111111", "", r)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, errors.RefreshTokenError)
 
 	r = &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	_, err = a.UpdateUserPhoneMagicLinkCrossDevice(MethodSMS, "", "+1111111111", "", r)
+	_, err = a.MagicLink().UpdateUserPhoneCrossDevice(MethodSMS, "", "+1111111111", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "identifier"))
-	_, err = a.UpdateUserPhoneMagicLinkCrossDevice(MethodSMS, "id", "", "", r)
+	_, err = a.MagicLink().UpdateUserPhoneCrossDevice(MethodSMS, "id", "", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "phone"))
-	_, err = a.UpdateUserPhoneMagicLinkCrossDevice(MethodSMS, "id", "phone", "", r)
+	_, err = a.MagicLink().UpdateUserPhoneCrossDevice(MethodSMS, "id", "phone", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "phone"))
-	_, err = a.UpdateUserPhoneMagicLinkCrossDevice(MethodEmail, "id", "+111111111111", "", r)
+	_, err = a.MagicLink().UpdateUserPhoneCrossDevice(MethodEmail, "id", "+111111111111", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "method"))
 	r = &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: "somename", Value: jwtTokenValid})
-	_, err = a.UpdateUserPhoneMagicLinkCrossDevice(MethodSMS, "id", "+111111111111", "", r)
+	_, err = a.MagicLink().UpdateUserPhoneCrossDevice(MethodSMS, "id", "+111111111111", "", r)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, errors.RefreshTokenError)
 }

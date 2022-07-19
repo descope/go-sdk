@@ -4,15 +4,23 @@ import (
 	"net/http"
 
 	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/logger"
+	"github.com/descope/go-sdk/descope/utils"
 )
 
-func (auth *authenticationService) OAuthStart(provider OAuthProvider, returnURL string, w http.ResponseWriter) (string, error) {
-	return auth.OAuthStartWithOptions(provider, returnURL, WithResponseOption(w))
+type oauth struct {
+	exchangerBase
 }
 
-func (auth *authenticationService) OAuthStartWithOptions(provider OAuthProvider, returnURL string, options ...Option) (url string, err error) {
+type oauthStartResponse struct {
+	URL string `json:"url"`
+}
+
+func (auth *oauth) Start(provider OAuthProvider, returnURL string, w http.ResponseWriter) (string, error) {
+	return auth.StartWithOptions(provider, returnURL, WithResponseOption(w))
+}
+
+func (auth *oauth) StartWithOptions(provider OAuthProvider, returnURL string, options ...Option) (url string, err error) {
 	m := map[string]string{
 		"provider": string(provider),
 	}
@@ -25,30 +33,15 @@ func (auth *authenticationService) OAuthStartWithOptions(provider OAuthProvider,
 	}
 
 	if httpResponse.Res != nil {
-		urlObj, err := httpResponse.Res.Location()
+		res := &oauthStartResponse{}
+		err = utils.Unmarshal([]byte(httpResponse.BodyStr), res)
 		if err != nil {
 			logger.LogError("failed to parse location from response for [%s]", err, provider)
 			return "", err
 		}
-		url = urlObj.String()
-		Options(options).CopyResponse(httpResponse.Res, httpResponse.BodyStr)
+		url = res.URL
+		Options(options).CreateRedirect(url)
 	}
 
 	return
-}
-
-func (auth *authenticationService) ExchangeToken(code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.ExchangeTokenWithOptions(code, WithResponseOption(w))
-}
-
-func (auth *authenticationService) ExchangeTokenWithOptions(code string, options ...Option) (*AuthenticationInfo, error) {
-	if code == "" {
-		return nil, errors.NewInvalidArgumentError("code")
-	}
-
-	httpResponse, err := auth.client.DoGetRequest(composeExchangeTokenURL(), &api.HTTPRequest{QueryParams: map[string]string{"code": string(code)}}, "")
-	if err != nil {
-		return nil, err
-	}
-	return auth.generateAuthenticationInfo(httpResponse, options...)
 }

@@ -4,38 +4,35 @@ import (
 	"net/http"
 )
 
-type MockDescopeAuthentication struct {
-	SignInOTPResponseError                      error
-	SignUpOTPResponseError                      error
-	SignUpOrInOTPResponseError                  error
-	VerifyCodeResponseInfo                      *AuthenticationInfo
-	AssertUpdateUserEmailOTP                    func(identifier string, email string, request *http.Request)
-	UpdateUserEmailOTPResponseError             error
-	AssertUpdateUserPhoneOTP                    func(method DeliveryMethod, identifier string, email string, request *http.Request)
-	UpdateUserPhoneOTPResponseError             error
-	VerifyCodeResponseError                     error
-	ValidateSessionResponseNotOK                bool
-	ValidateSessionResponseInfo                 *Token
-	ValidateSessionResponseError                error
-	GetMagicLinkSessionResponseInfo             *AuthenticationInfo
-	GetMagicLinkSessionResponseError            error
-	LogoutResponseError                         error
-	AssertSignInOTP                             func(method DeliveryMethod, identifier string)
-	AssertSignUpOTP                             func(method DeliveryMethod, identifier string, user *User)
-	AssertSignUpOrInOTP                         func(method DeliveryMethod, identifier string)
-	AssertVerifyCode                            func(method DeliveryMethod, identifier string, code string)
-	AssertSignUpTOTP                            func(identifier string, user *User)
-	SignUpTOTPResponse                          *TOTPResponse
-	SignUpTOTPResponseError                     error
-	AssertUpdateTOTP                            func(identifier string)
-	UpdateTOTPResponse                          *TOTPResponse
-	UpdateTOTPResponseError                     error
-	AssertVerifyTOTPCode                        func(identifier string, code string)
-	VerifyTOTPCodeResponseInfo                  *AuthenticationInfo
-	VerifyTOTPCodeResponseError                 error
-	AssertOAuthStart                            func(provider OAuthProvider, landingURL string)
-	AssertOAuthResponseURL                      string
-	OAuthStartResponseError                     error
+type MockDescopeAuthenticationOTP struct {
+	AssertSignInOTP                 func(method DeliveryMethod, identifier string)
+	AssertSignUpOTP                 func(method DeliveryMethod, identifier string, user *User)
+	AssertSignUpOrInOTP             func(method DeliveryMethod, identifier string)
+	AssertVerifyCode                func(method DeliveryMethod, identifier string, code string)
+	SignInOTPResponseError          error
+	SignUpOTPResponseError          error
+	SignUpOrInOTPResponseError      error
+	VerifyCodeResponseInfo          *AuthenticationInfo
+	AssertUpdateUserEmailOTP        func(identifier string, email string, request *http.Request)
+	UpdateUserEmailOTPResponseError error
+	AssertUpdateUserPhoneOTP        func(method DeliveryMethod, identifier string, email string, request *http.Request)
+	UpdateUserPhoneOTPResponseError error
+	VerifyCodeResponseError         error
+}
+
+type MockDescopeAuthenticationSAML struct {
+	AssertSAMLStart            func(tenant string, landingURL string, options ...Option)
+	AssertSAMLStartResponseURL string
+	SAMLStartResponseError     error
+}
+
+type MockDescopeAuthenticationOAuth struct {
+	AssertOAuthStart        func(provider OAuthProvider, landingURL string)
+	AssertOAuthResponseURL  string
+	OAuthStartResponseError error
+}
+
+type MockDescopeAuthenticationMagicLink struct {
 	AssertSignInMagicLink                       func(method DeliveryMethod, identifier, URI string)
 	AssertSignUpMagicLink                       func(method DeliveryMethod, identifier, URI string, user *User)
 	AssertSignUpOrInMagicLink                   func(method DeliveryMethod, identifier, URI string)
@@ -49,6 +46,9 @@ type MockDescopeAuthentication struct {
 	SignUpMagicLinkCrossDeviceResponseError     error
 	SignInMagicLinkCrossDeviceResponseError     error
 	SignUpOrInMagicLinkCrossDeviceResponseError error
+	AssertVerifyMagicLink                       func(token string)
+	VerifyCodeResponseError                     error
+	VerifyCodeResponseInfo                      *AuthenticationInfo
 	MagicLinkPendingLinkCrossDeviceResponse     *MagicLinkResponse
 	AssertUpdateUserEmailMagicLink              func(identifier, email, URI string, request *http.Request)
 	UpdateUserEmailMagicLinkResponseError       error
@@ -60,183 +60,240 @@ type MockDescopeAuthentication struct {
 	AssertUpdateUserPhoneMagicLinkCrossDevice   func(method DeliveryMethod, identifier, email, URI string, request *http.Request)
 	UpdateUserPhoneMagicLinkCrossDeviceError    error
 	UpdateUserPhoneMagicLinkCrossDeviceResponse *MagicLinkResponse
-	AssertExchangeToken                         func(code string, options ...Option)
-	ExchangeTokenResponseInfo                   *AuthenticationInfo
-	ExchangeTokenResponseError                  error
-	AssertSAMLStart                             func(tenant string, landingURL string, options ...Option)
-	AssertSAMLStartResponseURL                  string
-	SAMLStartResponseError                      error
-	AssertVerifyMagicLink                       func(token string)
-	SignUpWebAuthnStartResponseError            error
-	SignUpWebAuthnStartResponseTransaction      *WebAuthnTransactionResponse
-	SignUpWebAuthnFinishResponseError           error
-	SignUpWebAuthnFinishResponseInfo            *AuthenticationInfo
-	SignInWebAuthnStartResponseError            error
-	SignInWebAuthnStartResponseTransaction      *WebAuthnTransactionResponse
-	SignInWebAuthnFinishResponseError           error
-	SignInWebAuthnFinishResponseInfo            *AuthenticationInfo
+	GetMagicLinkSessionResponseInfo             *AuthenticationInfo
+	GetMagicLinkSessionResponseError            error
 }
 
-func (m MockDescopeAuthentication) SignInOTP(method DeliveryMethod, identifier string) error {
+type MockDescopeAuthenticationTOTP struct {
+	AssertSignInTOTP            func(method DeliveryMethod, identifier string)
+	SignInTOTPResponseError     error
+	AssertSignUpTOTP            func(identifier string, user *User)
+	SignUpTOTPResponse          *TOTPResponse
+	SignUpTOTPResponseError     error
+	AssertUpdateTOTP            func(identifier string)
+	UpdateTOTPResponse          *TOTPResponse
+	UpdateTOTPResponseError     error
+	AssertVerifyTOTPCode        func(identifier string, code string)
+	VerifyTOTPCodeResponseInfo  *AuthenticationInfo
+	VerifyTOTPCodeResponseError error
+}
+
+type MockDescopeAuthenticationWebAuthn struct {
+	SignUpWebAuthnStartResponseError       error
+	SignUpWebAuthnStartResponseTransaction *WebAuthnTransactionResponse
+	SignUpWebAuthnFinishResponseError      error
+	SignUpWebAuthnFinishResponseInfo       *AuthenticationInfo
+	SignInWebAuthnStartResponseError       error
+	SignInWebAuthnStartResponseTransaction *WebAuthnTransactionResponse
+	SignInWebAuthnFinishResponseError      error
+	SignInWebAuthnFinishResponseInfo       *AuthenticationInfo
+}
+
+type MockDescopeAuthentication struct {
+	otp       OTP
+	magicLink MagicLink
+	saml      SAML
+	oauth     OAuth
+	totp      TOTP
+	webAuthn  WebAuthn
+
+	ValidateSessionResponseNotOK bool
+	ValidateSessionResponseInfo  *Token
+	ValidateSessionResponseError error
+	LogoutResponseError          error
+	AssertExchangeToken          func(code string, options ...Option)
+	ExchangeTokenResponseInfo    *AuthenticationInfo
+	ExchangeTokenResponseError   error
+}
+
+func NewMockDescopeAuthentication() MockDescopeAuthentication {
+	return MockDescopeAuthentication{}
+}
+
+func (m MockDescopeAuthentication) OTP() OTP {
+	return m.otp
+}
+
+func (m MockDescopeAuthentication) MagicLink() MagicLink {
+	return m.magicLink
+}
+
+func (m MockDescopeAuthentication) WebAuthn() WebAuthn {
+	return m.webAuthn
+}
+
+func (m MockDescopeAuthentication) TOTP() TOTP {
+	return m.totp
+}
+
+func (m MockDescopeAuthentication) SAML() SAML {
+	return m.saml
+}
+
+func (m MockDescopeAuthentication) OAuth() OAuth {
+	return m.oauth
+}
+
+func (m MockDescopeAuthenticationOTP) SignIn(method DeliveryMethod, identifier string) error {
 	if m.AssertSignInOTP != nil {
 		m.AssertSignInOTP(method, identifier)
 	}
 	return m.SignInOTPResponseError
 }
 
-func (m MockDescopeAuthentication) SignUpOTP(method DeliveryMethod, identifier string, user *User) error {
+func (m MockDescopeAuthenticationOTP) SignUp(method DeliveryMethod, identifier string, user *User) error {
 	if m.AssertSignUpOTP != nil {
 		m.AssertSignUpOTP(method, identifier, user)
 	}
 	return m.SignUpOTPResponseError
 }
 
-func (m MockDescopeAuthentication) SignUpOrInOTP(method DeliveryMethod, identifier string) error {
+func (m MockDescopeAuthenticationOTP) SignUpOrIn(method DeliveryMethod, identifier string) error {
 	if m.AssertSignUpOrInOTP != nil {
 		m.AssertSignUpOrInOTP(method, identifier)
 	}
 	return m.SignUpOrInOTPResponseError
 }
 
-func (m MockDescopeAuthentication) SignUpTOTP(identifier string, user *User) (*TOTPResponse, error) {
+func (m MockDescopeAuthenticationTOTP) SignUp(identifier string, user *User) (*TOTPResponse, error) {
 	if m.AssertSignUpTOTP != nil {
 		m.AssertSignUpTOTP(identifier, user)
 	}
 	return m.SignUpTOTPResponse, m.SignUpTOTPResponseError
 }
 
-func (m MockDescopeAuthentication) UpdateUserTOTP(identifier string, _ *http.Request) (*TOTPResponse, error) {
+func (m MockDescopeAuthenticationTOTP) UpdateUser(identifier string, _ *http.Request) (*TOTPResponse, error) {
 	if m.AssertUpdateTOTP != nil {
 		m.AssertUpdateTOTP(identifier)
 	}
 	return m.UpdateTOTPResponse, m.UpdateTOTPResponseError
 }
 
-func (m MockDescopeAuthentication) SignInTOTPCode(identifier string, code string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
-	return m.SignInTOTPCodeWithOptions(identifier, code, nil)
+func (m MockDescopeAuthenticationTOTP) SignInCode(identifier string, code string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+	return m.SignInCodeWithOptions(identifier, code, nil)
 }
 
-func (m MockDescopeAuthentication) SignInTOTPCodeWithOptions(identifier string, code string, _ ...Option) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthenticationTOTP) SignInCodeWithOptions(identifier string, code string, _ ...Option) (*AuthenticationInfo, error) {
 	if m.AssertVerifyTOTPCode != nil {
 		m.AssertVerifyTOTPCode(identifier, code)
 	}
 	return m.VerifyTOTPCodeResponseInfo, m.VerifyTOTPCodeResponseError
 }
 
-func (m MockDescopeAuthentication) UpdateUserEmailOTP(identifier, email string, request *http.Request) error {
+func (m MockDescopeAuthenticationOTP) UpdateUserEmail(identifier, email string, request *http.Request) error {
 	if m.AssertUpdateUserEmailOTP != nil {
 		m.AssertUpdateUserEmailOTP(identifier, email, request)
 	}
 	return m.UpdateUserEmailOTPResponseError
 }
 
-func (m MockDescopeAuthentication) UpdateUserPhoneOTP(method DeliveryMethod, identifier, email string, request *http.Request) error {
+func (m MockDescopeAuthenticationOTP) UpdateUserPhone(method DeliveryMethod, identifier, email string, request *http.Request) error {
 	if m.AssertUpdateUserPhoneOTP != nil {
 		m.AssertUpdateUserPhoneOTP(method, identifier, email, request)
 	}
 	return m.UpdateUserPhoneOTPResponseError
 }
 
-func (m MockDescopeAuthentication) VerifyCode(method DeliveryMethod, identifier string, code string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthenticationOTP) VerifyCode(method DeliveryMethod, identifier string, code string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
 	if m.AssertVerifyCode != nil {
 		m.AssertVerifyCode(method, identifier, code)
 	}
 	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
 }
 
-func (m MockDescopeAuthentication) VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, _ ...Option) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthenticationOTP) VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, _ ...Option) (*AuthenticationInfo, error) {
 	if m.AssertVerifyCode != nil {
 		m.AssertVerifyCode(method, identifier, code)
 	}
 	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
 }
 
-func (m MockDescopeAuthentication) SignInMagicLink(method DeliveryMethod, identifier, URI string) error {
+func (m MockDescopeAuthenticationMagicLink) SignIn(method DeliveryMethod, identifier, URI string) error {
 	if m.AssertSignInMagicLink != nil {
 		m.AssertSignInMagicLink(method, identifier, URI)
 	}
 	return m.SignInMagicLinkResponseError
 }
 
-func (m MockDescopeAuthentication) SignUpMagicLink(method DeliveryMethod, identifier, URI string, user *User) error {
+func (m MockDescopeAuthenticationMagicLink) SignUp(method DeliveryMethod, identifier, URI string, user *User) error {
 	if m.AssertSignUpMagicLink != nil {
 		m.AssertSignUpMagicLink(method, identifier, URI, user)
 	}
 	return m.SignUpMagicLinkResponseError
 }
 
-func (m MockDescopeAuthentication) SignUpOrInMagicLink(method DeliveryMethod, identifier string, URI string) error {
+func (m MockDescopeAuthenticationMagicLink) SignUpOrIn(method DeliveryMethod, identifier string, URI string) error {
 	if m.AssertSignUpOrInMagicLink != nil {
 		m.AssertSignUpOrInMagicLink(method, identifier, URI)
 	}
 	return m.SignUpOrInMagicLinkResponseError
 }
 
-func (m MockDescopeAuthentication) SignInMagicLinkCrossDevice(method DeliveryMethod, identifier, URI string) (*MagicLinkResponse, error) {
+func (m MockDescopeAuthenticationMagicLink) SignInCrossDevice(method DeliveryMethod, identifier, URI string) (*MagicLinkResponse, error) {
 	if m.AssertSignInMagicLinkCrossDevice != nil {
 		m.AssertSignInMagicLinkCrossDevice(method, identifier, URI)
 	}
 	return m.MagicLinkPendingLinkCrossDeviceResponse, m.SignInMagicLinkCrossDeviceResponseError
 }
 
-func (m MockDescopeAuthentication) SignUpMagicLinkCrossDevice(method DeliveryMethod, identifier, URI string, user *User) (*MagicLinkResponse, error) {
+func (m MockDescopeAuthenticationMagicLink) SignUpCrossDevice(method DeliveryMethod, identifier, URI string, user *User) (*MagicLinkResponse, error) {
 	if m.AssertSignUpMagicLinkCrossDevice != nil {
 		m.AssertSignUpMagicLinkCrossDevice(method, identifier, URI, user)
 	}
 	return m.MagicLinkPendingLinkCrossDeviceResponse, m.SignUpMagicLinkCrossDeviceResponseError
 }
 
-func (m MockDescopeAuthentication) SignUpOrInMagicLinkCrossDevice(method DeliveryMethod, identifier string, URI string) (*MagicLinkResponse, error) {
+func (m MockDescopeAuthenticationMagicLink) SignUpOrInCrossDevice(method DeliveryMethod, identifier string, URI string) (*MagicLinkResponse, error) {
 	if m.AssertSignUpOrInMagicLinkCrossDevice != nil {
 		m.AssertSignUpOrInMagicLinkCrossDevice(method, identifier, URI)
 	}
 	return m.MagicLinkPendingLinkCrossDeviceResponse, m.SignUpOrInMagicLinkCrossDeviceResponseError
 }
 
-func (m MockDescopeAuthentication) UpdateUserEmailMagicLink(identifier, email, URI string, request *http.Request) error {
+func (m MockDescopeAuthenticationMagicLink) UpdateUserEmail(identifier, email, URI string, request *http.Request) error {
 	if m.AssertUpdateUserEmailMagicLink != nil {
 		m.AssertUpdateUserEmailMagicLink(identifier, email, URI, request)
 	}
 	return m.UpdateUserEmailMagicLinkResponseError
 }
 
-func (m MockDescopeAuthentication) UpdateUserEmailMagicLinkCrossDevice(identifier, email, URI string, request *http.Request) (*MagicLinkResponse, error) {
+func (m MockDescopeAuthenticationMagicLink) UpdateUserEmailCrossDevice(identifier, email, URI string, request *http.Request) (*MagicLinkResponse, error) {
 	if m.AssertUpdateUserEmailMagicLinkCrossDevice != nil {
 		m.AssertUpdateUserEmailMagicLinkCrossDevice(identifier, email, URI, request)
 	}
 	return m.UpdateUserEmailMagicLinkCrossDeviceResponse, m.UpdateUserEmailMagicLinkCrossDeviceError
 }
 
-func (m MockDescopeAuthentication) UpdateUserPhoneMagicLink(method DeliveryMethod, identifier, email, URI string, request *http.Request) error {
+func (m MockDescopeAuthenticationMagicLink) UpdateUserPhone(method DeliveryMethod, identifier, email, URI string, request *http.Request) error {
 	if m.AssertUpdateUserPhoneMagicLink != nil {
 		m.AssertUpdateUserPhoneMagicLink(method, identifier, email, URI, request)
 	}
 	return m.UpdateUserPhoneMagicLinkResponseError
 }
 
-func (m MockDescopeAuthentication) UpdateUserPhoneMagicLinkCrossDevice(method DeliveryMethod, identifier, email, URI string, request *http.Request) (*MagicLinkResponse, error) {
+func (m MockDescopeAuthenticationMagicLink) UpdateUserPhoneCrossDevice(method DeliveryMethod, identifier, email, URI string, request *http.Request) (*MagicLinkResponse, error) {
 	if m.AssertUpdateUserPhoneMagicLinkCrossDevice != nil {
 		m.AssertUpdateUserPhoneMagicLinkCrossDevice(method, identifier, email, URI, request)
 	}
 	return m.UpdateUserPhoneMagicLinkCrossDeviceResponse, m.UpdateUserPhoneMagicLinkCrossDeviceError
 }
 
-func (m MockDescopeAuthentication) GetMagicLinkSession(pendingRef string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthenticationMagicLink) GetSession(pendingRef string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
 	if m.AssertGetMagicLinkSession != nil {
 		m.AssertGetMagicLinkSession(pendingRef)
 	}
 	return m.GetMagicLinkSessionResponseInfo, m.GetMagicLinkSessionResponseError
 }
 
-func (m MockDescopeAuthentication) GetMagicLinkSessionWithOptions(_ string, _ ...Option) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthenticationMagicLink) GetSessionWithOptions(_ string, _ ...Option) (*AuthenticationInfo, error) {
 	return m.GetMagicLinkSessionResponseInfo, m.GetMagicLinkSessionResponseError
 }
 
-func (m MockDescopeAuthentication) OAuthStart(provider OAuthProvider, returnURL string, w http.ResponseWriter) (string, error) {
-	return m.OAuthStartWithOptions(provider, returnURL, WithResponseOption(w))
+func (m MockDescopeAuthenticationOAuth) Start(provider OAuthProvider, returnURL string, w http.ResponseWriter) (string, error) {
+	return m.StartWithOptions(provider, returnURL, WithResponseOption(w))
 }
 
-func (m MockDescopeAuthentication) OAuthStartWithOptions(provider OAuthProvider, returnURL string, _ ...Option) (string, error) {
+func (m MockDescopeAuthenticationOAuth) StartWithOptions(provider OAuthProvider, returnURL string, _ ...Option) (string, error) {
 	if m.AssertOAuthStart != nil {
 		m.AssertOAuthStart(provider, returnURL)
 	}
@@ -254,25 +311,25 @@ func (m MockDescopeAuthentication) ExchangeTokenWithOptions(code string, options
 	return m.ExchangeTokenResponseInfo, m.ExchangeTokenResponseError
 }
 
-func (m MockDescopeAuthentication) SAMLStart(tenant string, returnURL string, w http.ResponseWriter) (string, error) {
-	return m.SAMLStartWithOptions(tenant, returnURL, WithResponseOption(w))
+func (m MockDescopeAuthenticationSAML) Start(tenant string, returnURL string, w http.ResponseWriter) (string, error) {
+	return m.StartWithOptions(tenant, returnURL, WithResponseOption(w))
 }
 
-func (m MockDescopeAuthentication) SAMLStartWithOptions(tenant string, returnURL string, option ...Option) (string, error) {
+func (m MockDescopeAuthenticationSAML) StartWithOptions(tenant string, returnURL string, option ...Option) (string, error) {
 	if m.AssertSAMLStart != nil {
 		m.AssertSAMLStart(tenant, returnURL, option...)
 	}
 	return m.AssertSAMLStartResponseURL, m.SAMLStartResponseError
 }
 
-func (m MockDescopeAuthentication) VerifyMagicLink(token string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthenticationMagicLink) Verify(token string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
 	if m.AssertVerifyMagicLink != nil {
 		m.AssertVerifyMagicLink(token)
 	}
 	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
 }
 
-func (m MockDescopeAuthentication) VerifyMagicLinkWithOptions(token string, _ ...Option) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthenticationMagicLink) VerifyWithOptions(token string, _ ...Option) (*AuthenticationInfo, error) {
 	if m.AssertVerifyMagicLink != nil {
 		m.AssertVerifyMagicLink(token)
 	}
@@ -295,26 +352,26 @@ func (m MockDescopeAuthentication) LogoutWithOptions(_ *http.Request, _ ...Optio
 	return m.LogoutResponseError
 }
 
-func (m MockDescopeAuthentication) SignUpWebAuthnStart(_ string, _ *User) (*WebAuthnTransactionResponse, error) {
+func (m MockDescopeAuthenticationWebAuthn) SignUpStart(_ string, _ *User) (*WebAuthnTransactionResponse, error) {
 	return m.SignUpWebAuthnStartResponseTransaction, m.SignUpWebAuthnStartResponseError
 }
 
-func (m MockDescopeAuthentication) SignUpWebAuthnFinish(_ *WebAuthnFinishRequest, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthenticationWebAuthn) SignUpFinish(_ *WebAuthnFinishRequest, _ http.ResponseWriter) (*AuthenticationInfo, error) {
 	return m.SignUpWebAuthnFinishResponseInfo, m.SignUpWebAuthnFinishResponseError
 }
 
-func (m MockDescopeAuthentication) SignUpWebAuthnFinishWithOptions(_ *WebAuthnFinishRequest, _ ...Option) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthenticationWebAuthn) SignUpFinishWithOptions(_ *WebAuthnFinishRequest, _ ...Option) (*AuthenticationInfo, error) {
 	return m.SignUpWebAuthnFinishResponseInfo, m.SignUpWebAuthnFinishResponseError
 }
 
-func (m MockDescopeAuthentication) SignInWebAuthnStart(string) (*WebAuthnTransactionResponse, error) {
+func (m MockDescopeAuthenticationWebAuthn) SignInStart(string) (*WebAuthnTransactionResponse, error) {
 	return m.SignInWebAuthnStartResponseTransaction, m.SignInWebAuthnStartResponseError
 }
 
-func (m MockDescopeAuthentication) SignInWebAuthnFinish(_ *WebAuthnFinishRequest, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthenticationWebAuthn) SignInFinish(_ *WebAuthnFinishRequest, _ http.ResponseWriter) (*AuthenticationInfo, error) {
 	return m.SignInWebAuthnFinishResponseInfo, m.SignInWebAuthnFinishResponseError
 }
 
-func (m MockDescopeAuthentication) SignInWebAuthnFinishWithOptions(_ *WebAuthnFinishRequest, _ ...Option) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthenticationWebAuthn) SignInFinishWithOptions(_ *WebAuthnFinishRequest, _ ...Option) (*AuthenticationInfo, error) {
 	return m.SignInWebAuthnFinishResponseInfo, m.SignInWebAuthnFinishResponseError
 }

@@ -43,6 +43,12 @@ func TestEmptyProjectID(t *testing.T) {
 	assert.Contains(t, err.Error(), "project id is missing")
 }
 
+func TestEmptyConfig(t *testing.T) {
+	_, err := NewDescopeClientWithConfig(nil)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "config")
+}
+
 func TestDescopeSDKMock(t *testing.T) {
 	api := DescopeClient{
 		Auth: auth.MockDescopeAuthentication{

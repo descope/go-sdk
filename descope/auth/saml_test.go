@@ -20,7 +20,7 @@ func TestSAMLStart(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	urlStr, err := a.SAMLStart(tenant, landingURL, w)
+	urlStr, err := a.SAML().Start(tenant, landingURL, w)
 	require.NoError(t, err)
 	assert.EqualValues(t, uri, urlStr)
 	assert.EqualValues(t, urlStr, w.Result().Header.Get(RedirectLocationCookieName))
@@ -31,6 +31,6 @@ func TestSAMLStartInvalidForwardResponse(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	_, err = a.SAMLStart("", "", w)
+	_, err = a.SAML().Start("", "", w)
 	require.Error(t, err)
 }
