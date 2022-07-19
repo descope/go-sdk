@@ -116,7 +116,7 @@ func (auth *magicLink) UpdateUserEmail(identifier, email, URI string, r *http.Re
 	if err != nil {
 		return err
 	}
-	_, err = auth.client.DoPostRequest(composeUpdateUserEmail(), newMagicLinkUpdateEmailRequestBody(identifier, email, URI, false), nil, pswd)
+	_, err = auth.client.DoPostRequest(composeUpdateUserEmailMagicLink(), newMagicLinkUpdateEmailRequestBody(identifier, email, URI, false), nil, pswd)
 	return err
 }
 
@@ -134,7 +134,7 @@ func (auth *magicLink) UpdateUserEmailCrossDevice(identifier, email, URI string,
 	if err != nil {
 		return nil, err
 	}
-	httpResponse, err := auth.client.DoPostRequest(composeUpdateUserEmail(), newMagicLinkUpdateEmailRequestBody(identifier, email, URI, true), nil, pswd)
+	httpResponse, err := auth.client.DoPostRequest(composeUpdateUserEmailMagicLink(), newMagicLinkUpdateEmailRequestBody(identifier, email, URI, true), nil, pswd)
 	if err != nil {
 		return nil, err
 	}
