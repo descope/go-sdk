@@ -191,6 +191,14 @@ type WebAuthn interface {
 	// SignInWebAuthnFinishWithOptions - Use to finish an authentication process with a given transaction id and credentials after been signed
 	// by the credentials navigator.
 	SignInFinishWithOptions(finishRequest *WebAuthnFinishRequest, options ...Option) (*AuthenticationInfo, error)
+
+	// AddDeviceStart - Use to start an add webauthn device process for an existing user with the given identifier.
+	// Request is needed to obtain JWT and send it to Descope, for verification
+	// returns a transaction id response on success and error upon failure.
+	AddDeviceStart(identifier string, request *http.Request) (*WebAuthnTransactionResponse, error)
+	// AddDeviceFinishWithOptions - Use to finish an add webauthn device process with a given transaction id and credentials after been signed
+	// by the credentials navigator.
+	AddDeviceFinish(finishRequest *WebAuthnFinishRequest) error
 }
 
 type Authentication interface {
