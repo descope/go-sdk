@@ -87,14 +87,17 @@ type MockDescopeAuthenticationTOTP struct {
 }
 
 type MockDescopeAuthenticationWebAuthn struct {
-	SignUpWebAuthnStartResponseError       error
-	SignUpWebAuthnStartResponseTransaction *WebAuthnTransactionResponse
-	SignUpWebAuthnFinishResponseError      error
-	SignUpWebAuthnFinishResponseInfo       *AuthenticationInfo
-	SignInWebAuthnStartResponseError       error
-	SignInWebAuthnStartResponseTransaction *WebAuthnTransactionResponse
-	SignInWebAuthnFinishResponseError      error
-	SignInWebAuthnFinishResponseInfo       *AuthenticationInfo
+	SignUpWebAuthnStartResponseError          error
+	SignUpWebAuthnStartResponseTransaction    *WebAuthnTransactionResponse
+	SignUpWebAuthnFinishResponseError         error
+	SignUpWebAuthnFinishResponseInfo          *AuthenticationInfo
+	SignInWebAuthnStartResponseError          error
+	SignInWebAuthnStartResponseTransaction    *WebAuthnTransactionResponse
+	SignInWebAuthnFinishResponseError         error
+	SignInWebAuthnFinishResponseInfo          *AuthenticationInfo
+	AddDeviceWebAuthnStartResponseError       error
+	AddDeviceWebAuthnStartResponseTransaction *WebAuthnTransactionResponse
+	AddDeviceWebAuthnFinishResponseError      error
 }
 
 type MockDescopeAuthentication struct {
@@ -379,4 +382,16 @@ func (m MockDescopeAuthenticationWebAuthn) SignInFinish(_ *WebAuthnFinishRequest
 
 func (m MockDescopeAuthenticationWebAuthn) SignInFinishWithOptions(_ *WebAuthnFinishRequest, _ ...Option) (*AuthenticationInfo, error) {
 	return m.SignInWebAuthnFinishResponseInfo, m.SignInWebAuthnFinishResponseError
+}
+
+func (m MockDescopeAuthenticationWebAuthn) AddDeviceStart(_ string, _ *http.Request) (*WebAuthnTransactionResponse, error) {
+	return m.AddDeviceWebAuthnStartResponseTransaction, m.AddDeviceWebAuthnStartResponseError
+}
+
+func (m MockDescopeAuthenticationWebAuthn) AddDeviceFinish(_ *WebAuthnFinishRequest, _ http.ResponseWriter) error {
+	return m.AddDeviceWebAuthnFinishResponseError
+}
+
+func (m MockDescopeAuthenticationWebAuthn) AddDeviceFinishWithOptions(_ *WebAuthnFinishRequest, _ ...Option) error {
+	return m.AddDeviceWebAuthnFinishResponseError
 }

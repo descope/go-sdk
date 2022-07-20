@@ -67,3 +67,32 @@ func (auth *webAuthn) SignInFinishWithOptions(request *WebAuthnFinishRequest, op
 	}
 	return auth.generateAuthenticationInfo(res, options...)
 }
+
+func (auth *webAuthn) AddDeviceStart(identifier string, r *http.Request) (*WebAuthnTransactionResponse, error) {
+	if identifier == "" {
+		return nil, errors.NewInvalidArgumentError("identifier")
+	}
+
+	pswd, err := getValidRefreshToken(r)
+	if err != nil {
+		return nil, err
+	}
+
+	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnAddDeviceStart(), authenticationRequestBody{ExternalID: identifier}, nil, pswd)
+	if err != nil {
+		return nil, err
+	}
+
+	webAuthnResponse := &WebAuthnTransactionResponse{}
+	err = utils.Unmarshal([]byte(res.BodyStr), webAuthnResponse)
+	return webAuthnResponse, err
+}
+
+func (auth *webAuthn) AddDeviceFinish(request *WebAuthnFinishRequest, w http.ResponseWriter) error {
+	return auth.AddDeviceFinishWithOptions(request, WithResponseOption(w))
+}
+
+func (auth *webAuthn) AddDeviceFinishWithOptions(request *WebAuthnFinishRequest, options ...Option) error {
+	_, err := auth.client.DoPostRequest(api.Routes.WebAuthnAddDeviceFinish(), request, nil, "")
+	return err
+}

@@ -43,6 +43,8 @@ var (
 			webauthnSignupFinish     string
 			webauthnSigninStart      string
 			webauthnSigninFinish     string
+			webauthnAddDeviceStart   string
+			webauthnAddDeviceFinish  string
 			getMagicLinkSession      string
 			updateUserEmailMagicLink string
 			updateUserEmailOTP       string
@@ -63,10 +65,12 @@ var (
 			oauthStart:               "oauth/authorize",
 			exchangeToken:            "auth/exchange",
 			samlStart:                "auth/saml/authorize",
-			webauthnSigninStart:      "webauthn/signin/start",
-			webauthnSigninFinish:     "webauthn/signin/finish",
 			webauthnSignupStart:      "webauthn/signup/start",
 			webauthnSignupFinish:     "webauthn/signup/finish",
+			webauthnSigninStart:      "webauthn/signin/start",
+			webauthnSigninFinish:     "webauthn/signin/finish",
+			webauthnAddDeviceStart:   "webauthn/device/add/start",
+			webauthnAddDeviceFinish:  "webauthn/device/add/finish",
 			getMagicLinkSession:      "auth/magiclink/session",
 			updateUserEmailMagicLink: "user/update/email/magiclink",
 			updateUserEmailOTP:       "user/update/email/otp",
@@ -100,6 +104,8 @@ type endpoints struct {
 		webauthnSignupFinish     string
 		webauthnSigninStart      string
 		webauthnSigninFinish     string
+		webauthnAddDeviceStart   string
+		webauthnAddDeviceFinish  string
 		getMagicLinkSession      string
 		updateUserEmailMagicLink string
 		updateUserEmailOTP       string
@@ -165,6 +171,12 @@ func (e *endpoints) WebAuthnSigninStart() string {
 }
 func (e *endpoints) WebAuthnSigninFinish() string {
 	return path.Join(e.version, e.auth.webauthnSigninFinish)
+}
+func (e *endpoints) WebAuthnAddDeviceStart() string {
+	return path.Join(e.version, e.auth.webauthnAddDeviceStart)
+}
+func (e *endpoints) WebAuthnAddDeviceFinish() string {
+	return path.Join(e.version, e.auth.webauthnAddDeviceFinish)
 }
 func (e *endpoints) GetMagicLinkSession() string {
 	return path.Join(e.version, e.auth.getMagicLinkSession)
