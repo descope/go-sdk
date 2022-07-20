@@ -108,6 +108,8 @@ type MockDescopeAuthentication struct {
 	MockDescopeAuthenticationTOTP
 	MockDescopeAuthenticationWebAuthn
 
+	AssertLogout func(r *http.Request)
+
 	ValidateSessionResponseNotOK bool
 	ValidateSessionResponseInfo  *Token
 	ValidateSessionResponseError error
@@ -352,11 +354,17 @@ func (m MockDescopeAuthentication) ValidateSessionWithOptions(_ *http.Request, _
 	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseInfo, m.ValidateSessionResponseError
 }
 
-func (m MockDescopeAuthentication) Logout(_ *http.Request, _ http.ResponseWriter) error {
+func (m MockDescopeAuthentication) Logout(r *http.Request, _ http.ResponseWriter) error {
+	if m.AssertLogout != nil {
+		m.AssertLogout(r)
+	}
 	return m.LogoutResponseError
 }
 
-func (m MockDescopeAuthentication) LogoutWithOptions(_ *http.Request, _ ...Option) error {
+func (m MockDescopeAuthentication) LogoutWithOptions(r *http.Request, _ ...Option) error {
+	if m.AssertLogout != nil {
+		m.AssertLogout(r)
+	}
 	return m.LogoutResponseError
 }
 
