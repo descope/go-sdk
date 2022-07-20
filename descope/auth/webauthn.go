@@ -88,11 +88,7 @@ func (auth *webAuthn) AddDeviceStart(identifier string, r *http.Request) (*WebAu
 	return webAuthnResponse, err
 }
 
-func (auth *webAuthn) AddDeviceFinish(request *WebAuthnFinishRequest, w http.ResponseWriter) error {
-	return auth.AddDeviceFinishWithOptions(request, WithResponseOption(w))
-}
-
-func (auth *webAuthn) AddDeviceFinishWithOptions(request *WebAuthnFinishRequest, options ...Option) error {
+func (auth *webAuthn) AddDeviceFinish(request *WebAuthnFinishRequest) error {
 	_, err := auth.client.DoPostRequest(api.Routes.WebAuthnAddDeviceFinish(), request, nil, "")
 	return err
 }

@@ -102,7 +102,6 @@ func TestWebAuthnAddDeviceFinish(t *testing.T) {
 	expectedResponse := &WebAuthnFinishRequest{TransactionID: "a"}
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	w := httptest.NewRecorder()
-	err = a.WebAuthn().AddDeviceFinish(expectedResponse, w)
+	err = a.WebAuthn().AddDeviceFinish(expectedResponse)
 	require.NoError(t, err)
 }

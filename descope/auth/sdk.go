@@ -196,14 +196,9 @@ type WebAuthn interface {
 	// Request is needed to obtain JWT and send it to Descope, for verification
 	// returns a transaction id response on success and error upon failure.
 	AddDeviceStart(identifier string, request *http.Request) (*WebAuthnTransactionResponse, error)
-	// AddDeviceFinish - Use to finish an add webauthn device process with a given transaction id and credentials after been signed
-	// by the credentials navigator.
-	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
-	// This is a shortcut for AddDeviceFinishWithOptions(finishRequest, WithResponseOption(w))
-	AddDeviceFinish(finishRequest *WebAuthnFinishRequest, w http.ResponseWriter) error
 	// AddDeviceFinishWithOptions - Use to finish an add webauthn device process with a given transaction id and credentials after been signed
 	// by the credentials navigator.
-	AddDeviceFinishWithOptions(finishRequest *WebAuthnFinishRequest, options ...Option) error
+	AddDeviceFinish(finishRequest *WebAuthnFinishRequest) error
 }
 
 type Authentication interface {

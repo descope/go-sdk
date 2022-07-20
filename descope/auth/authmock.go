@@ -388,10 +388,6 @@ func (m MockDescopeAuthenticationWebAuthn) AddDeviceStart(_ string, _ *http.Requ
 	return m.AddDeviceWebAuthnStartResponseTransaction, m.AddDeviceWebAuthnStartResponseError
 }
 
-func (m MockDescopeAuthenticationWebAuthn) AddDeviceFinish(_ *WebAuthnFinishRequest, _ http.ResponseWriter) error {
-	return m.AddDeviceWebAuthnFinishResponseError
-}
-
-func (m MockDescopeAuthenticationWebAuthn) AddDeviceFinishWithOptions(_ *WebAuthnFinishRequest, _ ...Option) error {
+func (m MockDescopeAuthenticationWebAuthn) AddDeviceFinish(_ *WebAuthnFinishRequest) error {
 	return m.AddDeviceWebAuthnFinishResponseError
 }
