@@ -150,11 +150,17 @@ type User struct {
 	Email string `json:"email,omitempty"`
 }
 
+type WebauthnUserRequest struct {
+	ExternalID string `json:"externalId,omitempty"`
+	Name       string `json:"name,omitempty"`
+	Icon       string `json:"icon,omitempty"`
+}
+
 type UserResponse struct {
 	User          `json:",inline"`
-	ExternalID    string `json:"externalId,omitempty"`
-	VerifiedEmail bool   `json:"verifiedEmail,omitempty"`
-	VerifiedPhone bool   `json:"verifiedPhone,omitempty"`
+	ExternalIDs   []string `json:"externalIds,omitempty"`
+	VerifiedEmail bool     `json:"verifiedEmail,omitempty"`
+	VerifiedPhone bool     `json:"verifiedPhone,omitempty"`
 }
 
 type authenticationRequestBody struct {
@@ -170,7 +176,7 @@ type authenticationSignUpRequestBody struct {
 }
 
 type authenticationWebAuthnSignUpRequestBody struct {
-	User *UserResponse `json:"user"`
+	User *WebauthnUserRequest `json:"user"`
 }
 
 type authenticationVerifyRequestBody struct {
