@@ -5,6 +5,7 @@ import (
 	goErrors "errors"
 	"net/http"
 	"path"
+	"strings"
 	"time"
 
 	"github.com/descope/go-sdk/descope/api"
@@ -117,9 +118,10 @@ func (auth *authenticationService) ValidateSessionWithOptions(request *http.Requ
 		return false, nil, errors.MissingProviderError
 	}
 
+	// Allow empty refresh token if all we want is to validate the session token
 	sessionToken, refreshToken := provideTokens(request)
-	if refreshToken == "" || sessionToken == "" {
-		logger.LogDebug("unable to find tokens from cookies")
+	if sessionToken == "" {
+		logger.LogDebug("unable to find token from cookies")
 		return false, nil, nil
 	}
 
@@ -129,7 +131,7 @@ func (auth *authenticationService) ValidateSessionWithOptions(request *http.Requ
 // AuthenticationMiddleware - middleware used to validate session and invoke if provided a failure and
 // success callbacks after calling ValidateSession().
 // onFailure will be called when the authentication failed, if empty, will write unauthorized (401) on the response writer.
-// onSuccess will be called when the authentication suceeded, if empty, it will generate a new context with the descope user id associated with the given token and runs next.
+// onSuccess will be called when the authentication succeeded, if empty, it will generate a new context with the descope user id associated with the given token and runs next.
 func AuthenticationMiddleware(auth Authentication, onFailure func(http.ResponseWriter, *http.Request, error), onSuccess func(http.ResponseWriter, *http.Request, http.Handler, *Token)) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -162,6 +164,9 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 	}
 	if err != nil {
 		// check refresh token
+		if refreshToken == "" {
+			return false, nil, err
+		}
 		_, err := auth.validateJWT(refreshToken)
 		if ok, err := validateTokenError(err); !ok {
 			return false, nil, err
@@ -318,8 +323,17 @@ func createCookie(token *Token) *http.Cookie {
 
 func provideTokens(r *http.Request) (string, string) {
 	sessionToken := ""
-	if sessionCookie, _ := r.Cookie(SessionCookieName); sessionCookie != nil {
-		sessionToken = sessionCookie.Value
+	// First, check the header for Bearer token
+	// Header takes precedence over cookie
+	reqToken := r.Header.Get(AuthorizationHeaderName)
+	if splitToken := strings.Split(reqToken, BearerAuthorizationPrefix); len(splitToken) == 2 {
+		sessionToken = splitToken[1]
+	}
+
+	if sessionToken == "" {
+		if sessionCookie, _ := r.Cookie(SessionCookieName); sessionCookie != nil {
+			sessionToken = sessionCookie.Value
+		}
 	}
 
 	refreshCookie, err := r.Cookie(RefreshCookieName)

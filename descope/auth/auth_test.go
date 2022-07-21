@@ -247,7 +247,7 @@ func TestValidateSessionFailWithInvalidKey(t *testing.T) {
 	require.NoError(t, err)
 	ok, _, err := a.validateSession(jwtTokenValid, "")
 	require.Error(t, err)
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.Contains(t, err.Error(), "key provider 0 failed")
 	require.False(t, ok)
 	require.Zero(t, count)
 }
@@ -257,7 +257,17 @@ func TestValidateSessionRequest(t *testing.T) {
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenValid})
-	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+	ok, token, err := a.ValidateSessionWithOptions(request)
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.EqualValues(t, jwtTokenValid, token.JWT)
+}
+
+func TestValidateSessionRequestHeader(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.Header.Add(AuthorizationHeaderName, BearerAuthorizationPrefix+jwtTokenValid)
 	ok, token, err := a.ValidateSessionWithOptions(request)
 	require.NoError(t, err)
 	require.True(t, ok)
@@ -268,15 +278,8 @@ func TestValidateSessionRequestMissingCookie(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
-	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenValid})
-	ok, cookies, err := a.ValidateSessionWithOptions(request)
-	require.NoError(t, err)
-	require.False(t, ok)
-	require.Empty(t, cookies)
-
-	request = &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	ok, cookies, err = a.ValidateSessionWithOptions(request)
+	ok, cookies, err := a.ValidateSessionWithOptions(request)
 	require.NoError(t, err)
 	require.False(t, ok)
 	require.Empty(t, cookies)
