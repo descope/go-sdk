@@ -16,8 +16,10 @@ func (auth *webAuthn) SignUpStart(identifier string, user *User) (*WebAuthnTrans
 	if user == nil {
 		user = &User{}
 	}
-	uRes := &UserResponse{User: *user}
-	uRes.ExternalID = identifier
+	uRes := &WebauthnUserRequest{ExternalID: identifier}
+	if user != nil {
+		uRes.Name = user.Name
+	}
 	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignupStart(), authenticationWebAuthnSignUpRequestBody{User: uRes}, nil, "")
 	if err != nil {
 		return nil, err
