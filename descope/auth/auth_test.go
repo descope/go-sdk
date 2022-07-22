@@ -19,10 +19,11 @@ import (
 )
 
 const (
-	jwtTokenValid    = `eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzM4NCIsImtpZCI6ImU0YTU3Y2M5ZGZiNDAyYTNlNTNjNDJhNjQyMmY3M2FmIiwiZXhwIjoyNjU2MjU4NjkxfQ.eyJjb29raWVEb21haW4iOiIiLCJjb29raWVFeHBpcmF0aW9uIjoxOTk3MTkwOTY4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEUyIsImNvb2tpZVBhdGgiOiIvIiwiZXhwIjoxOTU3MTkwOTY4LCJpYXQiOjE2NTcxOTAzNjgsImlzcyI6InRlc3QiLCJzdWIiOiJleHRlcm5hbGlkIn0.whK9QcEmGRSghYv_Orhgg3ln_XaJs7efTbsSneWAf-QrT_ASo1s8pwkjgHYL-LtU7sAEdTGl1l1z49CNoEN7B6GUYOhwu_d8emLrTcpxgfnYlzhn_4wfuvi6gfOdgTPjbfb-0Hw9Gq8vsjziq37f6wkDurMF5HFhl0rCM43ywvZT6ocT1Fy4fNyCHa5ijf4-xNYut6AU23AauxE0ztOnLRzebLz_3kLB4cMqGQEXZC_uGyEu3O283JkaY-hYKJ05gt_8ltYw4vCu_IHSN2xHZYgC977XdQwWIULWZip_JYmO1DiGRTXXuxNqtPk6hV8HSkYtZoI7TxpiY95sR4abXtn6vzU6InUA1_fUfyAmyjBtr03KI9opTG9UTr-blMlQgKke3w_aVgHAJAYTFSKlniYcUyLyuDmtclQfUveaBQxVYfUFU29T4D6XK-l1epM3jBkKeSHfqB1FPZO4dfX1XbvwGpLzAoERwo6l9XjoZzJHXIAIix4UdZx_GBrN3hDc`
-	jwtTokenExpired  = `eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzM4NCIsImtpZCI6ImU0YTU3Y2M5ZGZiNDAyYTNlNTNjNDJhNjQyMmY3M2FmIn0.eyJjb29raWVOYW1lIjoiRFMiLCJleHAiOjEyNTYyNTg2OTF9.AvU50pkQt8F000JqpVy7vCbcV-pwGqyi_GENqmmqrRMVswk5Y5VfSjP7axBnZ55xJ85sP6ozawbs_g1FdGtzvgrHEIJVRJSe73EwWTV9yZwiUD8kU-QAtUqP_Vk-rf-3zzE1lmI3DubXZYGTE4tMUsIQ-2NI3-Q9R89yzjLMv9z7_0TaDB28LMCJPlmjTA-7x_FoWqxmCs0z00dZ6sthtppbo25DiO3EW7D35gE1CPOgITjktWSRt035TR0iV91YoPyPAkmEo3mxI4XXu-1fLcZdFFTZOOU4TmA-_wbXevf0kIaQ9Kl4jPEK9lSUHEhLG59nu_0aPVxUXqE-Y8Qo7Ed-Gri5fPhZarDtMRRpVc1pc7D8zYMyKEHvCqkdjV9MDfIK3eCVuCGUxytgEe4Px-sgPSS_7Ne8hZ1T7K3TbcoMlRl--fI6rbmcOj-2srCcofr9NX2pxeUdWU8g6ZfFFxADSfJNb0MbZz55QGN8yz-54jZR3nT7i7kXX0ylrDQw`
-	jwtTokenNotYet   = `eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzM4NCIsImtpZCI6ImU0YTU3Y2M5ZGZiNDAyYTNlNTNjNDJhNjQyMmY3M2FmIn0.eyJjb29raWVOYW1lIjoiRFMiLCJuYmYiOjI2NTYyNTg2OTF9.dvkNfmyUgbhlwv2eW_qC8VfcKYaMKaS8aDM2XdgYxnLuOhQUNnlY87H8bQGw7RChvqyJtciFo74KFhTZkAWqKDpdisIPDnydJ7SzY-NOv6Mtg0DAl99nDuItsYDoSIHVV_3h6feZC353ziQIEoktPf9dnyYpN0IumGMg-g5ww7foDglpwbIP9c6SxxDIOIMh5fGlT7tG79-i_QJ3zsDuYo0v8aNFd7QcP5tA8Kj9Tthp2pHTacu0WDSq39p6XEvDaKiLRhhVOfyd_jTTC2xzmkXRzt2KOy1ObRvhOiItQCoISn66QO4dm8febSagA2_GtDd1VYxwT0zW7usK4CwKfoSej_UMp-BZZ8Q1fDqMWfG9qWjeinfty7ePQwV2Y_kiNCjyTvKlbPnTINL_VXemb0pIaAITfROlzWtXGGnP3soFczgWe4WXC_Q7wx3uCkyN5BIKLajxCF3EAfPzDi7YbYnQXEk-imGoqWpYXw0SXMkYo2wkd9Qul4uXH_mGh50l`
-	unknownPublicKey = `{
+	jwtTokenValid         = `eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzM4NCIsImtpZCI6ImU0YTU3Y2M5ZGZiNDAyYTNlNTNjNDJhNjQyMmY3M2FmIiwiZXhwIjoyNjU2MjU4NjkxfQ.eyJjb29raWVEb21haW4iOiJteS1kb21haW4iLCJjb29raWVFeHBpcmF0aW9uIjoxOTk3MTkwOTY4LCJjb29raWVNYXhBZ2UiOjI1OTE5OTksImNvb2tpZU5hbWUiOiJEUyIsImNvb2tpZVBhdGgiOiIvbXktcGF0aCIsImV4cCI6MTk1NzE5MDk2OCwiaWF0IjoxNjU3MTkwMzY4LCJpc3MiOiJ0ZXN0Iiwic3ViIjoiZXh0ZXJuYWxpZCJ9.IJ3dwo0okmhY_nwiTSXKCZp4UJLeMfykm0RgBpFXDxipRKhT72iAIamyh5gD75SLA13CFGIIukNEY4TchNpnwTaoHLkVShUOGoblycdpp_Ym4odOWrNscO2adsGFiPBEuVYbjs-b77pqRcEfxB-yHzEPzN1JHleqCToqPJxspYLc3Q9Gy1JfwAfje6HeMJZe6oNAukSoiiEo_HoFxwxohBmWHjLsYJxQMXwb8_oDvaCu3iGwn82Ew63AATk2OClcquPisxPgIyr98jGmH-OHwCq3Zy14VhRy_qItwj-y_WGwsIaDiNHLbrRphV7hqS9_eYpB5_o9rUL0G6wIyMPY2WnxhYKcPawwCzy-oZuiiVsIx4FJRIFZwYOwbVef26mcfR3sIhu2DC26_lssJ0eUz68YQPp2g2ig9DYPJdYx5hP3p_QeoA36rfiAsOpzqkEHfJFKpGjvnLO82PtoBfrZZHXS22lUcdB9bIAwbqyv9SrpLjTpOXJa6IsYmX0bvlHX`
+	jwtTokenValidNoClaims = `eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzM4NCIsImtpZCI6ImU0YTU3Y2M5ZGZiNDAyYTNlNTNjNDJhNjQyMmY3M2FmIiwiZXhwIjoyNjU2MjU4NjkxfQ.e30.BGNbNtAYAoPwVdjPAZky9ElDdI0xr1lOS_1FMGB5Z7hfa1_F26aqE_C6-IjOb8PVWLSdHMS9oauMRTuClukkDfUvhlaVzKMamoLWKz4tANToF2D3qLk6m5DwrUTFpvsE58HuFaAS1oWhQ4ojD3c0_VfKwzX9rF_x43C_uW4IVkL7QGfYrMpYmgdmOmyfRyv9gGbfkTo7rPxt0161c31kMqUwBPcC8A0K62i7MFo1HAFrZXeEq0WsT7Zzuj0rrA9wzQ0mtoJRxuAdyKJi7pn94dZR9NOs7DraGCBjbN93KSQVPB0g3XBqR_xrMwNe3Dq-aAK8YFpluLy8MyvFviftH7hBeo_Lj0sUZDAecHQ4KfPBihmpYObuVi9DamF3hbzCnVl3TP1BVtdR0h_CzddYyww-CrEhTjoOJw27I47S3j8gE0gR_K-9kdCJomNn2vfY2XzJeVcDtk79NP53xG1-9koVr2zaKQ1F3Dv8uTuiekX01qQGy01lGVCZss0CTVXF`
+	jwtTokenExpired       = `eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzM4NCIsImtpZCI6ImU0YTU3Y2M5ZGZiNDAyYTNlNTNjNDJhNjQyMmY3M2FmIn0.eyJjb29raWVOYW1lIjoiRFMiLCJleHAiOjEyNTYyNTg2OTF9.AvU50pkQt8F000JqpVy7vCbcV-pwGqyi_GENqmmqrRMVswk5Y5VfSjP7axBnZ55xJ85sP6ozawbs_g1FdGtzvgrHEIJVRJSe73EwWTV9yZwiUD8kU-QAtUqP_Vk-rf-3zzE1lmI3DubXZYGTE4tMUsIQ-2NI3-Q9R89yzjLMv9z7_0TaDB28LMCJPlmjTA-7x_FoWqxmCs0z00dZ6sthtppbo25DiO3EW7D35gE1CPOgITjktWSRt035TR0iV91YoPyPAkmEo3mxI4XXu-1fLcZdFFTZOOU4TmA-_wbXevf0kIaQ9Kl4jPEK9lSUHEhLG59nu_0aPVxUXqE-Y8Qo7Ed-Gri5fPhZarDtMRRpVc1pc7D8zYMyKEHvCqkdjV9MDfIK3eCVuCGUxytgEe4Px-sgPSS_7Ne8hZ1T7K3TbcoMlRl--fI6rbmcOj-2srCcofr9NX2pxeUdWU8g6ZfFFxADSfJNb0MbZz55QGN8yz-54jZR3nT7i7kXX0ylrDQw`
+	jwtTokenNotYet        = `eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzM4NCIsImtpZCI6ImU0YTU3Y2M5ZGZiNDAyYTNlNTNjNDJhNjQyMmY3M2FmIn0.eyJjb29raWVOYW1lIjoiRFMiLCJuYmYiOjI2NTYyNTg2OTF9.dvkNfmyUgbhlwv2eW_qC8VfcKYaMKaS8aDM2XdgYxnLuOhQUNnlY87H8bQGw7RChvqyJtciFo74KFhTZkAWqKDpdisIPDnydJ7SzY-NOv6Mtg0DAl99nDuItsYDoSIHVV_3h6feZC353ziQIEoktPf9dnyYpN0IumGMg-g5ww7foDglpwbIP9c6SxxDIOIMh5fGlT7tG79-i_QJ3zsDuYo0v8aNFd7QcP5tA8Kj9Tthp2pHTacu0WDSq39p6XEvDaKiLRhhVOfyd_jTTC2xzmkXRzt2KOy1ObRvhOiItQCoISn66QO4dm8febSagA2_GtDd1VYxwT0zW7usK4CwKfoSej_UMp-BZZ8Q1fDqMWfG9qWjeinfty7ePQwV2Y_kiNCjyTvKlbPnTINL_VXemb0pIaAITfROlzWtXGGnP3soFczgWe4WXC_Q7wx3uCkyN5BIKLajxCF3EAfPzDi7YbYnQXEk-imGoqWpYXw0SXMkYo2wkd9Qul4uXH_mGh50l`
+	unknownPublicKey      = `{
 		"crv": "P-384",
 		"key_ops": [
 		  "verify"
@@ -387,9 +388,37 @@ func TestLogout(t *testing.T) {
 	c1 := w.Result().Cookies()[0]
 	assert.Empty(t, c1.Value)
 	assert.EqualValues(t, SessionCookieName, c1.Name)
+	assert.EqualValues(t, "/my-path", c1.Path)
+	assert.EqualValues(t, "my-domain", c1.Domain)
 	c2 := w.Result().Cookies()[1]
 	assert.Empty(t, c2.Value)
 	assert.EqualValues(t, RefreshCookieName, c2.Name)
+	assert.EqualValues(t, "/my-path", c2.Path)
+	assert.EqualValues(t, "my-domain", c2.Domain)
+}
+
+func TestLogoutNoClaims(t *testing.T) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK}, nil
+	})
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValidNoClaims})
+
+	w := httptest.NewRecorder()
+	err = a.Logout(request, w)
+	require.NoError(t, err)
+	require.Len(t, w.Result().Cookies(), 2)
+	c1 := w.Result().Cookies()[0]
+	assert.Empty(t, c1.Value)
+	assert.EqualValues(t, SessionCookieName, c1.Name)
+	assert.EqualValues(t, "/", c1.Path)
+	assert.EqualValues(t, "", c1.Domain)
+	c2 := w.Result().Cookies()[1]
+	assert.Empty(t, c2.Value)
+	assert.EqualValues(t, RefreshCookieName, c2.Name)
+	assert.EqualValues(t, "/", c2.Path)
+	assert.EqualValues(t, "", c2.Domain)
 }
 
 func TestLogoutFailure(t *testing.T) {
@@ -399,6 +428,16 @@ func TestLogoutFailure(t *testing.T) {
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+
+	err = a.Logout(request, nil)
+	require.Error(t, err)
+}
+
+func TestLogoutInvalidRefreshToken(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenExpired})
 
 	err = a.Logout(request, nil)
 	require.Error(t, err)

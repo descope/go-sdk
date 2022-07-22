@@ -90,21 +90,38 @@ func (auth *authenticationService) LogoutWithOptions(request *http.Request, opti
 		return errors.RefreshTokenError
 	}
 
+	token, err := auth.validateJWT(refreshToken)
+	if err != nil {
+		logger.LogDebug("invalid refresh token")
+		return errors.RefreshTokenError
+	}
+
 	httpResponse, err := auth.client.DoGetRequest(api.Routes.Logout(), &api.HTTPRequest{}, refreshToken)
 	if err != nil {
 		return err
 	}
 	cookies := httpResponse.Res.Cookies()
+
+	path := "/"
+	domain := ""
+	if token.Claims != nil {
+		if pathFromClaims, ok := token.Claims[claimAttributePath].(string); ok {
+			path = pathFromClaims
+		}
+		if domainFromClaims, ok := token.Claims[claimAttributeDomain].(string); ok {
+			domain = domainFromClaims
+		}
+	}
 	// delete cookies by not specifying max-age (e.i. max-age=0)
 	cookies = append(cookies, createCookie(&Token{JWT: "", Claims: map[string]interface{}{
 		claimAttributeName:   SessionCookieName,
-		claimAttributePath:   "/",
-		claimAttributeDomain: "",
+		claimAttributePath:   path,
+		claimAttributeDomain: domain,
 	}}))
 	cookies = append(cookies, createCookie(&Token{JWT: "", Claims: map[string]interface{}{
 		claimAttributeName:   RefreshCookieName,
-		claimAttributePath:   "/",
-		claimAttributeDomain: "",
+		claimAttributePath:   path,
+		claimAttributeDomain: domain,
 	}}))
 	Options(options).SetCookies(cookies)
 	return nil
