@@ -26,7 +26,7 @@ func (auth *saml) StartWithOptions(tenant string, returnURL string, options ...O
 		return "", errors.NewInvalidArgumentError("tenant")
 	}
 	m := map[string]string{
-		"tenant": string(tenant),
+		"tenantID": string(tenant),
 	}
 	if len(returnURL) > 0 {
 		m["redirectURL"] = returnURL
