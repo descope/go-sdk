@@ -90,20 +90,38 @@ func (auth *authenticationService) LogoutWithOptions(request *http.Request, opti
 		return errors.RefreshTokenError
 	}
 
+	token, err := auth.validateJWT(refreshToken)
+	if err != nil {
+		logger.LogDebug("invalid refresh token")
+		return errors.RefreshTokenError
+	}
+
 	httpResponse, err := auth.client.DoGetRequest(api.Routes.Logout(), &api.HTTPRequest{}, refreshToken)
 	if err != nil {
 		return err
 	}
 	cookies := httpResponse.Res.Cookies()
+
+	path := "/"
+	domain := ""
+	if token.Claims != nil {
+		if pathFromClaims, ok := token.Claims[claimAttributePath].(string); ok {
+			path = pathFromClaims
+		}
+		if domainFromClaims, ok := token.Claims[claimAttributeDomain].(string); ok {
+			domain = domainFromClaims
+		}
+	}
+	// delete cookies by not specifying max-age (e.i. max-age=0)
 	cookies = append(cookies, createCookie(&Token{JWT: "", Claims: map[string]interface{}{
-		"cookieName": SessionCookieName,
-		"path":       "/",
-		"domain":     "",
+		claimAttributeName:   SessionCookieName,
+		claimAttributePath:   path,
+		claimAttributeDomain: domain,
 	}}))
 	cookies = append(cookies, createCookie(&Token{JWT: "", Claims: map[string]interface{}{
-		"cookieName": RefreshCookieName,
-		"path":       "/",
-		"domain":     "",
+		claimAttributeName:   RefreshCookieName,
+		claimAttributePath:   path,
+		claimAttributeDomain: domain,
 	}}))
 	Options(options).SetCookies(cookies)
 	return nil
@@ -301,11 +319,11 @@ func getValidRefreshToken(r *http.Request) (string, error) {
 
 func createCookie(token *Token) *http.Cookie {
 	if token != nil {
-		path, _ := token.Claims["cookiePath"].(string)
-		domain, _ := token.Claims["cookieDomain"].(string)
-		name, _ := token.Claims["cookieName"].(string)
-		maxAge, _ := token.Claims["cookieMaxAge"].(float64)
-		expiration, _ := token.Claims["cookieExpiration"].(float64)
+		path, _ := token.Claims[claimAttributePath].(string)
+		domain, _ := token.Claims[claimAttributeDomain].(string)
+		name, _ := token.Claims[claimAttributeName].(string)
+		maxAge, _ := token.Claims[claimAttributeMaxAge].(float64)
+		expiration, _ := token.Claims[claimAttributeExpiration].(float64)
 		return &http.Cookie{
 			Path:     path,
 			Domain:   domain,

@@ -333,6 +333,12 @@ const (
 
 	ContextUserIDProperty               = "DESCOPE_USER_ID"
 	ContextUserIDPropertyKey ContextKey = ContextUserIDProperty
+
+	claimAttributeName       = "cookieName"
+	claimAttributeMaxAge     = "cookieMaxAge"
+	claimAttributeExpiration = "cookieExpiration"
+	claimAttributeDomain     = "cookieDomain"
+	claimAttributePath       = "cookiePath"
 )
 
 var (
