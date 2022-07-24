@@ -98,7 +98,7 @@
         displayName: "John Appleseed",
       }
 
-      const startResponse = await serverPost('webauthn/signup/start', user)
+      const startResponse = await serverPost(`webauthn/signup/start?origin=${encodeURIComponent(document.location.origin)}`, user)
       console.log('Received register start response', startResponse)
 
       const credentialOptions = decodeCredentialOptions(startResponse.options)
@@ -114,7 +114,7 @@
     }
 
     async function login(username) {
-      const startResponse = await serverPost(`webauthn/signin/start?id=${username}`)
+      const startResponse = await serverPost(`webauthn/signin/start?id=${encodeURIComponent(username)}&origin=${encodeURIComponent(document.location.origin)}`)
       console.log('Received login start response', startResponse)
 
       const assertionOptions = decodeAssertionOptions(startResponse.options)

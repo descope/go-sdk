@@ -76,7 +76,7 @@ func main() {
 			return
 		}
 
-		res, err := client.Auth.WebAuthn().SignUpStart(t.Name, t)
+		res, err := client.Auth.WebAuthn().SignUpStart(t.Name, t, c.Query("origin"))
 		if err != nil {
 			setError(c, err.Error())
 		}
@@ -100,7 +100,7 @@ func main() {
 	})
 
 	r.POST("/webauthn/signin/start", func(c *gin.Context) {
-		res, err := client.Auth.WebAuthn().SignInStart(c.Query("id"))
+		res, err := client.Auth.WebAuthn().SignInStart(c.Query("id"), c.Query("origin"))
 		if err != nil {
 			setError(c, err.Error())
 		}
