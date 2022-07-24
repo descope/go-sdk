@@ -248,7 +248,7 @@ func handleWebauthnSigninFinish(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleWebauthnSigninStart(w http.ResponseWriter, r *http.Request) {
-	res, err := client.Auth.WebAuthn().SignInStart(getQuery(r, "id"))
+	res, err := client.Auth.WebAuthn().SignInStart(getQuery(r, "id"), getQuery(r, "origin"))
 	if err != nil {
 		setError(w, err.Error())
 	}
@@ -266,7 +266,7 @@ func handleWebauthnSignupStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := client.Auth.WebAuthn().SignUpStart(t.Name, t)
+	res, err := client.Auth.WebAuthn().SignUpStart(t.Name, t, getQuery(r, "origin"))
 	if err != nil {
 		setError(w, err.Error())
 	}
