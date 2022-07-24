@@ -20,7 +20,7 @@ func TestSignUpStart(t *testing.T) {
 		assert.EqualValues(t, "test2@test.com", req.User.Name)
 	}, expectedResponse))
 	require.NoError(t, err)
-	res, err := a.WebAuthn().SignUpStart("test@test.com", &User{Name: "test2@test.com"})
+	res, err := a.WebAuthn().SignUpStart("test@test.com", &User{Name: "test2@test.com"}, "https://example.com")
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedResponse.TransactionID, res.TransactionID)
 }
@@ -46,7 +46,7 @@ func TestSignInStart(t *testing.T) {
 		assert.EqualValues(t, "a", req.ExternalID)
 	}, expectedResponse))
 	require.NoError(t, err)
-	res, err := a.WebAuthn().SignInStart("a")
+	res, err := a.WebAuthn().SignInStart("a", "https://example.com")
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedResponse.TransactionID, res.TransactionID)
 }
@@ -54,7 +54,7 @@ func TestSignInStart(t *testing.T) {
 func TestSignInWebAuthnStartEmpty(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	res, err := a.WebAuthn().SignInStart("")
+	res, err := a.WebAuthn().SignInStart("", "https://example.com")
 	require.Error(t, err)
 	assert.Empty(t, res)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
@@ -83,7 +83,7 @@ func TestWebAuthnAddDeviceStart(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	res, err := a.WebAuthn().AddDeviceStart("test@test.com", r)
+	res, err := a.WebAuthn().AddDeviceStart("test@test.com", "https://example.com", r)
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedResponse.TransactionID, res.TransactionID)
 }
@@ -93,7 +93,7 @@ func TestWebAuthnAddDeviceStartEmpty(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	res, err := a.WebAuthn().AddDeviceStart("", r)
+	res, err := a.WebAuthn().AddDeviceStart("", "https://example.com", r)
 	require.Error(t, err)
 	assert.Empty(t, res)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)

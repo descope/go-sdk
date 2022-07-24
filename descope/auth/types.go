@@ -176,7 +176,18 @@ type authenticationSignUpRequestBody struct {
 }
 
 type authenticationWebAuthnSignUpRequestBody struct {
-	User *WebauthnUserRequest `json:"user"`
+	User   *WebauthnUserRequest `json:"user"`
+	Origin string               `json:"origin"`
+}
+
+type authenticationWebAuthnSignInRequestBody struct {
+	ExternalID string `json:"externalId,omitempty"`
+	Origin     string `json:"origin"`
+}
+
+type authenticationWebAuthnAddDeviceRequestBody struct {
+	ExternalID string `json:"externalId,omitempty"`
+	Origin     string `json:"origin"`
 }
 
 type authenticationVerifyRequestBody struct {

@@ -12,7 +12,7 @@ type webAuthn struct {
 	authenticationsBase
 }
 
-func (auth *webAuthn) SignUpStart(identifier string, user *User) (*WebAuthnTransactionResponse, error) {
+func (auth *webAuthn) SignUpStart(identifier string, user *User, origin string) (*WebAuthnTransactionResponse, error) {
 	if user == nil {
 		user = &User{}
 	}
@@ -20,7 +20,7 @@ func (auth *webAuthn) SignUpStart(identifier string, user *User) (*WebAuthnTrans
 	if user != nil {
 		uRes.Name = user.Name
 	}
-	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignupStart(), authenticationWebAuthnSignUpRequestBody{User: uRes}, nil, "")
+	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignupStart(), authenticationWebAuthnSignUpRequestBody{User: uRes, Origin: origin}, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -42,12 +42,12 @@ func (auth *webAuthn) SignUpFinishWithOptions(request *WebAuthnFinishRequest, op
 	return auth.generateAuthenticationInfo(res, options...)
 }
 
-func (auth *webAuthn) SignInStart(identifier string) (*WebAuthnTransactionResponse, error) {
+func (auth *webAuthn) SignInStart(identifier string, origin string) (*WebAuthnTransactionResponse, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
 
-	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSigninStart(), authenticationRequestBody{ExternalID: identifier}, nil, "")
+	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSigninStart(), authenticationWebAuthnSignInRequestBody{ExternalID: identifier, Origin: origin}, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func (auth *webAuthn) SignInFinishWithOptions(request *WebAuthnFinishRequest, op
 	return auth.generateAuthenticationInfo(res, options...)
 }
 
-func (auth *webAuthn) AddDeviceStart(identifier string, r *http.Request) (*WebAuthnTransactionResponse, error) {
+func (auth *webAuthn) AddDeviceStart(identifier string, origin string, r *http.Request) (*WebAuthnTransactionResponse, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
@@ -80,7 +80,7 @@ func (auth *webAuthn) AddDeviceStart(identifier string, r *http.Request) (*WebAu
 		return nil, err
 	}
 
-	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnAddDeviceStart(), authenticationRequestBody{ExternalID: identifier}, nil, pswd)
+	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnAddDeviceStart(), authenticationWebAuthnAddDeviceRequestBody{ExternalID: identifier, Origin: origin}, nil, pswd)
 	if err != nil {
 		return nil, err
 	}

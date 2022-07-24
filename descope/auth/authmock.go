@@ -368,7 +368,7 @@ func (m MockDescopeAuthentication) LogoutWithOptions(r *http.Request, _ ...Optio
 	return m.LogoutResponseError
 }
 
-func (m MockDescopeAuthenticationWebAuthn) SignUpStart(_ string, _ *User) (*WebAuthnTransactionResponse, error) {
+func (m MockDescopeAuthenticationWebAuthn) SignUpStart(_ string, _ *User, _ string) (*WebAuthnTransactionResponse, error) {
 	return m.SignUpWebAuthnStartResponseTransaction, m.SignUpWebAuthnStartResponseError
 }
 
@@ -380,7 +380,7 @@ func (m MockDescopeAuthenticationWebAuthn) SignUpFinishWithOptions(_ *WebAuthnFi
 	return m.SignUpWebAuthnFinishResponseInfo, m.SignUpWebAuthnFinishResponseError
 }
 
-func (m MockDescopeAuthenticationWebAuthn) SignInStart(string) (*WebAuthnTransactionResponse, error) {
+func (m MockDescopeAuthenticationWebAuthn) SignInStart(_ string, _ string) (*WebAuthnTransactionResponse, error) {
 	return m.SignInWebAuthnStartResponseTransaction, m.SignInWebAuthnStartResponseError
 }
 
@@ -392,7 +392,7 @@ func (m MockDescopeAuthenticationWebAuthn) SignInFinishWithOptions(_ *WebAuthnFi
 	return m.SignInWebAuthnFinishResponseInfo, m.SignInWebAuthnFinishResponseError
 }
 
-func (m MockDescopeAuthenticationWebAuthn) AddDeviceStart(_ string, _ *http.Request) (*WebAuthnTransactionResponse, error) {
+func (m MockDescopeAuthenticationWebAuthn) AddDeviceStart(_ string, _ string, _ *http.Request) (*WebAuthnTransactionResponse, error) {
 	return m.AddDeviceWebAuthnStartResponseTransaction, m.AddDeviceWebAuthnStartResponseError
 }
 

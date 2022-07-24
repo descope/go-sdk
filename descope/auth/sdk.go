@@ -169,8 +169,10 @@ type SAML interface {
 
 type WebAuthn interface {
 	// SignUpStart - Use to start an authentication process with webauthn for the new user argument.
+	// Origin is the origin of the URL for the web page where the webauthn operation is taking place, as returned
+	// by calling document.location.origin via javascript.
 	// returns a transaction id response on success and error upon failure.
-	SignUpStart(identifier string, user *User) (*WebAuthnTransactionResponse, error)
+	SignUpStart(identifier string, user *User, origin string) (*WebAuthnTransactionResponse, error)
 	// SignUpFinish - Use to finish an authentication process with a given transaction id and credentials after been signed
 	// by the credentials navigator.
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
@@ -181,8 +183,10 @@ type WebAuthn interface {
 	SignUpFinishWithOptions(finishRequest *WebAuthnFinishRequest, options ...Option) (*AuthenticationInfo, error)
 
 	// SignInStart - Use to start an authentication validation with webauthn for an existing user with the given identifier.
+	// Origin is the origin of the URL for the web page where the webauthn operation is taking place, as returned
+	// by calling document.location.origin via javascript.
 	// returns a transaction id response on successs and error upon failure.
-	SignInStart(identifier string) (*WebAuthnTransactionResponse, error)
+	SignInStart(identifier string, origin string) (*WebAuthnTransactionResponse, error)
 	// SignInFinish - Use to finish an authentication process with a given transaction id and credentials after been signed
 	// by the credentials navigator.
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
@@ -193,9 +197,11 @@ type WebAuthn interface {
 	SignInFinishWithOptions(finishRequest *WebAuthnFinishRequest, options ...Option) (*AuthenticationInfo, error)
 
 	// AddDeviceStart - Use to start an add webauthn device process for an existing user with the given identifier.
-	// Request is needed to obtain JWT and send it to Descope, for verification
+	// Request is needed to obtain JWT and send it to Descope, for verification.
+	// Origin is the origin of the URL for the web page where the webauthn operation is taking place, as returned
+	// by calling document.location.origin via javascript.
 	// returns a transaction id response on success and error upon failure.
-	AddDeviceStart(identifier string, request *http.Request) (*WebAuthnTransactionResponse, error)
+	AddDeviceStart(identifier string, origin string, request *http.Request) (*WebAuthnTransactionResponse, error)
 	// AddDeviceFinishWithOptions - Use to finish an add webauthn device process with a given transaction id and credentials after been signed
 	// by the credentials navigator.
 	AddDeviceFinish(finishRequest *WebAuthnFinishRequest) error
