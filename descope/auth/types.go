@@ -62,6 +62,12 @@ func WithResponseOption(w http.ResponseWriter) Option {
 	return newOption(responseOption{}, w)
 }
 
+// WithNoRedirectOption - adds a response option to supported functions to allow
+// providing the writer, but making sure that there will be no redirect header
+func WithNoRedirectOption(w http.ResponseWriter) Option {
+	return newOption(noRedirectOption{}, w)
+}
+
 type Option interface {
 	Kind() interface{}
 	Value() interface{}
@@ -129,6 +135,7 @@ func (options Options) CreateRedirect(url string) {
 }
 
 type responseOption struct{}
+type noRedirectOption struct{}
 
 func NewToken(JWT string, token jwt.Token) *Token {
 	if token == nil {
