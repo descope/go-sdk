@@ -108,7 +108,9 @@ func (p *provider) findKey(kid string) (jwk.Key, error) {
 		if key.KeyID() == kid {
 			return key, nil
 		}
-		return nil, errors.NewNoPublicKeyError()
+		err = errors.NewNoPublicKeyError()
+		logger.LogError("Provided public key does not match required public key", err)
+		return nil, err
 	}
 
 	if err := p.requestKeys(); err != nil {
@@ -118,7 +120,9 @@ func (p *provider) findKey(kid string) (jwk.Key, error) {
 
 	key, ok := p.keySet[kid]
 	if !ok {
-		return nil, errors.NewNoPublicKeyError()
+		err := errors.NewNoPublicKeyError()
+		logger.LogError("Required public key does not exists in key set (key set size [%d])", err, len(p.keySet))
+		return nil, err
 	}
 
 	return key, nil

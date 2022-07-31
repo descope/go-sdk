@@ -178,6 +178,7 @@ func AuthenticationMiddleware(auth Authentication, onFailure func(http.ResponseW
 func (auth *authenticationService) validateSession(sessionToken string, refreshToken string, options ...Option) (bool, *Token, error) {
 	token, err := auth.validateJWT(sessionToken)
 	if sessionToken != "" && !auth.publicKeysProvider.publicKeyExists() {
+		logger.LogError("Cannot validate session, no public key available", err)
 		return false, nil, errors.NewNoPublicKeyError()
 	}
 	if err != nil {
