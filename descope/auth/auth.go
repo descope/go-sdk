@@ -90,7 +90,7 @@ func (auth *authenticationService) LogoutWithOptions(request *http.Request, opti
 		return errors.RefreshTokenError
 	}
 
-	token, err := auth.validateJWT(refreshToken)
+	_, err := auth.validateJWT(refreshToken)
 	if err != nil {
 		logger.LogDebug("invalid refresh token")
 		return errors.RefreshTokenError
@@ -102,27 +102,27 @@ func (auth *authenticationService) LogoutWithOptions(request *http.Request, opti
 	}
 	cookies := httpResponse.Res.Cookies()
 
-	path := "/"
-	domain := ""
-	if token.Claims != nil {
-		if pathFromClaims, ok := token.Claims[claimAttributePath].(string); ok {
-			path = pathFromClaims
-		}
-		if domainFromClaims, ok := token.Claims[claimAttributeDomain].(string); ok {
-			domain = domainFromClaims
-		}
+	jwtResponse, err := auth.extractJWTResponse(httpResponse.BodyStr)
+	if err != nil {
+		return err
 	}
+	if jwtResponse == nil {
+		jwtResponse = &JWTResponse{}
+	}
+	if len(jwtResponse.CookiePath) == 0 {
+		jwtResponse.CookiePath = "/"
+	}
+	jwtResponse.CookieMaxAge = 0
+	jwtResponse.CookieExpiration = 0
+
 	// delete cookies by not specifying max-age (e.i. max-age=0)
-	cookies = append(cookies, createCookie(&Token{JWT: "", Claims: map[string]interface{}{
-		claimAttributeName:   SessionCookieName,
-		claimAttributePath:   path,
-		claimAttributeDomain: domain,
-	}}))
-	cookies = append(cookies, createCookie(&Token{JWT: "", Claims: map[string]interface{}{
-		claimAttributeName:   RefreshCookieName,
-		claimAttributePath:   path,
-		claimAttributeDomain: domain,
-	}}))
+	cookies = append(cookies, createCookie(&Token{
+		JWT:    "",
+		Claims: map[string]interface{}{claimAttributeName: SessionCookieName},
+	}, jwtResponse))
+	cookies = append(cookies, createCookie(&Token{JWT: "",
+		Claims: map[string]interface{}{claimAttributeName: RefreshCookieName},
+	}, jwtResponse))
 	Options(options).SetCookies(cookies)
 	return nil
 }
@@ -218,18 +218,31 @@ func (auth *authenticationsBase) extractJWTResponse(bodyStr string) (*JWTRespons
 	return &jRes, nil
 }
 
+func (auth *authenticationsBase) collectJwts(jwt string, tokens []*Token) ([]*Token, error) {
+	if len(jwt) == 0 {
+		return tokens, nil
+	}
+	token, err := auth.validateJWT(jwt)
+	if err != nil {
+		return nil, err
+	}
+	return append(tokens, token), nil
+}
+
 func (auth *authenticationsBase) extractTokens(jRes *JWTResponse) ([]*Token, error) {
 
-	if jRes == nil || len(jRes.JWTS) == 0 {
+	if jRes == nil {
 		return nil, nil
 	}
 	var tokens []*Token
-	for i := range jRes.JWTS {
-		token, err := auth.validateJWT(jRes.JWTS[i])
-		if err != nil {
-			return nil, err
-		}
-		tokens = append(tokens, token)
+
+	tokens, err := auth.collectJwts(jRes.RefreshJwt, tokens)
+	if err != nil {
+		return nil, err
+	}
+	tokens, err = auth.collectJwts(jRes.SessionJwt, tokens)
+	if err != nil {
+		return nil, err
 	}
 	return tokens, nil
 }
@@ -297,11 +310,11 @@ func (auth *authenticationsBase) generateAuthenticationInfo(httpResponse *api.HT
 	cookies := httpResponse.Res.Cookies()
 	var token *Token
 	for i := range tokens {
-		ck := createCookie(tokens[i])
+		ck := createCookie(tokens[i], jwtResponse)
 		if ck != nil {
 			cookies = append(cookies, ck)
 		}
-		if tokens[i].Claims["cookieName"] == SessionCookieName {
+		if tokens[i].Claims[claimAttributeName] == SessionCookieName {
 			token = tokens[i]
 		}
 	}
@@ -318,21 +331,18 @@ func getValidRefreshToken(r *http.Request) (string, error) {
 	return refreshToken, nil
 }
 
-func createCookie(token *Token) *http.Cookie {
+func createCookie(token *Token, jwtRes *JWTResponse) *http.Cookie {
+
 	if token != nil {
-		path, _ := token.Claims[claimAttributePath].(string)
-		domain, _ := token.Claims[claimAttributeDomain].(string)
 		name, _ := token.Claims[claimAttributeName].(string)
-		maxAge, _ := token.Claims[claimAttributeMaxAge].(float64)
-		expiration, _ := token.Claims[claimAttributeExpiration].(float64)
 		return &http.Cookie{
-			Path:     path,
-			Domain:   domain,
+			Path:     jwtRes.CookiePath,
+			Domain:   jwtRes.CookieDomain,
 			Name:     name,
 			Value:    token.JWT,
 			HttpOnly: true,
-			MaxAge:   int(maxAge),
-			Expires:  time.Unix(int64(expiration), 0),
+			MaxAge:   int(jwtRes.CookieMaxAge),
+			Expires:  time.Unix(int64(jwtRes.CookieExpiration), 0),
 			SameSite: http.SameSiteNoneMode,
 			Secure:   true,
 		}

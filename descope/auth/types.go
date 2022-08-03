@@ -40,9 +40,14 @@ type Token struct {
 	Claims     map[string]interface{} `json:"claims,omitempty"`
 }
 type JWTResponse struct {
-	JWTS      []string      `json:"jwts,omitempty"`
-	User      *UserResponse `json:"user,omitempty"`
-	FirstSeen bool          `json:"firstSeen,omitempty"`
+	SessionJwt       string        `json:"sessionJwt,omitempty"`
+	RefreshJwt       string        `json:"refreshJwt,omitempty"`
+	CookieDomain     string        `json:"cookieDomain,omitempty"`
+	CookiePath       string        `json:"cookiePath,omitempty"`
+	CookieMaxAge     int32         `json:"cookieMaxAge,omitempty"`
+	CookieExpiration int32         `json:"cookieExpiration,omitempty"`
+	User             *UserResponse `json:"user,omitempty"`
+	FirstSeen        bool          `json:"firstSeen,omitempty"`
 }
 
 type MagicLinkResponse struct {
@@ -352,11 +357,7 @@ const (
 	ContextUserIDProperty               = "DESCOPE_USER_ID"
 	ContextUserIDPropertyKey ContextKey = ContextUserIDProperty
 
-	claimAttributeName       = "cookieName"
-	claimAttributeMaxAge     = "cookieMaxAge"
-	claimAttributeExpiration = "cookieExpiration"
-	claimAttributeDomain     = "cookieDomain"
-	claimAttributePath       = "cookiePath"
+	claimAttributeName = "drn"
 )
 
 var (

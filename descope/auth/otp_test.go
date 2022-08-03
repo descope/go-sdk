@@ -270,7 +270,7 @@ func TestVerifyCodeEmailResponseOption(t *testing.T) {
 		assert.EqualValues(t, email, body["externalId"])
 		assert.EqualValues(t, code, body["code"])
 		resp := &JWTResponse{
-			JWTS: []string{jwtTokenValid},
+			RefreshJwt: jwtTokenValid,
 			User: &UserResponse{
 				User: User{
 					Name:  name,

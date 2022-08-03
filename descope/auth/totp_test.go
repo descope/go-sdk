@@ -95,7 +95,7 @@ func TestVerifyTOTP(t *testing.T) {
 		assert.EqualValues(t, code, body["code"])
 
 		resp := &JWTResponse{
-			JWTS: []string{jwtTokenValid},
+			RefreshJwt: jwtTokenValid,
 			User: &UserResponse{
 				ExternalIDs: []string{externalID},
 			},
