@@ -47,7 +47,7 @@ func TestExchangeToken(t *testing.T) {
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeExchangeTokenURL()+"?code="+code, r.URL.RequestURI())
 		resp := &JWTResponse{
-			JWTS: []string{jwtTokenValid},
+			RefreshJwt: jwtTokenValid,
 			User: &UserResponse{
 				User: User{
 					Name: "name",

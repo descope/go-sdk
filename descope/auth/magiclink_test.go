@@ -349,7 +349,7 @@ func TestVerifyMagicLinkCodeWithSession(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, token, body["token"])
 		resp := &JWTResponse{
-			JWTS: []string{jwtTokenValid},
+			RefreshJwt: jwtTokenValid,
 			User: &UserResponse{
 				User: User{
 					Name:  name,
