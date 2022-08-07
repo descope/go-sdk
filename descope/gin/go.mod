@@ -1,6 +1,6 @@
 module github.com/descope/go-sdk/descope/gin
 
-go 1.19
+go 1.18
 
 require (
 	github.com/descope/go-sdk v0.0.0-20220724212518-43726566678f
