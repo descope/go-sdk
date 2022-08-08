@@ -33,11 +33,12 @@ type WebAuthnFinishRequest struct {
 }
 
 type Token struct {
-	Expiration int64                  `json:"expiration,omitempty"`
-	JWT        string                 `json:"jwt,omitempty"`
-	ID         string                 `json:"id,omitempty"`
-	ProjectID  string                 `json:"projectId,omitempty"`
-	Claims     map[string]interface{} `json:"claims,omitempty"`
+	RefreshExpiration int64                  `json:"refreshExpiration,omitempty"`
+	Expiration        int64                  `json:"expiration,omitempty"`
+	JWT               string                 `json:"jwt,omitempty"`
+	ID                string                 `json:"id,omitempty"`
+	ProjectID         string                 `json:"projectId,omitempty"`
+	Claims            map[string]interface{} `json:"claims,omitempty"`
 }
 type JWTResponse struct {
 	SessionJwt       string        `json:"sessionJwt,omitempty"`

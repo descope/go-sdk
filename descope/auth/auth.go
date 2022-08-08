@@ -181,7 +181,15 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 		logger.LogError("Cannot validate session, no public key available", err)
 		return false, nil, errors.NewNoPublicKeyError()
 	}
-	if err != nil {
+	if err == nil {
+		// parse refresh token, so we can get the refresh expiration as well
+		tToken, tErr := auth.validateJWT(refreshToken)
+		if tErr != nil {
+			logger.LogError("cannot validate refresh token, refresh expiration will not be available", err)
+		} else {
+			token.RefreshExpiration = tToken.Expiration
+		}
+	} else {
 		// check refresh token
 		if refreshToken == "" {
 			return false, nil, err
@@ -198,6 +206,12 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 		info, err := auth.generateAuthenticationInfo(httpResponse, options...)
 		if err != nil {
 			return false, nil, err
+		}
+		tToken, tErr := auth.validateJWT(refreshToken)
+		if tErr != nil {
+			logger.LogError("cannot validate refresh token for refresh response, refresh expiration will not be available", err)
+		} else {
+			info.SessionToken.RefreshExpiration = tToken.Expiration
 		}
 		return true, info.SessionToken, nil
 	}
@@ -218,15 +232,32 @@ func (auth *authenticationsBase) extractJWTResponse(bodyStr string) (*JWTRespons
 	return &jRes, nil
 }
 
-func (auth *authenticationsBase) collectJwts(jwt string, tokens []*Token) ([]*Token, error) {
-	if len(jwt) == 0 {
-		return tokens, nil
+func (auth *authenticationsBase) collectJwts(jwt, rJwt string, tokens []*Token) ([]*Token, error) {
+	var err error
+	var token *Token
+	if len(jwt) > 0 {
+		var err1 error
+		token, err1 = auth.validateJWT(jwt)
+		if err1 == nil {
+			tokens = append(tokens, token)
+		} else {
+			err = err1
+		}
 	}
-	token, err := auth.validateJWT(jwt)
-	if err != nil {
-		return nil, err
+	if len(rJwt) > 0 {
+		token2, err2 := auth.validateJWT(rJwt)
+		if err2 == nil {
+			if token != nil {
+				token.RefreshExpiration = token2.Expiration
+			}
+			token2.RefreshExpiration = token2.Expiration
+			tokens = append(tokens, token2)
+		} else {
+			err = err2
+		}
 	}
-	return append(tokens, token), nil
+
+	return tokens, err
 }
 
 func (auth *authenticationsBase) extractTokens(jRes *JWTResponse) ([]*Token, error) {
@@ -236,11 +267,7 @@ func (auth *authenticationsBase) extractTokens(jRes *JWTResponse) ([]*Token, err
 	}
 	var tokens []*Token
 
-	tokens, err := auth.collectJwts(jRes.RefreshJwt, tokens)
-	if err != nil {
-		return nil, err
-	}
-	tokens, err = auth.collectJwts(jRes.SessionJwt, tokens)
+	tokens, err := auth.collectJwts(jRes.SessionJwt, jRes.RefreshJwt, tokens)
 	if err != nil {
 		return nil, err
 	}
