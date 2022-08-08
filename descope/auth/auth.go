@@ -238,7 +238,9 @@ func (auth *authenticationsBase) collectJwts(jwt, rJwt string, tokens []*Token) 
 	}
 	token2, err2 := auth.validateJWT(rJwt)
 	if err2 == nil {
-		token.RefreshExpiration = token2.Expiration
+		if token != nil {
+			token.RefreshExpiration = token2.Expiration
+		}
 		token2.RefreshExpiration = token2.Expiration
 		tokens = append(tokens, token2)
 	} else {
