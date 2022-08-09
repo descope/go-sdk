@@ -18,7 +18,7 @@ flowchart LR
 
 ### Prerequisites
 
-Replace any instance of  `<ProjectID>` in the code below with your company's Project ID, which can be found in the [Descope console](link).
+Replace any instance of  `<ProjectID>` in the code below with your company's Project ID, which can be found in the [Descope console](https://app.descope.com).
 
 * Run the following commands in your project
 
@@ -102,7 +102,7 @@ flowchart LR
 
 ### Prerequisites
 
-Replace any instance of  `<ProjectID>` in the code below with your company's Project ID, which can be found in the [Descope console](link).
+Replace any instance of  `<ProjectID>` in the code below with your company's Project ID, which can be found in the [Descope console](https://app.descope.com).
 
 * Run the following commands in your project
 
@@ -179,7 +179,7 @@ Instantly run the end-to-end ExpresSDK for Go examples, as shown below. The sour
 
 ### Prerequisites
 
-Run the following commands in your project. Replace any instance of  `<ProjectID>` in the code below with your company's Project ID, which can be found in the [Descope console](link).
+Run the following commands in your project. Replace any instance of  `<ProjectID>` in the code below with your company's Project ID, which can be found in the [Descope console](https://app.descope.com).
 
 This commands will add the Descope Go ExpresSDK as a project dependency, clone the Go repository locally, and set the `DESCOPE_PROJECT_ID`.
 
