@@ -36,6 +36,9 @@ const (
 		"kid": "32b3da5277b142c7e24fdf0ef09e0919"
 	  }`
 	publicKey = `{"alg":"ES384","crv":"P-384","kid":"testkey","kty":"EC","use":"sig","x":"fcK-QcFhZooWoMPU2qIfkwBXfLIKkGm2plbS35jEQ53JqgnCaHDzLpyGaWWaIKfg","y":"IJS9pIQl3ZHh3GXi166DZgDieWGEypG9zaE3mEQrjgU-9F4qJWYDo4Fk0XS-ZJXr"}`
+
+	jwtTokenWithTenants  = "eyJhbGciOiJFUzM4NCIsImtpZCI6InRlc3RrZXkiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOlsidGVzdCJdLCJkcm4iOiJEUyIsImV4cCI6MzY2MDIyMzc1OSwiaWF0IjoxNjYwMjIzNzU5LCJpc3MiOiJ0ZXN0Iiwic3ViIjoic29tZXVzZXIiLCJ0ZW5hbnRzIjp7InQxIjp7fSwidDIiOnt9fX0.sIa7U18_h772xYpyFCjOXtsBtMtwWBoFNmDA-Bc-hmWciQC_5-sndtwLdaJD77t2wkoq3wAbjp6jcL1-qBSNZ6pueMdO02IbGK-mkmC439UhdQ7xs7jQXziHstMBaHT5"
+	publicKeyWithTenants = `{"alg":"ES384","crv":"P-384","kid":"testkey","kty":"EC","use":"sig","x":"Ov545bC4GMh_YPMF_rHzpi2iuLk4wmQsSN_HiCS_-e1TOp2zrPPOVzjIaGWk-S4u","y":"uzQM6ROnewL6UhYkV7FNH-0sXRj3QqoaKsQmclzJSad8oYw9Q7czRDfGa0dWo7r6"}`
 )
 
 var (
@@ -532,6 +535,21 @@ func TestExtractTokensInvalid(t *testing.T) {
 	tokens, err := a.extractTokens(&JWTResponse{RefreshJwt: "aaaaa"})
 	require.Error(t, err)
 	require.Empty(t, tokens)
+}
+
+func TestExtractJwtWithTenants(t *testing.T) {
+	a, err := newTestAuthConf(&AuthParams{PublicKey: publicKeyWithTenants}, nil, nil)
+	require.NoError(t, err)
+	tokens, err := a.extractTokens(&JWTResponse{SessionJwt: jwtTokenWithTenants})
+	require.NoError(t, err)
+	require.True(t, len(tokens) > 0)
+	tenants := tokens[0].GetTenants()
+	assert.Len(t, tenants, 2)
+	m := map[string]interface{}{"t1": true, "t2": true}
+	for _, k := range tenants {
+		delete(m, k)
+	}
+	assert.Len(t, m, 0)
 }
 
 func BenchmarkValidateSession(b *testing.B) {
