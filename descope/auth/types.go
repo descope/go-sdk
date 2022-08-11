@@ -40,6 +40,23 @@ type Token struct {
 	ProjectID         string                 `json:"projectId,omitempty"`
 	Claims            map[string]interface{} `json:"claims,omitempty"`
 }
+
+func (to *Token) GetTenants() []string {
+	var res []string
+	if to.Claims == nil {
+		return res
+	}
+	m := to.Claims[ClaimAuthorizedTenants]
+	tenants, ok := m.(map[string]interface{})
+	if !ok {
+		return res
+	}
+	for k := range tenants {
+		res = append(res, k)
+	}
+	return res
+}
+
 type JWTResponse struct {
 	SessionJwt       string        `json:"sessionJwt,omitempty"`
 	RefreshJwt       string        `json:"refreshJwt,omitempty"`
@@ -357,6 +374,7 @@ const (
 
 	ContextUserIDProperty               = "DESCOPE_USER_ID"
 	ContextUserIDPropertyKey ContextKey = ContextUserIDProperty
+	ClaimAuthorizedTenants              = "tenants"
 
 	claimAttributeName = "drn"
 )
