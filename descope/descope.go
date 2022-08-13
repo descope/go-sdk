@@ -17,7 +17,7 @@ type Config struct {
 	// PublicKey (optional, "") - used to override or implicitly use a dedicated public key in order to decrypt and validate the JWT tokens
 	// during ValidateSessionRequest(). If empty, will attempt to fetch all public keys from the specified project id.
 	PublicKey string
-	// DescopeBaseURL (optional, "https://descope.com") - override the default base URL used to communicate with descope services.
+	// DescopeBaseURL (optional, "https://api.descope.com") - override the default base URL used to communicate with descope services.
 	DescopeBaseURL string
 	// DefaultClient (optional, http.DefaultClient) - override the default client used to Do the actual http request.
 	DefaultClient api.IHttpClient

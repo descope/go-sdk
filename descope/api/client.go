@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	defaultURL = "https://descope.com"
+	defaultURL = "https://api.descope.com"
 )
 
 var (
