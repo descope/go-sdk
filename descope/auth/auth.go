@@ -143,7 +143,26 @@ func (auth *authenticationService) ValidateSessionWithOptions(request *http.Requ
 		return false, nil, nil
 	}
 
-	return auth.validateSession(sessionToken, refreshToken, options...)
+	return auth.validateSession(sessionToken, refreshToken, false, options...)
+}
+
+func (auth *authenticationService) RefreshSession(request *http.Request, w http.ResponseWriter) (bool, *Token, error) {
+	return auth.RefreshSessionWithOptions(request, WithResponseOption(w))
+}
+
+func (auth *authenticationService) RefreshSessionWithOptions(request *http.Request, options ...Option) (bool, *Token, error) {
+	if request == nil {
+		return false, nil, errors.MissingProviderError
+	}
+
+	// Allow empty refresh token if all we want is to validate the session token
+	sessionToken, refreshToken := provideTokens(request)
+	if sessionToken == "" {
+		logger.LogDebug("unable to find token from cookies")
+		return false, nil, nil
+	}
+
+	return auth.validateSession(sessionToken, refreshToken, true, options...)
 }
 
 // AuthenticationMiddleware - middleware used to validate session and invoke if provided a failure and
@@ -175,7 +194,7 @@ func AuthenticationMiddleware(auth Authentication, onFailure func(http.ResponseW
 	}
 }
 
-func (auth *authenticationService) validateSession(sessionToken string, refreshToken string, options ...Option) (bool, *Token, error) {
+func (auth *authenticationService) validateSession(sessionToken string, refreshToken string, forceRefresh bool, options ...Option) (bool, *Token, error) {
 	token, err := auth.validateJWT(sessionToken)
 	if sessionToken != "" && !auth.publicKeysProvider.publicKeyExists() {
 		logger.LogError("Cannot validate session, no public key available", err)
@@ -189,7 +208,8 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 		} else {
 			token.RefreshExpiration = tToken.Expiration
 		}
-	} else {
+	}
+	if err != nil || forceRefresh {
 		// check refresh token
 		if refreshToken == "" {
 			return false, nil, err
