@@ -380,6 +380,25 @@ func TestRefreshSessionRequestRefreshSession(t *testing.T) {
 	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
 }
 
+func TestRefreshSessionNoRequest(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	ok, token, err := a.RefreshSessionWithOptions(nil)
+	assert.Error(t, err)
+	assert.False(t, ok)
+	assert.Nil(t, token)
+}
+
+func TestRefreshSessionNoToken(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	ok, token, err := a.RefreshSessionWithOptions(request)
+	assert.NoError(t, err)
+	assert.False(t, ok)
+	assert.Nil(t, token)
+}
+
 func TestLogout(t *testing.T) {
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
