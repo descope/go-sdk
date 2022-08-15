@@ -224,6 +224,13 @@ type Authentication interface {
 	ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *Token, error)
 	ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, *Token, error)
 
+	// RefreshSession - Use to force refresh of a JWT token, even though it is not expired.
+	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
+	// returns true upon success or false and an error upon failure.
+	// This is a shortcut for RefreshSessionWithOptions(r, WithResponseOption(w))
+	RefreshSession(request *http.Request, w http.ResponseWriter) (bool, *Token, error)
+	RefreshSessionWithOptions(request *http.Request, options ...Option) (bool, *Token, error)
+
 	// Logout - Use to perform logout from all active devices. This will revoke the given tokens
 	// and if given options will also remove existing session on the given response sent to the client.
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.

@@ -113,7 +113,12 @@ type MockDescopeAuthentication struct {
 	ValidateSessionResponseNotOK bool
 	ValidateSessionResponseInfo  *Token
 	ValidateSessionResponseError error
-	LogoutResponseError          error
+
+	RefreshSessionResponseNotOK bool
+	RefreshSessionResponseInfo  *Token
+	RefreshSessionResponseError error
+
+	LogoutResponseError error
 }
 
 func NewMockDescopeAuthentication() MockDescopeAuthentication {
@@ -352,6 +357,14 @@ func (m MockDescopeAuthentication) ValidateSession(_ *http.Request, _ http.Respo
 
 func (m MockDescopeAuthentication) ValidateSessionWithOptions(_ *http.Request, _ ...Option) (bool, *Token, error) {
 	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseInfo, m.ValidateSessionResponseError
+}
+
+func (m MockDescopeAuthentication) RefreshSession(_ *http.Request, _ http.ResponseWriter) (bool, *Token, error) {
+	return !m.RefreshSessionResponseNotOK, m.RefreshSessionResponseInfo, m.RefreshSessionResponseError
+}
+
+func (m MockDescopeAuthentication) RefreshSessionWithOptions(_ *http.Request, _ ...Option) (bool, *Token, error) {
+	return !m.RefreshSessionResponseNotOK, m.RefreshSessionResponseInfo, m.RefreshSessionResponseError
 }
 
 func (m MockDescopeAuthentication) Logout(r *http.Request, _ http.ResponseWriter) error {
