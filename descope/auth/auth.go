@@ -204,7 +204,7 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 		// parse refresh token, so we can get the refresh expiration as well
 		tToken, tErr := auth.validateJWT(refreshToken)
 		if tErr != nil {
-			logger.LogError("cannot validate refresh token, refresh expiration will not be available", err)
+			logger.LogError("cannot validate refresh token, refresh expiration will not be available", tErr)
 		} else {
 			token.RefreshExpiration = tToken.Expiration
 		}
