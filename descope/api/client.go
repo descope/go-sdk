@@ -18,7 +18,9 @@ import (
 )
 
 const (
-	defaultURL = "https://api.descope.com"
+	defaultURL                = "https://api.descope.com"
+	AuthorizationHeaderName   = "Authorization"
+	BearerAuthorizationPrefix = "Bearer "
 )
 
 var (
@@ -347,8 +349,11 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 	for _, cookie := range options.Cookies {
 		req.AddCookie(cookie)
 	}
-
-	req.SetBasicAuth(c.conf.ProjectID, pswd)
+	bearer := c.conf.ProjectID
+	if len(pswd) > 0 {
+		bearer += ":" + pswd
+	}
+	req.Header.Set(AuthorizationHeaderName, BearerAuthorizationPrefix+bearer)
 
 	logger.LogDebug("sending request to [%s]", url)
 	response, err := c.httpClient.Do(req)

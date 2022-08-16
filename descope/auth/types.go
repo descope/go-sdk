@@ -365,10 +365,8 @@ const (
 	OAuthGitlab    OAuthProvider = "gitlab"
 	OAuthApple     OAuthProvider = "apple"
 
-	SessionCookieName         = "DS"
-	RefreshCookieName         = "DSR"
-	AuthorizationHeaderName   = "Authorization"
-	BearerAuthorizationPrefix = "Bearer "
+	SessionCookieName = "DS"
+	RefreshCookieName = "DSR"
 
 	RedirectLocationCookieName = "Location"
 
