@@ -351,7 +351,7 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 	}
 	bearer := c.conf.ProjectID
 	if len(pswd) > 0 {
-		bearer += ":" + pswd
+		bearer = fmt.Sprintf("%s:%s", bearer, pswd)
 	}
 	req.Header.Set(AuthorizationHeaderName, BearerAuthorizationPrefix+bearer)
 
