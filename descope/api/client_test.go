@@ -15,6 +15,20 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func getProjectAndJwt(r *http.Request) (string, string) {
+	var projectID, jwt string
+	reqToken := r.Header.Get(AuthorizationHeaderName)
+	if splitToken := strings.Split(reqToken, BearerAuthorizationPrefix); len(splitToken) == 2 {
+		bearer := splitToken[1]
+		bearers := strings.Split(bearer, ":")
+		projectID = bearers[0]
+		if len(bearers) > 1 {
+			jwt = bearers[1]
+		}
+	}
+	return projectID, jwt
+}
+
 func TestClient(t *testing.T) {
 	c := NewClient(ClientParams{})
 	assert.NotNil(t, c.httpClient)
@@ -28,8 +42,7 @@ func TestGetRequest(t *testing.T) {
 		assert.Nil(t, r.Body)
 		assert.EqualValues(t, "/path", r.URL.Path)
 		assert.EqualValues(t, "test=1", r.URL.RawQuery)
-		actualProject, _, ok := r.BasicAuth()
-		assert.True(t, ok)
+		actualProject, _ := getProjectAndJwt(r)
 		assert.EqualValues(t, projectID, actualProject)
 		return &http.Response{Body: io.NopCloser(strings.NewReader(expectedResponse)), StatusCode: http.StatusOK}, nil
 	})})
@@ -50,8 +63,7 @@ func TestPostRequest(t *testing.T) {
 	require.NoError(t, err)
 	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
 		assert.NotNil(t, r.Body)
-		actualProject, _, ok := r.BasicAuth()
-		assert.True(t, ok)
+		actualProject, _ := getProjectAndJwt(r)
 		assert.EqualValues(t, projectID, actualProject)
 		assert.EqualValues(t, expectedHeaders["header1"], r.Header.Get("header1"))
 		return &http.Response{Body: io.NopCloser(bytes.NewReader(outputBytes)), StatusCode: http.StatusOK}, nil

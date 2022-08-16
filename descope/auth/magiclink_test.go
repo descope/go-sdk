@@ -9,11 +9,26 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func getProjectAndJwt(r *http.Request) (string, string) {
+	var projectID, jwt string
+	reqToken := r.Header.Get(api.AuthorizationHeaderName)
+	if splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix); len(splitToken) == 2 {
+		bearer := splitToken[1]
+		bearers := strings.Split(bearer, ":")
+		projectID = bearers[0]
+		if len(bearers) > 1 {
+			jwt = bearers[1]
+		}
+	}
+	return projectID, jwt
+}
 
 func TestSignInMagicLinkEmptyExternalID(t *testing.T) {
 	email := ""
@@ -406,8 +421,7 @@ func TestUpdateUserEmail(t *testing.T) {
 		assert.EqualValues(t, email, body["email"])
 		assert.EqualValues(t, uri, body["URI"])
 		assert.Nil(t, body["crossDevice"])
-		u, p, ok := r.BasicAuth()
-		assert.True(t, ok)
+		u, p := getProjectAndJwt(r)
 		assert.NotEmpty(t, u)
 		assert.NotEmpty(t, p)
 	}))
@@ -431,8 +445,7 @@ func TestUpdateUserEmailCrossDevice(t *testing.T) {
 		assert.EqualValues(t, email, body["email"])
 		assert.EqualValues(t, uri, body["URI"])
 		assert.True(t, body["crossDevice"].(bool))
-		u, p, ok := r.BasicAuth()
-		assert.True(t, ok)
+		u, p := getProjectAndJwt(r)
 		assert.NotEmpty(t, u)
 		assert.NotEmpty(t, p)
 	}))
@@ -486,8 +499,7 @@ func TestUpdateUserPhone(t *testing.T) {
 		assert.EqualValues(t, phone, body["phone"])
 		assert.EqualValues(t, uri, body["URI"])
 		assert.Nil(t, body["crossDevice"])
-		u, p, ok := r.BasicAuth()
-		assert.True(t, ok)
+		u, p := getProjectAndJwt(r)
 		assert.NotEmpty(t, u)
 		assert.NotEmpty(t, p)
 	}))
@@ -511,8 +523,7 @@ func TestUpdateUserPhoneCrossDevice(t *testing.T) {
 		assert.EqualValues(t, phone, body["phone"])
 		assert.EqualValues(t, uri, body["URI"])
 		assert.True(t, body["crossDevice"].(bool))
-		u, p, ok := r.BasicAuth()
-		assert.True(t, ok)
+		u, p := getProjectAndJwt(r)
 		assert.NotEmpty(t, u)
 		assert.NotEmpty(t, p)
 	}))

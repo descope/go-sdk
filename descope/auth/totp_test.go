@@ -53,8 +53,7 @@ func TestUpdateTOTP(t *testing.T) {
 		assert.EqualValues(t, externalID, body["externalId"])
 		assert.Nil(t, body["user"])
 
-		u, p, ok := r.BasicAuth()
-		assert.True(t, ok)
+		u, p := getProjectAndJwt(r)
 		assert.NotEmpty(t, u)
 		assert.NotEmpty(t, p)
 
