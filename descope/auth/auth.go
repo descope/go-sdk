@@ -402,8 +402,10 @@ func provideTokens(r *http.Request) (string, string) {
 	// First, check the header for Bearer token
 	// Header takes precedence over cookie
 	reqToken := r.Header.Get(api.AuthorizationHeaderName)
-	if splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix); len(splitToken) == 2 {
-		sessionToken = splitToken[1]
+	if bearerToken := strings.TrimPrefix(reqToken, api.BearerAuthorizationPrefix); bearerToken != "" {
+		if splitToken := strings.Split(bearerToken, ":"); len(splitToken) == 2 {
+			sessionToken = splitToken[1]
+		}
 	}
 
 	if sessionToken == "" {

@@ -255,7 +255,7 @@ func TestValidateSessionRequestHeader(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
-	request.Header.Add(api.AuthorizationHeaderName, api.BearerAuthorizationPrefix+jwtTokenValid)
+	request.Header.Add(api.AuthorizationHeaderName, api.BearerAuthorizationPrefix+"prorject1:"+jwtTokenValid)
 	ok, token, err := a.ValidateSessionWithOptions(request)
 	require.NoError(t, err)
 	require.True(t, ok)
