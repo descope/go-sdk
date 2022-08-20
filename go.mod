@@ -3,7 +3,7 @@ module github.com/descope/go-sdk
 go 1.18
 
 require (
-	github.com/lestrrat-go/jwx/v2 v2.0.4
+	github.com/lestrrat-go/jwx/v2 v2.0.5
 	github.com/stretchr/testify v1.8.0
 )
 
