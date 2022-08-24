@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+GITLEAKS_VERSION="v8.8.11"
 CURRENT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 run_linter() {
@@ -86,19 +87,19 @@ lint_run_golangci() {
 # Run detect-secrets
 lint_find_secrets() {
 	echo "- Running secrets check"
-	INSTALLED_SECRETS_VERSION="$(gitleaks version)"
+	INSTALLED_SECRETS_VERSION="$(docker inspect ghcr.io/zricethezav/gitleaks:$GITLEAKS_VERSION)"
 	if [[ -z $INSTALLED_SECRETS_VERSION ]]; then
 		echo "Installing gitleaks for the first time..."
-		brew install gitleaks
+		git pull ghcr.io/zricethezav/gitleaks:$GITLEAKS_VERSION
 		echo "Done installing gitleaks"
 	fi
 	echo "  - Finding leaks in git log"
-	gitleaks detect -v --redact  -c ${CURRENT_DIR}/gitleaks.toml
+	docker run --rm -v ${CURRENT_DIR}:/conf -v ${PWD}:/code ghcr.io/zricethezav/gitleaks:$GITLEAKS_VERSION detect -v --redact --source="/code" -c /conf/gitleaks.toml
 	if [ $? -ne 0 ]; then
 		exit 1
 	fi
 	echo "  - Finding leaks in local repo"
-	gitleaks detect --no-git -v --redact -c ${CURRENT_DIR}/gitleaks.toml
+	docker run --rm -v ${CURRENT_DIR}:/conf -v ${PWD}:/code ghcr.io/zricethezav/gitleaks:$GITLEAKS_VERSION detect --no-git -v --redact --source="/code" -c /conf/gitleaks.toml
 	if [ $? -ne 0 ]; then
 		exit 1
 	fi
