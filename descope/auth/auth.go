@@ -136,13 +136,12 @@ func (auth *authenticationService) ValidateSessionWithOptions(request *http.Requ
 		return false, nil, errors.MissingProviderError
 	}
 
-	// Allow empty refresh token if all we want is to validate the session token
+	// Allow either empty session or refresh tokens if all we want is to validate the session token
 	sessionToken, refreshToken := provideTokens(request)
-	if sessionToken == "" {
+	if sessionToken == "" && refreshToken == "" {
 		logger.LogDebug("unable to find token from cookies")
 		return false, nil, nil
 	}
-
 	return auth.validateSession(sessionToken, refreshToken, false, options...)
 }
 
@@ -155,9 +154,9 @@ func (auth *authenticationService) RefreshSessionWithOptions(request *http.Reque
 		return false, nil, errors.MissingProviderError
 	}
 
-	// Allow empty refresh token if all we want is to validate the session token
+	// Allow either empty session or refresh tokens if all we want is to validate the session token
 	sessionToken, refreshToken := provideTokens(request)
-	if sessionToken == "" {
+	if sessionToken == "" && refreshToken == "" {
 		logger.LogDebug("unable to find token from cookies")
 		return false, nil, nil
 	}
@@ -195,18 +194,24 @@ func AuthenticationMiddleware(auth Authentication, onFailure func(http.ResponseW
 }
 
 func (auth *authenticationService) validateSession(sessionToken string, refreshToken string, forceRefresh bool, options ...Option) (bool, *Token, error) {
-	token, err := auth.validateJWT(sessionToken)
-	if sessionToken != "" && !auth.publicKeysProvider.publicKeyExists() {
+	// Make sure to try and validate either JWT because in the process we make sure we have the public keys
+	var token, tToken *Token
+	var err, tErr error
+	if sessionToken != "" {
+		token, err = auth.validateJWT(sessionToken)
+	}
+	if refreshToken != "" {
+		tToken, tErr = auth.validateJWT(refreshToken)
+	}
+	if !auth.publicKeysProvider.publicKeyExists() {
 		logger.LogError("Cannot validate session, no public key available", err)
 		return false, nil, errors.NewNoPublicKeyError()
 	}
-	if err == nil {
-		// parse refresh token, so we can get the refresh expiration as well
-		tToken, tErr := auth.validateJWT(refreshToken)
-		if tErr != nil {
-			logger.LogError("cannot validate refresh token, refresh expiration will not be available", tErr)
-		} else {
+	if err == nil && refreshToken != "" {
+		if tErr == nil {
 			token.RefreshExpiration = tToken.Expiration
+		} else {
+			logger.LogError("cannot validate refresh token, refresh expiration will not be available", tErr)
 		}
 	}
 	if err != nil || forceRefresh {
@@ -214,8 +219,7 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 		if refreshToken == "" {
 			return false, nil, err
 		}
-		_, err := auth.validateJWT(refreshToken)
-		if ok, err := validateTokenError(err); !ok {
+		if ok, err := validateTokenError(tErr); !ok {
 			return false, nil, err
 		}
 		// auto-refresh session token
@@ -227,12 +231,8 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 		if err != nil {
 			return false, nil, err
 		}
-		tToken, tErr := auth.validateJWT(refreshToken)
-		if tErr != nil {
-			logger.LogError("cannot validate refresh token for refresh response, refresh expiration will not be available", err)
-		} else {
-			info.SessionToken.RefreshExpiration = tToken.Expiration
-		}
+		// No need to check for error again because validateTokenError will return false for any non-nil error
+		info.SessionToken.RefreshExpiration = tToken.Expiration
 		return true, info.SessionToken, nil
 	}
 
