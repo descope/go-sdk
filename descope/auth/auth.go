@@ -207,14 +207,14 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 		logger.LogError("Cannot validate session, no public key available", err)
 		return false, nil, errors.NewNoPublicKeyError()
 	}
-	if err == nil && refreshToken != "" {
+	if err == nil && sessionToken != "" && refreshToken != "" {
 		if tErr == nil {
 			token.RefreshExpiration = tToken.Expiration
 		} else {
 			logger.LogError("cannot validate refresh token, refresh expiration will not be available", tErr)
 		}
 	}
-	if err != nil || forceRefresh {
+	if sessionToken == "" || err != nil || forceRefresh {
 		// check refresh token
 		if refreshToken == "" {
 			return false, nil, err

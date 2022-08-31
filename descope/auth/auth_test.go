@@ -263,14 +263,26 @@ func TestValidateSessionRequestHeader(t *testing.T) {
 }
 
 func TestValidateSessionRequestMissingCookie(t *testing.T) {
-	a, err := newTestAuth(nil, DoOk(nil))
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
+	})
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	ok, cookies, err := a.ValidateSessionWithOptions(request)
+	ok, token, err := a.ValidateSessionWithOptions(request)
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.NotEmpty(t, token)
+}
+
+func TestValidateSessionRequestMissingBothCookies(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	ok, token, err := a.ValidateSessionWithOptions(request)
 	require.NoError(t, err)
 	require.False(t, ok)
-	require.Empty(t, cookies)
+	require.Empty(t, token)
 }
 
 func TestValidateSessionRequestRefreshSession(t *testing.T) {
@@ -295,17 +307,21 @@ func TestValidateSessionRequestRefreshSession(t *testing.T) {
 
 func TestValidateSessionRequestMissingSessionToken(t *testing.T) {
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
-		return &http.Response{StatusCode: http.StatusOK, Header: http.Header{"Set-Cookie": []string{mockAuthSessionCookie.String()}}}, nil
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
 	})
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
 
 	b := httptest.NewRecorder()
-	ok, info, err := a.ValidateSession(request, b)
+	ok, userToken, err := a.ValidateSession(request, b)
 	require.NoError(t, err)
-	require.False(t, ok)
-	require.Empty(t, info)
+	require.True(t, ok)
+	assert.EqualValues(t, mockAuthSessionCookie.Value, userToken.JWT)
+	require.Len(t, b.Result().Cookies(), 1)
+	sessionCookie := b.Result().Cookies()[0]
+	require.NoError(t, err)
+	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
 }
 
 func TestValidateSessionRequestFailRefreshSession(t *testing.T) {
