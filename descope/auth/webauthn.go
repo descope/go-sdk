@@ -70,7 +70,7 @@ func (auth *webAuthn) SignInFinishWithOptions(request *WebAuthnFinishRequest, op
 	return auth.generateAuthenticationInfo(res, options...)
 }
 
-func (auth *webAuthn) AddDeviceStart(identifier string, origin string, r *http.Request) (*WebAuthnTransactionResponse, error) {
+func (auth *webAuthn) UpdateUserDeviceStart(identifier string, origin string, r *http.Request) (*WebAuthnTransactionResponse, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
@@ -80,7 +80,7 @@ func (auth *webAuthn) AddDeviceStart(identifier string, origin string, r *http.R
 		return nil, err
 	}
 
-	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnAddDeviceStart(), authenticationWebAuthnAddDeviceRequestBody{ExternalID: identifier, Origin: origin}, nil, pswd)
+	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnUpdateUserDeviceStart(), authenticationWebAuthnAddDeviceRequestBody{ExternalID: identifier, Origin: origin}, nil, pswd)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func (auth *webAuthn) AddDeviceStart(identifier string, origin string, r *http.R
 	return webAuthnResponse, err
 }
 
-func (auth *webAuthn) AddDeviceFinish(request *WebAuthnFinishRequest) error {
-	_, err := auth.client.DoPostRequest(api.Routes.WebAuthnAddDeviceFinish(), request, nil, "")
+func (auth *webAuthn) UpdateUserDeviceFinish(request *WebAuthnFinishRequest) error {
+	_, err := auth.client.DoPostRequest(api.Routes.WebAuthnUpdateUserDeviceFinish(), request, nil, "")
 	return err
 }

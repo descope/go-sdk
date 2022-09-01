@@ -42,10 +42,10 @@ func TestOAuthStartInvalidForwardResponse(t *testing.T) {
 	assert.Empty(t, urlStr)
 }
 
-func TestExchangeToken(t *testing.T) {
+func TestExchangeTokenOAuth(t *testing.T) {
 	code := "code"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
-		assert.EqualValues(t, composeExchangeTokenURL()+"?code="+code, r.URL.RequestURI())
+		assert.EqualValues(t, composeOAuthExchangeTokenURL()+"?code="+code, r.URL.RequestURI())
 		resp := &JWTResponse{
 			RefreshJwt: jwtTokenValid,
 			User: &UserResponse{
@@ -62,6 +62,32 @@ func TestExchangeToken(t *testing.T) {
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
 	authInfo, err := a.OAuth().ExchangeToken(code, w)
+	require.NoError(t, err)
+	require.NotNil(t, authInfo)
+	assert.EqualValues(t, "name", authInfo.User.Name)
+	assert.True(t, authInfo.FirstSeen)
+}
+
+func TestExchangeTokenSAML(t *testing.T) {
+	code := "code"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeSAMLExchangeTokenURL()+"?code="+code, r.URL.RequestURI())
+		resp := &JWTResponse{
+			RefreshJwt: jwtTokenValid,
+			User: &UserResponse{
+				User: User{
+					Name: "name",
+				},
+			},
+			FirstSeen: true,
+		}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	authInfo, err := a.SAML().ExchangeToken(code, w)
 	require.NoError(t, err)
 	require.NotNil(t, authInfo)
 	assert.EqualValues(t, "name", authInfo.User.Name)

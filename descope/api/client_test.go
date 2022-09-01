@@ -214,5 +214,5 @@ func TestDoRequestDefault(t *testing.T) {
 
 func TestRoutesSignInOTP(t *testing.T) {
 	r := Routes.SignInOTP()
-	assert.EqualValues(t, "/v1/auth/signin/otp", r)
+	assert.EqualValues(t, "/v1/auth/otp/signin", r)
 }

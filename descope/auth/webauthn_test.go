@@ -72,7 +72,7 @@ func TestSignUpFinish(t *testing.T) {
 	assert.EqualValues(t, jwtTokenValid, w.Result().Cookies()[0].Value)
 }
 
-func TestWebAuthnAddDeviceStart(t *testing.T) {
+func TestWebAuthnUpdateUserDeviceStart(t *testing.T) {
 	expectedResponse := WebAuthnTransactionResponse{TransactionID: "a"}
 	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
 		req := authenticationRequestBody{}
@@ -83,26 +83,26 @@ func TestWebAuthnAddDeviceStart(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	res, err := a.WebAuthn().AddDeviceStart("test@test.com", "https://example.com", r)
+	res, err := a.WebAuthn().UpdateUserDeviceStart("test@test.com", "https://example.com", r)
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedResponse.TransactionID, res.TransactionID)
 }
 
-func TestWebAuthnAddDeviceStartEmpty(t *testing.T) {
+func TestWebAuthnUpdateUserDeviceStartEmpty(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	res, err := a.WebAuthn().AddDeviceStart("", "https://example.com", r)
+	res, err := a.WebAuthn().UpdateUserDeviceStart("", "https://example.com", r)
 	require.Error(t, err)
 	assert.Empty(t, res)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
 
-func TestWebAuthnAddDeviceFinish(t *testing.T) {
+func TestWebAuthnUpdateUserDeviceFinish(t *testing.T) {
 	expectedResponse := &WebAuthnFinishRequest{TransactionID: "a"}
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	err = a.WebAuthn().AddDeviceFinish(expectedResponse)
+	err = a.WebAuthn().UpdateUserDeviceFinish(expectedResponse)
 	require.NoError(t, err)
 }

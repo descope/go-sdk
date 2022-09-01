@@ -9,7 +9,7 @@ import (
 )
 
 type oauth struct {
-	exchangerBase
+	authenticationsBase
 }
 
 type oauthStartResponse struct {
@@ -44,4 +44,12 @@ func (auth *oauth) StartWithOptions(provider OAuthProvider, returnURL string, op
 	}
 
 	return
+}
+
+func (auth *oauth) ExchangeToken(code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	return auth.ExchangeTokenWithOptions(code, WithResponseOption(w))
+}
+
+func (auth *oauth) ExchangeTokenWithOptions(code string, options ...Option) (*AuthenticationInfo, error) {
+	return auth.exchangeTokenWithOptions(code, composeOAuthExchangeTokenURL(), options...)
 }
