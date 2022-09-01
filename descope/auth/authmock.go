@@ -87,17 +87,17 @@ type MockDescopeAuthenticationTOTP struct {
 }
 
 type MockDescopeAuthenticationWebAuthn struct {
-	SignUpWebAuthnStartResponseError          error
-	SignUpWebAuthnStartResponseTransaction    *WebAuthnTransactionResponse
-	SignUpWebAuthnFinishResponseError         error
-	SignUpWebAuthnFinishResponseInfo          *AuthenticationInfo
-	SignInWebAuthnStartResponseError          error
-	SignInWebAuthnStartResponseTransaction    *WebAuthnTransactionResponse
-	SignInWebAuthnFinishResponseError         error
-	SignInWebAuthnFinishResponseInfo          *AuthenticationInfo
-	AddDeviceWebAuthnStartResponseError       error
-	AddDeviceWebAuthnStartResponseTransaction *WebAuthnTransactionResponse
-	AddDeviceWebAuthnFinishResponseError      error
+	SignUpWebAuthnStartResponseError                 error
+	SignUpWebAuthnStartResponseTransaction           *WebAuthnTransactionResponse
+	SignUpWebAuthnFinishResponseError                error
+	SignUpWebAuthnFinishResponseInfo                 *AuthenticationInfo
+	SignInWebAuthnStartResponseError                 error
+	SignInWebAuthnStartResponseTransaction           *WebAuthnTransactionResponse
+	SignInWebAuthnFinishResponseError                error
+	SignInWebAuthnFinishResponseInfo                 *AuthenticationInfo
+	UpdateUserDeviceWebAuthnStartResponseError       error
+	UpdateUserDeviceWebAuthnStartResponseTransaction *WebAuthnTransactionResponse
+	UpdateUserDeviceWebAuthnFinishResponseError      error
 }
 
 type MockDescopeAuthentication struct {
@@ -405,10 +405,10 @@ func (m MockDescopeAuthenticationWebAuthn) SignInFinishWithOptions(_ *WebAuthnFi
 	return m.SignInWebAuthnFinishResponseInfo, m.SignInWebAuthnFinishResponseError
 }
 
-func (m MockDescopeAuthenticationWebAuthn) AddDeviceStart(_ string, _ string, _ *http.Request) (*WebAuthnTransactionResponse, error) {
-	return m.AddDeviceWebAuthnStartResponseTransaction, m.AddDeviceWebAuthnStartResponseError
+func (m MockDescopeAuthenticationWebAuthn) UpdateUserDeviceStart(_ string, _ string, _ *http.Request) (*WebAuthnTransactionResponse, error) {
+	return m.UpdateUserDeviceWebAuthnStartResponseTransaction, m.UpdateUserDeviceWebAuthnStartResponseError
 }
 
-func (m MockDescopeAuthenticationWebAuthn) AddDeviceFinish(_ *WebAuthnFinishRequest) error {
-	return m.AddDeviceWebAuthnFinishResponseError
+func (m MockDescopeAuthenticationWebAuthn) UpdateUserDeviceFinish(_ *WebAuthnFinishRequest) error {
+	return m.UpdateUserDeviceWebAuthnFinishResponseError
 }

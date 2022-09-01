@@ -10,7 +10,7 @@ import (
 )
 
 type saml struct {
-	exchangerBase
+	authenticationsBase
 }
 
 type samlStartResponse struct {
@@ -48,4 +48,12 @@ func (auth *saml) StartWithOptions(tenant string, returnURL string, options ...O
 	}
 
 	return
+}
+
+func (auth *saml) ExchangeToken(code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	return auth.ExchangeTokenWithOptions(code, WithResponseOption(w))
+}
+
+func (auth *saml) ExchangeTokenWithOptions(code string, options ...Option) (*AuthenticationInfo, error) {
+	return auth.exchangeTokenWithOptions(code, composeSAMLExchangeTokenURL(), options...)
 }

@@ -40,12 +40,11 @@ type authenticationService struct {
 func NewAuth(conf AuthParams, c *api.Client) (*authenticationService, error) {
 	base := authenticationsBase{conf: &conf, client: c}
 	base.publicKeysProvider = newProvider(c, base.conf)
-	exchanger := exchangerBase{authenticationsBase: base}
 	authenticationService := &authenticationService{authenticationsBase: base}
 	authenticationService.otp = &otp{authenticationsBase: base}
 	authenticationService.magicLink = &magicLink{authenticationsBase: base}
-	authenticationService.oauth = &oauth{exchangerBase: exchanger}
-	authenticationService.saml = &saml{exchangerBase: exchanger}
+	authenticationService.oauth = &oauth{authenticationsBase: base}
+	authenticationService.saml = &saml{authenticationsBase: base}
 	authenticationService.webAuthn = &webAuthn{authenticationsBase: base}
 	authenticationService.totp = &totp{authenticationsBase: base}
 	return authenticationService, nil
@@ -344,6 +343,18 @@ func (*authenticationsBase) verifyDeliveryMethod(method DeliveryMethod, identifi
 	return nil
 }
 
+func (auth *authenticationsBase) exchangeTokenWithOptions(code string, url string, options ...Option) (*AuthenticationInfo, error) {
+	if code == "" {
+		return nil, errors.NewInvalidArgumentError("code")
+	}
+
+	httpResponse, err := auth.client.DoGetRequest(url, &api.HTTPRequest{QueryParams: map[string]string{"code": string(code)}}, "")
+	if err != nil {
+		return nil, err
+	}
+	return auth.generateAuthenticationInfo(httpResponse, options...)
+}
+
 func (auth *authenticationsBase) generateAuthenticationInfo(httpResponse *api.HTTPResponse, options ...Option) (*AuthenticationInfo, error) {
 	jwtResponse, err := auth.extractJWTResponse(httpResponse.BodyStr)
 	if err != nil {
@@ -496,12 +507,16 @@ func composeOAuthURL() string {
 	return api.Routes.OAuthStart()
 }
 
-func composeExchangeTokenURL() string {
-	return api.Routes.ExchangeToken()
+func composeOAuthExchangeTokenURL() string {
+	return api.Routes.ExchangeTokenOAuth()
 }
 
 func composeSAMLStartURL() string {
 	return api.Routes.SAMLStart()
+}
+
+func composeSAMLExchangeTokenURL() string {
+	return api.Routes.ExchangeTokenSAML()
 }
 
 func composeGetSession() string {

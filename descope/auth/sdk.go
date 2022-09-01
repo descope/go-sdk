@@ -133,17 +133,7 @@ type TOTP interface {
 	UpdateUser(identifier string, request *http.Request) (*TOTPResponse, error)
 }
 
-type Exchanger interface {
-	// ExchangeToken - Finalize OAuth or SAML authentication
-	// code should be extracted from the redirect URL of OAth/SAML authentication flow
-	ExchangeToken(code string, w http.ResponseWriter) (*AuthenticationInfo, error)
-	// ExchangeTokenWithOptions - Finalize OAuth or SAML authentication
-	// code should be extracted from the redirect URL of OAth/SAML authentication flow
-	ExchangeTokenWithOptions(code string, options ...Option) (*AuthenticationInfo, error)
-}
-
 type OAuth interface {
-	Exchanger
 	// Start - Use to start an OAuth authentication using the given OAuthProvider.
 	// returns an error upon failure and a string represent the redirect URL upon success.
 	// Uses the response writer to automatically redirect the client to the provider url for authentication.
@@ -152,10 +142,16 @@ type OAuth interface {
 	Start(provider OAuthProvider, returnURL string, w http.ResponseWriter) (string, error)
 	// OAuthStartWithOptions - use to start an OAuth authentication using the given OAuthProvider and options.
 	StartWithOptions(provider OAuthProvider, returnURL string, options ...Option) (string, error)
+
+	// ExchangeToken - Finalize OAuth
+	// code should be extracted from the redirect URL of OAth/SAML authentication flow
+	ExchangeToken(code string, w http.ResponseWriter) (*AuthenticationInfo, error)
+	// ExchangeTokenWithOptions - Finalize OAuth
+	// code should be extracted from the redirect URL of OAth/SAML authentication flow
+	ExchangeTokenWithOptions(code string, options ...Option) (*AuthenticationInfo, error)
 }
 
 type SAML interface {
-	Exchanger
 	// Start will initiate a SAML login flow
 	// return will be the redirect URL that needs to return to client
 	// and finalize with the ExchangeToken call
@@ -165,6 +161,12 @@ type SAML interface {
 	// return will be the redirect URL that needs to return to client
 	// and finalize with the ExchangeToken call
 	StartWithOptions(tenant string, landingURL string, options ...Option) (redirectURL string, err error)
+	// ExchangeToken - Finalize SAML authentication
+	// code should be extracted from the redirect URL of OAth/SAML authentication flow
+	ExchangeToken(code string, w http.ResponseWriter) (*AuthenticationInfo, error)
+	// ExchangeTokenWithOptions - Finalize SAML authentication
+	// code should be extracted from the redirect URL of OAth/SAML authentication flow
+	ExchangeTokenWithOptions(code string, options ...Option) (*AuthenticationInfo, error)
 }
 
 type WebAuthn interface {
@@ -196,15 +198,15 @@ type WebAuthn interface {
 	// by the credentials navigator.
 	SignInFinishWithOptions(finishRequest *WebAuthnFinishRequest, options ...Option) (*AuthenticationInfo, error)
 
-	// AddDeviceStart - Use to start an add webauthn device process for an existing user with the given identifier.
+	// UpdateUserDeviceStart - Use to start an add webauthn device process for an existing user with the given identifier.
 	// Request is needed to obtain JWT and send it to Descope, for verification.
 	// Origin is the origin of the URL for the web page where the webauthn operation is taking place, as returned
 	// by calling document.location.origin via javascript.
 	// returns a transaction id response on success and error upon failure.
-	AddDeviceStart(identifier string, origin string, request *http.Request) (*WebAuthnTransactionResponse, error)
-	// AddDeviceFinishWithOptions - Use to finish an add webauthn device process with a given transaction id and credentials after been signed
+	UpdateUserDeviceStart(identifier string, origin string, request *http.Request) (*WebAuthnTransactionResponse, error)
+	// UpdateUserDeviceFinish - Use to finish an add webauthn device process with a given transaction id and credentials after been signed
 	// by the credentials navigator.
-	AddDeviceFinish(finishRequest *WebAuthnFinishRequest) error
+	UpdateUserDeviceFinish(finishRequest *WebAuthnFinishRequest) error
 }
 
 type Authentication interface {
