@@ -175,9 +175,10 @@ func NewToken(JWT string, token jwt.Token) *Token {
 }
 
 type User struct {
-	Name  string `json:"name,omitempty"`
-	Phone string `json:"phone,omitempty"`
-	Email string `json:"email,omitempty"`
+	Username string `json:"username,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Phone    string `json:"phone,omitempty"`
+	Email    string `json:"email,omitempty"`
 }
 
 type WebauthnUserRequest struct {
