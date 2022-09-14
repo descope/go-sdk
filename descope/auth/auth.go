@@ -163,6 +163,43 @@ func (auth *authenticationService) RefreshSessionWithOptions(request *http.Reque
 	return auth.validateSession(sessionToken, refreshToken, true, options...)
 }
 
+func (auth *authenticationService) ExchangeAccessKey(request *http.Request) (success bool, SessionToken *Token, err error) {
+	if request == nil {
+		return false, nil, errors.MissingProviderError
+	}
+
+	authHeader := request.Header.Get(api.AuthorizationHeaderName)
+	authParts := strings.Split(authHeader, api.BearerAuthorizationPrefix)
+	if len(authParts) != 2 {
+		return false, nil, errors.MissingAccessKeyError
+	}
+
+	bearer := authParts[1]
+	bearers := strings.Split(bearer, ":")
+	if len(bearers) != 2 {
+		return false, nil, errors.MissingAccessKeyError
+	}
+
+	accessKey := bearers[1]
+	httpResponse, err := auth.client.DoGetRequest(api.Routes.ExchangeAccessKey(), &api.HTTPRequest{}, accessKey)
+	if err != nil {
+		logger.LogError("failed to exchange access key", err)
+		return false, nil, errors.UnauthorizedError
+	}
+
+	jwtResponse, err := auth.extractJWTResponse(httpResponse.BodyStr)
+	if err != nil || jwtResponse == nil {
+		return false, nil, errors.InvalidAccessKeyResponse
+	}
+
+	tokens, err := auth.extractTokens(jwtResponse)
+	if err != nil || len(tokens) == 0 {
+		return false, nil, errors.InvalidAccessKeyResponse
+	}
+
+	return true, tokens[0], nil
+}
+
 // AuthenticationMiddleware - middleware used to validate session and invoke if provided a failure and
 // success callbacks after calling ValidateSession().
 // onFailure will be called when the authentication failed, if empty, will write unauthorized (401) on the response writer.
