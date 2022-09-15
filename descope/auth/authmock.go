@@ -417,6 +417,6 @@ func (m MockDescopeAuthenticationWebAuthn) UpdateUserDeviceFinish(_ *WebAuthnFin
 	return m.UpdateUserDeviceWebAuthnFinishResponseError
 }
 
-func (m MockDescopeAuthentication) ExchangeAccessKey(_ *http.Request) (bool, *Token, error) {
+func (m MockDescopeAuthentication) ExchangeAccessKey(accessKey string) (bool, *Token, error) {
 	return !m.ExchangeAccessKeyResponseNotOK, m.ExchangeAccessKeyResponseInfo, m.ExchangeAccessKeyResponseError
 }

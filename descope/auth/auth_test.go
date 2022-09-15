@@ -607,6 +607,39 @@ func TestExtractJwtWithTenants(t *testing.T) {
 	assert.Len(t, m, 0)
 }
 
+func TestExchangeAccessKeyWithRequest(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+
+	request := &http.Request{Header: http.Header{}}
+	ok, token, err := a.exchangeAccessKeyWithRequest(request)
+	require.False(t, ok)
+	require.Nil(t, token)
+	require.ErrorIs(t, err, errors.MissingAccessKeyError)
+
+	request.Header.Set(api.AuthorizationHeaderName, api.BearerAuthorizationPrefix)
+	ok, token, err = a.exchangeAccessKeyWithRequest(request)
+	require.False(t, ok)
+	require.Nil(t, token)
+	require.ErrorIs(t, err, errors.MissingAccessKeyError)
+
+	request.Header.Set(api.AuthorizationHeaderName, api.BearerAuthorizationPrefix+"foo")
+	ok, token, err = a.exchangeAccessKeyWithRequest(request)
+	require.True(t, ok)
+	require.NotNil(t, token)
+	require.NoError(t, err)
+}
+
+func TestExchangeAccessKey(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+
+	ok, token, err := a.ExchangeAccessKey("foo")
+	require.True(t, ok)
+	require.NotNil(t, token)
+	require.NoError(t, err)
+}
+
 func BenchmarkValidateSession(b *testing.B) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(b, err)

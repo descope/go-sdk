@@ -243,5 +243,5 @@ type Authentication interface {
 	LogoutWithOptions(request *http.Request, options ...Option) error
 
 	// ExchangeAccessKey - Use to exchange an access key for a session token.
-	ExchangeAccessKey(request *http.Request) (bool, *Token, error)
+	ExchangeAccessKey(accessKey string) (bool, *Token, error)
 }

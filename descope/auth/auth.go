@@ -163,24 +163,25 @@ func (auth *authenticationService) RefreshSessionWithOptions(request *http.Reque
 	return auth.validateSession(sessionToken, refreshToken, true, options...)
 }
 
-func (auth *authenticationService) ExchangeAccessKey(request *http.Request) (success bool, SessionToken *Token, err error) {
+func (auth *authenticationService) exchangeAccessKeyWithRequest(request *http.Request) (success bool, SessionToken *Token, err error) {
 	if request == nil {
 		return false, nil, errors.MissingProviderError
 	}
 
 	authHeader := request.Header.Get(api.AuthorizationHeaderName)
-	authParts := strings.Split(authHeader, api.BearerAuthorizationPrefix)
-	if len(authParts) != 2 {
+	if !strings.HasPrefix(authHeader, api.BearerAuthorizationPrefix) {
 		return false, nil, errors.MissingAccessKeyError
 	}
 
-	bearer := authParts[1]
-	bearers := strings.Split(bearer, ":")
-	if len(bearers) != 2 {
+	accessKey := strings.TrimPrefix(authHeader, api.BearerAuthorizationPrefix)
+	if len(accessKey) == 0 {
 		return false, nil, errors.MissingAccessKeyError
 	}
 
-	accessKey := bearers[1]
+	return auth.ExchangeAccessKey(accessKey)
+}
+
+func (auth *authenticationService) ExchangeAccessKey(accessKey string) (success bool, SessionToken *Token, err error) {
 	httpResponse, err := auth.client.DoGetRequest(api.Routes.ExchangeAccessKey(), &api.HTTPRequest{}, accessKey)
 	if err != nil {
 		logger.LogError("failed to exchange access key", err)

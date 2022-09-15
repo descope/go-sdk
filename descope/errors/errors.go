@@ -12,7 +12,7 @@ var (
 	RefreshTokenError         = NewValidationError("refresh token invalid or not found")
 	MissingProviderError      = NewValidationError("missing JWT provider implementation, use a built-in implementation or custom")
 	InvalidPendingRefError    = NewValidationError("Invalid pending reference")
-	MissingAccessKeyError     = NewValidationError("authorization header must include project and key")
+	MissingAccessKeyError     = NewValidationError("authorization header must specify access key")
 	InvalidAccessKeyResponse  = NewValidationError("invalid access key response received")
 	MagicLinkUnauthorized     = NewValidationError("pending session token")
 	UnauthorizedError         = NewError(BadRequestErrorCode, "unauthorized access")
