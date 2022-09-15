@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	urlpkg "net/url"
 	"path"
@@ -53,6 +52,7 @@ var (
 			updateUserEmailOTP       string
 			updateUserPhoneMagicLink string
 			updateUserPhoneOTP       string
+			exchangeAccessKey        string
 		}{
 			signInOTP:                "auth/otp/signin",
 			signUpOTP:                "auth/otp/signup",
@@ -80,6 +80,7 @@ var (
 			updateUserEmailOTP:       "auth/otp/update/email",
 			updateUserPhoneMagicLink: "auth/magiclink/update/phone",
 			updateUserPhoneOTP:       "auth/otp/update/phone",
+			exchangeAccessKey:        "auth/accesskey/exchange",
 		},
 		logoutAll: "auth/logoutall",
 		keys:      "/keys/",
@@ -116,6 +117,7 @@ type endpoints struct {
 		updateUserEmailOTP       string
 		updateUserPhoneMagicLink string
 		updateUserPhoneOTP       string
+		exchangeAccessKey        string
 	}
 	logoutAll string
 	keys      string
@@ -212,6 +214,10 @@ func (e *endpoints) UpdateUserPhoneMagicLink() string {
 
 func (e *endpoints) UpdateUserPhoneOTP() string {
 	return path.Join(e.version, e.auth.updateUserPhoneOTP)
+}
+
+func (e *endpoints) ExchangeAccessKey() string {
+	return path.Join(e.version, e.auth.exchangeAccessKey)
 }
 
 type ClientParams struct {
@@ -396,7 +402,7 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 
 func (c *Client) parseBody(response *http.Response) (resBytes []byte, err error) {
 	if response.Body != nil {
-		resBytes, err = ioutil.ReadAll(response.Body)
+		resBytes, err = io.ReadAll(response.Body)
 		if err != nil {
 			logger.LogInfo("failed reading body from request to [%s]", response.Request.URL.String())
 			return nil, err

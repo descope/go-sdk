@@ -241,4 +241,7 @@ type Authentication interface {
 	// LogoutWithOptions - Use to perform logout from all active devices. This will revoke the given tokens
 	// and if given options will also remove existing session on the given response.
 	LogoutWithOptions(request *http.Request, options ...Option) error
+
+	// ExchangeAccessKey - Use to exchange an access key for a session token.
+	ExchangeAccessKey(accessKey string) (bool, *Token, error)
 }

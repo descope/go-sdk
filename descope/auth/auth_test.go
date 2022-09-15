@@ -615,3 +615,44 @@ func BenchmarkValidateSession(b *testing.B) {
 		_, _, _ = a.validateSession(jwtTokenValid, "", false)
 	}
 }
+
+func TestExchangeAccessKey(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+
+	ok, token, err := a.ExchangeAccessKey("foo")
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.NotNil(t, token)
+}
+
+func TestExchangeAccessKeyBadRequest(t *testing.T) {
+	a, err := newTestAuth(nil, DoBadRequest(nil))
+	require.NoError(t, err)
+
+	ok, token, err := a.ExchangeAccessKey("foo")
+	require.ErrorIs(t, err, errors.UnauthorizedError)
+	require.False(t, ok)
+	require.Nil(t, token)
+}
+
+func TestExchangeAccessKeyEmptyResponse(t *testing.T) {
+	a, err := newTestAuth(nil, DoOkWithBody(nil, ""))
+	require.NoError(t, err)
+
+	ok, token, err := a.ExchangeAccessKey("foo")
+	require.ErrorIs(t, err, errors.InvalidAccessKeyResponse)
+	require.False(t, ok)
+	require.Nil(t, token)
+}
+
+func TestExchangeAccessKeyInvalidResponse(t *testing.T) {
+	expectedResponse := JWTResponse{}
+	a, err := newTestAuth(nil, DoOkWithBody(nil, expectedResponse))
+	require.NoError(t, err)
+
+	ok, token, err := a.ExchangeAccessKey("foo")
+	require.ErrorIs(t, err, errors.InvalidAccessKeyResponse)
+	require.False(t, ok)
+	require.Nil(t, token)
+}
