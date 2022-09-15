@@ -163,24 +163,6 @@ func (auth *authenticationService) RefreshSessionWithOptions(request *http.Reque
 	return auth.validateSession(sessionToken, refreshToken, true, options...)
 }
 
-func (auth *authenticationService) exchangeAccessKeyWithRequest(request *http.Request) (success bool, SessionToken *Token, err error) {
-	if request == nil {
-		return false, nil, errors.MissingProviderError
-	}
-
-	authHeader := request.Header.Get(api.AuthorizationHeaderName)
-	if !strings.HasPrefix(authHeader, api.BearerAuthorizationPrefix) {
-		return false, nil, errors.MissingAccessKeyError
-	}
-
-	accessKey := strings.TrimPrefix(authHeader, api.BearerAuthorizationPrefix)
-	if len(accessKey) == 0 {
-		return false, nil, errors.MissingAccessKeyError
-	}
-
-	return auth.ExchangeAccessKey(accessKey)
-}
-
 func (auth *authenticationService) ExchangeAccessKey(accessKey string) (success bool, SessionToken *Token, err error) {
 	httpResponse, err := auth.client.DoGetRequest(api.Routes.ExchangeAccessKey(), &api.HTTPRequest{}, accessKey)
 	if err != nil {
