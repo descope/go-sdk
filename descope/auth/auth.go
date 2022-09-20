@@ -80,7 +80,7 @@ func (auth *authenticationService) Logout(request *http.Request, w http.Response
 
 func (auth *authenticationService) LogoutWithOptions(request *http.Request, options ...Option) error {
 	if request == nil {
-		return errors.MissingProviderError
+		return errors.MissingRequestError
 	}
 
 	_, refreshToken := provideTokens(request)
@@ -128,7 +128,7 @@ func (auth *authenticationService) LogoutWithOptions(request *http.Request, opti
 
 func (auth *authenticationService) Me(request *http.Request) (*UserResponse, error) {
 	if request == nil {
-		return nil, errors.MissingProviderError
+		return nil, errors.MissingRequestError
 	}
 
 	_, refreshToken := provideTokens(request)

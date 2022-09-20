@@ -495,7 +495,7 @@ func TestLogoutEmptyRequest(t *testing.T) {
 
 	err = a.LogoutWithOptions(nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.MissingProviderError)
+	assert.ErrorIs(t, err, errors.MissingRequestError)
 }
 
 func TestLogoutMissingToken(t *testing.T) {
