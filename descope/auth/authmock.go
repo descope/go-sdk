@@ -123,6 +123,9 @@ type MockDescopeAuthentication struct {
 	ExchangeAccessKeyResponseNotOK bool
 	ExchangeAccessKeyResponseInfo  *Token
 	ExchangeAccessKeyResponseError error
+
+	MeResponseInfo  *UserResponse
+	MeResponseError error
 }
 
 func NewMockDescopeAuthentication() MockDescopeAuthentication {
@@ -419,4 +422,8 @@ func (m MockDescopeAuthenticationWebAuthn) UpdateUserDeviceFinish(_ *WebAuthnFin
 
 func (m MockDescopeAuthentication) ExchangeAccessKey(_ string) (bool, *Token, error) {
 	return !m.ExchangeAccessKeyResponseNotOK, m.ExchangeAccessKeyResponseInfo, m.ExchangeAccessKeyResponseError
+}
+
+func (m MockDescopeAuthentication) Me(_ *http.Request) (*UserResponse, error) {
+	return m.MeResponseInfo, m.MeResponseError
 }

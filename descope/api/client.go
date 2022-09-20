@@ -85,6 +85,7 @@ var (
 		logoutAll: "auth/logoutall",
 		keys:      "/keys/",
 		refresh:   "auth/refresh",
+		me:        "auth/me",
 	}
 )
 
@@ -122,6 +123,7 @@ type endpoints struct {
 	logoutAll string
 	keys      string
 	refresh   string
+	me        string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -192,6 +194,9 @@ func (e *endpoints) GetMagicLinkSession() string {
 }
 func (e *endpoints) Logout() string {
 	return path.Join(e.version, e.logoutAll)
+}
+func (e *endpoints) Me() string {
+	return path.Join(e.version, e.me)
 }
 func (e *endpoints) GetKeys() string {
 	return path.Join(e.version, e.keys)
