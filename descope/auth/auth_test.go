@@ -48,6 +48,8 @@ var (
 	mockAuthInvalidRefreshCookie = &http.Cookie{Value: jwtTokenExpired, Name: RefreshCookieName}
 
 	mockAuthSessionBody = fmt.Sprintf(`{"refreshJwt": "%s", "cookiePath": "%s", "cookieDomain": "%s" }`, jwtTokenValid, "/my-path", "my-domain")
+
+	mockUserResponseBody = fmt.Sprintf(`{"name": "%s", "email": "%s", "userId": "%s"}`, "kuku name", "kuku@test.com", "kuku")
 )
 
 func readBodyMap(r *http.Request) (m map[string]interface{}, err error) {
@@ -493,7 +495,7 @@ func TestLogoutEmptyRequest(t *testing.T) {
 
 	err = a.LogoutWithOptions(nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.MissingProviderError)
+	assert.ErrorIs(t, err, errors.MissingRequestError)
 }
 
 func TestLogoutMissingToken(t *testing.T) {
@@ -655,4 +657,36 @@ func TestExchangeAccessKeyInvalidResponse(t *testing.T) {
 	require.ErrorIs(t, err, errors.InvalidAccessKeyResponse)
 	require.False(t, ok)
 	require.Nil(t, token)
+}
+
+func TestMe(t *testing.T) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockUserResponseBody))}, nil
+	})
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+
+	user, err := a.Me(request)
+	require.NoError(t, err)
+	assert.Equal(t, "kuku", user.UserID)
+	assert.Equal(t, "kuku@test.com", user.Email)
+	assert.Equal(t, "kuku name", user.Name)
+}
+
+func TestMeNoRequest(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	user, err := a.Me(nil)
+	assert.Error(t, err)
+	assert.Nil(t, user)
+}
+
+func TestMeNoToken(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	user, err := a.Me(request)
+	assert.Error(t, err)
+	assert.Nil(t, user)
 }

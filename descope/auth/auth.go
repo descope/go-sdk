@@ -80,7 +80,7 @@ func (auth *authenticationService) Logout(request *http.Request, w http.Response
 
 func (auth *authenticationService) LogoutWithOptions(request *http.Request, options ...Option) error {
 	if request == nil {
-		return errors.MissingProviderError
+		return errors.MissingRequestError
 	}
 
 	_, refreshToken := provideTokens(request)
@@ -124,6 +124,30 @@ func (auth *authenticationService) LogoutWithOptions(request *http.Request, opti
 	}, jwtResponse))
 	Options(options).SetCookies(cookies)
 	return nil
+}
+
+func (auth *authenticationService) Me(request *http.Request) (*UserResponse, error) {
+	if request == nil {
+		return nil, errors.MissingRequestError
+	}
+
+	_, refreshToken := provideTokens(request)
+	if refreshToken == "" {
+		logger.LogDebug("unable to find tokens from cookies")
+		return nil, errors.RefreshTokenError
+	}
+
+	_, err := auth.validateJWT(refreshToken)
+	if err != nil {
+		logger.LogDebug("invalid refresh token")
+		return nil, errors.RefreshTokenError
+	}
+
+	httpResponse, err := auth.client.DoGetRequest(api.Routes.Me(), &api.HTTPRequest{}, refreshToken)
+	if err != nil {
+		return nil, err
+	}
+	return auth.extractUserResponse(httpResponse.BodyStr)
 }
 
 func (auth *authenticationService) ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *Token, error) {
@@ -269,6 +293,19 @@ func (auth *authenticationsBase) extractJWTResponse(bodyStr string) (*JWTRespons
 		return nil, err
 	}
 	return &jRes, nil
+}
+
+func (auth *authenticationsBase) extractUserResponse(bodyStr string) (*UserResponse, error) {
+	if bodyStr == "" {
+		return nil, nil
+	}
+	res := UserResponse{}
+	err := utils.Unmarshal([]byte(bodyStr), &res)
+	if err != nil {
+		logger.LogError("unable to parse user response", err)
+		return nil, err
+	}
+	return &res, nil
 }
 
 func (auth *authenticationsBase) collectJwts(jwt, rJwt string, tokens []*Token) ([]*Token, error) {

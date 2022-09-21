@@ -15,6 +15,7 @@ var (
 	InvalidAccessKeyResponse  = NewValidationError("invalid access key response received")
 	MagicLinkUnauthorized     = NewValidationError("pending session token")
 	UnauthorizedError         = NewError(BadRequestErrorCode, "unauthorized access")
+	MissingRequestError       = NewValidationError("nil request provided")
 )
 
 type WebError struct {

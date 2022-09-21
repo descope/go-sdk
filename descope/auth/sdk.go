@@ -242,6 +242,10 @@ type Authentication interface {
 	// and if given options will also remove existing session on the given response.
 	LogoutWithOptions(request *http.Request, options ...Option) error
 
+	// Me - Use to retrieve current session user details. The request requires a valid refresh token.
+	// returns the user details or error if the refresh token is not valid.
+	Me(request *http.Request) (*UserResponse, error)
+
 	// ExchangeAccessKey - Use to exchange an access key for a session token.
 	ExchangeAccessKey(accessKey string) (bool, *Token, error)
 }
