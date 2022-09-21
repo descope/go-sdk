@@ -13,6 +13,7 @@ import (
 	"github.com/descope/go-sdk/descope/logger"
 	"github.com/descope/go-sdk/descope/utils"
 	"github.com/lestrrat-go/jwx/v2/jwt"
+	"golang.org/x/exp/slices"
 )
 
 type AuthParams struct {
@@ -148,6 +149,43 @@ func (auth *authenticationService) Me(request *http.Request) (*UserResponse, err
 		return nil, err
 	}
 	return auth.extractUserResponse(httpResponse.BodyStr)
+}
+
+func (auth *authenticationService) ValidatePermissions(token *Token, permissions []string) bool {
+	return auth.ValidateTenantPermissions(token, "", permissions)
+}
+
+func (auth *authenticationService) ValidateTenantPermissions(token *Token, tenant string, permissions []string) bool {
+	// in case ValidateSession failed or there's no Claims map for some reason
+	if token == nil || token.Claims == nil {
+		return false
+	}
+
+	// look for the granted permissions list in the appropriate place
+	var granted []string
+	if tenant == "" {
+		if v, ok := token.Claims[claimPermissions].([]string); ok {
+			granted = v
+		}
+	} else {
+		if v, ok := token.GetTenantValue(tenant, claimPermissions).([]string); ok {
+			granted = v
+		}
+	}
+
+	// warn if it seems like programmer forgot the tenant ID
+	if len(granted) == 0 && tenant == "" && len(token.GetTenants()) != 0 {
+		logger.LogDebug("no permission found but tenant might need to be specified")
+	}
+
+	// check that every requested permission appears in the granted list
+	for i := range permissions {
+		if !slices.Contains(granted, permissions[i]) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (auth *authenticationService) ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *Token, error) {
