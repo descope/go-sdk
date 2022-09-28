@@ -384,6 +384,7 @@ const (
 
 	claimAttributeName = "drn"
 	claimPermissions   = "permissions"
+	claimRoles         = "roles"
 )
 
 var (

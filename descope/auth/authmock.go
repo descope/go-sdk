@@ -118,6 +118,9 @@ type MockDescopeAuthentication struct {
 	RefreshSessionResponseInfo  *Token
 	RefreshSessionResponseError error
 
+	ValidatePermissionsResponse bool
+	ValidateRolesResponse       bool
+
 	LogoutResponseError error
 
 	ExchangeAccessKeyResponseNotOK bool
@@ -372,6 +375,22 @@ func (m MockDescopeAuthentication) RefreshSession(_ *http.Request, _ http.Respon
 
 func (m MockDescopeAuthentication) RefreshSessionWithOptions(_ *http.Request, _ ...Option) (bool, *Token, error) {
 	return !m.RefreshSessionResponseNotOK, m.RefreshSessionResponseInfo, m.RefreshSessionResponseError
+}
+
+func (m MockDescopeAuthentication) ValidatePermissions(_ *Token, _ []string) bool {
+	return m.ValidatePermissionsResponse
+}
+
+func (m MockDescopeAuthentication) ValidateTenantPermissions(_ *Token, _ string, _ []string) bool {
+	return m.ValidatePermissionsResponse
+}
+
+func (m MockDescopeAuthentication) ValidateRoles(_ *Token, _ []string) bool {
+	return m.ValidateRolesResponse
+}
+
+func (m MockDescopeAuthentication) ValidateTenantRoles(_ *Token, _ string, _ []string) bool {
+	return m.ValidateRolesResponse
 }
 
 func (m MockDescopeAuthentication) Logout(r *http.Request, _ http.ResponseWriter) error {

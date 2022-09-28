@@ -151,43 +151,6 @@ func (auth *authenticationService) Me(request *http.Request) (*UserResponse, err
 	return auth.extractUserResponse(httpResponse.BodyStr)
 }
 
-func (auth *authenticationService) ValidatePermissions(token *Token, permissions []string) bool {
-	return auth.ValidateTenantPermissions(token, "", permissions)
-}
-
-func (auth *authenticationService) ValidateTenantPermissions(token *Token, tenant string, permissions []string) bool {
-	// in case ValidateSession failed or there's no Claims map for some reason
-	if token == nil || token.Claims == nil {
-		return false
-	}
-
-	// look for the granted permissions list in the appropriate place
-	var granted []string
-	if tenant == "" {
-		if v, ok := token.Claims[claimPermissions].([]string); ok {
-			granted = v
-		}
-	} else {
-		if v, ok := token.GetTenantValue(tenant, claimPermissions).([]string); ok {
-			granted = v
-		}
-	}
-
-	// warn if it seems like programmer forgot the tenant ID
-	if len(granted) == 0 && tenant == "" && len(token.GetTenants()) != 0 {
-		logger.LogDebug("no permission found but tenant might need to be specified")
-	}
-
-	// check that every requested permission appears in the granted list
-	for i := range permissions {
-		if !slices.Contains(granted, permissions[i]) {
-			return false
-		}
-	}
-
-	return true
-}
-
 func (auth *authenticationService) ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *Token, error) {
 	return auth.ValidateSessionWithOptions(request, WithResponseOption(w))
 }
@@ -243,6 +206,34 @@ func (auth *authenticationService) ExchangeAccessKey(accessKey string) (success 
 	}
 
 	return true, tokens[0], nil
+}
+
+func (auth *authenticationService) ValidatePermissions(token *Token, permissions []string) bool {
+	return auth.ValidateTenantPermissions(token, "", permissions)
+}
+
+func (auth *authenticationService) ValidateTenantPermissions(token *Token, tenant string, permissions []string) bool {
+	granted := getAuthorizationClaimItems(token, tenant, claimPermissions)
+	for i := range permissions {
+		if !slices.Contains(granted, permissions[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+func (auth *authenticationService) ValidateRoles(token *Token, roles []string) bool {
+	return auth.ValidateTenantRoles(token, "", roles)
+}
+
+func (auth *authenticationService) ValidateTenantRoles(token *Token, tenant string, roles []string) bool {
+	membership := getAuthorizationClaimItems(token, tenant, claimRoles)
+	for i := range roles {
+		if !slices.Contains(membership, roles[i]) {
+			return false
+		}
+	}
+	return true
 }
 
 // AuthenticationMiddleware - middleware used to validate session and invoke if provided a failure and
@@ -539,6 +530,33 @@ func validateTokenError(err error) (bool, error) {
 		return false, errors.NewUnauthorizedError()
 	}
 	return true, nil
+}
+
+func getAuthorizationClaimItems(token *Token, tenant string, claim string) []string {
+	items := []string{}
+
+	// in case ValidateSession failed or there's no Claims map for some reason
+	if token == nil || token.Claims == nil {
+		return items
+	}
+
+	// look for the granted claim list in the appropriate place
+	if tenant == "" {
+		if v, ok := token.Claims[claim].([]string); ok {
+			items = v
+		}
+	} else {
+		if v, ok := token.GetTenantValue(tenant, claim).([]string); ok {
+			items = v
+		}
+	}
+
+	// warn if it seems like programmer forgot the tenant ID
+	if len(items) == 0 && tenant == "" && len(token.GetTenants()) != 0 {
+		logger.LogDebug("no authorization items found but tenant might need to be specified")
+	}
+
+	return items
 }
 
 func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (*MagicLinkResponse, error) {

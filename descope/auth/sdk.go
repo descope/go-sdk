@@ -233,6 +233,25 @@ type Authentication interface {
 	RefreshSession(request *http.Request, w http.ResponseWriter) (bool, *Token, error)
 	RefreshSessionWithOptions(request *http.Request, options ...Option) (bool, *Token, error)
 
+	// ExchangeAccessKey - Use to exchange an access key for a session token.
+	ExchangeAccessKey(accessKey string) (bool, *Token, error)
+
+	// ValidatePermissions - Use to ensure that a validated session token has been granted
+	// the specified permissions.
+	// This is a shortcut for ValidateTenantPermissions(token, "", permissions)
+	ValidatePermissions(token *Token, permissions []string) bool
+	// ValidateTenantPermissions - Use to ensure that a validated session token has been
+	// granted the specified permissions for a specific tenant.
+	ValidateTenantPermissions(token *Token, tenant string, permissions []string) bool
+
+	// ValidateRoles - Use to ensure that a validated session token has been granted the
+	// specified roles.
+	// This is a shortcut for ValidateTenantRoles(token, "", roles)
+	ValidateRoles(token *Token, roles []string) bool
+	// ValidateTenantRoles - Use to ensure that a validated session token has been granted
+	// the specified roles for a specific tenant.
+	ValidateTenantRoles(token *Token, tenant string, roles []string) bool
+
 	// Logout - Use to perform logout from all active devices. This will revoke the given tokens
 	// and if given options will also remove existing session on the given response sent to the client.
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
