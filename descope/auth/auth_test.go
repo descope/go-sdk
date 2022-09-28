@@ -50,6 +50,9 @@ var (
 	mockAuthSessionBody = fmt.Sprintf(`{"refreshJwt": "%s", "cookiePath": "%s", "cookieDomain": "%s" }`, jwtTokenValid, "/my-path", "my-domain")
 
 	mockUserResponseBody = fmt.Sprintf(`{"name": "%s", "email": "%s", "userId": "%s"}`, "kuku name", "kuku@test.com", "kuku")
+
+	mockAuthorizationToken       = &Token{Claims: map[string]any{claimPermissions: []string{"foo", "bar"}, claimRoles: []string{"abc", "xyz"}}}
+	mockAuthorizationTenantToken = &Token{Claims: map[string]any{ClaimAuthorizedTenants: map[string]any{"kuku": mockAuthorizationToken.Claims}}}
 )
 
 func readBodyMap(r *http.Request) (m map[string]interface{}, err error) {
@@ -657,6 +660,56 @@ func TestExchangeAccessKeyInvalidResponse(t *testing.T) {
 	require.ErrorIs(t, err, errors.InvalidAccessKeyResponse)
 	require.False(t, ok)
 	require.Nil(t, token)
+}
+
+func TestValidatePermissions(t *testing.T) {
+	a, err := newTestAuth(nil, DoOkWithBody(nil, ""))
+	require.NoError(t, err)
+
+	require.True(t, a.ValidatePermissions(mockAuthorizationToken, []string{}))
+	require.True(t, a.ValidatePermissions(mockAuthorizationToken, []string{"foo"}))
+	require.True(t, a.ValidatePermissions(mockAuthorizationToken, []string{"foo", "bar"}))
+	require.False(t, a.ValidatePermissions(mockAuthorizationToken, []string{"foo", "bar", "qux"}))
+
+	require.True(t, a.ValidatePermissions(mockAuthorizationTenantToken, []string{}))
+	require.False(t, a.ValidatePermissions(mockAuthorizationTenantToken, []string{"foo"}))
+	require.False(t, a.ValidatePermissions(mockAuthorizationTenantToken, []string{"foo", "bar"}))
+	require.False(t, a.ValidatePermissions(mockAuthorizationTenantToken, []string{"foo", "bar", "qux"}))
+
+	require.True(t, a.ValidateTenantPermissions(mockAuthorizationToken, "kuku", []string{}))
+	require.False(t, a.ValidateTenantPermissions(mockAuthorizationToken, "kuku", []string{"foo"}))
+	require.False(t, a.ValidateTenantPermissions(mockAuthorizationToken, "kuku", []string{"foo", "bar"}))
+	require.False(t, a.ValidateTenantPermissions(mockAuthorizationToken, "kuku", []string{"foo", "bar", "qux"}))
+
+	require.True(t, a.ValidateTenantPermissions(mockAuthorizationTenantToken, "kuku", []string{}))
+	require.True(t, a.ValidateTenantPermissions(mockAuthorizationTenantToken, "kuku", []string{"foo"}))
+	require.True(t, a.ValidateTenantPermissions(mockAuthorizationTenantToken, "kuku", []string{"foo", "bar"}))
+	require.False(t, a.ValidateTenantPermissions(mockAuthorizationTenantToken, "kuku", []string{"foo", "bar", "qux"}))
+}
+
+func TestValidateRoles(t *testing.T) {
+	a, err := newTestAuth(nil, DoOkWithBody(nil, ""))
+	require.NoError(t, err)
+
+	require.True(t, a.ValidateRoles(mockAuthorizationToken, []string{}))
+	require.True(t, a.ValidateRoles(mockAuthorizationToken, []string{"abc"}))
+	require.True(t, a.ValidateRoles(mockAuthorizationToken, []string{"abc", "xyz"}))
+	require.False(t, a.ValidateRoles(mockAuthorizationToken, []string{"abc", "xyz", "tuv"}))
+
+	require.True(t, a.ValidateRoles(mockAuthorizationTenantToken, []string{}))
+	require.False(t, a.ValidateRoles(mockAuthorizationTenantToken, []string{"abc"}))
+	require.False(t, a.ValidateRoles(mockAuthorizationTenantToken, []string{"abc", "xyz"}))
+	require.False(t, a.ValidateRoles(mockAuthorizationTenantToken, []string{"abc", "xyz", "tuv"}))
+
+	require.True(t, a.ValidateTenantRoles(mockAuthorizationToken, "kuku", []string{}))
+	require.False(t, a.ValidateTenantRoles(mockAuthorizationToken, "kuku", []string{"abc"}))
+	require.False(t, a.ValidateTenantRoles(mockAuthorizationToken, "kuku", []string{"abc", "xyz"}))
+	require.False(t, a.ValidateTenantRoles(mockAuthorizationToken, "kuku", []string{"abc", "xyz", "tuv"}))
+
+	require.True(t, a.ValidateTenantRoles(mockAuthorizationTenantToken, "kuku", []string{}))
+	require.True(t, a.ValidateTenantRoles(mockAuthorizationTenantToken, "kuku", []string{"abc"}))
+	require.True(t, a.ValidateTenantRoles(mockAuthorizationTenantToken, "kuku", []string{"abc", "xyz"}))
+	require.False(t, a.ValidateTenantRoles(mockAuthorizationTenantToken, "kuku", []string{"abc", "xyz", "tuv"}))
 }
 
 func TestMe(t *testing.T) {

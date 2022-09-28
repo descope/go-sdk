@@ -6,6 +6,7 @@ import (
 
 	"github.com/descope/go-sdk/descope/logger"
 	"github.com/lestrrat-go/jwx/v2/jwt"
+	"golang.org/x/exp/maps"
 )
 
 // TOTPResponse - returns all relevant data to complete a TOTP registration
@@ -42,19 +43,25 @@ type Token struct {
 }
 
 func (to *Token) GetTenants() []string {
-	var res []string
-	if to.Claims == nil {
-		return res
+	tenants := to.getTenants()
+	return maps.Keys(tenants)
+}
+
+func (to *Token) GetTenantValue(tenant, key string) any {
+	tenants := to.getTenants()
+	if info, ok := tenants[tenant].(map[string]any); ok {
+		return info[key]
 	}
-	m := to.Claims[ClaimAuthorizedTenants]
-	tenants, ok := m.(map[string]interface{})
-	if !ok {
-		return res
+	return nil
+}
+
+func (to *Token) getTenants() map[string]any {
+	if to.Claims != nil {
+		if tenants, ok := to.Claims[ClaimAuthorizedTenants].(map[string]any); ok {
+			return tenants
+		}
 	}
-	for k := range tenants {
-		res = append(res, k)
-	}
-	return res
+	return make(map[string]any)
 }
 
 type JWTResponse struct {
@@ -275,10 +282,6 @@ type authenticationGetMagicLinkSessionBody struct {
 	PendingRef string `json:"pendingRef"`
 }
 
-type exchangeTokenRequestBody struct {
-	Code string `json:"code"`
-}
-
 func newSignInRequestBody(externalID string) *authenticationRequestBody {
 	return &authenticationRequestBody{ExternalID: externalID}
 }
@@ -344,10 +347,6 @@ func newAuthenticationGetMagicLinkSessionBody(pendingRef string) *authentication
 	return &authenticationGetMagicLinkSessionBody{PendingRef: pendingRef}
 }
 
-func newExchangeTokenRequest(code string) *exchangeTokenRequestBody {
-	return &exchangeTokenRequestBody{Code: code}
-}
-
 type DeliveryMethod string
 
 type OAuthProvider string
@@ -376,6 +375,8 @@ const (
 	ClaimAuthorizedTenants              = "tenants"
 
 	claimAttributeName = "drn"
+	claimPermissions   = "permissions"
+	claimRoles         = "roles"
 )
 
 var (
