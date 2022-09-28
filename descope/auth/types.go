@@ -282,10 +282,6 @@ type authenticationGetMagicLinkSessionBody struct {
 	PendingRef string `json:"pendingRef"`
 }
 
-type exchangeTokenRequestBody struct {
-	Code string `json:"code"`
-}
-
 func newSignInRequestBody(externalID string) *authenticationRequestBody {
 	return &authenticationRequestBody{ExternalID: externalID}
 }
@@ -349,10 +345,6 @@ func newMagicLinkUpdatePhoneRequestBody(externalID, phone string, URI string, cr
 
 func newAuthenticationGetMagicLinkSessionBody(pendingRef string) *authenticationGetMagicLinkSessionBody {
 	return &authenticationGetMagicLinkSessionBody{PendingRef: pendingRef}
-}
-
-func newExchangeTokenRequest(code string) *exchangeTokenRequestBody {
-	return &exchangeTokenRequestBody{Code: code}
 }
 
 type DeliveryMethod string

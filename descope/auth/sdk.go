@@ -264,7 +264,4 @@ type Authentication interface {
 	// Me - Use to retrieve current session user details. The request requires a valid refresh token.
 	// returns the user details or error if the refresh token is not valid.
 	Me(request *http.Request) (*UserResponse, error)
-
-	// ExchangeAccessKey - Use to exchange an access key for a session token.
-	ExchangeAccessKey(accessKey string) (bool, *Token, error)
 }
