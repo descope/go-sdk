@@ -82,7 +82,6 @@ var (
 			updateUserPhoneOTP:       "auth/otp/update/phone",
 			exchangeAccessKey:        "auth/accesskey/exchange",
 		},
-		logout:    "auth/logout",
 		logoutAll: "auth/logoutall",
 		keys:      "/keys/",
 		refresh:   "auth/refresh",
@@ -121,7 +120,6 @@ type endpoints struct {
 		updateUserPhoneOTP       string
 		exchangeAccessKey        string
 	}
-	logout    string
 	logoutAll string
 	keys      string
 	refresh   string
@@ -193,9 +191,6 @@ func (e *endpoints) WebAuthnUpdateUserDeviceFinish() string {
 }
 func (e *endpoints) GetMagicLinkSession() string {
 	return path.Join(e.version, e.auth.getMagicLinkSession)
-}
-func (e *endpoints) Logout() string {
-	return path.Join(e.version, e.logout)
 }
 func (e *endpoints) LogoutAll() string {
 	return path.Join(e.version, e.logoutAll)

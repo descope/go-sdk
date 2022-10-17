@@ -75,54 +75,31 @@ func (auth *authenticationService) WebAuthn() WebAuthn {
 	return auth.webAuthn
 }
 
-func (auth *authenticationService) Logout(request *http.Request, w http.ResponseWriter) error {
-	return auth.LogoutWithOptions(request, WithResponseOption(w))
+func (auth *authenticationService) DeleteCookies(request *http.Request, w http.ResponseWriter) error {
+	return auth.DeleteCookiesWithOptions(request, WithResponseOption(w))
 }
 
-func (auth *authenticationService) LogoutWithOptions(request *http.Request, options ...Option) error {
+func (auth *authenticationService) DeleteCookiesWithOptions(request *http.Request, options ...Option) error {
 	if request == nil {
 		return errors.MissingRequestError
 	}
 
-	_, refreshToken := provideTokens(request)
-	if refreshToken == "" {
-		logger.LogDebug("unable to find tokens from cookies")
-		return errors.RefreshTokenError
+	cookies := make([]*http.Cookie, 0)
+	sessionCookie, _ := request.Cookie(SessionCookieName)
+	refreshCookie, _ := request.Cookie(RefreshCookieName)
+
+	if sessionCookie != nil {
+		sessionCookie.MaxAge = -1
+		sessionCookie.Value = ""
+		cookies = append(cookies, sessionCookie)
 	}
 
-	_, err := auth.validateJWT(refreshToken)
-	if err != nil {
-		logger.LogDebug("invalid refresh token")
-		return errors.RefreshTokenError
+	if refreshCookie != nil {
+		refreshCookie.MaxAge = -1
+		refreshCookie.Value = ""
+		cookies = append(cookies, refreshCookie)
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(api.Routes.Logout(), nil, &api.HTTPRequest{}, refreshToken)
-	if err != nil {
-		return err
-	}
-	cookies := httpResponse.Res.Cookies()
-
-	jwtResponse, err := auth.extractJWTResponse(httpResponse.BodyStr)
-	if err != nil {
-		return err
-	}
-	if jwtResponse == nil {
-		jwtResponse = &JWTResponse{}
-	}
-	if len(jwtResponse.CookiePath) == 0 {
-		jwtResponse.CookiePath = "/"
-	}
-	jwtResponse.CookieMaxAge = 0
-	jwtResponse.CookieExpiration = 0
-
-	// delete cookies by not specifying max-age (e.i. max-age=0)
-	cookies = append(cookies, createCookie(&Token{
-		JWT:    "",
-		Claims: map[string]interface{}{claimAttributeName: SessionCookieName},
-	}, jwtResponse))
-	cookies = append(cookies, createCookie(&Token{JWT: "",
-		Claims: map[string]interface{}{claimAttributeName: RefreshCookieName},
-	}, jwtResponse))
 	Options(options).SetCookies(cookies)
 	return nil
 }
