@@ -96,7 +96,7 @@ func (auth *authenticationService) LogoutWithOptions(request *http.Request, opti
 		return errors.RefreshTokenError
 	}
 
-	httpResponse, err := auth.client.DoGetRequest(api.Routes.Logout(), &api.HTTPRequest{}, refreshToken)
+	httpResponse, err := auth.client.DoPostRequest(api.Routes.Logout(), nil, &api.HTTPRequest{}, refreshToken)
 	if err != nil {
 		return err
 	}
