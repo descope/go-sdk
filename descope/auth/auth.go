@@ -127,6 +127,58 @@ func (auth *authenticationService) LogoutWithOptions(request *http.Request, opti
 	return nil
 }
 
+func (auth *authenticationService) LogoutAll(request *http.Request, w http.ResponseWriter) error {
+	return auth.LogoutAllWithOptions(request, WithResponseOption(w))
+}
+
+func (auth *authenticationService) LogoutAllWithOptions(request *http.Request, options ...Option) error {
+	if request == nil {
+		return errors.MissingRequestError
+	}
+
+	_, refreshToken := provideTokens(request)
+	if refreshToken == "" {
+		logger.LogDebug("unable to find tokens from cookies")
+		return errors.RefreshTokenError
+	}
+
+	_, err := auth.validateJWT(refreshToken)
+	if err != nil {
+		logger.LogDebug("invalid refresh token")
+		return errors.RefreshTokenError
+	}
+
+	httpResponse, err := auth.client.DoPostRequest(api.Routes.LogoutAll(), nil, &api.HTTPRequest{}, refreshToken)
+	if err != nil {
+		return err
+	}
+	cookies := httpResponse.Res.Cookies()
+
+	jwtResponse, err := auth.extractJWTResponse(httpResponse.BodyStr)
+	if err != nil {
+		return err
+	}
+	if jwtResponse == nil {
+		jwtResponse = &JWTResponse{}
+	}
+	if len(jwtResponse.CookiePath) == 0 {
+		jwtResponse.CookiePath = "/"
+	}
+	jwtResponse.CookieMaxAge = 0
+	jwtResponse.CookieExpiration = 0
+
+	// delete cookies by not specifying max-age (e.i. max-age=0)
+	cookies = append(cookies, createCookie(&Token{
+		JWT:    "",
+		Claims: map[string]interface{}{claimAttributeName: SessionCookieName},
+	}, jwtResponse))
+	cookies = append(cookies, createCookie(&Token{JWT: "",
+		Claims: map[string]interface{}{claimAttributeName: RefreshCookieName},
+	}, jwtResponse))
+	Options(options).SetCookies(cookies)
+	return nil
+}
+
 func (auth *authenticationService) Me(request *http.Request) (*UserResponse, error) {
 	if request == nil {
 		return nil, errors.MissingRequestError

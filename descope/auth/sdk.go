@@ -252,14 +252,23 @@ type Authentication interface {
 	// the specified roles for a specific tenant.
 	ValidateTenantRoles(token *Token, tenant string, roles []string) bool
 
-	// Logout - Use to perform logout from all active devices. This will revoke the given tokens
+	// Logout - Use to perform logout the session user. This will revoke the given token
 	// and if given options will also remove existing session on the given response sent to the client.
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	// This is a shortcut for LogoutWithOptions(r, WithResponseOption(w))
 	Logout(request *http.Request, w http.ResponseWriter) error
-	// LogoutWithOptions - Use to perform logout from all active devices. This will revoke the given tokens
+	// LogoutWithOptions - Use to perform logout the session user. This will revoke the given token
 	// and if given options will also remove existing session on the given response.
 	LogoutWithOptions(request *http.Request, options ...Option) error
+
+	// LogoutAll - Use to perform logout from all active devices. This will revoke the given tokens
+	// and if given options will also remove existing session on the given response sent to the client.
+	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
+	// This is a shortcut for LogoutAllWithOptions(r, WithResponseOption(w))
+	LogoutAll(request *http.Request, w http.ResponseWriter) error
+	// LogoutAllWithOptions - Use to perform logout from all active devices. This will revoke the given tokens
+	// and if given options will also remove existing session on the given response.
+	LogoutAllWithOptions(request *http.Request, options ...Option) error
 
 	// Me - Use to retrieve current session user details. The request requires a valid refresh token.
 	// returns the user details or error if the refresh token is not valid.
