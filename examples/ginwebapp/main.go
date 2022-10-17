@@ -135,7 +135,7 @@ func handleIsHealthy(c *gin.Context) {
 }
 
 func handleLogout(c *gin.Context) {
-	err := client.Auth.LogoutAll(c.Request, c.Writer)
+	err := client.Auth.Logout(c.Request, c.Writer)
 	if err != nil {
 		setError(c, err.Error())
 	} else {

@@ -104,11 +104,11 @@ func (auth *authenticationService) DeleteCookiesWithOptions(request *http.Reques
 	return nil
 }
 
-func (auth *authenticationService) LogoutAll(request *http.Request, w http.ResponseWriter) error {
-	return auth.LogoutAllWithOptions(request, WithResponseOption(w))
+func (auth *authenticationService) Logout(request *http.Request, w http.ResponseWriter) error {
+	return auth.LogoutWithOptions(request, WithResponseOption(w))
 }
 
-func (auth *authenticationService) LogoutAllWithOptions(request *http.Request, options ...Option) error {
+func (auth *authenticationService) LogoutWithOptions(request *http.Request, options ...Option) error {
 	if request == nil {
 		return errors.MissingRequestError
 	}
@@ -125,7 +125,7 @@ func (auth *authenticationService) LogoutAllWithOptions(request *http.Request, o
 		return errors.RefreshTokenError
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(api.Routes.LogoutAll(), nil, &api.HTTPRequest{}, refreshToken)
+	httpResponse, err := auth.client.DoPostRequest(api.Routes.Logout(), nil, &api.HTTPRequest{}, refreshToken)
 	if err != nil {
 		return err
 	}

@@ -109,7 +109,7 @@ type MockDescopeAuthentication struct {
 	MockDescopeAuthenticationWebAuthn
 
 	AssertDeleteCookies func(r *http.Request)
-	AssertLogoutAll     func(r *http.Request)
+	AssertLogout        func(r *http.Request)
 
 	ValidateSessionResponseNotOK bool
 	ValidateSessionResponseInfo  *Token
@@ -123,7 +123,7 @@ type MockDescopeAuthentication struct {
 	ValidateRolesResponse       bool
 
 	DeleteCookiesResponseError error
-	LogoutAllResponseError     error
+	LogoutResponseError        error
 
 	ExchangeAccessKeyResponseNotOK bool
 	ExchangeAccessKeyResponseInfo  *Token
@@ -409,18 +409,18 @@ func (m MockDescopeAuthentication) DeleteCookiesWithOptions(r *http.Request, _ .
 	return m.DeleteCookiesResponseError
 }
 
-func (m MockDescopeAuthentication) LogoutAll(r *http.Request, _ http.ResponseWriter) error {
-	if m.AssertLogoutAll != nil {
-		m.AssertLogoutAll(r)
+func (m MockDescopeAuthentication) Logout(r *http.Request, _ http.ResponseWriter) error {
+	if m.AssertLogout != nil {
+		m.AssertLogout(r)
 	}
-	return m.LogoutAllResponseError
+	return m.LogoutResponseError
 }
 
-func (m MockDescopeAuthentication) LogoutAllWithOptions(r *http.Request, _ ...Option) error {
-	if m.AssertLogoutAll != nil {
-		m.AssertLogoutAll(r)
+func (m MockDescopeAuthentication) LogoutWithOptions(r *http.Request, _ ...Option) error {
+	if m.AssertLogout != nil {
+		m.AssertLogout(r)
 	}
-	return m.LogoutAllResponseError
+	return m.LogoutResponseError
 }
 
 func (m MockDescopeAuthenticationWebAuthn) SignUpStart(_ string, _ *User, _ string) (*WebAuthnTransactionResponse, error) {

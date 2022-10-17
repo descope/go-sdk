@@ -155,7 +155,7 @@ func handleOAuth(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleLogout(w http.ResponseWriter, r *http.Request) {
-	err := client.Auth.LogoutAll(r, w)
+	err := client.Auth.Logout(r, w)
 	if err != nil {
 		setError(w, err.Error())
 	} else {
