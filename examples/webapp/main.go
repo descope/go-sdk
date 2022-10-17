@@ -79,7 +79,7 @@ func main() {
 		setResponse(w, http.StatusUnauthorized, "Unauthorized")
 	}, nil))
 	authRouter.HandleFunc("/private", handleIsHealthy)
-	authRouter.HandleFunc("/logout", handleLogout)
+	authRouter.HandleFunc("/logout", handleLogout) // Logout from all user's active sessions
 
 	server := &http.Server{Addr: fmt.Sprintf(":%s", port), Handler: router}
 	go func() {
@@ -155,7 +155,7 @@ func handleOAuth(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleLogout(w http.ResponseWriter, r *http.Request) {
-	err := client.Auth.Logout(r, w)
+	err := client.Auth.LogoutAll(r, w)
 	if err != nil {
 		setError(w, err.Error())
 	} else {

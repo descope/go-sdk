@@ -126,7 +126,7 @@ func main() {
 	authorized := r.Group("/")
 	authorized.Use(descopegin.AuthneticationMiddleware(client.Auth, nil, nil))
 	authorized.GET("/private", handleIsHealthy)
-	authorized.GET("/logout", handleLogout)
+	authorized.GET("/logout", handleLogout) // Logout from all user's active sessions
 	r.RunTLS(fmt.Sprintf(":%s", port), TLSCertPath, TLSkeyPath)
 }
 
@@ -135,7 +135,7 @@ func handleIsHealthy(c *gin.Context) {
 }
 
 func handleLogout(c *gin.Context) {
-	err := client.Auth.Logout(c.Request, c.Writer)
+	err := client.Auth.LogoutAll(c.Request, c.Writer)
 	if err != nil {
 		setError(c, err.Error())
 	} else {
