@@ -259,13 +259,13 @@ type Authentication interface {
 	// DeleteCookiesWithOptions - Deletes the session and refresh cookies in the http response.
 	DeleteCookiesWithOptions(request *http.Request, options ...Option) error
 
-	// LogoutAll - Use to perform logout from all active devices. This will revoke the given tokens
+	// LogoutAll - Use to perform logout from all active sessions for the request user. This will revoke the given tokens
 	// and if given options will also remove existing session on the given response sent to the client.
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	// This is a shortcut for LogoutAllWithOptions(r, WithResponseOption(w))
 	LogoutAll(request *http.Request, w http.ResponseWriter) error
-	// LogoutAllWithOptions - Use to perform logout from all active devices. This will revoke the given tokens
-	// and if given options will also remove existing session on the given response.
+	// LogoutAllWithOptions - Use to perform logout from all active sessions for the request user.
+	// This will revoke the given tokens and if given options will also remove existing session on the given response.
 	LogoutAllWithOptions(request *http.Request, options ...Option) error
 
 	// Me - Use to retrieve current session user details. The request requires a valid refresh token.
