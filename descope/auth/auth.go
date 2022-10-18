@@ -75,6 +75,35 @@ func (auth *authenticationService) WebAuthn() WebAuthn {
 	return auth.webAuthn
 }
 
+func (auth *authenticationService) DeleteCookies(request *http.Request, w http.ResponseWriter) error {
+	return auth.DeleteCookiesWithOptions(request, WithResponseOption(w))
+}
+
+func (auth *authenticationService) DeleteCookiesWithOptions(request *http.Request, options ...Option) error {
+	if request == nil {
+		return errors.MissingRequestError
+	}
+
+	cookies := make([]*http.Cookie, 0)
+	sessionCookie, _ := request.Cookie(SessionCookieName)
+	refreshCookie, _ := request.Cookie(RefreshCookieName)
+
+	if sessionCookie != nil {
+		sessionCookie.MaxAge = -1
+		sessionCookie.Value = ""
+		cookies = append(cookies, sessionCookie)
+	}
+
+	if refreshCookie != nil {
+		refreshCookie.MaxAge = -1
+		refreshCookie.Value = ""
+		cookies = append(cookies, refreshCookie)
+	}
+
+	Options(options).SetCookies(cookies)
+	return nil
+}
+
 func (auth *authenticationService) Logout(request *http.Request, w http.ResponseWriter) error {
 	return auth.LogoutWithOptions(request, WithResponseOption(w))
 }
@@ -96,7 +125,7 @@ func (auth *authenticationService) LogoutWithOptions(request *http.Request, opti
 		return errors.RefreshTokenError
 	}
 
-	httpResponse, err := auth.client.DoGetRequest(api.Routes.Logout(), &api.HTTPRequest{}, refreshToken)
+	httpResponse, err := auth.client.DoPostRequest(api.Routes.Logout(), nil, &api.HTTPRequest{}, refreshToken)
 	if err != nil {
 		return err
 	}

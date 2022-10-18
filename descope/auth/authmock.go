@@ -108,7 +108,8 @@ type MockDescopeAuthentication struct {
 	MockDescopeAuthenticationTOTP
 	MockDescopeAuthenticationWebAuthn
 
-	AssertLogout func(r *http.Request)
+	AssertDeleteCookies func(r *http.Request)
+	AssertLogout        func(r *http.Request)
 
 	ValidateSessionResponseNotOK bool
 	ValidateSessionResponseInfo  *Token
@@ -121,7 +122,8 @@ type MockDescopeAuthentication struct {
 	ValidatePermissionsResponse bool
 	ValidateRolesResponse       bool
 
-	LogoutResponseError error
+	DeleteCookiesResponseError error
+	LogoutResponseError        error
 
 	ExchangeAccessKeyResponseNotOK bool
 	ExchangeAccessKeyResponseInfo  *Token
@@ -391,6 +393,20 @@ func (m MockDescopeAuthentication) ValidateRoles(_ *Token, _ []string) bool {
 
 func (m MockDescopeAuthentication) ValidateTenantRoles(_ *Token, _ string, _ []string) bool {
 	return m.ValidateRolesResponse
+}
+
+func (m MockDescopeAuthentication) DeleteCookies(r *http.Request, _ http.ResponseWriter) error {
+	if m.AssertDeleteCookies != nil {
+		m.AssertDeleteCookies(r)
+	}
+	return m.DeleteCookiesResponseError
+}
+
+func (m MockDescopeAuthentication) DeleteCookiesWithOptions(r *http.Request, _ ...Option) error {
+	if m.AssertDeleteCookies != nil {
+		m.AssertDeleteCookies(r)
+	}
+	return m.DeleteCookiesResponseError
 }
 
 func (m MockDescopeAuthentication) Logout(r *http.Request, _ http.ResponseWriter) error {

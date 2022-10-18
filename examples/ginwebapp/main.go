@@ -126,7 +126,7 @@ func main() {
 	authorized := r.Group("/")
 	authorized.Use(descopegin.AuthneticationMiddleware(client.Auth, nil, nil))
 	authorized.GET("/private", handleIsHealthy)
-	authorized.GET("/logout", handleLogout)
+	authorized.POST("/logout", handleLogout) // Logout from all user's active sessions
 	r.RunTLS(fmt.Sprintf(":%s", port), TLSCertPath, TLSkeyPath)
 }
 
