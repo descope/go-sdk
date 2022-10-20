@@ -463,7 +463,7 @@ func (auth *authenticationsBase) exchangeTokenWithOptions(code string, url strin
 		return nil, errors.NewInvalidArgumentError("code")
 	}
 
-	httpResponse, err := auth.client.DoGetRequest(url, &api.HTTPRequest{QueryParams: map[string]string{"code": string(code)}}, "")
+	httpResponse, err := auth.client.DoPostRequest(url, newExchangeTokenBody(code), nil, "")
 	if err != nil {
 		return nil, err
 	}
