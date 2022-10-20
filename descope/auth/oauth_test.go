@@ -45,7 +45,11 @@ func TestOAuthStartInvalidForwardResponse(t *testing.T) {
 func TestExchangeTokenOAuth(t *testing.T) {
 	code := "code"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
-		assert.EqualValues(t, composeOAuthExchangeTokenURL()+"?code="+code, r.URL.RequestURI())
+		req := exchangeTokenBody{}
+		err := readBody(r, &req)
+		require.NoError(t, err)
+		assert.EqualValues(t, code, req.Code)
+
 		resp := &JWTResponse{
 			RefreshJwt: jwtTokenValid,
 			User: &UserResponse{
@@ -71,7 +75,10 @@ func TestExchangeTokenOAuth(t *testing.T) {
 func TestExchangeTokenSAML(t *testing.T) {
 	code := "code"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
-		assert.EqualValues(t, composeSAMLExchangeTokenURL()+"?code="+code, r.URL.RequestURI())
+		req := exchangeTokenBody{}
+		err := readBody(r, &req)
+		require.NoError(t, err)
+		assert.EqualValues(t, code, req.Code)
 		resp := &JWTResponse{
 			RefreshJwt: jwtTokenValid,
 			User: &UserResponse{
