@@ -218,7 +218,7 @@ func (auth *authenticationService) RefreshSessionWithOptions(request *http.Reque
 }
 
 func (auth *authenticationService) ExchangeAccessKey(accessKey string) (success bool, SessionToken *Token, err error) {
-	httpResponse, err := auth.client.DoGetRequest(api.Routes.ExchangeAccessKey(), &api.HTTPRequest{}, accessKey)
+	httpResponse, err := auth.client.DoPostRequest(api.Routes.ExchangeAccessKey(), nil, &api.HTTPRequest{}, accessKey)
 	if err != nil {
 		logger.LogError("failed to exchange access key", err)
 		return false, nil, errors.UnauthorizedError
@@ -324,7 +324,7 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 			return false, nil, err
 		}
 		// auto-refresh session token
-		httpResponse, err := auth.client.DoGetRequest(api.Routes.RefreshToken(), &api.HTTPRequest{}, refreshToken)
+		httpResponse, err := auth.client.DoPostRequest(api.Routes.RefreshToken(), nil, &api.HTTPRequest{}, refreshToken)
 		if err != nil {
 			return false, nil, errors.FailedToRefreshTokenError
 		}
