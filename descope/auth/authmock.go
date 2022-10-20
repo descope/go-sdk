@@ -301,7 +301,7 @@ func (m MockDescopeAuthenticationMagicLink) GetSession(pendingRef string, _ http
 	return m.GetMagicLinkSessionResponseInfo, m.GetMagicLinkSessionResponseError
 }
 
-func (m MockDescopeAuthenticationOAuth) Start(provider OAuthProvider, returnURL string, w http.ResponseWriter) (string, error) {
+func (m MockDescopeAuthenticationOAuth) Start(provider OAuthProvider, returnURL string, _ http.ResponseWriter) (string, error) {
 	if m.AssertOAuthStart != nil {
 		m.AssertOAuthStart(provider, returnURL)
 	}
