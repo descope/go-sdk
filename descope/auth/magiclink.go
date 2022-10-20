@@ -76,10 +76,6 @@ func (auth *magicLink) SignUpOrInCrossDevice(method DeliveryMethod, identifier, 
 }
 
 func (auth *magicLink) GetSession(pendingRef string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.GetSessionWithOptions(pendingRef, WithResponseOption(w))
-}
-
-func (auth *magicLink) GetSessionWithOptions(pendingRef string, options ...Option) (*AuthenticationInfo, error) {
 	httpResponse, err := auth.client.DoPostRequest(composeGetSession(), newAuthenticationGetMagicLinkSessionBody(pendingRef), nil, "")
 	if err != nil {
 		if err == errors.UnauthorizedError {
@@ -87,19 +83,15 @@ func (auth *magicLink) GetSessionWithOptions(pendingRef string, options ...Optio
 		}
 		return nil, err
 	}
-	return auth.generateAuthenticationInfo(httpResponse, options...)
+	return auth.generateAuthenticationInfo(httpResponse, w)
 }
 
 func (auth *magicLink) Verify(token string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.VerifyWithOptions(token, WithResponseOption(w))
-}
-
-func (auth *magicLink) VerifyWithOptions(token string, options ...Option) (*AuthenticationInfo, error) {
 	httpResponse, err := auth.client.DoPostRequest(composeVerifyMagicLinkURL(), newMagicLinkAuthenticationVerifyRequestBody(token), nil, "")
 	if err != nil {
 		return nil, err
 	}
-	return auth.generateAuthenticationInfo(httpResponse, options...)
+	return auth.generateAuthenticationInfo(httpResponse, w)
 }
 
 func (auth *magicLink) UpdateUserEmail(identifier, email, URI string, r *http.Request) error {

@@ -76,39 +76,32 @@ func (auth *authenticationService) WebAuthn() WebAuthn {
 }
 
 func (auth *authenticationService) DeleteCookies(request *http.Request, w http.ResponseWriter) error {
-	return auth.DeleteCookiesWithOptions(request, WithResponseOption(w))
-}
-
-func (auth *authenticationService) DeleteCookiesWithOptions(request *http.Request, options ...Option) error {
 	if request == nil {
 		return errors.MissingRequestError
 	}
+	if w == nil {
+		return errors.MissingResponseWriterError
+	}
 
-	cookies := make([]*http.Cookie, 0)
 	sessionCookie, _ := request.Cookie(SessionCookieName)
 	refreshCookie, _ := request.Cookie(RefreshCookieName)
 
 	if sessionCookie != nil {
 		sessionCookie.MaxAge = -1
 		sessionCookie.Value = ""
-		cookies = append(cookies, sessionCookie)
+		http.SetCookie(w, sessionCookie)
 	}
 
 	if refreshCookie != nil {
 		refreshCookie.MaxAge = -1
 		refreshCookie.Value = ""
-		cookies = append(cookies, refreshCookie)
+		http.SetCookie(w, refreshCookie)
 	}
 
-	Options(options).SetCookies(cookies)
 	return nil
 }
 
 func (auth *authenticationService) Logout(request *http.Request, w http.ResponseWriter) error {
-	return auth.LogoutWithOptions(request, WithResponseOption(w))
-}
-
-func (auth *authenticationService) LogoutWithOptions(request *http.Request, options ...Option) error {
 	if request == nil {
 		return errors.MissingRequestError
 	}
@@ -129,6 +122,10 @@ func (auth *authenticationService) LogoutWithOptions(request *http.Request, opti
 	if err != nil {
 		return err
 	}
+	if w == nil {
+		return nil
+	}
+
 	cookies := httpResponse.Res.Cookies()
 
 	jwtResponse, err := auth.extractJWTResponse(httpResponse.BodyStr)
@@ -152,7 +149,8 @@ func (auth *authenticationService) LogoutWithOptions(request *http.Request, opti
 	cookies = append(cookies, createCookie(&Token{JWT: "",
 		Claims: map[string]interface{}{claimAttributeName: RefreshCookieName},
 	}, jwtResponse))
-	Options(options).SetCookies(cookies)
+
+	setCookies(cookies, w)
 	return nil
 }
 
@@ -181,10 +179,6 @@ func (auth *authenticationService) Me(request *http.Request) (*UserResponse, err
 }
 
 func (auth *authenticationService) ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *Token, error) {
-	return auth.ValidateSessionWithOptions(request, WithResponseOption(w))
-}
-
-func (auth *authenticationService) ValidateSessionWithOptions(request *http.Request, options ...Option) (bool, *Token, error) {
 	if request == nil {
 		return false, nil, errors.MissingProviderError
 	}
@@ -195,14 +189,10 @@ func (auth *authenticationService) ValidateSessionWithOptions(request *http.Requ
 		logger.LogDebug("unable to find token from cookies")
 		return false, nil, nil
 	}
-	return auth.validateSession(sessionToken, refreshToken, false, options...)
+	return auth.validateSession(sessionToken, refreshToken, false, w)
 }
 
 func (auth *authenticationService) RefreshSession(request *http.Request, w http.ResponseWriter) (bool, *Token, error) {
-	return auth.RefreshSessionWithOptions(request, WithResponseOption(w))
-}
-
-func (auth *authenticationService) RefreshSessionWithOptions(request *http.Request, options ...Option) (bool, *Token, error) {
 	if request == nil {
 		return false, nil, errors.MissingProviderError
 	}
@@ -214,7 +204,7 @@ func (auth *authenticationService) RefreshSessionWithOptions(request *http.Reque
 		return false, nil, nil
 	}
 
-	return auth.validateSession(sessionToken, refreshToken, true, options...)
+	return auth.validateSession(sessionToken, refreshToken, true, w)
 }
 
 func (auth *authenticationService) ExchangeAccessKey(accessKey string) (success bool, SessionToken *Token, err error) {
@@ -294,7 +284,7 @@ func AuthenticationMiddleware(auth Authentication, onFailure func(http.ResponseW
 	}
 }
 
-func (auth *authenticationService) validateSession(sessionToken string, refreshToken string, forceRefresh bool, options ...Option) (bool, *Token, error) {
+func (auth *authenticationService) validateSession(sessionToken string, refreshToken string, forceRefresh bool, w http.ResponseWriter) (bool, *Token, error) {
 	// Make sure to try and validate either JWT because in the process we make sure we have the public keys
 	var token, tToken *Token
 	var err, tErr error
@@ -328,7 +318,7 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 		if err != nil {
 			return false, nil, errors.FailedToRefreshTokenError
 		}
-		info, err := auth.generateAuthenticationInfo(httpResponse, options...)
+		info, err := auth.generateAuthenticationInfo(httpResponse, w)
 		if err != nil {
 			return false, nil, err
 		}
@@ -458,7 +448,7 @@ func (*authenticationsBase) verifyDeliveryMethod(method DeliveryMethod, identifi
 	return nil
 }
 
-func (auth *authenticationsBase) exchangeTokenWithOptions(code string, url string, options ...Option) (*AuthenticationInfo, error) {
+func (auth *authenticationsBase) exchangeTokenWithOptions(code string, url string, w http.ResponseWriter) (*AuthenticationInfo, error) {
 	if code == "" {
 		return nil, errors.NewInvalidArgumentError("code")
 	}
@@ -467,10 +457,10 @@ func (auth *authenticationsBase) exchangeTokenWithOptions(code string, url strin
 	if err != nil {
 		return nil, err
 	}
-	return auth.generateAuthenticationInfo(httpResponse, options...)
+	return auth.generateAuthenticationInfo(httpResponse, w)
 }
 
-func (auth *authenticationsBase) generateAuthenticationInfo(httpResponse *api.HTTPResponse, options ...Option) (*AuthenticationInfo, error) {
+func (auth *authenticationsBase) generateAuthenticationInfo(httpResponse *api.HTTPResponse, w http.ResponseWriter) (*AuthenticationInfo, error) {
 	jwtResponse, err := auth.extractJWTResponse(httpResponse.BodyStr)
 	if err != nil {
 		return nil, err
@@ -491,7 +481,7 @@ func (auth *authenticationsBase) generateAuthenticationInfo(httpResponse *api.HT
 			token = tokens[i]
 		}
 	}
-	Options(options).SetCookies(cookies)
+	setCookies(cookies, w)
 	return NewAuthenticationInfo(jwtResponse, token), err
 }
 
@@ -675,4 +665,21 @@ func composeUpdateUserEmailMagicLink() string {
 
 func composeUpdateUserPhone(method DeliveryMethod) string {
 	return composeURLMethod(api.Routes.UpdateUserPhoneMagicLink(), method)
+}
+
+func redirectURL(url string, w http.ResponseWriter) {
+	if w == nil {
+		return
+	}
+	w.Header().Set(RedirectLocationCookieName, url)
+	w.WriteHeader(http.StatusTemporaryRedirect)
+}
+
+func setCookies(cookies []*http.Cookie, w http.ResponseWriter) {
+	if w == nil {
+		return
+	}
+	for i := range cookies {
+		http.SetCookie(w, cookies[i])
+	}
 }

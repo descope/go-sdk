@@ -7,15 +7,16 @@ const (
 )
 
 var (
-	NoPublicKeyError          = NewPublicKeyValidationError("no public key was found for this project")
-	FailedToRefreshTokenError = NewValidationError("fail to refresh token")
-	RefreshTokenError         = NewValidationError("refresh token invalid or not found")
-	MissingProviderError      = NewValidationError("missing JWT provider implementation, use a built-in implementation or custom")
-	InvalidPendingRefError    = NewValidationError("Invalid pending reference")
-	InvalidAccessKeyResponse  = NewValidationError("invalid access key response received")
-	MagicLinkUnauthorized     = NewValidationError("pending session token")
-	UnauthorizedError         = NewError(BadRequestErrorCode, "unauthorized access")
-	MissingRequestError       = NewValidationError("nil request provided")
+	NoPublicKeyError           = NewPublicKeyValidationError("no public key was found for this project")
+	FailedToRefreshTokenError  = NewValidationError("fail to refresh token")
+	RefreshTokenError          = NewValidationError("refresh token invalid or not found")
+	MissingProviderError       = NewValidationError("missing JWT provider implementation, use a built-in implementation or custom")
+	InvalidPendingRefError     = NewValidationError("Invalid pending reference")
+	InvalidAccessKeyResponse   = NewValidationError("invalid access key response received")
+	MagicLinkUnauthorized      = NewValidationError("pending session token")
+	UnauthorizedError          = NewError(BadRequestErrorCode, "unauthorized access")
+	MissingRequestError        = NewValidationError("nil request provided")
+	MissingResponseWriterError = NewValidationError("nil response writer provided")
 )
 
 type WebError struct {

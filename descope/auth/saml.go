@@ -17,11 +17,7 @@ type samlStartResponse struct {
 	URL string `json:"url"`
 }
 
-func (auth *saml) Start(tenant string, returnURL string, w http.ResponseWriter) (redirectURL string, err error) {
-	return auth.StartWithOptions(tenant, returnURL, WithResponseOption(w))
-}
-
-func (auth *saml) StartWithOptions(tenant string, returnURL string, options ...Option) (redirectURL string, err error) {
+func (auth *saml) Start(tenant string, returnURL string, w http.ResponseWriter) (url string, err error) {
 	if tenant == "" {
 		return "", errors.NewInvalidArgumentError("tenant")
 	}
@@ -43,17 +39,13 @@ func (auth *saml) StartWithOptions(tenant string, returnURL string, options ...O
 			logger.LogError("failed to parse saml location from response for [%s]", err, tenant)
 			return "", err
 		}
-		redirectURL = res.URL
-		Options(options).CreateRedirect(redirectURL)
+		url = res.URL
+		redirectURL(url, w)
 	}
 
 	return
 }
 
 func (auth *saml) ExchangeToken(code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.ExchangeTokenWithOptions(code, WithResponseOption(w))
-}
-
-func (auth *saml) ExchangeTokenWithOptions(code string, options ...Option) (*AuthenticationInfo, error) {
-	return auth.exchangeTokenWithOptions(code, composeSAMLExchangeTokenURL(), options...)
+	return auth.exchangeTokenWithOptions(code, composeSAMLExchangeTokenURL(), w)
 }

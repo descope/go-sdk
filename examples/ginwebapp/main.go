@@ -92,7 +92,7 @@ func main() {
 			return
 		}
 
-		_, err = client.Auth.WebAuthn().SignUpFinishWithOptions(t, descopegin.WithResponseOption(c))
+		_, err = client.Auth.WebAuthn().SignUpFinish(t, c.Writer)
 		if err != nil {
 			setError(c, err.Error())
 		}
@@ -116,7 +116,7 @@ func main() {
 			return
 		}
 
-		_, err = client.Auth.WebAuthn().SignInFinishWithOptions(t, descopegin.WithResponseOption(c))
+		_, err = client.Auth.WebAuthn().SignInFinish(t, c.Writer)
 		if err != nil {
 			setError(c, err.Error())
 		}
@@ -204,7 +204,7 @@ func handleGetMagicLinkSession(c *gin.Context) {
 		setError(c, "pending reference is empty")
 		return
 	}
-	_, err := client.Auth.MagicLink().GetSessionWithOptions(pendingRef, descopegin.WithResponseOption(c))
+	_, err := client.Auth.MagicLink().GetSession(pendingRef, c.Writer)
 	if goErrors.Is(err, descopeerrors.MagicLinkUnauthorized) {
 		setUnauthorized(c, err.Error())
 	}
@@ -221,7 +221,7 @@ func handleMagicLinkVerify(c *gin.Context) {
 		setError(c, "token is empty")
 		return
 	}
-	_, err := client.Auth.MagicLink().VerifyWithOptions(token, descopegin.WithResponseOption(c))
+	_, err := client.Auth.MagicLink().Verify(token, c.Writer)
 	if err != nil {
 		setError(c, err.Error())
 		return
@@ -236,7 +236,7 @@ func handleOTPVerify(c *gin.Context) {
 		setError(c, "code is empty")
 		return
 	}
-	_, err := client.Auth.OTP().VerifyCodeWithOptions(method, identifier, code, descopegin.WithResponseOption(c))
+	_, err := client.Auth.OTP().VerifyCode(method, identifier, code, c.Writer)
 	if err != nil {
 		setError(c, err.Error())
 		return
@@ -249,7 +249,7 @@ func handleOAuth(c *gin.Context) {
 	if provider == "" {
 		provider = auth.OAuthFacebook
 	}
-	_, err := client.Auth.OAuth().StartWithOptions(provider, "", descopegin.WithResponseOption(c))
+	_, err := client.Auth.OAuth().Start(provider, "", c.Writer)
 	if err != nil {
 		setError(c, err.Error())
 	}
