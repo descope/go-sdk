@@ -1,6 +1,6 @@
 module github.com/descope/go-sdk
 
-go 1.18
+go 1.19
 
 require (
 	github.com/lestrrat-go/jwx/v2 v2.0.5

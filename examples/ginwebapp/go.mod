@@ -1,6 +1,6 @@
 module github.com/descope/go-sdk/examples/ginwebapp
 
-go 1.18
+go 1.19
 
 require (
 	github.com/descope/go-sdk v0.0.0-20221020203112-9e33bcae5a86
