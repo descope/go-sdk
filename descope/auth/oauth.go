@@ -43,5 +43,5 @@ func (auth *oauth) Start(provider OAuthProvider, returnURL string, w http.Respon
 }
 
 func (auth *oauth) ExchangeToken(code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.exchangeTokenWithOptions(code, composeOAuthExchangeTokenURL(), w)
+	return auth.exchangeToken(code, composeOAuthExchangeTokenURL(), w)
 }

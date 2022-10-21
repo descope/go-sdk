@@ -448,7 +448,7 @@ func (*authenticationsBase) verifyDeliveryMethod(method DeliveryMethod, identifi
 	return nil
 }
 
-func (auth *authenticationsBase) exchangeTokenWithOptions(code string, url string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+func (auth *authenticationsBase) exchangeToken(code string, url string, w http.ResponseWriter) (*AuthenticationInfo, error) {
 	if code == "" {
 		return nil, errors.NewInvalidArgumentError("code")
 	}
