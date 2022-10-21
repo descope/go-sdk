@@ -1,6 +1,6 @@
 [![CI](https://github.com/descope/go-sdk/actions/workflows/ci.yml/badge.svg)](https://github.com/descope/go-sdk/actions/workflows/ci.yml)
 
-# ExpresSDK for Go
+# ExpressSDK for Go
 Use the Descope ExpresSDK for Go to quickly and easily add user authentication to your application or website. If you need more background on how the ExpresSDKs work, [click here](/sdk/index.mdx). 
 
 The SDK will require a valid `DESCOPE_PROJECT_ID`, which confirms that you are a registered Descope customer. We'll show you below exactly where to find your Project ID and how to set it.
