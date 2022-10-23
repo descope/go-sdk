@@ -284,7 +284,35 @@ func TestGetSession(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	info, err := a.MagicLink().GetSession(pendingRef, w)
+	info, err := a.MagicLink().GetSession(pendingRef, nil, nil, w)
+	require.NoError(t, err)
+	assert.NotEmpty(t, info.SessionToken.JWT)
+	require.Len(t, w.Result().Cookies(), 1)
+	sessionCookie := w.Result().Cookies()[0]
+	require.NoError(t, err)
+	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
+}
+
+func TestGetSessionWithLoginOptions(t *testing.T) {
+	pendingRef := "pending_ref"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeGetSession(), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, pendingRef, body["pendingRef"])
+		assert.EqualValues(t, map[string]interface{}{"stepup": true, "customClaims": map[string]interface{}{"k1": "v1"}}, body["loginOptions"])
+		reqToken := r.Header.Get(api.AuthorizationHeaderName)
+		splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix)
+		require.Len(t, splitToken, 2)
+		bearer := splitToken[1]
+		bearers := strings.Split(bearer, ":")
+		require.Len(t, bearers, 2)
+		assert.EqualValues(t, "test", bearers[1])
+	}))
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	info, err := a.MagicLink().GetSession(pendingRef, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, w)
 	require.NoError(t, err)
 	assert.NotEmpty(t, info.SessionToken.JWT)
 	require.Len(t, w.Result().Cookies(), 1)
@@ -300,7 +328,7 @@ func TestGetMagicLinkSessionError(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	_, err = a.MagicLink().GetSession(pendingRef, w)
+	_, err = a.MagicLink().GetSession(pendingRef, nil, nil, w)
 	require.Error(t, err)
 }
 
@@ -311,7 +339,7 @@ func TestGetMagicLinkSessionStillPending(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	_, err = a.MagicLink().GetSession(pendingRef, w)
+	_, err = a.MagicLink().GetSession(pendingRef, nil, nil, w)
 	require.Error(t, err)
 	require.ErrorIs(t, err, errors.MagicLinkUnauthorized)
 }
@@ -379,7 +407,7 @@ func TestVerifyMagicLinkCodeWithSession(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	info, err := a.MagicLink().Verify(token, w)
+	info, err := a.MagicLink().Verify(token, nil, nil, w)
 	require.NoError(t, err)
 	assert.NotEmpty(t, info.SessionToken.JWT)
 	require.Len(t, w.Result().Cookies(), 1)
@@ -403,7 +431,32 @@ func TestVerifyMagicLinkCodeNoSession(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	info, err := a.MagicLink().Verify(token, w)
+	info, err := a.MagicLink().Verify(token, nil, nil, w)
+	require.NoError(t, err)
+	assert.Empty(t, info)
+}
+
+func TestVerifyMagicLinkCodeNoSessionLoginOptions(t *testing.T) {
+	token := "4444"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeVerifyMagicLinkURL(), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, token, body["token"])
+		assert.EqualValues(t, map[string]interface{}{"stepup": true, "customClaims": map[string]interface{}{"k1": "v1"}}, body["loginOptions"])
+		reqToken := r.Header.Get(api.AuthorizationHeaderName)
+		splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix)
+		require.Len(t, splitToken, 2)
+		bearer := splitToken[1]
+		bearers := strings.Split(bearer, ":")
+		require.Len(t, bearers, 2)
+		assert.EqualValues(t, "test", bearers[1])
+		return &http.Response{StatusCode: http.StatusOK}, nil
+	})
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	info, err := a.MagicLink().Verify(token, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, w)
 	require.NoError(t, err)
 	assert.Empty(t, info)
 }

@@ -30,8 +30,17 @@ func (auth *webAuthn) SignUpStart(identifier string, user *User, origin string) 
 	return webAuthnResponse, err
 }
 
-func (auth *webAuthn) SignUpFinish(request *WebAuthnFinishRequest, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignupFinish(), request, nil, "")
+func (auth *webAuthn) SignUpFinish(request *WebAuthnFinishRequest, r *http.Request, loginOptions *LoginOptions, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	var pswd string
+	var err error
+	if loginOptions.IsStepup() {
+		pswd, err = getValidRefreshToken(r)
+		if err != nil {
+			return nil, err
+		}
+	}
+	request.LoginOptions = loginOptions
+	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignupFinish(), request, nil, pswd)
 	if err != nil {
 		return nil, err
 	}
@@ -54,8 +63,17 @@ func (auth *webAuthn) SignInStart(identifier string, origin string) (*WebAuthnTr
 
 }
 
-func (auth *webAuthn) SignInFinish(request *WebAuthnFinishRequest, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSigninFinish(), request, nil, "")
+func (auth *webAuthn) SignInFinish(request *WebAuthnFinishRequest, r *http.Request, loginOptions *LoginOptions, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	var pswd string
+	var err error
+	if loginOptions.IsStepup() {
+		pswd, err = getValidRefreshToken(r)
+		if err != nil {
+			return nil, err
+		}
+	}
+	request.LoginOptions = loginOptions
+	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSigninFinish(), request, nil, pswd)
 	if err != nil {
 		return nil, err
 	}

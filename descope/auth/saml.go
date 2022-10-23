@@ -46,6 +46,6 @@ func (auth *saml) Start(tenant string, returnURL string, w http.ResponseWriter) 
 	return
 }
 
-func (auth *saml) ExchangeToken(code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.exchangeToken(code, composeSAMLExchangeTokenURL(), w)
+func (auth *saml) ExchangeToken(code string, r *http.Request, loginOptions *LoginOptions, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	return auth.exchangeToken(code, composeSAMLExchangeTokenURL(), r, loginOptions, w)
 }

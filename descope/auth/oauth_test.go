@@ -7,8 +7,10 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
+	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -65,7 +67,45 @@ func TestExchangeTokenOAuth(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	authInfo, err := a.OAuth().ExchangeToken(code, w)
+	authInfo, err := a.OAuth().ExchangeToken(code, nil, nil, w)
+	require.NoError(t, err)
+	require.NotNil(t, authInfo)
+	assert.EqualValues(t, "name", authInfo.User.Name)
+	assert.True(t, authInfo.FirstSeen)
+}
+
+func TestExchangeTokenOAuthLoginOptions(t *testing.T) {
+	code := "code"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		req := exchangeTokenBody{}
+		err := readBody(r, &req)
+		require.NoError(t, err)
+		assert.EqualValues(t, code, req.Code)
+		assert.EqualValues(t, map[string]interface{}{"k1": "v1"}, req.LoginOptions.CustomClaims)
+		reqToken := r.Header.Get(api.AuthorizationHeaderName)
+		splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix)
+		require.Len(t, splitToken, 2)
+		bearer := splitToken[1]
+		bearers := strings.Split(bearer, ":")
+		require.Len(t, bearers, 2)
+		assert.EqualValues(t, "test", bearers[1])
+
+		resp := &JWTResponse{
+			RefreshJwt: jwtTokenValid,
+			User: &UserResponse{
+				User: User{
+					Name: "name",
+				},
+			},
+			FirstSeen: true,
+		}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	authInfo, err := a.OAuth().ExchangeToken(code, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, w)
 	require.NoError(t, err)
 	require.NotNil(t, authInfo)
 	assert.EqualValues(t, "name", authInfo.User.Name)
@@ -94,7 +134,7 @@ func TestExchangeTokenSAML(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	authInfo, err := a.SAML().ExchangeToken(code, w)
+	authInfo, err := a.SAML().ExchangeToken(code, nil, nil, w)
 	require.NoError(t, err)
 	require.NotNil(t, authInfo)
 	assert.EqualValues(t, "name", authInfo.User.Name)
@@ -106,6 +146,6 @@ func TestExchangeTokenError(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	_, err = a.OAuth().ExchangeToken(code, w)
+	_, err = a.OAuth().ExchangeToken(code, nil, nil, w)
 	require.Error(t, err)
 }

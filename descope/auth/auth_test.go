@@ -166,7 +166,7 @@ func TestAuthDefaultURL(t *testing.T) {
 		assert.Contains(t, r.URL.String(), url)
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCode(MethodWhatsApp, "4444", "444", nil)
+	_, err = a.OTP().VerifyCode(MethodWhatsApp, "4444", "444", nil, nil, nil)
 	require.NoError(t, err)
 }
 

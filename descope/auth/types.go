@@ -3,6 +3,7 @@ package auth
 import (
 	"regexp"
 
+	"github.com/descope/go-sdk/descope/logger"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"golang.org/x/exp/maps"
 )
@@ -27,9 +28,21 @@ type WebAuthnTransactionResponse struct {
 }
 
 type WebAuthnFinishRequest struct {
-	TransactionID string `json:"transactionID,omitempty"`
-	Response      string `json:"response,omitempty"`
+	TransactionID string        `json:"transactionID,omitempty"`
+	Response      string        `json:"response,omitempty"`
+	LoginOptions  *LoginOptions `json:"loginOptions,omitempty"`
 }
+
+type AuthFactor string
+
+const AuthFactorUnknown AuthFactor = ""
+const AuthFactorEmail AuthFactor = "email"
+const AuthFactorPhone AuthFactor = "sms"
+const AuthFactorSaml AuthFactor = "fed"
+const AuthFactorOAuth AuthFactor = "oauth"
+const AuthFactorWebauthn AuthFactor = "webauthn"
+const AuthFactorTOTP AuthFactor = "totp"
+const AuthFactorMFA AuthFactor = "mfa"
 
 type Token struct {
 	RefreshExpiration int64                  `json:"refreshExpiration,omitempty"`
@@ -60,6 +73,51 @@ func (to *Token) getTenants() map[string]any {
 		}
 	}
 	return make(map[string]any)
+}
+
+func (to *Token) CustomClaim(value string) interface{} {
+	if to.Claims != nil {
+		return to.Claims[value]
+	}
+	return nil
+}
+
+func (to *Token) AuthFactors() []AuthFactor {
+	if to.Claims == nil {
+		return nil
+	}
+	var afs []AuthFactor
+	factors, ok := to.Claims["amr"]
+	if ok {
+		factorsArr, ok := factors.([]interface{})
+		if ok {
+			for i := range factorsArr {
+				af, ok := factorsArr[i].(string)
+				if ok {
+					afs = append(afs, AuthFactor(af))
+				} else {
+					logger.LogInfo("Unkown authfactor type [%T]", factorsArr[i]) //notest
+				}
+			}
+		} else {
+			logger.LogInfo("Unknown amr value type [%T]", factors) //notest
+		}
+	}
+	// cases of no factors are not interesting, so not going to log them
+	return afs
+}
+
+func (to *Token) IsMFA() bool {
+	return len(to.AuthFactors()) > 1
+}
+
+type LoginOptions struct {
+	Stepup       bool                   `json:"stepup,omitempty"`
+	CustomClaims map[string]interface{} `json:"customClaims,omitempty"`
+}
+
+func (lo *LoginOptions) IsStepup() bool {
+	return lo != nil && lo.Stepup
 }
 
 type JWTResponse struct {
@@ -147,7 +205,8 @@ type authenticationWebAuthnAddDeviceRequestBody struct {
 
 type authenticationVerifyRequestBody struct {
 	*authenticationRequestBody `json:",inline"`
-	Code                       string `json:"code"`
+	Code                       string        `json:"code"`
+	LoginOptions               *LoginOptions `json:"loginOptions,omitempty"`
 }
 
 type totpSignUpRequestBody struct {
@@ -192,15 +251,18 @@ type magicLinkUpdatePhoneRequestBody struct {
 }
 
 type magicLinkAuthenticationVerifyRequestBody struct {
-	Token string `json:"token"`
+	Token        string        `json:"token"`
+	LoginOptions *LoginOptions `json:"loginOptions,omitempty"`
 }
 
 type authenticationGetMagicLinkSessionBody struct {
-	PendingRef string `json:"pendingRef"`
+	PendingRef   string        `json:"pendingRef"`
+	LoginOptions *LoginOptions `json:"loginOptions,omitempty"`
 }
 
 type exchangeTokenBody struct {
-	Code string `json:"code"`
+	Code         string        `json:"code"`
+	LoginOptions *LoginOptions `json:"loginOptions,omitempty"`
 }
 
 func newSignInRequestBody(externalID string) *authenticationRequestBody {
@@ -241,8 +303,8 @@ func newMagicLinkAuthenticationSignUpRequestBody(method DeliveryMethod, external
 	return &magicLinkAuthenticationSignUpRequestBody{authenticationSignUpRequestBody: b, CrossDevice: crossDevice, URI: URI}
 }
 
-func newMagicLinkAuthenticationVerifyRequestBody(token string) *magicLinkAuthenticationVerifyRequestBody {
-	return &magicLinkAuthenticationVerifyRequestBody{Token: token}
+func newMagicLinkAuthenticationVerifyRequestBody(token string, loginOptions *LoginOptions) *magicLinkAuthenticationVerifyRequestBody {
+	return &magicLinkAuthenticationVerifyRequestBody{Token: token, LoginOptions: loginOptions}
 }
 
 func newAuthenticationSignUpRequestBody(method DeliveryMethod, externalID string, user *User) *authenticationSignUpRequestBody {
@@ -252,8 +314,8 @@ func newAuthenticationSignUpRequestBody(method DeliveryMethod, externalID string
 	return b
 }
 
-func newAuthenticationVerifyRequestBody(value string, code string) *authenticationVerifyRequestBody {
-	return &authenticationVerifyRequestBody{authenticationRequestBody: newSignInRequestBody(value), Code: code}
+func newAuthenticationVerifyRequestBody(value string, code string, loginOptions *LoginOptions) *authenticationVerifyRequestBody {
+	return &authenticationVerifyRequestBody{authenticationRequestBody: newSignInRequestBody(value), Code: code, LoginOptions: loginOptions}
 }
 
 func newMagicLinkUpdateEmailRequestBody(externalID, email string, URI string, crossDevice bool) *magicLinkUpdateEmailRequestBody {
@@ -264,12 +326,12 @@ func newMagicLinkUpdatePhoneRequestBody(externalID, phone string, URI string, cr
 	return &magicLinkUpdatePhoneRequestBody{ExternalID: externalID, Phone: phone, URI: URI, CrossDevice: crossDevice}
 }
 
-func newAuthenticationGetMagicLinkSessionBody(pendingRef string) *authenticationGetMagicLinkSessionBody {
-	return &authenticationGetMagicLinkSessionBody{PendingRef: pendingRef}
+func newAuthenticationGetMagicLinkSessionBody(pendingRef string, loginOptions *LoginOptions) *authenticationGetMagicLinkSessionBody {
+	return &authenticationGetMagicLinkSessionBody{PendingRef: pendingRef, LoginOptions: loginOptions}
 }
 
-func newExchangeTokenBody(code string) *exchangeTokenBody {
-	return &exchangeTokenBody{Code: code}
+func newExchangeTokenBody(code string, loginOptions *LoginOptions) *exchangeTokenBody {
+	return &exchangeTokenBody{Code: code, LoginOptions: loginOptions}
 }
 
 type DeliveryMethod string

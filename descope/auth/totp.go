@@ -48,12 +48,20 @@ func (auth *totp) UpdateUser(identifier string, r *http.Request) (*TOTPResponse,
 	return totpResponse, nil
 }
 
-func (auth *totp) SignInCode(identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+func (auth *totp) SignInCode(identifier string, code string, r *http.Request, loginOptions *LoginOptions, w http.ResponseWriter) (*AuthenticationInfo, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
+	var pswd string
+	var err error
+	if loginOptions.IsStepup() {
+		pswd, err = getValidRefreshToken(r)
+		if err != nil {
+			return nil, err
+		}
+	}
 
-	httpResponse, err := auth.client.DoPostRequest(composeVerifyTOTPCodeURL(), newAuthenticationVerifyRequestBody(identifier, code), nil, "")
+	httpResponse, err := auth.client.DoPostRequest(composeVerifyTOTPCodeURL(), newAuthenticationVerifyRequestBody(identifier, code, loginOptions), nil, pswd)
 	if err != nil {
 		return nil, err
 	}
