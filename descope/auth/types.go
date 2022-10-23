@@ -1,10 +1,8 @@
 package auth
 
 import (
-	"net/http"
 	"regexp"
 
-	"github.com/descope/go-sdk/descope/logger"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"golang.org/x/exp/maps"
 )
@@ -85,87 +83,6 @@ func NewAuthenticationInfo(jRes *JWTResponse, token *Token) *AuthenticationInfo 
 	}
 	return &AuthenticationInfo{SessionToken: token, User: jRes.User, FirstSeen: jRes.FirstSeen}
 }
-
-// WithResponseOption - adds a response option to supported functions to allow
-// automatic apply and renewal of the tokens to the response sent to the client.
-func WithResponseOption(w http.ResponseWriter) Option {
-	return newOption(responseOption{}, w)
-}
-
-// WithNoRedirectOption - adds a response option to supported functions to allow
-// providing the writer, but making sure that there will be no redirect header
-func WithNoRedirectOption(w http.ResponseWriter) Option {
-	return newOption(noRedirectOption{}, w)
-}
-
-type Option interface {
-	Kind() interface{}
-	Value() interface{}
-}
-
-type pair struct {
-	kind  interface{}
-	value interface{}
-}
-
-func (p *pair) Kind() interface{} {
-	return p.kind
-}
-
-func (p *pair) Value() interface{} {
-	return p.value
-}
-
-func newOption(kind, value interface{}) Option {
-	return &pair{
-		kind:  kind,
-		value: value,
-	}
-}
-
-type Options []Option
-
-func (options Options) SetCookies(cookies []*http.Cookie) {
-	for _, option := range options {
-		if option != nil {
-			switch option.Kind().(type) {
-			case responseOption:
-				val := option.Value()
-				if val != nil {
-					if w, ok := val.(http.ResponseWriter); ok {
-						for i := range cookies {
-							http.SetCookie(w, cookies[i])
-						}
-					} else {
-						logger.LogDebug("Unexpected option value [%T]", val)
-					}
-				}
-			}
-		}
-	}
-}
-
-func (options Options) CreateRedirect(url string) {
-	for _, option := range options {
-		if option != nil {
-			switch option.Kind().(type) {
-			case responseOption:
-				val := option.Value()
-				if val != nil {
-					if w, ok := val.(http.ResponseWriter); ok {
-						w.Header().Set(RedirectLocationCookieName, url)
-						w.WriteHeader(http.StatusTemporaryRedirect)
-					} else {
-						logger.LogDebug("Unexpected option value [%T]", val)
-					}
-				}
-			}
-		}
-	}
-}
-
-type responseOption struct{}
-type noRedirectOption struct{}
 
 func NewToken(JWT string, token jwt.Token) *Token {
 	if token == nil {

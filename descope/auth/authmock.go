@@ -21,14 +21,14 @@ type MockDescopeAuthenticationOTP struct {
 }
 
 type MockDescopeAuthenticationExchanger struct {
-	AssertExchangeToken        func(code string, options ...Option)
+	AssertExchangeToken        func(code string, w http.ResponseWriter)
 	ExchangeTokenResponseInfo  *AuthenticationInfo
 	ExchangeTokenResponseError error
 }
 
 type MockDescopeAuthenticationSAML struct {
 	MockDescopeAuthenticationExchanger
-	AssertSAMLStart            func(tenant string, landingURL string, options ...Option)
+	AssertSAMLStart            func(tenant string, landingURL string, w http.ResponseWriter)
 	AssertSAMLStartResponseURL string
 	SAMLStartResponseError     error
 }
@@ -197,10 +197,6 @@ func (m MockDescopeAuthenticationTOTP) UpdateUser(identifier string, _ *http.Req
 }
 
 func (m MockDescopeAuthenticationTOTP) SignInCode(identifier string, code string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
-	return m.SignInCodeWithOptions(identifier, code, nil)
-}
-
-func (m MockDescopeAuthenticationTOTP) SignInCodeWithOptions(identifier string, code string, _ ...Option) (*AuthenticationInfo, error) {
 	if m.AssertVerifyTOTPCode != nil {
 		m.AssertVerifyTOTPCode(identifier, code)
 	}
@@ -222,13 +218,6 @@ func (m MockDescopeAuthenticationOTP) UpdateUserPhone(method DeliveryMethod, ide
 }
 
 func (m MockDescopeAuthenticationOTP) VerifyCode(method DeliveryMethod, identifier string, code string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
-	if m.AssertVerifyCode != nil {
-		m.AssertVerifyCode(method, identifier, code)
-	}
-	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
-}
-
-func (m MockDescopeAuthenticationOTP) VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, _ ...Option) (*AuthenticationInfo, error) {
 	if m.AssertVerifyCode != nil {
 		m.AssertVerifyCode(method, identifier, code)
 	}
@@ -312,15 +301,7 @@ func (m MockDescopeAuthenticationMagicLink) GetSession(pendingRef string, _ http
 	return m.GetMagicLinkSessionResponseInfo, m.GetMagicLinkSessionResponseError
 }
 
-func (m MockDescopeAuthenticationMagicLink) GetSessionWithOptions(_ string, _ ...Option) (*AuthenticationInfo, error) {
-	return m.GetMagicLinkSessionResponseInfo, m.GetMagicLinkSessionResponseError
-}
-
-func (m MockDescopeAuthenticationOAuth) Start(provider OAuthProvider, returnURL string, w http.ResponseWriter) (string, error) {
-	return m.StartWithOptions(provider, returnURL, WithResponseOption(w))
-}
-
-func (m MockDescopeAuthenticationOAuth) StartWithOptions(provider OAuthProvider, returnURL string, _ ...Option) (string, error) {
+func (m MockDescopeAuthenticationOAuth) Start(provider OAuthProvider, returnURL string, _ http.ResponseWriter) (string, error) {
 	if m.AssertOAuthStart != nil {
 		m.AssertOAuthStart(provider, returnURL)
 	}
@@ -328,23 +309,15 @@ func (m MockDescopeAuthenticationOAuth) StartWithOptions(provider OAuthProvider,
 }
 
 func (m MockDescopeAuthenticationExchanger) ExchangeToken(code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return m.ExchangeTokenWithOptions(code, WithResponseOption(w))
-}
-
-func (m MockDescopeAuthenticationExchanger) ExchangeTokenWithOptions(code string, options ...Option) (*AuthenticationInfo, error) {
 	if m.AssertExchangeToken != nil {
-		m.AssertExchangeToken(code, options...)
+		m.AssertExchangeToken(code, w)
 	}
 	return m.ExchangeTokenResponseInfo, m.ExchangeTokenResponseError
 }
 
 func (m MockDescopeAuthenticationSAML) Start(tenant string, returnURL string, w http.ResponseWriter) (string, error) {
-	return m.StartWithOptions(tenant, returnURL, WithResponseOption(w))
-}
-
-func (m MockDescopeAuthenticationSAML) StartWithOptions(tenant string, returnURL string, option ...Option) (string, error) {
 	if m.AssertSAMLStart != nil {
-		m.AssertSAMLStart(tenant, returnURL, option...)
+		m.AssertSAMLStart(tenant, returnURL, w)
 	}
 	return m.AssertSAMLStartResponseURL, m.SAMLStartResponseError
 }
@@ -356,26 +329,11 @@ func (m MockDescopeAuthenticationMagicLink) Verify(token string, _ http.Response
 	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
 }
 
-func (m MockDescopeAuthenticationMagicLink) VerifyWithOptions(token string, _ ...Option) (*AuthenticationInfo, error) {
-	if m.AssertVerifyMagicLink != nil {
-		m.AssertVerifyMagicLink(token)
-	}
-	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
-}
-
 func (m MockDescopeAuthentication) ValidateSession(_ *http.Request, _ http.ResponseWriter) (bool, *Token, error) {
 	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseInfo, m.ValidateSessionResponseError
 }
 
-func (m MockDescopeAuthentication) ValidateSessionWithOptions(_ *http.Request, _ ...Option) (bool, *Token, error) {
-	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseInfo, m.ValidateSessionResponseError
-}
-
 func (m MockDescopeAuthentication) RefreshSession(_ *http.Request, _ http.ResponseWriter) (bool, *Token, error) {
-	return !m.RefreshSessionResponseNotOK, m.RefreshSessionResponseInfo, m.RefreshSessionResponseError
-}
-
-func (m MockDescopeAuthentication) RefreshSessionWithOptions(_ *http.Request, _ ...Option) (bool, *Token, error) {
 	return !m.RefreshSessionResponseNotOK, m.RefreshSessionResponseInfo, m.RefreshSessionResponseError
 }
 
@@ -402,21 +360,7 @@ func (m MockDescopeAuthentication) DeleteCookies(r *http.Request, _ http.Respons
 	return m.DeleteCookiesResponseError
 }
 
-func (m MockDescopeAuthentication) DeleteCookiesWithOptions(r *http.Request, _ ...Option) error {
-	if m.AssertDeleteCookies != nil {
-		m.AssertDeleteCookies(r)
-	}
-	return m.DeleteCookiesResponseError
-}
-
 func (m MockDescopeAuthentication) Logout(r *http.Request, _ http.ResponseWriter) error {
-	if m.AssertLogout != nil {
-		m.AssertLogout(r)
-	}
-	return m.LogoutResponseError
-}
-
-func (m MockDescopeAuthentication) LogoutWithOptions(r *http.Request, _ ...Option) error {
 	if m.AssertLogout != nil {
 		m.AssertLogout(r)
 	}
@@ -431,19 +375,11 @@ func (m MockDescopeAuthenticationWebAuthn) SignUpFinish(_ *WebAuthnFinishRequest
 	return m.SignUpWebAuthnFinishResponseInfo, m.SignUpWebAuthnFinishResponseError
 }
 
-func (m MockDescopeAuthenticationWebAuthn) SignUpFinishWithOptions(_ *WebAuthnFinishRequest, _ ...Option) (*AuthenticationInfo, error) {
-	return m.SignUpWebAuthnFinishResponseInfo, m.SignUpWebAuthnFinishResponseError
-}
-
 func (m MockDescopeAuthenticationWebAuthn) SignInStart(_ string, _ string) (*WebAuthnTransactionResponse, error) {
 	return m.SignInWebAuthnStartResponseTransaction, m.SignInWebAuthnStartResponseError
 }
 
 func (m MockDescopeAuthenticationWebAuthn) SignInFinish(_ *WebAuthnFinishRequest, _ http.ResponseWriter) (*AuthenticationInfo, error) {
-	return m.SignInWebAuthnFinishResponseInfo, m.SignInWebAuthnFinishResponseError
-}
-
-func (m MockDescopeAuthenticationWebAuthn) SignInFinishWithOptions(_ *WebAuthnFinishRequest, _ ...Option) (*AuthenticationInfo, error) {
 	return m.SignInWebAuthnFinishResponseInfo, m.SignInWebAuthnFinishResponseError
 }
 

@@ -31,15 +31,11 @@ func (auth *webAuthn) SignUpStart(identifier string, user *User, origin string) 
 }
 
 func (auth *webAuthn) SignUpFinish(request *WebAuthnFinishRequest, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.SignUpFinishWithOptions(request, WithResponseOption(w))
-}
-
-func (auth *webAuthn) SignUpFinishWithOptions(request *WebAuthnFinishRequest, options ...Option) (*AuthenticationInfo, error) {
 	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignupFinish(), request, nil, "")
 	if err != nil {
 		return nil, err
 	}
-	return auth.generateAuthenticationInfo(res, options...)
+	return auth.generateAuthenticationInfo(res, w)
 }
 
 func (auth *webAuthn) SignInStart(identifier string, origin string) (*WebAuthnTransactionResponse, error) {
@@ -59,15 +55,11 @@ func (auth *webAuthn) SignInStart(identifier string, origin string) (*WebAuthnTr
 }
 
 func (auth *webAuthn) SignInFinish(request *WebAuthnFinishRequest, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.SignInFinishWithOptions(request, WithResponseOption(w))
-}
-
-func (auth *webAuthn) SignInFinishWithOptions(request *WebAuthnFinishRequest, options ...Option) (*AuthenticationInfo, error) {
 	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSigninFinish(), request, nil, "")
 	if err != nil {
 		return nil, err
 	}
-	return auth.generateAuthenticationInfo(res, options...)
+	return auth.generateAuthenticationInfo(res, w)
 }
 
 func (auth *webAuthn) UpdateUserDeviceStart(identifier string, origin string, r *http.Request) (*WebAuthnTransactionResponse, error) {

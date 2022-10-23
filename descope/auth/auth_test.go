@@ -166,7 +166,7 @@ func TestAuthDefaultURL(t *testing.T) {
 		assert.Contains(t, r.URL.String(), url)
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCodeWithOptions(MethodWhatsApp, "4444", "444")
+	_, err = a.OTP().VerifyCode(MethodWhatsApp, "4444", "444", nil)
 	require.NoError(t, err)
 }
 
@@ -175,7 +175,7 @@ func TestEmptyPublicKey(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("[]"))}, nil
 	}))
 	require.NoError(t, err)
-	ok, _, err := a.validateSession(jwtTokenExpired, "", false)
+	ok, _, err := a.validateSession(jwtTokenExpired, "", false, nil)
 	require.False(t, ok)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "no public key was found")
@@ -186,7 +186,7 @@ func TestErrorFetchPublicKey(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusInternalServerError, Body: io.NopCloser(strings.NewReader("what"))}, nil
 	}))
 	require.NoError(t, err)
-	ok, _, err := a.validateSession(jwtTokenExpired, "", false)
+	ok, _, err := a.validateSession(jwtTokenExpired, "", false, nil)
 	require.False(t, ok)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "no public key was found")
@@ -195,10 +195,10 @@ func TestErrorFetchPublicKey(t *testing.T) {
 func TestValidateSession(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.validateSession(jwtTokenValid, "", false)
+	ok, _, err := a.validateSession(jwtTokenValid, "", false, nil)
 	require.NoError(t, err)
 	require.True(t, ok)
-	ok, _, err = a.validateSession(jwtTokenValid, "", false)
+	ok, _, err = a.validateSession(jwtTokenValid, "", false, nil)
 	require.NoError(t, err)
 	require.True(t, ok)
 }
@@ -210,11 +210,11 @@ func TestValidateSessionFetchKeyCalledOnce(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", publicKey)))}, nil
 	}))
 	require.NoError(t, err)
-	ok, _, err := a.validateSession(jwtTokenValid, "", false)
+	ok, _, err := a.validateSession(jwtTokenValid, "", false, nil)
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.EqualValues(t, 1, count)
-	ok, _, err = a.validateSession(jwtTokenValid, "", false)
+	ok, _, err = a.validateSession(jwtTokenValid, "", false, nil)
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.EqualValues(t, 1, count)
@@ -225,7 +225,7 @@ func TestValidateSessionFetchKeyMalformed(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", unknownPublicKey)))}, nil
 	}))
 	require.NoError(t, err)
-	ok, _, err := a.validateSession(jwtTokenValid, jwtTokenValid, false)
+	ok, _, err := a.validateSession(jwtTokenValid, jwtTokenValid, false, nil)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 	require.False(t, ok)
@@ -238,7 +238,7 @@ func TestValidateSessionFailWithInvalidKey(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", publicKey)))}, nil
 	}))
 	require.NoError(t, err)
-	ok, _, err := a.validateSession(jwtTokenValid, "", false)
+	ok, _, err := a.validateSession(jwtTokenValid, "", false, nil)
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "key provider 0 failed")
 	require.False(t, ok)
@@ -250,7 +250,7 @@ func TestValidateSessionRequest(t *testing.T) {
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenValid})
-	ok, token, err := a.ValidateSessionWithOptions(request)
+	ok, token, err := a.ValidateSession(request, nil)
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.EqualValues(t, jwtTokenValid, token.JWT)
@@ -261,7 +261,7 @@ func TestValidateSessionRequestHeader(t *testing.T) {
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.Header.Add(api.AuthorizationHeaderName, api.BearerAuthorizationPrefix+jwtTokenValid)
-	ok, token, err := a.ValidateSessionWithOptions(request)
+	ok, token, err := a.ValidateSession(request, nil)
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.EqualValues(t, jwtTokenValid, token.JWT)
@@ -274,7 +274,7 @@ func TestValidateSessionRequestMissingCookie(t *testing.T) {
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	ok, token, err := a.ValidateSessionWithOptions(request)
+	ok, token, err := a.ValidateSession(request, nil)
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.NotEmpty(t, token)
@@ -284,7 +284,7 @@ func TestValidateSessionRequestMissingBothCookies(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
-	ok, token, err := a.ValidateSessionWithOptions(request)
+	ok, token, err := a.ValidateSession(request, nil)
 	require.NoError(t, err)
 	require.False(t, ok)
 	require.Empty(t, token)
@@ -337,7 +337,7 @@ func TestValidateSessionRequestFailRefreshSession(t *testing.T) {
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
 	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenExpired})
-	ok, cookies, err := a.ValidateSessionWithOptions(request)
+	ok, cookies, err := a.ValidateSession(request, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, errors.FailedToRefreshTokenError)
 	require.False(t, ok)
@@ -348,7 +348,7 @@ func TestValidateSessionRequestNoCookie(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
-	ok, cookies, err := a.ValidateSessionWithOptions(request)
+	ok, cookies, err := a.ValidateSession(request, nil)
 	require.NoError(t, err)
 	require.False(t, ok)
 	require.Empty(t, cookies)
@@ -357,7 +357,7 @@ func TestValidateSessionRequestNoCookie(t *testing.T) {
 func TestValidateSessionExpired(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.validateSession(jwtTokenExpired, jwtTokenExpired, false)
+	ok, _, err := a.validateSession(jwtTokenExpired, jwtTokenExpired, false, nil)
 	require.Error(t, err)
 	require.False(t, ok)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
@@ -366,7 +366,7 @@ func TestValidateSessionExpired(t *testing.T) {
 func TestValidateSessionNoProvider(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateSessionWithOptions(nil)
+	ok, _, err := a.ValidateSession(nil, nil)
 	require.Error(t, err)
 	require.ErrorIs(t, err, errors.MissingProviderError)
 	require.False(t, ok)
@@ -375,7 +375,7 @@ func TestValidateSessionNoProvider(t *testing.T) {
 func TestValidateSessionNotYet(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.validateSession(jwtTokenNotYet, jwtTokenNotYet, false)
+	ok, _, err := a.validateSession(jwtTokenNotYet, jwtTokenNotYet, false, nil)
 	require.Error(t, err)
 	require.False(t, ok)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
@@ -404,7 +404,7 @@ func TestRefreshSessionRequestRefreshSession(t *testing.T) {
 func TestRefreshSessionNoRequest(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, token, err := a.RefreshSessionWithOptions(nil)
+	ok, token, err := a.RefreshSession(nil, nil)
 	assert.Error(t, err)
 	assert.False(t, ok)
 	assert.Nil(t, token)
@@ -414,7 +414,7 @@ func TestRefreshSessionNoToken(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
-	ok, token, err := a.RefreshSessionWithOptions(request)
+	ok, token, err := a.RefreshSession(request, nil)
 	assert.NoError(t, err)
 	assert.False(t, ok)
 	assert.Nil(t, token)
@@ -536,7 +536,7 @@ func TestLogoutEmptyRequest(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	err = a.LogoutWithOptions(nil)
+	err = a.Logout(nil, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, errors.MissingRequestError)
 }
@@ -548,7 +548,7 @@ func TestLogoutMissingToken(t *testing.T) {
 	require.NoError(t, err)
 
 	request := &http.Request{Header: http.Header{}}
-	err = a.LogoutWithOptions(request)
+	err = a.Logout(request, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, errors.RefreshTokenError)
 }
@@ -657,7 +657,7 @@ func BenchmarkValidateSession(b *testing.B) {
 	require.NoError(b, err)
 
 	for n := 0; n < b.N; n++ {
-		_, _, _ = a.validateSession(jwtTokenValid, "", false)
+		_, _, _ = a.validateSession(jwtTokenValid, "", false, nil)
 	}
 }
 

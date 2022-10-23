@@ -49,10 +49,6 @@ func (auth *totp) UpdateUser(identifier string, r *http.Request) (*TOTPResponse,
 }
 
 func (auth *totp) SignInCode(identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.SignInCodeWithOptions(identifier, code, WithResponseOption(w))
-}
-
-func (auth *totp) SignInCodeWithOptions(identifier, code string, options ...Option) (*AuthenticationInfo, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
@@ -61,5 +57,5 @@ func (auth *totp) SignInCodeWithOptions(identifier, code string, options ...Opti
 	if err != nil {
 		return nil, err
 	}
-	return auth.generateAuthenticationInfo(httpResponse, options...)
+	return auth.generateAuthenticationInfo(httpResponse, w)
 }

@@ -25,7 +25,3 @@ func AuthneticationMiddleware(client auth.Authentication, onFailure func(*gin.Co
 		}
 	}
 }
-
-func WithResponseOption(c *gin.Context) auth.Option {
-	return auth.WithResponseOption(c.Writer)
-}

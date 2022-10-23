@@ -27,21 +27,6 @@ func TestSAMLStart(t *testing.T) {
 	assert.EqualValues(t, http.StatusTemporaryRedirect, w.Result().StatusCode)
 }
 
-func TestSAMLStartNoRedirect(t *testing.T) {
-	uri := "http://test.me"
-	tenant := "tenantID"
-	landingURL := "https://test.com"
-	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {
-		assert.EqualValues(t, fmt.Sprintf("%s?redirectURL=%s&tenant=%s", composeSAMLStartURL(), url.QueryEscape(landingURL), tenant), r.URL.RequestURI())
-	}))
-	require.NoError(t, err)
-	w := httptest.NewRecorder()
-	urlStr, err := a.SAML().StartWithOptions(tenant, landingURL, WithNoRedirectOption(w))
-	require.NoError(t, err)
-	assert.EqualValues(t, uri, urlStr)
-	assert.EqualValues(t, http.StatusOK, w.Result().StatusCode)
-}
-
 func TestSAMLStartInvalidForwardResponse(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)

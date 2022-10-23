@@ -16,11 +16,7 @@ type oauthStartResponse struct {
 	URL string `json:"url"`
 }
 
-func (auth *oauth) Start(provider OAuthProvider, returnURL string, w http.ResponseWriter) (string, error) {
-	return auth.StartWithOptions(provider, returnURL, WithResponseOption(w))
-}
-
-func (auth *oauth) StartWithOptions(provider OAuthProvider, returnURL string, options ...Option) (url string, err error) {
+func (auth *oauth) Start(provider OAuthProvider, returnURL string, w http.ResponseWriter) (url string, err error) {
 	m := map[string]string{
 		"provider": string(provider),
 	}
@@ -40,16 +36,12 @@ func (auth *oauth) StartWithOptions(provider OAuthProvider, returnURL string, op
 			return "", err
 		}
 		url = res.URL
-		Options(options).CreateRedirect(url)
+		redirectURL(url, w)
 	}
 
 	return
 }
 
 func (auth *oauth) ExchangeToken(code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.ExchangeTokenWithOptions(code, WithResponseOption(w))
-}
-
-func (auth *oauth) ExchangeTokenWithOptions(code string, options ...Option) (*AuthenticationInfo, error) {
-	return auth.exchangeTokenWithOptions(code, composeOAuthExchangeTokenURL(), options...)
+	return auth.exchangeToken(code, composeOAuthExchangeTokenURL(), w)
 }

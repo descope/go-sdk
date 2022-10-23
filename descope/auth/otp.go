@@ -41,10 +41,6 @@ func (auth *otp) SignUpOrIn(method DeliveryMethod, identifier string) error {
 }
 
 func (auth *otp) VerifyCode(method DeliveryMethod, identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.VerifyCodeWithOptions(method, identifier, code, WithResponseOption(w))
-}
-
-func (auth *otp) VerifyCodeWithOptions(method DeliveryMethod, identifier string, code string, options ...Option) (*AuthenticationInfo, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
@@ -66,7 +62,7 @@ func (auth *otp) VerifyCodeWithOptions(method DeliveryMethod, identifier string,
 	if err != nil {
 		return nil, err
 	}
-	return auth.generateAuthenticationInfo(httpResponse, options...)
+	return auth.generateAuthenticationInfo(httpResponse, w)
 }
 
 func (auth *otp) UpdateUserEmail(identifier, email string, r *http.Request) error {

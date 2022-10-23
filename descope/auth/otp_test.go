@@ -151,7 +151,7 @@ func TestEmptyEmailVerifyCodeEmail(t *testing.T) {
 	email := ""
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCodeWithOptions(MethodEmail, email, "4444")
+	_, err = a.OTP().VerifyCode(MethodEmail, email, "4444", nil)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -160,7 +160,7 @@ func TestInvalidVerifyCode(t *testing.T) {
 	email := "a"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCodeWithOptions("", email, "4444")
+	_, err = a.OTP().VerifyCode("", email, "4444", nil)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -175,7 +175,7 @@ func TestVerifyCodeDetectEmail(t *testing.T) {
 		assert.EqualValues(t, email, body["externalId"])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCodeWithOptions("", email, "555")
+	_, err = a.OTP().VerifyCode("", email, "555", nil)
 	require.NoError(t, err)
 }
 
@@ -189,7 +189,7 @@ func TestVerifyCodeDetectPhone(t *testing.T) {
 		assert.EqualValues(t, phone, body["externalId"])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCodeWithOptions("", phone, "555")
+	_, err = a.OTP().VerifyCode("", phone, "555", nil)
 	require.NoError(t, err)
 }
 
@@ -204,7 +204,7 @@ func TestVerifyCodeWithPhone(t *testing.T) {
 		assert.EqualValues(t, "4444", body["code"])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCodeWithOptions(MethodSMS, phone, "4444")
+	_, err = a.OTP().VerifyCode(MethodSMS, phone, "4444", nil)
 	require.NoError(t, err)
 }
 
@@ -220,7 +220,7 @@ func TestVerifyCodeEmail(t *testing.T) {
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCodeWithOptions(MethodEmail, email, code)
+	_, err = a.OTP().VerifyCode(MethodEmail, email, code, nil)
 	require.NoError(t, err)
 }
 
@@ -236,7 +236,7 @@ func TestVerifyCodeSMS(t *testing.T) {
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCodeWithOptions(MethodSMS, phone, code)
+	_, err = a.OTP().VerifyCode(MethodSMS, phone, code, nil)
 	require.NoError(t, err)
 }
 
@@ -252,7 +252,7 @@ func TestVerifyCodeWhatsApp(t *testing.T) {
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCodeWithOptions(MethodWhatsApp, phone, code)
+	_, err = a.OTP().VerifyCode(MethodWhatsApp, phone, code, nil)
 	require.NoError(t, err)
 }
 
