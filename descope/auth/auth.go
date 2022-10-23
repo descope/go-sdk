@@ -448,12 +448,20 @@ func (*authenticationsBase) verifyDeliveryMethod(method DeliveryMethod, identifi
 	return nil
 }
 
-func (auth *authenticationsBase) exchangeToken(code string, url string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+func (auth *authenticationsBase) exchangeToken(code string, url string, r *http.Request, loginOptions *LoginOptions, w http.ResponseWriter) (*AuthenticationInfo, error) {
 	if code == "" {
 		return nil, errors.NewInvalidArgumentError("code")
 	}
+	var pswd string
+	var err error
+	if loginOptions.IsStepup() {
+		pswd, err = getValidRefreshToken(r)
+		if err != nil {
+			return nil, err
+		}
+	}
 
-	httpResponse, err := auth.client.DoPostRequest(url, newExchangeTokenBody(code), nil, "")
+	httpResponse, err := auth.client.DoPostRequest(url, newExchangeTokenBody(code, loginOptions), nil, pswd)
 	if err != nil {
 		return nil, err
 	}

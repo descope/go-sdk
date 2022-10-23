@@ -75,8 +75,17 @@ func (auth *magicLink) SignUpOrInCrossDevice(method DeliveryMethod, identifier, 
 	return getPendingRefFromResponse(httpResponse)
 }
 
-func (auth *magicLink) GetSession(pendingRef string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	httpResponse, err := auth.client.DoPostRequest(composeGetSession(), newAuthenticationGetMagicLinkSessionBody(pendingRef), nil, "")
+func (auth *magicLink) GetSession(pendingRef string, r *http.Request, loginOptions *LoginOptions, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	var pswd string
+	var err error
+	if loginOptions.IsStepup() {
+		pswd, err = getValidRefreshToken(r)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	httpResponse, err := auth.client.DoPostRequest(composeGetSession(), newAuthenticationGetMagicLinkSessionBody(pendingRef, loginOptions), nil, pswd)
 	if err != nil {
 		if err == errors.UnauthorizedError {
 			return nil, errors.MagicLinkUnauthorized
@@ -86,8 +95,17 @@ func (auth *magicLink) GetSession(pendingRef string, w http.ResponseWriter) (*Au
 	return auth.generateAuthenticationInfo(httpResponse, w)
 }
 
-func (auth *magicLink) Verify(token string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	httpResponse, err := auth.client.DoPostRequest(composeVerifyMagicLinkURL(), newMagicLinkAuthenticationVerifyRequestBody(token), nil, "")
+func (auth *magicLink) Verify(token string, r *http.Request, loginOptions *LoginOptions, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	var pswd string
+	var err error
+	if loginOptions.IsStepup() {
+		pswd, err = getValidRefreshToken(r)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	httpResponse, err := auth.client.DoPostRequest(composeVerifyMagicLinkURL(), newMagicLinkAuthenticationVerifyRequestBody(token, loginOptions), nil, pswd)
 	if err != nil {
 		return nil, err
 	}

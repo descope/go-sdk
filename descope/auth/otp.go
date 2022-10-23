@@ -40,7 +40,7 @@ func (auth *otp) SignUpOrIn(method DeliveryMethod, identifier string) error {
 	return err
 }
 
-func (auth *otp) VerifyCode(method DeliveryMethod, identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+func (auth *otp) VerifyCode(method DeliveryMethod, identifier string, code string, r *http.Request, loginOptions *LoginOptions, w http.ResponseWriter) (*AuthenticationInfo, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
@@ -57,8 +57,15 @@ func (auth *otp) VerifyCode(method DeliveryMethod, identifier string, code strin
 			return nil, errors.NewInvalidArgumentError("method")
 		}
 	}
-
-	httpResponse, err := auth.client.DoPostRequest(composeVerifyCodeURL(method), newAuthenticationVerifyRequestBody(identifier, code), nil, "")
+	var pswd string
+	var err error
+	if loginOptions.IsStepup() {
+		pswd, err = getValidRefreshToken(r)
+		if err != nil {
+			return nil, err
+		}
+	}
+	httpResponse, err := auth.client.DoPostRequest(composeVerifyCodeURL(method), newAuthenticationVerifyRequestBody(identifier, code, loginOptions), nil, pswd)
 	if err != nil {
 		return nil, err
 	}

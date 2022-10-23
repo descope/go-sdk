@@ -42,6 +42,6 @@ func (auth *oauth) Start(provider OAuthProvider, returnURL string, w http.Respon
 	return
 }
 
-func (auth *oauth) ExchangeToken(code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.exchangeToken(code, composeOAuthExchangeTokenURL(), w)
+func (auth *oauth) ExchangeToken(code string, r *http.Request, loginOptions *LoginOptions, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	return auth.exchangeToken(code, composeOAuthExchangeTokenURL(), r, loginOptions, w)
 }

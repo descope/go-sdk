@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"io"
 	"net/http"
+	"strings"
 	"testing"
 
+	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -105,7 +107,45 @@ func TestVerifyTOTP(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	authInfo, err := a.TOTP().SignInCode(externalID, code, nil)
+	authInfo, err := a.TOTP().SignInCode(externalID, code, nil, nil, nil)
+	require.NoError(t, err)
+	assert.NotNil(t, authInfo)
+	assert.True(t, authInfo.FirstSeen)
+	assert.EqualValues(t, externalID, authInfo.User.ExternalIDs[0])
+}
+
+func TestVerifyTOTPLoginOptions(t *testing.T) {
+	externalID := "someID"
+	code := "123456"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeVerifyTOTPCodeURL(), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, externalID, body["externalId"])
+		assert.EqualValues(t, code, body["code"])
+		assert.EqualValues(t, map[string]interface{}{"stepup": true, "customClaims": map[string]interface{}{"k1": "v1"}}, body["loginOptions"])
+		reqToken := r.Header.Get(api.AuthorizationHeaderName)
+		splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix)
+		require.Len(t, splitToken, 2)
+		bearer := splitToken[1]
+		bearers := strings.Split(bearer, ":")
+		require.Len(t, bearers, 2)
+		assert.EqualValues(t, "test", bearers[1])
+
+		resp := &JWTResponse{
+			RefreshJwt: jwtTokenValid,
+			User: &UserResponse{
+				ExternalIDs: []string{externalID},
+			},
+			FirstSeen: true,
+		}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	authInfo, err := a.TOTP().SignInCode(externalID, code, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, nil)
 	require.NoError(t, err)
 	assert.NotNil(t, authInfo)
 	assert.True(t, authInfo.FirstSeen)
@@ -115,7 +155,7 @@ func TestVerifyTOTP(t *testing.T) {
 func TestVerifyTOTPFailure(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.TOTP().SignInCode("", "code", nil)
+	_, err = a.TOTP().SignInCode("", "code", nil, nil, nil)
 	assert.Error(t, err)
 
 }

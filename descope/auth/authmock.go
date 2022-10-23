@@ -8,7 +8,7 @@ type MockDescopeAuthenticationOTP struct {
 	AssertSignInOTP                 func(method DeliveryMethod, identifier string)
 	AssertSignUpOTP                 func(method DeliveryMethod, identifier string, user *User)
 	AssertSignUpOrInOTP             func(method DeliveryMethod, identifier string)
-	AssertVerifyCode                func(method DeliveryMethod, identifier string, code string)
+	AssertVerifyCode                func(method DeliveryMethod, identifier string, code string, r *http.Request, loginOptions *LoginOptions)
 	SignInOTPResponseError          error
 	SignUpOTPResponseError          error
 	SignUpOrInOTPResponseError      error
@@ -21,7 +21,7 @@ type MockDescopeAuthenticationOTP struct {
 }
 
 type MockDescopeAuthenticationExchanger struct {
-	AssertExchangeToken        func(code string, w http.ResponseWriter)
+	AssertExchangeToken        func(code string, r *http.Request, loginOptions *LoginOptions, w http.ResponseWriter)
 	ExchangeTokenResponseInfo  *AuthenticationInfo
 	ExchangeTokenResponseError error
 }
@@ -50,11 +50,11 @@ type MockDescopeAuthenticationMagicLink struct {
 	AssertSignInMagicLinkCrossDevice            func(method DeliveryMethod, identifier, URI string)
 	AssertSignUpMagicLinkCrossDevice            func(method DeliveryMethod, identifier, URI string, user *User)
 	AssertSignUpOrInMagicLinkCrossDevice        func(method DeliveryMethod, identifier, URI string)
-	AssertGetMagicLinkSession                   func(pendingRef string)
+	AssertGetMagicLinkSession                   func(pendingRef string, r *http.Request, loginOptions *LoginOptions)
 	SignUpMagicLinkCrossDeviceResponseError     error
 	SignInMagicLinkCrossDeviceResponseError     error
 	SignUpOrInMagicLinkCrossDeviceResponseError error
-	AssertVerifyMagicLink                       func(token string)
+	AssertVerifyMagicLink                       func(token string, r *http.Request, loginOptions *LoginOptions)
 	VerifyCodeResponseError                     error
 	VerifyCodeResponseInfo                      *AuthenticationInfo
 	MagicLinkPendingLinkCrossDeviceResponse     *MagicLinkResponse
@@ -81,7 +81,7 @@ type MockDescopeAuthenticationTOTP struct {
 	AssertUpdateTOTP            func(identifier string)
 	UpdateTOTPResponse          *TOTPResponse
 	UpdateTOTPResponseError     error
-	AssertVerifyTOTPCode        func(identifier string, code string)
+	AssertVerifyTOTPCode        func(identifier string, code string, r *http.Request, loginOptions *LoginOptions)
 	VerifyTOTPCodeResponseInfo  *AuthenticationInfo
 	VerifyTOTPCodeResponseError error
 }
@@ -196,9 +196,9 @@ func (m MockDescopeAuthenticationTOTP) UpdateUser(identifier string, _ *http.Req
 	return m.UpdateTOTPResponse, m.UpdateTOTPResponseError
 }
 
-func (m MockDescopeAuthenticationTOTP) SignInCode(identifier string, code string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthenticationTOTP) SignInCode(identifier string, code string, r *http.Request, loginOptions *LoginOptions, _ http.ResponseWriter) (*AuthenticationInfo, error) {
 	if m.AssertVerifyTOTPCode != nil {
-		m.AssertVerifyTOTPCode(identifier, code)
+		m.AssertVerifyTOTPCode(identifier, code, r, loginOptions)
 	}
 	return m.VerifyTOTPCodeResponseInfo, m.VerifyTOTPCodeResponseError
 }
@@ -217,9 +217,9 @@ func (m MockDescopeAuthenticationOTP) UpdateUserPhone(method DeliveryMethod, ide
 	return m.UpdateUserPhoneOTPResponseError
 }
 
-func (m MockDescopeAuthenticationOTP) VerifyCode(method DeliveryMethod, identifier string, code string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthenticationOTP) VerifyCode(method DeliveryMethod, identifier string, code string, r *http.Request, loginOptions *LoginOptions, _ http.ResponseWriter) (*AuthenticationInfo, error) {
 	if m.AssertVerifyCode != nil {
-		m.AssertVerifyCode(method, identifier, code)
+		m.AssertVerifyCode(method, identifier, code, r, loginOptions)
 	}
 	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
 }
@@ -294,9 +294,9 @@ func (m MockDescopeAuthenticationMagicLink) UpdateUserPhoneCrossDevice(method De
 	return m.UpdateUserPhoneMagicLinkCrossDeviceResponse, m.UpdateUserPhoneMagicLinkCrossDeviceError
 }
 
-func (m MockDescopeAuthenticationMagicLink) GetSession(pendingRef string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthenticationMagicLink) GetSession(pendingRef string, r *http.Request, loginOptions *LoginOptions, _ http.ResponseWriter) (*AuthenticationInfo, error) {
 	if m.AssertGetMagicLinkSession != nil {
-		m.AssertGetMagicLinkSession(pendingRef)
+		m.AssertGetMagicLinkSession(pendingRef, r, loginOptions)
 	}
 	return m.GetMagicLinkSessionResponseInfo, m.GetMagicLinkSessionResponseError
 }
@@ -308,9 +308,9 @@ func (m MockDescopeAuthenticationOAuth) Start(provider OAuthProvider, returnURL 
 	return m.AssertOAuthResponseURL, m.OAuthStartResponseError
 }
 
-func (m MockDescopeAuthenticationExchanger) ExchangeToken(code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthenticationExchanger) ExchangeToken(code string, r *http.Request, loginOptions *LoginOptions, w http.ResponseWriter) (*AuthenticationInfo, error) {
 	if m.AssertExchangeToken != nil {
-		m.AssertExchangeToken(code, w)
+		m.AssertExchangeToken(code, r, loginOptions, w)
 	}
 	return m.ExchangeTokenResponseInfo, m.ExchangeTokenResponseError
 }
@@ -322,9 +322,9 @@ func (m MockDescopeAuthenticationSAML) Start(tenant string, returnURL string, w 
 	return m.AssertSAMLStartResponseURL, m.SAMLStartResponseError
 }
 
-func (m MockDescopeAuthenticationMagicLink) Verify(token string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthenticationMagicLink) Verify(token string, r *http.Request, loginOptions *LoginOptions, _ http.ResponseWriter) (*AuthenticationInfo, error) {
 	if m.AssertVerifyMagicLink != nil {
-		m.AssertVerifyMagicLink(token)
+		m.AssertVerifyMagicLink(token, r, loginOptions)
 	}
 	return m.VerifyCodeResponseInfo, m.VerifyCodeResponseError
 }
@@ -371,7 +371,7 @@ func (m MockDescopeAuthenticationWebAuthn) SignUpStart(_ string, _ *User, _ stri
 	return m.SignUpWebAuthnStartResponseTransaction, m.SignUpWebAuthnStartResponseError
 }
 
-func (m MockDescopeAuthenticationWebAuthn) SignUpFinish(_ *WebAuthnFinishRequest, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthenticationWebAuthn) SignUpFinish(_ *WebAuthnFinishRequest, _ *http.Request, _ *LoginOptions, _ http.ResponseWriter) (*AuthenticationInfo, error) {
 	return m.SignUpWebAuthnFinishResponseInfo, m.SignUpWebAuthnFinishResponseError
 }
 
@@ -379,7 +379,7 @@ func (m MockDescopeAuthenticationWebAuthn) SignInStart(_ string, _ string) (*Web
 	return m.SignInWebAuthnStartResponseTransaction, m.SignInWebAuthnStartResponseError
 }
 
-func (m MockDescopeAuthenticationWebAuthn) SignInFinish(_ *WebAuthnFinishRequest, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+func (m MockDescopeAuthenticationWebAuthn) SignInFinish(_ *WebAuthnFinishRequest, _ *http.Request, _ *LoginOptions, _ http.ResponseWriter) (*AuthenticationInfo, error) {
 	return m.SignInWebAuthnFinishResponseInfo, m.SignInWebAuthnFinishResponseError
 }
 
