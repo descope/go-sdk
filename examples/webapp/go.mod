@@ -3,7 +3,7 @@ module github.com/descope/go-sdk/examples/webapp
 go 1.18
 
 require (
-	github.com/descope/go-sdk v0.0.0-20221020203112-9e33bcae5a86
+	github.com/descope/go-sdk v0.0.0-20221023214910-392349a3805f
 	github.com/gorilla/mux v1.8.0
 )
 
