@@ -135,7 +135,7 @@ func handleVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	_, err := client.Auth.OTP().VerifyCode(method, identifier, code, w)
+	_, err := client.Auth.OTP().VerifyCode(method, identifier, code, nil, nil, w)
 	if err != nil {
 		setError(w, err.Error())
 		return
@@ -206,7 +206,7 @@ func handleMagicLinkVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "token is empty")
 		return
 	}
-	_, err := client.Auth.MagicLink().Verify(token, w)
+	_, err := client.Auth.MagicLink().Verify(token, nil, nil, w)
 	if err != nil {
 		setError(w, err.Error())
 		return
@@ -220,7 +220,7 @@ func handleGetMagicLinkSession(w http.ResponseWriter, r *http.Request) {
 		setError(w, "pending reference is empty")
 		return
 	}
-	_, err := client.Auth.MagicLink().GetSession(pendingRef, w)
+	_, err := client.Auth.MagicLink().GetSession(pendingRef, nil, nil, w)
 	if goErrors.Is(err, errors.MagicLinkUnauthorized) {
 		setUnauthorized(w, err.Error())
 	}
@@ -240,7 +240,7 @@ func handleWebauthnSigninFinish(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = client.Auth.WebAuthn().SignInFinish(t, w)
+	_, err = client.Auth.WebAuthn().SignInFinish(t, nil, nil, w)
 	if err != nil {
 		setError(w, err.Error())
 	}
@@ -284,7 +284,7 @@ func handleWebauthnSignupFinish(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = client.Auth.WebAuthn().SignUpFinish(t, w)
+	_, err = client.Auth.WebAuthn().SignUpFinish(t, nil, nil, w)
 	if err != nil {
 		setError(w, err.Error())
 	}
