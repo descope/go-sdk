@@ -3,7 +3,7 @@ module github.com/descope/go-sdk/examples/ginwebapp
 go 1.18
 
 require (
-	github.com/descope/go-sdk v0.0.0-20221020203112-9e33bcae5a86
+	github.com/descope/go-sdk v0.0.0-20221023214910-392349a3805f
 	github.com/descope/go-sdk/descope/gin v0.0.0-20221020203112-9e33bcae5a86
 	github.com/gin-gonic/gin v1.8.1
 )
