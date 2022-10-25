@@ -192,6 +192,10 @@ func (auth *authenticationService) ValidateSession(request *http.Request, w http
 	return auth.validateSession(sessionToken, refreshToken, false, w)
 }
 
+func (auth *authenticationService) ValidateSessionTokens(sessionToken, refreshToken string) (bool, *Token, error) {
+	return auth.validateSession(sessionToken, refreshToken, false, nil)
+}
+
 func (auth *authenticationService) RefreshSession(request *http.Request, w http.ResponseWriter) (bool, *Token, error) {
 	if request == nil {
 		return false, nil, errors.MissingProviderError
