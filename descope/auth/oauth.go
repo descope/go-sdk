@@ -36,7 +36,7 @@ func (auth *oauth) Start(provider OAuthProvider, returnURL string, w http.Respon
 			return "", err
 		}
 		url = res.URL
-		redirectURL(url, w)
+		redirectToURL(url, w)
 	}
 
 	return

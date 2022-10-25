@@ -266,8 +266,8 @@ type exchangeTokenBody struct {
 }
 
 type samlStartBody struct {
-	Tenant    string `json:"tenant,omitempty"`
-	ReturnURL string `json:"returnURL,omitempty"`
+	Tenant      string `json:"tenant,omitempty"`
+	RedirectURL string `json:"redirectURL,omitempty"`
 }
 
 func newSignInRequestBody(externalID string) *authenticationRequestBody {
@@ -339,8 +339,8 @@ func newExchangeTokenBody(code string, loginOptions *LoginOptions) *exchangeToke
 	return &exchangeTokenBody{Code: code, LoginOptions: loginOptions}
 }
 
-func newSAMLStartBody(tenant, returnURL string) *samlStartBody {
-	return &samlStartBody{Tenant: tenant, ReturnURL: returnURL}
+func newSAMLStartBody(tenant, redirectURL string) *samlStartBody {
+	return &samlStartBody{Tenant: tenant, RedirectURL: redirectURL}
 }
 
 type DeliveryMethod string

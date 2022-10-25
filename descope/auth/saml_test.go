@@ -1,10 +1,8 @@
 package auth
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -16,7 +14,12 @@ func TestSAMLStart(t *testing.T) {
 	tenant := "tenantID"
 	landingURL := "https://test.com"
 	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {
-		assert.EqualValues(t, fmt.Sprintf("%s?redirectURL=%s&tenant=%s", composeSAMLStartURL(), url.QueryEscape(landingURL), tenant), r.URL.RequestURI())
+		req := samlStartBody{}
+		err := readBody(r, &req)
+		require.NoError(t, err)
+		assert.EqualValues(t, tenant, req.Tenant)
+		assert.EqualValues(t, landingURL, req.RedirectURL)
+		assert.EqualValues(t, composeSAMLStartURL(), r.URL.RequestURI())
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()

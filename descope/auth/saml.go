@@ -17,11 +17,11 @@ type samlStartResponse struct {
 	URL string `json:"url"`
 }
 
-func (auth *saml) Start(tenant string, returnURL string, w http.ResponseWriter) (url string, err error) {
+func (auth *saml) Start(tenant string, redirectURL string, w http.ResponseWriter) (url string, err error) {
 	if tenant == "" {
 		return "", errors.NewInvalidArgumentError("tenant")
 	}
-	httpResponse, err := auth.client.DoPostRequest(composeSAMLStartURL(), newSAMLStartBody(tenant, returnURL), &api.HTTPRequest{}, "")
+	httpResponse, err := auth.client.DoPostRequest(composeSAMLStartURL(), newSAMLStartBody(tenant, redirectURL), &api.HTTPRequest{}, "")
 	if err != nil {
 		return
 	}
@@ -34,7 +34,7 @@ func (auth *saml) Start(tenant string, returnURL string, w http.ResponseWriter) 
 			return "", err
 		}
 		url = res.URL
-		redirectURL(url, w)
+		redirectToURL(url, w)
 	}
 
 	return
