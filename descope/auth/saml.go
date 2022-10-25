@@ -21,13 +21,7 @@ func (auth *saml) Start(tenant string, returnURL string, w http.ResponseWriter) 
 	if tenant == "" {
 		return "", errors.NewInvalidArgumentError("tenant")
 	}
-	m := map[string]string{
-		"tenant": string(tenant),
-	}
-	if len(returnURL) > 0 {
-		m["redirectURL"] = returnURL
-	}
-	httpResponse, err := auth.client.DoGetRequest(composeSAMLStartURL(), &api.HTTPRequest{QueryParams: m}, "")
+	httpResponse, err := auth.client.DoPostRequest(composeSAMLStartURL(), newSAMLStartBody(tenant, returnURL), &api.HTTPRequest{}, "")
 	if err != nil {
 		return
 	}
