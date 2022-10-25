@@ -675,7 +675,7 @@ func composeUpdateUserPhone(method DeliveryMethod) string {
 	return composeURLMethod(api.Routes.UpdateUserPhoneMagicLink(), method)
 }
 
-func redirectURL(url string, w http.ResponseWriter) {
+func redirectToURL(url string, w http.ResponseWriter) {
 	if w == nil {
 		return
 	}
