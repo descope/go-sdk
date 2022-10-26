@@ -16,14 +16,8 @@ type oauthStartResponse struct {
 	URL string `json:"url"`
 }
 
-func (auth *oauth) Start(provider OAuthProvider, returnURL string, w http.ResponseWriter) (url string, err error) {
-	m := map[string]string{
-		"provider": string(provider),
-	}
-	if len(returnURL) > 0 {
-		m["redirectURL"] = returnURL
-	}
-	httpResponse, err := auth.client.DoGetRequest(composeOAuthURL(), &api.HTTPRequest{QueryParams: m}, "")
+func (auth *oauth) Start(provider OAuthProvider, redirectURL string, w http.ResponseWriter) (url string, err error) {
+	httpResponse, err := auth.client.DoPostRequest(composeOAuthURL(), newOAuthStartBody(string(provider), redirectURL), &api.HTTPRequest{}, "")
 	if err != nil {
 		return
 	}
