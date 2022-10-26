@@ -2,7 +2,6 @@ package auth
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -39,7 +38,12 @@ func TestOAuthStartForwardResponse(t *testing.T) {
 func TestOAuthStartInvalidForwardResponse(t *testing.T) {
 	provider := OAuthGithub
 	a, err := newTestAuth(nil, DoBadRequest(func(r *http.Request) {
-		assert.EqualValues(t, fmt.Sprintf("%s?provider=%s", composeOAuthURL(), provider), r.URL.RequestURI())
+		req := oauthStartBody{}
+		err := readBody(r, &req)
+		require.NoError(t, err)
+		assert.EqualValues(t, provider, req.Provider)
+		assert.EqualValues(t, "", req.RedirectURL)
+		assert.EqualValues(t, composeOAuthURL(), r.URL.RequestURI())
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
