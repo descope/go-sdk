@@ -265,11 +265,6 @@ type exchangeTokenBody struct {
 	LoginOptions *LoginOptions `json:"loginOptions,omitempty"`
 }
 
-type samlStartBody struct {
-	Tenant      string `json:"tenant,omitempty"`
-	RedirectURL string `json:"redirectURL,omitempty"`
-}
-
 type oauthStartBody struct {
 	Provider    string `json:"provider,omitempty"`
 	RedirectURL string `json:"redirectURL,omitempty"`
@@ -342,10 +337,6 @@ func newAuthenticationGetMagicLinkSessionBody(pendingRef string, loginOptions *L
 
 func newExchangeTokenBody(code string, loginOptions *LoginOptions) *exchangeTokenBody {
 	return &exchangeTokenBody{Code: code, LoginOptions: loginOptions}
-}
-
-func newSAMLStartBody(tenant, redirectURL string) *samlStartBody {
-	return &samlStartBody{Tenant: tenant, RedirectURL: redirectURL}
 }
 
 func newOAuthStartBody(provider, redirectURL string) *oauthStartBody {
