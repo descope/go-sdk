@@ -265,11 +265,6 @@ type exchangeTokenBody struct {
 	LoginOptions *LoginOptions `json:"loginOptions,omitempty"`
 }
 
-type oauthStartBody struct {
-	Provider    string `json:"provider,omitempty"`
-	RedirectURL string `json:"redirectURL,omitempty"`
-}
-
 func newSignInRequestBody(externalID string) *authenticationRequestBody {
 	return &authenticationRequestBody{ExternalID: externalID}
 }
@@ -337,10 +332,6 @@ func newAuthenticationGetMagicLinkSessionBody(pendingRef string, loginOptions *L
 
 func newExchangeTokenBody(code string, loginOptions *LoginOptions) *exchangeTokenBody {
 	return &exchangeTokenBody{Code: code, LoginOptions: loginOptions}
-}
-
-func newOAuthStartBody(provider, redirectURL string) *oauthStartBody {
-	return &oauthStartBody{Provider: string(provider), RedirectURL: redirectURL}
 }
 
 type DeliveryMethod string

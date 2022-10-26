@@ -17,7 +17,13 @@ type oauthStartResponse struct {
 }
 
 func (auth *oauth) Start(provider OAuthProvider, redirectURL string, w http.ResponseWriter) (url string, err error) {
-	httpResponse, err := auth.client.DoPostRequest(composeOAuthURL(), newOAuthStartBody(string(provider), redirectURL), &api.HTTPRequest{}, "")
+	m := map[string]string{
+		"provider": string(provider),
+	}
+	if len(redirectURL) > 0 {
+		m["redirectURL"] = redirectURL
+	}
+	httpResponse, err := auth.client.DoPostRequest(composeOAuthURL(), nil, &api.HTTPRequest{QueryParams: m}, "")
 	if err != nil {
 		return
 	}
