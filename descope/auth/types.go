@@ -270,6 +270,11 @@ type samlStartBody struct {
 	RedirectURL string `json:"redirectURL,omitempty"`
 }
 
+type oauthStartBody struct {
+	Provider    string `json:"provider,omitempty"`
+	RedirectURL string `json:"redirectURL,omitempty"`
+}
+
 func newSignInRequestBody(externalID string) *authenticationRequestBody {
 	return &authenticationRequestBody{ExternalID: externalID}
 }
@@ -341,6 +346,10 @@ func newExchangeTokenBody(code string, loginOptions *LoginOptions) *exchangeToke
 
 func newSAMLStartBody(tenant, redirectURL string) *samlStartBody {
 	return &samlStartBody{Tenant: tenant, RedirectURL: redirectURL}
+}
+
+func newOAuthStartBody(provider, redirectURL string) *oauthStartBody {
+	return &oauthStartBody{Provider: string(provider), RedirectURL: redirectURL}
 }
 
 type DeliveryMethod string
