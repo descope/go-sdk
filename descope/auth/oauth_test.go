@@ -2,11 +2,9 @@ package auth
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
-	"net/url"
 	"strings"
 	"testing"
 
@@ -21,7 +19,12 @@ func TestOAuthStartForwardResponse(t *testing.T) {
 	landingURL := "https://test.com"
 	provider := OAuthGithub
 	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {
-		assert.EqualValues(t, fmt.Sprintf("%s?provider=%s&redirectURL=%s", composeOAuthURL(), provider, url.QueryEscape(landingURL)), r.URL.RequestURI())
+		req := oauthStartBody{}
+		err := readBody(r, &req)
+		require.NoError(t, err)
+		assert.EqualValues(t, provider, req.Provider)
+		assert.EqualValues(t, landingURL, req.RedirectURL)
+		assert.EqualValues(t, composeOAuthURL(), r.URL.RequestURI())
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
@@ -35,7 +38,12 @@ func TestOAuthStartForwardResponse(t *testing.T) {
 func TestOAuthStartInvalidForwardResponse(t *testing.T) {
 	provider := OAuthGithub
 	a, err := newTestAuth(nil, DoBadRequest(func(r *http.Request) {
-		assert.EqualValues(t, fmt.Sprintf("%s?provider=%s", composeOAuthURL(), provider), r.URL.RequestURI())
+		req := oauthStartBody{}
+		err := readBody(r, &req)
+		require.NoError(t, err)
+		assert.EqualValues(t, provider, req.Provider)
+		assert.EqualValues(t, "", req.RedirectURL)
+		assert.EqualValues(t, composeOAuthURL(), r.URL.RequestURI())
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
