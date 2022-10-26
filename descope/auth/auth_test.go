@@ -203,6 +203,16 @@ func TestValidateSession(t *testing.T) {
 	require.True(t, ok)
 }
 
+func TestValidateSessionTokens(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	ok, _, err := a.ValidateSessionTokens(jwtTokenValid, "")
+	require.NoError(t, err)
+	require.True(t, ok)
+	ok, _, _ = a.ValidateSessionTokens(jwtTokenExpired, "")
+	require.False(t, ok)
+}
+
 func TestValidateSessionFetchKeyCalledOnce(t *testing.T) {
 	count := 0
 	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, mocks.Do(func(r *http.Request) (*http.Response, error) {

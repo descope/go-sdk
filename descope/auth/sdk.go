@@ -200,6 +200,11 @@ type Authentication interface {
 	// returns true upon success or false and an error upon failure.
 	ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *Token, error)
 
+	// ValidateSessionTokens - Use to validate a session of a given token.
+	// Should be called before any private API call that requires authorization.
+	// returns true upon success or false and an error upon failure.
+	ValidateSessionTokens(sessionToken, refreshToken string) (bool, *Token, error)
+
 	// RefreshSession - Use to force refresh of a JWT token, even though it is not expired.
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	// returns true upon success or false and an error upon failure.

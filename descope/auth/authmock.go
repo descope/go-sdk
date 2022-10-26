@@ -333,6 +333,10 @@ func (m MockDescopeAuthentication) ValidateSession(_ *http.Request, _ http.Respo
 	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseInfo, m.ValidateSessionResponseError
 }
 
+func (m MockDescopeAuthentication) ValidateSessionTokens(_ string, _ string) (bool, *Token, error) {
+	return !m.ValidateSessionResponseNotOK, m.ValidateSessionResponseInfo, m.ValidateSessionResponseError
+}
+
 func (m MockDescopeAuthentication) RefreshSession(_ *http.Request, _ http.ResponseWriter) (bool, *Token, error) {
 	return !m.RefreshSessionResponseNotOK, m.RefreshSessionResponseInfo, m.RefreshSessionResponseError
 }
