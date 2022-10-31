@@ -376,7 +376,7 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 		bearer = fmt.Sprintf("%s:%s", bearer, pswd)
 	}
 	req.Header.Set(AuthorizationHeaderName, BearerAuthorizationPrefix+bearer)
-	addDescopeHeaders(req)
+	c.addDescopeHeaders(req)
 
 	logger.LogDebug("sending request to [%s]", url)
 	response, err := c.httpClient.Do(req)
