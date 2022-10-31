@@ -8,6 +8,7 @@ import (
 	"net/http"
 	urlpkg "net/url"
 	"path"
+	"runtime"
 	"strings"
 	"time"
 
@@ -370,6 +371,7 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 		bearer = fmt.Sprintf("%s:%s", bearer, pswd)
 	}
 	req.Header.Set(AuthorizationHeaderName, BearerAuthorizationPrefix+bearer)
+	addDescopeHeaders(req)
 
 	logger.LogDebug("sending request to [%s]", url)
 	response, err := c.httpClient.Do(req)
@@ -439,4 +441,9 @@ func (c *Client) parseResponseError(response *http.Response) error {
 
 func isResponseOK(response *http.Response) bool {
 	return response.StatusCode >= http.StatusOK && response.StatusCode < http.StatusMultipleChoices || response.StatusCode == http.StatusTemporaryRedirect
+}
+
+func addDescopeHeaders(req *http.Request) {
+	req.Header.Set("x-descope-sdk-name", "golang")
+	req.Header.Set("x-descope-sdk-go-version", runtime.Version())
 }
