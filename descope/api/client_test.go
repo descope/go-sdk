@@ -35,6 +35,20 @@ func TestClient(t *testing.T) {
 	assert.NotNil(t, c.headers)
 }
 
+func TestRequestWithDescopeHeaders(t *testing.T) {
+	projectID := "test"
+	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+		assert.Nil(t, r.Body)
+		assert.EqualValues(t, "golang", r.Header.Get("X-Descope-Sdk-Name"))
+		assert.True(t, strings.HasPrefix(r.Header.Get("X-Descope-Sdk-Go-Version"), "go"))
+		// cannot test sdk-version since build info does not work in tests
+		return &http.Response{StatusCode: http.StatusOK}, nil
+	})})
+
+	_, err := c.DoPostRequest("path", nil, nil, "")
+	require.NoError(t, err)
+}
+
 func TestGetRequest(t *testing.T) {
 	projectID := "test"
 	expectedResponse := "hey"
