@@ -8,6 +8,8 @@ import (
 	"net/http"
 	urlpkg "net/url"
 	"path"
+	"runtime"
+	"runtime/debug"
 	"strings"
 	"time"
 
@@ -242,6 +244,7 @@ type Client struct {
 	uri        string
 	headers    map[string]string
 	conf       ClientParams
+	buildInfo  *debug.BuildInfo
 }
 type HTTPResponse struct {
 	Req     *http.Request
@@ -283,11 +286,14 @@ func NewClient(conf ClientParams) *Client {
 		conf.BaseURL = defaultURL
 	}
 
+	bi, _ := debug.ReadBuildInfo()
+
 	return &Client{
 		uri:        conf.BaseURL,
 		httpClient: httpClient,
 		headers:    defaultHeaders,
 		conf:       conf,
+		buildInfo:  bi,
 	}
 }
 
@@ -370,6 +376,7 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 		bearer = fmt.Sprintf("%s:%s", bearer, pswd)
 	}
 	req.Header.Set(AuthorizationHeaderName, BearerAuthorizationPrefix+bearer)
+	c.addDescopeHeaders(req)
 
 	logger.LogDebug("sending request to [%s]", url)
 	response, err := c.httpClient.Do(req)
@@ -439,4 +446,18 @@ func (c *Client) parseResponseError(response *http.Response) error {
 
 func isResponseOK(response *http.Response) bool {
 	return response.StatusCode >= http.StatusOK && response.StatusCode < http.StatusMultipleChoices || response.StatusCode == http.StatusTemporaryRedirect
+}
+
+func (c *Client) addDescopeHeaders(req *http.Request) {
+	req.Header.Set("x-descope-sdk-name", "golang")
+	req.Header.Set("x-descope-sdk-go-version", runtime.Version())
+	if c.buildInfo != nil {
+		for _, dep := range c.buildInfo.Deps {
+			if strings.HasPrefix(dep.Path, "github.com/descope/go-sdk/descope") {
+				req.Header.Set("x-descope-sdk-version", dep.Version)
+				req.Header.Set("x-descope-sdk-sha", dep.Sum)
+				break
+			}
+		}
+	}
 }
