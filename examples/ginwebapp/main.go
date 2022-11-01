@@ -92,7 +92,7 @@ func main() {
 			return
 		}
 
-		_, err = client.Auth.WebAuthn().SignUpFinish(t, nil, nil, c.Writer)
+		_, err = client.Auth.WebAuthn().SignUpFinish(t, c.Writer)
 		if err != nil {
 			setError(c, err.Error())
 		}
@@ -100,7 +100,7 @@ func main() {
 	})
 
 	r.POST("/webauthn/signin/start", func(c *gin.Context) {
-		res, err := client.Auth.WebAuthn().SignInStart(c.Query("id"), c.Query("origin"))
+		res, err := client.Auth.WebAuthn().SignInStart(c.Query("id"), c.Query("origin"), nil, nil)
 		if err != nil {
 			setError(c, err.Error())
 		}
@@ -116,7 +116,7 @@ func main() {
 			return
 		}
 
-		_, err = client.Auth.WebAuthn().SignInFinish(t, nil, nil, c.Writer)
+		_, err = client.Auth.WebAuthn().SignInFinish(t, c.Writer)
 		if err != nil {
 			setError(c, err.Error())
 		}
@@ -236,7 +236,7 @@ func handleOTPVerify(c *gin.Context) {
 		setError(c, "code is empty")
 		return
 	}
-	_, err := client.Auth.OTP().VerifyCode(method, identifier, code, nil, nil, c.Writer)
+	_, err := client.Auth.OTP().VerifyCode(method, identifier, code, c.Writer)
 	if err != nil {
 		setError(c, err.Error())
 		return
@@ -249,7 +249,7 @@ func handleOAuth(c *gin.Context) {
 	if provider == "" {
 		provider = auth.OAuthFacebook
 	}
-	_, err := client.Auth.OAuth().Start(provider, "", c.Writer)
+	_, err := client.Auth.OAuth().Start(provider, "", nil, nil, c.Writer)
 	if err != nil {
 		setError(c, err.Error())
 	}
