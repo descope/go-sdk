@@ -34,27 +34,45 @@ func TestSignInMagicLinkEmptyExternalID(t *testing.T) {
 	email := ""
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.MagicLink().SignIn(MethodEmail, email, "")
+	err = a.MagicLink().SignIn(MethodEmail, email, "", nil, nil)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 
-	err = a.MagicLink().SignIn(MethodEmail, email, "http://test.me")
+	err = a.MagicLink().SignIn(MethodEmail, email, "http://test.me", nil, nil)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+}
+
+func TestSignInMagicLinkStepupNoJWT(t *testing.T) {
+	email := "e@e.com"
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	err = a.MagicLink().SignIn(MethodEmail, email, "", nil, &LoginOptions{Stepup: true})
+	require.Error(t, err)
+	assert.ErrorIs(t, err, errors.InvalidStepupJwtError)
 }
 
 func TestSignInMagicLinkCrossDeviceEmptyExternalID(t *testing.T) {
 	email := ""
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.MagicLink().SignIn(MethodEmail, email, "")
+	err = a.MagicLink().SignIn(MethodEmail, email, "", nil, nil)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 
-	info, err := a.MagicLink().SignInCrossDevice(MethodEmail, email, "http://test.me")
+	info, err := a.MagicLink().SignInCrossDevice(MethodEmail, email, "http://test.me", nil, nil)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 	require.Empty(t, info)
+}
+
+func TestSignInMagicLinkCrossDeviceStepupNoJwt(t *testing.T) {
+	email := "test@test.com"
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	_, err = a.MagicLink().SignInCrossDevice(MethodEmail, email, "", nil, &LoginOptions{Stepup: true})
+	require.Error(t, err)
+	assert.ErrorIs(t, err, errors.InvalidStepupJwtError)
 }
 
 func TestSignInMagicLinkEmail(t *testing.T) {
@@ -69,7 +87,31 @@ func TestSignInMagicLinkEmail(t *testing.T) {
 		assert.EqualValues(t, uri, body["URI"])
 	}))
 	require.NoError(t, err)
-	err = a.MagicLink().SignIn(MethodEmail, email, uri)
+	err = a.MagicLink().SignIn(MethodEmail, email, uri, nil, nil)
+	require.NoError(t, err)
+}
+
+func TestSignInMagicLinkEmailLoginOptions(t *testing.T) {
+	email := "test@email.com"
+	uri := "http://test.me"
+
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeMagicLinkSignInURL(MethodEmail), r.URL.RequestURI())
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, email, body["externalId"])
+		assert.EqualValues(t, uri, body["URI"])
+		assert.EqualValues(t, map[string]interface{}{"stepup": true, "customClaims": map[string]interface{}{"k1": "v1"}}, body["loginOptions"])
+		reqToken := r.Header.Get(api.AuthorizationHeaderName)
+		splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix)
+		require.Len(t, splitToken, 2)
+		bearer := splitToken[1]
+		bearers := strings.Split(bearer, ":")
+		require.Len(t, bearers, 2)
+		assert.EqualValues(t, "test", bearers[1])
+	}))
+	require.NoError(t, err)
+	err = a.MagicLink().SignIn(MethodEmail, email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
 	require.NoError(t, err)
 }
 
@@ -90,7 +132,37 @@ func TestSignInMagicLinkEmailCrossDevice(t *testing.T) {
 		}, nil
 	})
 	require.NoError(t, err)
-	response, err := a.MagicLink().SignInCrossDevice(MethodEmail, email, uri)
+	response, err := a.MagicLink().SignInCrossDevice(MethodEmail, email, uri, nil, nil)
+	require.NoError(t, err)
+	require.Equal(t, pendingRefResponse, response.PendingRef)
+}
+
+func TestSignInMagicLinkEmailCrossDeviceStepup(t *testing.T) {
+	email := "test@email.com"
+	uri := "http://test.me"
+	pendingRefResponse := "pending_ref"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeMagicLinkSignInURL(MethodEmail), r.URL.RequestURI())
+
+		m, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, email, m["externalId"])
+		assert.EqualValues(t, uri, m["URI"])
+		assert.EqualValues(t, map[string]interface{}{"stepup": true, "customClaims": map[string]interface{}{"k1": "v1"}}, m["loginOptions"])
+		reqToken := r.Header.Get(api.AuthorizationHeaderName)
+		splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix)
+		require.Len(t, splitToken, 2)
+		bearer := splitToken[1]
+		bearers := strings.Split(bearer, ":")
+		require.Len(t, bearers, 2)
+		assert.EqualValues(t, "test", bearers[1])
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s"}`, pendingRefResponse))),
+		}, nil
+	})
+	require.NoError(t, err)
+	response, err := a.MagicLink().SignInCrossDevice(MethodEmail, email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
 	require.NoError(t, err)
 	require.Equal(t, pendingRefResponse, response.PendingRef)
 }
@@ -105,7 +177,7 @@ func TestSignInMagicLinkEmailCrossDeviceInvalidResponse(t *testing.T) {
 		}, nil
 	})
 	require.NoError(t, err)
-	res, err := a.MagicLink().SignInCrossDevice(MethodEmail, email, uri)
+	res, err := a.MagicLink().SignInCrossDevice(MethodEmail, email, uri, nil, nil)
 	require.Error(t, err)
 	require.Empty(t, res)
 }
@@ -284,35 +356,7 @@ func TestGetSession(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	info, err := a.MagicLink().GetSession(pendingRef, nil, nil, w)
-	require.NoError(t, err)
-	assert.NotEmpty(t, info.SessionToken.JWT)
-	require.Len(t, w.Result().Cookies(), 1)
-	sessionCookie := w.Result().Cookies()[0]
-	require.NoError(t, err)
-	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
-}
-
-func TestGetSessionWithLoginOptions(t *testing.T) {
-	pendingRef := "pending_ref"
-	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
-		assert.EqualValues(t, composeGetSession(), r.URL.RequestURI())
-
-		body, err := readBodyMap(r)
-		require.NoError(t, err)
-		assert.EqualValues(t, pendingRef, body["pendingRef"])
-		assert.EqualValues(t, map[string]interface{}{"stepup": true, "customClaims": map[string]interface{}{"k1": "v1"}}, body["loginOptions"])
-		reqToken := r.Header.Get(api.AuthorizationHeaderName)
-		splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix)
-		require.Len(t, splitToken, 2)
-		bearer := splitToken[1]
-		bearers := strings.Split(bearer, ":")
-		require.Len(t, bearers, 2)
-		assert.EqualValues(t, "test", bearers[1])
-	}))
-	require.NoError(t, err)
-	w := httptest.NewRecorder()
-	info, err := a.MagicLink().GetSession(pendingRef, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, w)
+	info, err := a.MagicLink().GetSession(pendingRef, w)
 	require.NoError(t, err)
 	assert.NotEmpty(t, info.SessionToken.JWT)
 	require.Len(t, w.Result().Cookies(), 1)
@@ -328,7 +372,7 @@ func TestGetMagicLinkSessionError(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	_, err = a.MagicLink().GetSession(pendingRef, nil, nil, w)
+	_, err = a.MagicLink().GetSession(pendingRef, w)
 	require.Error(t, err)
 }
 
@@ -339,7 +383,7 @@ func TestGetMagicLinkSessionStillPending(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	_, err = a.MagicLink().GetSession(pendingRef, nil, nil, w)
+	_, err = a.MagicLink().GetSession(pendingRef, w)
 	require.Error(t, err)
 	require.ErrorIs(t, err, errors.MagicLinkUnauthorized)
 }
@@ -407,7 +451,7 @@ func TestVerifyMagicLinkCodeWithSession(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	info, err := a.MagicLink().Verify(token, nil, nil, w)
+	info, err := a.MagicLink().Verify(token, w)
 	require.NoError(t, err)
 	assert.NotEmpty(t, info.SessionToken.JWT)
 	require.Len(t, w.Result().Cookies(), 1)
@@ -431,32 +475,7 @@ func TestVerifyMagicLinkCodeNoSession(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	info, err := a.MagicLink().Verify(token, nil, nil, w)
-	require.NoError(t, err)
-	assert.Empty(t, info)
-}
-
-func TestVerifyMagicLinkCodeNoSessionLoginOptions(t *testing.T) {
-	token := "4444"
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
-		assert.EqualValues(t, composeVerifyMagicLinkURL(), r.URL.RequestURI())
-
-		body, err := readBodyMap(r)
-		require.NoError(t, err)
-		assert.EqualValues(t, token, body["token"])
-		assert.EqualValues(t, map[string]interface{}{"stepup": true, "customClaims": map[string]interface{}{"k1": "v1"}}, body["loginOptions"])
-		reqToken := r.Header.Get(api.AuthorizationHeaderName)
-		splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix)
-		require.Len(t, splitToken, 2)
-		bearer := splitToken[1]
-		bearers := strings.Split(bearer, ":")
-		require.Len(t, bearers, 2)
-		assert.EqualValues(t, "test", bearers[1])
-		return &http.Response{StatusCode: http.StatusOK}, nil
-	})
-	require.NoError(t, err)
-	w := httptest.NewRecorder()
-	info, err := a.MagicLink().Verify(token, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, w)
+	info, err := a.MagicLink().Verify(token, w)
 	require.NoError(t, err)
 	assert.Empty(t, info)
 }

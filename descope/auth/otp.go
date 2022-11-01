@@ -10,12 +10,20 @@ type otp struct {
 	authenticationsBase
 }
 
-func (auth *otp) SignIn(method DeliveryMethod, identifier string) error {
+func (auth *otp) SignIn(method DeliveryMethod, identifier string, r *http.Request, loginOptions *LoginOptions) error {
+	var pswd string
+	var err error
 	if identifier == "" {
 		return errors.NewInvalidArgumentError("identifier")
 	}
+	if loginOptions.IsStepup() {
+		pswd, err = getValidRefreshToken(r)
+		if err != nil {
+			return errors.InvalidStepupJwtError
+		}
+	}
 
-	_, err := auth.client.DoPostRequest(composeSignInURL(method), newSignInRequestBody(identifier), nil, "")
+	_, err = auth.client.DoPostRequest(composeSignInURL(method), newSignInRequestBody(identifier, loginOptions), nil, pswd)
 	return err
 }
 
@@ -36,11 +44,11 @@ func (auth *otp) SignUpOrIn(method DeliveryMethod, identifier string) error {
 		return errors.NewInvalidArgumentError("identifier")
 	}
 
-	_, err := auth.client.DoPostRequest(composeSignUpOrInURL(method), newSignInRequestBody(identifier), nil, "")
+	_, err := auth.client.DoPostRequest(composeSignUpOrInURL(method), newSignInRequestBody(identifier, nil), nil, "")
 	return err
 }
 
-func (auth *otp) VerifyCode(method DeliveryMethod, identifier string, code string, r *http.Request, loginOptions *LoginOptions, w http.ResponseWriter) (*AuthenticationInfo, error) {
+func (auth *otp) VerifyCode(method DeliveryMethod, identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
@@ -57,15 +65,7 @@ func (auth *otp) VerifyCode(method DeliveryMethod, identifier string, code strin
 			return nil, errors.NewInvalidArgumentError("method")
 		}
 	}
-	var pswd string
-	var err error
-	if loginOptions.IsStepup() {
-		pswd, err = getValidRefreshToken(r)
-		if err != nil {
-			return nil, err
-		}
-	}
-	httpResponse, err := auth.client.DoPostRequest(composeVerifyCodeURL(method), newAuthenticationVerifyRequestBody(identifier, code, loginOptions), nil, pswd)
+	httpResponse, err := auth.client.DoPostRequest(composeVerifyCodeURL(method), newAuthenticationVerifyRequestBody(identifier, code), nil, "")
 	if err != nil {
 		return nil, err
 	}

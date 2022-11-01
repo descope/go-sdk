@@ -61,7 +61,7 @@ func (auth *totp) SignInCode(identifier string, code string, r *http.Request, lo
 		}
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(composeVerifyTOTPCodeURL(), newAuthenticationVerifyRequestBody(identifier, code, loginOptions), nil, pswd)
+	httpResponse, err := auth.client.DoPostRequest(composeVerifyTOTPCodeURL(), newAuthenticationVerifyTOTPRequestBody(identifier, code, loginOptions), nil, pswd)
 	if err != nil {
 		return nil, err
 	}

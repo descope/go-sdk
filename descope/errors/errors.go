@@ -17,6 +17,7 @@ var (
 	UnauthorizedError          = NewError(BadRequestErrorCode, "unauthorized access")
 	MissingRequestError        = NewValidationError("nil request provided")
 	MissingResponseWriterError = NewValidationError("nil response writer provided")
+	InvalidStepupJwtError      = NewValidationError("refresh JWT must be provided for stepup actions")
 )
 
 type WebError struct {

@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/descope/go-sdk/descope/api"
+	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/logger"
 	"github.com/descope/go-sdk/descope/utils"
 )
@@ -16,14 +17,22 @@ type oauthStartResponse struct {
 	URL string `json:"url"`
 }
 
-func (auth *oauth) Start(provider OAuthProvider, redirectURL string, w http.ResponseWriter) (url string, err error) {
+func (auth *oauth) Start(provider OAuthProvider, redirectURL string, r *http.Request, loginOptions *LoginOptions, w http.ResponseWriter) (url string, err error) {
 	m := map[string]string{
 		"provider": string(provider),
 	}
 	if len(redirectURL) > 0 {
 		m["redirectURL"] = redirectURL
 	}
-	httpResponse, err := auth.client.DoPostRequest(composeOAuthURL(), nil, &api.HTTPRequest{QueryParams: m}, "")
+	var pswd string
+	if loginOptions.IsStepup() {
+		pswd, err = getValidRefreshToken(r)
+		if err != nil {
+			return "", errors.InvalidStepupJwtError
+		}
+	}
+
+	httpResponse, err := auth.client.DoPostRequest(composeOAuthURL(), loginOptions, &api.HTTPRequest{QueryParams: m}, pswd)
 	if err != nil {
 		return
 	}
@@ -42,6 +51,6 @@ func (auth *oauth) Start(provider OAuthProvider, redirectURL string, w http.Resp
 	return
 }
 
-func (auth *oauth) ExchangeToken(code string, r *http.Request, loginOptions *LoginOptions, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.exchangeToken(code, composeOAuthExchangeTokenURL(), r, loginOptions, w)
+func (auth *oauth) ExchangeToken(code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	return auth.exchangeToken(code, composeOAuthExchangeTokenURL(), w)
 }
