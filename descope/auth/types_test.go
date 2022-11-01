@@ -31,4 +31,6 @@ func TestCustomClaims(t *testing.T) {
 	assert.Nil(t, to.CustomClaim("a"))
 	to = &Token{Claims: map[string]interface{}{"a": "b"}}
 	assert.EqualValues(t, "b", to.CustomClaim("a"))
+	to = &Token{}
+	assert.Nil(t, to.CustomClaim("a"))
 }

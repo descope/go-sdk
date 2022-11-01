@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/descope/go-sdk/descope/api"
+	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -56,6 +57,17 @@ func TestOAuthStartForwardResponseStepup(t *testing.T) {
 	assert.EqualValues(t, uri, urlStr)
 	assert.EqualValues(t, urlStr, w.Result().Header.Get(RedirectLocationCookieName))
 	assert.EqualValues(t, http.StatusTemporaryRedirect, w.Result().StatusCode)
+}
+
+func TestOAuthStartForwardResponseStepupNoJWT(t *testing.T) {
+	uri := "http://test.me"
+	landingURL := "https://test.com"
+	provider := OAuthGithub
+	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {}))
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	_, err = a.OAuth().Start(provider, landingURL, nil, &LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, w)
+	assert.ErrorIs(t, err, errors.InvalidStepupJwtError)
 }
 
 func TestOAuthStartInvalidForwardResponse(t *testing.T) {

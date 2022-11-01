@@ -70,7 +70,7 @@ func TestSignInMagicLinkCrossDeviceStepupNoJwt(t *testing.T) {
 	email := "test@test.com"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.MagicLink().SignIn(MethodEmail, email, "", nil, &LoginOptions{Stepup: true})
+	_, err = a.MagicLink().SignInCrossDevice(MethodEmail, email, "", nil, &LoginOptions{Stepup: true})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, errors.InvalidStepupJwtError)
 }
