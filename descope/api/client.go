@@ -227,6 +227,13 @@ func (e *endpoints) ExchangeAccessKey() string {
 	return path.Join(e.version, e.auth.exchangeAccessKey)
 }
 
+type sdkInfo struct {
+	name      string
+	version   string
+	goVersion string
+	sha       string
+}
+
 type ClientParams struct {
 	BaseURL              string
 	DefaultClient        IHttpClient
@@ -244,7 +251,7 @@ type Client struct {
 	uri        string
 	headers    map[string]string
 	conf       ClientParams
-	buildInfo  *debug.BuildInfo
+	sdkInfo    *sdkInfo
 }
 type HTTPResponse struct {
 	Req     *http.Request
@@ -286,14 +293,12 @@ func NewClient(conf ClientParams) *Client {
 		conf.BaseURL = defaultURL
 	}
 
-	bi, _ := debug.ReadBuildInfo()
-
 	return &Client{
 		uri:        conf.BaseURL,
 		httpClient: httpClient,
 		headers:    defaultHeaders,
 		conf:       conf,
-		buildInfo:  bi,
+		sdkInfo:    getSDKInfo(),
 	}
 }
 
@@ -449,15 +454,25 @@ func isResponseOK(response *http.Response) bool {
 }
 
 func (c *Client) addDescopeHeaders(req *http.Request) {
-	req.Header.Set("x-descope-sdk-name", "golang")
-	req.Header.Set("x-descope-sdk-go-version", runtime.Version())
-	if c.buildInfo != nil {
-		for _, dep := range c.buildInfo.Deps {
+	req.Header.Set("x-descope-sdk-name", c.sdkInfo.name)
+	req.Header.Set("x-descope-sdk-go-version", c.sdkInfo.goVersion)
+	req.Header.Set("x-descope-sdk-version", c.sdkInfo.version)
+	req.Header.Set("x-descope-sdk-sha", c.sdkInfo.sha)
+}
+
+func getSDKInfo() *sdkInfo {
+	sdkInfo := &sdkInfo{
+		name:      "golang",
+		goVersion: runtime.Version(),
+	}
+	if bi, ok := debug.ReadBuildInfo(); ok && bi != nil {
+		for _, dep := range bi.Deps {
 			if strings.HasPrefix(dep.Path, "github.com/descope/go-sdk/descope") {
-				req.Header.Set("x-descope-sdk-version", dep.Version)
-				req.Header.Set("x-descope-sdk-sha", dep.Sum)
+				sdkInfo.version = dep.Version
+				sdkInfo.sha = dep.Sum
 				break
 			}
 		}
 	}
+	return sdkInfo
 }
