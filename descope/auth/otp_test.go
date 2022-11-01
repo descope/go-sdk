@@ -24,7 +24,28 @@ func TestValidEmailSignInEmail(t *testing.T) {
 		assert.EqualValues(t, email, body["externalId"])
 	}))
 	require.NoError(t, err)
-	err = a.OTP().SignIn(MethodEmail, email)
+	err = a.OTP().SignIn(MethodEmail, email, nil, nil)
+	require.NoError(t, err)
+}
+
+func TestValidEmailSignInEmailStepup(t *testing.T) {
+	email := "test@email.com"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeSignInURL(MethodEmail), r.URL.RequestURI())
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, email, body["externalId"])
+		assert.EqualValues(t, map[string]interface{}{"stepup": true, "customClaims": map[string]interface{}{"k1": "v1"}}, body["loginOptions"])
+		reqToken := r.Header.Get(api.AuthorizationHeaderName)
+		splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix)
+		require.Len(t, splitToken, 2)
+		bearer := splitToken[1]
+		bearers := strings.Split(bearer, ":")
+		require.Len(t, bearers, 2)
+		assert.EqualValues(t, "test", bearers[1])
+	}))
+	require.NoError(t, err)
+	err = a.OTP().SignIn(MethodEmail, email, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
 	require.NoError(t, err)
 }
 
@@ -125,7 +146,7 @@ func TestEmptyEmailSignIn(t *testing.T) {
 	email := ""
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.OTP().SignIn(MethodEmail, email)
+	err = a.OTP().SignIn(MethodEmail, email, nil, nil)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -148,11 +169,20 @@ func TestInvalidEmailSignUp(t *testing.T) {
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
 
+func TestInvalidSignInStepupNoJWT(t *testing.T) {
+	phone := "+8222941449"
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	err = a.OTP().SignIn(MethodSMS, phone, nil, &LoginOptions{Stepup: true})
+	require.Error(t, err)
+	assert.ErrorIs(t, err, errors.InvalidStepupJwtError)
+}
+
 func TestEmptyEmailVerifyCodeEmail(t *testing.T) {
 	email := ""
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCode(MethodEmail, email, "4444", nil, nil, nil)
+	_, err = a.OTP().VerifyCode(MethodEmail, email, "4444", nil)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -161,7 +191,7 @@ func TestInvalidVerifyCode(t *testing.T) {
 	email := "a"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCode("", email, "4444", nil, nil, nil)
+	_, err = a.OTP().VerifyCode("", email, "4444", nil)
 	require.Error(t, err)
 	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
 }
@@ -176,7 +206,7 @@ func TestVerifyCodeDetectEmail(t *testing.T) {
 		assert.EqualValues(t, email, body["externalId"])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCode("", email, "555", nil, nil, nil)
+	_, err = a.OTP().VerifyCode("", email, "555", nil)
 	require.NoError(t, err)
 }
 
@@ -188,17 +218,9 @@ func TestVerifyCodeDetectPhone(t *testing.T) {
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["externalId"])
-		assert.EqualValues(t, map[string]interface{}{"stepup": true, "customClaims": map[string]interface{}{"k1": "v1"}}, body["loginOptions"])
-		reqToken := r.Header.Get(api.AuthorizationHeaderName)
-		splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix)
-		require.Len(t, splitToken, 2)
-		bearer := splitToken[1]
-		bearers := strings.Split(bearer, ":")
-		require.Len(t, bearers, 2)
-		assert.EqualValues(t, "test", bearers[1])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCode("", phone, "555", &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, nil)
+	_, err = a.OTP().VerifyCode("", phone, "555", nil)
 	require.NoError(t, err)
 }
 
@@ -213,7 +235,7 @@ func TestVerifyCodeWithPhone(t *testing.T) {
 		assert.EqualValues(t, "4444", body["code"])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCode(MethodSMS, phone, "4444", nil, nil, nil)
+	_, err = a.OTP().VerifyCode(MethodSMS, phone, "4444", nil)
 	require.NoError(t, err)
 }
 
@@ -229,7 +251,7 @@ func TestVerifyCodeEmail(t *testing.T) {
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCode(MethodEmail, email, code, nil, nil, nil)
+	_, err = a.OTP().VerifyCode(MethodEmail, email, code, nil)
 	require.NoError(t, err)
 }
 
@@ -245,7 +267,7 @@ func TestVerifyCodeSMS(t *testing.T) {
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCode(MethodSMS, phone, code, nil, nil, nil)
+	_, err = a.OTP().VerifyCode(MethodSMS, phone, code, nil)
 	require.NoError(t, err)
 }
 
@@ -261,7 +283,7 @@ func TestVerifyCodeWhatsApp(t *testing.T) {
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCode(MethodWhatsApp, phone, code, nil, nil, nil)
+	_, err = a.OTP().VerifyCode(MethodWhatsApp, phone, code, nil)
 	require.NoError(t, err)
 }
 
@@ -294,7 +316,7 @@ func TestVerifyCodeEmailResponseOption(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	info, err := a.OTP().VerifyCode(MethodEmail, email, code, nil, nil, w)
+	info, err := a.OTP().VerifyCode(MethodEmail, email, code, w)
 	require.NoError(t, err)
 	require.Len(t, w.Result().Cookies(), 1)
 	sessionCookie := w.Result().Cookies()[0]
@@ -319,7 +341,7 @@ func TestVerifyCodeEmailResponseNil(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	info, err := a.OTP().VerifyCode(MethodEmail, email, code, nil, nil, nil)
+	info, err := a.OTP().VerifyCode(MethodEmail, email, code, nil)
 	require.NoError(t, err)
 	assert.Len(t, w.Result().Cookies(), 0)
 	require.NotEmpty(t, info)

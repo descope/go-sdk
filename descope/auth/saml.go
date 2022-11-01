@@ -17,7 +17,7 @@ type samlStartResponse struct {
 	URL string `json:"url"`
 }
 
-func (auth *saml) Start(tenant string, redirectURL string, w http.ResponseWriter) (url string, err error) {
+func (auth *saml) Start(tenant string, redirectURL string, r *http.Request, loginOptions *LoginOptions, w http.ResponseWriter) (url string, err error) {
 	if tenant == "" {
 		return "", errors.NewInvalidArgumentError("tenant")
 	}
@@ -27,7 +27,14 @@ func (auth *saml) Start(tenant string, redirectURL string, w http.ResponseWriter
 	if len(redirectURL) > 0 {
 		m["redirectURL"] = redirectURL
 	}
-	httpResponse, err := auth.client.DoPostRequest(composeSAMLStartURL(), nil, &api.HTTPRequest{QueryParams: m}, "")
+	var pswd string
+	if loginOptions.IsStepup() {
+		pswd, err = getValidRefreshToken(r)
+		if err != nil {
+			return "", errors.InvalidStepupJwtError
+		}
+	}
+	httpResponse, err := auth.client.DoPostRequest(composeSAMLStartURL(), loginOptions, &api.HTTPRequest{QueryParams: m}, pswd)
 	if err != nil {
 		return
 	}
@@ -46,6 +53,6 @@ func (auth *saml) Start(tenant string, redirectURL string, w http.ResponseWriter
 	return
 }
 
-func (auth *saml) ExchangeToken(code string, r *http.Request, loginOptions *LoginOptions, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	return auth.exchangeToken(code, composeSAMLExchangeTokenURL(), r, loginOptions, w)
+func (auth *saml) ExchangeToken(code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	return auth.exchangeToken(code, composeSAMLExchangeTokenURL(), w)
 }
