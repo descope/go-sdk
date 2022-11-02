@@ -22,6 +22,7 @@ const (
 	defaultURL                = "https://api.descope.com"
 	AuthorizationHeaderName   = "Authorization"
 	BearerAuthorizationPrefix = "Bearer "
+	nullString                = "null"
 )
 
 var (
@@ -323,7 +324,7 @@ func (c *Client) DoPostRequest(uri string, body interface{}, options *HTTPReques
 		if b, err := utils.Marshal(body); err == nil {
 			// According to the above comment, we might get here, and there are parsers that do not like this string
 			// We prefer the body will be nil
-			if string(b) != "null" {
+			if string(b) != nullString {
 				payload = bytes.NewBuffer(b)
 			}
 		} else {
