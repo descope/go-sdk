@@ -318,9 +318,14 @@ func (c *Client) DoPostRequest(uri string, body interface{}, options *HTTPReques
 	}
 
 	var payload io.Reader
+	// Originally this was an object, so nil comparison will not always work
 	if body != nil {
 		if b, err := utils.Marshal(body); err == nil {
-			payload = bytes.NewBuffer(b)
+			// According to the above comment, we might get here, and there are parsers that do not like this string
+			// We prefer the body will be nil
+			if string(b) != "null" {
+				payload = bytes.NewBuffer(b)
+			}
 		} else {
 			return nil, err
 		}

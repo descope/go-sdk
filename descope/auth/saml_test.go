@@ -20,6 +20,7 @@ func TestSAMLStart(t *testing.T) {
 	landingURL := "https://test.com"
 	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {
 		assert.EqualValues(t, fmt.Sprintf("%s?redirectURL=%s&tenant=%s", composeSAMLStartURL(), url.QueryEscape(landingURL), tenant), r.URL.RequestURI())
+		assert.Nil(t, r.Body)
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
