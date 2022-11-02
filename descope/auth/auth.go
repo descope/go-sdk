@@ -568,12 +568,20 @@ func getAuthorizationClaimItems(token *Token, tenant string, claim string) []str
 
 	// look for the granted claim list in the appropriate place
 	if tenant == "" {
-		if v, ok := token.Claims[claim].([]string); ok {
-			items = v
+		if v, ok := token.Claims[claim].([]interface{}); ok {
+			for i := range v {
+				if item, ok := v[i].(string); ok {
+					items = append(items, item)
+				}
+			}
 		}
 	} else {
-		if v, ok := token.GetTenantValue(tenant, claim).([]string); ok {
-			items = v
+		if v, ok := token.GetTenantValue(tenant, claim).([]interface{}); ok {
+			for i := range v {
+				if item, ok := v[i].(string); ok {
+					items = append(items, item)
+				}
+			}
 		}
 	}
 
