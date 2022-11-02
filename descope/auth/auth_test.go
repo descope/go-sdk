@@ -51,7 +51,9 @@ var (
 
 	mockUserResponseBody = fmt.Sprintf(`{"name": "%s", "email": "%s", "userId": "%s"}`, "kuku name", "kuku@test.com", "kuku")
 
-	mockAuthorizationToken       = &Token{Claims: map[string]any{claimPermissions: []string{"foo", "bar"}, claimRoles: []string{"abc", "xyz"}}}
+	permissions                  = []interface{}{"foo", "bar"}
+	roles                        = []interface{}{"abc", "xyz"}
+	mockAuthorizationToken       = &Token{Claims: map[string]any{claimPermissions: permissions, claimRoles: roles}}
 	mockAuthorizationTenantToken = &Token{Claims: map[string]any{ClaimAuthorizedTenants: map[string]any{"kuku": mockAuthorizationToken.Claims}}}
 )
 
