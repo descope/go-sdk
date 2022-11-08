@@ -108,6 +108,31 @@ func TestSignUpFinish(t *testing.T) {
 	assert.EqualValues(t, jwtTokenValid, w.Result().Cookies()[0].Value)
 }
 
+func TestSignUpOrInStart(t *testing.T) {
+	expectedResponse := WebAuthnTransactionResponse{TransactionID: "a", Create: true}
+	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
+		req := authenticationWebAuthnSignUpOrInRequestBody{}
+		err := readBody(r, &req)
+		require.NoError(t, err)
+		assert.EqualValues(t, "test@test.com", req.ExternalID)
+		assert.EqualValues(t, "https://example.com", req.Origin)
+	}, expectedResponse))
+	require.NoError(t, err)
+	res, err := a.WebAuthn().SignUpOrInStart("test@test.com", "https://example.com")
+	require.NoError(t, err)
+	assert.EqualValues(t, expectedResponse.TransactionID, res.TransactionID)
+	assert.EqualValues(t, expectedResponse.Create, res.Create)
+}
+
+func TestSignUpOrInStartEmpty(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	res, err := a.WebAuthn().SignUpOrInStart("", "https://example.com")
+	require.Error(t, err)
+	assert.Nil(t, res)
+	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+}
+
 func TestWebAuthnUpdateUserDeviceStart(t *testing.T) {
 	expectedResponse := WebAuthnTransactionResponse{TransactionID: "a"}
 	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {

@@ -95,6 +95,8 @@ type MockDescopeAuthenticationWebAuthn struct {
 	SignInWebAuthnStartResponseTransaction           *WebAuthnTransactionResponse
 	SignInWebAuthnFinishResponseError                error
 	SignInWebAuthnFinishResponseInfo                 *AuthenticationInfo
+	SignUpOrInWebAuthnStartResponseError             error
+	SignUpOrInWebAuthnStartResponseTransaction       *WebAuthnTransactionResponse
 	UpdateUserDeviceWebAuthnStartResponseError       error
 	UpdateUserDeviceWebAuthnStartResponseTransaction *WebAuthnTransactionResponse
 	UpdateUserDeviceWebAuthnFinishResponseError      error
@@ -385,6 +387,10 @@ func (m MockDescopeAuthenticationWebAuthn) SignInStart(_ string, _ string, _ *ht
 
 func (m MockDescopeAuthenticationWebAuthn) SignInFinish(_ *WebAuthnFinishRequest, _ http.ResponseWriter) (*AuthenticationInfo, error) {
 	return m.SignInWebAuthnFinishResponseInfo, m.SignInWebAuthnFinishResponseError
+}
+
+func (m MockDescopeAuthenticationWebAuthn) SignUpOrInStart(_ string, _ string) (*WebAuthnTransactionResponse, error) {
+	return m.SignUpOrInWebAuthnStartResponseTransaction, m.SignUpOrInWebAuthnStartResponseError
 }
 
 func (m MockDescopeAuthenticationWebAuthn) UpdateUserDeviceStart(_ string, _ string, _ *http.Request) (*WebAuthnTransactionResponse, error) {

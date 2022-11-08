@@ -173,6 +173,15 @@ type WebAuthn interface {
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	SignInFinish(finishRequest *WebAuthnFinishRequest, w http.ResponseWriter) (*AuthenticationInfo, error)
 
+	// SignUpOrInStart - Use to start an authentication validation with webauthn, if user does not exist, a new user will be created
+	// with the given identifier. The Create field in the response object determines which browser API should be called,
+	// either navigator.credentials.create or navigator.credentials.get as well as whether to call SignUpFinish (if
+	// Create is true) or SignInFinish (if Create is false) later to finalize the operation.
+	// Origin is the origin of the URL for the web page where the webauthn operation is taking place, as returned
+	// by calling document.location.origin via javascript.
+	// returns a transaction id response on successs and error upon failure.
+	SignUpOrInStart(identifier string, origin string) (*WebAuthnTransactionResponse, error)
+
 	// UpdateUserDeviceStart - Use to start an add webauthn device process for an existing user with the given identifier.
 	// Request is needed to obtain JWT and send it to Descope, for verification.
 	// Origin is the origin of the URL for the web page where the webauthn operation is taking place, as returned
