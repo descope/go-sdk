@@ -25,6 +25,7 @@ type AuthenticationInfo struct {
 type WebAuthnTransactionResponse struct {
 	TransactionID string `json:"transactionId,omitempty"`
 	Options       string `json:"options,omitempty"`
+	Create        bool   `json:"create,omitempty"`
 }
 
 type WebAuthnFinishRequest struct {
@@ -197,6 +198,11 @@ type authenticationWebAuthnSignInRequestBody struct {
 	ExternalID   string        `json:"externalId,omitempty"`
 	Origin       string        `json:"origin"`
 	LoginOptions *LoginOptions `json:"loginOptions,omitempty"`
+}
+
+type authenticationWebAuthnSignUpOrInRequestBody struct {
+	ExternalID string `json:"externalId,omitempty"`
+	Origin     string `json:"origin"`
 }
 
 type authenticationWebAuthnAddDeviceRequestBody struct {

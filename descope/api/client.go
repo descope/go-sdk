@@ -44,10 +44,11 @@ var (
 			exchangeTokenOAuth       string
 			samlStart                string
 			exchangeTokenSAML        string
-			webauthnSignupStart      string
-			webauthnSignupFinish     string
-			webauthnSigninStart      string
-			webauthnSigninFinish     string
+			webauthnSignUpStart      string
+			webauthnSignUpFinish     string
+			webauthnSignInStart      string
+			webauthnSignInFinish     string
+			webauthnSignUpOrInStart  string
 			webauthnUpdateStart      string
 			webauthnUpdateFinish     string
 			getMagicLinkSession      string
@@ -72,10 +73,11 @@ var (
 			exchangeTokenOAuth:       "auth/oauth/exchange",
 			samlStart:                "auth/saml/authorize",
 			exchangeTokenSAML:        "auth/saml/exchange",
-			webauthnSignupStart:      "auth/webauthn/signup/start",
-			webauthnSignupFinish:     "auth/webauthn/signup/finish",
-			webauthnSigninStart:      "auth/webauthn/signin/start",
-			webauthnSigninFinish:     "auth/webauthn/signin/finish",
+			webauthnSignUpStart:      "auth/webauthn/signup/start",
+			webauthnSignUpFinish:     "auth/webauthn/signup/finish",
+			webauthnSignInStart:      "auth/webauthn/signin/start",
+			webauthnSignInFinish:     "auth/webauthn/signin/finish",
+			webauthnSignUpOrInStart:  "auth/webauthn/signup-in/start",
 			webauthnUpdateStart:      "auth/webauthn/update/start",
 			webauthnUpdateFinish:     "auth/webauthn/update/finish",
 			getMagicLinkSession:      "auth/magiclink/pending-session",
@@ -110,10 +112,11 @@ type endpoints struct {
 		exchangeTokenOAuth       string
 		samlStart                string
 		exchangeTokenSAML        string
-		webauthnSignupStart      string
-		webauthnSignupFinish     string
-		webauthnSigninStart      string
-		webauthnSigninFinish     string
+		webauthnSignUpStart      string
+		webauthnSignUpFinish     string
+		webauthnSignInStart      string
+		webauthnSignInFinish     string
+		webauthnSignUpOrInStart  string
 		webauthnUpdateStart      string
 		webauthnUpdateFinish     string
 		getMagicLinkSession      string
@@ -174,17 +177,20 @@ func (e *endpoints) SAMLStart() string {
 func (e *endpoints) ExchangeTokenSAML() string {
 	return path.Join(e.version, e.auth.exchangeTokenSAML)
 }
-func (e *endpoints) WebAuthnSignupStart() string {
-	return path.Join(e.version, e.auth.webauthnSignupStart)
+func (e *endpoints) WebAuthnSignUpStart() string {
+	return path.Join(e.version, e.auth.webauthnSignUpStart)
 }
-func (e *endpoints) WebAuthnSignupFinish() string {
-	return path.Join(e.version, e.auth.webauthnSignupFinish)
+func (e *endpoints) WebAuthnSignUpFinish() string {
+	return path.Join(e.version, e.auth.webauthnSignUpFinish)
 }
-func (e *endpoints) WebAuthnSigninStart() string {
-	return path.Join(e.version, e.auth.webauthnSigninStart)
+func (e *endpoints) WebAuthnSignInStart() string {
+	return path.Join(e.version, e.auth.webauthnSignInStart)
 }
-func (e *endpoints) WebAuthnSigninFinish() string {
-	return path.Join(e.version, e.auth.webauthnSigninFinish)
+func (e *endpoints) WebAuthnSignInFinish() string {
+	return path.Join(e.version, e.auth.webauthnSignInFinish)
+}
+func (e *endpoints) WebAuthnSignUpOrInStart() string {
+	return path.Join(e.version, e.auth.webauthnSignUpOrInStart)
 }
 func (e *endpoints) WebAuthnUpdateUserDeviceStart() string {
 	return path.Join(e.version, e.auth.webauthnUpdateStart)
