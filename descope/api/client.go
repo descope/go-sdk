@@ -87,10 +87,11 @@ var (
 			updateUserPhoneOTP:       "auth/otp/update/phone",
 			exchangeAccessKey:        "auth/accesskey/exchange",
 		},
-		logout:  "auth/logoutall",
-		keys:    "/keys/",
-		refresh: "auth/refresh",
-		me:      "auth/me",
+		logout:    "auth/logout",
+		logoutAll: "auth/logoutall",
+		keys:      "/keys/",
+		refresh:   "auth/refresh",
+		me:        "auth/me",
 	}
 )
 
@@ -126,10 +127,11 @@ type endpoints struct {
 		updateUserPhoneOTP       string
 		exchangeAccessKey        string
 	}
-	logout  string
-	keys    string
-	refresh string
-	me      string
+	logout    string
+	logoutAll string
+	keys      string
+	refresh   string
+	me        string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -203,6 +205,9 @@ func (e *endpoints) GetMagicLinkSession() string {
 }
 func (e *endpoints) Logout() string {
 	return path.Join(e.version, e.logout)
+}
+func (e *endpoints) LogoutAll() string {
+	return path.Join(e.version, e.logoutAll)
 }
 func (e *endpoints) Me() string {
 	return path.Join(e.version, e.me)
