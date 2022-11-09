@@ -504,6 +504,30 @@ func TestLogoutNoClaims(t *testing.T) {
 	assert.EqualValues(t, "", c2.Domain)
 }
 
+func TestLogoutAllNoClaims(t *testing.T) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK}, nil
+	})
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtRTokenValid})
+
+	w := httptest.NewRecorder()
+	err = a.LogoutAll(request, w)
+	require.NoError(t, err)
+	require.Len(t, w.Result().Cookies(), 2)
+	c1 := w.Result().Cookies()[0]
+	assert.Empty(t, c1.Value)
+	assert.EqualValues(t, SessionCookieName, c1.Name)
+	assert.EqualValues(t, "/", c1.Path)
+	assert.EqualValues(t, "", c1.Domain)
+	c2 := w.Result().Cookies()[1]
+	assert.Empty(t, c2.Value)
+	assert.EqualValues(t, RefreshCookieName, c2.Name)
+	assert.EqualValues(t, "/", c2.Path)
+	assert.EqualValues(t, "", c2.Domain)
+}
+
 func TestLogoutFailure(t *testing.T) {
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusBadGateway}, nil
@@ -516,6 +540,18 @@ func TestLogoutFailure(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestLogoutAllFailure(t *testing.T) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusBadGateway}, nil
+	})
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+
+	err = a.LogoutAll(request, nil)
+	require.Error(t, err)
+}
+
 func TestLogoutInvalidRefreshToken(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
@@ -523,6 +559,16 @@ func TestLogoutInvalidRefreshToken(t *testing.T) {
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenExpired})
 
 	err = a.Logout(request, nil)
+	require.Error(t, err)
+}
+
+func TestLogoutAllInvalidRefreshToken(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenExpired})
+
+	err = a.LogoutAll(request, nil)
 	require.Error(t, err)
 }
 
@@ -537,6 +583,17 @@ func TestLogoutEmptyRequest(t *testing.T) {
 	assert.ErrorIs(t, err, errors.MissingRequestError)
 }
 
+func TestLogoutAllEmptyRequest(t *testing.T) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusBadGateway}, nil
+	})
+	require.NoError(t, err)
+
+	err = a.LogoutAll(nil, nil)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, errors.MissingRequestError)
+}
+
 func TestLogoutMissingToken(t *testing.T) {
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusBadGateway}, nil
@@ -545,6 +602,18 @@ func TestLogoutMissingToken(t *testing.T) {
 
 	request := &http.Request{Header: http.Header{}}
 	err = a.Logout(request, nil)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, errors.RefreshTokenError)
+}
+
+func TestLogoutAllMissingToken(t *testing.T) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusBadGateway}, nil
+	})
+	require.NoError(t, err)
+
+	request := &http.Request{Header: http.Header{}}
+	err = a.LogoutAll(request, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, errors.RefreshTokenError)
 }
