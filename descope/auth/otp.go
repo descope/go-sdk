@@ -16,7 +16,7 @@ func (auth *otp) SignIn(method DeliveryMethod, identifier string, r *http.Reques
 	if identifier == "" {
 		return errors.NewInvalidArgumentError("identifier")
 	}
-	if loginOptions.IsStepup() {
+	if loginOptions.IsJWTRequired() {
 		pswd, err = getValidRefreshToken(r)
 		if err != nil {
 			return errors.InvalidStepupJwtError

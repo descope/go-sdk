@@ -8,11 +8,11 @@ import (
 
 func TestIsStepup(t *testing.T) {
 	lo := &LoginOptions{Stepup: true}
-	assert.True(t, lo.IsStepup())
+	assert.True(t, lo.IsJWTRequired())
 	lo = &LoginOptions{Stepup: false}
-	assert.False(t, lo.IsStepup())
+	assert.False(t, lo.IsJWTRequired())
 	lo = nil
-	assert.False(t, lo.IsStepup())
+	assert.False(t, lo.IsJWTRequired())
 }
 
 func TestAuthFactors(t *testing.T) {

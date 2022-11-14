@@ -16,7 +16,7 @@ func (auth *magicLink) SignIn(method DeliveryMethod, identifier, URI string, r *
 	if identifier == "" {
 		return errors.NewInvalidArgumentError("identifier")
 	}
-	if loginOptions.IsStepup() {
+	if loginOptions.IsJWTRequired() {
 		pswd, err = getValidRefreshToken(r)
 		if err != nil {
 			return errors.InvalidStepupJwtError
@@ -53,7 +53,7 @@ func (auth *magicLink) SignInCrossDevice(method DeliveryMethod, identifier, URI 
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
-	if loginOptions.IsStepup() {
+	if loginOptions.IsJWTRequired() {
 		pswd, err = getValidRefreshToken(r)
 		if err != nil {
 			return nil, errors.InvalidStepupJwtError
