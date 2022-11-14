@@ -28,7 +28,7 @@ func (auth *saml) Start(tenant string, redirectURL string, r *http.Request, logi
 		m["redirectURL"] = redirectURL
 	}
 	var pswd string
-	if loginOptions.IsStepup() {
+	if loginOptions.IsJWTRequired() {
 		pswd, err = getValidRefreshToken(r)
 		if err != nil {
 			return "", errors.InvalidStepupJwtError

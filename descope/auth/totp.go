@@ -54,7 +54,7 @@ func (auth *totp) SignInCode(identifier string, code string, r *http.Request, lo
 	}
 	var pswd string
 	var err error
-	if loginOptions.IsStepup() {
+	if loginOptions.IsJWTRequired() {
 		pswd, err = getValidRefreshToken(r)
 		if err != nil {
 			return nil, err

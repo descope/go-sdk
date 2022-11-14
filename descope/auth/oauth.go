@@ -25,7 +25,7 @@ func (auth *oauth) Start(provider OAuthProvider, redirectURL string, r *http.Req
 		m["redirectURL"] = redirectURL
 	}
 	var pswd string
-	if loginOptions.IsStepup() {
+	if loginOptions.IsJWTRequired() {
 		pswd, err = getValidRefreshToken(r)
 		if err != nil {
 			return "", errors.InvalidStepupJwtError

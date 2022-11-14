@@ -115,6 +115,29 @@ func TestSignInMagicLinkEmailLoginOptions(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestSignInMagicLinkEmailLoginOptionsMFA(t *testing.T) {
+	email := "test@email.com"
+	uri := "http://test.me"
+
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeMagicLinkSignInURL(MethodEmail), r.URL.RequestURI())
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, email, body["externalId"])
+		assert.EqualValues(t, uri, body["URI"])
+		assert.EqualValues(t, map[string]interface{}{"mfa": true, "customClaims": map[string]interface{}{"k1": "v1"}}, body["loginOptions"])
+		reqToken := r.Header.Get(api.AuthorizationHeaderName)
+		splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix)
+		require.Len(t, splitToken, 2)
+		bearer := splitToken[1]
+		bearers := strings.Split(bearer, ":")
+		require.Len(t, bearers, 2)
+		assert.EqualValues(t, "test", bearers[1])
+	}))
+	require.NoError(t, err)
+	err = a.MagicLink().SignIn(MethodEmail, email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &LoginOptions{MFA: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
+	require.NoError(t, err)
+}
 func TestSignInMagicLinkEmailCrossDevice(t *testing.T) {
 	email := "test@email.com"
 	uri := "http://test.me"

@@ -113,11 +113,12 @@ func (to *Token) IsMFA() bool {
 
 type LoginOptions struct {
 	Stepup       bool                   `json:"stepup,omitempty"`
+	MFA          bool                   `json:"mfa,omitempty"`
 	CustomClaims map[string]interface{} `json:"customClaims,omitempty"`
 }
 
-func (lo *LoginOptions) IsStepup() bool {
-	return lo != nil && lo.Stepup
+func (lo *LoginOptions) IsJWTRequired() bool {
+	return lo != nil && (lo.Stepup || lo.MFA)
 }
 
 type JWTResponse struct {
