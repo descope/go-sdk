@@ -21,7 +21,6 @@ import (
 	"github.com/descope/go-sdk/descope/auth"
 	descopeerrors "github.com/descope/go-sdk/descope/errors"
 	descopegin "github.com/descope/go-sdk/descope/gin"
-	"github.com/descope/go-sdk/descope/logger"
 	"github.com/gin-gonic/gin"
 )
 
@@ -40,7 +39,9 @@ func main() {
 	log.Println("starting server on port " + port)
 	r := gin.Default()
 	var err error
-	client, err = descope.NewDescopeClientWithConfig(&descope.Config{LogLevel: logger.LogDebugLevel, DescopeBaseURL: "http://localhost:8191"})
+	// Leave projectId param empty to get it from DESCOPE_PROJECT_ID env variable
+	projectID := ""
+	client, err = descope.NewDescopeClientWithConfig(&descope.Config{ProjectID: projectID})
 	if err != nil {
 		log.Println("failed to init: " + err.Error())
 		os.Exit(1)
