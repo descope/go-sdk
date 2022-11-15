@@ -40,7 +40,7 @@ func main() {
 	log.Println("starting server on port " + port)
 	r := gin.Default()
 	var err error
-	client, err = descope.NewDescopeClientWithConfig(&descope.Config{LogLevel: logger.LogDebugLevel, DescopeBaseURL: "http://localhost:8191"})
+	client, err = descope.NewDescopeClientWithConfig(&descope.Config{LogLevel: logger.LogDebugLevel})
 	if err != nil {
 		log.Println("failed to init: " + err.Error())
 		os.Exit(1)
