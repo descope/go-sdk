@@ -586,7 +586,7 @@ func TestUpdateUserPhone(t *testing.T) {
 	phone := "+111111111111"
 	uri := "https://some.url.com"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
-		assert.EqualValues(t, composeUpdateUserPhone(MethodSMS), r.URL.RequestURI())
+		assert.EqualValues(t, composeUpdateUserPhoneMagiclink(MethodSMS), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
@@ -610,7 +610,7 @@ func TestUpdateUserPhoneCrossDevice(t *testing.T) {
 	phone := "+1111111111"
 	uri := "https://some.url.com"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
-		assert.EqualValues(t, composeUpdateUserPhone(MethodWhatsApp), r.URL.RequestURI())
+		assert.EqualValues(t, composeUpdateUserPhoneMagiclink(MethodWhatsApp), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)

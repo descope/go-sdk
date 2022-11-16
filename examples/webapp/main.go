@@ -9,7 +9,6 @@ import (
 	"crypto/x509/pkix"
 	"encoding/json"
 	"encoding/pem"
-	goErrors "errors"
 	"fmt"
 	"log"
 	"math/big"
@@ -20,7 +19,6 @@ import (
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/auth"
-	"github.com/descope/go-sdk/descope/errors"
 	"github.com/gorilla/mux"
 )
 
@@ -36,6 +34,7 @@ var port = "8085"
 
 func main() {
 	log.Println("starting server on port " + port)
+	log.Println("go to https://localhost:" + port + " to enjoy descope")
 	var err error
 	router := mux.NewRouter()
 	// Leave projectId param empty to get it from DESCOPE_PROJECT_ID env variable
@@ -52,19 +51,21 @@ func main() {
 	}
 
 	router.Use(loggingMiddleware)
+	router.HandleFunc("/", help).Methods(http.MethodGet)
+
 	router.HandleFunc("/otp/signin", handleSignIn).Methods(http.MethodGet)
 	router.HandleFunc("/otp/signup", handleSignUp).Methods(http.MethodGet)
 	router.HandleFunc("/otp/verify", handleVerify).Methods(http.MethodGet)
 
 	router.HandleFunc("/oauth", handleOAuth).Methods(http.MethodGet)
+	router.HandleFunc("/oauth/exchange", finalizeOAuth).Methods(http.MethodGet)
 
 	router.HandleFunc("/magiclink/signin", handleMagicLinkSignIn).Methods(http.MethodGet)
 	router.HandleFunc("/magiclink/signup", handleMagicLinkSignUp).Methods(http.MethodGet)
 	router.HandleFunc("/magiclink/verify", handleMagicLinkVerify).Methods(http.MethodGet)
-	router.HandleFunc("/magiclink/session", handleGetMagicLinkSession).Methods(http.MethodGet)
 
 	router.HandleFunc("/webauthn", func(w http.ResponseWriter, r *http.Request) {
-		file, _ := os.ReadFile("../demo.html")
+		file, _ := os.ReadFile("./demo.html")
 		w.WriteHeader(http.StatusOK)
 		w.Write(file)
 	}).Methods(http.MethodGet)
@@ -75,12 +76,22 @@ func main() {
 	router.HandleFunc("/webauthn/signin/start", handleWebauthnSigninStart).Methods(http.MethodPost)
 	router.HandleFunc("/webauthn/signin/finish", handleWebauthnSigninFinish).Methods(http.MethodPost)
 
+	router.HandleFunc("/stepup", handleStepup).Methods(http.MethodGet)
+	router.HandleFunc("/stepup/conf", handleStepupSignUpInEmail).Methods(http.MethodGet)
+	router.HandleFunc("/stepup/conf/verify", handleStepupConfVerify).Methods(http.MethodGet)
+	router.HandleFunc("/stepup/conf/update", handleStepupConfUpdate).Methods(http.MethodGet)
+	router.HandleFunc("/stepup/conf/update/verify", handleStepupConfUpdateVerify).Methods(http.MethodGet)
+	router.HandleFunc("/stepup/login", handleStepupLogin).Methods(http.MethodGet)
+	router.HandleFunc("/stepup/login/verify", handleStepupLoginVerify).Methods(http.MethodGet)
+	router.HandleFunc("/stepup/stepup", handleStepupStepup).Methods(http.MethodGet)
+	router.HandleFunc("/stepup/stepup/verify", handleStepupStepupVerify).Methods(http.MethodGet)
+
 	authRouter := router.Methods(http.MethodGet).Subrouter()
 	authRouter.Use(auth.AuthenticationMiddleware(client.Auth, func(w http.ResponseWriter, r *http.Request, err error) {
 		setResponse(w, http.StatusUnauthorized, "Unauthorized")
 	}, nil))
-	authRouter.HandleFunc("/private", handleIsHealthy)
-	authRouter.HandleFunc("/logout", handleLogout).Methods(http.MethodPost) // Logout from all user's active sessions
+	authRouter.HandleFunc("/private", handleIsHealthy).Methods(http.MethodGet)
+	authRouter.HandleFunc("/logout", handleLogout).Methods(http.MethodGet) // Logout from all user's active sessions
 
 	server := &http.Server{Addr: fmt.Sprintf(":%s", port), Handler: router}
 	go func() {
@@ -103,16 +114,43 @@ func main() {
 }
 
 func handleIsHealthy(w http.ResponseWriter, r *http.Request) {
-	setOK(w)
+	setResponse(w, http.StatusOK, "You can see this page only since you are logged in")
+}
+
+func help(w http.ResponseWriter, r *http.Request) {
+	helpTxt := "To test sign up with otp email go to /otp/signup?email=\n\n"
+	helpTxt += "To test sign up with otp sms go to /otp/signup?sms=\n\n"
+	helpTxt += "To test sign up with otp whatsapp go to /otp/signup?whatsapp=\n\n"
+	helpTxt += "To test sign in of existing user with otp email go to /otp/signin?email=\n\n"
+	helpTxt += "To test sign in of existing user with otp sms go to /otp/signin?sms=\n\n"
+	helpTxt += "To test sign in of existing user with otp whatsapp go to /otp/signin?whatsapp=\n\n"
+	helpTxt += "---------------------------------------------------------\n\n"
+	helpTxt += "To test sign up/in with OAuth go to /oauth?provider=[google|github|facebook]\n\n"
+	helpTxt += "---------------------------------------------------------\n\n"
+	helpTxt += "To test webauthn  /webauthn\n"
+	helpTxt += "---------------------------------------------------------\n\n"
+	helpTxt += "To test sign up with magiclink and email go to /magiclink/signup?email=\n\n"
+	helpTxt += "To test sign up with magiclink and sms go to /magiclink/signup?sms=\n\n"
+	helpTxt += "To test sign up with magiclink and whatsapp go to /magiclink/signup?whatsapp=\n\n"
+	helpTxt += "To test sign in of existing user with magiclink email go to /magiclink/signin?email=\n\n"
+	helpTxt += "To test sign in of existing user with magiclink sms go to /magiclink/signin?sms=\n\n"
+	helpTxt += "To test sign in of existing user with magiclink whatsapp go to /magiclink/signin?whatsapp=\n\n"
+	helpTxt += "---------------------------------------------------------\n\n"
+	helpTxt += "To start a stepup flow go to /stepup\n\n"
+	helpTxt += "---------------------------------------------------------\n\n"
+	helpTxt += "To see that you are actually logged in go to /private \n\n"
+	helpTxt += "To logout go to /logout\n\n"
+	setResponse(w, http.StatusOK, helpTxt)
 }
 
 func handleSignUp(w http.ResponseWriter, r *http.Request) {
 	method, identifier := getMethodAndIdentifier(r)
 	err := client.Auth.OTP().SignUp(method, identifier, &auth.User{Name: "test"})
 	if err != nil {
-		setError(w, err.Error())
+		setErrorWithSignUpIn(w, err.Error(), method, identifier)
 	} else {
-		setOK(w)
+		helpTxt := "to verify code received go to /otp/verify?" + string(method) + "=" + identifier + "&code=<code>"
+		setResponse(w, http.StatusOK, helpTxt)
 	}
 }
 
@@ -120,9 +158,10 @@ func handleSignIn(w http.ResponseWriter, r *http.Request) {
 	method, identifier := getMethodAndIdentifier(r)
 	err := client.Auth.OTP().SignIn(method, identifier, nil, nil)
 	if err != nil {
-		setError(w, err.Error())
+		setErrorWithSignUpIn(w, err.Error(), method, identifier)
 	} else {
-		setOK(w)
+		helpTxt := "to verify code received go to /otp/verify?" + string(method) + "=" + identifier + "&code=<code>"
+		setResponse(w, http.StatusOK, helpTxt)
 	}
 }
 
@@ -136,12 +175,12 @@ func handleVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	_, err := client.Auth.OTP().VerifyCode(method, identifier, code, w)
+	authInfo, err := client.Auth.OTP().VerifyCode(method, identifier, code, w)
 	if err != nil {
 		setError(w, err.Error())
 		return
 	}
-	setOK(w)
+	sendSuccessAuthResponse(w, authInfo)
 }
 
 func handleOAuth(w http.ResponseWriter, r *http.Request) {
@@ -149,10 +188,34 @@ func handleOAuth(w http.ResponseWriter, r *http.Request) {
 	if p, ok := r.URL.Query()["provider"]; ok {
 		provider = auth.OAuthProvider(p[0])
 	}
-	_, err := client.Auth.OAuth().Start(provider, "", nil, nil, w)
+	_, err := client.Auth.OAuth().Start(provider, "https://localhost:8085/oauth/exchange", nil, nil, w)
 	if err != nil {
 		setError(w, err.Error())
 	}
+}
+
+func finalizeOAuth(w http.ResponseWriter, r *http.Request) {
+	var code string
+	if codes, ok := r.URL.Query()["code"]; ok {
+		code = codes[0]
+	}
+	if code == "" {
+		setError(w, "code is empty")
+		return
+	}
+	authInfo, err := client.Auth.OAuth().ExchangeToken(code, w)
+	if err != nil {
+		setError(w, err.Error())
+		return
+	}
+	sendSuccessAuthResponse(w, authInfo)
+}
+
+func sendSuccessAuthResponse(w http.ResponseWriter, authInfo *auth.AuthenticationInfo) {
+	helpTxt := "You have properly authenticated, you can check for your JWT in the cookie\n"
+	mr, _ := json.MarshalIndent(authInfo, "", "")
+	helpTxt += string(mr) + "\n"
+	setResponse(w, http.StatusOK, helpTxt)
 }
 
 func handleLogout(w http.ResponseWriter, r *http.Request) {
@@ -166,34 +229,27 @@ func handleLogout(w http.ResponseWriter, r *http.Request) {
 
 func handleMagicLinkSignIn(w http.ResponseWriter, r *http.Request) {
 	method, identifier := getMethodAndIdentifier(r)
-	var err error
-
-	if crossDevice := queryBool(r, "crossDevice"); crossDevice {
-		_, err = client.Auth.MagicLink().SignInCrossDevice(method, identifier, verifyMagicLinkURI, nil, nil)
-	} else {
-		err = client.Auth.MagicLink().SignIn(method, identifier, verifyMagicLinkURI, nil, nil)
-	}
+	err := client.Auth.MagicLink().SignIn(method, identifier, verifyMagicLinkURI, nil, nil)
 	if err != nil {
-		setError(w, err.Error())
+		setErrorWithSignUpIn(w, err.Error(), method, identifier)
+		return
 	}
-	setOK(w)
+	helpTxt := "You should have received a magiclink by " + string(method) + "\n"
+	helpTxt += "Copy it to this browser in order to complete the signin"
+	setResponse(w, http.StatusOK, helpTxt)
 }
 
 func handleMagicLinkSignUp(w http.ResponseWriter, r *http.Request) {
 	method, identifier := getMethodAndIdentifier(r)
-	var err error
-
 	user := &auth.User{Name: "test"}
-	if crossDevice := queryBool(r, "crossDevice"); crossDevice {
-		_, err = client.Auth.MagicLink().SignUpCrossDevice(method, identifier, verifyMagicLinkURI, user)
-	} else {
-		err = client.Auth.MagicLink().SignUp(method, identifier, verifyMagicLinkURI, user)
-	}
+	err := client.Auth.MagicLink().SignUp(method, identifier, verifyMagicLinkURI, user)
 	if err != nil {
-		setError(w, err.Error())
+		setErrorWithSignUpIn(w, err.Error(), method, identifier)
+		return
 	}
-
-	setOK(w)
+	helpTxt := "You should have received a magiclink by " + string(method) + "\n"
+	helpTxt += "Copy it to this browser in order to complete the sign up"
+	setResponse(w, http.StatusOK, helpTxt)
 }
 
 func handleMagicLinkVerify(w http.ResponseWriter, r *http.Request) {
@@ -207,29 +263,12 @@ func handleMagicLinkVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "token is empty")
 		return
 	}
-	_, err := client.Auth.MagicLink().Verify(token, w)
+	authInfo, err := client.Auth.MagicLink().Verify(token, w)
 	if err != nil {
 		setError(w, err.Error())
 		return
 	}
-	setOK(w)
-}
-
-func handleGetMagicLinkSession(w http.ResponseWriter, r *http.Request) {
-	pendingRef := getQuery(r, "pendingRef")
-	if pendingRef == "" {
-		setError(w, "pending reference is empty")
-		return
-	}
-	_, err := client.Auth.MagicLink().GetSession(pendingRef, w)
-	if goErrors.Is(err, errors.MagicLinkUnauthorized) {
-		setUnauthorized(w, err.Error())
-	}
-	if err != nil {
-		setError(w, err.Error())
-		return
-	}
-	setOK(w)
+	sendSuccessAuthResponse(w, authInfo)
 }
 
 func handleWebauthnSigninFinish(w http.ResponseWriter, r *http.Request) {
@@ -267,7 +306,7 @@ func handleWebauthnSignupStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := client.Auth.WebAuthn().SignUpStart(t.Name, t, getQuery(r, "origin"))
+	res, err := client.Auth.WebAuthn().SignUpStart(t.Email, t, getQuery(r, "origin"))
 	if err != nil {
 		setError(w, err.Error())
 	}
@@ -290,6 +329,142 @@ func handleWebauthnSignupFinish(w http.ResponseWriter, r *http.Request) {
 		setError(w, err.Error())
 	}
 	setOK(w)
+}
+
+func handleStepup(w http.ResponseWriter, r *http.Request) {
+	helpTxt := "First we will make sure we have a user in the system with email and phone go to /stepup/conf?email=\n\n"
+	setResponse(w, http.StatusOK, helpTxt)
+}
+
+func handleStepupSignUpInEmail(w http.ResponseWriter, r *http.Request) {
+	method, identifier := getMethodAndIdentifier(r)
+	err := client.Auth.OTP().SignUpOrIn(method, identifier)
+	if err != nil {
+		setErrorWithSignUpIn(w, err.Error(), method, identifier)
+	} else {
+		helpTxt := "to verify code received go to /stepup/conf/verify?" + string(method) + "=" + identifier + "&code=<code>"
+		setResponse(w, http.StatusOK, helpTxt)
+	}
+}
+
+func handleStepupConfVerify(w http.ResponseWriter, r *http.Request) {
+	code := ""
+	method, identifier := getMethodAndIdentifier(r)
+	if codes, ok := r.URL.Query()["code"]; ok {
+		code = codes[0]
+	}
+	if code == "" {
+		setError(w, "code is empty")
+		return
+	}
+	authInfo, err := client.Auth.OTP().VerifyCode(method, identifier, code, w)
+	if err != nil {
+		setError(w, err.Error())
+		return
+	}
+	helpTxt := "Great !\n"
+	helpTxt += "Now lets update our user with a phone number go to /stepup/conf/update?identifier=" + authInfo.User.ExternalIDs[0] + "&sms=<phone>"
+	setResponse(w, http.StatusOK, helpTxt)
+}
+
+func handleStepupConfUpdate(w http.ResponseWriter, r *http.Request) {
+	method, identifier := getMethodAndIdentifier(r)
+	var exID string
+	if codes, ok := r.URL.Query()["identifier"]; ok {
+		exID = codes[0]
+	}
+	err := client.Auth.OTP().UpdateUserPhone(method, exID, identifier, r)
+	if err != nil {
+		setErrorWithSignUpIn(w, err.Error(), method, identifier)
+	} else {
+		helpTxt := "to verify code received go to /stepup/conf/update/verify?" + string(method) + "=" + exID + "&code=<code>"
+		setResponse(w, http.StatusOK, helpTxt)
+	}
+}
+
+func handleStepupConfUpdateVerify(w http.ResponseWriter, r *http.Request) {
+	code := ""
+	method, identifier := getMethodAndIdentifier(r)
+	if codes, ok := r.URL.Query()["code"]; ok {
+		code = codes[0]
+	}
+	if code == "" {
+		setError(w, "code is empty")
+		return
+	}
+	authInfo, err := client.Auth.OTP().VerifyCode(method, identifier, code, nil)
+	if err != nil {
+		setErrorWithSignUpIn(w, err.Error(), method, identifier)
+		return
+	}
+	helpTxt := "Great, we have a user with 2 factors, now lets start the actual step flow !\n"
+	helpTxt += "go to /stepup/login?email=" + authInfo.User.ExternalIDs[0]
+	setResponse(w, http.StatusOK, helpTxt)
+}
+
+func handleStepupLogin(w http.ResponseWriter, r *http.Request) {
+	method, identifier := getMethodAndIdentifier(r)
+	err := client.Auth.OTP().SignUpOrIn(method, identifier)
+	if err != nil {
+		setErrorWithSignUpIn(w, err.Error(), method, identifier)
+	} else {
+		helpTxt := "to verify code received go to /stepup/login/verify?" + string(method) + "=" + identifier + "&code=<code>"
+		setResponse(w, http.StatusOK, helpTxt)
+	}
+}
+
+func handleStepupLoginVerify(w http.ResponseWriter, r *http.Request) {
+	code := ""
+	method, identifier := getMethodAndIdentifier(r)
+	if codes, ok := r.URL.Query()["code"]; ok {
+		code = codes[0]
+	}
+	if code == "" {
+		setError(w, "code is empty")
+		return
+	}
+	authInfo, err := client.Auth.OTP().VerifyCode(method, identifier, code, w)
+	if err != nil {
+		setError(w, err.Error())
+		return
+	}
+	helpTxt := "You have logged in !\n"
+	mr, _ := json.MarshalIndent(authInfo, "", "")
+	helpTxt += string(mr) + "\n\n"
+	helpTxt += "Now lets stepup go to /stepup/stepup?sms=" + authInfo.User.ExternalIDs[0]
+	setResponse(w, http.StatusOK, helpTxt)
+}
+
+func handleStepupStepup(w http.ResponseWriter, r *http.Request) {
+	method, identifier := getMethodAndIdentifier(r)
+	err := client.Auth.OTP().SignIn(method, identifier, r, &auth.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"demoKey": "demoValue"}})
+	if err != nil {
+		setErrorWithSignUpIn(w, err.Error(), method, identifier)
+	} else {
+		helpTxt := "to verify code received go to /stepup/stepup/verify?" + string(method) + "=" + identifier + "&code=<code>"
+		setResponse(w, http.StatusOK, helpTxt)
+	}
+}
+
+func handleStepupStepupVerify(w http.ResponseWriter, r *http.Request) {
+	code := ""
+	method, identifier := getMethodAndIdentifier(r)
+	if codes, ok := r.URL.Query()["code"]; ok {
+		code = codes[0]
+	}
+	if code == "" {
+		setError(w, "code is empty")
+		return
+	}
+	authInfo, err := client.Auth.OTP().VerifyCode(method, identifier, code, w)
+	if err != nil {
+		setError(w, err.Error())
+		return
+	}
+	helpTxt := "You have stepped up, pay attention to the custom claims !\n"
+	mr, _ := json.MarshalIndent(authInfo, "", "")
+	helpTxt += string(mr)
+	setResponse(w, http.StatusOK, helpTxt)
 }
 
 func queryBool(r *http.Request, key string) bool {
@@ -322,7 +497,18 @@ func setUnauthorized(w http.ResponseWriter, message string) {
 }
 
 func setError(w http.ResponseWriter, message string) {
-	setResponse(w, http.StatusInternalServerError, message)
+	setResponse(w, http.StatusInternalServerError, message+" ")
+}
+
+func setErrorWithSignUpIn(w http.ResponseWriter, message string, method auth.DeliveryMethod, identifier string) {
+	msg := message
+	if method != "" {
+		msg += " method: " + string(method)
+	}
+	if identifier != "" {
+		msg += " identifier: " + identifier
+	}
+	setError(w, msg)
 }
 
 func setResponse(w http.ResponseWriter, status int, message string) {

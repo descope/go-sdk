@@ -170,7 +170,7 @@ func (auth *magicLink) UpdateUserPhone(method DeliveryMethod, identifier, phone,
 	if err != nil {
 		return err
 	}
-	_, err = auth.client.DoPostRequest(composeUpdateUserPhone(method), newMagicLinkUpdatePhoneRequestBody(identifier, phone, URI, false), nil, pswd)
+	_, err = auth.client.DoPostRequest(composeUpdateUserPhoneMagiclink(method), newMagicLinkUpdatePhoneRequestBody(identifier, phone, URI, false), nil, pswd)
 	return err
 }
 
@@ -191,7 +191,7 @@ func (auth *magicLink) UpdateUserPhoneCrossDevice(method DeliveryMethod, identif
 	if err != nil {
 		return nil, err
 	}
-	httpResponse, err := auth.client.DoPostRequest(composeUpdateUserPhone(method), newMagicLinkUpdatePhoneRequestBody(identifier, phone, URI, true), nil, pswd)
+	httpResponse, err := auth.client.DoPostRequest(composeUpdateUserPhoneMagiclink(method), newMagicLinkUpdatePhoneRequestBody(identifier, phone, URI, true), nil, pswd)
 	if err != nil {
 		return nil, err
 	}

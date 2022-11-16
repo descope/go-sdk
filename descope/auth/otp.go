@@ -107,6 +107,6 @@ func (auth *otp) UpdateUserPhone(method DeliveryMethod, identifier, phone string
 	if err != nil {
 		return err
 	}
-	_, err = auth.client.DoPostRequest(composeUpdateUserPhone(method), newOTPUpdatePhoneRequestBody(identifier, phone), nil, pswd)
+	_, err = auth.client.DoPostRequest(composeUpdateUserPhoneOTP(method), newOTPUpdatePhoneRequestBody(identifier, phone), nil, pswd)
 	return err
 }
