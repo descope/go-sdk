@@ -397,7 +397,7 @@ func TestUpdatePhoneOTP(t *testing.T) {
 	externalID := "943248329844"
 	phone := "+111111111111"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
-		assert.EqualValues(t, composeUpdateUserPhoneMagiclink(MethodSMS), r.URL.RequestURI())
+		assert.EqualValues(t, composeUpdateUserPhoneOTP(MethodSMS), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
