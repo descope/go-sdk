@@ -54,7 +54,6 @@ func main() {
 	authorized := r.Group("/")
 	authorized.Use(descopegin.AuthneticationMiddleware(client.Auth, nil, nil))
 	authorized.GET("/private", handleIsHealthy)
-	authorized.GET("/logout", handleLogout) // Logout from all user's active sessions
 	r.RunTLS(fmt.Sprintf(":%s", port), TLSCertPath, TLSkeyPath)
 }
 
@@ -64,22 +63,12 @@ func help(c *gin.Context) {
 	helpTxt += "Sign up or in with otp whatsapp go to /otp/signupOrIn?whatsapp=\n\n"
 	helpTxt += "-------------------------------------\n\n"
 	helpTxt += "See a private page /private\n\n"
-	helpTxt += "To logout /logout\n\n"
 	helpTxt += "To see more examples see out webapp example (../webapp)\n\n"
 	setResponse(c, http.StatusOK, helpTxt)
 }
 
 func handleIsHealthy(c *gin.Context) {
 	setResponse(c, http.StatusOK, "You can see this page only because you are logged in")
-}
-
-func handleLogout(c *gin.Context) {
-	err := client.Auth.Logout(c.Request, c.Writer)
-	if err != nil {
-		setError(c, err.Error())
-	} else {
-		setOK(c)
-	}
 }
 
 func handleSignUpOrIn(c *gin.Context) {

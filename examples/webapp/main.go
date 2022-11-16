@@ -91,7 +91,6 @@ func main() {
 		setResponse(w, http.StatusUnauthorized, "Unauthorized")
 	}, nil))
 	authRouter.HandleFunc("/private", handleIsHealthy).Methods(http.MethodGet)
-	authRouter.HandleFunc("/logout", handleLogout).Methods(http.MethodGet) // Logout from all user's active sessions
 
 	server := &http.Server{Addr: fmt.Sprintf(":%s", port), Handler: router}
 	go func() {
@@ -139,7 +138,6 @@ func help(w http.ResponseWriter, r *http.Request) {
 	helpTxt += "Start a stepup flow go to: /stepup\n\n"
 	helpTxt += "---------------------------------------------------------\n\n"
 	helpTxt += "See that you are actually logged in go to: /private \n\n"
-	helpTxt += "logout go to: /logout\n\n"
 	setResponse(w, http.StatusOK, helpTxt)
 }
 
@@ -216,15 +214,6 @@ func sendSuccessAuthResponse(w http.ResponseWriter, authInfo *auth.Authenticatio
 	mr, _ := json.MarshalIndent(authInfo, "", "")
 	helpTxt += string(mr) + "\n"
 	setResponse(w, http.StatusOK, helpTxt)
-}
-
-func handleLogout(w http.ResponseWriter, r *http.Request) {
-	err := client.Auth.Logout(r, w)
-	if err != nil {
-		setError(w, err.Error())
-	} else {
-		setOK(w)
-	}
 }
 
 func handleMagicLinkSignIn(w http.ResponseWriter, r *http.Request) {
