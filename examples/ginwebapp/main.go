@@ -59,12 +59,12 @@ func main() {
 }
 
 func help(c *gin.Context) {
-	helpTxt := "To test sign up or in with otp email go to /otp/signupOrIn?email=\n\n"
-	helpTxt += "To test sign up or in with otp sms go to /otp/signupOrIn?sms=\n\n"
-	helpTxt += "To test sign up or in with otp whatsapp go to /otp/signupOrIn?whatsapp=\n\n"
+	helpTxt := "Sign up or in with otp email go to /otp/signupOrIn?email=\n\n"
+	helpTxt += "Sign up or in with otp sms go to /otp/signupOrIn?sms=\n\n"
+	helpTxt += "Sign up or in with otp whatsapp go to /otp/signupOrIn?whatsapp=\n\n"
 	helpTxt += "-------------------------------------\n\n"
-	helpTxt += "To see a private page\n\n"
-	helpTxt += "To logout\n\n"
+	helpTxt += "See a private page /private\n\n"
+	helpTxt += "To logout /logout\n\n"
 	helpTxt += "To see more examples see out webapp example (../webapp)\n\n"
 	setResponse(c, http.StatusOK, helpTxt)
 }
