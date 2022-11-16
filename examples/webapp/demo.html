@@ -94,8 +94,8 @@
 
     async function register(username) {
       const user = {
-        externalID: username,
-        displayName: "John Appleseed",
+        email: username,
+        name: "John Appleseed",
       }
 
       const startResponse = await serverPost(`webauthn/signup/start?origin=${encodeURIComponent(document.location.origin)}`, user)
@@ -184,7 +184,8 @@
     }
 
     function decodeBase64Url(value) {
-      return Uint8Array.from(atob(value), c => c.charCodeAt(0)).buffer
+      const base64 = value.replace(/-/g, '+').replace(/_/g, '/')
+      return Uint8Array.from(atob(base64), c => c.charCodeAt(0)).buffer
     }
 
     function encodeBase64Url(value) {
@@ -222,20 +223,19 @@
 </head>
 
 <body>
-  <form>
-    <div class="box">
-      <h1>Webauthn</h1>
-      <input id="email" class="email" type="email" name="email" placeholder="email" value="" required />
-      <div class="actions">
-        <button id="register" onclick="performRegister()">
-          Register
-        </button>
-        <button id="login" onclick="performLogin()">
-          Login
-        </button>
-      </div>
+  <div class="box">
+    <h1>Webauthn</h1>
+    <span>Dont forget to set the permitted domains on auth methods page</span>
+    <input id="email" class="email" type="email" name="email" placeholder="email" value="" required />
+    <div class="actions">
+      <button id="register" onclick="performRegister()">
+        Register
+      </button>
+      <button id="login" onclick="performLogin()">
+        Login
+      </button>
     </div>
-  </form>
+  </div>
 </body>
 
 </html>

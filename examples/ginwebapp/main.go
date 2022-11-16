@@ -8,18 +8,15 @@ import (
 	"crypto/x509/pkix"
 	"encoding/json"
 	"encoding/pem"
-	goErrors "errors"
 	"fmt"
 	"log"
 	"math/big"
 	"net/http"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/auth"
-	descopeerrors "github.com/descope/go-sdk/descope/errors"
 	descopegin "github.com/descope/go-sdk/descope/gin"
 	"github.com/gin-gonic/gin"
 )
@@ -28,19 +25,17 @@ const (
 	TLSkeyPath  = "../key.pem"
 	TLSCertPath = "../cert.pem"
 	port        = "8085"
-
-	trueStr            = "true"
-	verifyMagicLinkURI = "https://localhost:8085/magiclink/verify"
 )
 
 var client *descope.DescopeClient
 
 func main() {
 	log.Println("starting server on port " + port)
+	log.Println("go to https://localhost:" + port + " to enjoy descope")
 	r := gin.Default()
 	var err error
 	// Leave projectId param empty to get it from DESCOPE_PROJECT_ID env variable
-	projectID := ""
+	projectID := "P2GgYHq1CQWttp2EYr5GXTd44DMu"
 	client, err = descope.NewDescopeClientWithConfig(&descope.Config{ProjectID: projectID})
 	if err != nil {
 		log.Println("failed to init: " + err.Error())
@@ -52,182 +47,39 @@ func main() {
 		os.Exit(1)
 	}
 
-	r.GET("/otp/signup", handleSignUp)
-	r.GET("/otp/signin", handleSignIn)
+	r.GET("/", help)
+	r.GET("/otp/signupOrIn", handleSignUpOrIn)
 	r.GET("/otp/verify", handleOTPVerify)
-
-	r.GET("/oauth", handleOAuth)
-
-	r.GET("/magiclink/signin", handleMagicLinkSignIn)
-	r.GET("/magiclink/signup", handleMagicLinkSignUp)
-	r.GET("/magiclink/session", handleGetMagicLinkSession)
-	r.GET("/magiclink/verify", handleMagicLinkVerify)
-
-	r.GET("/webauthn", func(c *gin.Context) {
-		file, _ := os.ReadFile("../demo.html")
-		c.Data(http.StatusOK, "text/html; charset=utf-8", file)
-	})
-
-	r.POST("/webauthn/signup/start", func(c *gin.Context) {
-		decoder := json.NewDecoder(c.Request.Body)
-		var t *auth.User
-		err := decoder.Decode(&t)
-		if err != nil {
-			setError(c, err.Error())
-			return
-		}
-
-		res, err := client.Auth.WebAuthn().SignUpStart(t.Name, t, c.Query("origin"))
-		if err != nil {
-			setError(c, err.Error())
-		}
-		c.Writer.Header().Add("Content-Type", "application/json")
-		c.PureJSON(http.StatusOK, res)
-	})
-	r.POST("/webauthn/signup/finish", func(c *gin.Context) {
-		decoder := json.NewDecoder(c.Request.Body)
-		var t *auth.WebAuthnFinishRequest
-		err := decoder.Decode(&t)
-		if err != nil {
-			setError(c, err.Error())
-			return
-		}
-
-		_, err = client.Auth.WebAuthn().SignUpFinish(t, c.Writer)
-		if err != nil {
-			setError(c, err.Error())
-		}
-		setOK(c)
-	})
-
-	r.POST("/webauthn/signin/start", func(c *gin.Context) {
-		res, err := client.Auth.WebAuthn().SignInStart(c.Query("id"), c.Query("origin"), nil, nil)
-		if err != nil {
-			setError(c, err.Error())
-		}
-		c.Writer.Header().Add("Content-Type", "application/json")
-		c.PureJSON(http.StatusOK, res)
-	})
-	r.POST("/webauthn/signin/finish", func(c *gin.Context) {
-		decoder := json.NewDecoder(c.Request.Body)
-		var t *auth.WebAuthnFinishRequest
-		err := decoder.Decode(&t)
-		if err != nil {
-			setError(c, err.Error())
-			return
-		}
-
-		_, err = client.Auth.WebAuthn().SignInFinish(t, c.Writer)
-		if err != nil {
-			setError(c, err.Error())
-		}
-		setOK(c)
-	})
 
 	authorized := r.Group("/")
 	authorized.Use(descopegin.AuthneticationMiddleware(client.Auth, nil, nil))
 	authorized.GET("/private", handleIsHealthy)
-	authorized.POST("/logout", handleLogout) // Logout from all user's active sessions
 	r.RunTLS(fmt.Sprintf(":%s", port), TLSCertPath, TLSkeyPath)
 }
 
+func help(c *gin.Context) {
+	helpTxt := "Sign up or in with otp email go to /otp/signupOrIn?email=\n\n"
+	helpTxt += "Sign up or in with otp sms go to /otp/signupOrIn?sms=\n\n"
+	helpTxt += "Sign up or in with otp whatsapp go to /otp/signupOrIn?whatsapp=\n\n"
+	helpTxt += "-------------------------------------\n\n"
+	helpTxt += "See a private page /private\n\n"
+	helpTxt += "To see more examples see out webapp example (../webapp)\n\n"
+	setResponse(c, http.StatusOK, helpTxt)
+}
+
 func handleIsHealthy(c *gin.Context) {
-	setOK(c)
+	setResponse(c, http.StatusOK, "You can see this page only because you are logged in")
 }
 
-func handleLogout(c *gin.Context) {
-	err := client.Auth.Logout(c.Request, c.Writer)
-	if err != nil {
-		setError(c, err.Error())
-	} else {
-		setOK(c)
-	}
-}
-
-func handleSignUp(c *gin.Context) {
+func handleSignUpOrIn(c *gin.Context) {
 	method, identifier := getMethodAndIdentifier(c)
-	err := client.Auth.OTP().SignUp(method, identifier, &auth.User{Name: "test"})
+	err := client.Auth.OTP().SignUpOrIn(method, identifier)
 	if err != nil {
-		setError(c, err.Error())
+		setErrorWithSignUpIn(c, err.Error(), method, identifier)
 	} else {
-		setOK(c)
+		helpTxt := "to verify code received go to /otp/verify?" + string(method) + "=" + identifier + "&code=<code>"
+		setResponse(c, http.StatusOK, helpTxt)
 	}
-}
-
-func handleSignIn(c *gin.Context) {
-	method, identifier := getMethodAndIdentifier(c)
-	err := client.Auth.OTP().SignIn(method, identifier, nil, nil)
-	if err != nil {
-		setError(c, err.Error())
-	} else {
-		setOK(c)
-	}
-}
-
-func handleMagicLinkSignIn(c *gin.Context) {
-	method, identifier := getMethodAndIdentifier(c)
-	var err error
-	var magicLinkResponse *auth.MagicLinkResponse
-
-	if crossDevice := queryBool(c, "crossDevice"); crossDevice {
-		magicLinkResponse, err = client.Auth.MagicLink().SignInCrossDevice(method, identifier, verifyMagicLinkURI, nil, nil)
-	} else {
-		err = client.Auth.MagicLink().SignIn(method, identifier, verifyMagicLinkURI, nil, nil)
-	}
-	if err != nil {
-		setError(c, err.Error())
-	}
-	c.JSON(http.StatusOK, magicLinkResponse)
-
-}
-
-func handleMagicLinkSignUp(c *gin.Context) {
-	method, identifier := getMethodAndIdentifier(c)
-	var err error
-	var magicLinkResponse *auth.MagicLinkResponse
-
-	user := &auth.User{Name: "test"}
-	if crossDevice := queryBool(c, "crossDevice"); crossDevice {
-		magicLinkResponse, err = client.Auth.MagicLink().SignUpCrossDevice(method, identifier, verifyMagicLinkURI, user)
-	} else {
-		err = client.Auth.MagicLink().SignUp(method, identifier, verifyMagicLinkURI, user)
-	}
-	if err != nil {
-		setError(c, err.Error())
-	}
-
-	c.JSON(http.StatusOK, magicLinkResponse)
-}
-
-func handleGetMagicLinkSession(c *gin.Context) {
-	pendingRef := c.Query("pendingRef")
-	if pendingRef == "" {
-		setError(c, "pending reference is empty")
-		return
-	}
-	_, err := client.Auth.MagicLink().GetSession(pendingRef, c.Writer)
-	if goErrors.Is(err, descopeerrors.MagicLinkUnauthorized) {
-		setUnauthorized(c, err.Error())
-	}
-	if err != nil {
-		setError(c, err.Error())
-		return
-	}
-	setOK(c)
-}
-
-func handleMagicLinkVerify(c *gin.Context) {
-	token := c.Query("t")
-	if token == "" {
-		setError(c, "token is empty")
-		return
-	}
-	_, err := client.Auth.MagicLink().Verify(token, c.Writer)
-	if err != nil {
-		setError(c, err.Error())
-		return
-	}
-	setOK(c)
 }
 
 func handleOTPVerify(c *gin.Context) {
@@ -237,23 +89,15 @@ func handleOTPVerify(c *gin.Context) {
 		setError(c, "code is empty")
 		return
 	}
-	_, err := client.Auth.OTP().VerifyCode(method, identifier, code, c.Writer)
+	authInfo, err := client.Auth.OTP().VerifyCode(method, identifier, code, c.Writer)
 	if err != nil {
 		setError(c, err.Error())
 		return
 	}
-	setOK(c)
-}
-
-func handleOAuth(c *gin.Context) {
-	provider := auth.OAuthProvider(c.Query("provider"))
-	if provider == "" {
-		provider = auth.OAuthFacebook
-	}
-	_, err := client.Auth.OAuth().Start(provider, "", nil, nil, c.Writer)
-	if err != nil {
-		setError(c, err.Error())
-	}
+	helpTxt := "You have properly authenticated, you can check for your JWT in the cookie\n"
+	mr, _ := json.MarshalIndent(authInfo, "", "")
+	helpTxt += string(mr) + "\n"
+	setResponse(c, http.StatusOK, helpTxt)
 }
 
 func getMethodAndIdentifier(c *gin.Context) (auth.DeliveryMethod, string) {
@@ -271,12 +115,19 @@ func getMethodAndIdentifier(c *gin.Context) (auth.DeliveryMethod, string) {
 	return method, identifier
 }
 
-func queryBool(c *gin.Context, key string) bool {
-	return strings.ToLower(c.Query(key)) == trueStr
-}
-
 func setOK(c *gin.Context) {
 	setResponse(c, http.StatusOK, "OK")
+}
+
+func setErrorWithSignUpIn(c *gin.Context, message string, method auth.DeliveryMethod, identifier string) {
+	msg := message
+	if method != "" {
+		msg += " method: " + string(method)
+	}
+	if identifier != "" {
+		msg += " identifier: " + identifier
+	}
+	setError(c, msg)
 }
 
 func setError(c *gin.Context, message string) {

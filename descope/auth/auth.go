@@ -705,8 +705,12 @@ func composeUpdateUserEmailMagicLink() string {
 	return api.Routes.UpdateUserEmailMagiclink()
 }
 
-func composeUpdateUserPhone(method DeliveryMethod) string {
+func composeUpdateUserPhoneMagiclink(method DeliveryMethod) string {
 	return composeURLMethod(api.Routes.UpdateUserPhoneMagicLink(), method)
+}
+
+func composeUpdateUserPhoneOTP(method DeliveryMethod) string {
+	return composeURLMethod(api.Routes.UpdateUserPhoneOTP(), method)
 }
 
 func redirectToURL(url string, w http.ResponseWriter) {
