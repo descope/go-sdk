@@ -35,7 +35,7 @@ func main() {
 	r := gin.Default()
 	var err error
 	// Leave projectId param empty to get it from DESCOPE_PROJECT_ID env variable
-	projectID := "P2GgYHq1CQWttp2EYr5GXTd44DMu"
+	projectID := ""
 	client, err = descope.NewDescopeClientWithConfig(&descope.Config{ProjectID: projectID})
 	if err != nil {
 		log.Println("failed to init: " + err.Error())
