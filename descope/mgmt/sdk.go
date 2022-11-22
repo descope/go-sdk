@@ -9,7 +9,7 @@ type Tenant interface {
 	//
 	// The tenant name must be unique per project. The tenant ID is generated automatically
 	// for the tenant.
-	Create(managementKey, name string, selfProvisioningDomains []string) error
+	Create(managementKey, name string, selfProvisioningDomains []string) (id string, err error)
 
 	// Create a new tenant with the given name and ID.
 	//

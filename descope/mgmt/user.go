@@ -48,7 +48,7 @@ func makeCreateUpdateUserRequest(identifier, email, phone, displayName string, r
 }
 
 func makeUserTenantsList(tenants []UserTenants) []map[string]any {
-	res := make([]map[string]any, len(tenants))
+	res := []map[string]any{}
 	for _, tenant := range tenants {
 		res = append(res, map[string]any{
 			"tenantId":  tenant.TenantID,

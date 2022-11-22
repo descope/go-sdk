@@ -27,6 +27,20 @@ func TestSignUpStart(t *testing.T) {
 	assert.EqualValues(t, expectedResponse.TransactionID, res.TransactionID)
 }
 
+func TestSignUpStartNilUser(t *testing.T) {
+	expectedResponse := WebAuthnTransactionResponse{TransactionID: "a"}
+	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
+		req := authenticationWebAuthnSignUpRequestBody{}
+		err := readBody(r, &req)
+		require.NoError(t, err)
+		assert.EqualValues(t, "test@test.com", req.User.ExternalID)
+	}, expectedResponse))
+	require.NoError(t, err)
+	res, err := a.WebAuthn().SignUpStart("test@test.com", nil, "https://example.com")
+	require.NoError(t, err)
+	assert.EqualValues(t, expectedResponse.TransactionID, res.TransactionID)
+}
+
 func TestSignInFinish(t *testing.T) {
 	expectedResponse := &WebAuthnFinishRequest{TransactionID: "a"}
 	a, err := newTestAuth(nil, DoOk(nil))
