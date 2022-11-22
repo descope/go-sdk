@@ -28,36 +28,7 @@ const (
 var (
 	Routes = endpoints{
 		version: "/v1/",
-		auth: struct {
-			signInOTP                string
-			signUpOTP                string
-			signUpOrInOTP            string
-			signUpTOTP               string
-			updateTOTP               string
-			verifyTOTPCode           string
-			verifyCode               string
-			signInMagicLink          string
-			signUpMagicLink          string
-			signUpOrInMagicLink      string
-			verifyMagicLink          string
-			oauthStart               string
-			exchangeTokenOAuth       string
-			samlStart                string
-			exchangeTokenSAML        string
-			webauthnSignUpStart      string
-			webauthnSignUpFinish     string
-			webauthnSignInStart      string
-			webauthnSignInFinish     string
-			webauthnSignUpOrInStart  string
-			webauthnUpdateStart      string
-			webauthnUpdateFinish     string
-			getMagicLinkSession      string
-			updateUserEmailMagicLink string
-			updateUserEmailOTP       string
-			updateUserPhoneMagicLink string
-			updateUserPhoneOTP       string
-			exchangeAccessKey        string
-		}{
+		auth: authEndpoints{
 			signInOTP:                "auth/otp/signin",
 			signUpOTP:                "auth/otp/signup",
 			signUpOrInOTP:            "auth/otp/signup-in",
@@ -87,6 +58,17 @@ var (
 			updateUserPhoneOTP:       "auth/otp/update/phone",
 			exchangeAccessKey:        "auth/accesskey/exchange",
 		},
+		mgmt: mgmtEndpoints{
+			tenantCreate:   "mgmt/tenant/create",
+			tenantUpdate:   "mgmt/tenant/update",
+			tenantDelete:   "mgmt/tenant/delete",
+			userCreate:     "mgmt/user/create",
+			userUpdate:     "mgmt/user/update",
+			userDelete:     "mgmt/user/delete",
+			ssoConfigure:   "mgmt/sso/settings",
+			ssoMetadata:    "mgmt/sso/metadata",
+			ssoRoleMapping: "mgmt/sso/roles",
+		},
 		logout:    "auth/logout",
 		logoutAll: "auth/logoutall",
 		keys:      "/keys/",
@@ -96,42 +78,57 @@ var (
 )
 
 type endpoints struct {
-	version string
-	auth    struct {
-		signInOTP                string
-		signUpOTP                string
-		signUpOrInOTP            string
-		signUpTOTP               string
-		updateTOTP               string
-		verifyTOTPCode           string
-		verifyCode               string
-		signInMagicLink          string
-		signUpMagicLink          string
-		signUpOrInMagicLink      string
-		verifyMagicLink          string
-		oauthStart               string
-		exchangeTokenOAuth       string
-		samlStart                string
-		exchangeTokenSAML        string
-		webauthnSignUpStart      string
-		webauthnSignUpFinish     string
-		webauthnSignInStart      string
-		webauthnSignInFinish     string
-		webauthnSignUpOrInStart  string
-		webauthnUpdateStart      string
-		webauthnUpdateFinish     string
-		getMagicLinkSession      string
-		updateUserEmailMagicLink string
-		updateUserEmailOTP       string
-		updateUserPhoneMagicLink string
-		updateUserPhoneOTP       string
-		exchangeAccessKey        string
-	}
+	version   string
+	auth      authEndpoints
+	mgmt      mgmtEndpoints
 	logout    string
 	logoutAll string
 	keys      string
 	refresh   string
 	me        string
+}
+
+type authEndpoints struct {
+	signInOTP                string
+	signUpOTP                string
+	signUpOrInOTP            string
+	signUpTOTP               string
+	updateTOTP               string
+	verifyTOTPCode           string
+	verifyCode               string
+	signInMagicLink          string
+	signUpMagicLink          string
+	signUpOrInMagicLink      string
+	verifyMagicLink          string
+	oauthStart               string
+	exchangeTokenOAuth       string
+	samlStart                string
+	exchangeTokenSAML        string
+	webauthnSignUpStart      string
+	webauthnSignUpFinish     string
+	webauthnSignInStart      string
+	webauthnSignInFinish     string
+	webauthnSignUpOrInStart  string
+	webauthnUpdateStart      string
+	webauthnUpdateFinish     string
+	getMagicLinkSession      string
+	updateUserEmailMagicLink string
+	updateUserEmailOTP       string
+	updateUserPhoneMagicLink string
+	updateUserPhoneOTP       string
+	exchangeAccessKey        string
+}
+
+type mgmtEndpoints struct {
+	tenantCreate   string
+	tenantUpdate   string
+	tenantDelete   string
+	userCreate     string
+	userUpdate     string
+	userDelete     string
+	ssoConfigure   string
+	ssoMetadata    string
+	ssoRoleMapping string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -237,6 +234,42 @@ func (e *endpoints) UpdateUserPhoneOTP() string {
 
 func (e *endpoints) ExchangeAccessKey() string {
 	return path.Join(e.version, e.auth.exchangeAccessKey)
+}
+
+func (e *endpoints) ManagementTenantCreate() string {
+	return path.Join(e.version, e.mgmt.tenantCreate)
+}
+
+func (e *endpoints) ManagementTenantUpdate() string {
+	return path.Join(e.version, e.mgmt.tenantUpdate)
+}
+
+func (e *endpoints) ManagementTenantDelete() string {
+	return path.Join(e.version, e.mgmt.tenantDelete)
+}
+
+func (e *endpoints) ManagementUserCreate() string {
+	return path.Join(e.version, e.mgmt.userCreate)
+}
+
+func (e *endpoints) ManagementUserUpdate() string {
+	return path.Join(e.version, e.mgmt.userUpdate)
+}
+
+func (e *endpoints) ManagementUserDelete() string {
+	return path.Join(e.version, e.mgmt.userDelete)
+}
+
+func (e *endpoints) ManagementSSOConfigure() string {
+	return path.Join(e.version, e.mgmt.ssoConfigure)
+}
+
+func (e *endpoints) ManagementSSOMetadata() string {
+	return path.Join(e.version, e.mgmt.ssoMetadata)
+}
+
+func (e *endpoints) ManagementSSORoleMapping() string {
+	return path.Join(e.version, e.mgmt.ssoRoleMapping)
 }
 
 type sdkInfo struct {
