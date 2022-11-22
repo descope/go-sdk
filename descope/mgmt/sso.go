@@ -9,7 +9,7 @@ type sso struct {
 	managementBase
 }
 
-func (s *sso) ConfigureSettings(managementKey string, tenantID string, enabled bool, idpURL, idpCert, entityID, redirectURL string) error {
+func (s *sso) ConfigureSettings(managementKey, tenantID string, enabled bool, idpURL, idpCert, entityID, redirectURL string) error {
 	if tenantID == "" {
 		return errors.NewInvalidArgumentError("tenantID")
 	}
@@ -34,7 +34,7 @@ func (s *sso) ConfigureSettings(managementKey string, tenantID string, enabled b
 	return err
 }
 
-func (s *sso) ConfigureMetadata(managementKey string, tenantID string, enabled bool, idpMetadataURL string) error {
+func (s *sso) ConfigureMetadata(managementKey, tenantID string, enabled bool, idpMetadataURL string) error {
 	if tenantID == "" {
 		return errors.NewInvalidArgumentError("tenantID")
 	}
@@ -50,7 +50,7 @@ func (s *sso) ConfigureMetadata(managementKey string, tenantID string, enabled b
 	return err
 }
 
-func (s *sso) ConfigureRoleMapping(managementKey string, tenantID string, roleMappings []RoleMapping) error {
+func (s *sso) ConfigureRoleMapping(managementKey, tenantID string, roleMappings []RoleMapping) error {
 	if tenantID == "" {
 		return errors.NewInvalidArgumentError("tenantID")
 	}
