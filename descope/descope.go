@@ -93,5 +93,6 @@ func NewDescopeClientWithConfig(config *Config) (*DescopeClient, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &DescopeClient{Auth: authService, config: config}, nil
+	managementService := mgmt.NewManagement(mgmt.MgmtParams{ProjectID: config.ProjectID}, c)
+	return &DescopeClient{Auth: authService, Management: managementService, config: config}, nil
 }
