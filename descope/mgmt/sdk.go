@@ -66,6 +66,7 @@ type User interface {
 	Delete(managementKey, identifier string) error
 }
 
+// Represents a mapping between a set of groups of users and a role that will be assigned to them.
 type RoleMapping struct {
 	Groups []string
 	Role   string
