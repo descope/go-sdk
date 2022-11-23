@@ -22,6 +22,8 @@ func TestEnvVariableProjectID(t *testing.T) {
 	a, err := NewDescopeClient()
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedProjectID, a.config.ProjectID)
+	assert.NotNil(t, a.Auth)
+	assert.NotNil(t, a.Management)
 }
 
 func TestEnvVariablePublicKey(t *testing.T) {
@@ -35,6 +37,8 @@ func TestEnvVariablePublicKey(t *testing.T) {
 	a, err := NewDescopeClientWithConfig(&Config{ProjectID: "a"})
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedPublicKey, a.config.PublicKey)
+	assert.NotNil(t, a.Auth)
+	assert.NotNil(t, a.Management)
 }
 
 func TestEmptyProjectID(t *testing.T) {
