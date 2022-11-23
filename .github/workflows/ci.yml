@@ -1,9 +1,6 @@
 name: CI
 
-on:
-  push
-  pull_request:
-    types: [opened, reopened, synchronize]
+on: [push, pull_request]
 
 env:
   GO_VERSION: 1.18
