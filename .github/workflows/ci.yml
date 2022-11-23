@@ -3,7 +3,7 @@ name: CI
 on:
   push
   pull_request:
-    types: [opened, reopened]
+    types: [opened, reopened, synchronize]
 
 env:
   GO_VERSION: 1.18
