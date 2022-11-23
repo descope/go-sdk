@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AuthneticationMiddleware(client auth.Authentication, onFailure func(*gin.Context, error), onSuccess func(*gin.Context, *auth.Token)) gin.HandlerFunc {
+func AuthenticationMiddleware(client auth.Authentication, onFailure func(*gin.Context, error), onSuccess func(*gin.Context, *auth.Token)) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if ok, token, err := client.ValidateSession(c.Request, c.Writer); ok {
 			if onSuccess != nil {
