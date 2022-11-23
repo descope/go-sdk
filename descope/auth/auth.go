@@ -30,12 +30,13 @@ type authenticationsBase struct {
 type authenticationService struct {
 	authenticationsBase
 
-	otp       OTP
-	magicLink MagicLink
-	totp      TOTP
-	webAuthn  WebAuthn
-	oauth     OAuth
-	saml      SAML
+	otp           OTP
+	magicLink     MagicLink
+	enchantedLink EnchantedLink
+	totp          TOTP
+	webAuthn      WebAuthn
+	oauth         OAuth
+	saml          SAML
 }
 
 func NewAuth(conf AuthParams, c *api.Client) (*authenticationService, error) {
@@ -44,6 +45,7 @@ func NewAuth(conf AuthParams, c *api.Client) (*authenticationService, error) {
 	authenticationService := &authenticationService{authenticationsBase: base}
 	authenticationService.otp = &otp{authenticationsBase: base}
 	authenticationService.magicLink = &magicLink{authenticationsBase: base}
+	authenticationService.enchantedLink = &enchantedLink{authenticationsBase: base}
 	authenticationService.oauth = &oauth{authenticationsBase: base}
 	authenticationService.saml = &saml{authenticationsBase: base}
 	authenticationService.webAuthn = &webAuthn{authenticationsBase: base}
@@ -53,6 +55,10 @@ func NewAuth(conf AuthParams, c *api.Client) (*authenticationService, error) {
 
 func (auth *authenticationService) MagicLink() MagicLink {
 	return auth.magicLink
+}
+
+func (auth *authenticationService) EnchantedLink() EnchantedLink {
+	return auth.enchantedLink
 }
 
 func (auth *authenticationService) OTP() OTP {
@@ -620,8 +626,8 @@ func getAuthorizationClaimItems(token *Token, tenant string, claim string) []str
 	return items
 }
 
-func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (*MagicLinkResponse, error) {
-	var response *MagicLinkResponse
+func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (*EnchantedLinkResponse, error) {
+	var response *EnchantedLinkResponse
 	if err := utils.Unmarshal([]byte(httpResponse.BodyStr), &response); err != nil {
 		logger.LogError("failed to load pending reference from response", err)
 		return response, errors.InvalidPendingRefError
@@ -677,6 +683,30 @@ func composeVerifyMagicLinkURL() string {
 	return api.Routes.VerifyMagicLink()
 }
 
+func composeEnchantedLinkSignInURL() string {
+	return composeURLMethod(api.Routes.SignInEnchantedLink(), MethodEmail)
+}
+
+func composeEnchantedLinkSignUpURL() string {
+	return composeURLMethod(api.Routes.SignUpEnchantedLink(), MethodEmail)
+}
+
+func composeEnchantedLinkSignUpOrInURL() string {
+	return composeURLMethod(api.Routes.SignUpOrInEnchantedLink(), MethodEmail)
+}
+
+func composeVerifyEnchantedLinkURL() string {
+	return api.Routes.VerifyEnchantedLink()
+}
+
+func composeGetSession() string {
+	return api.Routes.GetEnchantedLinkSession()
+}
+
+func composeUpdateUserEmailEnchantedLink() string {
+	return api.Routes.UpdateUserEmailEnchantedlink()
+}
+
 func composeOAuthURL() string {
 	return api.Routes.OAuthStart()
 }
@@ -691,10 +721,6 @@ func composeSAMLStartURL() string {
 
 func composeSAMLExchangeTokenURL() string {
 	return api.Routes.ExchangeTokenSAML()
-}
-
-func composeGetSession() string {
-	return api.Routes.GetMagicLinkSession()
 }
 
 func composeUpdateUserEmailOTP() string {
