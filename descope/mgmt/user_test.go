@@ -19,13 +19,13 @@ func TestUserCreateSuccess(t *testing.T) {
 		require.Len(t, roleNames, 1)
 		require.Equal(t, "foo", roleNames[0])
 	}))
-	err := mgmt.User().Create("key", "abc", "foo@bar.com", "", "", []string{"foo"}, nil)
+	err := mgmt.User().Create("abc", "foo@bar.com", "", "", []string{"foo"}, nil)
 	require.NoError(t, err)
 }
 
 func TestUserCreateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.User().Create("key", "", "foo@bar.com", "", "", nil, nil)
+	err := mgmt.User().Create("", "foo@bar.com", "", "", nil, nil)
 	require.Error(t, err)
 }
 
@@ -51,13 +51,13 @@ func TestUserUpdateSuccess(t *testing.T) {
 			}
 		}
 	}))
-	err := mgmt.User().Update("key", "abc", "foo@bar.com", "", "", nil, []UserTenants{{TenantID: "x", Roles: []string{"foo"}}, {TenantID: "y", Roles: []string{"bar"}}})
+	err := mgmt.User().Update("abc", "foo@bar.com", "", "", nil, []UserTenants{{TenantID: "x", Roles: []string{"foo"}}, {TenantID: "y", Roles: []string{"bar"}}})
 	require.NoError(t, err)
 }
 
 func TestUserUpdateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.User().Update("key", "", "foo@bar.com", "", "", nil, nil)
+	err := mgmt.User().Update("", "foo@bar.com", "", "", nil, nil)
 	require.Error(t, err)
 }
 
@@ -68,12 +68,12 @@ func TestUserDeleteSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["identifier"])
 	}))
-	err := mgmt.User().Delete("key", "abc")
+	err := mgmt.User().Delete("abc")
 	require.NoError(t, err)
 }
 
 func TestUserDeleteError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.User().Delete("key", "")
+	err := mgmt.User().Delete("")
 	require.Error(t, err)
 }

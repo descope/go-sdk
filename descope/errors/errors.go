@@ -31,7 +31,7 @@ func NewError(code, message string) *WebError {
 }
 
 func NewInvalidArgumentError(arg string) *WebError {
-	return NewError(BadRequestErrorCode, fmt.Sprintf("invalid argument %s", arg))
+	return NewError(BadRequestErrorCode, fmt.Sprintf("the '%s' argument is invalid", arg))
 }
 
 func NewUnauthorizedError() *WebError {

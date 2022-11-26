@@ -21,14 +21,14 @@ func TestTenantCreateSuccess(t *testing.T) {
 		require.Equal(t, "foo", selfProvisioningDomains[0])
 		require.Equal(t, "bar", selfProvisioningDomains[1])
 	}, response))
-	id, err := mgmt.Tenant().Create("key", "abc", []string{"foo", "bar"})
+	id, err := mgmt.Tenant().Create("abc", []string{"foo", "bar"})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)
 }
 
 func TestTenantCreateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	id, err := mgmt.Tenant().Create("key", "", nil)
+	id, err := mgmt.Tenant().Create("", nil)
 	require.Error(t, err)
 	require.Empty(t, id)
 }
@@ -46,15 +46,15 @@ func TestTenantCreateWithIDSuccess(t *testing.T) {
 		require.Equal(t, "foo", selfProvisioningDomains[0])
 		require.Equal(t, "bar", selfProvisioningDomains[1])
 	}, response))
-	err := mgmt.Tenant().CreateWithID("key", "123", "abc", []string{"foo", "bar"})
+	err := mgmt.Tenant().CreateWithID("123", "abc", []string{"foo", "bar"})
 	require.NoError(t, err)
 }
 
 func TestTenantCreateWithIDError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.Tenant().CreateWithID("key", "", "abc", nil)
+	err := mgmt.Tenant().CreateWithID("", "abc", nil)
 	require.Error(t, err)
-	err = mgmt.Tenant().CreateWithID("key", "123", "", nil)
+	err = mgmt.Tenant().CreateWithID("123", "", nil)
 	require.Error(t, err)
 }
 
@@ -70,15 +70,15 @@ func TestTenantUpdateSuccess(t *testing.T) {
 		require.Equal(t, "foo", selfProvisioningDomains[0])
 		require.Equal(t, "bar", selfProvisioningDomains[1])
 	}))
-	err := mgmt.Tenant().Update("key", "123", "abc", []string{"foo", "bar"})
+	err := mgmt.Tenant().Update("123", "abc", []string{"foo", "bar"})
 	require.NoError(t, err)
 }
 
 func TestTenantUpdateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.Tenant().Update("key", "", "abc", nil)
+	err := mgmt.Tenant().Update("", "abc", nil)
 	require.Error(t, err)
-	err = mgmt.Tenant().Update("key", "123", "", nil)
+	err = mgmt.Tenant().Update("123", "", nil)
 	require.Error(t, err)
 }
 
@@ -89,12 +89,12 @@ func TestTenantDeleteSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["id"])
 	}))
-	err := mgmt.Tenant().Delete("key", "abc")
+	err := mgmt.Tenant().Delete("abc")
 	require.NoError(t, err)
 }
 
 func TestTenantDeleteError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.Tenant().Delete("key", "")
+	err := mgmt.Tenant().Delete("")
 	require.Error(t, err)
 }
