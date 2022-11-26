@@ -2,6 +2,7 @@ package auth
 
 import (
 	"regexp"
+	"strings"
 
 	"github.com/descope/go-sdk/descope/logger"
 	"github.com/lestrrat-go/jwx/v2/jwt"
@@ -148,10 +149,13 @@ func NewToken(JWT string, token jwt.Token) *Token {
 		return nil
 	}
 
+	parts := strings.Split(token.Issuer(), "/")
+	projectID := parts[len(parts)-1]
+
 	return &Token{
 		JWT:        JWT,
 		ID:         token.Subject(),
-		ProjectID:  token.Issuer(),
+		ProjectID:  projectID,
 		Expiration: token.Expiration().Unix(),
 		Claims:     token.PrivateClaims(),
 	}
