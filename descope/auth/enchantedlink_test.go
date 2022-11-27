@@ -203,7 +203,7 @@ func TestGetEnchantedLinkSessionStillPending(t *testing.T) {
 	w := httptest.NewRecorder()
 	_, err = a.EnchantedLink().GetSession(pendingRef, w)
 	require.Error(t, err)
-	require.ErrorIs(t, err, errors.MagicLinkUnauthorized)
+	require.ErrorIs(t, err, errors.EnchantedLinkUnauthorized)
 }
 
 func TestUpdateUserEmailEnchantedLink(t *testing.T) {
