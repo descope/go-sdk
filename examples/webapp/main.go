@@ -140,8 +140,8 @@ func help(w http.ResponseWriter, r *http.Request) {
 	helpTxt += "Sign in of existing user with magiclink sms go to: /magiclink/signin?sms=\n\n"
 	helpTxt += "Sign in of existing user with magiclink whatsapp go to: /magiclink/signin?whatsapp=\n\n"
 	helpTxt += "---------------------------------------------------------\n\n"
-	helpTxt += "Sign up with enchantedlink go to: /enchantedlink/signup?email=\n\n"
-	helpTxt += "Sign in of existing user with enchantedlink email go to: /enchantedlink/signin?email=\n\n"
+	helpTxt += "Sign up with enchanted link go to: /enchantedlink/signup?email=\n\n"
+	helpTxt += "Sign in of existing user with enchanted link email go to: /enchantedlink/signin?email=\n\n"
 	helpTxt += "---------------------------------------------------------\n\n"
 	helpTxt += "Start a stepup flow go to: /stepup\n\n"
 	helpTxt += "---------------------------------------------------------\n\n"
@@ -275,7 +275,7 @@ func handleEnchantedLinkSignIn(w http.ResponseWriter, r *http.Request) {
 		setErrorWithSignUpIn(w, err.Error(), "", identifier)
 		return
 	}
-	helpTxt := "You should have received an enchantedlink by email\n"
+	helpTxt := "You should have received an enchanted link by email\n"
 	helpTxt += "Clink on the link labeled " + enchantedRes.Identifier + "\n"
 	helpTxt += "Once done, copy the following to the url, so you will get a session on your original page:\n"
 	helpTxt += "/enchantedlink/session?pendingRef=" + enchantedRes.PendingRef
@@ -290,7 +290,7 @@ func handleEnchantedLinkSignUp(w http.ResponseWriter, r *http.Request) {
 		setErrorWithSignUpIn(w, err.Error(), "", identifier)
 		return
 	}
-	helpTxt := "You should have received an enchantedlink by email\n"
+	helpTxt := "You should have received an enchanted link by email\n"
 	helpTxt += "Clink on the link labeled " + enchantedRes.Identifier + "\n"
 	helpTxt += "Once done, copy the following to the url, so you will get a session on your original page:\n"
 	helpTxt += "/enchantedlink/session?pendingRef=" + enchantedRes.PendingRef
