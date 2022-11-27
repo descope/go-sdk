@@ -20,19 +20,19 @@ func TestSSOConfigureSettingsSuccess(t *testing.T) {
 		require.Equal(t, "entity", req["entityId"])
 		require.Equal(t, "https://redirect", req["redirectURL"])
 	}))
-	err := mgmt.SSO().ConfigureSettings("key", "abc", true, "http://idpURL", "mycert", "entity", "https://redirect")
+	err := mgmt.SSO().ConfigureSettings("abc", true, "http://idpURL", "mycert", "entity", "https://redirect")
 	require.NoError(t, err)
 }
 
 func TestSSOConfigureSettingsError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.SSO().ConfigureSettings("key", "", true, "http://idpURL", "mycert", "entity", "")
+	err := mgmt.SSO().ConfigureSettings("", true, "http://idpURL", "mycert", "entity", "")
 	require.Error(t, err)
-	err = mgmt.SSO().ConfigureSettings("key", "abc", true, "", "mycert", "entity", "")
+	err = mgmt.SSO().ConfigureSettings("abc", true, "", "mycert", "entity", "")
 	require.Error(t, err)
-	err = mgmt.SSO().ConfigureSettings("key", "abc", true, "http://idpURL", "", "entity", "")
+	err = mgmt.SSO().ConfigureSettings("abc", true, "http://idpURL", "", "entity", "")
 	require.Error(t, err)
-	err = mgmt.SSO().ConfigureSettings("key", "abc", true, "http://idpURL", "mycert", "", "")
+	err = mgmt.SSO().ConfigureSettings("abc", true, "http://idpURL", "mycert", "", "")
 	require.Error(t, err)
 }
 
@@ -45,15 +45,15 @@ func TestSSOConfigureMetadataSuccess(t *testing.T) {
 		require.Equal(t, true, req["enabled"])
 		require.Equal(t, "http://idpURL", req["idpMetadataURL"])
 	}))
-	err := mgmt.SSO().ConfigureMetadata("key", "abc", true, "http://idpURL")
+	err := mgmt.SSO().ConfigureMetadata("abc", true, "http://idpURL")
 	require.NoError(t, err)
 }
 
 func TestSSOConfigureMetadataError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.SSO().ConfigureMetadata("key", "", true, "http://idpURL")
+	err := mgmt.SSO().ConfigureMetadata("", true, "http://idpURL")
 	require.Error(t, err)
-	err = mgmt.SSO().ConfigureMetadata("key", "abc", true, "")
+	err = mgmt.SSO().ConfigureMetadata("abc", true, "")
 	require.Error(t, err)
 }
 
@@ -78,12 +78,12 @@ func TestSSOConfigureRoleMappingSuccess(t *testing.T) {
 			}
 		}
 	}))
-	err := mgmt.SSO().ConfigureRoleMapping("key", "abc", []RoleMapping{{Groups: []string{"foo"}, Role: "x"}, {Groups: []string{"bar"}, Role: "y"}})
+	err := mgmt.SSO().ConfigureRoleMapping("abc", []RoleMapping{{Groups: []string{"foo"}, Role: "x"}, {Groups: []string{"bar"}, Role: "y"}})
 	require.NoError(t, err)
 }
 
 func TestSSOConfigureRoleMappingError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.SSO().ConfigureRoleMapping("key", "", nil)
+	err := mgmt.SSO().ConfigureRoleMapping("", nil)
 	require.Error(t, err)
 }

@@ -10,24 +10,24 @@ type tenant struct {
 	managementBase
 }
 
-func (t *tenant) Create(managementKey, name string, selfProvisioningDomains []string) (id string, err error) {
-	return t.createWithID(managementKey, "", name, selfProvisioningDomains)
+func (t *tenant) Create(name string, selfProvisioningDomains []string) (id string, err error) {
+	return t.createWithID("", name, selfProvisioningDomains)
 }
 
-func (t *tenant) CreateWithID(managementKey, id, name string, selfProvisioningDomains []string) error {
+func (t *tenant) CreateWithID(id, name string, selfProvisioningDomains []string) error {
 	if id == "" {
 		return errors.NewInvalidArgumentError("id")
 	}
-	_, err := t.createWithID(managementKey, id, name, selfProvisioningDomains)
+	_, err := t.createWithID(id, name, selfProvisioningDomains)
 	return err
 }
 
-func (t *tenant) createWithID(managementKey, id, name string, selfProvisioningDomains []string) (string, error) {
+func (t *tenant) createWithID(id, name string, selfProvisioningDomains []string) (string, error) {
 	if name == "" {
 		return "", errors.NewInvalidArgumentError("name")
 	}
 	req := makeCreateUpdateTenantRequest(id, name, selfProvisioningDomains)
-	httpRes, err := t.client.DoPostRequest(api.Routes.ManagementTenantCreate(), req, nil, managementKey)
+	httpRes, err := t.client.DoPostRequest(api.Routes.ManagementTenantCreate(), req, nil, t.conf.ManagementKey)
 	if err != nil {
 		return "", err
 	}
@@ -40,7 +40,7 @@ func (t *tenant) createWithID(managementKey, id, name string, selfProvisioningDo
 	return res.ID, nil
 }
 
-func (t *tenant) Update(managementKey, id, name string, selfProvisioningDomains []string) error {
+func (t *tenant) Update(id, name string, selfProvisioningDomains []string) error {
 	if id == "" {
 		return errors.NewInvalidArgumentError("id")
 	}
@@ -48,16 +48,16 @@ func (t *tenant) Update(managementKey, id, name string, selfProvisioningDomains 
 		return errors.NewInvalidArgumentError("name")
 	}
 	req := makeCreateUpdateTenantRequest(id, name, selfProvisioningDomains)
-	_, err := t.client.DoPostRequest(api.Routes.ManagementTenantUpdate(), req, nil, managementKey)
+	_, err := t.client.DoPostRequest(api.Routes.ManagementTenantUpdate(), req, nil, t.conf.ManagementKey)
 	return err
 }
 
-func (t *tenant) Delete(managementKey, id string) error {
+func (t *tenant) Delete(id string) error {
 	if id == "" {
 		return errors.NewInvalidArgumentError("id")
 	}
 	req := map[string]any{"id": id}
-	_, err := t.client.DoPostRequest(api.Routes.ManagementTenantDelete(), req, nil, managementKey)
+	_, err := t.client.DoPostRequest(api.Routes.ManagementTenantDelete(), req, nil, t.conf.ManagementKey)
 	return err
 }
 

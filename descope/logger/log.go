@@ -48,7 +48,7 @@ func LogDebug(format string, args ...interface{}) {
 }
 
 func LogError(format string, err error, args ...interface{}) {
-	loggerInstance.doLog(LogDebugLevel, "%s [error: %s]", append([]interface{}{fmt.Sprintf(format, args...)}, err)...)
+	loggerInstance.doLog(LogInfoLevel, "%s [error: %s]", append([]interface{}{fmt.Sprintf(format, args...)}, err)...)
 }
 
 func LogInfo(format string, args ...interface{}) {

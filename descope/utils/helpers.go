@@ -15,10 +15,14 @@ func Unmarshal(bs []byte, obj interface{}) error {
 	return json.Unmarshal(bs, obj)
 }
 
-func GetPublicKeyEnvVariable() string {
-	return os.Getenv(EnvironmentVariablePublicKey)
-}
-
 func GetProjectIDEnvVariable() string {
 	return os.Getenv(EnvironmentVariableProjectID)
+}
+
+func GetManagementKeyEnvVariable() string {
+	return os.Getenv(EnvironmentVariableManagementKey)
+}
+
+func GetPublicKeyEnvVariable() string {
+	return os.Getenv(EnvironmentVariablePublicKey)
 }
