@@ -1,0 +1,39 @@
+{
+    "users": [
+        {
+            "id": "john@acmecorp.com",
+            "displayName": "John Foobar",
+            "email": "john@acmecorp.com"
+        },
+        {
+            "id": "stan@acmecorp.com",
+            "displayName": "Stan Acme",
+            "phone": "5551234",
+            "roles": [
+                "dev",
+                "tester"
+            ]
+        },
+        {
+            "id": "a@acmecorp.com",
+            "phone": "a@acmecorp.com"
+        },
+        {
+            "id": "anne@acmecorp.com",
+            "displayName": "Anne",
+            "phone": "182948",
+            "tenants": [
+                {
+                    "tenantId": "figma",
+                    "roles": [
+                        "dev",
+                        "tester"
+                    ]
+                },
+                {
+                    "tenantId": "adobe"
+                }
+            ]
+        }
+    ]
+}
