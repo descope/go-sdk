@@ -41,35 +41,38 @@ type MockDescopeAuthenticationOAuth struct {
 }
 
 type MockDescopeAuthenticationMagicLink struct {
-	AssertSignInMagicLink                       func(method DeliveryMethod, identifier, URI string, r *http.Request, loginOptions *LoginOptions)
-	AssertSignUpMagicLink                       func(method DeliveryMethod, identifier, URI string, user *User)
-	AssertSignUpOrInMagicLink                   func(method DeliveryMethod, identifier, URI string)
-	SignUpMagicLinkResponseError                error
-	SignInMagicLinkResponseError                error
-	SignUpOrInMagicLinkResponseError            error
-	AssertSignInMagicLinkCrossDevice            func(method DeliveryMethod, identifier, URI string, r *http.Request, loginOptions *LoginOptions)
-	AssertSignUpMagicLinkCrossDevice            func(method DeliveryMethod, identifier, URI string, user *User)
-	AssertSignUpOrInMagicLinkCrossDevice        func(method DeliveryMethod, identifier, URI string)
-	AssertGetMagicLinkSession                   func(pendingRef string)
-	SignUpMagicLinkCrossDeviceResponseError     error
-	SignInMagicLinkCrossDeviceResponseError     error
-	SignUpOrInMagicLinkCrossDeviceResponseError error
-	AssertVerifyMagicLink                       func(token string)
-	VerifyCodeResponseError                     error
-	VerifyCodeResponseInfo                      *AuthenticationInfo
-	MagicLinkPendingLinkCrossDeviceResponse     *MagicLinkResponse
-	AssertUpdateUserEmailMagicLink              func(identifier, email, URI string, request *http.Request)
-	UpdateUserEmailMagicLinkResponseError       error
-	AssertUpdateUserEmailMagicLinkCrossDevice   func(identifier, email, URI string, request *http.Request)
-	UpdateUserEmailMagicLinkCrossDeviceError    error
-	UpdateUserEmailMagicLinkCrossDeviceResponse *MagicLinkResponse
-	AssertUpdateUserPhoneMagicLink              func(method DeliveryMethod, identifier, email, URI string, request *http.Request)
-	UpdateUserPhoneMagicLinkResponseError       error
-	AssertUpdateUserPhoneMagicLinkCrossDevice   func(method DeliveryMethod, identifier, email, URI string, request *http.Request)
-	UpdateUserPhoneMagicLinkCrossDeviceError    error
-	UpdateUserPhoneMagicLinkCrossDeviceResponse *MagicLinkResponse
-	GetMagicLinkSessionResponseInfo             *AuthenticationInfo
-	GetMagicLinkSessionResponseError            error
+	AssertSignInMagicLink                 func(method DeliveryMethod, identifier, URI string, r *http.Request, loginOptions *LoginOptions)
+	AssertSignUpMagicLink                 func(method DeliveryMethod, identifier, URI string, user *User)
+	AssertSignUpOrInMagicLink             func(method DeliveryMethod, identifier, URI string)
+	SignUpMagicLinkResponseError          error
+	SignInMagicLinkResponseError          error
+	SignUpOrInMagicLinkResponseError      error
+	AssertVerifyMagicLink                 func(token string)
+	VerifyCodeResponseError               error
+	VerifyCodeResponseInfo                *AuthenticationInfo
+	AssertUpdateUserEmailMagicLink        func(identifier, email, URI string, request *http.Request)
+	UpdateUserEmailMagicLinkResponseError error
+	AssertUpdateUserPhoneMagicLink        func(method DeliveryMethod, identifier, email, URI string, request *http.Request)
+	UpdateUserPhoneMagicLinkResponseError error
+}
+
+type MockDescopeAuthenticationEnchantedLink struct {
+	AssertSignInEnchantedLink                 func(identifier, URI string, r *http.Request, loginOptions *LoginOptions)
+	AssertSignUpEnchantedLink                 func(identifier, URI string, user *User)
+	AssertSignUpOrInEnchantedLink             func(identifier, URI string)
+	SignUpEnchantedLinkResponseError          error
+	SignInEnchantedLinkResponseError          error
+	SignUpOrInEnchantedLinkResponseError      error
+	AssertGetEnchantedLinkSession             func(pendingRef string)
+	AssertVerifyEnchantedLink                 func(token string)
+	AssertVerifyEnchantedLinkResponseError    error
+	VerifyCodeResponseError                   error
+	EnchantedLinkPendingLinkResponse          *EnchantedLinkResponse
+	AssertUpdateUserEmailEnchantedLink        func(identifier, email, URI string, request *http.Request)
+	UpdateUserEmailEnchantedLinkResponseError error
+	UpdateUserEmailEnchantedLinkResponse      *EnchantedLinkResponse
+	GetEnchantedLinkSessionResponseInfo       *AuthenticationInfo
+	GetEnchantedLinkSessionResponseError      error
 }
 
 type MockDescopeAuthenticationTOTP struct {
@@ -105,6 +108,7 @@ type MockDescopeAuthenticationWebAuthn struct {
 type MockDescopeAuthentication struct {
 	MockDescopeAuthenticationOTP
 	MockDescopeAuthenticationMagicLink
+	MockDescopeAuthenticationEnchantedLink
 	MockDescopeAuthenticationSAML
 	MockDescopeAuthenticationOAuth
 	MockDescopeAuthenticationTOTP
@@ -145,6 +149,10 @@ func (m MockDescopeAuthentication) OTP() OTP {
 
 func (m MockDescopeAuthentication) MagicLink() MagicLink {
 	return m.MockDescopeAuthenticationMagicLink
+}
+
+func (m MockDescopeAuthentication) EnchantedLink() EnchantedLink {
+	return m.MockDescopeAuthenticationEnchantedLink
 }
 
 func (m MockDescopeAuthentication) WebAuthn() WebAuthn {
@@ -247,39 +255,11 @@ func (m MockDescopeAuthenticationMagicLink) SignUpOrIn(method DeliveryMethod, id
 	return m.SignUpOrInMagicLinkResponseError
 }
 
-func (m MockDescopeAuthenticationMagicLink) SignInCrossDevice(method DeliveryMethod, identifier, URI string, r *http.Request, loginOptions *LoginOptions) (*MagicLinkResponse, error) {
-	if m.AssertSignInMagicLinkCrossDevice != nil {
-		m.AssertSignInMagicLinkCrossDevice(method, identifier, URI, r, loginOptions)
-	}
-	return m.MagicLinkPendingLinkCrossDeviceResponse, m.SignInMagicLinkCrossDeviceResponseError
-}
-
-func (m MockDescopeAuthenticationMagicLink) SignUpCrossDevice(method DeliveryMethod, identifier, URI string, user *User) (*MagicLinkResponse, error) {
-	if m.AssertSignUpMagicLinkCrossDevice != nil {
-		m.AssertSignUpMagicLinkCrossDevice(method, identifier, URI, user)
-	}
-	return m.MagicLinkPendingLinkCrossDeviceResponse, m.SignUpMagicLinkCrossDeviceResponseError
-}
-
-func (m MockDescopeAuthenticationMagicLink) SignUpOrInCrossDevice(method DeliveryMethod, identifier string, URI string) (*MagicLinkResponse, error) {
-	if m.AssertSignUpOrInMagicLinkCrossDevice != nil {
-		m.AssertSignUpOrInMagicLinkCrossDevice(method, identifier, URI)
-	}
-	return m.MagicLinkPendingLinkCrossDeviceResponse, m.SignUpOrInMagicLinkCrossDeviceResponseError
-}
-
 func (m MockDescopeAuthenticationMagicLink) UpdateUserEmail(identifier, email, URI string, request *http.Request) error {
 	if m.AssertUpdateUserEmailMagicLink != nil {
 		m.AssertUpdateUserEmailMagicLink(identifier, email, URI, request)
 	}
 	return m.UpdateUserEmailMagicLinkResponseError
-}
-
-func (m MockDescopeAuthenticationMagicLink) UpdateUserEmailCrossDevice(identifier, email, URI string, request *http.Request) (*MagicLinkResponse, error) {
-	if m.AssertUpdateUserEmailMagicLinkCrossDevice != nil {
-		m.AssertUpdateUserEmailMagicLinkCrossDevice(identifier, email, URI, request)
-	}
-	return m.UpdateUserEmailMagicLinkCrossDeviceResponse, m.UpdateUserEmailMagicLinkCrossDeviceError
 }
 
 func (m MockDescopeAuthenticationMagicLink) UpdateUserPhone(method DeliveryMethod, identifier, email, URI string, request *http.Request) error {
@@ -289,18 +269,46 @@ func (m MockDescopeAuthenticationMagicLink) UpdateUserPhone(method DeliveryMetho
 	return m.UpdateUserPhoneMagicLinkResponseError
 }
 
-func (m MockDescopeAuthenticationMagicLink) UpdateUserPhoneCrossDevice(method DeliveryMethod, identifier, email, URI string, request *http.Request) (*MagicLinkResponse, error) {
-	if m.AssertUpdateUserPhoneMagicLinkCrossDevice != nil {
-		m.AssertUpdateUserPhoneMagicLinkCrossDevice(method, identifier, email, URI, request)
+func (m MockDescopeAuthenticationEnchantedLink) SignIn(identifier, URI string, r *http.Request, loginOptions *LoginOptions) (*EnchantedLinkResponse, error) {
+	if m.AssertSignInEnchantedLink != nil {
+		m.AssertSignInEnchantedLink(identifier, URI, r, loginOptions)
 	}
-	return m.UpdateUserPhoneMagicLinkCrossDeviceResponse, m.UpdateUserPhoneMagicLinkCrossDeviceError
+	return m.EnchantedLinkPendingLinkResponse, m.SignInEnchantedLinkResponseError
 }
 
-func (m MockDescopeAuthenticationMagicLink) GetSession(pendingRef string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
-	if m.AssertGetMagicLinkSession != nil {
-		m.AssertGetMagicLinkSession(pendingRef)
+func (m MockDescopeAuthenticationEnchantedLink) SignUp(identifier, URI string, user *User) (*EnchantedLinkResponse, error) {
+	if m.AssertSignUpEnchantedLink != nil {
+		m.AssertSignUpEnchantedLink(identifier, URI, user)
 	}
-	return m.GetMagicLinkSessionResponseInfo, m.GetMagicLinkSessionResponseError
+	return m.EnchantedLinkPendingLinkResponse, m.SignUpEnchantedLinkResponseError
+}
+
+func (m MockDescopeAuthenticationEnchantedLink) SignUpOrIn(identifier string, URI string) (*EnchantedLinkResponse, error) {
+	if m.AssertSignUpOrInEnchantedLink != nil {
+		m.AssertSignUpOrInEnchantedLink(identifier, URI)
+	}
+	return m.EnchantedLinkPendingLinkResponse, m.SignUpOrInEnchantedLinkResponseError
+}
+
+func (m MockDescopeAuthenticationEnchantedLink) UpdateUserEmail(identifier, email, URI string, request *http.Request) (*EnchantedLinkResponse, error) {
+	if m.AssertUpdateUserEmailEnchantedLink != nil {
+		m.AssertUpdateUserEmailEnchantedLink(identifier, email, URI, request)
+	}
+	return m.UpdateUserEmailEnchantedLinkResponse, m.UpdateUserEmailEnchantedLinkResponseError
+}
+
+func (m MockDescopeAuthenticationEnchantedLink) GetSession(pendingRef string, _ http.ResponseWriter) (*AuthenticationInfo, error) {
+	if m.AssertGetEnchantedLinkSession != nil {
+		m.AssertGetEnchantedLinkSession(pendingRef)
+	}
+	return m.GetEnchantedLinkSessionResponseInfo, m.GetEnchantedLinkSessionResponseError
+}
+
+func (m MockDescopeAuthenticationEnchantedLink) Verify(token string) error {
+	if m.AssertVerifyEnchantedLink != nil {
+		m.AssertVerifyEnchantedLink(token)
+	}
+	return m.AssertVerifyEnchantedLinkResponseError
 }
 
 func (m MockDescopeAuthenticationOAuth) Start(provider OAuthProvider, returnURL string, r *http.Request, loginOptions *LoginOptions, _ http.ResponseWriter) (string, error) {

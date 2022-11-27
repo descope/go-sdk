@@ -64,6 +64,11 @@ func main() {
 	router.HandleFunc("/magiclink/signup", handleMagicLinkSignUp).Methods(http.MethodGet)
 	router.HandleFunc("/magiclink/verify", handleMagicLinkVerify).Methods(http.MethodGet)
 
+	router.HandleFunc("/enchantedlink/signin", handleEnchantedLinkSignIn).Methods(http.MethodGet)
+	router.HandleFunc("/enchantedlink/signup", handleEnchantedLinkSignUp).Methods(http.MethodGet)
+	router.HandleFunc("/enchantedlink/verify", handleEnchantedLinkVerify).Methods(http.MethodGet)
+	router.HandleFunc("/enchantedlink/session", handleEnchantedLinkSession).Methods(http.MethodGet)
+
 	router.HandleFunc("/webauthn", func(w http.ResponseWriter, r *http.Request) {
 		file, _ := os.ReadFile("./demo.html")
 		w.WriteHeader(http.StatusOK)
@@ -134,6 +139,9 @@ func help(w http.ResponseWriter, r *http.Request) {
 	helpTxt += "Sign in of existing user with magiclink email go to: /magiclink/signin?email=\n\n"
 	helpTxt += "Sign in of existing user with magiclink sms go to: /magiclink/signin?sms=\n\n"
 	helpTxt += "Sign in of existing user with magiclink whatsapp go to: /magiclink/signin?whatsapp=\n\n"
+	helpTxt += "---------------------------------------------------------\n\n"
+	helpTxt += "Sign up with enchanted link go to: /enchantedlink/signup?email=\n\n"
+	helpTxt += "Sign in of existing user with enchanted link email go to: /enchantedlink/signin?email=\n\n"
 	helpTxt += "---------------------------------------------------------\n\n"
 	helpTxt += "Start a stepup flow go to: /stepup\n\n"
 	helpTxt += "---------------------------------------------------------\n\n"
@@ -253,6 +261,73 @@ func handleMagicLinkVerify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	authInfo, err := client.Auth.MagicLink().Verify(token, w)
+	if err != nil {
+		setError(w, err.Error())
+		return
+	}
+	sendSuccessAuthResponse(w, authInfo)
+}
+
+func handleEnchantedLinkSignIn(w http.ResponseWriter, r *http.Request) {
+	_, identifier := getMethodAndIdentifier(r)
+	enchantedRes, err := client.Auth.EnchantedLink().SignIn(identifier, verifyMagicLinkURI, nil, nil)
+	if err != nil {
+		setErrorWithSignUpIn(w, err.Error(), "", identifier)
+		return
+	}
+	helpTxt := "You should have received an enchanted link by email\n"
+	helpTxt += "Clink on the link labeled " + enchantedRes.Identifier + "\n"
+	helpTxt += "Once done, copy the following to the url, so you will get a session on your original page:\n"
+	helpTxt += "/enchantedlink/session?pendingRef=" + enchantedRes.PendingRef
+	setResponse(w, http.StatusOK, helpTxt)
+}
+
+func handleEnchantedLinkSignUp(w http.ResponseWriter, r *http.Request) {
+	_, identifier := getMethodAndIdentifier(r)
+	user := &auth.User{Name: "test"}
+	enchantedRes, err := client.Auth.EnchantedLink().SignUp(identifier, verifyMagicLinkURI, user)
+	if err != nil {
+		setErrorWithSignUpIn(w, err.Error(), "", identifier)
+		return
+	}
+	helpTxt := "You should have received an enchanted link by email\n"
+	helpTxt += "Clink on the link labeled " + enchantedRes.Identifier + "\n"
+	helpTxt += "Once done, copy the following to the url, so you will get a session on your original page:\n"
+	helpTxt += "/enchantedlink/session?pendingRef=" + enchantedRes.PendingRef
+	setResponse(w, http.StatusOK, helpTxt)
+}
+
+func handleEnchantedLinkVerify(w http.ResponseWriter, r *http.Request) {
+	tokens := r.URL.Query()["t"]
+	if len(tokens) == 0 {
+		setError(w, "token is empty")
+		return
+	}
+	token := tokens[0]
+	if token == "" {
+		setError(w, "token is empty")
+		return
+	}
+	err := client.Auth.EnchantedLink().Verify(token, nil)
+	if err != nil {
+		setError(w, err.Error())
+		return
+	}
+	setResponse(w, http.StatusOK, "Go back to original tab and follow the instructions")
+}
+
+func handleEnchantedLinkSession(w http.ResponseWriter, r *http.Request) {
+	tokens := r.URL.Query()["pendingRef"]
+	if len(tokens) == 0 {
+		setError(w, "token is empty")
+		return
+	}
+	token := tokens[0]
+	if token == "" {
+		setError(w, "token is empty")
+		return
+	}
+	authInfo, err := client.Auth.EnchantedLink().GetSession(tokens[0], w)
 	if err != nil {
 		setError(w, err.Error())
 		return

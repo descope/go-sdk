@@ -40,6 +40,11 @@ var (
 			signUpMagicLink:          "auth/magiclink/signup",
 			signUpOrInMagicLink:      "auth/magiclink/signup-in",
 			verifyMagicLink:          "auth/magiclink/verify",
+			signInEnchantedLink:      "auth/enchantedlink/signin",
+			signUpEnchantedLink:      "auth/enchantedlink/signup",
+			signUpOrInEnchantedLink:  "auth/enchantedlink/signup-in",
+			verifyEnchantedLink:      "auth/enchantedlink/verify",
+			getEnchantedLinkSession:  "auth/enchantedlink/pending-session",
 			oauthStart:               "auth/oauth/authorize",
 			exchangeTokenOAuth:       "auth/oauth/exchange",
 			samlStart:                "auth/saml/authorize",
@@ -51,7 +56,6 @@ var (
 			webauthnSignUpOrInStart:  "auth/webauthn/signup-in/start",
 			webauthnUpdateStart:      "auth/webauthn/update/start",
 			webauthnUpdateFinish:     "auth/webauthn/update/finish",
-			getMagicLinkSession:      "auth/magiclink/pending-session",
 			updateUserEmailMagicLink: "auth/magiclink/update/email",
 			updateUserEmailOTP:       "auth/otp/update/email",
 			updateUserPhoneMagicLink: "auth/magiclink/update/phone",
@@ -89,34 +93,39 @@ type endpoints struct {
 }
 
 type authEndpoints struct {
-	signInOTP                string
-	signUpOTP                string
-	signUpOrInOTP            string
-	signUpTOTP               string
-	updateTOTP               string
-	verifyTOTPCode           string
-	verifyCode               string
-	signInMagicLink          string
-	signUpMagicLink          string
-	signUpOrInMagicLink      string
-	verifyMagicLink          string
-	oauthStart               string
-	exchangeTokenOAuth       string
-	samlStart                string
-	exchangeTokenSAML        string
-	webauthnSignUpStart      string
-	webauthnSignUpFinish     string
-	webauthnSignInStart      string
-	webauthnSignInFinish     string
-	webauthnSignUpOrInStart  string
-	webauthnUpdateStart      string
-	webauthnUpdateFinish     string
-	getMagicLinkSession      string
-	updateUserEmailMagicLink string
-	updateUserEmailOTP       string
-	updateUserPhoneMagicLink string
-	updateUserPhoneOTP       string
-	exchangeAccessKey        string
+	signInOTP                    string
+	signUpOTP                    string
+	signUpOrInOTP                string
+	signUpTOTP                   string
+	updateTOTP                   string
+	verifyTOTPCode               string
+	verifyCode                   string
+	signInMagicLink              string
+	signUpMagicLink              string
+	signUpOrInMagicLink          string
+	verifyMagicLink              string
+	signInEnchantedLink          string
+	signUpEnchantedLink          string
+	signUpOrInEnchantedLink      string
+	verifyEnchantedLink          string
+	getEnchantedLinkSession      string
+	updateUserEmailEnchantedLink string
+	oauthStart                   string
+	exchangeTokenOAuth           string
+	samlStart                    string
+	exchangeTokenSAML            string
+	webauthnSignUpStart          string
+	webauthnSignUpFinish         string
+	webauthnSignInStart          string
+	webauthnSignInFinish         string
+	webauthnSignUpOrInStart      string
+	webauthnUpdateStart          string
+	webauthnUpdateFinish         string
+	updateUserEmailMagicLink     string
+	updateUserEmailOTP           string
+	updateUserPhoneMagicLink     string
+	updateUserPhoneOTP           string
+	exchangeAccessKey            string
 }
 
 type mgmtEndpoints struct {
@@ -164,6 +173,25 @@ func (e *endpoints) SignUpOrInMagicLink() string {
 func (e *endpoints) VerifyMagicLink() string {
 	return path.Join(e.version, e.auth.verifyMagicLink)
 }
+
+func (e *endpoints) SignInEnchantedLink() string {
+	return path.Join(e.version, e.auth.signInEnchantedLink)
+}
+func (e *endpoints) SignUpEnchantedLink() string {
+	return path.Join(e.version, e.auth.signUpEnchantedLink)
+}
+func (e *endpoints) SignUpOrInEnchantedLink() string {
+	return path.Join(e.version, e.auth.signUpOrInEnchantedLink)
+}
+func (e *endpoints) UpdateUserEmailEnchantedlink() string {
+	return path.Join(e.version, e.auth.updateUserEmailEnchantedLink)
+}
+func (e *endpoints) VerifyEnchantedLink() string {
+	return path.Join(e.version, e.auth.verifyEnchantedLink)
+}
+func (e *endpoints) GetEnchantedLinkSession() string {
+	return path.Join(e.version, e.auth.getEnchantedLinkSession)
+}
 func (e *endpoints) OAuthStart() string {
 	return path.Join(e.version, e.auth.oauthStart)
 }
@@ -196,9 +224,6 @@ func (e *endpoints) WebAuthnUpdateUserDeviceStart() string {
 }
 func (e *endpoints) WebAuthnUpdateUserDeviceFinish() string {
 	return path.Join(e.version, e.auth.webauthnUpdateFinish)
-}
-func (e *endpoints) GetMagicLinkSession() string {
-	return path.Join(e.version, e.auth.getMagicLinkSession)
 }
 func (e *endpoints) Logout() string {
 	return path.Join(e.version, e.logout)

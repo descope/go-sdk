@@ -13,7 +13,7 @@ var (
 	MissingProviderError       = NewValidationError("missing JWT provider implementation, use a built-in implementation or custom")
 	InvalidPendingRefError     = NewValidationError("Invalid pending reference")
 	InvalidAccessKeyResponse   = NewValidationError("invalid access key response received")
-	MagicLinkUnauthorized      = NewValidationError("pending session token")
+	EnchantedLinkUnauthorized  = NewValidationError("pending session token")
 	UnauthorizedError          = NewError(BadRequestErrorCode, "unauthorized access")
 	MissingRequestError        = NewValidationError("nil request provided")
 	MissingResponseWriterError = NewValidationError("nil response writer provided")

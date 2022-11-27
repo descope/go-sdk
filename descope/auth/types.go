@@ -133,8 +133,9 @@ type JWTResponse struct {
 	FirstSeen        bool          `json:"firstSeen,omitempty"`
 }
 
-type MagicLinkResponse struct {
-	PendingRef string `json:"pendingRef,omitempty"` // Pending referral code used to poll magic link authentication status
+type EnchantedLinkResponse struct {
+	PendingRef string `json:"pendingRef,omitempty"` // Pending referral code used to poll enchanted link authentication status
+	Identifier string `json:"identifier,omitempty"` // Identifier, on which link the user should click
 }
 
 func NewAuthenticationInfo(jRes *JWTResponse, token *Token) *AuthenticationInfo {
