@@ -22,7 +22,7 @@ func prepare() (err error) {
 		// generate a management key in the Company section of the admin console: https://app.descope.com/settings/company
 		return errors.New("the DESCOPE_MANAGEMENT_KEY environment variable must be set")
 	}
-	descopeClient, err = descope.NewDescopeClientWithConfig(&descope.Config{DescopeBaseURL: "https://api.sandbox.descope.com"})
+	descopeClient, err = descope.NewDescopeClient()
 	return err
 }
 
