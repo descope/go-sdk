@@ -308,7 +308,7 @@ func handleEnchantedLinkVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "token is empty")
 		return
 	}
-	err := client.Auth.EnchantedLink().Verify(token, nil)
+	err := client.Auth.EnchantedLink().Verify(token)
 	if err != nil {
 		setError(w, err.Error())
 		return
