@@ -52,7 +52,7 @@ func main() {
 	r.GET("/otp/verify", handleOTPVerify)
 
 	authorized := r.Group("/")
-	authorized.Use(descopegin.AuthneticationMiddleware(client.Auth, nil, nil))
+	authorized.Use(descopegin.AuthenticationMiddleware(client.Auth, nil, nil))
 	authorized.GET("/private", handleIsHealthy)
 	r.RunTLS(fmt.Sprintf(":%s", port), TLSCertPath, TLSkeyPath)
 }
