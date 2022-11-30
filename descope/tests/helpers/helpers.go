@@ -24,6 +24,15 @@ func ReadBody(r *http.Request, m interface{}) (err error) {
 	return
 }
 
+func ReadParams(r *http.Request) (params map[string]string) {
+	params = map[string]string{}
+	values := r.URL.Query()
+	for key, val := range values {
+		params[key] = val[0]
+	}
+	return
+}
+
 func DoOk(checks func(*http.Request)) mocks.Do {
 	return func(r *http.Request) (*http.Response, error) {
 		if checks != nil {

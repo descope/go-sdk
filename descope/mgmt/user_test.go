@@ -77,3 +77,63 @@ func TestUserDeleteError(t *testing.T) {
 	err := mgmt.User().Delete("")
 	require.Error(t, err)
 }
+
+func TestUserLoadSuccess(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"email": "a@b.c",
+		}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		params := helpers.ReadParams(r)
+		require.Equal(t, "abc", params["identifier"])
+	}, response))
+	res, err := mgmt.User().Load("abc")
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, "a@b.c", res.Email)
+}
+
+func TestUserLoadBadInput(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.User().Load("")
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserLoadError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := mgmt.User().Load("abc")
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestSearchAllUsersSuccess(t *testing.T) {
+	response := map[string]any{
+		"users": []map[string]any{{
+			"email": "a@b.c",
+		}},
+	}
+	tenantIDs := []string{"t1"}
+	roleNames := []string{"role1"}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.EqualValues(t, tenantIDs[0], req["tenantIds"].([]any)[0])
+		require.EqualValues(t, roleNames[0], req["roleNames"].([]any)[0])
+		require.EqualValues(t, 100, req["limit"])
+	}, response))
+	res, err := mgmt.User().SearchAll(tenantIDs, roleNames, 100)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Len(t, res, 1)
+	require.Equal(t, "a@b.c", res[0].Email)
+}
+
+func TestSearchAllUsersError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := mgmt.User().SearchAll(nil, nil, 100)
+	require.Error(t, err)
+	require.Nil(t, res)
+}

@@ -79,8 +79,7 @@ type DescopeClient struct {
 	// environment variable. Management keys can be generated in the Descope console.
 	Management mgmt.Management
 
-	config    *Config
-	apiClient *api.Client
+	config *Config
 }
 
 // Creates a new DescopeClient object. The value for the Descope projectID must be set
