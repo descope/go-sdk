@@ -70,6 +70,8 @@ var (
 			userCreate:     "mgmt/user/create",
 			userUpdate:     "mgmt/user/update",
 			userDelete:     "mgmt/user/delete",
+			userLoad:       "mgmt/user",
+			userSearchAll:  "mgmt/user/search",
 			ssoConfigure:   "mgmt/sso/settings",
 			ssoMetadata:    "mgmt/sso/metadata",
 			ssoRoleMapping: "mgmt/sso/roles",
@@ -136,6 +138,8 @@ type mgmtEndpoints struct {
 	userCreate     string
 	userUpdate     string
 	userDelete     string
+	userLoad       string
+	userSearchAll  string
 	ssoConfigure   string
 	ssoMetadata    string
 	ssoRoleMapping string
@@ -284,6 +288,14 @@ func (e *endpoints) ManagementUserUpdate() string {
 
 func (e *endpoints) ManagementUserDelete() string {
 	return path.Join(e.version, e.mgmt.userDelete)
+}
+
+func (e *endpoints) ManagementUserLoad() string {
+	return path.Join(e.version, e.mgmt.userLoad)
+}
+
+func (e *endpoints) ManagementUserSearchAll() string {
+	return path.Join(e.version, e.mgmt.userSearchAll)
 }
 
 func (e *endpoints) ManagementSSOConfigure() string {
