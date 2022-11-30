@@ -78,7 +78,7 @@ type User interface {
 	//
 	// The roleNames parameter is an optional array of role names to filter by.
 	//
-	// The limit parameter limits the amount of returned users. Leave at 0 to return the
+	// The limit parameter limits the number of returned users. Leave at 0 to return the
 	// default amount.
 	SearchAll(tenantIDs, roleNames []string, limit int32) ([]*auth.UserResponse, error)
 }
