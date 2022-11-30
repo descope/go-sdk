@@ -1,5 +1,7 @@
 package mgmt
 
+import "github.com/descope/go-sdk/descope/auth"
+
 // Provides functions for managing tenants in a project.
 type Tenant interface {
 	// Create a new tenant with the given name.
@@ -64,6 +66,21 @@ type User interface {
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	Delete(identifier string) error
+
+	// Load an existing user
+	//
+	// The identifier is required and the user will be fetched according to it.
+	Load(identifier string) (*auth.UserResponse, error)
+
+	// Search all users according to given filters
+	//
+	// The tenantIDs parameter is an optional array of tenant IDs to filter by.
+	//
+	// The roleNames parameter is an optional array of role names to filter by.
+	//
+	// The limit parameter limits the amount of returned users. Leave at 0 to return the
+	// default amount.
+	SearchAll(tenantIDs, roleNames []string, limit int32) ([]*auth.UserResponse, error)
 }
 
 // Represents a mapping between a set of groups of users and a role that will be assigned to them.

@@ -59,6 +59,24 @@ func userDelete(args []string) error {
 	return descopeClient.Management.User().Delete(args[0])
 }
 
+func userLoad(args []string) error {
+	res, err := descopeClient.Management.User().Load(args[0])
+	if err == nil {
+		fmt.Fprintln(os.Stdout, "Found:", res)
+	}
+	return err
+}
+
+func userSearchAll(args []string) error {
+	res, err := descopeClient.Management.User().SearchAll(nil, nil, 0)
+	if err == nil {
+		for _, u := range res {
+			fmt.Fprintln(os.Stdout, "Found:", u)
+		}
+	}
+	return err
+}
+
 func tenantCreate(args []string) error {
 	if flags.Identifier != "" {
 		return descopeClient.Management.Tenant().CreateWithID(flags.Identifier, args[0], flags.Domains)
@@ -142,6 +160,16 @@ func main() {
 
 	addCommand(tenantDelete, "tenant-delete <id>", "Delete an existing tenant", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(userLoad, "user-load <id>", "Load an existing user", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(1)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(userSearchAll, "user-search-all", "Search existing users", func(cmd *cobra.Command) {
+		// Currently not accepting any filters
 		cmd.DisableFlagsInUseLine = true
 	})
 
