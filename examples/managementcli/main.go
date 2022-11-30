@@ -62,7 +62,7 @@ func userDelete(args []string) error {
 func userLoad(args []string) error {
 	res, err := descopeClient.Management.User().Load(args[0])
 	if err == nil {
-		fmt.Fprintln(os.Stdout, "Found:", res)
+		fmt.Println("Found:", res)
 	}
 	return err
 }
