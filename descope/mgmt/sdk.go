@@ -89,6 +89,14 @@ type RoleMapping struct {
 	Role   string
 }
 
+// Represents a mapping between Descope and IDP user attributes
+type AttributeMapping struct {
+	Name        string `json:"name,omitempty"`
+	Email       string `json:"email,omitempty"`
+	PhoneNumber string `json:"phoneNumber,omitempty"`
+	Group       string `json:"group,omitempty"`
+}
+
 // Provides functions for configuring SSO for a project.
 type SSO interface {
 	// Configure SSO setting for a tenant manually.
@@ -100,7 +108,10 @@ type SSO interface {
 	// Configure SSO setting for a tenant by fetching SSO settings from an IDP metadata URL.
 	ConfigureMetadata(tenantID string, enabled bool, idpMetadataURL string) error
 
-	// Configure SSO role mapping from the IDP groups to the Descope roles.
+	// Configure SSO IDP mapping including groups to the Descope roles and user attributes.
+	ConfigureMapping(tenantID string, roleMappings []RoleMapping, attributeMapping *AttributeMapping) error
+
+	// Deprecated - Use ConfigureMapping instead
 	ConfigureRoleMapping(tenantID string, roleMappings []RoleMapping) error
 }
 

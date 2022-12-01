@@ -64,16 +64,19 @@ var (
 			exchangeAccessKey:            "auth/accesskey/exchange",
 		},
 		mgmt: mgmtEndpoints{
-			tenantCreate:   "mgmt/tenant/create",
-			tenantUpdate:   "mgmt/tenant/update",
-			tenantDelete:   "mgmt/tenant/delete",
-			userCreate:     "mgmt/user/create",
-			userUpdate:     "mgmt/user/update",
-			userDelete:     "mgmt/user/delete",
-			userLoad:       "mgmt/user",
-			userSearchAll:  "mgmt/user/search",
-			ssoConfigure:   "mgmt/sso/settings",
-			ssoMetadata:    "mgmt/sso/metadata",
+			tenantCreate:  "mgmt/tenant/create",
+			tenantUpdate:  "mgmt/tenant/update",
+			tenantDelete:  "mgmt/tenant/delete",
+			userCreate:    "mgmt/user/create",
+			userUpdate:    "mgmt/user/update",
+			userDelete:    "mgmt/user/delete",
+			userLoad:      "mgmt/user",
+			userSearchAll: "mgmt/user/search",
+			ssoConfigure:  "mgmt/sso/settings",
+			ssoMetadata:   "mgmt/sso/metadata",
+			ssoMapping:    "mgmt/sso/mapping",
+
+			// Deprecated
 			ssoRoleMapping: "mgmt/sso/roles",
 		},
 		logout:    "auth/logout",
@@ -132,16 +135,19 @@ type authEndpoints struct {
 }
 
 type mgmtEndpoints struct {
-	tenantCreate   string
-	tenantUpdate   string
-	tenantDelete   string
-	userCreate     string
-	userUpdate     string
-	userDelete     string
-	userLoad       string
-	userSearchAll  string
-	ssoConfigure   string
-	ssoMetadata    string
+	tenantCreate  string
+	tenantUpdate  string
+	tenantDelete  string
+	userCreate    string
+	userUpdate    string
+	userDelete    string
+	userLoad      string
+	userSearchAll string
+	ssoConfigure  string
+	ssoMetadata   string
+	ssoMapping    string
+
+	// Deprecated
 	ssoRoleMapping string
 }
 
@@ -305,6 +311,12 @@ func (e *endpoints) ManagementSSOConfigure() string {
 func (e *endpoints) ManagementSSOMetadata() string {
 	return path.Join(e.version, e.mgmt.ssoMetadata)
 }
+
+func (e *endpoints) ManagementSSOMapping() string {
+	return path.Join(e.version, e.mgmt.ssoMapping)
+}
+
+// DEPRECATED
 
 func (e *endpoints) ManagementSSORoleMapping() string {
 	return path.Join(e.version, e.mgmt.ssoRoleMapping)

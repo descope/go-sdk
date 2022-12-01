@@ -57,6 +57,40 @@ func TestSSOConfigureMetadataError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestSSOConfigureMappingSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["tenantId"])
+		roleMappings := req["roleMappings"].([]any)
+		require.Len(t, roleMappings, 2)
+		for i := range roleMappings {
+			mapping := roleMappings[i].(map[string]any)
+			groups := mapping["groups"].([]any)
+			require.Len(t, groups, 1)
+			if i == 0 {
+				require.Equal(t, "x", mapping["roleName"])
+				require.Equal(t, "foo", groups[0])
+			} else {
+				require.Equal(t, "y", mapping["roleName"])
+				require.Equal(t, "bar", groups[0])
+			}
+		}
+		require.Equal(t, "INAME", req["attributeMapping"].(map[string]any)["name"])
+	}))
+	err := mgmt.SSO().ConfigureMapping("abc", []RoleMapping{{Groups: []string{"foo"}, Role: "x"}, {Groups: []string{"bar"}, Role: "y"}}, &AttributeMapping{Name: "INAME"})
+	require.NoError(t, err)
+}
+
+func TestSSOConfigureMappingError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.SSO().ConfigureMapping("", nil, nil)
+	require.Error(t, err)
+}
+
+// DEPRECATED
+
 func TestSSOConfigureRoleMappingSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
