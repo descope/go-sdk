@@ -110,9 +110,6 @@ type SSO interface {
 
 	// Configure SSO IDP mapping including groups to the Descope roles and user attributes.
 	ConfigureMapping(tenantID string, roleMappings []RoleMapping, attributeMapping *AttributeMapping) error
-
-	// Deprecated - Use ConfigureMapping instead
-	ConfigureRoleMapping(tenantID string, roleMappings []RoleMapping) error
 }
 
 // Provides various APIs for managing a Descope project programmatically. A management key must

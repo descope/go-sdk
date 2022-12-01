@@ -75,9 +75,6 @@ var (
 			ssoConfigure:  "mgmt/sso/settings",
 			ssoMetadata:   "mgmt/sso/metadata",
 			ssoMapping:    "mgmt/sso/mapping",
-
-			// Deprecated
-			ssoRoleMapping: "mgmt/sso/roles",
 		},
 		logout:    "auth/logout",
 		logoutAll: "auth/logoutall",
@@ -146,9 +143,6 @@ type mgmtEndpoints struct {
 	ssoConfigure  string
 	ssoMetadata   string
 	ssoMapping    string
-
-	// Deprecated
-	ssoRoleMapping string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -314,12 +308,6 @@ func (e *endpoints) ManagementSSOMetadata() string {
 
 func (e *endpoints) ManagementSSOMapping() string {
 	return path.Join(e.version, e.mgmt.ssoMapping)
-}
-
-// DEPRECATED
-
-func (e *endpoints) ManagementSSORoleMapping() string {
-	return path.Join(e.version, e.mgmt.ssoRoleMapping)
 }
 
 type sdkInfo struct {

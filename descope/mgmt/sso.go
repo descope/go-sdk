@@ -69,24 +69,3 @@ func (s *sso) ConfigureMapping(tenantID string, roleMappings []RoleMapping, attr
 	_, err := s.client.DoPostRequest(api.Routes.ManagementSSOMapping(), req, nil, s.conf.ManagementKey)
 	return err
 }
-
-// DEPRECATED
-
-func (s *sso) ConfigureRoleMapping(tenantID string, roleMappings []RoleMapping) error {
-	if tenantID == "" {
-		return errors.NewInvalidArgumentError("tenantID")
-	}
-	mappings := []map[string]any{}
-	for i := range roleMappings {
-		mappings = append(mappings, map[string]any{
-			"groups":   roleMappings[i].Groups,
-			"roleName": roleMappings[i].Role,
-		})
-	}
-	req := map[string]any{
-		"tenantId":    tenantID,
-		"roleMapping": mappings,
-	}
-	_, err := s.client.DoPostRequest(api.Routes.ManagementSSORoleMapping(), req, nil, s.conf.ManagementKey)
-	return err
-}
