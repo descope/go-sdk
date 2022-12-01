@@ -75,7 +75,7 @@ var (
 			ssoConfigure:   "mgmt/sso/settings",
 			ssoMetadata:    "mgmt/sso/metadata",
 			ssoRoleMapping: "mgmt/sso/roles",
-			updateJWT:      "/mgmt/jwt/update",
+			updateJWT:      "mgmt/jwt/update",
 		},
 		logout:    "auth/logout",
 		logoutAll: "auth/logoutall",
