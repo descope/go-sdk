@@ -75,6 +75,7 @@ var (
 			ssoConfigure:   "mgmt/sso/settings",
 			ssoMetadata:    "mgmt/sso/metadata",
 			ssoRoleMapping: "mgmt/sso/roles",
+			updateJWT:      "mgmt/jwt/update",
 		},
 		logout:    "auth/logout",
 		logoutAll: "auth/logoutall",
@@ -143,6 +144,7 @@ type mgmtEndpoints struct {
 	ssoConfigure   string
 	ssoMetadata    string
 	ssoRoleMapping string
+	updateJWT      string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -308,6 +310,10 @@ func (e *endpoints) ManagementSSOMetadata() string {
 
 func (e *endpoints) ManagementSSORoleMapping() string {
 	return path.Join(e.version, e.mgmt.ssoRoleMapping)
+}
+
+func (e *endpoints) ManagementUpdateJWT() string {
+	return path.Join(e.version, e.mgmt.updateJWT)
 }
 
 type sdkInfo struct {
