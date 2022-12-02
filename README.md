@@ -234,7 +234,7 @@ assert.ErrorIs(t, err, errors.BadRequest)
 ``` 
 In this example we mocked the Descope Authentication to change the response of the ValidateSession.
 
-In addition, you can use our mocks package to simple test your app without the need of going out to Descope. By that, you can simply mock responses and errors and have assertion to the incoming data. You can find all mocks [here](https://github.com/descope/go-sdk/blob/main/descope/tests/mocks).
+In addition, you can use our mocks package for testing your app without the need of going out to Descope services. By that, you can simply mock responses and errors and have assertion for the incoming data of each SDK method. You can find all mocks [here](https://github.com/descope/go-sdk/blob/main/descope/tests/mocks).
 
 ## License
 
