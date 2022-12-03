@@ -61,10 +61,10 @@ type MockMagicLink struct {
 	VerifyError    error
 	VerifyResponse *auth.AuthenticationInfo
 
-	UpdateUserEmailAssert func(identifier, email, URI string, request *http.Request)
+	UpdateUserEmailAssert func(identifier, email, URI string, r *http.Request)
 	UpdateUserEmailError  error
 
-	UpdateUserPhoneAssert func(method auth.DeliveryMethod, identifier, phone, URI string, request *http.Request)
+	UpdateUserPhoneAssert func(method auth.DeliveryMethod, identifier, phone, URI string, r *http.Request)
 	UpdateUserPhoneError  error
 }
 
@@ -96,16 +96,16 @@ func (m *MockMagicLink) Verify(token string, w http.ResponseWriter) (*auth.Authe
 	return m.VerifyResponse, m.VerifyError
 }
 
-func (m *MockMagicLink) UpdateUserEmail(identifier, email, URI string, request *http.Request) error {
+func (m *MockMagicLink) UpdateUserEmail(identifier, email, URI string, r *http.Request) error {
 	if m.UpdateUserEmailAssert != nil {
-		m.UpdateUserEmailAssert(identifier, email, URI, request)
+		m.UpdateUserEmailAssert(identifier, email, URI, r)
 	}
 	return m.UpdateUserEmailError
 }
 
-func (m *MockMagicLink) UpdateUserPhone(method auth.DeliveryMethod, identifier, phone, URI string, request *http.Request) error {
+func (m *MockMagicLink) UpdateUserPhone(method auth.DeliveryMethod, identifier, phone, URI string, r *http.Request) error {
 	if m.UpdateUserPhoneAssert != nil {
-		m.UpdateUserPhoneAssert(method, identifier, phone, URI, request)
+		m.UpdateUserPhoneAssert(method, identifier, phone, URI, r)
 	}
 	return m.UpdateUserPhoneError
 }
@@ -132,11 +132,11 @@ type MockEnchantedLink struct {
 	VerifyAssert func(token string) (*auth.AuthenticationInfo, error)
 	VerifyError  error
 
-	UpdateUserEmailAssert   func(identifier, email, URI string, request *http.Request)
+	UpdateUserEmailAssert   func(identifier, email, URI string, r *http.Request)
 	UpdateUserEmailError    error
 	UpdateUserEmailResponse *auth.EnchantedLinkResponse
 
-	UpdateUserPhoneAssert func(method auth.DeliveryMethod, identifier, phone, URI string, request *http.Request)
+	UpdateUserPhoneAssert func(method auth.DeliveryMethod, identifier, phone, URI string, r *http.Request)
 	UpdateUserPhoneError  error
 }
 
@@ -175,9 +175,9 @@ func (m *MockEnchantedLink) Verify(token string) error {
 	return m.VerifyError
 }
 
-func (m *MockEnchantedLink) UpdateUserEmail(identifier, email, URI string, request *http.Request) (*auth.EnchantedLinkResponse, error) {
+func (m *MockEnchantedLink) UpdateUserEmail(identifier, email, URI string, r *http.Request) (*auth.EnchantedLinkResponse, error) {
 	if m.UpdateUserEmailAssert != nil {
-		m.UpdateUserEmailAssert(identifier, email, URI, request)
+		m.UpdateUserEmailAssert(identifier, email, URI, r)
 	}
 	return m.UpdateUserEmailResponse, m.UpdateUserEmailError
 }
@@ -198,10 +198,10 @@ type MockOTP struct {
 	VerifyCodeError    error
 	VerifyCodeResponse *auth.AuthenticationInfo
 
-	UpdateUserEmailAssert func(identifier, email string, request *http.Request)
+	UpdateUserEmailAssert func(identifier, email string, r *http.Request)
 	UpdateUserEmailError  error
 
-	UpdateUserPhoneAssert func(method auth.DeliveryMethod, identifier, phone string, request *http.Request)
+	UpdateUserPhoneAssert func(method auth.DeliveryMethod, identifier, phone string, r *http.Request)
 	UpdateUserPhoneError  error
 }
 
@@ -233,16 +233,16 @@ func (m *MockOTP) VerifyCode(method auth.DeliveryMethod, identifier string, code
 	return m.VerifyCodeResponse, m.VerifyCodeError
 }
 
-func (m *MockOTP) UpdateUserEmail(identifier, email string, request *http.Request) error {
+func (m *MockOTP) UpdateUserEmail(identifier, email string, r *http.Request) error {
 	if m.UpdateUserEmailAssert != nil {
-		m.UpdateUserEmailAssert(identifier, email, request)
+		m.UpdateUserEmailAssert(identifier, email, r)
 	}
 	return m.UpdateUserEmailError
 }
 
-func (m *MockOTP) UpdateUserPhone(method auth.DeliveryMethod, identifier, phone string, request *http.Request) error {
+func (m *MockOTP) UpdateUserPhone(method auth.DeliveryMethod, identifier, phone string, r *http.Request) error {
 	if m.UpdateUserPhoneAssert != nil {
-		m.UpdateUserPhoneAssert(method, identifier, phone, request)
+		m.UpdateUserPhoneAssert(method, identifier, phone, r)
 	}
 	return m.UpdateUserPhoneError
 }
@@ -258,7 +258,7 @@ type MockTOTP struct {
 	SignInCodeError    error
 	SignInCodeResponse *auth.AuthenticationInfo
 
-	UpdateUserAssert   func(identifier string, request *http.Request)
+	UpdateUserAssert   func(identifier string, r *http.Request)
 	UpdateUserError    error
 	UpdateUserResponse *auth.TOTPResponse
 }
@@ -277,9 +277,9 @@ func (m *MockTOTP) SignInCode(identifier string, code string, r *http.Request, l
 	return m.SignInCodeResponse, m.SignInCodeError
 }
 
-func (m *MockTOTP) UpdateUser(identifier string, request *http.Request) (*auth.TOTPResponse, error) {
+func (m *MockTOTP) UpdateUser(identifier string, r *http.Request) (*auth.TOTPResponse, error) {
 	if m.UpdateUserAssert != nil {
-		m.UpdateUserAssert(identifier, request)
+		m.UpdateUserAssert(identifier, r)
 	}
 	return m.UpdateUserResponse, m.UpdateUserError
 }
@@ -359,7 +359,7 @@ type MockWebAuthn struct {
 	SignUpOrInStartError    error
 	SignUpOrInStartResponse *auth.WebAuthnTransactionResponse
 
-	UpdateUserDeviceStartAssert   func(identifier string, origin string, request *http.Request)
+	UpdateUserDeviceStartAssert   func(identifier string, origin string, r *http.Request)
 	UpdateUserDeviceStartError    error
 	UpdateUserDeviceStartResponse *auth.WebAuthnTransactionResponse
 
@@ -402,9 +402,9 @@ func (m *MockWebAuthn) SignUpOrInStart(identifier string, origin string) (*auth.
 	return m.SignUpOrInStartResponse, m.SignUpOrInStartError
 }
 
-func (m *MockWebAuthn) UpdateUserDeviceStart(identifier string, origin string, request *http.Request) (*auth.WebAuthnTransactionResponse, error) {
+func (m *MockWebAuthn) UpdateUserDeviceStart(identifier string, origin string, r *http.Request) (*auth.WebAuthnTransactionResponse, error) {
 	if m.UpdateUserDeviceStartAssert != nil {
-		m.UpdateUserDeviceStartAssert(identifier, origin, request)
+		m.UpdateUserDeviceStartAssert(identifier, origin, r)
 	}
 	return m.UpdateUserDeviceStartResponse, m.UpdateUserDeviceStartError
 }
@@ -419,25 +419,25 @@ func (m *MockWebAuthn) UpdateUserDeviceFinish(finishRequest *auth.WebAuthnFinish
 // Mock Session
 
 type MockSession struct {
-	ValidateSessionAssert          func(request *http.Request, w http.ResponseWriter)
+	ValidateSessionAssert          func(r *http.Request, w http.ResponseWriter)
 	ValidateSessionError           error
 	ValidateSessionResponse        *auth.Token
-	ValidateSessionResponseSuccess bool
+	ValidateSessionResponseFailure bool
 
 	ValidateSessionTokensAssert          func(sessionToken, refreshToken string)
 	ValidateSessionTokensError           error
 	ValidateSessionTokensResponse        *auth.Token
-	ValidateSessionTokensResponseSuccess bool
+	ValidateSessionTokensResponseFailure bool
 
-	RefreshSessionAssert          func(request *http.Request, w http.ResponseWriter)
+	RefreshSessionAssert          func(r *http.Request, w http.ResponseWriter)
 	RefreshSessionError           error
 	RefreshSessionResponse        *auth.Token
-	RefreshSessionResponseSuccess bool
+	RefreshSessionResponseFailure bool
 
 	ExchangeAccessKeyAssert          func(accessKey string)
 	ExchangeAccessKeyError           error
 	ExchangeAccessKeyResponse        *auth.Token
-	ExchangeAccessKeyResponseSuccess bool
+	ExchangeAccessKeyResponseFailure bool
 
 	ValidatePermissionsAssert   func(token *auth.Token, permissions []string)
 	ValidatePermissionsResponse bool
@@ -451,43 +451,43 @@ type MockSession struct {
 	ValidateTenantRolesAssert   func(token *auth.Token, tenant string, roles []string)
 	ValidateTenantRolesResponse bool
 
-	LogoutAssert func(request *http.Request, w http.ResponseWriter)
+	LogoutAssert func(r *http.Request, w http.ResponseWriter)
 	LogoutError  error
 
-	LogoutAllAssert func(request *http.Request, w http.ResponseWriter)
+	LogoutAllAssert func(r *http.Request, w http.ResponseWriter)
 	LogoutAllError  error
 
-	MeAssert   func(request *http.Request)
+	MeAssert   func(r *http.Request)
 	MeError    error
 	MeResponse *auth.UserResponse
 }
 
-func (m MockSession) ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *auth.Token, error) {
+func (m MockSession) ValidateSession(r *http.Request, w http.ResponseWriter) (bool, *auth.Token, error) {
 	if m.ValidateSessionAssert != nil {
-		m.ValidateSessionAssert(request, w)
+		m.ValidateSessionAssert(r, w)
 	}
-	return m.ValidateSessionResponseSuccess, m.ValidateSessionResponse, m.ValidateSessionError
+	return !m.ValidateSessionResponseFailure, m.ValidateSessionResponse, m.ValidateSessionError
 }
 
 func (m *MockSession) ValidateSessionTokens(sessionToken, refreshToken string) (bool, *auth.Token, error) {
 	if m.ValidateSessionTokensAssert != nil {
 		m.ValidateSessionTokensAssert(sessionToken, refreshToken)
 	}
-	return m.ValidateSessionTokensResponseSuccess, m.ValidateSessionTokensResponse, m.ValidateSessionTokensError
+	return !m.ValidateSessionTokensResponseFailure, m.ValidateSessionTokensResponse, m.ValidateSessionTokensError
 }
 
-func (m *MockSession) RefreshSession(request *http.Request, w http.ResponseWriter) (bool, *auth.Token, error) {
+func (m *MockSession) RefreshSession(r *http.Request, w http.ResponseWriter) (bool, *auth.Token, error) {
 	if m.RefreshSessionAssert != nil {
-		m.RefreshSessionAssert(request, w)
+		m.RefreshSessionAssert(r, w)
 	}
-	return m.RefreshSessionResponseSuccess, m.RefreshSessionResponse, m.RefreshSessionError
+	return !m.RefreshSessionResponseFailure, m.RefreshSessionResponse, m.RefreshSessionError
 }
 
 func (m *MockSession) ExchangeAccessKey(accessKey string) (bool, *auth.Token, error) {
 	if m.ExchangeAccessKeyAssert != nil {
 		m.ExchangeAccessKeyAssert(accessKey)
 	}
-	return m.ExchangeAccessKeyResponseSuccess, m.ExchangeAccessKeyResponse, m.ExchangeAccessKeyError
+	return !m.ExchangeAccessKeyResponseFailure, m.ExchangeAccessKeyResponse, m.ExchangeAccessKeyError
 }
 
 func (m *MockSession) ValidatePermissions(token *auth.Token, permissions []string) bool {
@@ -518,23 +518,23 @@ func (m *MockSession) ValidateTenantRoles(token *auth.Token, tenant string, role
 	return m.ValidateTenantRolesResponse
 }
 
-func (m *MockSession) Logout(request *http.Request, w http.ResponseWriter) error {
+func (m *MockSession) Logout(r *http.Request, w http.ResponseWriter) error {
 	if m.LogoutAssert != nil {
-		m.LogoutAssert(request, w)
+		m.LogoutAssert(r, w)
 	}
 	return m.LogoutError
 }
 
-func (m *MockSession) LogoutAll(request *http.Request, w http.ResponseWriter) error {
+func (m *MockSession) LogoutAll(r *http.Request, w http.ResponseWriter) error {
 	if m.LogoutAllAssert != nil {
-		m.LogoutAllAssert(request, w)
+		m.LogoutAllAssert(r, w)
 	}
 	return m.LogoutAllError
 }
 
-func (m *MockSession) Me(request *http.Request) (*auth.UserResponse, error) {
+func (m *MockSession) Me(r *http.Request) (*auth.UserResponse, error) {
 	if m.MeAssert != nil {
-		m.MeAssert(request)
+		m.MeAssert(r)
 	}
 	return m.MeResponse, m.MeError
 }
