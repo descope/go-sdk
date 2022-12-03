@@ -6,6 +6,8 @@ import (
 
 	"github.com/descope/go-sdk/descope/auth"
 	"github.com/descope/go-sdk/descope/errors"
+	mocksauth "github.com/descope/go-sdk/descope/tests/mocks/auth"
+	mocksmgmt "github.com/descope/go-sdk/descope/tests/mocks/mgmt"
 	"github.com/descope/go-sdk/descope/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -54,15 +56,35 @@ func TestEmptyConfig(t *testing.T) {
 }
 
 func TestDescopeSDKMock(t *testing.T) {
+	updateJWTWithCustomClaimsCalled := false
+	validateSessionResponse := "test1"
+	updateJWTWithCustomClaimsResponse := "test2"
 	api := DescopeClient{
-		Auth: auth.MockDescopeAuthentication{
-			ValidateSessionResponseNotOK: true,
-			ValidateSessionResponseInfo:  &auth.Token{JWT: "test"},
-			ValidateSessionResponseError: errors.NoPublicKeyError,
+		Auth: &mocksauth.MockAuthentication{
+			MockSession: mocksauth.MockSession{
+				ValidateSessionResponseSuccess: false,
+				ValidateSessionResponse:        &auth.Token{JWT: validateSessionResponse},
+				ValidateSessionError:           errors.NoPublicKeyError,
+			},
+		},
+		Management: &mocksmgmt.MockManagement{
+			MockJWT: &mocksmgmt.MockJWT{
+				UpdateJWTWithCustomClaimsResponse: updateJWTWithCustomClaimsResponse,
+				UpdateJWTWithCustomClaimsAssert: func(jwt string, customClaims map[string]any) {
+					updateJWTWithCustomClaimsCalled = true
+					assert.EqualValues(t, "some jwt", jwt)
+				},
+			},
 		},
 	}
 	ok, info, err := api.Auth.ValidateSession(nil, nil)
 	assert.False(t, ok)
 	assert.NotEmpty(t, info)
+	assert.EqualValues(t, validateSessionResponse, info.JWT)
 	assert.ErrorIs(t, err, errors.NoPublicKeyError)
+
+	res, err := api.Management.JWT().UpdateJWTWithCustomClaims("some jwt", nil)
+	require.NoError(t, err)
+	assert.True(t, updateJWTWithCustomClaimsCalled)
+	assert.EqualValues(t, updateJWTWithCustomClaimsResponse, res)
 }

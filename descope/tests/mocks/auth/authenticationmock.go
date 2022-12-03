@@ -1,4 +1,4 @@
-package authmocks
+package mocksauth
 
 import (
 	"net/http"
@@ -7,41 +7,41 @@ import (
 )
 
 type MockAuthentication struct {
-	MockMagicLink
-	MockEnchantedLink
-	MockOTP
-	MockTOTP
-	MockOAuth
-	MockSAML
-	MockWebAuthn
-	MockOthers
+	*MockMagicLink
+	*MockEnchantedLink
+	*MockOTP
+	*MockTOTP
+	*MockOAuth
+	*MockSAML
+	*MockWebAuthn
+	MockSession
 }
 
-func (m MockAuthentication) MagicLink() auth.MagicLink {
+func (m *MockAuthentication) MagicLink() auth.MagicLink {
 	return m.MockMagicLink
 }
 
-func (m MockAuthentication) EnchantedLink() auth.EnchantedLink {
+func (m *MockAuthentication) EnchantedLink() auth.EnchantedLink {
 	return m.MockEnchantedLink
 }
 
-func (m MockAuthentication) OTP() auth.OTP {
+func (m *MockAuthentication) OTP() auth.OTP {
 	return m.MockOTP
 }
 
-func (m MockAuthentication) TOTP() auth.TOTP {
+func (m *MockAuthentication) TOTP() auth.TOTP {
 	return m.MockTOTP
 }
 
-func (m MockAuthentication) OAuth() auth.OAuth {
+func (m *MockAuthentication) OAuth() auth.OAuth {
 	return m.MockOAuth
 }
 
-func (m MockAuthentication) SAML() auth.SAML {
+func (m *MockAuthentication) SAML() auth.SAML {
 	return m.MockSAML
 }
 
-func (m MockAuthentication) WebAuthn() auth.WebAuthn {
+func (m *MockAuthentication) WebAuthn() auth.WebAuthn {
 	return m.MockWebAuthn
 }
 
@@ -68,42 +68,42 @@ type MockMagicLink struct {
 	UpdateUserPhoneError  error
 }
 
-func (m MockMagicLink) SignIn(method auth.DeliveryMethod, identifier, URI string, r *http.Request, loginOptions *auth.LoginOptions) error {
+func (m *MockMagicLink) SignIn(method auth.DeliveryMethod, identifier, URI string, r *http.Request, loginOptions *auth.LoginOptions) error {
 	if m.SignInAssert != nil {
 		m.SignInAssert(method, identifier, URI, r, loginOptions)
 	}
 	return m.SignInError
 }
 
-func (m MockMagicLink) SignUp(method auth.DeliveryMethod, identifier, URI string, user *auth.User) error {
+func (m *MockMagicLink) SignUp(method auth.DeliveryMethod, identifier, URI string, user *auth.User) error {
 	if m.SignUpAssert != nil {
 		m.SignUpAssert(method, identifier, URI, user)
 	}
 	return m.SignUpError
 }
 
-func (m MockMagicLink) SignUpOrIn(method auth.DeliveryMethod, identifier string, URI string) error {
+func (m *MockMagicLink) SignUpOrIn(method auth.DeliveryMethod, identifier string, URI string) error {
 	if m.SignUpOrInAssert != nil {
 		m.SignUpOrInAssert(method, identifier, URI)
 	}
 	return m.SignUpOrInError
 }
 
-func (m MockMagicLink) Verify(token string, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
+func (m *MockMagicLink) Verify(token string, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
 	if m.VerifyAssert != nil {
 		m.VerifyAssert(token, w)
 	}
 	return m.VerifyResponse, m.VerifyError
 }
 
-func (m MockMagicLink) UpdateUserEmail(identifier, email, URI string, request *http.Request) error {
+func (m *MockMagicLink) UpdateUserEmail(identifier, email, URI string, request *http.Request) error {
 	if m.UpdateUserEmailAssert != nil {
 		m.UpdateUserEmailAssert(identifier, email, URI, request)
 	}
 	return m.UpdateUserEmailError
 }
 
-func (m MockMagicLink) UpdateUserPhone(method auth.DeliveryMethod, identifier, phone, URI string, request *http.Request) error {
+func (m *MockMagicLink) UpdateUserPhone(method auth.DeliveryMethod, identifier, phone, URI string, request *http.Request) error {
 	if m.UpdateUserPhoneAssert != nil {
 		m.UpdateUserPhoneAssert(method, identifier, phone, URI, request)
 	}
@@ -140,42 +140,42 @@ type MockEnchantedLink struct {
 	UpdateUserPhoneError  error
 }
 
-func (m MockEnchantedLink) SignIn(identifier, URI string, r *http.Request, loginOptions *auth.LoginOptions) (*auth.EnchantedLinkResponse, error) {
+func (m *MockEnchantedLink) SignIn(identifier, URI string, r *http.Request, loginOptions *auth.LoginOptions) (*auth.EnchantedLinkResponse, error) {
 	if m.SignInAssert != nil {
 		m.SignInAssert(identifier, URI, r, loginOptions)
 	}
 	return m.SignInResponse, m.SignInError
 }
 
-func (m MockEnchantedLink) SignUp(identifier, URI string, user *auth.User) (*auth.EnchantedLinkResponse, error) {
+func (m *MockEnchantedLink) SignUp(identifier, URI string, user *auth.User) (*auth.EnchantedLinkResponse, error) {
 	if m.SignUpAssert != nil {
 		m.SignUpAssert(identifier, URI, user)
 	}
 	return m.SignUpResponse, m.SignUpError
 }
 
-func (m MockEnchantedLink) SignUpOrIn(identifier string, URI string) (*auth.EnchantedLinkResponse, error) {
+func (m *MockEnchantedLink) SignUpOrIn(identifier string, URI string) (*auth.EnchantedLinkResponse, error) {
 	if m.SignUpOrInAssert != nil {
 		m.SignUpOrInAssert(identifier, URI)
 	}
 	return m.SignUpOrInResponse, m.SignUpOrInError
 }
 
-func (m MockEnchantedLink) GetSession(pendingRef string, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
+func (m *MockEnchantedLink) GetSession(pendingRef string, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
 	if m.GetSessionAssert != nil {
 		m.GetSessionAssert(pendingRef, w)
 	}
 	return m.GetSessionResponse, m.GetSessionError
 }
 
-func (m MockEnchantedLink) Verify(token string) error {
+func (m *MockEnchantedLink) Verify(token string) error {
 	if m.VerifyAssert != nil {
 		m.VerifyAssert(token)
 	}
 	return m.VerifyError
 }
 
-func (m MockEnchantedLink) UpdateUserEmail(identifier, email, URI string, request *http.Request) (*auth.EnchantedLinkResponse, error) {
+func (m *MockEnchantedLink) UpdateUserEmail(identifier, email, URI string, request *http.Request) (*auth.EnchantedLinkResponse, error) {
 	if m.UpdateUserEmailAssert != nil {
 		m.UpdateUserEmailAssert(identifier, email, URI, request)
 	}
@@ -205,42 +205,42 @@ type MockOTP struct {
 	UpdateUserPhoneError  error
 }
 
-func (m MockOTP) SignIn(method auth.DeliveryMethod, identifier string, r *http.Request, loginOptions *auth.LoginOptions) error {
+func (m *MockOTP) SignIn(method auth.DeliveryMethod, identifier string, r *http.Request, loginOptions *auth.LoginOptions) error {
 	if m.SignInAssert != nil {
 		m.SignInAssert(method, identifier, r, loginOptions)
 	}
 	return m.SignInError
 }
 
-func (m MockOTP) SignUp(method auth.DeliveryMethod, identifier string, user *auth.User) error {
+func (m *MockOTP) SignUp(method auth.DeliveryMethod, identifier string, user *auth.User) error {
 	if m.SignUpAssert != nil {
 		m.SignUpAssert(method, identifier, user)
 	}
 	return m.SignUpError
 }
 
-func (m MockOTP) SignUpOrIn(method auth.DeliveryMethod, identifier string) error {
+func (m *MockOTP) SignUpOrIn(method auth.DeliveryMethod, identifier string) error {
 	if m.SignUpOrInAssert != nil {
 		m.SignUpOrInAssert(method, identifier)
 	}
 	return m.SignUpOrInError
 }
 
-func (m MockOTP) VerifyCode(method auth.DeliveryMethod, identifier string, code string, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
+func (m *MockOTP) VerifyCode(method auth.DeliveryMethod, identifier string, code string, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
 	if m.VerifyCodeAssert != nil {
 		m.VerifyCodeAssert(method, identifier, code, w)
 	}
 	return m.VerifyCodeResponse, m.VerifyCodeError
 }
 
-func (m MockOTP) UpdateUserEmail(identifier, email string, request *http.Request) error {
+func (m *MockOTP) UpdateUserEmail(identifier, email string, request *http.Request) error {
 	if m.UpdateUserEmailAssert != nil {
 		m.UpdateUserEmailAssert(identifier, email, request)
 	}
 	return m.UpdateUserEmailError
 }
 
-func (m MockOTP) UpdateUserPhone(method auth.DeliveryMethod, identifier, phone string, request *http.Request) error {
+func (m *MockOTP) UpdateUserPhone(method auth.DeliveryMethod, identifier, phone string, request *http.Request) error {
 	if m.UpdateUserPhoneAssert != nil {
 		m.UpdateUserPhoneAssert(method, identifier, phone, request)
 	}
@@ -263,21 +263,21 @@ type MockTOTP struct {
 	UpdateUserResponse *auth.TOTPResponse
 }
 
-func (m MockTOTP) SignUp(identifier string, user *auth.User) (*auth.TOTPResponse, error) {
+func (m *MockTOTP) SignUp(identifier string, user *auth.User) (*auth.TOTPResponse, error) {
 	if m.SignUpAssert != nil {
 		m.SignUpAssert(identifier, user)
 	}
 	return m.SignUpResponse, m.SignUpError
 }
 
-func (m MockTOTP) SignInCode(identifier string, code string, r *http.Request, loginOptions *auth.LoginOptions, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
+func (m *MockTOTP) SignInCode(identifier string, code string, r *http.Request, loginOptions *auth.LoginOptions, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
 	if m.SignInCodeAssert != nil {
 		m.SignInCodeAssert(identifier, code, r, loginOptions, w)
 	}
 	return m.SignInCodeResponse, m.SignInCodeError
 }
 
-func (m MockTOTP) UpdateUser(identifier string, request *http.Request) (*auth.TOTPResponse, error) {
+func (m *MockTOTP) UpdateUser(identifier string, request *http.Request) (*auth.TOTPResponse, error) {
 	if m.UpdateUserAssert != nil {
 		m.UpdateUserAssert(identifier, request)
 	}
@@ -296,14 +296,14 @@ type MockOAuth struct {
 	ExchangeTokenResponse *auth.AuthenticationInfo
 }
 
-func (m MockOAuth) Start(provider auth.OAuthProvider, returnURL string, r *http.Request, loginOptions *auth.LoginOptions, w http.ResponseWriter) (string, error) {
+func (m *MockOAuth) Start(provider auth.OAuthProvider, returnURL string, r *http.Request, loginOptions *auth.LoginOptions, w http.ResponseWriter) (string, error) {
 	if m.StartAssert != nil {
 		m.StartAssert(provider, returnURL, r, loginOptions, w)
 	}
 	return m.StartResponse, m.StartError
 }
 
-func (m MockOAuth) ExchangeToken(code string, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
+func (m *MockOAuth) ExchangeToken(code string, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
 	if m.ExchangeTokenAssert != nil {
 		m.ExchangeTokenAssert(code, w)
 	}
@@ -322,14 +322,14 @@ type MockSAML struct {
 	ExchangeTokenResponse *auth.AuthenticationInfo
 }
 
-func (m MockSAML) Start(tenant string, returnURL string, r *http.Request, loginOptions *auth.LoginOptions, w http.ResponseWriter) (redirectURL string, err error) {
+func (m *MockSAML) Start(tenant string, returnURL string, r *http.Request, loginOptions *auth.LoginOptions, w http.ResponseWriter) (redirectURL string, err error) {
 	if m.StartAssert != nil {
 		m.StartAssert(tenant, returnURL, r, loginOptions, w)
 	}
 	return m.StartResponse, m.StartError
 }
 
-func (m MockSAML) ExchangeToken(code string, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
+func (m *MockSAML) ExchangeToken(code string, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
 	if m.ExchangeTokenAssert != nil {
 		m.ExchangeTokenAssert(code, w)
 	}
@@ -367,58 +367,58 @@ type MockWebAuthn struct {
 	UpdateUserDeviceFinishError  error
 }
 
-func (m MockWebAuthn) SignUpStart(identifier string, user *auth.User, origin string) (*auth.WebAuthnTransactionResponse, error) {
+func (m *MockWebAuthn) SignUpStart(identifier string, user *auth.User, origin string) (*auth.WebAuthnTransactionResponse, error) {
 	if m.SignUpStartAssert != nil {
 		m.SignUpStartAssert(identifier, user, origin)
 	}
 	return m.SignUpStartResponse, m.SignUpStartError
 }
 
-func (m MockWebAuthn) SignUpFinish(finishRequest *auth.WebAuthnFinishRequest, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
+func (m *MockWebAuthn) SignUpFinish(finishRequest *auth.WebAuthnFinishRequest, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
 	if m.SignUpFinishAssert != nil {
 		m.SignUpFinishAssert(finishRequest, w)
 	}
 	return m.SignUpFinishResponse, m.SignUpFinishError
 }
 
-func (m MockWebAuthn) SignInStart(identifier string, origin string, r *http.Request, loginOptions *auth.LoginOptions) (*auth.WebAuthnTransactionResponse, error) {
+func (m *MockWebAuthn) SignInStart(identifier string, origin string, r *http.Request, loginOptions *auth.LoginOptions) (*auth.WebAuthnTransactionResponse, error) {
 	if m.SignInStartAssert != nil {
 		m.SignInStartAssert(identifier, origin, r, loginOptions)
 	}
 	return m.SignInStartResponse, m.SignInStartError
 }
 
-func (m MockWebAuthn) SignInFinish(finishRequest *auth.WebAuthnFinishRequest, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
+func (m *MockWebAuthn) SignInFinish(finishRequest *auth.WebAuthnFinishRequest, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
 	if m.SignInFinishAssert != nil {
 		m.SignInFinishAssert(finishRequest, w)
 	}
 	return m.SignInFinishResponse, m.SignInFinishError
 }
 
-func (m MockWebAuthn) SignUpOrInStart(identifier string, origin string) (*auth.WebAuthnTransactionResponse, error) {
+func (m *MockWebAuthn) SignUpOrInStart(identifier string, origin string) (*auth.WebAuthnTransactionResponse, error) {
 	if m.SignUpOrInStartAssert != nil {
 		m.SignUpOrInStartAssert(identifier, origin)
 	}
 	return m.SignUpOrInStartResponse, m.SignUpOrInStartError
 }
 
-func (m MockWebAuthn) UpdateUserDeviceStart(identifier string, origin string, request *http.Request) (*auth.WebAuthnTransactionResponse, error) {
+func (m *MockWebAuthn) UpdateUserDeviceStart(identifier string, origin string, request *http.Request) (*auth.WebAuthnTransactionResponse, error) {
 	if m.UpdateUserDeviceStartAssert != nil {
 		m.UpdateUserDeviceStartAssert(identifier, origin, request)
 	}
 	return m.UpdateUserDeviceStartResponse, m.UpdateUserDeviceStartError
 }
 
-func (m MockWebAuthn) UpdateUserDeviceFinish(finishRequest *auth.WebAuthnFinishRequest) error {
+func (m *MockWebAuthn) UpdateUserDeviceFinish(finishRequest *auth.WebAuthnFinishRequest) error {
 	if m.UpdateUserDeviceFinishAssert != nil {
 		m.UpdateUserDeviceFinishAssert(finishRequest)
 	}
 	return m.UpdateUserDeviceFinishError
 }
 
-// Mock Others
+// Mock Session
 
-type MockOthers struct {
+type MockSession struct {
 	ValidateSessionAssert          func(request *http.Request, w http.ResponseWriter)
 	ValidateSessionError           error
 	ValidateSessionResponse        *auth.Token
@@ -462,77 +462,77 @@ type MockOthers struct {
 	MeResponse *auth.UserResponse
 }
 
-func (m MockOthers) ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *auth.Token, error) {
+func (m MockSession) ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *auth.Token, error) {
 	if m.ValidateSessionAssert != nil {
 		m.ValidateSessionAssert(request, w)
 	}
 	return m.ValidateSessionResponseSuccess, m.ValidateSessionResponse, m.ValidateSessionError
 }
 
-func (m MockOthers) ValidateSessionTokens(sessionToken, refreshToken string) (bool, *auth.Token, error) {
+func (m *MockSession) ValidateSessionTokens(sessionToken, refreshToken string) (bool, *auth.Token, error) {
 	if m.ValidateSessionTokensAssert != nil {
 		m.ValidateSessionTokensAssert(sessionToken, refreshToken)
 	}
 	return m.ValidateSessionTokensResponseSuccess, m.ValidateSessionTokensResponse, m.ValidateSessionTokensError
 }
 
-func (m MockOthers) RefreshSession(request *http.Request, w http.ResponseWriter) (bool, *auth.Token, error) {
+func (m *MockSession) RefreshSession(request *http.Request, w http.ResponseWriter) (bool, *auth.Token, error) {
 	if m.RefreshSessionAssert != nil {
 		m.RefreshSessionAssert(request, w)
 	}
 	return m.RefreshSessionResponseSuccess, m.RefreshSessionResponse, m.RefreshSessionError
 }
 
-func (m MockOthers) ExchangeAccessKey(accessKey string) (bool, *auth.Token, error) {
+func (m *MockSession) ExchangeAccessKey(accessKey string) (bool, *auth.Token, error) {
 	if m.ExchangeAccessKeyAssert != nil {
 		m.ExchangeAccessKeyAssert(accessKey)
 	}
 	return m.ExchangeAccessKeyResponseSuccess, m.ExchangeAccessKeyResponse, m.ExchangeAccessKeyError
 }
 
-func (m MockOthers) ValidatePermissions(token *auth.Token, permissions []string) bool {
+func (m *MockSession) ValidatePermissions(token *auth.Token, permissions []string) bool {
 	if m.ValidatePermissionsAssert != nil {
 		m.ValidatePermissionsAssert(token, permissions)
 	}
 	return m.ValidatePermissionsResponse
 }
 
-func (m MockOthers) ValidateTenantPermissions(token *auth.Token, tenant string, permissions []string) bool {
+func (m *MockSession) ValidateTenantPermissions(token *auth.Token, tenant string, permissions []string) bool {
 	if m.ValidateTenantPermissionsAssert != nil {
 		m.ValidateTenantPermissionsAssert(token, tenant, permissions)
 	}
 	return m.ValidateTenantPermissionsResponse
 }
 
-func (m MockOthers) ValidateRoles(token *auth.Token, roles []string) bool {
+func (m *MockSession) ValidateRoles(token *auth.Token, roles []string) bool {
 	if m.ValidateRolesAssert != nil {
 		m.ValidateRolesAssert(token, roles)
 	}
 	return m.ValidateRolesResponse
 }
 
-func (m MockOthers) ValidateTenantRoles(token *auth.Token, tenant string, roles []string) bool {
+func (m *MockSession) ValidateTenantRoles(token *auth.Token, tenant string, roles []string) bool {
 	if m.ValidateTenantRolesAssert != nil {
 		m.ValidateTenantRolesAssert(token, tenant, roles)
 	}
 	return m.ValidateTenantRolesResponse
 }
 
-func (m MockOthers) Logout(request *http.Request, w http.ResponseWriter) error {
+func (m *MockSession) Logout(request *http.Request, w http.ResponseWriter) error {
 	if m.LogoutAssert != nil {
 		m.LogoutAssert(request, w)
 	}
 	return m.LogoutError
 }
 
-func (m MockOthers) LogoutAll(request *http.Request, w http.ResponseWriter) error {
+func (m *MockSession) LogoutAll(request *http.Request, w http.ResponseWriter) error {
 	if m.LogoutAllAssert != nil {
 		m.LogoutAllAssert(request, w)
 	}
 	return m.LogoutAllError
 }
 
-func (m MockOthers) Me(request *http.Request) (*auth.UserResponse, error) {
+func (m *MockSession) Me(request *http.Request) (*auth.UserResponse, error) {
 	if m.MeAssert != nil {
 		m.MeAssert(request)
 	}

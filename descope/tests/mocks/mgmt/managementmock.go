@@ -1,4 +1,4 @@
-package mgmtmocks
+package mocksmgmt
 
 import (
 	"github.com/descope/go-sdk/descope/auth"
@@ -6,25 +6,25 @@ import (
 )
 
 type MockManagement struct {
-	MockJWT
-	MockSSO
-	MockUser
-	MockTenant
+	*MockJWT
+	*MockSSO
+	*MockUser
+	*MockTenant
 }
 
-func (m MockManagement) JWT() mgmt.JWT {
+func (m *MockManagement) JWT() mgmt.JWT {
 	return m.MockJWT
 }
 
-func (m MockManagement) SSO() mgmt.SSO {
+func (m *MockManagement) SSO() mgmt.SSO {
 	return m.MockSSO
 }
 
-func (m MockManagement) User() mgmt.User {
+func (m *MockManagement) User() mgmt.User {
 	return m.MockUser
 }
 
-func (m MockManagement) Tenant() mgmt.Tenant {
+func (m *MockManagement) Tenant() mgmt.Tenant {
 	return m.MockTenant
 }
 
@@ -36,7 +36,7 @@ type MockJWT struct {
 	UpdateJWTWithCustomClaimsError    error
 }
 
-func (m MockJWT) UpdateJWTWithCustomClaims(jwt string, customClaims map[string]any) (string, error) {
+func (m *MockJWT) UpdateJWTWithCustomClaims(jwt string, customClaims map[string]any) (string, error) {
 	if m.UpdateJWTWithCustomClaimsAssert != nil {
 		m.UpdateJWTWithCustomClaimsAssert(jwt, customClaims)
 	}
@@ -56,21 +56,21 @@ type MockSSO struct {
 	ConfigureRoleMappingError  error
 }
 
-func (m MockSSO) ConfigureSettings(tenantID string, enabled bool, idpURL, idpCert, entityID, redirectURL string) error {
+func (m *MockSSO) ConfigureSettings(tenantID string, enabled bool, idpURL, idpCert, entityID, redirectURL string) error {
 	if m.ConfigureSettingsAssert != nil {
 		m.ConfigureSettingsAssert(tenantID, enabled, idpURL, idpCert, entityID, redirectURL)
 	}
 	return m.ConfigureSettingsError
 }
 
-func (m MockSSO) ConfigureMetadata(tenantID string, enabled bool, idpMetadataURL string) error {
+func (m *MockSSO) ConfigureMetadata(tenantID string, enabled bool, idpMetadataURL string) error {
 	if m.ConfigureMetadataAssert != nil {
 		m.ConfigureMetadataAssert(tenantID, enabled, idpMetadataURL)
 	}
 	return m.ConfigureMetadataError
 }
 
-func (m MockSSO) ConfigureRoleMapping(tenantID string, roleMappings []mgmt.RoleMapping) error {
+func (m *MockSSO) ConfigureRoleMapping(tenantID string, roleMappings []mgmt.RoleMapping) error {
 	if m.ConfigureRoleMappingAssert != nil {
 		m.ConfigureRoleMappingAssert(tenantID, roleMappings)
 	}
@@ -98,35 +98,35 @@ type MockUser struct {
 	SearchAllError    error
 }
 
-func (m MockUser) Create(identifier, email, phone, displayName string, roles []string, tenants []mgmt.UserTenants) error {
+func (m *MockUser) Create(identifier, email, phone, displayName string, roles []string, tenants []mgmt.UserTenants) error {
 	if m.CreateAssert != nil {
 		m.CreateAssert(identifier, email, phone, displayName, roles, tenants)
 	}
 	return m.CreateError
 }
 
-func (m MockUser) Update(identifier, email, phone, displayName string, roles []string, tenants []mgmt.UserTenants) error {
+func (m *MockUser) Update(identifier, email, phone, displayName string, roles []string, tenants []mgmt.UserTenants) error {
 	if m.UpdateAssert != nil {
 		m.UpdateAssert(identifier, email, phone, displayName, roles, tenants)
 	}
 	return m.UpdateError
 }
 
-func (m MockUser) Delete(identifier string) error {
+func (m *MockUser) Delete(identifier string) error {
 	if m.DeleteAssert != nil {
 		m.DeleteAssert(identifier)
 	}
 	return m.DeleteAssertError
 }
 
-func (m MockUser) Load(identifier string) (*auth.UserResponse, error) {
+func (m *MockUser) Load(identifier string) (*auth.UserResponse, error) {
 	if m.LoadAssert != nil {
 		m.LoadAssert(identifier)
 	}
 	return m.LoadResponse, m.LoadError
 }
 
-func (m MockUser) SearchAll(tenantIDs, roleNames []string, limit int32) ([]*auth.UserResponse, error) {
+func (m *MockUser) SearchAll(tenantIDs, roleNames []string, limit int32) ([]*auth.UserResponse, error) {
 	if m.SearchAllAssert != nil {
 		m.SearchAllAssert(tenantIDs, roleNames, limit)
 	}
@@ -150,28 +150,28 @@ type MockTenant struct {
 	DeleteError  error
 }
 
-func (m MockTenant) Create(name string, selfProvisioningDomains []string) (id string, err error) {
+func (m *MockTenant) Create(name string, selfProvisioningDomains []string) (id string, err error) {
 	if m.CreateAssert != nil {
 		m.CreateAssert(name, selfProvisioningDomains)
 	}
 	return m.CreateResponse, m.CreateError
 }
 
-func (m MockTenant) CreateWithID(id, name string, selfProvisioningDomains []string) error {
+func (m *MockTenant) CreateWithID(id, name string, selfProvisioningDomains []string) error {
 	if m.CreateWithIDAssert != nil {
 		m.CreateWithIDAssert(id, name, selfProvisioningDomains)
 	}
 	return m.CreateWithIDError
 }
 
-func (m MockTenant) Update(id, name string, selfProvisioningDomains []string) error {
+func (m *MockTenant) Update(id, name string, selfProvisioningDomains []string) error {
 	if m.UpdateAssert != nil {
 		m.UpdateAssert(id, name, selfProvisioningDomains)
 	}
 	return m.UpdateError
 }
 
-func (m MockTenant) Delete(id string) error {
+func (m *MockTenant) Delete(id string) error {
 	if m.DeleteAssert != nil {
 		m.DeleteAssert(id)
 	}
