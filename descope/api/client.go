@@ -64,18 +64,18 @@ var (
 			exchangeAccessKey:            "auth/accesskey/exchange",
 		},
 		mgmt: mgmtEndpoints{
-			tenantCreate:   "mgmt/tenant/create",
-			tenantUpdate:   "mgmt/tenant/update",
-			tenantDelete:   "mgmt/tenant/delete",
-			userCreate:     "mgmt/user/create",
-			userUpdate:     "mgmt/user/update",
-			userDelete:     "mgmt/user/delete",
-			userLoad:       "mgmt/user",
-			userSearchAll:  "mgmt/user/search",
-			ssoConfigure:   "mgmt/sso/settings",
-			ssoMetadata:    "mgmt/sso/metadata",
-			ssoRoleMapping: "mgmt/sso/roles",
-			updateJWT:      "mgmt/jwt/update",
+			tenantCreate:  "mgmt/tenant/create",
+			tenantUpdate:  "mgmt/tenant/update",
+			tenantDelete:  "mgmt/tenant/delete",
+			userCreate:    "mgmt/user/create",
+			userUpdate:    "mgmt/user/update",
+			userDelete:    "mgmt/user/delete",
+			userLoad:      "mgmt/user",
+			userSearchAll: "mgmt/user/search",
+			ssoConfigure:  "mgmt/sso/settings",
+			ssoMetadata:   "mgmt/sso/metadata",
+			ssoMapping:    "mgmt/sso/mapping",
+			updateJWT:     "mgmt/jwt/update",
 		},
 		logout:    "auth/logout",
 		logoutAll: "auth/logoutall",
@@ -133,18 +133,18 @@ type authEndpoints struct {
 }
 
 type mgmtEndpoints struct {
-	tenantCreate   string
-	tenantUpdate   string
-	tenantDelete   string
-	userCreate     string
-	userUpdate     string
-	userDelete     string
-	userLoad       string
-	userSearchAll  string
-	ssoConfigure   string
-	ssoMetadata    string
-	ssoRoleMapping string
-	updateJWT      string
+	tenantCreate  string
+	tenantUpdate  string
+	tenantDelete  string
+	userCreate    string
+	userUpdate    string
+	userDelete    string
+	userLoad      string
+	userSearchAll string
+	ssoConfigure  string
+	ssoMetadata   string
+	ssoMapping    string
+	updateJWT     string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -308,8 +308,8 @@ func (e *endpoints) ManagementSSOMetadata() string {
 	return path.Join(e.version, e.mgmt.ssoMetadata)
 }
 
-func (e *endpoints) ManagementSSORoleMapping() string {
-	return path.Join(e.version, e.mgmt.ssoRoleMapping)
+func (e *endpoints) ManagementSSOMapping() string {
+	return path.Join(e.version, e.mgmt.ssoMapping)
 }
 
 func (e *endpoints) ManagementUpdateJWT() string {

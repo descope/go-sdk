@@ -50,7 +50,7 @@ func (s *sso) ConfigureMetadata(tenantID string, enabled bool, idpMetadataURL st
 	return err
 }
 
-func (s *sso) ConfigureRoleMapping(tenantID string, roleMappings []RoleMapping) error {
+func (s *sso) ConfigureMapping(tenantID string, roleMappings []RoleMapping, attributeMapping *AttributeMapping) error {
 	if tenantID == "" {
 		return errors.NewInvalidArgumentError("tenantID")
 	}
@@ -62,9 +62,10 @@ func (s *sso) ConfigureRoleMapping(tenantID string, roleMappings []RoleMapping) 
 		})
 	}
 	req := map[string]any{
-		"tenantId":    tenantID,
-		"roleMapping": mappings,
+		"tenantId":         tenantID,
+		"roleMappings":     mappings,
+		"attributeMapping": attributeMapping,
 	}
-	_, err := s.client.DoPostRequest(api.Routes.ManagementSSORoleMapping(), req, nil, s.conf.ManagementKey)
+	_, err := s.client.DoPostRequest(api.Routes.ManagementSSOMapping(), req, nil, s.conf.ManagementKey)
 	return err
 }
