@@ -215,24 +215,47 @@ The examples run on TLS at the following URL: [https://localhost:8085](https://l
 
 
 ## Unit Testing and Data Mocks
-Simplify your unit testing by using the predefined mocks and mock objects provided with the ExpresSDK.
+Simplify your unit testing by using our mocks package for testing your app without the need of going out to Descope services. By that, you can simply mock responses and errors and have assertion for the incoming data of each SDK method. You can find all mocks [here](https://github.com/descope/go-sdk/blob/main/descope/tests/mocks).
+
+Mock usage examples:
+- [Authentication](https://github.com/descope/go-sdk/blob/main/descope/tests/mocks/auth/authenticationmock_test.go)
+- [Management](https://github.com/descope/go-sdk/blob/main/descope/tests/mocks/mgmt/managementmock_test.go)
+
+In the following snippet we mocked the Descope Authentication and Management sdks, and have assertions to check the actual inputs passed to the sdk:
 
 ```code go
-descopeClient := descope.DescopeClient{
-	Auth: auth.MockDescopeAuthentication{
-		ValidateSessionResponseNotOK:   true,
-		ValidateSessionResponseToken:   &auth.Token{JWT: "test"},
-		ValidateSessionResponseError:   errors.BadRequest,
-	},
-}
+updateJWTWithCustomClaimsCalled := false
+	validateSessionResponse := "test1"
+	updateJWTWithCustomClaimsResponse := "test2"
+	api := DescopeClient{
+		Auth: &mocksauth.MockAuthentication{
+			MockSession: mocksauth.MockSession{
+				ValidateSessionResponseSuccess: false,
+				ValidateSessionResponse:        &auth.Token{JWT: validateSessionResponse},
+				ValidateSessionError:           errors.NoPublicKeyError,
+			},
+		},
+		Management: &mocksmgmt.MockManagement{
+			MockJWT: &mocksmgmt.MockJWT{
+				UpdateJWTWithCustomClaimsResponse: updateJWTWithCustomClaimsResponse,
+				UpdateJWTWithCustomClaimsAssert: func(jwt string, customClaims map[string]any) {
+					updateJWTWithCustomClaimsCalled = true
+					assert.EqualValues(t, "some jwt", jwt)
+				},
+			},
+		},
+	}
+	ok, info, err := api.Auth.ValidateSession(nil, nil)
+	assert.False(t, ok)
+	assert.NotEmpty(t, info)
+	assert.EqualValues(t, validateSessionResponse, info.JWT)
+	assert.ErrorIs(t, err, errors.NoPublicKeyError)
 
-ok, userToken, err := descopeClient.Auth.ValidateSession("my token", "another token")
-assert.False(t, ok)
-assert.NotEmpty(t, userToken)
-assert.EqualValues(t, "test", userToken.JWT)
-assert.ErrorIs(t, err, errors.BadRequest)
+	res, err := api.Management.JWT().UpdateJWTWithCustomClaims("some jwt", nil)
+	require.NoError(t, err)
+	assert.True(t, updateJWTWithCustomClaimsCalled)
+	assert.EqualValues(t, updateJWTWithCustomClaimsResponse, res)
 ``` 
-In this example we mocked the Descope Authentication to change the response of the ValidateSession
 
 ## License
 

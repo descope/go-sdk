@@ -112,6 +112,13 @@ type SSO interface {
 	ConfigureMapping(tenantID string, roleMappings []RoleMapping, attributeMapping *AttributeMapping) error
 }
 
+// Provide functions for manipulating valid JWT
+type JWT interface {
+	// Update a valid JWT with the custom claims provided
+	// The new JWT will be returned
+	UpdateJWTWithCustomClaims(jwt string, customClaims map[string]any) (string, error)
+}
+
 // Provides various APIs for managing a Descope project programmatically. A management key must
 // be provided in the DecopeClient configuration or by setting the DESCOPE_MANAGEMENT_KEY
 // environment variable. Management keys can be generated in the Descope console.
@@ -124,4 +131,7 @@ type Management interface {
 
 	// Provides functions for configuring SSO for a project.
 	SSO() SSO
+
+	// Provide functions for manipulating valid JWT
+	JWT() JWT
 }
