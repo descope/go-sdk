@@ -176,10 +176,17 @@ type WebauthnUserRequest struct {
 
 type UserResponse struct {
 	User          `json:",inline"`
-	UserID        string   `json:"userId,omitempty"`
-	ExternalIDs   []string `json:"externalIds,omitempty"`
-	VerifiedEmail bool     `json:"verifiedEmail,omitempty"`
-	VerifiedPhone bool     `json:"verifiedPhone,omitempty"`
+	UserID        string         `json:"userId,omitempty"`
+	ExternalIDs   []string       `json:"externalIds,omitempty"`
+	VerifiedEmail bool           `json:"verifiedEmail,omitempty"`
+	VerifiedPhone bool           `json:"verifiedPhone,omitempty"`
+	RoleNames     []string       `json:"roleNames,omitempty"`
+	UserTenants   []*UserTenants `json:"userTenants,omitempty"`
+}
+
+type UserTenants struct {
+	TenantID  string   `json:"tenantId"`
+	RoleNames []string `json:"roleNames,omitempty"`
 }
 
 type authenticationRequestBody struct {
