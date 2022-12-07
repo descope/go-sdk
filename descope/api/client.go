@@ -64,18 +64,22 @@ var (
 			exchangeAccessKey:            "auth/accesskey/exchange",
 		},
 		mgmt: mgmtEndpoints{
-			tenantCreate:  "mgmt/tenant/create",
-			tenantUpdate:  "mgmt/tenant/update",
-			tenantDelete:  "mgmt/tenant/delete",
-			userCreate:    "mgmt/user/create",
-			userUpdate:    "mgmt/user/update",
-			userDelete:    "mgmt/user/delete",
-			userLoad:      "mgmt/user",
-			userSearchAll: "mgmt/user/search",
-			ssoConfigure:  "mgmt/sso/settings",
-			ssoMetadata:   "mgmt/sso/metadata",
-			ssoMapping:    "mgmt/sso/mapping",
-			updateJWT:     "mgmt/jwt/update",
+			tenantCreate:      "mgmt/tenant/create",
+			tenantUpdate:      "mgmt/tenant/update",
+			tenantDelete:      "mgmt/tenant/delete",
+			userCreate:        "mgmt/user/create",
+			userUpdate:        "mgmt/user/update",
+			userDelete:        "mgmt/user/delete",
+			userLoad:          "mgmt/user",
+			userSearchAll:     "mgmt/user/search",
+			ssoConfigure:      "mgmt/sso/settings",
+			ssoMetadata:       "mgmt/sso/metadata",
+			ssoMapping:        "mgmt/sso/mapping",
+			updateJWT:         "mgmt/jwt/update",
+			permissionCreate:  "mgmt/permission/create",
+			permissionUpdate:  "mgmt/permission/update",
+			permissionDelete:  "mgmt/permission/delete",
+			permissionLoadAll: "mgmt/permission/all",
 		},
 		logout:    "auth/logout",
 		logoutAll: "auth/logoutall",
@@ -133,18 +137,22 @@ type authEndpoints struct {
 }
 
 type mgmtEndpoints struct {
-	tenantCreate  string
-	tenantUpdate  string
-	tenantDelete  string
-	userCreate    string
-	userUpdate    string
-	userDelete    string
-	userLoad      string
-	userSearchAll string
-	ssoConfigure  string
-	ssoMetadata   string
-	ssoMapping    string
-	updateJWT     string
+	tenantCreate      string
+	tenantUpdate      string
+	tenantDelete      string
+	userCreate        string
+	userUpdate        string
+	userDelete        string
+	userLoad          string
+	userSearchAll     string
+	ssoConfigure      string
+	ssoMetadata       string
+	ssoMapping        string
+	updateJWT         string
+	permissionCreate  string
+	permissionUpdate  string
+	permissionDelete  string
+	permissionLoadAll string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -314,6 +322,22 @@ func (e *endpoints) ManagementSSOMapping() string {
 
 func (e *endpoints) ManagementUpdateJWT() string {
 	return path.Join(e.version, e.mgmt.updateJWT)
+}
+
+func (e *endpoints) ManagementPermissionCreate() string {
+	return path.Join(e.version, e.mgmt.permissionCreate)
+}
+
+func (e *endpoints) ManagementPermissionUpdate() string {
+	return path.Join(e.version, e.mgmt.permissionUpdate)
+}
+
+func (e *endpoints) ManagementPermissionDelete() string {
+	return path.Join(e.version, e.mgmt.permissionDelete)
+}
+
+func (e *endpoints) ManagementPermissionLoadAll() string {
+	return path.Join(e.version, e.mgmt.permissionLoadAll)
 }
 
 type sdkInfo struct {

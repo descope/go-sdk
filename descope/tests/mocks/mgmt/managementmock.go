@@ -10,6 +10,7 @@ type MockManagement struct {
 	*MockSSO
 	*MockUser
 	*MockTenant
+	*MockPermission
 }
 
 func (m *MockManagement) JWT() mgmt.JWT {
@@ -26,6 +27,10 @@ func (m *MockManagement) User() mgmt.User {
 
 func (m *MockManagement) Tenant() mgmt.Tenant {
 	return m.MockTenant
+}
+
+func (m *MockManagement) Permission() mgmt.Permission {
+	return m.MockPermission
 }
 
 // Mock JWT
@@ -176,4 +181,45 @@ func (m *MockTenant) Delete(id string) error {
 		m.DeleteAssert(id)
 	}
 	return m.DeleteError
+}
+
+// Mock Permission
+
+type MockPermission struct {
+	CreateAssert func(name, description string)
+	CreateError  error
+
+	UpdateAssert func(name, newName, description string)
+	UpdateError  error
+
+	DeleteAssert      func(name string)
+	DeleteAssertError error
+
+	LoadAllResponse []*auth.Permission
+	LoadAllError    error
+}
+
+func (m *MockPermission) Create(name, description string) error {
+	if m.CreateAssert != nil {
+		m.CreateAssert(name, description)
+	}
+	return m.CreateError
+}
+
+func (m *MockPermission) Update(name, newName, description string) error {
+	if m.UpdateAssert != nil {
+		m.UpdateAssert(name, newName, description)
+	}
+	return m.UpdateError
+}
+
+func (m *MockPermission) Delete(name string) error {
+	if m.DeleteAssert != nil {
+		m.DeleteAssert(name)
+	}
+	return m.DeleteAssertError
+}
+
+func (m *MockPermission) LoadAll() ([]*auth.Permission, error) {
+	return m.LoadAllResponse, m.LoadAllError
 }

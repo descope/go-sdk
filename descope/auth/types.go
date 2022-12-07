@@ -189,6 +189,11 @@ type UserTenants struct {
 	RoleNames []string `json:"roleNames,omitempty"`
 }
 
+type Permission struct {
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+}
+
 type authenticationRequestBody struct {
 	ExternalID   string        `json:"externalId,omitempty"`
 	LoginOptions *LoginOptions `json:"loginOptions,omitempty"`

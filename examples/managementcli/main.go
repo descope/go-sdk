@@ -14,12 +14,13 @@ import (
 // Command line flags
 
 var flags struct {
-	Identifier string
-	Email      string
-	Phone      string
-	Name       string
-	Tenants    []string
-	Domains    []string
+	Identifier  string
+	Email       string
+	Phone       string
+	Name        string
+	Tenants     []string
+	Domains     []string
+	Description string
 }
 
 // Descope SDK
@@ -99,6 +100,28 @@ func tenantDelete(args []string) error {
 	return descopeClient.Management.Tenant().Delete(args[0])
 }
 
+func permissionCreate(args []string) error {
+	return descopeClient.Management.Permission().Create(args[0], flags.Description)
+}
+
+func permissionUpdate(args []string) error {
+	return descopeClient.Management.Permission().Update(args[0], args[1], flags.Description)
+}
+
+func permissionDelete(args []string) error {
+	return descopeClient.Management.Permission().Delete(args[0])
+}
+
+func permissionAll(args []string) error {
+	res, err := descopeClient.Management.Permission().LoadAll()
+	if err == nil {
+		for _, p := range res {
+			fmt.Println("Found:", p)
+		}
+	}
+	return err
+}
+
 // Command line setup
 
 var cli = &cobra.Command{
@@ -170,6 +193,25 @@ func main() {
 
 	addCommand(userSearchAll, "user-search-all", "Search existing users", func(cmd *cobra.Command) {
 		// Currently not accepting any filters
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(permissionCreate, "permission-create <name>", "Create a new permission", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(1)
+		cmd.Flags().StringVarP(&flags.Description, "description", "D", "", "the permission's description")
+	})
+
+	addCommand(permissionUpdate, "permission-update <name> <newName>", "Update a permission", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(2)
+		cmd.Flags().StringVarP(&flags.Description, "description", "D", "", "the permission's description")
+	})
+
+	addCommand(permissionDelete, "permission-delete <name>", "Delete a permission", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(1)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(permissionAll, "permission-all", "Load all permissions", func(cmd *cobra.Command) {
 		cmd.DisableFlagsInUseLine = true
 	})
 
