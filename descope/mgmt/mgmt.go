@@ -19,10 +19,11 @@ type managementBase struct {
 type managementService struct {
 	managementBase
 
-	tenant Tenant
-	user   User
-	sso    SSO
-	jwt    JWT
+	tenant     Tenant
+	user       User
+	sso        SSO
+	jwt        JWT
+	permission Permission
 }
 
 func NewManagement(conf ManagementParams, c *api.Client) *managementService {
@@ -32,6 +33,7 @@ func NewManagement(conf ManagementParams, c *api.Client) *managementService {
 	service.user = &user{managementBase: base}
 	service.sso = &sso{managementBase: base}
 	service.jwt = &jwt{managementBase: base}
+	service.permission = &permission{managementBase: base}
 	return service
 }
 
@@ -53,6 +55,11 @@ func (mgmt *managementService) SSO() SSO {
 func (mgmt *managementService) JWT() JWT {
 	mgmt.ensureManagementKey()
 	return mgmt.jwt
+}
+
+func (mgmt *managementService) Permission() Permission {
+	mgmt.ensureManagementKey()
+	return mgmt.permission
 }
 
 func (mgmt *managementService) ensureManagementKey() {

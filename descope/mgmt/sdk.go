@@ -119,6 +119,35 @@ type JWT interface {
 	UpdateJWTWithCustomClaims(jwt string, customClaims map[string]any) (string, error)
 }
 
+// Provides functions for managing permissions in a project.
+type Permission interface {
+	// Create a new permission.
+	//
+	// The name is required to uniquely identify a permission.
+	//
+	// The description parameter is an optional description to briefly explain
+	// what this permission allows.
+	Create(name, description string) error
+
+	// Update an existing permission.
+	//
+	// The parameters follow the same convention as those for the Create function, with
+	// the distinction where `name` identifies the permission and `newName` holds the updated
+	// name value.
+	//
+	// IMPORTANT: All parameters will override whatever values are currently set
+	// in the existing permission. Use carefully.
+	Update(name, newName, description string) error
+
+	// Delete an existing permission.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	Delete(name string) error
+
+	// Load all permissions.
+	LoadAll() ([]*auth.Permission, error)
+}
+
 // Provides various APIs for managing a Descope project programmatically. A management key must
 // be provided in the DecopeClient configuration or by setting the DESCOPE_MANAGEMENT_KEY
 // environment variable. Management keys can be generated in the Descope console.
@@ -134,4 +163,7 @@ type Management interface {
 
 	// Provide functions for manipulating valid JWT
 	JWT() JWT
+
+	// Provide functions for managing permissions in a project
+	Permission() Permission
 }
