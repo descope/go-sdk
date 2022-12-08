@@ -258,7 +258,7 @@ func (e *endpoints) Me() string {
 	return path.Join(e.version, e.me)
 }
 func (e *endpoints) GetKeys() string {
-	return path.Join(e.version, e.keys)
+	return path.Join("/v2/", e.keys)
 }
 func (e *endpoints) RefreshToken() string {
 	return path.Join(e.version, e.refresh)

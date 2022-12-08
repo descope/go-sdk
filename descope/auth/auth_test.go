@@ -219,7 +219,7 @@ func TestValidateSessionFetchKeyCalledOnce(t *testing.T) {
 	count := 0
 	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, mocks.Do(func(r *http.Request) (*http.Response, error) {
 		count++
-		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", publicKey)))}, nil
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf(`{"keys":[%s]}`, publicKey)))}, nil
 	}))
 	require.NoError(t, err)
 	ok, _, err := a.validateSession(jwtTokenValid, "", false, nil)
@@ -234,7 +234,7 @@ func TestValidateSessionFetchKeyCalledOnce(t *testing.T) {
 
 func TestValidateSessionFetchKeyMalformed(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, mocks.Do(func(r *http.Request) (*http.Response, error) {
-		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", unknownPublicKey)))}, nil
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf(`{"keys":[%s]}`, unknownPublicKey)))}, nil
 	}))
 	require.NoError(t, err)
 	ok, _, err := a.validateSession(jwtTokenValid, jwtTokenValid, false, nil)
