@@ -80,6 +80,10 @@ var (
 			permissionUpdate:  "mgmt/permission/update",
 			permissionDelete:  "mgmt/permission/delete",
 			permissionLoadAll: "mgmt/permission/all",
+			roleCreate:        "mgmt/role/create",
+			roleUpdate:        "mgmt/role/update",
+			roleDelete:        "mgmt/role/delete",
+			roleLoadAll:       "mgmt/role/all",
 		},
 		logout:    "auth/logout",
 		logoutAll: "auth/logoutall",
@@ -153,6 +157,10 @@ type mgmtEndpoints struct {
 	permissionUpdate  string
 	permissionDelete  string
 	permissionLoadAll string
+	roleCreate        string
+	roleUpdate        string
+	roleDelete        string
+	roleLoadAll       string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -338,6 +346,22 @@ func (e *endpoints) ManagementPermissionDelete() string {
 
 func (e *endpoints) ManagementPermissionLoadAll() string {
 	return path.Join(e.version, e.mgmt.permissionLoadAll)
+}
+
+func (e *endpoints) ManagementRoleCreate() string {
+	return path.Join(e.version, e.mgmt.roleCreate)
+}
+
+func (e *endpoints) ManagementRoleUpdate() string {
+	return path.Join(e.version, e.mgmt.roleUpdate)
+}
+
+func (e *endpoints) ManagementRoleDelete() string {
+	return path.Join(e.version, e.mgmt.roleDelete)
+}
+
+func (e *endpoints) ManagementRoleLoadAll() string {
+	return path.Join(e.version, e.mgmt.roleLoadAll)
 }
 
 type sdkInfo struct {
