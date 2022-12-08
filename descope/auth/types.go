@@ -194,6 +194,12 @@ type Permission struct {
 	Description string `json:"description,omitempty"`
 }
 
+type Role struct {
+	Name            string   `json:"name"`
+	Description     string   `json:"description,omitempty"`
+	PermissionNames []string `json:"permissionNames,omitempty"`
+}
+
 type authenticationRequestBody struct {
 	ExternalID   string        `json:"externalId,omitempty"`
 	LoginOptions *LoginOptions `json:"loginOptions,omitempty"`

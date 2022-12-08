@@ -148,6 +148,36 @@ type Permission interface {
 	LoadAll() ([]*auth.Permission, error)
 }
 
+// Provides functions for managing roles in a project.
+type Role interface {
+	// Create a new role.
+	//
+	// The name is required to uniquely identify a role.
+	//
+	// The description parameter is an optional description to briefly explain
+	// what this role allows.
+	// The permissionNames parameter denotes which permissions are included in this role.
+	Create(name, description string, permissionNames []string) error
+
+	// Update an existing role.
+	//
+	// The parameters follow the same convention as those for the Create function, with
+	// the distinction where `name` identifies the role and `newName` holds the updated
+	// name value.
+	//
+	// IMPORTANT: All parameters will override whatever values are currently set
+	// in the existing role. Use carefully.
+	Update(name, newName, description string, permissionNames []string) error
+
+	// Delete an existing role.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	Delete(name string) error
+
+	// Load all roles.
+	LoadAll() ([]*auth.Role, error)
+}
+
 // Provides various APIs for managing a Descope project programmatically. A management key must
 // be provided in the DecopeClient configuration or by setting the DESCOPE_MANAGEMENT_KEY
 // environment variable. Management keys can be generated in the Descope console.
@@ -166,4 +196,7 @@ type Management interface {
 
 	// Provide functions for managing permissions in a project
 	Permission() Permission
+
+	// Provide functions for managing roles in a project
+	Role() Role
 }

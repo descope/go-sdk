@@ -21,6 +21,7 @@ var flags struct {
 	Tenants     []string
 	Domains     []string
 	Description string
+	Permissions []string
 }
 
 // Descope SDK
@@ -122,6 +123,28 @@ func permissionAll(args []string) error {
 	return err
 }
 
+func roleCreate(args []string) error {
+	return descopeClient.Management.Role().Create(args[0], flags.Description, flags.Permissions)
+}
+
+func roleUpdate(args []string) error {
+	return descopeClient.Management.Role().Update(args[0], args[1], flags.Description, flags.Permissions)
+}
+
+func roleDelete(args []string) error {
+	return descopeClient.Management.Role().Delete(args[0])
+}
+
+func roleAll(args []string) error {
+	res, err := descopeClient.Management.Role().LoadAll()
+	if err == nil {
+		for _, p := range res {
+			fmt.Println("Found:", p)
+		}
+	}
+	return err
+}
+
 // Command line setup
 
 var cli = &cobra.Command{
@@ -212,6 +235,27 @@ func main() {
 	})
 
 	addCommand(permissionAll, "permission-all", "Load all permissions", func(cmd *cobra.Command) {
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(roleCreate, "role-create <name>", "Create a new role", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(1)
+		cmd.Flags().StringVarP(&flags.Description, "description", "D", "", "the role's description")
+		cmd.Flags().StringSliceVarP(&flags.Permissions, "permissions", "P", nil, "the permission names included in this role")
+	})
+
+	addCommand(roleUpdate, "role-update <name> <newName>", "Update a role", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(2)
+		cmd.Flags().StringVarP(&flags.Description, "description", "D", "", "the role's description")
+		cmd.Flags().StringSliceVarP(&flags.Permissions, "permissions", "P", nil, "the permission names included in this role")
+	})
+
+	addCommand(roleDelete, "role-delete <name>", "Delete a role", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(1)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(roleAll, "role-all", "Load all roles", func(cmd *cobra.Command) {
 		cmd.DisableFlagsInUseLine = true
 	})
 
