@@ -66,5 +66,5 @@ func unmarshalRolesLoadAllResponse(res *api.HTTPResponse) ([]*auth.Role, error) 
 	if err != nil {
 		return nil, err
 	}
-	return pres.Roles, err
+	return pres.Roles, nil
 }
