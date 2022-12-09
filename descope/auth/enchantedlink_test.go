@@ -47,14 +47,14 @@ func TestSignInEnchantedLink(t *testing.T) {
 		assert.EqualValues(t, uri, m["URI"])
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","identifier": "%s"}`, pendingRefResponse, identifier))),
+			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","linkId": "%s"}`, pendingRefResponse, identifier))),
 		}, nil
 	})
 	require.NoError(t, err)
 	response, err := a.EnchantedLink().SignIn(email, uri, nil, nil)
 	require.NoError(t, err)
 	require.Equal(t, pendingRefResponse, response.PendingRef)
-	require.Equal(t, identifier, response.Identifier)
+	require.Equal(t, identifier, response.LinkID)
 }
 
 func TestSignInEnchantedLinkStepup(t *testing.T) {
@@ -79,14 +79,14 @@ func TestSignInEnchantedLinkStepup(t *testing.T) {
 		assert.EqualValues(t, "test", bearers[1])
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","identifier": "%s"}`, pendingRefResponse, identifier))),
+			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","linkId": "%s"}`, pendingRefResponse, identifier))),
 		}, nil
 	})
 	require.NoError(t, err)
 	response, err := a.EnchantedLink().SignIn(email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
 	require.NoError(t, err)
 	require.Equal(t, pendingRefResponse, response.PendingRef)
-	require.Equal(t, identifier, response.Identifier)
+	require.Equal(t, identifier, response.LinkID)
 }
 
 func TestSignInEnchantedLinkInvalidResponse(t *testing.T) {
@@ -120,14 +120,14 @@ func TestSignUpEnchantedLink(t *testing.T) {
 		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","identifier": "%s"}`, pendingRefResponse, identifier))),
+			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","linkId": "%s"}`, pendingRefResponse, identifier))),
 		}, nil
 	})
 	require.NoError(t, err)
 	response, err := a.EnchantedLink().SignUp(email, uri, &User{Name: "test"})
 	require.NoError(t, err)
 	require.Equal(t, pendingRefResponse, response.PendingRef)
-	require.Equal(t, identifier, response.Identifier)
+	require.Equal(t, identifier, response.LinkID)
 }
 
 func TestSignUpOrInEnchantedLink(t *testing.T) {
@@ -144,14 +144,14 @@ func TestSignUpOrInEnchantedLink(t *testing.T) {
 		assert.EqualValues(t, uri, m["URI"])
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s", "identifier": "%s"}`, pendingRefResponse, identifier))),
+			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s", "linkId": "%s"}`, pendingRefResponse, identifier))),
 		}, nil
 	})
 	require.NoError(t, err)
 	response, err := a.EnchantedLink().SignUpOrIn(email, uri)
 	require.NoError(t, err)
 	require.Equal(t, pendingRefResponse, response.PendingRef)
-	require.Equal(t, identifier, response.Identifier)
+	require.Equal(t, identifier, response.LinkID)
 }
 
 func TestSignUpEnchantedLinkEmptyIdentifier(t *testing.T) {
