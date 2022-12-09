@@ -49,16 +49,12 @@ func (p *provider) selectKey(sink jws.KeySink, key jwk.Key) error {
 
 func (p *provider) requestKeys() error {
 	projectID := p.conf.ProjectID
-	keysWrapper := map[string]interface{}{}
+	keysWrapper := map[string][]map[string]interface{}{}
 	_, err := p.client.DoGetRequest(path.Join(api.Routes.GetKeys(), projectID), &api.HTTPRequest{ResBodyObj: &keysWrapper}, "")
 	if err != nil {
 		return err
 	}
-	keysInterface := keysWrapper["keys"]
-	keys, ok := keysInterface.([]interface{})
-	if !ok {
-		return errors.NewPublicKeyValidationError("Failed parsing public key")
-	}
+	keys := keysWrapper["keys"]
 	tempKeySet := map[string]jwk.Key{}
 	for i := range keys {
 		b, err := utils.Marshal(keys[i])
