@@ -27,7 +27,8 @@ const (
 
 var (
 	Routes = endpoints{
-		version: "/v1/",
+		version:   "/v1/",
+		versionV2: "/v2/",
 		auth: authEndpoints{
 			signInOTP:                    "auth/otp/signin",
 			signUpOTP:                    "auth/otp/signup",
@@ -95,6 +96,7 @@ var (
 
 type endpoints struct {
 	version   string
+	versionV2 string
 	auth      authEndpoints
 	mgmt      mgmtEndpoints
 	logout    string
@@ -258,7 +260,7 @@ func (e *endpoints) Me() string {
 	return path.Join(e.version, e.me)
 }
 func (e *endpoints) GetKeys() string {
-	return path.Join(e.version, e.keys)
+	return path.Join(e.versionV2, e.keys)
 }
 func (e *endpoints) RefreshToken() string {
 	return path.Join(e.version, e.refresh)
