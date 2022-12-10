@@ -135,7 +135,7 @@ type JWTResponse struct {
 
 type EnchantedLinkResponse struct {
 	PendingRef string `json:"pendingRef,omitempty"` // Pending referral code used to poll enchanted link authentication status
-	LinkID     string `json:"linkId,omitempty"`     // Link ID, on which link the user should click
+	LinkID     string `json:"linkId,omitempty"`     // Link id, on which link the user should click
 }
 
 func NewAuthenticationInfo(jRes *JWTResponse, token *Token) *AuthenticationInfo {
