@@ -120,7 +120,7 @@ func main() {
 func handleIsHealthy(w http.ResponseWriter, r *http.Request) {
 	setResponse(w, http.StatusOK, "You can see this page only since you are logged in")
 }
-aa
+
 func help(w http.ResponseWriter, r *http.Request) {
 	helpTxt := "Sign up with otp email go to: /otp/signup?email=\n\n"
 	helpTxt += "Sign up with otp sms go to: /otp/signup?sms=\n\n"
@@ -276,7 +276,7 @@ func handleEnchantedLinkSignIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	helpTxt := "You should have received an enchanted link by email\n"
-	helpTxt += "Clink on the link labeled " + enchantedRes.LinkID + "\n"
+	helpTxt += "Clink on the link labeled " + enchantedRes.Identifier + "\n"
 	helpTxt += "Once done, copy the following to the url, so you will get a session on your original page:\n"
 	helpTxt += "/enchantedlink/session?pendingRef=" + enchantedRes.PendingRef
 	setResponse(w, http.StatusOK, helpTxt)
@@ -291,7 +291,7 @@ func handleEnchantedLinkSignUp(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	helpTxt := "You should have received an enchanted link by email\n"
-	helpTxt += "Clink on the link labeled " + enchantedRes.LinkID + "\n"
+	helpTxt += "Clink on the link labeled " + enchantedRes.Identifier + "\n"
 	helpTxt += "Once done, copy the following to the url, so you will get a session on your original page:\n"
 	helpTxt += "/enchantedlink/session?pendingRef=" + enchantedRes.PendingRef
 	setResponse(w, http.StatusOK, helpTxt)
