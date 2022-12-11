@@ -120,7 +120,7 @@ func main() {
 func handleIsHealthy(w http.ResponseWriter, r *http.Request) {
 	setResponse(w, http.StatusOK, "You can see this page only since you are logged in")
 }
-
+aa
 func help(w http.ResponseWriter, r *http.Request) {
 	helpTxt := "Sign up with otp email go to: /otp/signup?email=\n\n"
 	helpTxt += "Sign up with otp sms go to: /otp/signup?sms=\n\n"
