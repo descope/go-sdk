@@ -306,6 +306,7 @@ func TestValidateSessionRequestRefreshSession(t *testing.T) {
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
 	})
+	a.conf.SessionJWTViaCookie = true
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
@@ -335,10 +336,15 @@ func TestValidateSessionRequestMissingSessionToken(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, ok)
 	assert.EqualValues(t, mockAuthSessionCookie.Value, userToken.JWT)
-	require.Len(t, b.Result().Cookies(), 1)
-	sessionCookie := b.Result().Cookies()[0]
-	require.NoError(t, err)
-	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
+	require.Len(t, b.Result().Cookies(), 0)
+
+	require.Len(t, b.Result().Cookies(), 0)
+	authHeader := b.Header().Get(api.AuthorizationHeaderName)
+	require.NotEmpty(t, authHeader)
+	tokens := strings.Split(authHeader, api.BearerAuthorizationPrefix)
+	require.EqualValues(t, 2, len(tokens))
+	sessionJWT := tokens[1]
+	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionJWT)
 }
 
 func TestValidateSessionRequestFailRefreshSession(t *testing.T) {
@@ -407,10 +413,14 @@ func TestRefreshSessionRequestRefreshSession(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, ok)
 	assert.EqualValues(t, mockAuthSessionCookie.Value, userToken.JWT)
-	require.Len(t, b.Result().Cookies(), 1)
-	sessionCookie := b.Result().Cookies()[0]
-	require.NoError(t, err)
-	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
+	require.Len(t, b.Result().Cookies(), 0)
+	require.Len(t, b.Result().Cookies(), 0)
+	authHeader := b.Header().Get(api.AuthorizationHeaderName)
+	require.NotEmpty(t, authHeader)
+	tokens := strings.Split(authHeader, api.BearerAuthorizationPrefix)
+	require.EqualValues(t, 2, len(tokens))
+	sessionJWT := tokens[1]
+	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionJWT)
 }
 
 func TestRefreshSessionNoRequest(t *testing.T) {
