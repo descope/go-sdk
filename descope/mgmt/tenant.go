@@ -2,6 +2,7 @@ package mgmt
 
 import (
 	"github.com/descope/go-sdk/descope/api"
+	"github.com/descope/go-sdk/descope/auth"
 	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/utils"
 )
@@ -61,6 +62,25 @@ func (t *tenant) Delete(id string) error {
 	return err
 }
 
+func (t *tenant) LoadAll() ([]*auth.Tenant, error) {
+	res, err := t.client.DoGetRequest(api.Routes.ManagementTenantLoadAll(), nil, t.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalLoadAllTenantsResponse(res)
+}
+
 func makeCreateUpdateTenantRequest(id, name string, selfProvisioningDomains []string) map[string]any {
 	return map[string]any{"id": id, "name": name, "selfProvisioningDomains": selfProvisioningDomains}
+}
+
+func unmarshalLoadAllTenantsResponse(res *api.HTTPResponse) ([]*auth.Tenant, error) {
+	tres := struct {
+		Tenants []*auth.Tenant
+	}{}
+	err := utils.Unmarshal([]byte(res.BodyStr), &tres)
+	if err != nil {
+		return nil, err
+	}
+	return tres.Tenants, err
 }

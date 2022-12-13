@@ -189,6 +189,12 @@ type UserTenants struct {
 	RoleNames []string `json:"roleNames,omitempty"`
 }
 
+type Tenant struct {
+	ID                      string   `json:"id"`
+	Name                    string   `json:"name"`
+	SelfProvisioningDomains []string `json:"selfProvisioningDomains"`
+}
+
 type Permission struct {
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
