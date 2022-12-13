@@ -33,6 +33,10 @@ type Config struct {
 	LogLevel logger.LogLevel
 	// LoggerInterface (optional, log.Default()) - set the logger instance to use for logging with the sdk.
 	Logger logger.LoggerInterface
+	// State whether session jwt should be sent to client in header or in the cookie,
+	// defaults to header, use cookie if session jwt will stay small (less than 1k)
+	// session cookie can grow bigger, in case of using authorization, or adding custom claims
+	SessionJWTViaCookie bool
 }
 
 func (c *Config) setProjectID() string {
@@ -107,7 +111,7 @@ func NewDescopeClientWithConfig(config *Config) (*DescopeClient, error) {
 
 	c := api.NewClient(api.ClientParams{BaseURL: config.DescopeBaseURL, CustomDefaultHeaders: config.CustomDefaultHeaders, DefaultClient: config.DefaultClient, ProjectID: config.ProjectID})
 
-	authService, err := auth.NewAuth(auth.AuthParams{ProjectID: config.ProjectID, PublicKey: config.PublicKey}, c)
+	authService, err := auth.NewAuth(auth.AuthParams{ProjectID: config.ProjectID, PublicKey: config.PublicKey, SessionJWTViaCookie: config.SessionJWTViaCookie}, c)
 	if err != nil {
 		return nil, err
 	}

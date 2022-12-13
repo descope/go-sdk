@@ -17,8 +17,9 @@ import (
 )
 
 type AuthParams struct {
-	ProjectID string
-	PublicKey string
+	ProjectID           string
+	PublicKey           string
+	SessionJWTViaCookie bool
 }
 
 type authenticationsBase struct {
@@ -510,12 +511,21 @@ func (auth *authenticationsBase) generateAuthenticationInfo(httpResponse *api.HT
 	cookies := httpResponse.Res.Cookies()
 	var token *Token
 	for i := range tokens {
-		ck := createCookie(tokens[i], jwtResponse)
-		if ck != nil {
-			cookies = append(cookies, ck)
+		token = tokens[i]
+		addToCookie := true
+		if token.Claims[claimAttributeName] == SessionCookieName {
+			if !auth.conf.SessionJWTViaCookie {
+				addToCookie = false
+				if w != nil {
+					w.Header().Set(api.AuthorizationHeaderName, api.BearerAuthorizationPrefix+token.JWT)
+				}
+			}
 		}
-		if tokens[i].Claims[claimAttributeName] == SessionCookieName {
-			token = tokens[i]
+		if addToCookie {
+			ck := createCookie(token, jwtResponse)
+			if ck != nil {
+				cookies = append(cookies, ck)
+			}
 		}
 	}
 	setCookies(cookies, w)
