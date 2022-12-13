@@ -177,10 +177,13 @@ func TestGetSession(t *testing.T) {
 	info, err := a.EnchantedLink().GetSession(pendingRef, w)
 	require.NoError(t, err)
 	assert.NotEmpty(t, info.SessionToken.JWT)
-	require.Len(t, w.Result().Cookies(), 1)
-	sessionCookie := w.Result().Cookies()[0]
-	require.NoError(t, err)
-	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
+	require.Len(t, w.Result().Cookies(), 0)
+	authHeader := w.Header().Get(api.AuthorizationHeaderName)
+	require.NotEmpty(t, authHeader)
+	tokens := strings.Split(authHeader, api.BearerAuthorizationPrefix)
+	require.EqualValues(t, 2, len(tokens))
+	sessionJWT := tokens[1]
+	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionJWT)
 }
 
 func TestGetEnchantedLinkSessionError(t *testing.T) {
