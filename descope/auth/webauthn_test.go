@@ -50,12 +50,6 @@ func TestSignInFinish(t *testing.T) {
 	require.NoError(t, err)
 	assert.EqualValues(t, jwtTokenValid, res.SessionToken.JWT)
 	require.Len(t, w.Result().Cookies(), 0)
-	authHeader := w.Header().Get(api.AuthorizationHeaderName)
-	require.NotEmpty(t, authHeader)
-	tokens := strings.Split(authHeader, api.BearerAuthorizationPrefix)
-	require.EqualValues(t, 2, len(tokens))
-	sessionJWT := tokens[1]
-	assert.EqualValues(t, jwtTokenValid, sessionJWT)
 }
 
 func TestSignInStart(t *testing.T) {
@@ -124,12 +118,6 @@ func TestSignUpFinish(t *testing.T) {
 	require.NoError(t, err)
 	assert.EqualValues(t, jwtTokenValid, res.SessionToken.JWT)
 	require.Len(t, w.Result().Cookies(), 0)
-	authHeader := w.Header().Get(api.AuthorizationHeaderName)
-	require.NotEmpty(t, authHeader)
-	tokens := strings.Split(authHeader, api.BearerAuthorizationPrefix)
-	require.EqualValues(t, 2, len(tokens))
-	sessionJWT := tokens[1]
-	assert.EqualValues(t, jwtTokenValid, sessionJWT)
 }
 
 func TestSignUpOrInStart(t *testing.T) {

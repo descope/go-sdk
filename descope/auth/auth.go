@@ -343,7 +343,7 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 			logger.LogError("cannot validate refresh token, refresh expiration will not be available", tErr)
 		}
 	}
-	if sessionToken == "" || err != nil || forceRefresh {
+	if err != nil || forceRefresh {
 		// check refresh token
 		if refreshToken == "" {
 			return false, nil, err
@@ -351,7 +351,7 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 		if ok, err := validateTokenError(tErr); !ok {
 			return false, nil, err
 		}
-		// auto-refresh session token
+		// refresh session token
 		httpResponse, err := auth.client.DoPostRequest(api.Routes.RefreshToken(), nil, &api.HTTPRequest{}, refreshToken)
 		if err != nil {
 			return false, nil, errors.FailedToRefreshTokenError
@@ -509,27 +509,24 @@ func (auth *authenticationsBase) generateAuthenticationInfo(httpResponse *api.HT
 		return nil, err
 	}
 	cookies := httpResponse.Res.Cookies()
-	var token *Token
+	var sToken *Token
 	for i := range tokens {
-		token = tokens[i]
 		addToCookie := true
-		if token.Claims[claimAttributeName] == SessionCookieName {
+		if tokens[i].Claims[claimAttributeName] == SessionCookieName {
+			sToken = tokens[i]
 			if !auth.conf.SessionJWTViaCookie {
 				addToCookie = false
-				if w != nil {
-					w.Header().Set(api.AuthorizationHeaderName, api.BearerAuthorizationPrefix+token.JWT)
-				}
 			}
 		}
 		if addToCookie {
-			ck := createCookie(token, jwtResponse)
+			ck := createCookie(tokens[i], jwtResponse)
 			if ck != nil {
 				cookies = append(cookies, ck)
 			}
 		}
 	}
 	setCookies(cookies, w)
-	return NewAuthenticationInfo(jwtResponse, token), err
+	return NewAuthenticationInfo(jwtResponse, sToken), err
 }
 
 func getValidRefreshToken(r *http.Request) (string, error) {
