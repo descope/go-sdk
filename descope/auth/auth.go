@@ -343,7 +343,7 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 			logger.LogError("cannot validate refresh token, refresh expiration will not be available", tErr)
 		}
 	}
-	if err != nil || forceRefresh {
+	if ((err != nil || sessionToken == "") && auth.conf.SessionJWTViaCookie) || forceRefresh {
 		// check refresh token
 		if refreshToken == "" {
 			return false, nil, err
@@ -365,7 +365,7 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 		return true, info.SessionToken, nil
 	}
 
-	return true, token, nil
+	return token != nil && err != nil, token, err
 }
 
 func (auth *authenticationsBase) extractJWTResponse(bodyStr string) (*JWTResponse, error) {
