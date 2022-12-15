@@ -82,5 +82,5 @@ func unmarshalLoadAllTenantsResponse(res *api.HTTPResponse) ([]*auth.Tenant, err
 	if err != nil {
 		return nil, err
 	}
-	return tres.Tenants, err
+	return tres.Tenants, nil
 }
