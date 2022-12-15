@@ -101,6 +101,16 @@ func tenantDelete(args []string) error {
 	return descopeClient.Management.Tenant().Delete(args[0])
 }
 
+func tenantLoadAll(args []string) error {
+	res, err := descopeClient.Management.Tenant().LoadAll()
+	if err == nil {
+		for _, t := range res {
+			fmt.Println("Found:", t)
+		}
+	}
+	return err
+}
+
 func permissionCreate(args []string) error {
 	return descopeClient.Management.Permission().Create(args[0], flags.Description)
 }
@@ -206,6 +216,10 @@ func main() {
 
 	addCommand(tenantDelete, "tenant-delete <id>", "Delete an existing tenant", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(tenantLoadAll, "tenant-all", "Load all tenants", func(cmd *cobra.Command) {
 		cmd.DisableFlagsInUseLine = true
 	})
 

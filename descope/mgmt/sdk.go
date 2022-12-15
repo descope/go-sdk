@@ -31,6 +31,9 @@ type Tenant interface {
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	Delete(id string) error
+
+	// Load all project tenants
+	LoadAll() ([]*auth.Tenant, error)
 }
 
 // Represents a tenant association for a User. The tenant ID is required to denote

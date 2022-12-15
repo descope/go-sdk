@@ -158,6 +158,9 @@ type MockTenant struct {
 
 	DeleteAssert func(id string)
 	DeleteError  error
+
+	LoadAllResponse []*auth.Tenant
+	LoadAllError    error
 }
 
 func (m *MockTenant) Create(name string, selfProvisioningDomains []string) (id string, err error) {
@@ -186,6 +189,10 @@ func (m *MockTenant) Delete(id string) error {
 		m.DeleteAssert(id)
 	}
 	return m.DeleteError
+}
+
+func (m *MockTenant) LoadAll() ([]*auth.Tenant, error) {
+	return m.LoadAllResponse, m.LoadAllError
 }
 
 // Mock Permission
