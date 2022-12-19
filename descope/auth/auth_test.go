@@ -337,14 +337,6 @@ func TestValidateSessionRequestMissingSessionToken(t *testing.T) {
 	require.True(t, ok)
 	assert.EqualValues(t, mockAuthSessionCookie.Value, userToken.JWT)
 	require.Len(t, b.Result().Cookies(), 0)
-
-	require.Len(t, b.Result().Cookies(), 0)
-	authHeader := b.Header().Get(api.AuthorizationHeaderName)
-	require.NotEmpty(t, authHeader)
-	tokens := strings.Split(authHeader, api.BearerAuthorizationPrefix)
-	require.EqualValues(t, 2, len(tokens))
-	sessionJWT := tokens[1]
-	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionJWT)
 }
 
 func TestValidateSessionRequestFailRefreshSession(t *testing.T) {
@@ -414,13 +406,6 @@ func TestRefreshSessionRequestRefreshSession(t *testing.T) {
 	require.True(t, ok)
 	assert.EqualValues(t, mockAuthSessionCookie.Value, userToken.JWT)
 	require.Len(t, b.Result().Cookies(), 0)
-	require.Len(t, b.Result().Cookies(), 0)
-	authHeader := b.Header().Get(api.AuthorizationHeaderName)
-	require.NotEmpty(t, authHeader)
-	tokens := strings.Split(authHeader, api.BearerAuthorizationPrefix)
-	require.EqualValues(t, 2, len(tokens))
-	sessionJWT := tokens[1]
-	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionJWT)
 }
 
 func TestRefreshSessionNoRequest(t *testing.T) {
