@@ -509,27 +509,24 @@ func (auth *authenticationsBase) generateAuthenticationInfo(httpResponse *api.HT
 		return nil, err
 	}
 	cookies := httpResponse.Res.Cookies()
-	var token *Token
+	var sToken *Token
 	for i := range tokens {
-		token = tokens[i]
 		addToCookie := true
-		if token.Claims[claimAttributeName] == SessionCookieName {
+		if tokens[i].Claims[claimAttributeName] == SessionCookieName {
+			sToken = tokens[i]
 			if !auth.conf.SessionJWTViaCookie {
 				addToCookie = false
-				if w != nil {
-					w.Header().Set(api.AuthorizationHeaderName, api.BearerAuthorizationPrefix+token.JWT)
-				}
 			}
 		}
 		if addToCookie {
-			ck := createCookie(token, jwtResponse)
+			ck := createCookie(tokens[i], jwtResponse)
 			if ck != nil {
 				cookies = append(cookies, ck)
 			}
 		}
 	}
 	setCookies(cookies, w)
-	return NewAuthenticationInfo(jwtResponse, token), err
+	return NewAuthenticationInfo(jwtResponse, sToken), err
 }
 
 func getValidRefreshToken(r *http.Request) (string, error) {

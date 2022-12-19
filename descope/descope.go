@@ -33,8 +33,8 @@ type Config struct {
 	LogLevel logger.LogLevel
 	// LoggerInterface (optional, log.Default()) - set the logger instance to use for logging with the sdk.
 	Logger logger.LoggerInterface
-	// State whether session jwt should be sent to client in header or in the cookie,
-	// defaults to header, use cookie if session jwt will stay small (less than 1k)
+	// State whether session jwt should be sent to client in cookie or let the calling function handle the transfer of the jwt,
+	// defaults to leaving it for calling function, use cookie if session jwt will stay small (less than 1k)
 	// session cookie can grow bigger, in case of using authorization, or adding custom claims
 	SessionJWTViaCookie bool
 }
