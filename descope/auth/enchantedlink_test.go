@@ -177,7 +177,7 @@ func TestGetSession(t *testing.T) {
 	info, err := a.EnchantedLink().GetSession(pendingRef, w)
 	require.NoError(t, err)
 	assert.NotEmpty(t, info.SessionToken.JWT)
-	require.Len(t, w.Result().Cookies(), 0)
+	require.Len(t, w.Result().Cookies(), 1) // Just the refresh token
 }
 
 func TestGetEnchantedLinkSessionError(t *testing.T) {

@@ -47,7 +47,7 @@ var (
 	mockAuthInvalidSessionCookie = &http.Cookie{Value: jwtTokenExpired, Name: SessionCookieName}
 	mockAuthInvalidRefreshCookie = &http.Cookie{Value: jwtTokenExpired, Name: RefreshCookieName}
 
-	mockAuthSessionBody = fmt.Sprintf(`{"refreshJwt": "%s", "cookiePath": "%s", "cookieDomain": "%s" }`, jwtTokenValid, "/my-path", "my-domain")
+	mockAuthSessionBody = fmt.Sprintf(`{"sessionJwt": "%s", "refreshJwt": "%s", "cookiePath": "%s", "cookieDomain": "%s" }`, jwtTokenValid, jwtRTokenValid, "/my-path", "my-domain")
 
 	mockUserResponseBody = fmt.Sprintf(`{"name": "%s", "email": "%s", "userId": "%s"}`, "kuku name", "kuku@test.com", "kuku")
 
@@ -285,7 +285,7 @@ func TestValidateSessionRequestMissingCookie(t *testing.T) {
 	})
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
-	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtRTokenValid})
 	ok, token, err := a.ValidateSession(request, nil)
 	require.NoError(t, err)
 	require.True(t, ok)
@@ -309,7 +309,7 @@ func TestValidateSessionRequestRefreshSession(t *testing.T) {
 	a.conf.SessionJWTViaCookie = true
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
-	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtRTokenValid})
 	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenExpired})
 
 	b := httptest.NewRecorder()
@@ -317,7 +317,7 @@ func TestValidateSessionRequestRefreshSession(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, ok)
 	assert.EqualValues(t, mockAuthSessionCookie.Value, userToken.JWT)
-	require.Len(t, b.Result().Cookies(), 1)
+	require.Len(t, b.Result().Cookies(), 2)
 	sessionCookie := b.Result().Cookies()[0]
 	require.NoError(t, err)
 	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
@@ -329,14 +329,14 @@ func TestValidateSessionRequestMissingSessionToken(t *testing.T) {
 	})
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
-	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtRTokenValid})
 
 	b := httptest.NewRecorder()
 	ok, userToken, err := a.ValidateSession(request, b)
 	require.NoError(t, err)
 	require.True(t, ok)
 	assert.EqualValues(t, mockAuthSessionCookie.Value, userToken.JWT)
-	require.Len(t, b.Result().Cookies(), 0)
+	require.Len(t, b.Result().Cookies(), 1) // Only the refresh token
 }
 
 func TestValidateSessionRequestFailRefreshSession(t *testing.T) {
@@ -345,7 +345,7 @@ func TestValidateSessionRequestFailRefreshSession(t *testing.T) {
 	})
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
-	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtRTokenValid})
 	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenExpired})
 	ok, cookies, err := a.ValidateSession(request, nil)
 	require.Error(t, err)
@@ -397,7 +397,7 @@ func TestRefreshSessionRequestRefreshSession(t *testing.T) {
 	})
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
-	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtRTokenValid})
 	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenExpired})
 
 	b := httptest.NewRecorder()
@@ -405,7 +405,7 @@ func TestRefreshSessionRequestRefreshSession(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, ok)
 	assert.EqualValues(t, mockAuthSessionCookie.Value, userToken.JWT)
-	require.Len(t, b.Result().Cookies(), 0)
+	require.Len(t, b.Result().Cookies(), 1) // Just the refresh token
 }
 
 func TestRefreshSessionNoRequest(t *testing.T) {
@@ -529,7 +529,7 @@ func TestLogoutFailure(t *testing.T) {
 	})
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
-	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtRTokenValid})
 
 	err = a.Logout(request, nil)
 	require.Error(t, err)
@@ -541,7 +541,7 @@ func TestLogoutAllFailure(t *testing.T) {
 	})
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
-	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtRTokenValid})
 
 	err = a.LogoutAll(request, nil)
 	require.Error(t, err)
@@ -818,7 +818,7 @@ func TestMe(t *testing.T) {
 	})
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
-	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
+	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtRTokenValid})
 
 	user, err := a.Me(request)
 	require.NoError(t, err)

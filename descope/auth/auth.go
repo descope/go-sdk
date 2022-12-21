@@ -356,7 +356,7 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 		if err != nil {
 			return false, nil, errors.FailedToRefreshTokenError
 		}
-		info, err := auth.generateAuthenticationInfo(httpResponse, w)
+		info, err := auth.generateAuthenticationInfoWithRefreshToken(httpResponse, tToken, w)
 		if err != nil {
 			return false, nil, err
 		}
@@ -499,6 +499,10 @@ func (auth *authenticationsBase) exchangeToken(code string, url string, w http.R
 }
 
 func (auth *authenticationsBase) generateAuthenticationInfo(httpResponse *api.HTTPResponse, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	return auth.generateAuthenticationInfoWithRefreshToken(httpResponse, nil, w)
+}
+
+func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(httpResponse *api.HTTPResponse, refreshToken *Token, w http.ResponseWriter) (*AuthenticationInfo, error) {
 	jwtResponse, err := auth.extractJWTResponse(httpResponse.BodyStr)
 	if err != nil {
 		return nil, err
@@ -518,6 +522,9 @@ func (auth *authenticationsBase) generateAuthenticationInfo(httpResponse *api.HT
 				addToCookie = false
 			}
 		}
+		if tokens[i].Claims[claimAttributeName] == RefreshCookieName {
+			refreshToken = tokens[i]
+		}
 		if addToCookie {
 			ck := createCookie(tokens[i], jwtResponse)
 			if ck != nil {
@@ -526,7 +533,7 @@ func (auth *authenticationsBase) generateAuthenticationInfo(httpResponse *api.HT
 		}
 	}
 	setCookies(cookies, w)
-	return NewAuthenticationInfo(jwtResponse, sToken), err
+	return NewAuthenticationInfo(jwtResponse, sToken, refreshToken), err
 }
 
 func getValidRefreshToken(r *http.Request) (string, error) {
