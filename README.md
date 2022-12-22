@@ -126,7 +126,7 @@ The user can either `sign up`, `sign in` or `sign up or in`
 ```go
 // If configured globally, the redirect URI is optional. If provided however, it will be used
 // instead of any global configuration.
-res, err := client.Auth.EnchantedLink().SignIn(identifier, "http://myapp.com/verify-magic-link", nil, nil)
+res, err := client.Auth.EnchantedLink().SignIn(identifier, "http://myapp.com/verify-enchanted-link", nil, nil)
 if err != nil {
     // handle error
 }
