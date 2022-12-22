@@ -422,7 +422,7 @@ err := descopeClient.Management.User().Update("desmond@descope.com", "desmond@de
 err := descopeClient.Management.User().Delete("desmond@descope.com")
 
 // Load specific user
-userRes, err := err := descopeClient.Management.User().Load("desmond@descope.com")
+userRes, err := descopeClient.Management.User().Load("desmond@descope.com")
 
 // Search all users, optionally according to tenant and/or role filter
 usersResp = err := descopeClient.Management.User().SearchAll([]string{"my-tenant-id"}, nil, 0)
