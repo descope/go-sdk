@@ -633,4 +633,4 @@ If you need help you can email [Descope Support](mailto:support@descope.com)
 
 ## License
 
-The Descope SDK for Python is licensed for use under the terms and conditions of the [MIT license Agreement](https://github.com/descope/python-sdk/blob/main/LICENSE).
+The Descope SDK for Go is licensed for use under the terms and conditions of the [MIT license Agreement](https://github.com/descope/go-sdk/blob/main/LICENSE).
