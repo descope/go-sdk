@@ -49,7 +49,7 @@ func TestSignInFinish(t *testing.T) {
 	res, err := a.WebAuthn().SignInFinish(expectedResponse, w)
 	require.NoError(t, err)
 	assert.EqualValues(t, jwtTokenValid, res.SessionToken.JWT)
-	require.Len(t, w.Result().Cookies(), 0)
+	require.Len(t, w.Result().Cookies(), 1) // Just the refresh token
 }
 
 func TestSignInStart(t *testing.T) {
@@ -117,7 +117,7 @@ func TestSignUpFinish(t *testing.T) {
 	res, err := a.WebAuthn().SignUpFinish(expectedResponse, w)
 	require.NoError(t, err)
 	assert.EqualValues(t, jwtTokenValid, res.SessionToken.JWT)
-	require.Len(t, w.Result().Cookies(), 0)
+	require.Len(t, w.Result().Cookies(), 1) // Just the refresh token
 }
 
 func TestSignUpOrInStart(t *testing.T) {

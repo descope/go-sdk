@@ -19,6 +19,7 @@ type TOTPResponse struct {
 
 type AuthenticationInfo struct {
 	SessionToken *Token        `json:"token,omitempty"`
+	RefreshToken *Token        `json:"refreshToken,omitempty"`
 	User         *UserResponse `json:"user,omitempty"`
 	FirstSeen    bool          `json:"firstSeen,omitempty"`
 }
@@ -138,11 +139,16 @@ type EnchantedLinkResponse struct {
 	LinkID     string `json:"linkId,omitempty"`     // Link id, on which link the user should click
 }
 
-func NewAuthenticationInfo(jRes *JWTResponse, token *Token) *AuthenticationInfo {
+func NewAuthenticationInfo(jRes *JWTResponse, sessionToken, refreshToken *Token) *AuthenticationInfo {
 	if jRes == nil {
 		jRes = &JWTResponse{}
 	}
-	return &AuthenticationInfo{SessionToken: token, User: jRes.User, FirstSeen: jRes.FirstSeen}
+	return &AuthenticationInfo{
+		SessionToken: sessionToken,
+		RefreshToken: refreshToken,
+		User:         jRes.User,
+		FirstSeen:    jRes.FirstSeen,
+	}
 }
 
 func NewToken(JWT string, token jwt.Token) *Token {

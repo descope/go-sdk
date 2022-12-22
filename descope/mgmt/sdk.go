@@ -106,13 +106,13 @@ type SSO interface {
 	//
 	// All parameters are required. The idpURL is the URL for the identity provider and idpCert
 	// is the certificated provided by the identity provider.
-	ConfigureSettings(tenantID string, enabled bool, idpURL, idpCert, entityID, redirectURL string) error
+	ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL string) error
 
 	// Configure SSO setting for a tenant by fetching SSO settings from an IDP metadata URL.
-	ConfigureMetadata(tenantID string, enabled bool, idpMetadataURL string) error
+	ConfigureMetadata(tenantID, idpMetadataURL string) error
 
 	// Configure SSO IDP mapping including groups to the Descope roles and user attributes.
-	ConfigureMapping(tenantID string, roleMappings []RoleMapping, attributeMapping *AttributeMapping) error
+	ConfigureMapping(tenantID string, roleMappings []*RoleMapping, attributeMapping *AttributeMapping) error
 }
 
 // Provide functions for manipulating valid JWT

@@ -9,7 +9,7 @@ type sso struct {
 	managementBase
 }
 
-func (s *sso) ConfigureSettings(tenantID string, enabled bool, idpURL, idpCert, entityID, redirectURL string) error {
+func (s *sso) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL string) error {
 	if tenantID == "" {
 		return errors.NewInvalidArgumentError("tenantID")
 	}
@@ -24,7 +24,6 @@ func (s *sso) ConfigureSettings(tenantID string, enabled bool, idpURL, idpCert, 
 	}
 	req := map[string]any{
 		"tenantId":    tenantID,
-		"enabled":     enabled,
 		"idpURL":      idpURL,
 		"idpCert":     idpCert,
 		"entityId":    entityID,
@@ -34,7 +33,7 @@ func (s *sso) ConfigureSettings(tenantID string, enabled bool, idpURL, idpCert, 
 	return err
 }
 
-func (s *sso) ConfigureMetadata(tenantID string, enabled bool, idpMetadataURL string) error {
+func (s *sso) ConfigureMetadata(tenantID, idpMetadataURL string) error {
 	if tenantID == "" {
 		return errors.NewInvalidArgumentError("tenantID")
 	}
@@ -43,14 +42,13 @@ func (s *sso) ConfigureMetadata(tenantID string, enabled bool, idpMetadataURL st
 	}
 	req := map[string]any{
 		"tenantId":       tenantID,
-		"enabled":        enabled,
 		"idpMetadataURL": idpMetadataURL,
 	}
 	_, err := s.client.DoPostRequest(api.Routes.ManagementSSOMetadata(), req, nil, s.conf.ManagementKey)
 	return err
 }
 
-func (s *sso) ConfigureMapping(tenantID string, roleMappings []RoleMapping, attributeMapping *AttributeMapping) error {
+func (s *sso) ConfigureMapping(tenantID string, roleMappings []*RoleMapping, attributeMapping *AttributeMapping) error {
 	if tenantID == "" {
 		return errors.NewInvalidArgumentError("tenantID")
 	}

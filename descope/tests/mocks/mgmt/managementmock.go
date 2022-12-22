@@ -56,31 +56,31 @@ func (m *MockJWT) UpdateJWTWithCustomClaims(jwt string, customClaims map[string]
 // Mock SSO
 
 type MockSSO struct {
-	ConfigureSettingsAssert func(tenantID string, enabled bool, idpURL, idpCert, entityID, redirectURL string)
+	ConfigureSettingsAssert func(tenantID, idpURL, idpCert, entityID, redirectURL string)
 	ConfigureSettingsError  error
 
-	ConfigureMetadataAssert func(tenantID string, enabled bool, idpMetadataURL string)
+	ConfigureMetadataAssert func(tenantID, idpMetadataURL string)
 	ConfigureMetadataError  error
 
-	ConfigureMappingAssert func(tenantID string, roleMappings []mgmt.RoleMapping, attributeMapping *mgmt.AttributeMapping)
+	ConfigureMappingAssert func(tenantID string, roleMappings []*mgmt.RoleMapping, attributeMapping *mgmt.AttributeMapping)
 	ConfigureMappingError  error
 }
 
-func (m *MockSSO) ConfigureSettings(tenantID string, enabled bool, idpURL, idpCert, entityID, redirectURL string) error {
+func (m *MockSSO) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL string) error {
 	if m.ConfigureSettingsAssert != nil {
-		m.ConfigureSettingsAssert(tenantID, enabled, idpURL, idpCert, entityID, redirectURL)
+		m.ConfigureSettingsAssert(tenantID, idpURL, idpCert, entityID, redirectURL)
 	}
 	return m.ConfigureSettingsError
 }
 
-func (m *MockSSO) ConfigureMetadata(tenantID string, enabled bool, idpMetadataURL string) error {
+func (m *MockSSO) ConfigureMetadata(tenantID, idpMetadataURL string) error {
 	if m.ConfigureMetadataAssert != nil {
-		m.ConfigureMetadataAssert(tenantID, enabled, idpMetadataURL)
+		m.ConfigureMetadataAssert(tenantID, idpMetadataURL)
 	}
 	return m.ConfigureMetadataError
 }
 
-func (m *MockSSO) ConfigureMapping(tenantID string, roleMappings []mgmt.RoleMapping, attributeMapping *mgmt.AttributeMapping) error {
+func (m *MockSSO) ConfigureMapping(tenantID string, roleMappings []*mgmt.RoleMapping, attributeMapping *mgmt.AttributeMapping) error {
 	if m.ConfigureMappingAssert != nil {
 		m.ConfigureMappingAssert(tenantID, roleMappings, attributeMapping)
 	}
