@@ -179,7 +179,7 @@ Users can authenticate using their social logins, using the OAuth protocol. Conf
 // Choose an oauth provider out of the supported providers
 // If configured globally, the return URL is optional. If provided however, it will be used
 // instead of any global configuration.
-// Redirect the user to the given returned URL to start the OAuth redirect chain
+// Redirect the user to the returned URL to start the OAuth redirect chain
 url, err := descopeClient.OAuth().Start("google", "https://my-app.com/handle-oauth", nil, nil, w)
 if err != nil {
     // handle error
@@ -207,7 +207,7 @@ Users can authenticate to a specific tenant using SAML or Single Sign On. Config
 // Choose which tenant to log into
 // If configured globally, the return URL is optional. If provided however, it will be used
 // instead of any global configuration.
-// Redirect the user to the given returned URL to start the SSO/SAML redirect chain
+// Redirect the user to the returned URL to start the SSO/SAML redirect chain
 url, err := descopeClient.SAML().Start("my-tenant-ID", "https://my-app.com/handle-saml", nil, nil, w)
 if err != nil {
     // handle error
