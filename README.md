@@ -467,7 +467,6 @@ Note: Certificates should have a similar structure to:
 -----BEGIN CERTIFICATE-----
 Certifcate contents
 -----END CERTIFICATE-----
-
 ```
 
 ### Manage Permissions
@@ -589,38 +588,38 @@ Mock usage examples:
 
 In the following snippet we mocked the Descope Authentication and Management SDKs, and have assertions to check the actual inputs passed to the SDK:
 
-```code go
+```go
 updateJWTWithCustomClaimsCalled := false
-	validateSessionResponse := "test1"
-	updateJWTWithCustomClaimsResponse := "test2"
-	api := DescopeClient{
-		Auth: &mocksauth.MockAuthentication{
-			MockSession: mocksauth.MockSession{
-				ValidateSessionResponseSuccess: false,
-				ValidateSessionResponse:        &auth.Token{JWT: validateSessionResponse},
-				ValidateSessionError:           errors.NoPublicKeyError,
-			},
-		},
-		Management: &mocksmgmt.MockManagement{
-			MockJWT: &mocksmgmt.MockJWT{
-				UpdateJWTWithCustomClaimsResponse: updateJWTWithCustomClaimsResponse,
-				UpdateJWTWithCustomClaimsAssert: func(jwt string, customClaims map[string]any) {
-					updateJWTWithCustomClaimsCalled = true
-					assert.EqualValues(t, "some jwt", jwt)
-				},
-			},
-		},
-	}
-	ok, info, err := api.Auth.ValidateSession(nil, nil)
-	assert.False(t, ok)
-	assert.NotEmpty(t, info)
-	assert.EqualValues(t, validateSessionResponse, info.JWT)
-	assert.ErrorIs(t, err, errors.NoPublicKeyError)
+validateSessionResponse := "test1"
+updateJWTWithCustomClaimsResponse := "test2"
+api := DescopeClient{
+    Auth: &mocksauth.MockAuthentication{
+        MockSession: mocksauth.MockSession{
+            ValidateSessionResponseSuccess: false,
+            ValidateSessionResponse:        &auth.Token{JWT: validateSessionResponse},
+            ValidateSessionError:           errors.NoPublicKeyError,
+        },
+    },
+    Management: &mocksmgmt.MockManagement{
+        MockJWT: &mocksmgmt.MockJWT{
+            UpdateJWTWithCustomClaimsResponse: updateJWTWithCustomClaimsResponse,
+            UpdateJWTWithCustomClaimsAssert: func(jwt string, customClaims map[string]any) {
+                updateJWTWithCustomClaimsCalled = true
+                assert.EqualValues(t, "some jwt", jwt)
+            },
+        },
+    },
+}
+ok, info, err := api.Auth.ValidateSession(nil, nil)
+assert.False(t, ok)
+assert.NotEmpty(t, info)
+assert.EqualValues(t, validateSessionResponse, info.JWT)
+assert.ErrorIs(t, err, errors.NoPublicKeyError)
 
-	res, err := api.Management.JWT().UpdateJWTWithCustomClaims("some jwt", nil)
-	require.NoError(t, err)
-	assert.True(t, updateJWTWithCustomClaimsCalled)
-	assert.EqualValues(t, updateJWTWithCustomClaimsResponse, res)
+res, err := api.Management.JWT().UpdateJWTWithCustomClaims("some jwt", nil)
+require.NoError(t, err)
+assert.True(t, updateJWTWithCustomClaimsCalled)
+assert.EqualValues(t, updateJWTWithCustomClaimsResponse, res)
 ```
 
 ## Learn More
