@@ -62,7 +62,7 @@ type MockSSO struct {
 	ConfigureMetadataAssert func(tenantID, idpMetadataURL string)
 	ConfigureMetadataError  error
 
-	ConfigureMappingAssert func(tenantID string, roleMappings []mgmt.RoleMapping, attributeMapping *mgmt.AttributeMapping)
+	ConfigureMappingAssert func(tenantID string, roleMappings []*mgmt.RoleMapping, attributeMapping *mgmt.AttributeMapping)
 	ConfigureMappingError  error
 }
 
@@ -80,7 +80,7 @@ func (m *MockSSO) ConfigureMetadata(tenantID, idpMetadataURL string) error {
 	return m.ConfigureMetadataError
 }
 
-func (m *MockSSO) ConfigureMapping(tenantID string, roleMappings []mgmt.RoleMapping, attributeMapping *mgmt.AttributeMapping) error {
+func (m *MockSSO) ConfigureMapping(tenantID string, roleMappings []*mgmt.RoleMapping, attributeMapping *mgmt.AttributeMapping) error {
 	if m.ConfigureMappingAssert != nil {
 		m.ConfigureMappingAssert(tenantID, roleMappings, attributeMapping)
 	}

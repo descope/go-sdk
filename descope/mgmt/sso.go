@@ -48,7 +48,7 @@ func (s *sso) ConfigureMetadata(tenantID, idpMetadataURL string) error {
 	return err
 }
 
-func (s *sso) ConfigureMapping(tenantID string, roleMappings []RoleMapping, attributeMapping *AttributeMapping) error {
+func (s *sso) ConfigureMapping(tenantID string, roleMappings []*RoleMapping, attributeMapping *AttributeMapping) error {
 	if tenantID == "" {
 		return errors.NewInvalidArgumentError("tenantID")
 	}

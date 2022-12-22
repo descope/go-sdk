@@ -77,7 +77,7 @@ func TestSSOConfigureMappingSuccess(t *testing.T) {
 		}
 		require.Equal(t, "INAME", req["attributeMapping"].(map[string]any)["name"])
 	}))
-	err := mgmt.SSO().ConfigureMapping("abc", []RoleMapping{{Groups: []string{"foo"}, Role: "x"}, {Groups: []string{"bar"}, Role: "y"}}, &AttributeMapping{Name: "INAME"})
+	err := mgmt.SSO().ConfigureMapping("abc", []*RoleMapping{{Groups: []string{"foo"}, Role: "x"}, {Groups: []string{"bar"}, Role: "y"}}, &AttributeMapping{Name: "INAME"})
 	require.NoError(t, err)
 }
 
