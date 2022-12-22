@@ -550,7 +550,7 @@ To run the examples, set your `Project ID` by setting the `DESCOPE_PROJECT_ID` e
 in the sample code.
 Find your Project ID in the [Descope console](https://app.descope.com/settings/project).
 
-```Go
+```bash
 export DESCOPE_PROJECT_ID=<ProjectID>
 ```
 
