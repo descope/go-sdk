@@ -16,6 +16,8 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+const SKEW = time.Second * 5
+
 type AuthParams struct {
 	ProjectID           string
 	PublicKey           string
@@ -437,10 +439,10 @@ func (auth *authenticationsBase) extractTokens(jRes *JWTResponse) ([]*Token, err
 }
 
 func (auth *authenticationsBase) validateJWT(JWT string) (*Token, error) {
-	token, err := jwt.Parse([]byte(JWT), jwt.WithKeyProvider(auth.publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true))
+	token, err := jwt.Parse([]byte(JWT), jwt.WithKeyProvider(auth.publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true), jwt.WithAcceptableSkew(SKEW))
 	if err != nil {
 		var parseErr error
-		token, parseErr = jwt.Parse([]byte(JWT), jwt.WithKeyProvider(auth.publicKeysProvider), jwt.WithVerify(false), jwt.WithValidate(false))
+		token, parseErr = jwt.Parse([]byte(JWT), jwt.WithKeyProvider(auth.publicKeysProvider), jwt.WithVerify(false), jwt.WithValidate(false), jwt.WithAcceptableSkew(SKEW))
 		if parseErr != nil {
 			err = parseErr
 		}
