@@ -424,6 +424,9 @@ err := descopeClient.Management.User().Delete("desmond@descope.com")
 // Load specific user
 userRes, err := descopeClient.Management.User().Load("desmond@descope.com")
 
+// If needed, users can be loaded using the JWT subject as well
+userRes, err := descopeClient.Management.User().LoadByJWTSubject("<jwt-subject>")
+
 // Search all users, optionally according to tenant and/or role filter
 usersResp = err := descopeClient.Management.User().SearchAll([]string{"my-tenant-id"}, nil, 0)
 if err == nil {
