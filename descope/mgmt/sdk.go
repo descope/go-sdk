@@ -70,10 +70,16 @@ type User interface {
 	// IMPORTANT: This action is irreversible. Use carefully.
 	Delete(identifier string) error
 
-	// Load an existing user
+	// Load an existing user.
 	//
 	// The identifier is required and the user will be fetched according to it.
 	Load(identifier string) (*auth.UserResponse, error)
+
+	// Load an existing user by JWT subject. The JWT subject can be found
+	// on the user's JWT.
+	//
+	// The jwtSubject is required and the user will be fetched according to it.
+	LoadByJWTSubject(jwtSubject string) (*auth.UserResponse, error)
 
 	// Search all users according to given filters
 	//
