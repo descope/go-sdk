@@ -108,6 +108,36 @@ func TestUserLoadError(t *testing.T) {
 	require.Nil(t, res)
 }
 
+func TestUserLoadByJWTSubjectSuccess(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"email": "a@b.c",
+		}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		params := helpers.ReadParams(r)
+		require.Equal(t, "abc", params["jwtSubject"])
+	}, response))
+	res, err := mgmt.User().LoadByJWTSubject("abc")
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, "a@b.c", res.Email)
+}
+
+func TestUserLoadByJWTSubjectBadInput(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.User().LoadByJWTSubject("")
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserLoadByJWTSubjectError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := mgmt.User().LoadByJWTSubject("abc")
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
 func TestSearchAllUsersSuccess(t *testing.T) {
 	response := map[string]any{
 		"users": []map[string]any{{

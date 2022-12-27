@@ -136,6 +136,13 @@ func (m *MockUser) Load(identifier string) (*auth.UserResponse, error) {
 	return m.LoadResponse, m.LoadError
 }
 
+func (m *MockUser) LoadByJWTSubject(jwtSubject string) (*auth.UserResponse, error) {
+	if m.LoadAssert != nil {
+		m.LoadAssert(jwtSubject)
+	}
+	return m.LoadResponse, m.LoadError
+}
+
 func (m *MockUser) SearchAll(tenantIDs, roleNames []string, limit int32) ([]*auth.UserResponse, error) {
 	if m.SearchAllAssert != nil {
 		m.SearchAllAssert(tenantIDs, roleNames, limit)

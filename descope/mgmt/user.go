@@ -42,8 +42,19 @@ func (u *user) Load(identifier string) (*auth.UserResponse, error) {
 	if identifier == "" {
 		return nil, errors.NewInvalidArgumentError("identifier")
 	}
+	return u.load(identifier, "")
+}
+
+func (u *user) LoadByJWTSubject(jwtSubject string) (*auth.UserResponse, error) {
+	if jwtSubject == "" {
+		return nil, errors.NewInvalidArgumentError("jwtSubject")
+	}
+	return u.load("", jwtSubject)
+}
+
+func (u *user) load(identifier, jwtSubject string) (*auth.UserResponse, error) {
 	req := &api.HTTPRequest{
-		QueryParams: map[string]string{"identifier": identifier},
+		QueryParams: map[string]string{"identifier": identifier, "jwtSubject": jwtSubject},
 	}
 	res, err := u.client.DoGetRequest(api.Routes.ManagementUserLoad(), req, u.conf.ManagementKey)
 	if err != nil {
