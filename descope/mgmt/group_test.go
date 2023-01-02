@@ -74,8 +74,8 @@ func TestLoadAllGroupsForMembersSuccess(t *testing.T) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		require.Equal(t, []interface{}{"one", "two"}, req["userIds"])
-		require.Equal(t, []interface{}{"three", "four"}, req["externalIds"])
+		require.Equal(t, []interface{}{"one", "two"}, req["jwtSubjects"])
+		require.Equal(t, []interface{}{"three", "four"}, req["identifiers"])
 	}, response))
 	res, err := mgmt.Group().LoadAllGroupsForMembers(tenantID, jwtSubjects, identifiers)
 	require.NoError(t, err)

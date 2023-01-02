@@ -34,8 +34,8 @@ func (r *group) LoadAllGroupsForMembers(tenantID string, jwtSubjects, identifier
 	}
 	body := map[string]any{
 		"tenantId":    tenantID,
-		"externalIds": identifiers,
-		"userIds":     jwtSubjects,
+		"identifiers": identifiers,
+		"jwtSubjects": jwtSubjects,
 	}
 	res, err := r.client.DoPostRequest(api.Routes.ManagementGroupLoadAllGroupsForMember(), body, nil, r.conf.ManagementKey)
 	if err != nil {
