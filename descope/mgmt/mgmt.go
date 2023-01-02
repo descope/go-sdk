@@ -25,6 +25,7 @@ type managementService struct {
 	jwt        JWT
 	permission Permission
 	role       Role
+	group      Group
 }
 
 func NewManagement(conf ManagementParams, c *api.Client) *managementService {
@@ -36,6 +37,7 @@ func NewManagement(conf ManagementParams, c *api.Client) *managementService {
 	service.jwt = &jwt{managementBase: base}
 	service.permission = &permission{managementBase: base}
 	service.role = &role{managementBase: base}
+	service.group = &group{managementBase: base}
 	return service
 }
 
@@ -67,6 +69,11 @@ func (mgmt *managementService) Permission() Permission {
 func (mgmt *managementService) Role() Role {
 	mgmt.ensureManagementKey()
 	return mgmt.role
+}
+
+func (mgmt *managementService) Group() Group {
+	mgmt.ensureManagementKey()
+	return mgmt.group
 }
 
 func (mgmt *managementService) ensureManagementKey() {

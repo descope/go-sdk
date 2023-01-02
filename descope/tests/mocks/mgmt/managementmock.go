@@ -12,6 +12,7 @@ type MockManagement struct {
 	*MockTenant
 	*MockPermission
 	*MockRole
+	*MockGroup
 }
 
 func (m *MockManagement) JWT() mgmt.JWT {
@@ -36,6 +37,10 @@ func (m *MockManagement) Permission() mgmt.Permission {
 
 func (m *MockManagement) Role() mgmt.Role {
 	return m.MockRole
+}
+
+func (m *MockManagement) Group() mgmt.Group {
+	return m.MockGroup
 }
 
 // Mock JWT
@@ -282,4 +287,41 @@ func (m *MockRole) Delete(name string) error {
 
 func (m *MockRole) LoadAll() ([]*auth.Role, error) {
 	return m.LoadAllResponse, m.LoadAllError
+}
+
+// Mock Group
+
+type MockGroup struct {
+	LoadAllGroupsAssert   func(tenantID string)
+	LoadAllGroupsResponse []*auth.Group
+	LoadAllGroupsError    error
+
+	LoadAllGroupsForMembersAssert   func(tenantID string, jwtSubjects, identifiers []string)
+	LoadAllGroupsForMembersResponse []*auth.Group
+	LoadAllGroupsForMembersError    error
+
+	LoadAllGroupMembersAssert   func(tenantID, groupID string)
+	LoadAllGroupMembersResponse []*auth.Group
+	LoadAllGroupMembersError    error
+}
+
+func (m *MockGroup) LoadAllGroups(tenantID string) ([]*auth.Group, error) {
+	if m.LoadAllGroupsAssert != nil {
+		m.LoadAllGroupsAssert(tenantID)
+	}
+	return m.LoadAllGroupsResponse, m.LoadAllGroupsError
+}
+
+func (m *MockGroup) LoadAllGroupsForMembers(tenantID string, jwtSubjects, identifiers []string) ([]*auth.Group, error) {
+	if m.LoadAllGroupsForMembersAssert != nil {
+		m.LoadAllGroupsForMembersAssert(tenantID, jwtSubjects, identifiers)
+	}
+	return m.LoadAllGroupsForMembersResponse, m.LoadAllGroupsForMembersError
+}
+
+func (m *MockGroup) LoadAllGroupMembers(tenantID, groupID string) ([]*auth.Group, error) {
+	if m.LoadAllGroupMembersAssert != nil {
+		m.LoadAllGroupMembersAssert(tenantID, groupID)
+	}
+	return m.LoadAllGroupMembersResponse, m.LoadAllGroupMembersError
 }

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/mgmt"
@@ -155,6 +156,53 @@ func roleAll(args []string) error {
 	return err
 }
 
+func groupAllForTenant(args []string) error {
+	tenantID := args[0]
+	res, err := descopeClient.Management.Group().LoadAllGroups(tenantID)
+	if err == nil {
+		for _, p := range res {
+			fmt.Printf("Found group: %s, %s. Members: %v\n", p.ID, p.Display, p.Members)
+		}
+	}
+	return err
+}
+
+func groupAllForMembersJWTSubjects(args []string) error {
+	tenantID := args[0]
+	jwtSubjects := strings.Split(args[1], ",")
+	res, err := descopeClient.Management.Group().LoadAllGroupsForMembers(tenantID, jwtSubjects, nil)
+	if err == nil {
+		for _, p := range res {
+			fmt.Printf("Found group: %s, %s. Members: %v\n", p.ID, p.Display, p.Members)
+		}
+	}
+	return err
+}
+
+func groupAllForMembersIdentifiers(args []string) error {
+	tenantID := args[0]
+	identifiers := strings.Split(args[1], ",")
+	res, err := descopeClient.Management.Group().LoadAllGroupsForMembers(tenantID, nil, identifiers)
+	if err == nil {
+		for _, p := range res {
+			fmt.Printf("Found group: %s, %s. Members: %v\n", p.ID, p.Display, p.Members)
+		}
+	}
+	return err
+}
+
+func groupAllGroupMembers(args []string) error {
+	tenantID := args[0]
+	groupID := args[1]
+	res, err := descopeClient.Management.Group().LoadAllGroupMembers(tenantID, groupID)
+	if err == nil {
+		for _, p := range res {
+			fmt.Printf("Found group: %s, %s. Members: %v\n", p.ID, p.Display, p.Members)
+		}
+	}
+	return err
+}
+
 // Command line setup
 
 var cli = &cobra.Command{
@@ -270,6 +318,26 @@ func main() {
 	})
 
 	addCommand(roleAll, "role-all", "Load all roles", func(cmd *cobra.Command) {
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(groupAllForTenant, "group-all-for-tenant <tenantId>", "Load all groups for a given tenant id", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(1)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(groupAllForMembersJWTSubjects, "group-all-for-members-jwt-subjects <tenantId> <jwtSubjects>", "Load all groups for the given user's jwt subjects (can be found in the user's JWT)", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(2)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(groupAllForMembersIdentifiers, "group-all-for-members-identifiers <tenantId> <identifiers>", "Load all groups for the given user's identifiers (used for sign-in)", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(2)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(groupAllGroupMembers, "group-members <tenantId> <groupId>", "Load all group's members by the given group id", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(2)
 		cmd.DisableFlagsInUseLine = true
 	})
 
