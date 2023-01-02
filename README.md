@@ -528,6 +528,44 @@ if err == nil {
 }
 ```
 
+### Query SSO Groups
+
+You can query SSO groups:
+
+```go
+// Load all groups for a given tenant id
+res, err := descopeClient.Management.Group().LoadAllGroups("tenant-id")
+if err == nil {
+    for _, group := range res {
+        // Do something
+    }
+}
+
+// Load all groups for the given user's jwt subjects (can be found in the user's JWT) 
+res, err := descopeClient.Management.Group().LoadAllGroupsForMembers("tenant-id", []string{"jwt-subject-1", "jwt-subject-2"}, nil)
+if err == nil {
+    for _, group := range res {
+        // Do something
+    }
+}
+
+// Load all groups for the given user's identifiers (used for sign-in)
+res, err := descopeClient.Management.Group().LoadAllGroupsForMembers("tenant-id", nil, []string{"identifier-1", "identifier-2"})
+if err == nil {
+    for _, group := range res {
+        // Do something
+    }
+}
+
+// Load all group's members by the given group id
+res, err := descopeClient.Management.Group().LoadAllGroupMembers("tenant-id", "group-id")
+if err == nil {
+    for _, group := range res {
+        // Do something with group.members
+    }
+}
+```
+
 ### Manage JWTs
 
 You can add custom claims to a valid JWT.

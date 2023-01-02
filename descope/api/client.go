@@ -65,27 +65,30 @@ var (
 			exchangeAccessKey:            "auth/accesskey/exchange",
 		},
 		mgmt: mgmtEndpoints{
-			tenantCreate:      "mgmt/tenant/create",
-			tenantUpdate:      "mgmt/tenant/update",
-			tenantDelete:      "mgmt/tenant/delete",
-			tenantLoadAll:     "mgmt/tenant/all",
-			userCreate:        "mgmt/user/create",
-			userUpdate:        "mgmt/user/update",
-			userDelete:        "mgmt/user/delete",
-			userLoad:          "mgmt/user",
-			userSearchAll:     "mgmt/user/search",
-			ssoConfigure:      "mgmt/sso/settings",
-			ssoMetadata:       "mgmt/sso/metadata",
-			ssoMapping:        "mgmt/sso/mapping",
-			updateJWT:         "mgmt/jwt/update",
-			permissionCreate:  "mgmt/permission/create",
-			permissionUpdate:  "mgmt/permission/update",
-			permissionDelete:  "mgmt/permission/delete",
-			permissionLoadAll: "mgmt/permission/all",
-			roleCreate:        "mgmt/role/create",
-			roleUpdate:        "mgmt/role/update",
-			roleDelete:        "mgmt/role/delete",
-			roleLoadAll:       "mgmt/role/all",
+			tenantCreate:                "mgmt/tenant/create",
+			tenantUpdate:                "mgmt/tenant/update",
+			tenantDelete:                "mgmt/tenant/delete",
+			tenantLoadAll:               "mgmt/tenant/all",
+			userCreate:                  "mgmt/user/create",
+			userUpdate:                  "mgmt/user/update",
+			userDelete:                  "mgmt/user/delete",
+			userLoad:                    "mgmt/user",
+			userSearchAll:               "mgmt/user/search",
+			ssoConfigure:                "mgmt/sso/settings",
+			ssoMetadata:                 "mgmt/sso/metadata",
+			ssoMapping:                  "mgmt/sso/mapping",
+			updateJWT:                   "mgmt/jwt/update",
+			permissionCreate:            "mgmt/permission/create",
+			permissionUpdate:            "mgmt/permission/update",
+			permissionDelete:            "mgmt/permission/delete",
+			permissionLoadAll:           "mgmt/permission/all",
+			roleCreate:                  "mgmt/role/create",
+			roleUpdate:                  "mgmt/role/update",
+			roleDelete:                  "mgmt/role/delete",
+			roleLoadAll:                 "mgmt/role/all",
+			groupLoadAllGroups:          "mgmt/group/all",
+			groupLoadAllGroupsForMember: "mgmt/group/member/all",
+			groupLoadAllGroupMembers:    "mgmt/group/members",
 		},
 		logout:    "auth/logout",
 		logoutAll: "auth/logoutall",
@@ -144,27 +147,35 @@ type authEndpoints struct {
 }
 
 type mgmtEndpoints struct {
-	tenantCreate      string
-	tenantUpdate      string
-	tenantDelete      string
-	tenantLoadAll     string
-	userCreate        string
-	userUpdate        string
-	userDelete        string
-	userLoad          string
-	userSearchAll     string
-	ssoConfigure      string
-	ssoMetadata       string
-	ssoMapping        string
-	updateJWT         string
+	tenantCreate  string
+	tenantUpdate  string
+	tenantDelete  string
+	tenantLoadAll string
+
+	userCreate    string
+	userUpdate    string
+	userDelete    string
+	userLoad      string
+	userSearchAll string
+
+	ssoConfigure string
+	ssoMetadata  string
+	ssoMapping   string
+	updateJWT    string
+
 	permissionCreate  string
 	permissionUpdate  string
 	permissionDelete  string
 	permissionLoadAll string
-	roleCreate        string
-	roleUpdate        string
-	roleDelete        string
-	roleLoadAll       string
+
+	roleCreate  string
+	roleUpdate  string
+	roleDelete  string
+	roleLoadAll string
+
+	groupLoadAllGroups          string
+	groupLoadAllGroupsForMember string
+	groupLoadAllGroupMembers    string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -370,6 +381,18 @@ func (e *endpoints) ManagementRoleDelete() string {
 
 func (e *endpoints) ManagementRoleLoadAll() string {
 	return path.Join(e.version, e.mgmt.roleLoadAll)
+}
+
+func (e *endpoints) ManagementGroupLoadAllGroups() string {
+	return path.Join(e.version, e.mgmt.groupLoadAllGroups)
+}
+
+func (e *endpoints) ManagementGroupLoadAllGroupsForMember() string {
+	return path.Join(e.version, e.mgmt.groupLoadAllGroupsForMember)
+}
+
+func (e *endpoints) ManagementGroupLoadAllGroupMembers() string {
+	return path.Join(e.version, e.mgmt.groupLoadAllGroupMembers)
 }
 
 type sdkInfo struct {

@@ -212,6 +212,18 @@ type Role struct {
 	PermissionNames []string `json:"permissionNames,omitempty"`
 }
 
+type GroupMember struct {
+	Identifier string `json:"identifier,omitempty"`
+	JwtSubject string `json:"jwtSubject,omitempty"`
+	Display    string `json:"display,omitempty"`
+}
+
+type Group struct {
+	ID      string        `json:"id"`
+	Display string        `json:"display,omitempty"`
+	Members []GroupMember `json:"members,omitempty"`
+}
+
 type authenticationRequestBody struct {
 	ExternalID   string        `json:"externalId,omitempty"`
 	LoginOptions *LoginOptions `json:"loginOptions,omitempty"`

@@ -187,6 +187,21 @@ type Role interface {
 	LoadAll() ([]*auth.Role, error)
 }
 
+// Provides functions for querying SSO groups in a project's tenant.
+type Group interface {
+	// Load all groups for a specific tenant id.
+	LoadAllGroups(tenantID string) ([]*auth.Group, error)
+
+	// Load all groups for the provided user JWT subjects or identifiers.
+	//
+	// JWT subject is with the format of "U2J5ES9S8TkvCgOvcrkpzUgVTEBM" (example), which can be found on the user's JWT.
+	// identifier is the actual user identifier used for sign in.
+	LoadAllGroupsForMembers(tenantID string, jwtSubjects, identifiers []string) ([]*auth.Group, error)
+
+	// Load all members of the provided group id.
+	LoadAllGroupMembers(tenantID, groupID string) ([]*auth.Group, error)
+}
+
 // Provides various APIs for managing a Descope project programmatically. A management key must
 // be provided in the DecopeClient configuration or by setting the DESCOPE_MANAGEMENT_KEY
 // environment variable. Management keys can be generated in the Descope console.
@@ -208,4 +223,7 @@ type Management interface {
 
 	// Provide functions for managing roles in a project
 	Role() Role
+
+	// Provide functions for querying SSO groups in a project
+	Group() Group
 }
