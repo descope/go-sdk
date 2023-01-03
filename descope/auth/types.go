@@ -197,7 +197,7 @@ type AccessKeyResponse struct {
 	KeyTenants  []*AssociatedTenant `json:"keyTenants,omitempty"`
 	Status      string              `json:"status,omitempty"`
 	CreatedTime int32               `json:"createdTime,omitempty"`
-	ExpiresTime int32               `json:"expireTime,omitempty"`
+	ExpireTime  int32               `json:"expireTime,omitempty"`
 	CreatedBy   string              `json:"createdBy,omitempty"`
 }
 

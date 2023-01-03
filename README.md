@@ -407,13 +407,13 @@ You can create, update, delete or load users, as well as search according to fil
 // A user must have an identifier, other fields are optional.
 // Roles should be set directly if no tenants exist, otherwise set
 // on a per-tenant basis.
-err := descopeClient.Management.User().Create("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*mgmt.AssociatedTenants{
+err := descopeClient.Management.User().Create("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*mgmt.AssociatedTenant{
     {TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},
 })
 
 // Update will override all fields as is. Use carefully.
-err := descopeClient.Management.User().Update("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*mgmt.AssociatedTenants{
+err := descopeClient.Management.User().Update("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*mgmt.AssociatedTenant{
     {TenantID: "tenant-ID1", RoleNames: []string{"role-name1", "role-name2"}},
     {TenantID: "tenant-ID2"},
 })
@@ -444,7 +444,7 @@ You can create, update, delete or load access keys, as well as search according 
 // An access key must have a name and expireTime, other fields are optional.
 // Roles should be set directly if no tenants exist, otherwise set
 // on a per-tenant basis.
-res, err := descopeClient.Management.AccessKey().Create("access-key-1", 0, nil, []*mgmt.AssociatedTenants{
+res, err := descopeClient.Management.AccessKey().Create("access-key-1", 0, nil, []*mgmt.AssociatedTenant{
     {TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},
 })
@@ -578,7 +578,7 @@ if err == nil {
     }
 }
 
-// Load all groups for the given user's jwt subjects (can be found in the user's JWT) 
+// Load all groups for the given user's jwt subjects (can be found in the user's JWT)
 res, err := descopeClient.Management.Group().LoadAllGroupsForMembers("tenant-id", []string{"jwt-subject-1", "jwt-subject-2"}, nil)
 if err == nil {
     for _, group := range res {
