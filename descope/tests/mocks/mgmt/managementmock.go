@@ -193,12 +193,12 @@ func (m *MockAccessKey) Create(name string, expireTime int64, roles []string, ke
 	if m.CreateAssert != nil {
 		m.CreateAssert(name, expireTime, roles, keyTenants)
 	}
-	var hash string
+	var cleartext string
 	var key *auth.AccessKeyResponse
 	if m.CreateResponseFn != nil {
-		hash, key = m.CreateResponseFn()
+		cleartext, key = m.CreateResponseFn()
 	}
-	return hash, key, m.CreateError
+	return cleartext, key, m.CreateError
 }
 
 func (m *MockAccessKey) Load(id string) (*auth.AccessKeyResponse, error) {

@@ -99,14 +99,14 @@ func makeCreateAccessKeyBody(name string, expireTime int64, roleNames []string, 
 
 func unmarshalCreatedAccessKeyResponse(res *api.HTTPResponse) (string, *auth.AccessKeyResponse, error) {
 	akres := struct {
-		Hash string
-		Key  *auth.AccessKeyResponse
+		Cleartext string
+		Key       *auth.AccessKeyResponse
 	}{}
 	err := utils.Unmarshal([]byte(res.BodyStr), &akres)
 	if err != nil {
 		return "", nil, err
 	}
-	return akres.Hash, akres.Key, err
+	return akres.Cleartext, akres.Key, err
 }
 
 func unmarshalAccessKeyResponse(res *api.HTTPResponse) (*auth.AccessKeyResponse, error) {

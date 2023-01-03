@@ -90,12 +90,12 @@ func accessKeyCreate(args []string) error {
 	if err != nil {
 		return err
 	}
-	hash, res, err := descopeClient.Management.AccessKey().Create(args[0], expireTime, nil, tenants)
+	cleartext, res, err := descopeClient.Management.AccessKey().Create(args[0], expireTime, nil, tenants)
 	if err != nil {
 		return err
 	}
 	fmt.Println("Access Key Created with ID: ", res.ID)
-	fmt.Println("Hash:", hash)
+	fmt.Println("Cleartext:", cleartext)
 	return nil
 }
 

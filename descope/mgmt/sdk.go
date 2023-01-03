@@ -95,7 +95,7 @@ type User interface {
 // Provides functions for managing access keys in a project.
 type AccessKey interface {
 	// Create a new access key.
-	// IMPORTANT: The access key hash will be returned only when first created.
+	// IMPORTANT: The access key cleartext will be returned only when first created.
 	// 			  Make sure to save it in a secure manner.
 	//
 	// The name parameter is required. It doesn't have to be unique.

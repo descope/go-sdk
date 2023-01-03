@@ -10,7 +10,7 @@ import (
 
 func TestAccessKeyCreateSuccess(t *testing.T) {
 	response := map[string]any{
-		"hash": "hash",
+		"cleartext": "cleartext",
 		"key": map[string]any{
 			"name": "abc",
 		}}
@@ -24,9 +24,9 @@ func TestAccessKeyCreateSuccess(t *testing.T) {
 		require.Len(t, roleNames, 1)
 		require.Equal(t, "foo", roleNames[0])
 	}, response))
-	hash, key, err := mgmt.AccessKey().Create("abc", 0, []string{"foo"}, nil)
+	cleartext, key, err := mgmt.AccessKey().Create("abc", 0, []string{"foo"}, nil)
 	require.NoError(t, err)
-	require.Equal(t, "hash", hash)
+	require.Equal(t, "cleartext", cleartext)
 	require.Equal(t, "abc", key.Name)
 }
 
