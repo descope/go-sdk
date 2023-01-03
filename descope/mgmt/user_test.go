@@ -51,7 +51,7 @@ func TestUserUpdateSuccess(t *testing.T) {
 			}
 		}
 	}))
-	err := mgmt.User().Update("abc", "foo@bar.com", "", "", nil, []UserTenants{{TenantID: "x", Roles: []string{"foo"}}, {TenantID: "y", Roles: []string{"bar"}}})
+	err := mgmt.User().Update("abc", "foo@bar.com", "", "", nil, []*AssociatedTenant{{TenantID: "x", Roles: []string{"foo"}}, {TenantID: "y", Roles: []string{"bar"}}})
 	require.NoError(t, err)
 }
 

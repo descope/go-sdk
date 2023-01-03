@@ -182,15 +182,26 @@ type WebauthnUserRequest struct {
 
 type UserResponse struct {
 	User          `json:",inline"`
-	UserID        string         `json:"userId,omitempty"`
-	ExternalIDs   []string       `json:"externalIds,omitempty"`
-	VerifiedEmail bool           `json:"verifiedEmail,omitempty"`
-	VerifiedPhone bool           `json:"verifiedPhone,omitempty"`
-	RoleNames     []string       `json:"roleNames,omitempty"`
-	UserTenants   []*UserTenants `json:"userTenants,omitempty"`
+	UserID        string              `json:"userId,omitempty"`
+	ExternalIDs   []string            `json:"externalIds,omitempty"`
+	VerifiedEmail bool                `json:"verifiedEmail,omitempty"`
+	VerifiedPhone bool                `json:"verifiedPhone,omitempty"`
+	RoleNames     []string            `json:"roleNames,omitempty"`
+	UserTenants   []*AssociatedTenant `json:"userTenants,omitempty"`
 }
 
-type UserTenants struct {
+type AccessKeyResponse struct {
+	ID          string              `json:"id,omitempty"`
+	Name        string              `json:"name,omitempty"`
+	RoleNames   []string            `json:"roleNames,omitempty"`
+	KeyTenants  []*AssociatedTenant `json:"keyTenants,omitempty"`
+	Status      string              `json:"status,omitempty"`
+	CreatedTime int32               `json:"createdTime,omitempty"`
+	ExpireTime  int32               `json:"expireTime,omitempty"`
+	CreatedBy   string              `json:"createdBy,omitempty"`
+}
+
+type AssociatedTenant struct {
 	TenantID  string   `json:"tenantId"`
 	RoleNames []string `json:"roleNames,omitempty"`
 }

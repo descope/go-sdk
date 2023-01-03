@@ -36,10 +36,10 @@ type Tenant interface {
 	LoadAll() ([]*auth.Tenant, error)
 }
 
-// Represents a tenant association for a User. The tenant ID is required to denote
-// which tenant the user belongs to. Roles is an optional list of roles for the
-// user in this specific tenant.
-type UserTenants struct {
+// Represents a tenant association for a User or an Access Key. The tenant ID is required
+// to denote which tenant the user / access key belongs to. Roles is an optional list of
+// roles for the user / access key in this specific tenant.
+type AssociatedTenant struct {
 	TenantID string
 	Roles    []string
 }
@@ -55,7 +55,7 @@ type User interface {
 	// aren't associated with a tenant, while the tenants parameter can be used
 	// to specify which tenants to associate the user with and what roles the
 	// user has in each one.
-	Create(identifier, email, phone, displayName string, roles []string, tenants []UserTenants) error
+	Create(identifier, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) error
 
 	// Update an existing user.
 	//
@@ -63,7 +63,7 @@ type User interface {
 	//
 	// IMPORTANT: All parameters will override whatever values are currently set
 	// in the existing user. Use carefully.
-	Update(identifier, email, phone, displayName string, roles []string, tenants []UserTenants) error
+	Update(identifier, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) error
 
 	// Delete an existing user.
 	//
@@ -85,11 +85,65 @@ type User interface {
 	//
 	// The tenantIDs parameter is an optional array of tenant IDs to filter by.
 	//
-	// The roleNames parameter is an optional array of role names to filter by.
+	// The roles parameter is an optional array of role names to filter by.
 	//
 	// The limit parameter limits the number of returned users. Leave at 0 to return the
 	// default amount.
-	SearchAll(tenantIDs, roleNames []string, limit int32) ([]*auth.UserResponse, error)
+	SearchAll(tenantIDs, roles []string, limit int32) ([]*auth.UserResponse, error)
+}
+
+// Provides functions for managing access keys in a project.
+type AccessKey interface {
+	// Create a new access key.
+	// IMPORTANT: The access key cleartext will be returned only when first created.
+	// 			  Make sure to save it in a secure manner.
+	//
+	// The name parameter is required. It doesn't have to be unique.
+	//
+	// The expireTime parameter is required, and it should contain when the key should expire,
+	// or 0 to make it indefinite.
+	//
+	// The roles parameter is an optional list of the access key's roles for access keys that
+	// aren't associated with a tenant, while the keyTenants parameter can be used
+	// to specify which tenants to associate the access key with and what roles the
+	// access key has in each one.
+	Create(name string, expireTime int64, roles []string, keyTenants []*AssociatedTenant) (string, *auth.AccessKeyResponse, error)
+
+	// Load an existing access key.
+	//
+	// The id parameter is required and the access key will be fetched according to it.
+	Load(id string) (*auth.AccessKeyResponse, error)
+
+	// Search all access keys according to given filters
+	//
+	// The tenantIDs parameter is an optional array of tenant IDs to filter by.
+	SearchAll(tenantIDs []string) ([]*auth.AccessKeyResponse, error)
+
+	// Update an existing access key.
+	//
+	// The parameters follow the same convention as those for the Create function.
+	// Only the name is settable for the time being.
+	//
+	// IMPORTANT: All parameters will override whatever values are currently set
+	// in the existing access key. Use carefully.
+	Update(id, name string) (*auth.AccessKeyResponse, error)
+
+	// Deactivate an existing access key.
+	//
+	// IMPORTANT: This deactivated key will not be usable from this stage. It will, however,
+	// persist, and can be activated again if needed.
+	Deactivate(id string) error
+
+	// Activate an existing access key.
+	//
+	// IMPORTANT: Only deactivated keys can be activated again, and become usable once more. New access keys
+	// are active by default.
+	Activate(id string) error
+
+	// Delete an existing access key.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	Delete(id string) error
 }
 
 // Represents a mapping between a set of groups of users and a role that will be assigned to them.
@@ -211,6 +265,9 @@ type Management interface {
 
 	// Provides functions for managing users in a project.
 	User() User
+
+	// Provides functions for managing access keys in a project.
+	AccessKey() AccessKey
 
 	// Provides functions for configuring SSO for a project.
 	SSO() SSO

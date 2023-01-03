@@ -74,6 +74,13 @@ var (
 			userDelete:                  "mgmt/user/delete",
 			userLoad:                    "mgmt/user",
 			userSearchAll:               "mgmt/user/search",
+			accessKeyCreate:             "mgmt/accesskey/create",
+			accessKeyLoad:               "mgmt/accesskey",
+			accessKeySearchAll:          "mgmt/accesskey/search",
+			accessKeyUpdate:             "mgmt/accesskey/update",
+			accessKeyDeactivate:         "mgmt/accesskey/deactivate",
+			accessKeyActivate:           "mgmt/accesskey/activate",
+			accessKeyDelete:             "mgmt/accesskey/delete",
 			ssoConfigure:                "mgmt/sso/settings",
 			ssoMetadata:                 "mgmt/sso/metadata",
 			ssoMapping:                  "mgmt/sso/mapping",
@@ -157,6 +164,14 @@ type mgmtEndpoints struct {
 	userDelete    string
 	userLoad      string
 	userSearchAll string
+
+	accessKeyCreate     string
+	accessKeyLoad       string
+	accessKeySearchAll  string
+	accessKeyUpdate     string
+	accessKeyDeactivate string
+	accessKeyActivate   string
+	accessKeyDelete     string
 
 	ssoConfigure string
 	ssoMetadata  string
@@ -333,6 +348,34 @@ func (e *endpoints) ManagementUserLoad() string {
 
 func (e *endpoints) ManagementUserSearchAll() string {
 	return path.Join(e.version, e.mgmt.userSearchAll)
+}
+
+func (e *endpoints) ManagementAccessKeyCreate() string {
+	return path.Join(e.version, e.mgmt.accessKeyCreate)
+}
+
+func (e *endpoints) ManagementAccessKeyLoad() string {
+	return path.Join(e.version, e.mgmt.accessKeyLoad)
+}
+
+func (e *endpoints) ManagementAccessKeySearchAll() string {
+	return path.Join(e.version, e.mgmt.accessKeySearchAll)
+}
+
+func (e *endpoints) ManagementAccessKeyUpdate() string {
+	return path.Join(e.version, e.mgmt.accessKeyUpdate)
+}
+
+func (e *endpoints) ManagementAccessKeyDeactivate() string {
+	return path.Join(e.version, e.mgmt.accessKeyDeactivate)
+}
+
+func (e *endpoints) ManagementAccessKeyActivate() string {
+	return path.Join(e.version, e.mgmt.accessKeyActivate)
+}
+
+func (e *endpoints) ManagementAccessKeyDelete() string {
+	return path.Join(e.version, e.mgmt.accessKeyDelete)
 }
 
 func (e *endpoints) ManagementSSOConfigure() string {

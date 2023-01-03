@@ -72,9 +72,9 @@ func main() {
 	for _, user := range data.Users {
 		fmt.Println("Adding user", user.Identifier, "("+user.DisplayName+")")
 
-		tenants := []mgmt.UserTenants{}
+		tenants := []*mgmt.AssociatedTenant{}
 		for _, curr := range user.Tenants {
-			tenants = append(tenants, mgmt.UserTenants{TenantID: curr.TenantID, Roles: curr.Roles})
+			tenants = append(tenants, &mgmt.AssociatedTenant{TenantID: curr.TenantID, Roles: curr.Roles})
 		}
 
 		err := descopeClient.Management.User().Create(user.Identifier, user.Email, user.Phone, user.DisplayName, user.Roles, tenants)

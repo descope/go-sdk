@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/descope/go-sdk/descope"
@@ -38,22 +39,22 @@ func prepare() (err error) {
 		// generate a management key in the Company section of the admin console: https://app.descope.com/settings/company
 		return errors.New("the DESCOPE_MANAGEMENT_KEY environment variable must be set")
 	}
-	descopeClient, err = descope.NewDescopeClient()
+	descopeClient, err = descope.NewDescopeClientWithConfig(&descope.Config{DescopeBaseURL: "http://localhost:8000"})
 	return err
 }
 
 func userCreate(args []string) error {
-	tenants := []mgmt.UserTenants{}
+	tenants := []*mgmt.AssociatedTenant{}
 	for _, tenantID := range flags.Tenants {
-		tenants = append(tenants, mgmt.UserTenants{TenantID: tenantID})
+		tenants = append(tenants, &mgmt.AssociatedTenant{TenantID: tenantID})
 	}
 	return descopeClient.Management.User().Create(args[0], flags.Email, flags.Phone, flags.Name, nil, tenants)
 }
 
 func userUpdate(args []string) error {
-	tenants := []mgmt.UserTenants{}
+	tenants := []*mgmt.AssociatedTenant{}
 	for _, tenantID := range flags.Tenants {
-		tenants = append(tenants, mgmt.UserTenants{TenantID: tenantID})
+		tenants = append(tenants, &mgmt.AssociatedTenant{TenantID: tenantID})
 	}
 	return descopeClient.Management.User().Update(args[0], flags.Email, flags.Phone, flags.Name, nil, tenants)
 }
@@ -78,6 +79,59 @@ func userSearchAll(args []string) error {
 		}
 	}
 	return err
+}
+
+func accessKeyCreate(args []string) error {
+	tenants := []*mgmt.AssociatedTenant{}
+	for _, tenantID := range flags.Tenants {
+		tenants = append(tenants, &mgmt.AssociatedTenant{TenantID: tenantID})
+	}
+	expireTime, err := strconv.ParseInt(args[1], 10, 64)
+	if err != nil {
+		return err
+	}
+	cleartext, res, err := descopeClient.Management.AccessKey().Create(args[0], expireTime, nil, tenants)
+	if err != nil {
+		return err
+	}
+	fmt.Println("Access Key Created with ID: ", res.ID)
+	fmt.Println("Cleartext:", cleartext)
+	return nil
+}
+
+func accessKeyLoad(args []string) error {
+	res, err := descopeClient.Management.AccessKey().Load(args[0])
+	if err == nil {
+		fmt.Println("Found:", res)
+	}
+	return err
+}
+
+func accessKeySearchAll(args []string) error {
+	res, err := descopeClient.Management.AccessKey().SearchAll(nil)
+	if err == nil {
+		for _, u := range res {
+			fmt.Println("Found:", u)
+		}
+	}
+	return err
+}
+
+func accessKeyUpdate(args []string) error {
+	_, err := descopeClient.Management.AccessKey().Update(args[0], args[1])
+	return err
+}
+
+func accessKeyDeactivate(args []string) error {
+	return descopeClient.Management.AccessKey().Deactivate(args[0])
+}
+
+func accessKeyActivate(args []string) error {
+	return descopeClient.Management.AccessKey().Activate(args[0])
+}
+
+func accessKeyDelete(args []string) error {
+	return descopeClient.Management.AccessKey().Delete(args[0])
 }
 
 func tenantCreate(args []string) error {
@@ -247,6 +301,40 @@ func main() {
 	})
 
 	addCommand(userDelete, "user-delete <identifier>", "Delete an existing user", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(1)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(accessKeyCreate, "access-key-create <name> <expireTime>", "Create a new access key", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(2)
+		cmd.Flags().StringSliceVarP(&flags.Tenants, "tenants", "T", nil, "the ids of the user's tenants")
+	})
+
+	addCommand(accessKeyLoad, "access-key-load", "Load an access key <id>", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(1)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(accessKeySearchAll, "access-key-search-all", "Search all access keys", func(cmd *cobra.Command) {
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(accessKeyUpdate, "access-key-update", "Update an access key <id>", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(2)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(accessKeyDeactivate, "access-key-deactivate", "Deactivate an access key <id>", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(1)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(accessKeyActivate, "access-key-activate", "Activate an access key <id>", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(1)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(accessKeyDelete, "access-key-delete", "Delete an access key <id>", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 		cmd.DisableFlagsInUseLine = true
 	})

@@ -9,6 +9,7 @@ type MockManagement struct {
 	*MockJWT
 	*MockSSO
 	*MockUser
+	*MockAccessKey
 	*MockTenant
 	*MockPermission
 	*MockRole
@@ -25,6 +26,10 @@ func (m *MockManagement) SSO() mgmt.SSO {
 
 func (m *MockManagement) User() mgmt.User {
 	return m.MockUser
+}
+
+func (m *MockManagement) AccessKey() mgmt.AccessKey {
+	return m.MockAccessKey
 }
 
 func (m *MockManagement) Tenant() mgmt.Tenant {
@@ -95,32 +100,32 @@ func (m *MockSSO) ConfigureMapping(tenantID string, roleMappings []*mgmt.RoleMap
 // Mock User
 
 type MockUser struct {
-	CreateAssert func(identifier, email, phone, displayName string, roles []string, tenants []mgmt.UserTenants)
+	CreateAssert func(identifier, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant)
 	CreateError  error
 
-	UpdateAssert func(identifier, email, phone, displayName string, roles []string, tenants []mgmt.UserTenants)
+	UpdateAssert func(identifier, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant)
 	UpdateError  error
 
-	DeleteAssert      func(identifier string)
-	DeleteAssertError error
+	DeleteAssert func(identifier string)
+	DeleteError  error
 
 	LoadAssert   func(identifier string)
 	LoadResponse *auth.UserResponse
 	LoadError    error
 
-	SearchAllAssert   func(tenantIDs, roleNames []string, limit int32)
+	SearchAllAssert   func(tenantIDs, roles []string, limit int32)
 	SearchAllResponse []*auth.UserResponse
 	SearchAllError    error
 }
 
-func (m *MockUser) Create(identifier, email, phone, displayName string, roles []string, tenants []mgmt.UserTenants) error {
+func (m *MockUser) Create(identifier, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant) error {
 	if m.CreateAssert != nil {
 		m.CreateAssert(identifier, email, phone, displayName, roles, tenants)
 	}
 	return m.CreateError
 }
 
-func (m *MockUser) Update(identifier, email, phone, displayName string, roles []string, tenants []mgmt.UserTenants) error {
+func (m *MockUser) Update(identifier, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant) error {
 	if m.UpdateAssert != nil {
 		m.UpdateAssert(identifier, email, phone, displayName, roles, tenants)
 	}
@@ -131,7 +136,7 @@ func (m *MockUser) Delete(identifier string) error {
 	if m.DeleteAssert != nil {
 		m.DeleteAssert(identifier)
 	}
-	return m.DeleteAssertError
+	return m.DeleteError
 }
 
 func (m *MockUser) Load(identifier string) (*auth.UserResponse, error) {
@@ -148,11 +153,94 @@ func (m *MockUser) LoadByJWTSubject(jwtSubject string) (*auth.UserResponse, erro
 	return m.LoadResponse, m.LoadError
 }
 
-func (m *MockUser) SearchAll(tenantIDs, roleNames []string, limit int32) ([]*auth.UserResponse, error) {
+func (m *MockUser) SearchAll(tenantIDs, roles []string, limit int32) ([]*auth.UserResponse, error) {
 	if m.SearchAllAssert != nil {
-		m.SearchAllAssert(tenantIDs, roleNames, limit)
+		m.SearchAllAssert(tenantIDs, roles, limit)
 	}
 	return m.SearchAllResponse, m.SearchAllError
+}
+
+// Mock Access Key
+
+type MockAccessKey struct {
+	CreateAssert     func(name string, expireTime int64, roles []string, keyTenants []*mgmt.AssociatedTenant)
+	CreateResponseFn func() (string, *auth.AccessKeyResponse)
+	CreateError      error
+
+	LoadAssert   func(id string)
+	LoadResponse *auth.AccessKeyResponse
+	LoadError    error
+
+	SearchAllAssert   func(tenantIDs []string)
+	SearchAllResponse []*auth.AccessKeyResponse
+	SearchAllError    error
+
+	UpdateAssert   func(id, name string)
+	UpdateResponse *auth.AccessKeyResponse
+	UpdateError    error
+
+	DeactivateAssert func(id string)
+	DeactivateError  error
+
+	ActivateAssert func(id string)
+	ActivateError  error
+
+	DeleteAssert func(id string)
+	DeleteError  error
+}
+
+func (m *MockAccessKey) Create(name string, expireTime int64, roles []string, keyTenants []*mgmt.AssociatedTenant) (string, *auth.AccessKeyResponse, error) {
+	if m.CreateAssert != nil {
+		m.CreateAssert(name, expireTime, roles, keyTenants)
+	}
+	var cleartext string
+	var key *auth.AccessKeyResponse
+	if m.CreateResponseFn != nil {
+		cleartext, key = m.CreateResponseFn()
+	}
+	return cleartext, key, m.CreateError
+}
+
+func (m *MockAccessKey) Load(id string) (*auth.AccessKeyResponse, error) {
+	if m.LoadAssert != nil {
+		m.LoadAssert(id)
+	}
+	return m.LoadResponse, m.LoadError
+}
+
+func (m *MockAccessKey) SearchAll(tenantIDs []string) ([]*auth.AccessKeyResponse, error) {
+	if m.SearchAllAssert != nil {
+		m.SearchAllAssert(tenantIDs)
+	}
+	return m.SearchAllResponse, m.SearchAllError
+}
+
+func (m *MockAccessKey) Update(id, name string) (*auth.AccessKeyResponse, error) {
+	if m.UpdateAssert != nil {
+		m.UpdateAssert(id, name)
+	}
+	return m.UpdateResponse, m.UpdateError
+}
+
+func (m *MockAccessKey) Deactivate(id string) error {
+	if m.DeactivateAssert != nil {
+		m.DeactivateAssert(id)
+	}
+	return m.DeactivateError
+}
+
+func (m *MockAccessKey) Activate(id string) error {
+	if m.ActivateAssert != nil {
+		m.ActivateAssert(id)
+	}
+	return m.ActivateError
+}
+
+func (m *MockAccessKey) Delete(id string) error {
+	if m.DeleteAssert != nil {
+		m.DeleteAssert(id)
+	}
+	return m.DeleteError
 }
 
 // Mock Tenant
@@ -216,8 +304,8 @@ type MockPermission struct {
 	UpdateAssert func(name, newName, description string)
 	UpdateError  error
 
-	DeleteAssert      func(name string)
-	DeleteAssertError error
+	DeleteAssert func(name string)
+	DeleteError  error
 
 	LoadAllResponse []*auth.Permission
 	LoadAllError    error
@@ -241,7 +329,7 @@ func (m *MockPermission) Delete(name string) error {
 	if m.DeleteAssert != nil {
 		m.DeleteAssert(name)
 	}
-	return m.DeleteAssertError
+	return m.DeleteError
 }
 
 func (m *MockPermission) LoadAll() ([]*auth.Permission, error) {
@@ -257,8 +345,8 @@ type MockRole struct {
 	UpdateAssert func(name, newName, description string, permissionNames []string)
 	UpdateError  error
 
-	DeleteAssert      func(name string)
-	DeleteAssertError error
+	DeleteAssert func(name string)
+	DeleteError  error
 
 	LoadAllResponse []*auth.Role
 	LoadAllError    error
@@ -282,7 +370,7 @@ func (m *MockRole) Delete(name string) error {
 	if m.DeleteAssert != nil {
 		m.DeleteAssert(name)
 	}
-	return m.DeleteAssertError
+	return m.DeleteError
 }
 
 func (m *MockRole) LoadAll() ([]*auth.Role, error) {

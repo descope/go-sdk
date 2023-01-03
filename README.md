@@ -407,18 +407,18 @@ You can create, update, delete or load users, as well as search according to fil
 // A user must have an identifier, other fields are optional.
 // Roles should be set directly if no tenants exist, otherwise set
 // on a per-tenant basis.
-err := descopeClient.Management.User().Create("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []mgmt.UserTenants{
+err := descopeClient.Management.User().Create("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*mgmt.AssociatedTenant{
     {TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},
 })
 
 // Update will override all fields as is. Use carefully.
-err := descopeClient.Management.User().Update("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []mgmt.UserTenants{
+err := descopeClient.Management.User().Update("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*mgmt.AssociatedTenant{
     {TenantID: "tenant-ID1", RoleNames: []string{"role-name1", "role-name2"}},
     {TenantID: "tenant-ID2"},
 })
 
-// Tenant deletion cannot be undone. Use carefully.
+// User deletion cannot be undone. Use carefully.
 err := descopeClient.Management.User().Delete("desmond@descope.com")
 
 // Load specific user
@@ -428,12 +428,49 @@ userRes, err := descopeClient.Management.User().Load("desmond@descope.com")
 userRes, err := descopeClient.Management.User().LoadByJWTSubject("<jwt-subject>")
 
 // Search all users, optionally according to tenant and/or role filter
-usersResp = err := descopeClient.Management.User().SearchAll([]string{"my-tenant-id"}, nil, 0)
+usersResp, err := descopeClient.Management.User().SearchAll([]string{"my-tenant-id"}, nil, 0)
 if err == nil {
     for _, user := range usersResp {
         // Do something
     }
 }
+```
+
+### Manage Access Keys
+
+You can create, update, delete or load access keys, as well as search according to filters:
+
+```go
+// An access key must have a name and expireTime, other fields are optional.
+// Roles should be set directly if no tenants exist, otherwise set
+// on a per-tenant basis.
+res, err := descopeClient.Management.AccessKey().Create("access-key-1", 0, nil, []*mgmt.AssociatedTenant{
+    {TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
+    {TenantID: "tenant-ID2"},
+})
+
+// Load specific user
+res, err := descopeClient.Management.AccessKey().Load("access-key-id")
+
+// Search all users, optionally according to tenant and/or role filter
+accessKeysResp = err := descopeClient.Management.AccessKey().SearchAll([]string{"my-tenant-id"})
+if err == nil {
+    for _, accessKey := range accessKeysResp {
+        // Do something
+    }
+}
+
+// Update will override all fields as is. Use carefully.
+res, err := descopeClient.Management.AccessKey().Update("access-key-id", "updated-name")
+
+// Access keys can be deactivated to prevent usage. This can be undone using "activate".
+err := descopeClient.Management.AccessKey().Deactivate("access-key-id")
+
+// Disabled access keys can be activated once again.
+err := descopeClient.Management.AccessKey().Activate("access-key-id")
+
+// Access key deletion cannot be undone. Use carefully.
+err := descopeClient.Management.AccessKey().Delete("access-key-id")
 ```
 
 ### Manage SSO Setting
@@ -541,7 +578,7 @@ if err == nil {
     }
 }
 
-// Load all groups for the given user's jwt subjects (can be found in the user's JWT) 
+// Load all groups for the given user's jwt subjects (can be found in the user's JWT)
 res, err := descopeClient.Management.Group().LoadAllGroupsForMembers("tenant-id", []string{"jwt-subject-1", "jwt-subject-2"}, nil)
 if err == nil {
     for _, group := range res {

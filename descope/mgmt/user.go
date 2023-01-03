@@ -11,7 +11,7 @@ type user struct {
 	managementBase
 }
 
-func (u *user) Create(identifier, email, phone, displayName string, roles []string, tenants []UserTenants) error {
+func (u *user) Create(identifier, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) error {
 	if identifier == "" {
 		return errors.NewInvalidArgumentError("identifier")
 	}
@@ -20,7 +20,7 @@ func (u *user) Create(identifier, email, phone, displayName string, roles []stri
 	return err
 }
 
-func (u *user) Update(identifier, email, phone, displayName string, roles []string, tenants []UserTenants) error {
+func (u *user) Update(identifier, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) error {
 	if identifier == "" {
 		return errors.NewInvalidArgumentError("identifier")
 	}
@@ -63,8 +63,8 @@ func (u *user) load(identifier, jwtSubject string) (*auth.UserResponse, error) {
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) SearchAll(tenantIDs, roleNames []string, limit int32) ([]*auth.UserResponse, error) {
-	req := makeSearchAllRequest(tenantIDs, roleNames, limit)
+func (u *user) SearchAll(tenantIDs, roles []string, limit int32) ([]*auth.UserResponse, error) {
+	req := makeSearchAllRequest(tenantIDs, roles, limit)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserSearchAll(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -72,32 +72,21 @@ func (u *user) SearchAll(tenantIDs, roleNames []string, limit int32) ([]*auth.Us
 	return unmarshalUserSearchAllResponse(res)
 }
 
-func makeCreateUpdateUserRequest(identifier, email, phone, displayName string, roles []string, tenants []UserTenants) map[string]any {
+func makeCreateUpdateUserRequest(identifier, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) map[string]any {
 	return map[string]any{
 		"identifier":  identifier,
 		"email":       email,
 		"phoneNumber": phone,
 		"displayName": displayName,
 		"roleNames":   roles,
-		"userTenants": makeUserTenantsList(tenants),
+		"userTenants": makeAssociatedTenantList(tenants),
 	}
 }
 
-func makeUserTenantsList(tenants []UserTenants) []map[string]any {
-	res := []map[string]any{}
-	for _, tenant := range tenants {
-		res = append(res, map[string]any{
-			"tenantId":  tenant.TenantID,
-			"roleNames": tenant.Roles,
-		})
-	}
-	return res
-}
-
-func makeSearchAllRequest(tenantIDs, roleNames []string, limit int32) map[string]any {
+func makeSearchAllRequest(tenantIDs, roles []string, limit int32) map[string]any {
 	return map[string]any{
 		"tenantIds": tenantIDs,
-		"roleNames": roleNames,
+		"roleNames": roles,
 		"limit":     limit,
 	}
 }
