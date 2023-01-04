@@ -98,7 +98,7 @@ func TestVerifyTOTP(t *testing.T) {
 		resp := &JWTResponse{
 			RefreshJwt: jwtTokenValid,
 			User: &UserResponse{
-				ExternalIDs: []string{externalID},
+				LoginIDs: []string{externalID},
 			},
 			FirstSeen: true,
 		}
@@ -111,7 +111,7 @@ func TestVerifyTOTP(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, authInfo)
 	assert.True(t, authInfo.FirstSeen)
-	assert.EqualValues(t, externalID, authInfo.User.ExternalIDs[0])
+	assert.EqualValues(t, externalID, authInfo.User.LoginIDs[0])
 }
 
 func TestVerifyTOTPLoginOptions(t *testing.T) {
@@ -136,7 +136,7 @@ func TestVerifyTOTPLoginOptions(t *testing.T) {
 		resp := &JWTResponse{
 			RefreshJwt: jwtTokenValid,
 			User: &UserResponse{
-				ExternalIDs: []string{externalID},
+				LoginIDs: []string{externalID},
 			},
 			FirstSeen: true,
 		}
@@ -149,7 +149,7 @@ func TestVerifyTOTPLoginOptions(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, authInfo)
 	assert.True(t, authInfo.FirstSeen)
-	assert.EqualValues(t, externalID, authInfo.User.ExternalIDs[0])
+	assert.EqualValues(t, externalID, authInfo.User.LoginIDs[0])
 }
 
 func TestVerifyTOTPFailure(t *testing.T) {

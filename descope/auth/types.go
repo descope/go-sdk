@@ -183,7 +183,7 @@ type WebauthnUserRequest struct {
 type UserResponse struct {
 	User          `json:",inline"`
 	UserID        string              `json:"userId,omitempty"`
-	ExternalIDs   []string            `json:"externalIds,omitempty"`
+	LoginIDs      []string            `json:"loginIds,omitempty"`
 	VerifiedEmail bool                `json:"verifiedEmail,omitempty"`
 	VerifiedPhone bool                `json:"verifiedPhone,omitempty"`
 	RoleNames     []string            `json:"roleNames,omitempty"`
