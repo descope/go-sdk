@@ -20,7 +20,7 @@ func TestLoadAllGroupsSuccess(t *testing.T) {
 			Members: []auth.GroupMember{
 				{
 					Identifier: "some-identifier",
-					JwtSubject: "some-jwtSubject",
+					UserID:     "some-userID",
 					Display:    "some-display",
 				},
 			},
@@ -55,7 +55,7 @@ func TestLoadAllGroupsError(t *testing.T) {
 
 func TestLoadAllGroupsForMembersSuccess(t *testing.T) {
 	tenantID := "abc"
-	jwtSubjects := []string{"one", "two"}
+	userIDs := []string{"one", "two"}
 	identifiers := []string{"three", "four"}
 	response := []*auth.Group{
 		{
@@ -64,7 +64,7 @@ func TestLoadAllGroupsForMembersSuccess(t *testing.T) {
 			Members: []auth.GroupMember{
 				{
 					Identifier: "some-identifier",
-					JwtSubject: "some-jwtSubject",
+					UserID:     "some-userIDs",
 					Display:    "some-display",
 				},
 			},
@@ -74,40 +74,40 @@ func TestLoadAllGroupsForMembersSuccess(t *testing.T) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		require.Equal(t, []interface{}{"one", "two"}, req["jwtSubjects"])
+		require.Equal(t, []interface{}{"one", "two"}, req["userIds"])
 		require.Equal(t, []interface{}{"three", "four"}, req["identifiers"])
 	}, response))
-	res, err := mgmt.Group().LoadAllGroupsForMembers(tenantID, jwtSubjects, identifiers)
+	res, err := mgmt.Group().LoadAllGroupsForMembers(tenantID, userIDs, identifiers)
 	require.NoError(t, err)
 	assert.EqualValues(t, response, res)
 }
 
-func TestLoadAllGroupsForMembersMissingArgumentJwtSubjects(t *testing.T) {
+func TestLoadAllGroupsForMembersMissingArgumentUserIDs(t *testing.T) {
 	tenantID := "abc"
-	var jwtSubjects []string
+	var userIDs []string
 	var identifiers []string
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := mgmt.Group().LoadAllGroupsForMembers(tenantID, jwtSubjects, identifiers)
-	require.ErrorContains(t, err, errors.NewInvalidArgumentError("jwtSubjects and identifiers").Message)
+	res, err := mgmt.Group().LoadAllGroupsForMembers(tenantID, userIDs, identifiers)
+	require.ErrorContains(t, err, errors.NewInvalidArgumentError("userIds and identifiers").Message)
 	assert.Nil(t, res)
 }
 
 func TestLoadAllGroupsForMembersMissingArgumentTenantID(t *testing.T) {
 	tenantID := ""
-	jwtSubjects := []string{"one", "two"}
+	userIDs := []string{"one", "two"}
 	identifiers := []string{"three", "four"}
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := mgmt.Group().LoadAllGroupsForMembers(tenantID, jwtSubjects, identifiers)
+	res, err := mgmt.Group().LoadAllGroupsForMembers(tenantID, userIDs, identifiers)
 	require.ErrorContains(t, err, errors.NewInvalidArgumentError("tenantID").Message)
 	assert.Nil(t, res)
 }
 
 func TestLoadAllGroupsForMembersError(t *testing.T) {
 	tenantID := "abc"
-	jwtSubjects := []string{"one", "two"}
+	userIDs := []string{"one", "two"}
 	identifiers := []string{"three", "four"}
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := mgmt.Group().LoadAllGroupsForMembers(tenantID, jwtSubjects, identifiers)
+	res, err := mgmt.Group().LoadAllGroupsForMembers(tenantID, userIDs, identifiers)
 	require.Error(t, err)
 	assert.Nil(t, res)
 }
@@ -122,7 +122,7 @@ func TestLoadAllGroupMembersSuccess(t *testing.T) {
 			Members: []auth.GroupMember{
 				{
 					Identifier: "some-identifier",
-					JwtSubject: "some-jwtSubject",
+					UserID:     "some-userIDs",
 					Display:    "some-display",
 				},
 			},

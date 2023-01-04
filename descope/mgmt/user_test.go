@@ -108,7 +108,7 @@ func TestUserLoadError(t *testing.T) {
 	require.Nil(t, res)
 }
 
-func TestUserLoadByJWTSubjectSuccess(t *testing.T) {
+func TestUserLoadByUserIDSuccess(t *testing.T) {
 	response := map[string]any{
 		"user": map[string]any{
 			"email": "a@b.c",
@@ -116,24 +116,24 @@ func TestUserLoadByJWTSubjectSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		params := helpers.ReadParams(r)
-		require.Equal(t, "abc", params["jwtSubject"])
+		require.Equal(t, "abc", params["userId"])
 	}, response))
-	res, err := mgmt.User().LoadByJWTSubject("abc")
+	res, err := mgmt.User().LoadByUserID("abc")
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
 }
 
-func TestUserLoadByJWTSubjectBadInput(t *testing.T) {
+func TestUserLoadByUserIDBadInput(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := mgmt.User().LoadByJWTSubject("")
+	res, err := mgmt.User().LoadByUserID("")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
-func TestUserLoadByJWTSubjectError(t *testing.T) {
+func TestUserLoadByUserIDError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := mgmt.User().LoadByJWTSubject("abc")
+	res, err := mgmt.User().LoadByUserID("abc")
 	require.Error(t, err)
 	require.Nil(t, res)
 }

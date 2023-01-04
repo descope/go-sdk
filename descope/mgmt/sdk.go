@@ -75,11 +75,11 @@ type User interface {
 	// The identifier is required and the user will be fetched according to it.
 	Load(identifier string) (*auth.UserResponse, error)
 
-	// Load an existing user by JWT subject. The JWT subject can be found
+	// Load an existing user by User ID. The user ID can be found
 	// on the user's JWT.
 	//
-	// The jwtSubject is required and the user will be fetched according to it.
-	LoadByJWTSubject(jwtSubject string) (*auth.UserResponse, error)
+	// The userID is required and the user will be fetched according to it.
+	LoadByUserID(userID string) (*auth.UserResponse, error)
 
 	// Search all users according to given filters
 	//
@@ -246,11 +246,11 @@ type Group interface {
 	// Load all groups for a specific tenant id.
 	LoadAllGroups(tenantID string) ([]*auth.Group, error)
 
-	// Load all groups for the provided user JWT subjects or identifiers.
+	// Load all groups for the provided user IDs or identifiers.
 	//
-	// JWT subject is with the format of "U2J5ES9S8TkvCgOvcrkpzUgVTEBM" (example), which can be found on the user's JWT.
+	// userIDs have a format of "U2J5ES9S8TkvCgOvcrkpzUgVTEBM" (example), which can be found on the user's JWT.
 	// identifier is the actual user identifier used for sign in.
-	LoadAllGroupsForMembers(tenantID string, jwtSubjects, identifiers []string) ([]*auth.Group, error)
+	LoadAllGroupsForMembers(tenantID string, userIDs, identifiers []string) ([]*auth.Group, error)
 
 	// Load all members of the provided group id.
 	LoadAllGroupMembers(tenantID, groupID string) ([]*auth.Group, error)

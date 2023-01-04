@@ -146,9 +146,9 @@ func (m *MockUser) Load(identifier string) (*auth.UserResponse, error) {
 	return m.LoadResponse, m.LoadError
 }
 
-func (m *MockUser) LoadByJWTSubject(jwtSubject string) (*auth.UserResponse, error) {
+func (m *MockUser) LoadByUserID(userID string) (*auth.UserResponse, error) {
 	if m.LoadAssert != nil {
-		m.LoadAssert(jwtSubject)
+		m.LoadAssert(userID)
 	}
 	return m.LoadResponse, m.LoadError
 }
@@ -384,7 +384,7 @@ type MockGroup struct {
 	LoadAllGroupsResponse []*auth.Group
 	LoadAllGroupsError    error
 
-	LoadAllGroupsForMembersAssert   func(tenantID string, jwtSubjects, identifiers []string)
+	LoadAllGroupsForMembersAssert   func(tenantID string, userIDs, identifiers []string)
 	LoadAllGroupsForMembersResponse []*auth.Group
 	LoadAllGroupsForMembersError    error
 
@@ -400,9 +400,9 @@ func (m *MockGroup) LoadAllGroups(tenantID string) ([]*auth.Group, error) {
 	return m.LoadAllGroupsResponse, m.LoadAllGroupsError
 }
 
-func (m *MockGroup) LoadAllGroupsForMembers(tenantID string, jwtSubjects, identifiers []string) ([]*auth.Group, error) {
+func (m *MockGroup) LoadAllGroupsForMembers(tenantID string, userIDs, identifiers []string) ([]*auth.Group, error) {
 	if m.LoadAllGroupsForMembersAssert != nil {
-		m.LoadAllGroupsForMembersAssert(tenantID, jwtSubjects, identifiers)
+		m.LoadAllGroupsForMembersAssert(tenantID, userIDs, identifiers)
 	}
 	return m.LoadAllGroupsForMembersResponse, m.LoadAllGroupsForMembersError
 }
