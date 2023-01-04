@@ -25,17 +25,17 @@ func (r *group) LoadAllGroups(tenantID string) ([]*auth.Group, error) {
 	return unmarshalGroupsResponse(res)
 }
 
-func (r *group) LoadAllGroupsForMembers(tenantID string, jwtSubjects, identifiers []string) ([]*auth.Group, error) {
+func (r *group) LoadAllGroupsForMembers(tenantID string, userIDs, identifiers []string) ([]*auth.Group, error) {
 	if tenantID == "" {
 		return nil, errors.NewInvalidArgumentError("tenantID")
 	}
-	if len(jwtSubjects) == 0 && len(identifiers) == 0 {
-		return nil, errors.NewInvalidArgumentError("jwtSubjects and identifiers")
+	if len(userIDs) == 0 && len(identifiers) == 0 {
+		return nil, errors.NewInvalidArgumentError("userIds and identifiers")
 	}
 	body := map[string]any{
 		"tenantId":    tenantID,
 		"identifiers": identifiers,
-		"jwtSubjects": jwtSubjects,
+		"userIds":     userIDs,
 	}
 	res, err := r.client.DoPostRequest(api.Routes.ManagementGroupLoadAllGroupsForMember(), body, nil, r.conf.ManagementKey)
 	if err != nil {

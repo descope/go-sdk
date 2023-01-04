@@ -221,10 +221,10 @@ func groupAllForTenant(args []string) error {
 	return err
 }
 
-func groupAllForMembersJWTSubjects(args []string) error {
+func groupAllForMembersUserIDs(args []string) error {
 	tenantID := args[0]
-	jwtSubjects := strings.Split(args[1], ",")
-	res, err := descopeClient.Management.Group().LoadAllGroupsForMembers(tenantID, jwtSubjects, nil)
+	userIDs := strings.Split(args[1], ",")
+	res, err := descopeClient.Management.Group().LoadAllGroupsForMembers(tenantID, userIDs, nil)
 	if err == nil {
 		for _, p := range res {
 			fmt.Printf("Found group: %s, %s. Members: %v\n", p.ID, p.Display, p.Members)
@@ -414,7 +414,7 @@ func main() {
 		cmd.DisableFlagsInUseLine = true
 	})
 
-	addCommand(groupAllForMembersJWTSubjects, "group-all-for-members-jwt-subjects <tenantId> <jwtSubjects>", "Load all groups for the given user's jwt subjects (can be found in the user's JWT)", func(cmd *cobra.Command) {
+	addCommand(groupAllForMembersUserIDs, "group-all-for-members-user-ids <tenantId> <userIDs>", "Load all groups for the given user's ID (can be found in the user's JWT)", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
 		cmd.DisableFlagsInUseLine = true
 	})

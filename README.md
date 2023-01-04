@@ -424,8 +424,8 @@ err := descopeClient.Management.User().Delete("desmond@descope.com")
 // Load specific user
 userRes, err := descopeClient.Management.User().Load("desmond@descope.com")
 
-// If needed, users can be loaded using the JWT subject as well
-userRes, err := descopeClient.Management.User().LoadByJWTSubject("<jwt-subject>")
+// If needed, users can be loaded using their ID as well
+userRes, err := descopeClient.Management.User().LoadByUserID("<user-id>")
 
 // Search all users, optionally according to tenant and/or role filter
 usersResp, err := descopeClient.Management.User().SearchAll([]string{"my-tenant-id"}, nil, 0)
@@ -578,8 +578,8 @@ if err == nil {
     }
 }
 
-// Load all groups for the given user's jwt subjects (can be found in the user's JWT)
-res, err := descopeClient.Management.Group().LoadAllGroupsForMembers("tenant-id", []string{"jwt-subject-1", "jwt-subject-2"}, nil)
+// Load all groups for the given user IDs (can be found in the user's JWT)
+res, err := descopeClient.Management.Group().LoadAllGroupsForMembers("tenant-id", []string{"user-id-1", "user-id-2"}, nil)
 if err == nil {
     for _, group := range res {
         // Do something

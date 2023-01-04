@@ -225,7 +225,7 @@ type Role struct {
 
 type GroupMember struct {
 	Identifier string `json:"identifier,omitempty"`
-	JwtSubject string `json:"jwtSubject,omitempty"`
+	UserID     string `json:"userId,omitempty"`
 	Display    string `json:"display,omitempty"`
 }
 
