@@ -72,24 +72,24 @@ func handleIsHealthy(c *gin.Context) {
 }
 
 func handleSignUpOrIn(c *gin.Context) {
-	method, identifier := getMethodAndIdentifier(c)
-	err := client.Auth.OTP().SignUpOrIn(method, identifier)
+	method, loginID := getMethodAndLoginID(c)
+	err := client.Auth.OTP().SignUpOrIn(method, loginID)
 	if err != nil {
-		setErrorWithSignUpIn(c, err.Error(), method, identifier)
+		setErrorWithSignUpIn(c, err.Error(), method, loginID)
 	} else {
-		helpTxt := "to verify code received go to /otp/verify?" + string(method) + "=" + identifier + "&code=<code>"
+		helpTxt := "to verify code received go to /otp/verify?" + string(method) + "=" + loginID + "&code=<code>"
 		setResponse(c, http.StatusOK, helpTxt)
 	}
 }
 
 func handleOTPVerify(c *gin.Context) {
-	method, identifier := getMethodAndIdentifier(c)
+	method, loginID := getMethodAndLoginID(c)
 	code := c.Query("code")
 	if code == "" {
 		setError(c, "code is empty")
 		return
 	}
-	authInfo, err := client.Auth.OTP().VerifyCode(method, identifier, code, c.Writer)
+	authInfo, err := client.Auth.OTP().VerifyCode(method, loginID, code, c.Writer)
 	if err != nil {
 		setError(c, err.Error())
 		return
@@ -100,32 +100,32 @@ func handleOTPVerify(c *gin.Context) {
 	setResponse(c, http.StatusOK, helpTxt)
 }
 
-func getMethodAndIdentifier(c *gin.Context) (auth.DeliveryMethod, string) {
+func getMethodAndLoginID(c *gin.Context) (auth.DeliveryMethod, string) {
 	method := auth.MethodEmail
-	identifier := ""
+	loginID := ""
 	if email := c.Query("email"); email != "" {
-		identifier = email
+		loginID = email
 	} else if sms := c.Query("sms"); sms != "" {
 		method = auth.MethodSMS
-		identifier = sms
+		loginID = sms
 	} else if whatsapp := c.Query("whatsapp"); whatsapp != "" {
 		method = auth.MethodWhatsApp
-		identifier = whatsapp
+		loginID = whatsapp
 	}
-	return method, identifier
+	return method, loginID
 }
 
 func setOK(c *gin.Context) {
 	setResponse(c, http.StatusOK, "OK")
 }
 
-func setErrorWithSignUpIn(c *gin.Context, message string, method auth.DeliveryMethod, identifier string) {
+func setErrorWithSignUpIn(c *gin.Context, message string, method auth.DeliveryMethod, loginID string) {
 	msg := message
 	if method != "" {
 		msg += " method: " + string(method)
 	}
-	if identifier != "" {
-		msg += " identifier: " + identifier
+	if loginID != "" {
+		msg += " loginID: " + loginID
 	}
 	setError(c, msg)
 }

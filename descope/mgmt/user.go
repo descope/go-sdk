@@ -11,38 +11,38 @@ type user struct {
 	managementBase
 }
 
-func (u *user) Create(identifier, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) error {
-	if identifier == "" {
-		return errors.NewInvalidArgumentError("identifier")
+func (u *user) Create(loginID, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) error {
+	if loginID == "" {
+		return errors.NewInvalidArgumentError("loginID")
 	}
-	req := makeCreateUpdateUserRequest(identifier, email, phone, displayName, roles, tenants)
+	req := makeCreateUpdateUserRequest(loginID, email, phone, displayName, roles, tenants)
 	_, err := u.client.DoPostRequest(api.Routes.ManagementUserCreate(), req, nil, u.conf.ManagementKey)
 	return err
 }
 
-func (u *user) Update(identifier, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) error {
-	if identifier == "" {
-		return errors.NewInvalidArgumentError("identifier")
+func (u *user) Update(loginID, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) error {
+	if loginID == "" {
+		return errors.NewInvalidArgumentError("loginID")
 	}
-	req := makeCreateUpdateUserRequest(identifier, email, phone, displayName, roles, tenants)
+	req := makeCreateUpdateUserRequest(loginID, email, phone, displayName, roles, tenants)
 	_, err := u.client.DoPostRequest(api.Routes.ManagementUserUpdate(), req, nil, u.conf.ManagementKey)
 	return err
 }
 
-func (u *user) Delete(identifier string) error {
-	if identifier == "" {
-		return errors.NewInvalidArgumentError("identifier")
+func (u *user) Delete(loginID string) error {
+	if loginID == "" {
+		return errors.NewInvalidArgumentError("loginID")
 	}
-	req := map[string]any{"identifier": identifier}
+	req := map[string]any{"loginId": loginID}
 	_, err := u.client.DoPostRequest(api.Routes.ManagementUserDelete(), req, nil, u.conf.ManagementKey)
 	return err
 }
 
-func (u *user) Load(identifier string) (*auth.UserResponse, error) {
-	if identifier == "" {
-		return nil, errors.NewInvalidArgumentError("identifier")
+func (u *user) Load(loginID string) (*auth.UserResponse, error) {
+	if loginID == "" {
+		return nil, errors.NewInvalidArgumentError("loginID")
 	}
-	return u.load(identifier, "")
+	return u.load(loginID, "")
 }
 
 func (u *user) LoadByUserID(userID string) (*auth.UserResponse, error) {
@@ -52,9 +52,9 @@ func (u *user) LoadByUserID(userID string) (*auth.UserResponse, error) {
 	return u.load("", userID)
 }
 
-func (u *user) load(identifier, userID string) (*auth.UserResponse, error) {
+func (u *user) load(loginID, userID string) (*auth.UserResponse, error) {
 	req := &api.HTTPRequest{
-		QueryParams: map[string]string{"identifier": identifier, "userId": userID},
+		QueryParams: map[string]string{"loginId": loginID, "userId": userID},
 	}
 	res, err := u.client.DoGetRequest(api.Routes.ManagementUserLoad(), req, u.conf.ManagementKey)
 	if err != nil {
@@ -72,9 +72,9 @@ func (u *user) SearchAll(tenantIDs, roles []string, limit int32) ([]*auth.UserRe
 	return unmarshalUserSearchAllResponse(res)
 }
 
-func makeCreateUpdateUserRequest(identifier, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) map[string]any {
+func makeCreateUpdateUserRequest(loginID, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) map[string]any {
 	return map[string]any{
-		"identifier":  identifier,
+		"loginId":     loginID,
 		"email":       email,
 		"phoneNumber": phone,
 		"displayName": displayName,

@@ -18,7 +18,7 @@ func TestSignUpStart(t *testing.T) {
 		req := authenticationWebAuthnSignUpRequestBody{}
 		err := readBody(r, &req)
 		require.NoError(t, err)
-		assert.EqualValues(t, "test@test.com", req.User.ExternalID)
+		assert.EqualValues(t, "test@test.com", req.User.LoginID)
 		assert.EqualValues(t, "test2@test.com", req.User.Name)
 	}, expectedResponse))
 	require.NoError(t, err)
@@ -33,7 +33,7 @@ func TestSignUpStartNilUser(t *testing.T) {
 		req := authenticationWebAuthnSignUpRequestBody{}
 		err := readBody(r, &req)
 		require.NoError(t, err)
-		assert.EqualValues(t, "test@test.com", req.User.ExternalID)
+		assert.EqualValues(t, "test@test.com", req.User.LoginID)
 	}, expectedResponse))
 	require.NoError(t, err)
 	res, err := a.WebAuthn().SignUpStart("test@test.com", nil, "https://example.com")
@@ -58,7 +58,7 @@ func TestSignInStart(t *testing.T) {
 		req := authenticationRequestBody{}
 		err := readBody(r, &req)
 		require.NoError(t, err)
-		assert.EqualValues(t, "a", req.ExternalID)
+		assert.EqualValues(t, "a", req.LoginID)
 	}, expectedResponse))
 	require.NoError(t, err)
 	res, err := a.WebAuthn().SignInStart("a", "https://example.com", nil, nil)
@@ -72,7 +72,7 @@ func TestSignInStartStepup(t *testing.T) {
 		req := authenticationRequestBody{}
 		err := readBody(r, &req)
 		require.NoError(t, err)
-		assert.EqualValues(t, "a", req.ExternalID)
+		assert.EqualValues(t, "a", req.LoginID)
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, map[string]interface{}{"stepup": true, "customClaims": map[string]interface{}{"k1": "v1"}}, body["loginOptions"])
@@ -126,7 +126,7 @@ func TestSignUpOrInStart(t *testing.T) {
 		req := authenticationWebAuthnSignUpOrInRequestBody{}
 		err := readBody(r, &req)
 		require.NoError(t, err)
-		assert.EqualValues(t, "test@test.com", req.ExternalID)
+		assert.EqualValues(t, "test@test.com", req.LoginID)
 		assert.EqualValues(t, "https://example.com", req.Origin)
 	}, expectedResponse))
 	require.NoError(t, err)
@@ -151,7 +151,7 @@ func TestWebAuthnUpdateUserDeviceStart(t *testing.T) {
 		req := authenticationRequestBody{}
 		err := readBody(r, &req)
 		require.NoError(t, err)
-		assert.EqualValues(t, "test@test.com", req.ExternalID)
+		assert.EqualValues(t, "test@test.com", req.LoginID)
 	}, expectedResponse))
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}

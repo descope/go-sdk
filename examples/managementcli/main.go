@@ -16,7 +16,7 @@ import (
 // Command line flags
 
 var flags struct {
-	Identifier  string
+	LoginID     string
 	Email       string
 	Phone       string
 	Name        string
@@ -135,8 +135,8 @@ func accessKeyDelete(args []string) error {
 }
 
 func tenantCreate(args []string) error {
-	if flags.Identifier != "" {
-		return descopeClient.Management.Tenant().CreateWithID(flags.Identifier, args[0], flags.Domains)
+	if flags.LoginID != "" {
+		return descopeClient.Management.Tenant().CreateWithID(flags.LoginID, args[0], flags.Domains)
 	}
 	tenantID, err := descopeClient.Management.Tenant().Create(args[0], flags.Domains)
 	if err == nil {
@@ -146,8 +146,8 @@ func tenantCreate(args []string) error {
 }
 
 func tenantUpdate(args []string) error {
-	if flags.Identifier != "" {
-		return descopeClient.Management.Tenant().CreateWithID(flags.Identifier, args[0], flags.Domains)
+	if flags.LoginID != "" {
+		return descopeClient.Management.Tenant().CreateWithID(flags.LoginID, args[0], flags.Domains)
 	}
 	return descopeClient.Management.Tenant().Update(args[0], args[1], flags.Domains)
 }
@@ -233,10 +233,10 @@ func groupAllForMembersUserIDs(args []string) error {
 	return err
 }
 
-func groupAllForMembersIdentifiers(args []string) error {
+func groupAllForMembersLoginIDs(args []string) error {
 	tenantID := args[0]
-	identifiers := strings.Split(args[1], ",")
-	res, err := descopeClient.Management.Group().LoadAllGroupsForMembers(tenantID, nil, identifiers)
+	loginIDs := strings.Split(args[1], ",")
+	res, err := descopeClient.Management.Group().LoadAllGroupsForMembers(tenantID, nil, loginIDs)
 	if err == nil {
 		for _, p := range res {
 			fmt.Printf("Found group: %s, %s. Members: %v\n", p.ID, p.Display, p.Members)
@@ -284,7 +284,7 @@ func addCommand(action func([]string) error, use string, help string, setup func
 }
 
 func main() {
-	addCommand(userCreate, "user-create <identifier>", "Create a new user", func(cmd *cobra.Command) {
+	addCommand(userCreate, "user-create <loginID>", "Create a new user", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 		cmd.Flags().StringVarP(&flags.Email, "email", "E", "", "the user's email address")
 		cmd.Flags().StringVarP(&flags.Phone, "phone", "P", "", "the user's phone number")
@@ -292,7 +292,7 @@ func main() {
 		cmd.Flags().StringSliceVarP(&flags.Tenants, "tenants", "T", nil, "the ids of the user's tenants")
 	})
 
-	addCommand(userUpdate, "user-update <identifier>", "Update an existing user", func(cmd *cobra.Command) {
+	addCommand(userUpdate, "user-update <loginID>", "Update an existing user", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 		cmd.Flags().StringVarP(&flags.Email, "email", "E", "", "the user's email address")
 		cmd.Flags().StringVarP(&flags.Phone, "phone", "P", "", "the user's phone number")
@@ -300,7 +300,7 @@ func main() {
 		cmd.Flags().StringSliceVarP(&flags.Tenants, "tenants", "T", nil, "the ids of the user's tenants")
 	})
 
-	addCommand(userDelete, "user-delete <identifier>", "Delete an existing user", func(cmd *cobra.Command) {
+	addCommand(userDelete, "user-delete <loginID>", "Delete an existing user", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 		cmd.DisableFlagsInUseLine = true
 	})
@@ -341,7 +341,7 @@ func main() {
 
 	addCommand(tenantCreate, "tenant-create <name>", "Create a new tenant", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
-		cmd.Flags().StringVarP(&flags.Identifier, "id", "I", "", "the tenant's custom id")
+		cmd.Flags().StringVarP(&flags.LoginID, "id", "I", "", "the tenant's custom id")
 		cmd.Flags().StringSliceVarP(&flags.Domains, "domains", "D", nil, "the tenant's self provisioning domains")
 	})
 
@@ -419,7 +419,7 @@ func main() {
 		cmd.DisableFlagsInUseLine = true
 	})
 
-	addCommand(groupAllForMembersIdentifiers, "group-all-for-members-identifiers <tenantId> <identifiers>", "Load all groups for the given user's identifiers (used for sign-in)", func(cmd *cobra.Command) {
+	addCommand(groupAllForMembersLoginIDs, "group-all-for-members-loginIDs <tenantId> <loginIDs>", "Load all groups for the given user's loginIDs (used for sign-in)", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
 		cmd.DisableFlagsInUseLine = true
 	})

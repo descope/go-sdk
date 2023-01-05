@@ -14,13 +14,13 @@ import (
 )
 
 func TestSignUp(t *testing.T) {
-	externalID := "someID"
+	loginID := "someID"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeSignUpTOTPURL(), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, externalID, body["externalId"])
+		assert.EqualValues(t, loginID, body["loginId"])
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
 
 		resp := &TOTPResponse{
@@ -33,7 +33,7 @@ func TestSignUp(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	token, err := a.TOTP().SignUp(externalID, &User{Name: "test"})
+	token, err := a.TOTP().SignUp(loginID, &User{Name: "test"})
 	require.NoError(t, err)
 	assert.NotNil(t, token)
 }
@@ -46,13 +46,13 @@ func TestSignUpTOTPFailure(t *testing.T) {
 }
 
 func TestUpdateTOTP(t *testing.T) {
-	externalID := "someID"
+	loginID := "someID"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeUpdateTOTPURL(), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, externalID, body["externalId"])
+		assert.EqualValues(t, loginID, body["loginId"])
 		assert.Nil(t, body["user"])
 
 		u, p := getProjectAndJwt(r)
@@ -71,7 +71,7 @@ func TestUpdateTOTP(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	token, err := a.TOTP().UpdateUser(externalID, r)
+	token, err := a.TOTP().UpdateUser(loginID, r)
 	require.NoError(t, err)
 	assert.NotNil(t, token)
 }
@@ -85,20 +85,20 @@ func TestUpodateTOTPFailure(t *testing.T) {
 }
 
 func TestVerifyTOTP(t *testing.T) {
-	externalID := "someID"
+	loginID := "someID"
 	code := "123456"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeVerifyTOTPCodeURL(), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, externalID, body["externalId"])
+		assert.EqualValues(t, loginID, body["loginId"])
 		assert.EqualValues(t, code, body["code"])
 
 		resp := &JWTResponse{
 			RefreshJwt: jwtTokenValid,
 			User: &UserResponse{
-				LoginIDs: []string{externalID},
+				LoginIDs: []string{loginID},
 			},
 			FirstSeen: true,
 		}
@@ -107,22 +107,22 @@ func TestVerifyTOTP(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	authInfo, err := a.TOTP().SignInCode(externalID, code, nil, nil, nil)
+	authInfo, err := a.TOTP().SignInCode(loginID, code, nil, nil, nil)
 	require.NoError(t, err)
 	assert.NotNil(t, authInfo)
 	assert.True(t, authInfo.FirstSeen)
-	assert.EqualValues(t, externalID, authInfo.User.LoginIDs[0])
+	assert.EqualValues(t, loginID, authInfo.User.LoginIDs[0])
 }
 
 func TestVerifyTOTPLoginOptions(t *testing.T) {
-	externalID := "someID"
+	loginID := "someID"
 	code := "123456"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeVerifyTOTPCodeURL(), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, externalID, body["externalId"])
+		assert.EqualValues(t, loginID, body["loginId"])
 		assert.EqualValues(t, code, body["code"])
 		assert.EqualValues(t, map[string]interface{}{"stepup": true, "customClaims": map[string]interface{}{"k1": "v1"}}, body["loginOptions"])
 		reqToken := r.Header.Get(api.AuthorizationHeaderName)
@@ -136,7 +136,7 @@ func TestVerifyTOTPLoginOptions(t *testing.T) {
 		resp := &JWTResponse{
 			RefreshJwt: jwtTokenValid,
 			User: &UserResponse{
-				LoginIDs: []string{externalID},
+				LoginIDs: []string{loginID},
 			},
 			FirstSeen: true,
 		}
@@ -145,11 +145,11 @@ func TestVerifyTOTPLoginOptions(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	authInfo, err := a.TOTP().SignInCode(externalID, code, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, nil)
+	authInfo, err := a.TOTP().SignInCode(loginID, code, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, nil)
 	require.NoError(t, err)
 	assert.NotNil(t, authInfo)
 	assert.True(t, authInfo.FirstSeen)
-	assert.EqualValues(t, externalID, authInfo.User.LoginIDs[0])
+	assert.EqualValues(t, loginID, authInfo.User.LoginIDs[0])
 }
 
 func TestVerifyTOTPFailure(t *testing.T) {

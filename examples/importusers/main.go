@@ -32,7 +32,7 @@ type TenantMapping struct {
 }
 
 type User struct {
-	Identifier  string          `json:"id"`
+	LoginID     string          `json:"id"`
 	Email       string          `json:"email"`
 	Phone       string          `json:"phone"`
 	DisplayName string          `json:"displayName"`
@@ -70,14 +70,14 @@ func main() {
 	fmt.Println("Adding", len(data.Users), "users...")
 
 	for _, user := range data.Users {
-		fmt.Println("Adding user", user.Identifier, "("+user.DisplayName+")")
+		fmt.Println("Adding user", user.LoginID, "("+user.DisplayName+")")
 
 		tenants := []*mgmt.AssociatedTenant{}
 		for _, curr := range user.Tenants {
 			tenants = append(tenants, &mgmt.AssociatedTenant{TenantID: curr.TenantID, Roles: curr.Roles})
 		}
 
-		err := descopeClient.Management.User().Create(user.Identifier, user.Email, user.Phone, user.DisplayName, user.Roles, tenants)
+		err := descopeClient.Management.User().Create(user.LoginID, user.Email, user.Phone, user.DisplayName, user.Roles, tenants)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Error adding user:", err)
 		}

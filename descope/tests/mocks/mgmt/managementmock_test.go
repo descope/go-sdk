@@ -12,24 +12,24 @@ import (
 
 func TestMockManagement(t *testing.T) {
 	called := false
-	expectedIdentifier := "mytestidentifier"
+	expectedLoginID := "mytestloginID"
 
 	descopeClient := descope.DescopeClient{
 		Management: &MockManagement{
 			MockUser: &MockUser{
-				CreateAssert: func(identifier, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant) {
+				CreateAssert: func(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant) {
 					called = true
-					assert.EqualValues(t, expectedIdentifier, identifier)
+					assert.EqualValues(t, expectedLoginID, loginID)
 				},
-				LoadResponse: &auth.UserResponse{UserID: expectedIdentifier},
+				LoadResponse: &auth.UserResponse{UserID: expectedLoginID},
 			},
 		},
 	}
 	assert.NotNil(t, descopeClient.Management)
-	require.NoError(t, descopeClient.Management.User().Create(expectedIdentifier, "", "", "", nil, nil))
+	require.NoError(t, descopeClient.Management.User().Create(expectedLoginID, "", "", "", nil, nil))
 	assert.True(t, called)
 
-	u, err := descopeClient.Management.User().Load(expectedIdentifier)
+	u, err := descopeClient.Management.User().Load(expectedLoginID)
 	require.NoError(t, err)
-	assert.EqualValues(t, expectedIdentifier, u.UserID)
+	assert.EqualValues(t, expectedLoginID, u.UserID)
 }

@@ -450,16 +450,16 @@ func (auth *authenticationsBase) validateJWT(JWT string) (*Token, error) {
 	return NewToken(JWT, token), err
 }
 
-func (*authenticationsBase) verifyDeliveryMethod(method DeliveryMethod, identifier string, user *User) *errors.WebError {
-	varName := "identifier"
-	if identifier == "" {
+func (*authenticationsBase) verifyDeliveryMethod(method DeliveryMethod, loginID string, user *User) *errors.WebError {
+	varName := "loginID"
+	if loginID == "" {
 		return errors.NewInvalidArgumentError(varName)
 	}
 
 	switch method {
 	case MethodEmail:
 		if len(user.Email) == 0 {
-			user.Email = identifier
+			user.Email = loginID
 		} else {
 			varName = "user.Email"
 		}
@@ -468,7 +468,7 @@ func (*authenticationsBase) verifyDeliveryMethod(method DeliveryMethod, identifi
 		}
 	case MethodSMS:
 		if len(user.Phone) == 0 {
-			user.Phone = identifier
+			user.Phone = loginID
 		} else {
 			varName = "user.Phone"
 		}
@@ -477,7 +477,7 @@ func (*authenticationsBase) verifyDeliveryMethod(method DeliveryMethod, identifi
 		}
 	case MethodWhatsApp:
 		if len(user.Phone) == 0 {
-			user.Phone = identifier
+			user.Phone = loginID
 		} else {
 			varName = "user.Phone"
 		}

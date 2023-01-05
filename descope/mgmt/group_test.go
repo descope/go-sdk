@@ -19,9 +19,9 @@ func TestLoadAllGroupsSuccess(t *testing.T) {
 			Display: "some-display",
 			Members: []auth.GroupMember{
 				{
-					Identifier: "some-identifier",
-					UserID:     "some-userID",
-					Display:    "some-display",
+					LoginID: "some-loginID",
+					UserID:  "some-userID",
+					Display: "some-display",
 				},
 			},
 		},
@@ -56,16 +56,16 @@ func TestLoadAllGroupsError(t *testing.T) {
 func TestLoadAllGroupsForMembersSuccess(t *testing.T) {
 	tenantID := "abc"
 	userIDs := []string{"one", "two"}
-	identifiers := []string{"three", "four"}
+	loginIDs := []string{"three", "four"}
 	response := []*auth.Group{
 		{
 			ID:      "some-id",
 			Display: "some-display",
 			Members: []auth.GroupMember{
 				{
-					Identifier: "some-identifier",
-					UserID:     "some-userIDs",
-					Display:    "some-display",
+					LoginID: "some-loginID",
+					UserID:  "some-userIDs",
+					Display: "some-display",
 				},
 			},
 		},
@@ -75,9 +75,9 @@ func TestLoadAllGroupsForMembersSuccess(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, []interface{}{"one", "two"}, req["userIds"])
-		require.Equal(t, []interface{}{"three", "four"}, req["identifiers"])
+		require.Equal(t, []interface{}{"three", "four"}, req["loginIds"])
 	}, response))
-	res, err := mgmt.Group().LoadAllGroupsForMembers(tenantID, userIDs, identifiers)
+	res, err := mgmt.Group().LoadAllGroupsForMembers(tenantID, userIDs, loginIDs)
 	require.NoError(t, err)
 	assert.EqualValues(t, response, res)
 }
@@ -85,19 +85,19 @@ func TestLoadAllGroupsForMembersSuccess(t *testing.T) {
 func TestLoadAllGroupsForMembersMissingArgumentUserIDs(t *testing.T) {
 	tenantID := "abc"
 	var userIDs []string
-	var identifiers []string
+	var loginIDs []string
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := mgmt.Group().LoadAllGroupsForMembers(tenantID, userIDs, identifiers)
-	require.ErrorContains(t, err, errors.NewInvalidArgumentError("userIds and identifiers").Message)
+	res, err := mgmt.Group().LoadAllGroupsForMembers(tenantID, userIDs, loginIDs)
+	require.ErrorContains(t, err, errors.NewInvalidArgumentError("userIDs and loginIDs").Message)
 	assert.Nil(t, res)
 }
 
 func TestLoadAllGroupsForMembersMissingArgumentTenantID(t *testing.T) {
 	tenantID := ""
 	userIDs := []string{"one", "two"}
-	identifiers := []string{"three", "four"}
+	loginIDs := []string{"three", "four"}
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := mgmt.Group().LoadAllGroupsForMembers(tenantID, userIDs, identifiers)
+	res, err := mgmt.Group().LoadAllGroupsForMembers(tenantID, userIDs, loginIDs)
 	require.ErrorContains(t, err, errors.NewInvalidArgumentError("tenantID").Message)
 	assert.Nil(t, res)
 }
@@ -105,9 +105,9 @@ func TestLoadAllGroupsForMembersMissingArgumentTenantID(t *testing.T) {
 func TestLoadAllGroupsForMembersError(t *testing.T) {
 	tenantID := "abc"
 	userIDs := []string{"one", "two"}
-	identifiers := []string{"three", "four"}
+	loginIDs := []string{"three", "four"}
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := mgmt.Group().LoadAllGroupsForMembers(tenantID, userIDs, identifiers)
+	res, err := mgmt.Group().LoadAllGroupsForMembers(tenantID, userIDs, loginIDs)
 	require.Error(t, err)
 	assert.Nil(t, res)
 }
@@ -121,9 +121,9 @@ func TestLoadAllGroupMembersSuccess(t *testing.T) {
 			Display: "some-display",
 			Members: []auth.GroupMember{
 				{
-					Identifier: "some-identifier",
-					UserID:     "some-userIDs",
-					Display:    "some-display",
+					LoginID: "some-loginID",
+					UserID:  "some-userIDs",
+					Display: "some-display",
 				},
 			},
 		},
