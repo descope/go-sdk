@@ -15,7 +15,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSignInEnchantedLinkEmptyExternalID(t *testing.T) {
+func TestSignInEnchantedLinkEmptyLoginID(t *testing.T) {
 	email := ""
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
@@ -37,37 +37,37 @@ func TestSignInEnchantedLink(t *testing.T) {
 	email := "test@email.com"
 	uri := "http://test.me"
 	pendingRefResponse := "pending_ref"
-	identifier := "identifier"
+	loginID := "loginID"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeEnchantedLinkSignInURL(), r.URL.RequestURI())
 
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, m["externalId"])
+		assert.EqualValues(t, email, m["loginId"])
 		assert.EqualValues(t, uri, m["URI"])
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","linkId": "%s"}`, pendingRefResponse, identifier))),
+			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","linkId": "%s"}`, pendingRefResponse, loginID))),
 		}, nil
 	})
 	require.NoError(t, err)
 	response, err := a.EnchantedLink().SignIn(email, uri, nil, nil)
 	require.NoError(t, err)
 	require.Equal(t, pendingRefResponse, response.PendingRef)
-	require.Equal(t, identifier, response.LinkID)
+	require.Equal(t, loginID, response.LinkID)
 }
 
 func TestSignInEnchantedLinkStepup(t *testing.T) {
 	email := "test@email.com"
 	uri := "http://test.me"
 	pendingRefResponse := "pending_ref"
-	identifier := "identifier"
+	loginID := "loginID"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeEnchantedLinkSignInURL(), r.URL.RequestURI())
 
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, m["externalId"])
+		assert.EqualValues(t, email, m["loginId"])
 		assert.EqualValues(t, uri, m["URI"])
 		assert.EqualValues(t, map[string]interface{}{"stepup": true, "customClaims": map[string]interface{}{"k1": "v1"}}, m["loginOptions"])
 		reqToken := r.Header.Get(api.AuthorizationHeaderName)
@@ -79,14 +79,14 @@ func TestSignInEnchantedLinkStepup(t *testing.T) {
 		assert.EqualValues(t, "test", bearers[1])
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","linkId": "%s"}`, pendingRefResponse, identifier))),
+			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","linkId": "%s"}`, pendingRefResponse, loginID))),
 		}, nil
 	})
 	require.NoError(t, err)
 	response, err := a.EnchantedLink().SignIn(email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
 	require.NoError(t, err)
 	require.Equal(t, pendingRefResponse, response.PendingRef)
-	require.Equal(t, identifier, response.LinkID)
+	require.Equal(t, loginID, response.LinkID)
 }
 
 func TestSignInEnchantedLinkInvalidResponse(t *testing.T) {
@@ -108,7 +108,7 @@ func TestSignUpEnchantedLink(t *testing.T) {
 	email := "test@email.com"
 	uri := "http://test.me"
 	pendingRefResponse := "pending_ref"
-	identifier := "identifier"
+	loginID := "loginID"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeEnchantedLinkSignUpURL(), r.URL.RequestURI())
 
@@ -116,45 +116,45 @@ func TestSignUpEnchantedLink(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, uri, m["URI"])
-		assert.EqualValues(t, email, m["externalId"])
+		assert.EqualValues(t, email, m["loginId"])
 		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","linkId": "%s"}`, pendingRefResponse, identifier))),
+			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","linkId": "%s"}`, pendingRefResponse, loginID))),
 		}, nil
 	})
 	require.NoError(t, err)
 	response, err := a.EnchantedLink().SignUp(email, uri, &User{Name: "test"})
 	require.NoError(t, err)
 	require.Equal(t, pendingRefResponse, response.PendingRef)
-	require.Equal(t, identifier, response.LinkID)
+	require.Equal(t, loginID, response.LinkID)
 }
 
 func TestSignUpOrInEnchantedLink(t *testing.T) {
 	email := "test@email.com"
 	uri := "http://test.me"
 	pendingRefResponse := "pending_ref"
-	identifier := "ident"
+	loginID := "ident"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeEnchantedLinkSignUpOrInURL(), r.URL.RequestURI())
 
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, m["externalId"])
+		assert.EqualValues(t, email, m["loginId"])
 		assert.EqualValues(t, uri, m["URI"])
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s", "linkId": "%s"}`, pendingRefResponse, identifier))),
+			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s", "linkId": "%s"}`, pendingRefResponse, loginID))),
 		}, nil
 	})
 	require.NoError(t, err)
 	response, err := a.EnchantedLink().SignUpOrIn(email, uri)
 	require.NoError(t, err)
 	require.Equal(t, pendingRefResponse, response.PendingRef)
-	require.Equal(t, identifier, response.LinkID)
+	require.Equal(t, loginID, response.LinkID)
 }
 
-func TestSignUpEnchantedLinkEmptyIdentifier(t *testing.T) {
+func TestSignUpEnchantedLinkEmptyLoginID(t *testing.T) {
 	uri := "http://test.me"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
@@ -204,7 +204,7 @@ func TestGetEnchantedLinkSessionStillPending(t *testing.T) {
 }
 
 func TestUpdateUserEmailEnchantedLink(t *testing.T) {
-	externalID := "943248329844"
+	loginID := "943248329844"
 	email := "test@test.com"
 	uri := "https://some.url.com"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
@@ -212,7 +212,7 @@ func TestUpdateUserEmailEnchantedLink(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, externalID, body["externalId"])
+		assert.EqualValues(t, loginID, body["loginId"])
 		assert.EqualValues(t, email, body["email"])
 		assert.EqualValues(t, uri, body["URI"])
 		assert.True(t, body["crossDevice"].(bool))
@@ -223,12 +223,12 @@ func TestUpdateUserEmailEnchantedLink(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	_, err = a.EnchantedLink().UpdateUserEmail(externalID, email, uri, r)
+	_, err = a.EnchantedLink().UpdateUserEmail(loginID, email, uri, r)
 	require.NoError(t, err)
 }
 
 func TestUpdateUserEmailEnchantedLinkMissingArgs(t *testing.T) {
-	externalID := "943248329844"
+	loginID := "943248329844"
 	email := "test@test.com"
 	uri := "https://some.url.com"
 	a, err := newTestAuth(nil, nil)
@@ -237,9 +237,9 @@ func TestUpdateUserEmailEnchantedLinkMissingArgs(t *testing.T) {
 	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
 	_, err = a.EnchantedLink().UpdateUserEmail("", email, uri, r)
 	require.Error(t, err)
-	_, err = a.EnchantedLink().UpdateUserEmail(externalID, "", uri, r)
+	_, err = a.EnchantedLink().UpdateUserEmail(loginID, "", uri, r)
 	require.Error(t, err)
-	_, err = a.EnchantedLink().UpdateUserEmail(externalID, "not_a_valid_email", uri, r)
+	_, err = a.EnchantedLink().UpdateUserEmail(loginID, "not_a_valid_email", uri, r)
 	require.Error(t, err)
 }
 
@@ -253,14 +253,14 @@ func TestSignUpEnchantedLinkEmailNoUser(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, uri, m["URI"])
-		assert.EqualValues(t, email, m["externalId"])
+		assert.EqualValues(t, email, m["loginId"])
 		assert.EqualValues(t, email, m["user"].(map[string]interface{})["email"])
 	}))
 	require.NoError(t, err)
 	_, err = a.EnchantedLink().SignUp(email, uri, nil)
 	require.NoError(t, err)
 }
-func TestSignUpOrInEnchantedLinkNoIdentifier(t *testing.T) {
+func TestSignUpOrInEnchantedLinkNoLoginID(t *testing.T) {
 	uri := "http://test.me"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)

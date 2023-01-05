@@ -48,14 +48,14 @@ import (
     "github.com/descope/go-sdk/descope/auth"
 )
 
-// Every user must have an identifier. All other user information is optional
-identifier := "desmond@descope.com"
+// Every user must have an loginID. All other user information is optional
+loginID := "desmond@descope.com"
 user :=  &auth.User{
     Name: "Desmond Copeland",
     Phone: "212-555-1234",
-    Email: identifier,
+    Email: loginID,
 }
-err := client.Auth.OTP().SignUp(auth.MethodEmail, identifier, user)
+err := client.Auth.OTP().SignUp(auth.MethodEmail, loginID, user)
 if err != nil {
     // handle error
 }
@@ -66,7 +66,7 @@ The user will receive a code using the selected delivery method. Verify that cod
 ```go
 // The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
 // Otherwise they're available via authInfo
-authInfo, err :=  descopeClient.OTP().Verify(auth.MethodEmail, identifier, code, w)
+authInfo, err :=  descopeClient.OTP().Verify(auth.MethodEmail, loginID, code, w)
 if err != nil {
     // handle error
 }
@@ -126,7 +126,7 @@ The user can either `sign up`, `sign in` or `sign up or in`
 ```go
 // If configured globally, the redirect URI is optional. If provided however, it will be used
 // instead of any global configuration.
-res, err := client.Auth.EnchantedLink().SignIn(identifier, "http://myapp.com/verify-enchanted-link", nil, nil)
+res, err := client.Auth.EnchantedLink().SignIn(loginID, "http://myapp.com/verify-enchanted-link", nil, nil)
 if err != nil {
     // handle error
 }
@@ -238,14 +238,14 @@ on the link provided by the `ProvisioningURL`.
 Existing users can add TOTP using the `update` function.
 
 ```go
-// Every user must have an identifier. All other user information is optional
-identifier := "desmond@descope.com"
+// Every user must have an loginID. All other user information is optional
+loginID := "desmond@descope.com"
 user :=  &auth.User{
     Name: "Desmond Copeland",
     Phone: "212-555-1234",
-    Email: identifier,
+    Email: loginID,
 }
-totpResponse, err := client.Auth.TOTP().SignUp(auth.MethodEmail, identifier, user)
+totpResponse, err := client.Auth.TOTP().SignUp(auth.MethodEmail, loginID, user)
 if err != nil {
     // handle error
 }
@@ -263,7 +263,7 @@ the app produces.
 ```go
 // The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
 // Otherwise they're available via authInfo
-authInfo, err := descopeClient.TOTP().sign_in_code(identifier, code, nil, nil, w)
+authInfo, err := descopeClient.TOTP().sign_in_code(loginID, code, nil, nil, w)
 if err != nil {
     // handle error
 }
@@ -404,7 +404,7 @@ if err == nil {
 You can create, update, delete or load users, as well as search according to filters:
 
 ```go
-// A user must have an identifier, other fields are optional.
+// A user must have an loginID, other fields are optional.
 // Roles should be set directly if no tenants exist, otherwise set
 // on a per-tenant basis.
 err := descopeClient.Management.User().Create("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*mgmt.AssociatedTenant{
@@ -586,8 +586,8 @@ if err == nil {
     }
 }
 
-// Load all groups for the given user's identifiers (used for sign-in)
-res, err := descopeClient.Management.Group().LoadAllGroupsForMembers("tenant-id", nil, []string{"identifier-1", "identifier-2"})
+// Load all groups for the given user's loginIDs (used for sign-in)
+res, err := descopeClient.Management.Group().LoadAllGroupsForMembers("tenant-id", nil, []string{"login-id-1", "login-id-2"})
 if err == nil {
     for _, group := range res {
         // Do something

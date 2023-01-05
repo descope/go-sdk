@@ -175,9 +175,9 @@ type User struct {
 }
 
 type WebauthnUserRequest struct {
-	ExternalID string `json:"externalId,omitempty"`
-	Name       string `json:"name,omitempty"`
-	Icon       string `json:"icon,omitempty"`
+	LoginID string `json:"loginId,omitempty"`
+	Name    string `json:"name,omitempty"`
+	Icon    string `json:"icon,omitempty"`
 }
 
 type UserResponse struct {
@@ -224,9 +224,9 @@ type Role struct {
 }
 
 type GroupMember struct {
-	Identifier string `json:"identifier,omitempty"`
-	UserID     string `json:"userId,omitempty"`
-	Display    string `json:"display,omitempty"`
+	LoginID string `json:"loginID,omitempty"`
+	UserID  string `json:"userId,omitempty"`
+	Display string `json:"display,omitempty"`
 }
 
 type Group struct {
@@ -236,16 +236,16 @@ type Group struct {
 }
 
 type authenticationRequestBody struct {
-	ExternalID   string        `json:"externalId,omitempty"`
+	LoginID      string        `json:"loginId,omitempty"`
 	LoginOptions *LoginOptions `json:"loginOptions,omitempty"`
 }
 
 type authenticationSignUpRequestBody struct {
-	WhatsApp   string `json:"whatsapp,omitempty"`
-	Phone      string `json:"phone,omitempty"`
-	Email      string `json:"email,omitempty"`
-	ExternalID string `json:"externalId,omitempty"`
-	User       *User  `json:"user"`
+	WhatsApp string `json:"whatsapp,omitempty"`
+	Phone    string `json:"phone,omitempty"`
+	Email    string `json:"email,omitempty"`
+	LoginID  string `json:"loginId,omitempty"`
+	User     *User  `json:"user"`
 }
 
 type authenticationWebAuthnSignUpRequestBody struct {
@@ -254,19 +254,19 @@ type authenticationWebAuthnSignUpRequestBody struct {
 }
 
 type authenticationWebAuthnSignInRequestBody struct {
-	ExternalID   string        `json:"externalId,omitempty"`
+	LoginID      string        `json:"loginId,omitempty"`
 	Origin       string        `json:"origin"`
 	LoginOptions *LoginOptions `json:"loginOptions,omitempty"`
 }
 
 type authenticationWebAuthnSignUpOrInRequestBody struct {
-	ExternalID string `json:"externalId,omitempty"`
-	Origin     string `json:"origin"`
+	LoginID string `json:"loginId,omitempty"`
+	Origin  string `json:"origin"`
 }
 
 type authenticationWebAuthnAddDeviceRequestBody struct {
-	ExternalID string `json:"externalId,omitempty"`
-	Origin     string `json:"origin"`
+	LoginID string `json:"loginId,omitempty"`
+	Origin  string `json:"origin"`
 }
 
 type authenticationVerifyRequestBody struct {
@@ -280,18 +280,18 @@ type authenticationVerifyTOTPRequestBody struct {
 }
 
 type totpSignUpRequestBody struct {
-	ExternalID string `json:"externalId,omitempty"`
-	User       *User  `json:"user,omitempty"`
+	LoginID string `json:"loginId,omitempty"`
+	User    *User  `json:"user,omitempty"`
 }
 
 type otpUpdateEmailRequestBody struct {
-	ExternalID string `json:"externalId,omitempty"`
-	Email      string `json:"email,omitempty"`
+	LoginID string `json:"loginId,omitempty"`
+	Email   string `json:"email,omitempty"`
 }
 
 type otpUpdatePhoneRequestBody struct {
-	ExternalID string `json:"externalId,omitempty"`
-	Phone      string `json:"phone,omitempty"`
+	LoginID string `json:"loginId,omitempty"`
+	Phone   string `json:"phone,omitempty"`
 }
 
 type magicLinkAuthenticationRequestBody struct {
@@ -309,14 +309,14 @@ type magicLinkAuthenticationSignUpRequestBody struct {
 
 type magicLinkUpdateEmailRequestBody struct {
 	Email       string `json:"email,inline"`
-	ExternalID  string `json:"externalId,inline"`
+	LoginID     string `json:"loginId,inline"`
 	URI         string `json:"URI,omitempty"`
 	CrossDevice bool   `json:"crossDevice,omitempty"`
 }
 
 type magicLinkUpdatePhoneRequestBody struct {
 	Phone       string `json:"phone,inline"`
-	ExternalID  string `json:"externalId,inline"`
+	LoginID     string `json:"loginId,inline"`
 	URI         string `json:"URI,omitempty"`
 	CrossDevice bool   `json:"crossDevice,omitempty"`
 }
@@ -333,8 +333,8 @@ type exchangeTokenBody struct {
 	Code string `json:"code"`
 }
 
-func newSignInRequestBody(externalID string, loginOptions *LoginOptions) *authenticationRequestBody {
-	return &authenticationRequestBody{ExternalID: externalID, LoginOptions: loginOptions}
+func newSignInRequestBody(loginID string, loginOptions *LoginOptions) *authenticationRequestBody {
+	return &authenticationRequestBody{LoginID: loginID, LoginOptions: loginOptions}
 }
 
 func newSignUpRequestBody(method DeliveryMethod, user *User) *authenticationSignUpRequestBody {
@@ -348,26 +348,26 @@ func newSignUpRequestBody(method DeliveryMethod, user *User) *authenticationSign
 	return &authenticationSignUpRequestBody{Email: user.Email}
 }
 
-func newSignUPTOTPRequestBody(externalID string, user *User) *totpSignUpRequestBody {
-	return &totpSignUpRequestBody{ExternalID: externalID, User: user}
+func newSignUPTOTPRequestBody(loginID string, user *User) *totpSignUpRequestBody {
+	return &totpSignUpRequestBody{LoginID: loginID, User: user}
 }
 
-func newOTPUpdateEmailRequestBody(externalID, email string) *otpUpdateEmailRequestBody {
-	return &otpUpdateEmailRequestBody{ExternalID: externalID, Email: email}
+func newOTPUpdateEmailRequestBody(loginID, email string) *otpUpdateEmailRequestBody {
+	return &otpUpdateEmailRequestBody{LoginID: loginID, Email: email}
 }
 
-func newOTPUpdatePhoneRequestBody(externalID, phone string) *otpUpdatePhoneRequestBody {
-	return &otpUpdatePhoneRequestBody{ExternalID: externalID, Phone: phone}
+func newOTPUpdatePhoneRequestBody(loginID, phone string) *otpUpdatePhoneRequestBody {
+	return &otpUpdatePhoneRequestBody{LoginID: loginID, Phone: phone}
 }
 
 func newMagicLinkAuthenticationRequestBody(value, URI string, crossDevice bool, loginOptions *LoginOptions) *magicLinkAuthenticationRequestBody {
 	return &magicLinkAuthenticationRequestBody{authenticationRequestBody: newSignInRequestBody(value, loginOptions), URI: URI, CrossDevice: crossDevice, LoginOptions: loginOptions}
 }
 
-func newMagicLinkAuthenticationSignUpRequestBody(method DeliveryMethod, externalID, URI string, user *User, crossDevice bool) *magicLinkAuthenticationSignUpRequestBody {
+func newMagicLinkAuthenticationSignUpRequestBody(method DeliveryMethod, loginID, URI string, user *User, crossDevice bool) *magicLinkAuthenticationSignUpRequestBody {
 	b := newSignUpRequestBody(method, user)
 	b.User = user
-	b.ExternalID = externalID
+	b.LoginID = loginID
 	return &magicLinkAuthenticationSignUpRequestBody{authenticationSignUpRequestBody: b, CrossDevice: crossDevice, URI: URI}
 }
 
@@ -375,10 +375,10 @@ func newMagicLinkAuthenticationVerifyRequestBody(token string) *magicLinkAuthent
 	return &magicLinkAuthenticationVerifyRequestBody{Token: token}
 }
 
-func newAuthenticationSignUpRequestBody(method DeliveryMethod, externalID string, user *User) *authenticationSignUpRequestBody {
+func newAuthenticationSignUpRequestBody(method DeliveryMethod, loginID string, user *User) *authenticationSignUpRequestBody {
 	b := newSignUpRequestBody(method, user)
 	b.User = user
-	b.ExternalID = externalID
+	b.LoginID = loginID
 	return b
 }
 
@@ -390,12 +390,12 @@ func newAuthenticationVerifyTOTPRequestBody(value string, code string, loginOpti
 	return &authenticationVerifyTOTPRequestBody{authenticationVerifyRequestBody: newAuthenticationVerifyRequestBody(value, code), LoginOptions: loginOptions}
 }
 
-func newMagicLinkUpdateEmailRequestBody(externalID, email string, URI string, crossDevice bool) *magicLinkUpdateEmailRequestBody {
-	return &magicLinkUpdateEmailRequestBody{ExternalID: externalID, Email: email, URI: URI, CrossDevice: crossDevice}
+func newMagicLinkUpdateEmailRequestBody(loginID, email string, URI string, crossDevice bool) *magicLinkUpdateEmailRequestBody {
+	return &magicLinkUpdateEmailRequestBody{LoginID: loginID, Email: email, URI: URI, CrossDevice: crossDevice}
 }
 
-func newMagicLinkUpdatePhoneRequestBody(externalID, phone string, URI string, crossDevice bool) *magicLinkUpdatePhoneRequestBody {
-	return &magicLinkUpdatePhoneRequestBody{ExternalID: externalID, Phone: phone, URI: URI, CrossDevice: crossDevice}
+func newMagicLinkUpdatePhoneRequestBody(loginID, phone string, URI string, crossDevice bool) *magicLinkUpdatePhoneRequestBody {
+	return &magicLinkUpdatePhoneRequestBody{LoginID: loginID, Phone: phone, URI: URI, CrossDevice: crossDevice}
 }
 
 func newAuthenticationGetMagicLinkSessionBody(pendingRef string) *authenticationGetMagicLinkSessionBody {

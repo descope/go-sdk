@@ -100,16 +100,16 @@ func (m *MockSSO) ConfigureMapping(tenantID string, roleMappings []*mgmt.RoleMap
 // Mock User
 
 type MockUser struct {
-	CreateAssert func(identifier, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant)
+	CreateAssert func(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant)
 	CreateError  error
 
-	UpdateAssert func(identifier, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant)
+	UpdateAssert func(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant)
 	UpdateError  error
 
-	DeleteAssert func(identifier string)
+	DeleteAssert func(loginID string)
 	DeleteError  error
 
-	LoadAssert   func(identifier string)
+	LoadAssert   func(loginID string)
 	LoadResponse *auth.UserResponse
 	LoadError    error
 
@@ -118,30 +118,30 @@ type MockUser struct {
 	SearchAllError    error
 }
 
-func (m *MockUser) Create(identifier, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant) error {
+func (m *MockUser) Create(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant) error {
 	if m.CreateAssert != nil {
-		m.CreateAssert(identifier, email, phone, displayName, roles, tenants)
+		m.CreateAssert(loginID, email, phone, displayName, roles, tenants)
 	}
 	return m.CreateError
 }
 
-func (m *MockUser) Update(identifier, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant) error {
+func (m *MockUser) Update(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant) error {
 	if m.UpdateAssert != nil {
-		m.UpdateAssert(identifier, email, phone, displayName, roles, tenants)
+		m.UpdateAssert(loginID, email, phone, displayName, roles, tenants)
 	}
 	return m.UpdateError
 }
 
-func (m *MockUser) Delete(identifier string) error {
+func (m *MockUser) Delete(loginID string) error {
 	if m.DeleteAssert != nil {
-		m.DeleteAssert(identifier)
+		m.DeleteAssert(loginID)
 	}
 	return m.DeleteError
 }
 
-func (m *MockUser) Load(identifier string) (*auth.UserResponse, error) {
+func (m *MockUser) Load(loginID string) (*auth.UserResponse, error) {
 	if m.LoadAssert != nil {
-		m.LoadAssert(identifier)
+		m.LoadAssert(loginID)
 	}
 	return m.LoadResponse, m.LoadError
 }
@@ -384,7 +384,7 @@ type MockGroup struct {
 	LoadAllGroupsResponse []*auth.Group
 	LoadAllGroupsError    error
 
-	LoadAllGroupsForMembersAssert   func(tenantID string, userIDs, identifiers []string)
+	LoadAllGroupsForMembersAssert   func(tenantID string, userIDs, loginIDs []string)
 	LoadAllGroupsForMembersResponse []*auth.Group
 	LoadAllGroupsForMembersError    error
 
@@ -400,9 +400,9 @@ func (m *MockGroup) LoadAllGroups(tenantID string) ([]*auth.Group, error) {
 	return m.LoadAllGroupsResponse, m.LoadAllGroupsError
 }
 
-func (m *MockGroup) LoadAllGroupsForMembers(tenantID string, userIDs, identifiers []string) ([]*auth.Group, error) {
+func (m *MockGroup) LoadAllGroupsForMembers(tenantID string, userIDs, loginIDs []string) ([]*auth.Group, error) {
 	if m.LoadAllGroupsForMembersAssert != nil {
-		m.LoadAllGroupsForMembersAssert(tenantID, userIDs, identifiers)
+		m.LoadAllGroupsForMembersAssert(tenantID, userIDs, loginIDs)
 	}
 	return m.LoadAllGroupsForMembersResponse, m.LoadAllGroupsForMembersError
 }

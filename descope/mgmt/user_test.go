@@ -13,7 +13,7 @@ func TestUserCreateSuccess(t *testing.T) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		require.Equal(t, "abc", req["identifier"])
+		require.Equal(t, "abc", req["loginId"])
 		require.Equal(t, "foo@bar.com", req["email"])
 		roleNames := req["roleNames"].([]any)
 		require.Len(t, roleNames, 1)
@@ -34,7 +34,7 @@ func TestUserUpdateSuccess(t *testing.T) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		require.Equal(t, "abc", req["identifier"])
+		require.Equal(t, "abc", req["loginId"])
 		require.Equal(t, "foo@bar.com", req["email"])
 		userTenants := req["userTenants"].([]any)
 		require.Len(t, userTenants, 2)
@@ -66,7 +66,7 @@ func TestUserDeleteSuccess(t *testing.T) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		require.Equal(t, "abc", req["identifier"])
+		require.Equal(t, "abc", req["loginId"])
 	}))
 	err := mgmt.User().Delete("abc")
 	require.NoError(t, err)
@@ -86,7 +86,7 @@ func TestUserLoadSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		params := helpers.ReadParams(r)
-		require.Equal(t, "abc", params["identifier"])
+		require.Equal(t, "abc", params["loginId"])
 	}, response))
 	res, err := mgmt.User().Load("abc")
 	require.NoError(t, err)

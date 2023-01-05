@@ -12,11 +12,11 @@ type webAuthn struct {
 	authenticationsBase
 }
 
-func (auth *webAuthn) SignUpStart(identifier string, user *User, origin string) (*WebAuthnTransactionResponse, error) {
+func (auth *webAuthn) SignUpStart(loginID string, user *User, origin string) (*WebAuthnTransactionResponse, error) {
 	if user == nil {
 		user = &User{}
 	}
-	uRes := &WebauthnUserRequest{ExternalID: identifier}
+	uRes := &WebauthnUserRequest{LoginID: loginID}
 	if user != nil {
 		uRes.Name = user.Name
 	}
@@ -38,9 +38,9 @@ func (auth *webAuthn) SignUpFinish(request *WebAuthnFinishRequest, w http.Respon
 	return auth.generateAuthenticationInfo(res, w)
 }
 
-func (auth *webAuthn) SignInStart(identifier string, origin string, r *http.Request, loginOptions *LoginOptions) (*WebAuthnTransactionResponse, error) {
-	if identifier == "" {
-		return nil, errors.NewInvalidArgumentError("identifier")
+func (auth *webAuthn) SignInStart(loginID string, origin string, r *http.Request, loginOptions *LoginOptions) (*WebAuthnTransactionResponse, error) {
+	if loginID == "" {
+		return nil, errors.NewInvalidArgumentError("loginID")
 	}
 	var pswd string
 	var err error
@@ -51,7 +51,7 @@ func (auth *webAuthn) SignInStart(identifier string, origin string, r *http.Requ
 		}
 	}
 
-	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignInStart(), authenticationWebAuthnSignInRequestBody{ExternalID: identifier, Origin: origin, LoginOptions: loginOptions}, nil, pswd)
+	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignInStart(), authenticationWebAuthnSignInRequestBody{LoginID: loginID, Origin: origin, LoginOptions: loginOptions}, nil, pswd)
 	if err != nil {
 		return nil, err
 	}
@@ -70,12 +70,12 @@ func (auth *webAuthn) SignInFinish(request *WebAuthnFinishRequest, w http.Respon
 	return auth.generateAuthenticationInfo(res, w)
 }
 
-func (auth *webAuthn) SignUpOrInStart(identifier string, origin string) (*WebAuthnTransactionResponse, error) {
-	if identifier == "" {
-		return nil, errors.NewInvalidArgumentError("identifier")
+func (auth *webAuthn) SignUpOrInStart(loginID string, origin string) (*WebAuthnTransactionResponse, error) {
+	if loginID == "" {
+		return nil, errors.NewInvalidArgumentError("loginID")
 	}
 
-	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignUpOrInStart(), authenticationWebAuthnSignInRequestBody{ExternalID: identifier, Origin: origin}, nil, "")
+	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignUpOrInStart(), authenticationWebAuthnSignInRequestBody{LoginID: loginID, Origin: origin}, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -85,9 +85,9 @@ func (auth *webAuthn) SignUpOrInStart(identifier string, origin string) (*WebAut
 	return webAuthnResponse, err
 }
 
-func (auth *webAuthn) UpdateUserDeviceStart(identifier string, origin string, r *http.Request) (*WebAuthnTransactionResponse, error) {
-	if identifier == "" {
-		return nil, errors.NewInvalidArgumentError("identifier")
+func (auth *webAuthn) UpdateUserDeviceStart(loginID string, origin string, r *http.Request) (*WebAuthnTransactionResponse, error) {
+	if loginID == "" {
+		return nil, errors.NewInvalidArgumentError("loginID")
 	}
 
 	pswd, err := getValidRefreshToken(r)
@@ -95,7 +95,7 @@ func (auth *webAuthn) UpdateUserDeviceStart(identifier string, origin string, r 
 		return nil, err
 	}
 
-	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnUpdateUserDeviceStart(), authenticationWebAuthnAddDeviceRequestBody{ExternalID: identifier, Origin: origin}, nil, pswd)
+	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnUpdateUserDeviceStart(), authenticationWebAuthnAddDeviceRequestBody{LoginID: loginID, Origin: origin}, nil, pswd)
 	if err != nil {
 		return nil, err
 	}

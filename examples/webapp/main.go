@@ -150,30 +150,30 @@ func help(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleSignUp(w http.ResponseWriter, r *http.Request) {
-	method, identifier := getMethodAndIdentifier(r)
-	err := client.Auth.OTP().SignUp(method, identifier, &auth.User{Name: "test"})
+	method, loginID := getMethodAndLoginID(r)
+	err := client.Auth.OTP().SignUp(method, loginID, &auth.User{Name: "test"})
 	if err != nil {
-		setErrorWithSignUpIn(w, err.Error(), method, identifier)
+		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {
-		helpTxt := "to verify code received go to /otp/verify?" + string(method) + "=" + identifier + "&code=<code>"
+		helpTxt := "to verify code received go to /otp/verify?" + string(method) + "=" + loginID + "&code=<code>"
 		setResponse(w, http.StatusOK, helpTxt)
 	}
 }
 
 func handleSignIn(w http.ResponseWriter, r *http.Request) {
-	method, identifier := getMethodAndIdentifier(r)
-	err := client.Auth.OTP().SignIn(method, identifier, nil, nil)
+	method, loginID := getMethodAndLoginID(r)
+	err := client.Auth.OTP().SignIn(method, loginID, nil, nil)
 	if err != nil {
-		setErrorWithSignUpIn(w, err.Error(), method, identifier)
+		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {
-		helpTxt := "to verify code received go to /otp/verify?" + string(method) + "=" + identifier + "&code=<code>"
+		helpTxt := "to verify code received go to /otp/verify?" + string(method) + "=" + loginID + "&code=<code>"
 		setResponse(w, http.StatusOK, helpTxt)
 	}
 }
 
 func handleVerify(w http.ResponseWriter, r *http.Request) {
 	code := ""
-	method, identifier := getMethodAndIdentifier(r)
+	method, loginID := getMethodAndLoginID(r)
 	if codes, ok := r.URL.Query()["code"]; ok {
 		code = codes[0]
 	}
@@ -181,7 +181,7 @@ func handleVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	authInfo, err := client.Auth.OTP().VerifyCode(method, identifier, code, w)
+	authInfo, err := client.Auth.OTP().VerifyCode(method, loginID, code, w)
 	if err != nil {
 		setError(w, err.Error())
 		return
@@ -225,10 +225,10 @@ func sendSuccessAuthResponse(w http.ResponseWriter, authInfo *auth.Authenticatio
 }
 
 func handleMagicLinkSignIn(w http.ResponseWriter, r *http.Request) {
-	method, identifier := getMethodAndIdentifier(r)
-	err := client.Auth.MagicLink().SignIn(method, identifier, verifyMagicLinkURI, nil, nil)
+	method, loginID := getMethodAndLoginID(r)
+	err := client.Auth.MagicLink().SignIn(method, loginID, verifyMagicLinkURI, nil, nil)
 	if err != nil {
-		setErrorWithSignUpIn(w, err.Error(), method, identifier)
+		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 		return
 	}
 	helpTxt := "You should have received a magiclink by " + string(method) + "\n"
@@ -237,11 +237,11 @@ func handleMagicLinkSignIn(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleMagicLinkSignUp(w http.ResponseWriter, r *http.Request) {
-	method, identifier := getMethodAndIdentifier(r)
+	method, loginID := getMethodAndLoginID(r)
 	user := &auth.User{Name: "test"}
-	err := client.Auth.MagicLink().SignUp(method, identifier, verifyMagicLinkURI, user)
+	err := client.Auth.MagicLink().SignUp(method, loginID, verifyMagicLinkURI, user)
 	if err != nil {
-		setErrorWithSignUpIn(w, err.Error(), method, identifier)
+		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 		return
 	}
 	helpTxt := "You should have received a magiclink by " + string(method) + "\n"
@@ -269,10 +269,10 @@ func handleMagicLinkVerify(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleEnchantedLinkSignIn(w http.ResponseWriter, r *http.Request) {
-	_, identifier := getMethodAndIdentifier(r)
-	enchantedRes, err := client.Auth.EnchantedLink().SignIn(identifier, verifyMagicLinkURI, nil, nil)
+	_, loginID := getMethodAndLoginID(r)
+	enchantedRes, err := client.Auth.EnchantedLink().SignIn(loginID, verifyMagicLinkURI, nil, nil)
 	if err != nil {
-		setErrorWithSignUpIn(w, err.Error(), "", identifier)
+		setErrorWithSignUpIn(w, err.Error(), "", loginID)
 		return
 	}
 	helpTxt := "You should have received an enchanted link by email\n"
@@ -283,11 +283,11 @@ func handleEnchantedLinkSignIn(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleEnchantedLinkSignUp(w http.ResponseWriter, r *http.Request) {
-	_, identifier := getMethodAndIdentifier(r)
+	_, loginID := getMethodAndLoginID(r)
 	user := &auth.User{Name: "test"}
-	enchantedRes, err := client.Auth.EnchantedLink().SignUp(identifier, verifyMagicLinkURI, user)
+	enchantedRes, err := client.Auth.EnchantedLink().SignUp(loginID, verifyMagicLinkURI, user)
 	if err != nil {
-		setErrorWithSignUpIn(w, err.Error(), "", identifier)
+		setErrorWithSignUpIn(w, err.Error(), "", loginID)
 		return
 	}
 	helpTxt := "You should have received an enchanted link by email\n"
@@ -401,19 +401,19 @@ func handleStepup(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleStepupSignUpInEmail(w http.ResponseWriter, r *http.Request) {
-	method, identifier := getMethodAndIdentifier(r)
-	err := client.Auth.OTP().SignUpOrIn(method, identifier)
+	method, loginID := getMethodAndLoginID(r)
+	err := client.Auth.OTP().SignUpOrIn(method, loginID)
 	if err != nil {
-		setErrorWithSignUpIn(w, err.Error(), method, identifier)
+		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {
-		helpTxt := "to verify code received go to /stepup/conf/verify?" + string(method) + "=" + identifier + "&code=<code>"
+		helpTxt := "to verify code received go to /stepup/conf/verify?" + string(method) + "=" + loginID + "&code=<code>"
 		setResponse(w, http.StatusOK, helpTxt)
 	}
 }
 
 func handleStepupConfVerify(w http.ResponseWriter, r *http.Request) {
 	code := ""
-	method, identifier := getMethodAndIdentifier(r)
+	method, loginID := getMethodAndLoginID(r)
 	if codes, ok := r.URL.Query()["code"]; ok {
 		code = codes[0]
 	}
@@ -421,25 +421,25 @@ func handleStepupConfVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	authInfo, err := client.Auth.OTP().VerifyCode(method, identifier, code, w)
+	authInfo, err := client.Auth.OTP().VerifyCode(method, loginID, code, w)
 	if err != nil {
 		setError(w, err.Error())
 		return
 	}
 	helpTxt := "Great !\n"
-	helpTxt += "Now lets update our user with a phone number go to /stepup/conf/update?identifier=" + authInfo.User.LoginIDs[0] + "&sms=<phone>"
+	helpTxt += "Now lets update our user with a phone number go to /stepup/conf/update?loginId=" + authInfo.User.LoginIDs[0] + "&sms=<phone>"
 	setResponse(w, http.StatusOK, helpTxt)
 }
 
 func handleStepupConfUpdate(w http.ResponseWriter, r *http.Request) {
-	method, identifier := getMethodAndIdentifier(r)
+	method, loginID := getMethodAndLoginID(r)
 	var exID string
-	if codes, ok := r.URL.Query()["identifier"]; ok {
+	if codes, ok := r.URL.Query()["loginId"]; ok {
 		exID = codes[0]
 	}
-	err := client.Auth.OTP().UpdateUserPhone(method, exID, identifier, r)
+	err := client.Auth.OTP().UpdateUserPhone(method, exID, loginID, r)
 	if err != nil {
-		setErrorWithSignUpIn(w, err.Error(), method, identifier)
+		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {
 		helpTxt := "to verify code received go to /stepup/conf/update/verify?" + string(method) + "=" + exID + "&code=<code>"
 		setResponse(w, http.StatusOK, helpTxt)
@@ -448,7 +448,7 @@ func handleStepupConfUpdate(w http.ResponseWriter, r *http.Request) {
 
 func handleStepupConfUpdateVerify(w http.ResponseWriter, r *http.Request) {
 	code := ""
-	method, identifier := getMethodAndIdentifier(r)
+	method, loginID := getMethodAndLoginID(r)
 	if codes, ok := r.URL.Query()["code"]; ok {
 		code = codes[0]
 	}
@@ -456,9 +456,9 @@ func handleStepupConfUpdateVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	authInfo, err := client.Auth.OTP().VerifyCode(method, identifier, code, nil)
+	authInfo, err := client.Auth.OTP().VerifyCode(method, loginID, code, nil)
 	if err != nil {
-		setErrorWithSignUpIn(w, err.Error(), method, identifier)
+		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 		return
 	}
 	helpTxt := "Great, we have a user with 2 factors, now lets start the actual step flow !\n"
@@ -467,19 +467,19 @@ func handleStepupConfUpdateVerify(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleStepupLogin(w http.ResponseWriter, r *http.Request) {
-	method, identifier := getMethodAndIdentifier(r)
-	err := client.Auth.OTP().SignUpOrIn(method, identifier)
+	method, loginID := getMethodAndLoginID(r)
+	err := client.Auth.OTP().SignUpOrIn(method, loginID)
 	if err != nil {
-		setErrorWithSignUpIn(w, err.Error(), method, identifier)
+		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {
-		helpTxt := "to verify code received go to /stepup/login/verify?" + string(method) + "=" + identifier + "&code=<code>"
+		helpTxt := "to verify code received go to /stepup/login/verify?" + string(method) + "=" + loginID + "&code=<code>"
 		setResponse(w, http.StatusOK, helpTxt)
 	}
 }
 
 func handleStepupLoginVerify(w http.ResponseWriter, r *http.Request) {
 	code := ""
-	method, identifier := getMethodAndIdentifier(r)
+	method, loginID := getMethodAndLoginID(r)
 	if codes, ok := r.URL.Query()["code"]; ok {
 		code = codes[0]
 	}
@@ -487,7 +487,7 @@ func handleStepupLoginVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	authInfo, err := client.Auth.OTP().VerifyCode(method, identifier, code, w)
+	authInfo, err := client.Auth.OTP().VerifyCode(method, loginID, code, w)
 	if err != nil {
 		setError(w, err.Error())
 		return
@@ -500,19 +500,19 @@ func handleStepupLoginVerify(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleStepupStepup(w http.ResponseWriter, r *http.Request) {
-	method, identifier := getMethodAndIdentifier(r)
-	err := client.Auth.OTP().SignIn(method, identifier, r, &auth.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"demoKey": "demoValue"}})
+	method, loginID := getMethodAndLoginID(r)
+	err := client.Auth.OTP().SignIn(method, loginID, r, &auth.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"demoKey": "demoValue"}})
 	if err != nil {
-		setErrorWithSignUpIn(w, err.Error(), method, identifier)
+		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {
-		helpTxt := "to verify code received go to /stepup/stepup/verify?" + string(method) + "=" + identifier + "&code=<code>"
+		helpTxt := "to verify code received go to /stepup/stepup/verify?" + string(method) + "=" + loginID + "&code=<code>"
 		setResponse(w, http.StatusOK, helpTxt)
 	}
 }
 
 func handleStepupStepupVerify(w http.ResponseWriter, r *http.Request) {
 	code := ""
-	method, identifier := getMethodAndIdentifier(r)
+	method, loginID := getMethodAndLoginID(r)
 	if codes, ok := r.URL.Query()["code"]; ok {
 		code = codes[0]
 	}
@@ -520,7 +520,7 @@ func handleStepupStepupVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	authInfo, err := client.Auth.OTP().VerifyCode(method, identifier, code, w)
+	authInfo, err := client.Auth.OTP().VerifyCode(method, loginID, code, w)
 	if err != nil {
 		setError(w, err.Error())
 		return
@@ -564,13 +564,13 @@ func setError(w http.ResponseWriter, message string) {
 	setResponse(w, http.StatusInternalServerError, message+" ")
 }
 
-func setErrorWithSignUpIn(w http.ResponseWriter, message string, method auth.DeliveryMethod, identifier string) {
+func setErrorWithSignUpIn(w http.ResponseWriter, message string, method auth.DeliveryMethod, loginID string) {
 	msg := message
 	if method != "" {
 		msg += " method: " + string(method)
 	}
-	if identifier != "" {
-		msg += " identifier: " + identifier
+	if loginID != "" {
+		msg += " loginID: " + loginID
 	}
 	setError(w, msg)
 }
@@ -580,19 +580,19 @@ func setResponse(w http.ResponseWriter, status int, message string) {
 	w.Write([]byte(message))
 }
 
-func getMethodAndIdentifier(r *http.Request) (auth.DeliveryMethod, string) {
+func getMethodAndLoginID(r *http.Request) (auth.DeliveryMethod, string) {
 	method := auth.MethodEmail
-	identifier := ""
+	loginID := ""
 	if email, ok := r.URL.Query()["email"]; ok {
-		identifier = email[0]
+		loginID = email[0]
 	} else if sms, ok := r.URL.Query()["sms"]; ok {
 		method = auth.MethodSMS
-		identifier = sms[0]
+		loginID = sms[0]
 	} else if whatsapp, ok := r.URL.Query()["whatsapp"]; ok {
 		method = auth.MethodWhatsApp
-		identifier = whatsapp[0]
+		loginID = whatsapp[0]
 	}
-	return method, identifier
+	return method, loginID
 }
 
 func generateKeysIfNeeded() error {

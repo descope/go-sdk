@@ -29,7 +29,7 @@ func getProjectAndJwt(r *http.Request) (string, string) {
 	return projectID, jwt
 }
 
-func TestSignInMagicLinkEmptyExternalID(t *testing.T) {
+func TestSignInMagicLinkEmptyLoginID(t *testing.T) {
 	email := ""
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
@@ -59,7 +59,7 @@ func TestSignInMagicLinkEmail(t *testing.T) {
 		assert.EqualValues(t, composeMagicLinkSignInURL(MethodEmail), r.URL.RequestURI())
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, body["externalId"])
+		assert.EqualValues(t, email, body["loginId"])
 		assert.EqualValues(t, uri, body["URI"])
 	}))
 	require.NoError(t, err)
@@ -75,7 +75,7 @@ func TestSignInMagicLinkEmailLoginOptions(t *testing.T) {
 		assert.EqualValues(t, composeMagicLinkSignInURL(MethodEmail), r.URL.RequestURI())
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, body["externalId"])
+		assert.EqualValues(t, email, body["loginId"])
 		assert.EqualValues(t, uri, body["URI"])
 		assert.EqualValues(t, map[string]interface{}{"stepup": true, "customClaims": map[string]interface{}{"k1": "v1"}}, body["loginOptions"])
 		reqToken := r.Header.Get(api.AuthorizationHeaderName)
@@ -99,7 +99,7 @@ func TestSignInMagicLinkEmailLoginOptionsMFA(t *testing.T) {
 		assert.EqualValues(t, composeMagicLinkSignInURL(MethodEmail), r.URL.RequestURI())
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, body["externalId"])
+		assert.EqualValues(t, email, body["loginId"])
 		assert.EqualValues(t, uri, body["URI"])
 		assert.EqualValues(t, map[string]interface{}{"mfa": true, "customClaims": map[string]interface{}{"k1": "v1"}}, body["loginOptions"])
 		reqToken := r.Header.Get(api.AuthorizationHeaderName)
@@ -164,7 +164,7 @@ func TestSignUpMagicLinkEmail(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, uri, m["URI"])
-		assert.EqualValues(t, email, m["externalId"])
+		assert.EqualValues(t, email, m["loginId"])
 		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
@@ -182,7 +182,7 @@ func TestSignUpMagicLinkEmailNoUser(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, uri, m["URI"])
-		assert.EqualValues(t, email, m["externalId"])
+		assert.EqualValues(t, email, m["loginId"])
 		assert.EqualValues(t, email, m["user"].(map[string]interface{})["email"])
 	}))
 	require.NoError(t, err)
@@ -198,7 +198,7 @@ func TestSignUpOrInMagicLinkEmail(t *testing.T) {
 
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, m["externalId"])
+		assert.EqualValues(t, email, m["loginId"])
 		assert.EqualValues(t, uri, m["URI"])
 		assert.Nil(t, m["user"])
 	}))
@@ -207,7 +207,7 @@ func TestSignUpOrInMagicLinkEmail(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestSignUpOrInMagicLinkNoIdentifier(t *testing.T) {
+func TestSignUpOrInMagicLinkNoLoginID(t *testing.T) {
 	uri := "http://test.me"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
@@ -223,7 +223,7 @@ func TestSignUpOrInMagicLinkSMS(t *testing.T) {
 
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, m["externalId"])
+		assert.EqualValues(t, email, m["loginId"])
 		assert.EqualValues(t, uri, m["URI"])
 		assert.Nil(t, m["user"])
 	}))
@@ -240,7 +240,7 @@ func TestSignUpOrInMagicLinkWhatsapp(t *testing.T) {
 
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, email, m["externalId"])
+		assert.EqualValues(t, email, m["loginId"])
 		assert.EqualValues(t, uri, m["URI"])
 		assert.Nil(t, m["user"])
 	}))
@@ -259,7 +259,7 @@ func TestSignUpMagicLinkSMS(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["phone"])
 		assert.EqualValues(t, uri, body["URI"])
-		assert.EqualValues(t, phone, body["externalId"])
+		assert.EqualValues(t, phone, body["loginId"])
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
@@ -277,7 +277,7 @@ func TestSignUpMagicLinkWhatsApp(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["whatsapp"])
 		assert.EqualValues(t, uri, body["URI"])
-		assert.EqualValues(t, phone, body["externalId"])
+		assert.EqualValues(t, phone, body["loginId"])
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
@@ -336,7 +336,7 @@ func TestVerifyMagicLinkCodeNoSession(t *testing.T) {
 }
 
 func TestUpdateUserEmail(t *testing.T) {
-	externalID := "943248329844"
+	loginID := "943248329844"
 	email := "test@test.com"
 	uri := "https://some.url.com"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
@@ -344,7 +344,7 @@ func TestUpdateUserEmail(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, externalID, body["externalId"])
+		assert.EqualValues(t, loginID, body["loginId"])
 		assert.EqualValues(t, email, body["email"])
 		assert.EqualValues(t, uri, body["URI"])
 		assert.Nil(t, body["crossDevice"])
@@ -355,7 +355,7 @@ func TestUpdateUserEmail(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	err = a.MagicLink().UpdateUserEmail(externalID, email, uri, r)
+	err = a.MagicLink().UpdateUserEmail(loginID, email, uri, r)
 	require.NoError(t, err)
 }
 
@@ -366,7 +366,7 @@ func TestUpdateEmailMagicLinkFailures(t *testing.T) {
 	require.NoError(t, err)
 	err = a.MagicLink().UpdateUserEmail("", "email@email.com", "", r)
 	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), "identifier"))
+	assert.True(t, strings.Contains(err.Error(), "loginID"))
 	err = a.MagicLink().UpdateUserEmail("id", "", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "email"))
@@ -376,7 +376,7 @@ func TestUpdateEmailMagicLinkFailures(t *testing.T) {
 }
 
 func TestUpdateUserPhone(t *testing.T) {
-	externalID := "943248329844"
+	loginID := "943248329844"
 	phone := "+111111111111"
 	uri := "https://some.url.com"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
@@ -384,7 +384,7 @@ func TestUpdateUserPhone(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, externalID, body["externalId"])
+		assert.EqualValues(t, loginID, body["loginId"])
 		assert.EqualValues(t, phone, body["phone"])
 		assert.EqualValues(t, uri, body["URI"])
 		assert.Nil(t, body["crossDevice"])
@@ -395,7 +395,7 @@ func TestUpdateUserPhone(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtTokenValid})
-	err = a.MagicLink().UpdateUserPhone(MethodSMS, externalID, phone, uri, r)
+	err = a.MagicLink().UpdateUserPhone(MethodSMS, loginID, phone, uri, r)
 	require.NoError(t, err)
 }
 
@@ -406,7 +406,7 @@ func TestUpdatePhoneMagicLinkFailures(t *testing.T) {
 	require.NoError(t, err)
 	err = a.MagicLink().UpdateUserPhone(MethodSMS, "", "+1111111111", "", r)
 	assert.Error(t, err)
-	assert.True(t, strings.Contains(err.Error(), "identifier"))
+	assert.True(t, strings.Contains(err.Error(), "loginID"))
 	err = a.MagicLink().UpdateUserPhone(MethodSMS, "id", "", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "phone"))

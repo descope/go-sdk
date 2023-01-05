@@ -11,12 +11,12 @@ type totp struct {
 	authenticationsBase
 }
 
-func (auth *totp) SignUp(identifier string, user *User) (*TOTPResponse, error) {
-	if identifier == "" {
-		return nil, errors.NewInvalidArgumentError("identifier")
+func (auth *totp) SignUp(loginID string, user *User) (*TOTPResponse, error) {
+	if loginID == "" {
+		return nil, errors.NewInvalidArgumentError("loginID")
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(composeSignUpTOTPURL(), newSignUPTOTPRequestBody(identifier, user), nil, "")
+	httpResponse, err := auth.client.DoPostRequest(composeSignUpTOTPURL(), newSignUPTOTPRequestBody(loginID, user), nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -28,15 +28,15 @@ func (auth *totp) SignUp(identifier string, user *User) (*TOTPResponse, error) {
 	return totpResponse, nil
 }
 
-func (auth *totp) UpdateUser(identifier string, r *http.Request) (*TOTPResponse, error) {
-	if identifier == "" {
-		return nil, errors.NewInvalidArgumentError("identifier")
+func (auth *totp) UpdateUser(loginID string, r *http.Request) (*TOTPResponse, error) {
+	if loginID == "" {
+		return nil, errors.NewInvalidArgumentError("loginID")
 	}
 	pswd, err := getValidRefreshToken(r)
 	if err != nil {
 		return nil, err
 	}
-	httpResponse, err := auth.client.DoPostRequest(composeUpdateTOTPURL(), newSignUPTOTPRequestBody(identifier, nil), nil, pswd)
+	httpResponse, err := auth.client.DoPostRequest(composeUpdateTOTPURL(), newSignUPTOTPRequestBody(loginID, nil), nil, pswd)
 	if err != nil {
 		return nil, err
 	}
@@ -48,9 +48,9 @@ func (auth *totp) UpdateUser(identifier string, r *http.Request) (*TOTPResponse,
 	return totpResponse, nil
 }
 
-func (auth *totp) SignInCode(identifier string, code string, r *http.Request, loginOptions *LoginOptions, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	if identifier == "" {
-		return nil, errors.NewInvalidArgumentError("identifier")
+func (auth *totp) SignInCode(loginID string, code string, r *http.Request, loginOptions *LoginOptions, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	if loginID == "" {
+		return nil, errors.NewInvalidArgumentError("loginID")
 	}
 	var pswd string
 	var err error
@@ -61,7 +61,7 @@ func (auth *totp) SignInCode(identifier string, code string, r *http.Request, lo
 		}
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(composeVerifyTOTPCodeURL(), newAuthenticationVerifyTOTPRequestBody(identifier, code, loginOptions), nil, pswd)
+	httpResponse, err := auth.client.DoPostRequest(composeVerifyTOTPCodeURL(), newAuthenticationVerifyTOTPRequestBody(loginID, code, loginOptions), nil, pswd)
 	if err != nil {
 		return nil, err
 	}

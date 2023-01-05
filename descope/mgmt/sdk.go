@@ -48,14 +48,14 @@ type AssociatedTenant struct {
 type User interface {
 	// Create a new user.
 	//
-	// The identifier is required and will determine what the user will use to
+	// The loginID is required and will determine what the user will use to
 	// sign in. All other fields are optional.
 	//
 	// The roles parameter is an optional list of the user's roles for users that
 	// aren't associated with a tenant, while the tenants parameter can be used
 	// to specify which tenants to associate the user with and what roles the
 	// user has in each one.
-	Create(identifier, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) error
+	Create(loginID, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) error
 
 	// Update an existing user.
 	//
@@ -63,17 +63,17 @@ type User interface {
 	//
 	// IMPORTANT: All parameters will override whatever values are currently set
 	// in the existing user. Use carefully.
-	Update(identifier, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) error
+	Update(loginID, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) error
 
 	// Delete an existing user.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
-	Delete(identifier string) error
+	Delete(loginID string) error
 
 	// Load an existing user.
 	//
-	// The identifier is required and the user will be fetched according to it.
-	Load(identifier string) (*auth.UserResponse, error)
+	// The loginID is required and the user will be fetched according to it.
+	Load(loginID string) (*auth.UserResponse, error)
 
 	// Load an existing user by User ID. The user ID can be found
 	// on the user's JWT.
@@ -246,11 +246,11 @@ type Group interface {
 	// Load all groups for a specific tenant id.
 	LoadAllGroups(tenantID string) ([]*auth.Group, error)
 
-	// Load all groups for the provided user IDs or identifiers.
+	// Load all groups for the provided user IDs or login IDs.
 	//
 	// userIDs have a format of "U2J5ES9S8TkvCgOvcrkpzUgVTEBM" (example), which can be found on the user's JWT.
-	// identifier is the actual user identifier used for sign in.
-	LoadAllGroupsForMembers(tenantID string, userIDs, identifiers []string) ([]*auth.Group, error)
+	// loginID is how the user identifies when logging in.
+	LoadAllGroupsForMembers(tenantID string, userIDs, loginIDs []string) ([]*auth.Group, error)
 
 	// Load all members of the provided group id.
 	LoadAllGroupMembers(tenantID, groupID string) ([]*auth.Group, error)

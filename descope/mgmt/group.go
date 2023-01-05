@@ -25,17 +25,17 @@ func (r *group) LoadAllGroups(tenantID string) ([]*auth.Group, error) {
 	return unmarshalGroupsResponse(res)
 }
 
-func (r *group) LoadAllGroupsForMembers(tenantID string, userIDs, identifiers []string) ([]*auth.Group, error) {
+func (r *group) LoadAllGroupsForMembers(tenantID string, userIDs, loginIDs []string) ([]*auth.Group, error) {
 	if tenantID == "" {
 		return nil, errors.NewInvalidArgumentError("tenantID")
 	}
-	if len(userIDs) == 0 && len(identifiers) == 0 {
-		return nil, errors.NewInvalidArgumentError("userIds and identifiers")
+	if len(userIDs) == 0 && len(loginIDs) == 0 {
+		return nil, errors.NewInvalidArgumentError("userIDs and loginIDs")
 	}
 	body := map[string]any{
-		"tenantId":    tenantID,
-		"identifiers": identifiers,
-		"userIds":     userIDs,
+		"tenantId": tenantID,
+		"loginIds": loginIDs,
+		"userIds":  userIDs,
 	}
 	res, err := r.client.DoPostRequest(api.Routes.ManagementGroupLoadAllGroupsForMember(), body, nil, r.conf.ManagementKey)
 	if err != nil {

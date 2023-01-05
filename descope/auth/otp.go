@@ -10,11 +10,11 @@ type otp struct {
 	authenticationsBase
 }
 
-func (auth *otp) SignIn(method DeliveryMethod, identifier string, r *http.Request, loginOptions *LoginOptions) error {
+func (auth *otp) SignIn(method DeliveryMethod, loginID string, r *http.Request, loginOptions *LoginOptions) error {
 	var pswd string
 	var err error
-	if identifier == "" {
-		return errors.NewInvalidArgumentError("identifier")
+	if loginID == "" {
+		return errors.NewInvalidArgumentError("loginID")
 	}
 	if loginOptions.IsJWTRequired() {
 		pswd, err = getValidRefreshToken(r)
@@ -23,41 +23,41 @@ func (auth *otp) SignIn(method DeliveryMethod, identifier string, r *http.Reques
 		}
 	}
 
-	_, err = auth.client.DoPostRequest(composeSignInURL(method), newSignInRequestBody(identifier, loginOptions), nil, pswd)
+	_, err = auth.client.DoPostRequest(composeSignInURL(method), newSignInRequestBody(loginID, loginOptions), nil, pswd)
 	return err
 }
 
-func (auth *otp) SignUp(method DeliveryMethod, identifier string, user *User) error {
+func (auth *otp) SignUp(method DeliveryMethod, loginID string, user *User) error {
 	if user == nil {
 		user = &User{}
 	}
-	if err := auth.verifyDeliveryMethod(method, identifier, user); err != nil {
+	if err := auth.verifyDeliveryMethod(method, loginID, user); err != nil {
 		return err
 	}
 
-	_, err := auth.client.DoPostRequest(composeSignUpURL(method), newAuthenticationSignUpRequestBody(method, identifier, user), nil, "")
+	_, err := auth.client.DoPostRequest(composeSignUpURL(method), newAuthenticationSignUpRequestBody(method, loginID, user), nil, "")
 	return err
 }
 
-func (auth *otp) SignUpOrIn(method DeliveryMethod, identifier string) error {
-	if identifier == "" {
-		return errors.NewInvalidArgumentError("identifier")
+func (auth *otp) SignUpOrIn(method DeliveryMethod, loginID string) error {
+	if loginID == "" {
+		return errors.NewInvalidArgumentError("loginID")
 	}
 
-	_, err := auth.client.DoPostRequest(composeSignUpOrInURL(method), newSignInRequestBody(identifier, nil), nil, "")
+	_, err := auth.client.DoPostRequest(composeSignUpOrInURL(method), newSignInRequestBody(loginID, nil), nil, "")
 	return err
 }
 
-func (auth *otp) VerifyCode(method DeliveryMethod, identifier string, code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
-	if identifier == "" {
-		return nil, errors.NewInvalidArgumentError("identifier")
+func (auth *otp) VerifyCode(method DeliveryMethod, loginID string, code string, w http.ResponseWriter) (*AuthenticationInfo, error) {
+	if loginID == "" {
+		return nil, errors.NewInvalidArgumentError("loginID")
 	}
 	if method == "" {
-		if phoneRegex.MatchString(identifier) {
+		if phoneRegex.MatchString(loginID) {
 			method = MethodSMS
 		}
 
-		if emailRegex.MatchString(identifier) {
+		if emailRegex.MatchString(loginID) {
 			method = MethodEmail
 		}
 
@@ -65,16 +65,16 @@ func (auth *otp) VerifyCode(method DeliveryMethod, identifier string, code strin
 			return nil, errors.NewInvalidArgumentError("method")
 		}
 	}
-	httpResponse, err := auth.client.DoPostRequest(composeVerifyCodeURL(method), newAuthenticationVerifyRequestBody(identifier, code), nil, "")
+	httpResponse, err := auth.client.DoPostRequest(composeVerifyCodeURL(method), newAuthenticationVerifyRequestBody(loginID, code), nil, "")
 	if err != nil {
 		return nil, err
 	}
 	return auth.generateAuthenticationInfo(httpResponse, w)
 }
 
-func (auth *otp) UpdateUserEmail(identifier, email string, r *http.Request) error {
-	if identifier == "" {
-		return errors.NewInvalidArgumentError("identifier")
+func (auth *otp) UpdateUserEmail(loginID, email string, r *http.Request) error {
+	if loginID == "" {
+		return errors.NewInvalidArgumentError("loginID")
 	}
 	if email == "" {
 		return errors.NewInvalidArgumentError("email")
@@ -86,13 +86,13 @@ func (auth *otp) UpdateUserEmail(identifier, email string, r *http.Request) erro
 	if err != nil {
 		return err
 	}
-	_, err = auth.client.DoPostRequest(composeUpdateUserEmailOTP(), newOTPUpdateEmailRequestBody(identifier, email), nil, pswd)
+	_, err = auth.client.DoPostRequest(composeUpdateUserEmailOTP(), newOTPUpdateEmailRequestBody(loginID, email), nil, pswd)
 	return err
 }
 
-func (auth *otp) UpdateUserPhone(method DeliveryMethod, identifier, phone string, r *http.Request) error {
-	if identifier == "" {
-		return errors.NewInvalidArgumentError("identifier")
+func (auth *otp) UpdateUserPhone(method DeliveryMethod, loginID, phone string, r *http.Request) error {
+	if loginID == "" {
+		return errors.NewInvalidArgumentError("loginID")
 	}
 	if phone == "" {
 		return errors.NewInvalidArgumentError("phone")
@@ -107,6 +107,6 @@ func (auth *otp) UpdateUserPhone(method DeliveryMethod, identifier, phone string
 	if err != nil {
 		return err
 	}
-	_, err = auth.client.DoPostRequest(composeUpdateUserPhoneOTP(method), newOTPUpdatePhoneRequestBody(identifier, phone), nil, pswd)
+	_, err = auth.client.DoPostRequest(composeUpdateUserPhoneOTP(method), newOTPUpdatePhoneRequestBody(loginID, phone), nil, pswd)
 	return err
 }

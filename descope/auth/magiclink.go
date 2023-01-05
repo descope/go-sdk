@@ -10,11 +10,11 @@ type magicLink struct {
 	authenticationsBase
 }
 
-func (auth *magicLink) SignIn(method DeliveryMethod, identifier, URI string, r *http.Request, loginOptions *LoginOptions) error {
+func (auth *magicLink) SignIn(method DeliveryMethod, loginID, URI string, r *http.Request, loginOptions *LoginOptions) error {
 	var pswd string
 	var err error
-	if identifier == "" {
-		return errors.NewInvalidArgumentError("identifier")
+	if loginID == "" {
+		return errors.NewInvalidArgumentError("loginID")
 	}
 	if loginOptions.IsJWTRequired() {
 		pswd, err = getValidRefreshToken(r)
@@ -23,27 +23,27 @@ func (auth *magicLink) SignIn(method DeliveryMethod, identifier, URI string, r *
 		}
 	}
 
-	_, err = auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(identifier, URI, false, loginOptions), nil, pswd)
+	_, err = auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(loginID, URI, false, loginOptions), nil, pswd)
 	return err
 }
 
-func (auth *magicLink) SignUp(method DeliveryMethod, identifier, URI string, user *User) error {
+func (auth *magicLink) SignUp(method DeliveryMethod, loginID, URI string, user *User) error {
 	if user == nil {
 		user = &User{}
 	}
-	if err := auth.verifyDeliveryMethod(method, identifier, user); err != nil {
+	if err := auth.verifyDeliveryMethod(method, loginID, user); err != nil {
 		return err
 	}
 
-	_, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, identifier, URI, user, false), nil, "")
+	_, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, loginID, URI, user, false), nil, "")
 	return err
 }
 
-func (auth *magicLink) SignUpOrIn(method DeliveryMethod, identifier, URI string) error {
-	if identifier == "" {
-		return errors.NewInvalidArgumentError("identifier")
+func (auth *magicLink) SignUpOrIn(method DeliveryMethod, loginID, URI string) error {
+	if loginID == "" {
+		return errors.NewInvalidArgumentError("loginID")
 	}
-	_, err := auth.client.DoPostRequest(composeMagicLinkSignUpOrInURL(method), newMagicLinkAuthenticationRequestBody(identifier, URI, false, nil), nil, "")
+	_, err := auth.client.DoPostRequest(composeMagicLinkSignUpOrInURL(method), newMagicLinkAuthenticationRequestBody(loginID, URI, false, nil), nil, "")
 	return err
 }
 
@@ -57,9 +57,9 @@ func (auth *magicLink) Verify(token string, w http.ResponseWriter) (*Authenticat
 	return auth.generateAuthenticationInfo(httpResponse, w)
 }
 
-func (auth *magicLink) UpdateUserEmail(identifier, email, URI string, r *http.Request) error {
-	if identifier == "" {
-		return errors.NewInvalidArgumentError("identifier")
+func (auth *magicLink) UpdateUserEmail(loginID, email, URI string, r *http.Request) error {
+	if loginID == "" {
+		return errors.NewInvalidArgumentError("loginID")
 	}
 	if email == "" {
 		return errors.NewInvalidArgumentError("email")
@@ -71,13 +71,13 @@ func (auth *magicLink) UpdateUserEmail(identifier, email, URI string, r *http.Re
 	if err != nil {
 		return err
 	}
-	_, err = auth.client.DoPostRequest(composeUpdateUserEmailMagicLink(), newMagicLinkUpdateEmailRequestBody(identifier, email, URI, false), nil, pswd)
+	_, err = auth.client.DoPostRequest(composeUpdateUserEmailMagicLink(), newMagicLinkUpdateEmailRequestBody(loginID, email, URI, false), nil, pswd)
 	return err
 }
 
-func (auth *magicLink) UpdateUserPhone(method DeliveryMethod, identifier, phone, URI string, r *http.Request) error {
-	if identifier == "" {
-		return errors.NewInvalidArgumentError("identifier")
+func (auth *magicLink) UpdateUserPhone(method DeliveryMethod, loginID, phone, URI string, r *http.Request) error {
+	if loginID == "" {
+		return errors.NewInvalidArgumentError("loginID")
 	}
 	if phone == "" {
 		return errors.NewInvalidArgumentError("phone")
@@ -92,6 +92,6 @@ func (auth *magicLink) UpdateUserPhone(method DeliveryMethod, identifier, phone,
 	if err != nil {
 		return err
 	}
-	_, err = auth.client.DoPostRequest(composeUpdateUserPhoneMagiclink(method), newMagicLinkUpdatePhoneRequestBody(identifier, phone, URI, false), nil, pswd)
+	_, err = auth.client.DoPostRequest(composeUpdateUserPhoneMagiclink(method), newMagicLinkUpdatePhoneRequestBody(loginID, phone, URI, false), nil, pswd)
 	return err
 }
