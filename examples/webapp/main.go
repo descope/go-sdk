@@ -427,7 +427,7 @@ func handleStepupConfVerify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	helpTxt := "Great !\n"
-	helpTxt += "Now lets update our user with a phone number go to /stepup/conf/update?identifier=" + authInfo.User.ExternalIDs[0] + "&sms=<phone>"
+	helpTxt += "Now lets update our user with a phone number go to /stepup/conf/update?identifier=" + authInfo.User.LoginIDs[0] + "&sms=<phone>"
 	setResponse(w, http.StatusOK, helpTxt)
 }
 
@@ -462,7 +462,7 @@ func handleStepupConfUpdateVerify(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	helpTxt := "Great, we have a user with 2 factors, now lets start the actual step flow !\n"
-	helpTxt += "go to /stepup/login?email=" + authInfo.User.ExternalIDs[0]
+	helpTxt += "go to /stepup/login?email=" + authInfo.User.LoginIDs[0]
 	setResponse(w, http.StatusOK, helpTxt)
 }
 
@@ -495,7 +495,7 @@ func handleStepupLoginVerify(w http.ResponseWriter, r *http.Request) {
 	helpTxt := "You have logged in !\n"
 	mr, _ := json.MarshalIndent(authInfo, "", "")
 	helpTxt += string(mr) + "\n\n"
-	helpTxt += "Now lets stepup go to /stepup/stepup?sms=" + authInfo.User.ExternalIDs[0]
+	helpTxt += "Now lets stepup go to /stepup/stepup?sms=" + authInfo.User.LoginIDs[0]
 	setResponse(w, http.StatusOK, helpTxt)
 }
 
