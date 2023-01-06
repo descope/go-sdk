@@ -602,7 +602,7 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 	logger.LogDebug("sending request to [%s]", url)
 	response, err := c.httpClient.Do(req)
 	if err != nil {
-		logger.LogInfo("failed sending request to [%s]", url)
+		logger.LogError("failed sending request to [%s]", err, url)
 		return nil, err
 	}
 
@@ -611,7 +611,7 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 	}
 	if !isResponseOK(response) {
 		err = c.parseResponseError(response)
-		logger.LogDebug("failed sending request to [%s] with [%s]", url, err)
+		logger.LogInfo("failed sending request to [%s], error: [%s]", url, err)
 		return nil, err
 	}
 
@@ -637,7 +637,7 @@ func (c *Client) parseBody(response *http.Response) (resBytes []byte, err error)
 	if response.Body != nil {
 		resBytes, err = io.ReadAll(response.Body)
 		if err != nil {
-			logger.LogInfo("failed reading body from request to [%s]", response.Request.URL.String())
+			logger.LogError("failed reading body from request to [%s]", err, response.Request.URL.String())
 			return nil, err
 		}
 	}
@@ -659,7 +659,7 @@ func (c *Client) parseResponseError(response *http.Response) error {
 
 	var responseErr *errors.WebError
 	if err := json.Unmarshal(body, &responseErr); err != nil {
-		logger.LogInfo("failed to load error from response [error: %s]", err)
+		logger.LogError("failed to load error from response", err)
 		return errors.NewValidationError(string(body))
 	}
 	return responseErr
