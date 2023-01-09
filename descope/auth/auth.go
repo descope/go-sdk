@@ -541,7 +541,7 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 		}
 	}
 	setCookies(cookies, w)
-	logger.LogInfo("generateAuthenticationInfoWithRefreshToken cookies", fmt.Sprintf("%+v", cookies))
+	logger.LogInfo("generateAuthenticationInfoWithRefreshToken cookies: %s", fmt.Sprintf("%+v", cookies))
 	return NewAuthenticationInfo(jwtResponse, sToken, refreshToken), err
 }
 
