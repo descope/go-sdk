@@ -48,7 +48,7 @@ import (
     "github.com/descope/go-sdk/descope/auth"
 )
 
-// Every user must have an loginID. All other user information is optional
+// Every user must have a loginID. All other user information is optional
 loginID := "desmond@descope.com"
 user :=  &auth.User{
     Name: "Desmond Copeland",
@@ -238,7 +238,7 @@ on the link provided by the `ProvisioningURL`.
 Existing users can add TOTP using the `update` function.
 
 ```go
-// Every user must have an loginID. All other user information is optional
+// Every user must have a loginID. All other user information is optional
 loginID := "desmond@descope.com"
 user :=  &auth.User{
     Name: "Desmond Copeland",
@@ -404,7 +404,7 @@ if err == nil {
 You can create, update, delete or load users, as well as search according to filters:
 
 ```go
-// A user must have an loginID, other fields are optional.
+// A user must have a loginID, other fields are optional.
 // Roles should be set directly if no tenants exist, otherwise set
 // on a per-tenant basis.
 err := descopeClient.Management.User().Create("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*mgmt.AssociatedTenant{
