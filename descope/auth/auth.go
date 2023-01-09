@@ -540,6 +540,18 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 			}
 		}
 	}
+
+	if refreshToken == nil {
+		for i := range cookies {
+			if cookies[i].Name == RefreshCookieName {
+				refreshToken, err = auth.validateJWT(cookies[i].Value)
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
+	}
+
 	setCookies(cookies, w)
 	logger.LogInfo("generateAuthenticationInfoWithRefreshToken cookies: %s", fmt.Sprintf("%+v", cookies))
 	return NewAuthenticationInfo(jwtResponse, sToken, refreshToken), err
