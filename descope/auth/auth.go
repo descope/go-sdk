@@ -516,9 +516,9 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 		return nil, err
 	}
 
-	logger.LogInfo("generateAuthenticationInfoWithRefreshToken body", httpResponse.BodyStr)
-	logger.LogInfo("generateAuthenticationInfoWithRefreshToken jwtResponse", fmt.Sprintf("%+v", jwtResponse))
-	logger.LogInfo("generateAuthenticationInfoWithRefreshToken tokens", fmt.Sprintf("%+v", tokens))
+	logger.LogInfo("generateAuthenticationInfoWithRefreshToken body: %s", httpResponse.BodyStr)
+	logger.LogInfo("generateAuthenticationInfoWithRefreshToken jwtResponse: %s", fmt.Sprintf("%+v", jwtResponse))
+	logger.LogInfo("generateAuthenticationInfoWithRefreshToken tokens: %s", fmt.Sprintf("%+v", tokens))
 
 	cookies := httpResponse.Res.Cookies()
 	var sToken *Token
