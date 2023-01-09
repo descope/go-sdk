@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	goErrors "errors"
+	"fmt"
 	"net/http"
 	"path"
 	"strings"
@@ -514,6 +515,11 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 		logger.LogError("unable to extract tokens from request [%s]", err, httpResponse.Req.URL)
 		return nil, err
 	}
+
+	logger.LogInfo("generateAuthenticationInfoWithRefreshToken body", httpResponse.BodyStr)
+	logger.LogInfo("generateAuthenticationInfoWithRefreshToken jwtResponse", fmt.Sprintf("%+v", jwtResponse))
+	logger.LogInfo("generateAuthenticationInfoWithRefreshToken tokens", fmt.Sprintf("%+v", tokens))
+
 	cookies := httpResponse.Res.Cookies()
 	var sToken *Token
 	for i := range tokens {
@@ -535,6 +541,7 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 		}
 	}
 	setCookies(cookies, w)
+	logger.LogInfo("generateAuthenticationInfoWithRefreshToken cookies", fmt.Sprintf("%+v", cookies))
 	return NewAuthenticationInfo(jwtResponse, sToken, refreshToken), err
 }
 
