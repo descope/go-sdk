@@ -292,6 +292,7 @@ func TestVerifyCodeEmailResponseOption(t *testing.T) {
 	code := "4914"
 	name := "name"
 	phone := "+11111111111"
+	picture := "@(^_^)@"
 	firstSeen := true
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeVerifyCodeURL(MethodEmail), r.URL.RequestURI())
@@ -307,6 +308,7 @@ func TestVerifyCodeEmailResponseOption(t *testing.T) {
 					Name:  name,
 					Phone: phone,
 				},
+				Picture: picture,
 			},
 			FirstSeen: firstSeen,
 		}
@@ -316,9 +318,13 @@ func TestVerifyCodeEmailResponseOption(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	_, err = a.OTP().VerifyCode(MethodEmail, email, code, w)
+	authInfo, err := a.OTP().VerifyCode(MethodEmail, email, code, w)
 	require.NoError(t, err)
 	require.Len(t, w.Result().Cookies(), 0)
+	assert.Equal(t, firstSeen, authInfo.FirstSeen)
+	assert.Equal(t, name, authInfo.User.Name)
+	assert.Equal(t, phone, authInfo.User.Phone)
+	assert.Equal(t, picture, authInfo.User.Picture)
 }
 
 func TestVerifyCodeEmailResponseNil(t *testing.T) {

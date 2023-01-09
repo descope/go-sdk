@@ -84,6 +84,10 @@ func TestOAuthStartInvalidForwardResponse(t *testing.T) {
 
 func TestExchangeTokenOAuth(t *testing.T) {
 	code := "code"
+	firstSeen := true
+	name := "name"
+	phone := "+11111111111"
+	picture := "@(^_^)@"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		req := exchangeTokenBody{}
 		err := readBody(r, &req)
@@ -94,10 +98,12 @@ func TestExchangeTokenOAuth(t *testing.T) {
 			RefreshJwt: jwtTokenValid,
 			User: &UserResponse{
 				User: User{
-					Name: "name",
+					Name:  name,
+					Phone: phone,
 				},
+				Picture: picture,
 			},
-			FirstSeen: true,
+			FirstSeen: firstSeen,
 		}
 		respBytes, err := utils.Marshal(resp)
 		require.NoError(t, err)
@@ -108,8 +114,10 @@ func TestExchangeTokenOAuth(t *testing.T) {
 	authInfo, err := a.OAuth().ExchangeToken(code, w)
 	require.NoError(t, err)
 	require.NotNil(t, authInfo)
-	assert.EqualValues(t, "name", authInfo.User.Name)
-	assert.True(t, authInfo.FirstSeen)
+	assert.Equal(t, firstSeen, authInfo.FirstSeen)
+	assert.Equal(t, name, authInfo.User.Name)
+	assert.Equal(t, phone, authInfo.User.Phone)
+	assert.Equal(t, picture, authInfo.User.Picture)
 }
 
 func TestExchangeTokenSAML(t *testing.T) {

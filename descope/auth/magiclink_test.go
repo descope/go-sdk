@@ -290,6 +290,7 @@ func TestVerifyMagicLinkCodeWithSession(t *testing.T) {
 	firstSeen := true
 	name := "name"
 	phone := "+11111111111"
+	picture := "@(^_^)@"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeVerifyMagicLinkURL(), r.URL.RequestURI())
 
@@ -303,6 +304,7 @@ func TestVerifyMagicLinkCodeWithSession(t *testing.T) {
 					Name:  name,
 					Phone: phone,
 				},
+				Picture: picture,
 			},
 			FirstSeen: firstSeen,
 		}
@@ -315,6 +317,10 @@ func TestVerifyMagicLinkCodeWithSession(t *testing.T) {
 	info, err := a.MagicLink().Verify(token, w)
 	require.NoError(t, err)
 	assert.NotEmpty(t, info.SessionToken.JWT)
+	assert.Equal(t, firstSeen, info.FirstSeen)
+	assert.Equal(t, name, info.User.Name)
+	assert.Equal(t, phone, info.User.Phone)
+	assert.Equal(t, picture, info.User.Picture)
 	require.Len(t, w.Result().Cookies(), 0)
 }
 

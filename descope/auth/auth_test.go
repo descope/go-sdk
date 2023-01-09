@@ -49,7 +49,7 @@ var (
 
 	mockAuthSessionBody = fmt.Sprintf(`{"sessionJwt": "%s", "refreshJwt": "%s", "cookiePath": "%s", "cookieDomain": "%s" }`, jwtTokenValid, jwtRTokenValid, "/my-path", "my-domain")
 
-	mockUserResponseBody = fmt.Sprintf(`{"name": "%s", "email": "%s", "userId": "%s"}`, "kuku name", "kuku@test.com", "kuku")
+	mockUserResponseBody = fmt.Sprintf(`{"name": "%s", "email": "%s", "userId": "%s", "picture": "%s"}`, "kuku name", "kuku@test.com", "kuku", "@(^_^)@")
 
 	permissions                  = []interface{}{"foo", "bar"}
 	roles                        = []interface{}{"abc", "xyz"}
@@ -825,6 +825,7 @@ func TestMe(t *testing.T) {
 	assert.Equal(t, "kuku", user.UserID)
 	assert.Equal(t, "kuku@test.com", user.Email)
 	assert.Equal(t, "kuku name", user.Name)
+	assert.Equal(t, "@(^_^)@", user.Picture)
 }
 
 func TestMeNoRequest(t *testing.T) {
