@@ -541,15 +541,30 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 		}
 	}
 
-	if refreshToken == nil {
+	if refreshToken == nil || refreshToken.JWT == "" {
+		if refreshToken == nil {
+			logger.LogInfo("generateAuthenticationInfoWithRefreshToken empty refreshToken going to take it from cookies..")
+		} else {
+			logger.LogInfo("generateAuthenticationInfoWithRefreshToken empty refreshToken.JWT going to take it from cookies..")
+		}
+
 		for i := range cookies {
+			logger.LogInfo("generateAuthenticationInfoWithRefreshToken handling cookie %s", cookies[i].Name)
 			if cookies[i].Name == RefreshCookieName {
+				logger.LogInfo("generateAuthenticationInfoWithRefreshToken found DSR, value %s", cookies[i].Value)
 				refreshToken, err = auth.validateJWT(cookies[i].Value)
 				if err != nil {
+					logger.LogInfo("generateAuthenticationInfoWithRefreshToken failed to validate DSR jwt [%s]", err.Error())
 					return nil, err
 				}
 			}
 		}
+	}
+
+	if refreshToken == nil {
+		logger.LogInfo("generateAuthenticationInfoWithRefreshToken RefreshToken is nil")
+	} else {
+		logger.LogInfo("generateAuthenticationInfoWithRefreshToken RefreshToken is NOT nil [%s]", refreshToken.JWT)
 	}
 
 	setCookies(cookies, w)
