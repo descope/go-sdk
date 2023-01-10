@@ -487,14 +487,14 @@ func (m *MockSession) RefreshSession(r *http.Request, w http.ResponseWriter) (bo
 		m.RefreshSessionAssert(r, w)
 	}
 
-	if m.RefreshSessionResponse != nil {
-		return true, m.RefreshSessionResponse, nil
-	}
-
 	if len(m.RefreshSessionResponseArray) > 0 && m.RefreshSessionResponseCounter < len(m.RefreshSessionResponseArray) {
 		currentRefreshResponse := m.RefreshSessionResponseArray[m.RefreshSessionResponseCounter]
 		m.RefreshSessionResponseCounter++
 		return true, currentRefreshResponse, nil
+	}
+
+	if m.RefreshSessionResponse != nil {
+		return true, m.RefreshSessionResponse, nil
 	}
 
 	return !m.RefreshSessionResponseFailure, m.RefreshSessionResponse, m.RefreshSessionError
