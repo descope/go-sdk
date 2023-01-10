@@ -180,6 +180,59 @@ func TestGetSession(t *testing.T) {
 	require.Len(t, w.Result().Cookies(), 1) // Just the refresh token
 }
 
+func TestGetSessionGenerateAuthenticationInfoValidDSRCookie(t *testing.T) {
+	pendingRef := "pending_ref"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		cookie := &http.Cookie{Name: RefreshCookieName, Value: jwtRTokenValid} // valid token
+		return &http.Response{StatusCode: http.StatusOK,
+			Body:   io.NopCloser(bytes.NewBufferString(mockAuthSessionBodyNoRefreshJwt)),
+			Header: http.Header{"Set-Cookie": []string{cookie.String()}},
+		}, nil
+	})
+	a.conf.SessionJWTViaCookie = true
+	require.NoError(t, err)
+
+	w := httptest.NewRecorder()
+	info, err := a.EnchantedLink().GetSession(pendingRef, w)
+	require.NoError(t, err)
+	assert.NotEmpty(t, info.SessionToken.JWT)
+	assert.NotEmpty(t, info.RefreshToken.JWT) // make sure refresh token exist
+}
+
+func TestGetSessionGenerateAuthenticationInfoInValidDSRCookie(t *testing.T) {
+	pendingRef := "pending_ref"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		cookie := &http.Cookie{Name: RefreshCookieName, Value: jwtTokenExpired} // invalid token
+		return &http.Response{StatusCode: http.StatusOK,
+			Body:   io.NopCloser(bytes.NewBufferString(mockAuthSessionBodyNoRefreshJwt)),
+			Header: http.Header{"Set-Cookie": []string{cookie.String()}},
+		}, nil
+	})
+	a.conf.SessionJWTViaCookie = true
+	require.NoError(t, err)
+
+	w := httptest.NewRecorder()
+	_, err = a.EnchantedLink().GetSession(pendingRef, w)
+	require.Error(t, err) // should get error as Refresh cookie is invalid
+}
+
+func TestGetSessionGenerateAuthenticationInfoNoDSRCookie(t *testing.T) {
+	pendingRef := "pending_ref"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK,
+			Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBodyNoRefreshJwt)),
+		}, nil
+	})
+	a.conf.SessionJWTViaCookie = true
+	require.NoError(t, err)
+
+	w := httptest.NewRecorder()
+	info, err := a.EnchantedLink().GetSession(pendingRef, w)
+	require.NoError(t, err)
+	assert.NotEmpty(t, info.SessionToken.JWT)
+	assert.Nil(t, info.RefreshToken) // there is no DSR cookie so refresh token is not exist (not on body and not on cookie)
+}
+
 func TestGetEnchantedLinkSessionError(t *testing.T) {
 	pendingRef := "pending_ref"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {

@@ -433,6 +433,8 @@ type MockSession struct {
 	RefreshSessionError           error
 	RefreshSessionResponse        *auth.Token
 	RefreshSessionResponseFailure bool
+	RefreshSessionResponseArray   []*auth.Token
+	RefreshSessionResponseCounter int
 
 	ExchangeAccessKeyAssert          func(accessKey string)
 	ExchangeAccessKeyError           error
@@ -477,9 +479,24 @@ func (m *MockSession) ValidateSessionTokens(sessionToken, refreshToken string) (
 }
 
 func (m *MockSession) RefreshSession(r *http.Request, w http.ResponseWriter) (bool, *auth.Token, error) {
+	if m.RefreshSessionResponseFailure {
+		return false, nil, m.RefreshSessionError
+	}
+
 	if m.RefreshSessionAssert != nil {
 		m.RefreshSessionAssert(r, w)
 	}
+
+	if len(m.RefreshSessionResponseArray) > 0 && m.RefreshSessionResponseCounter < len(m.RefreshSessionResponseArray) {
+		currentRefreshResponse := m.RefreshSessionResponseArray[m.RefreshSessionResponseCounter]
+		m.RefreshSessionResponseCounter++
+		return true, currentRefreshResponse, nil
+	}
+
+	if m.RefreshSessionResponse != nil {
+		return true, m.RefreshSessionResponse, nil
+	}
+
 	return !m.RefreshSessionResponseFailure, m.RefreshSessionResponse, m.RefreshSessionError
 }
 

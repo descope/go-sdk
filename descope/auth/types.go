@@ -143,6 +143,11 @@ func NewAuthenticationInfo(jRes *JWTResponse, sessionToken, refreshToken *Token)
 	if jRes == nil {
 		jRes = &JWTResponse{}
 	}
+
+	if sessionToken == nil || refreshToken == nil {
+		logger.LogDebug("Building new authentication info object with empty sessionToken(%t)/refreshToken(%t)", sessionToken == nil, refreshToken == nil)
+	}
+
 	return &AuthenticationInfo{
 		SessionToken: sessionToken,
 		RefreshToken: refreshToken,

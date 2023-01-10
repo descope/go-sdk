@@ -514,6 +514,7 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 		logger.LogError("unable to extract tokens from request [%s]", err, httpResponse.Req.URL)
 		return nil, err
 	}
+
 	cookies := httpResponse.Res.Cookies()
 	var sToken *Token
 	for i := range tokens {
@@ -534,6 +535,19 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 			}
 		}
 	}
+
+	if refreshToken == nil || refreshToken.JWT == "" {
+		for i := range cookies {
+			if cookies[i].Name == RefreshCookieName {
+				refreshToken, err = auth.validateJWT(cookies[i].Value)
+				if err != nil {
+					logger.LogDebug("validation of refresh token failed: %s", err.Error())
+					return nil, err
+				}
+			}
+		}
+	}
+
 	setCookies(cookies, w)
 	return NewAuthenticationInfo(jwtResponse, sToken, refreshToken), err
 }
