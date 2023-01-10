@@ -47,7 +47,8 @@ var (
 	mockAuthInvalidSessionCookie = &http.Cookie{Value: jwtTokenExpired, Name: SessionCookieName}
 	mockAuthInvalidRefreshCookie = &http.Cookie{Value: jwtTokenExpired, Name: RefreshCookieName}
 
-	mockAuthSessionBody = fmt.Sprintf(`{"sessionJwt": "%s", "refreshJwt": "%s", "cookiePath": "%s", "cookieDomain": "%s" }`, jwtTokenValid, jwtRTokenValid, "/my-path", "my-domain")
+	mockAuthSessionBody             = fmt.Sprintf(`{"sessionJwt": "%s", "refreshJwt": "%s", "cookiePath": "%s", "cookieDomain": "%s" }`, jwtTokenValid, jwtRTokenValid, "/my-path", "my-domain")
+	mockAuthSessionBodyNoRefreshJwt = fmt.Sprintf(`{"sessionJwt": "%s", "cookiePath": "%s", "cookieDomain": "%s" }`, jwtTokenValid, "/my-path", "my-domain")
 
 	mockUserResponseBody = fmt.Sprintf(`{"name": "%s", "email": "%s", "userId": "%s"}`, "kuku name", "kuku@test.com", "kuku")
 

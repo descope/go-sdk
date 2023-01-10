@@ -3,7 +3,6 @@ package auth
 import (
 	"context"
 	goErrors "errors"
-	"fmt"
 	"net/http"
 	"path"
 	"strings"
@@ -516,10 +515,6 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 		return nil, err
 	}
 
-	logger.LogInfo("generateAuthenticationInfoWithRefreshToken body: %s", httpResponse.BodyStr)
-	logger.LogInfo("generateAuthenticationInfoWithRefreshToken jwtResponse: %s", fmt.Sprintf("%+v", jwtResponse))
-	logger.LogInfo("generateAuthenticationInfoWithRefreshToken tokens: %s", fmt.Sprintf("%+v", tokens))
-
 	cookies := httpResponse.Res.Cookies()
 	var sToken *Token
 	for i := range tokens {
@@ -542,33 +537,18 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 	}
 
 	if refreshToken == nil || refreshToken.JWT == "" {
-		if refreshToken == nil {
-			logger.LogInfo("generateAuthenticationInfoWithRefreshToken empty refreshToken going to take it from cookies..")
-		} else {
-			logger.LogInfo("generateAuthenticationInfoWithRefreshToken empty refreshToken.JWT going to take it from cookies..")
-		}
-
 		for i := range cookies {
-			logger.LogInfo("generateAuthenticationInfoWithRefreshToken handling cookie %s", cookies[i].Name)
 			if cookies[i].Name == RefreshCookieName {
-				logger.LogInfo("generateAuthenticationInfoWithRefreshToken found DSR, value %s", cookies[i].Value)
 				refreshToken, err = auth.validateJWT(cookies[i].Value)
 				if err != nil {
-					logger.LogInfo("generateAuthenticationInfoWithRefreshToken failed to validate DSR jwt [%s]", err.Error())
+					logger.LogDebug("validation of refresh token failed: %s", err.Error())
 					return nil, err
 				}
 			}
 		}
 	}
 
-	if refreshToken == nil {
-		logger.LogInfo("generateAuthenticationInfoWithRefreshToken RefreshToken is nil")
-	} else {
-		logger.LogInfo("generateAuthenticationInfoWithRefreshToken RefreshToken is NOT nil [%s]", refreshToken.JWT)
-	}
-
 	setCookies(cookies, w)
-	logger.LogInfo("generateAuthenticationInfoWithRefreshToken cookies: %s", fmt.Sprintf("%+v", cookies))
 	return NewAuthenticationInfo(jwtResponse, sToken, refreshToken), err
 }
 
