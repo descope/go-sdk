@@ -87,6 +87,10 @@ func TestUpodateTOTPFailure(t *testing.T) {
 func TestVerifyTOTP(t *testing.T) {
 	loginID := "someID"
 	code := "123456"
+	firstSeen := true
+	name := "name"
+	phone := "+11111111111"
+	picture := "@(^_^)@"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeVerifyTOTPCodeURL(), r.URL.RequestURI())
 
@@ -98,9 +102,14 @@ func TestVerifyTOTP(t *testing.T) {
 		resp := &JWTResponse{
 			RefreshJwt: jwtTokenValid,
 			User: &UserResponse{
+				User: User{
+					Name:  name,
+					Phone: phone,
+				},
 				LoginIDs: []string{loginID},
+				Picture:  picture,
 			},
-			FirstSeen: true,
+			FirstSeen: firstSeen,
 		}
 		respBytes, err := utils.Marshal(resp)
 		require.NoError(t, err)
@@ -112,6 +121,10 @@ func TestVerifyTOTP(t *testing.T) {
 	assert.NotNil(t, authInfo)
 	assert.True(t, authInfo.FirstSeen)
 	assert.EqualValues(t, loginID, authInfo.User.LoginIDs[0])
+	assert.Equal(t, firstSeen, authInfo.FirstSeen)
+	assert.Equal(t, name, authInfo.User.Name)
+	assert.Equal(t, phone, authInfo.User.Phone)
+	assert.Equal(t, picture, authInfo.User.Picture)
 }
 
 func TestVerifyTOTPLoginOptions(t *testing.T) {
