@@ -180,7 +180,6 @@ func TestGetSession(t *testing.T) {
 	require.Len(t, w.Result().Cookies(), 1) // Just the refresh token
 }
 
-// HERE HERE
 func TestGetSessionGenerateAuthenticationInfoValidDSRCookie(t *testing.T) {
 	pendingRef := "pending_ref"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
@@ -233,8 +232,6 @@ func TestGetSessionGenerateAuthenticationInfoNoDSRCookie(t *testing.T) {
 	assert.NotEmpty(t, info.SessionToken.JWT)
 	assert.Nil(t, info.RefreshToken) // there is no DSR cookie so refresh token is not exist (not on body and not on cookie)
 }
-
-//HERE HERE
 
 func TestGetEnchantedLinkSessionError(t *testing.T) {
 	pendingRef := "pending_ref"
