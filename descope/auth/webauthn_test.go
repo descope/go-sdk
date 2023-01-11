@@ -106,7 +106,7 @@ func TestSignInWebAuthnStepupNoJWT(t *testing.T) {
 	res, err := a.WebAuthn().SignInStart("a", "https://example.com", nil, &LoginOptions{Stepup: true})
 	require.Error(t, err)
 	assert.Empty(t, res)
-	assert.ErrorIs(t, err, errors.InvalidStepupJwtError)
+	assert.True(t, errors.InvalidStepupJwtError.Is(err))
 }
 
 func TestSignUpFinish(t *testing.T) {

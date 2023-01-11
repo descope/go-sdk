@@ -47,8 +47,9 @@ var (
 	mockAuthInvalidSessionCookie = &http.Cookie{Value: jwtTokenExpired, Name: SessionCookieName}
 	mockAuthInvalidRefreshCookie = &http.Cookie{Value: jwtTokenExpired, Name: RefreshCookieName}
 
-	mockAuthSessionBody             = fmt.Sprintf(`{"sessionJwt": "%s", "refreshJwt": "%s", "cookiePath": "%s", "cookieDomain": "%s" }`, jwtTokenValid, jwtRTokenValid, "/my-path", "my-domain")
-	mockAuthSessionBodyNoRefreshJwt = fmt.Sprintf(`{"sessionJwt": "%s", "cookiePath": "%s", "cookieDomain": "%s" }`, jwtTokenValid, "/my-path", "my-domain")
+	mockAuthSessionBody                   = fmt.Sprintf(`{"sessionJwt": "%s", "refreshJwt": "%s", "cookiePath": "%s", "cookieDomain": "%s" }`, jwtTokenValid, jwtRTokenValid, "/my-path", "my-domain")
+	mockAuthSessionBodyNoRefreshJwt       = fmt.Sprintf(`{"sessionJwt": "%s", "cookiePath": "%s", "cookieDomain": "%s" }`, jwtTokenValid, "/my-path", "my-domain")
+	mockAuthAPIRateLimitErrorResponseBody = fmt.Sprintf(`{"errorCode": "%s", "errorDescription": "%s", "message": "%s" }`, "E130429", "https://docs.descope.com/rate-limit", "API rate limit exceeded.")
 
 	mockUserResponseBody = fmt.Sprintf(`{"name": "%s", "email": "%s", "userId": "%s", "picture": "%s"}`, "kuku name", "kuku@test.com", "kuku", "@(^_^)@")
 
@@ -350,7 +351,22 @@ func TestValidateSessionRequestFailRefreshSession(t *testing.T) {
 	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenExpired})
 	ok, cookies, err := a.ValidateSession(request, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.FailedToRefreshTokenError)
+	require.True(t, errors.FailedToRefreshTokenError.Is(err))
+	require.False(t, ok)
+	require.Empty(t, cookies)
+}
+
+func TestValidateSessionRequestFailRefreshSessionApiRateLimitError(t *testing.T) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusTooManyRequests, Body: io.NopCloser(bytes.NewBufferString(mockAuthAPIRateLimitErrorResponseBody))}, nil
+	})
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: RefreshCookieName, Value: jwtRTokenValid})
+	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenExpired})
+	ok, cookies, err := a.ValidateSession(request, nil)
+	require.Error(t, err)
+	require.True(t, errors.ApiRateLimitExceeded.Is(err))
 	require.False(t, ok)
 	require.Empty(t, cookies)
 }
@@ -576,7 +592,7 @@ func TestLogoutEmptyRequest(t *testing.T) {
 
 	err = a.Logout(nil, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.MissingRequestError)
+	assert.True(t, errors.MissingRequestError.Is(err))
 }
 
 func TestLogoutAllEmptyRequest(t *testing.T) {
@@ -587,7 +603,7 @@ func TestLogoutAllEmptyRequest(t *testing.T) {
 
 	err = a.LogoutAll(nil, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.MissingRequestError)
+	assert.True(t, errors.MissingRequestError.Is(err))
 }
 
 func TestLogoutMissingToken(t *testing.T) {
@@ -599,7 +615,7 @@ func TestLogoutMissingToken(t *testing.T) {
 	request := &http.Request{Header: http.Header{}}
 	err = a.Logout(request, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.RefreshTokenError)
+	assert.True(t, errors.RefreshTokenError.Is(err))
 }
 
 func TestLogoutAllMissingToken(t *testing.T) {
@@ -611,7 +627,7 @@ func TestLogoutAllMissingToken(t *testing.T) {
 	request := &http.Request{Header: http.Header{}}
 	err = a.LogoutAll(request, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.RefreshTokenError)
+	assert.True(t, errors.RefreshTokenError.Is(err))
 }
 
 func TestAuthenticationMiddlewareFailure(t *testing.T) {
@@ -737,7 +753,19 @@ func TestExchangeAccessKeyBadRequest(t *testing.T) {
 	require.NoError(t, err)
 
 	ok, token, err := a.ExchangeAccessKey("foo")
-	require.ErrorIs(t, err, errors.UnauthorizedError)
+	require.True(t, errors.UnauthorizedError.Is(err))
+	require.False(t, ok)
+	require.Nil(t, token)
+}
+
+func TestExchangeAccessKeyRateLimitError(t *testing.T) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusTooManyRequests, Body: io.NopCloser(bytes.NewBufferString(mockAuthAPIRateLimitErrorResponseBody))}, nil
+	})
+	require.NoError(t, err)
+
+	ok, token, err := a.ExchangeAccessKey("foo")
+	require.True(t, errors.ApiRateLimitExceeded.Is(err))
 	require.False(t, ok)
 	require.Nil(t, token)
 }

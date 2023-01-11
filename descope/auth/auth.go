@@ -250,6 +250,9 @@ func (auth *authenticationService) RefreshSession(request *http.Request, w http.
 func (auth *authenticationService) ExchangeAccessKey(accessKey string) (success bool, SessionToken *Token, err error) {
 	httpResponse, err := auth.client.DoPostRequest(api.Routes.ExchangeAccessKey(), nil, &api.HTTPRequest{}, accessKey)
 	if err != nil {
+		if errors.ApiRateLimitExceeded.Is(err) {
+			return false, nil, err
+		}
 		logger.LogError("failed to exchange access key", err)
 		return false, nil, errors.UnauthorizedError
 	}
@@ -356,6 +359,9 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 		// auto-refresh session token
 		httpResponse, err := auth.client.DoPostRequest(api.Routes.RefreshToken(), nil, &api.HTTPRequest{}, refreshToken)
 		if err != nil {
+			if errors.ApiRateLimitExceeded.Is(err) {
+				return false, nil, err
+			}
 			return false, nil, errors.FailedToRefreshTokenError
 		}
 		info, err := auth.generateAuthenticationInfoWithRefreshToken(httpResponse, tToken, w)

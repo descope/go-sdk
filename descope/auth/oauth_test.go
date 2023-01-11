@@ -67,7 +67,7 @@ func TestOAuthStartForwardResponseStepupNoJWT(t *testing.T) {
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
 	_, err = a.OAuth().Start(provider, landingURL, nil, &LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, w)
-	assert.ErrorIs(t, err, errors.InvalidStepupJwtError)
+	assert.True(t, errors.InvalidStepupJwtError.Is(err))
 }
 
 func TestOAuthStartInvalidForwardResponse(t *testing.T) {

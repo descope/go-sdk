@@ -30,7 +30,7 @@ func TestSignInEnchantedLinkStepupNoJwt(t *testing.T) {
 	require.NoError(t, err)
 	_, err = a.EnchantedLink().SignIn(email, "", nil, &LoginOptions{Stepup: true})
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.InvalidStepupJwtError)
+	assert.True(t, errors.InvalidStepupJwtError.Is(err))
 }
 
 func TestSignInEnchantedLink(t *testing.T) {

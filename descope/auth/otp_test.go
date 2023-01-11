@@ -175,7 +175,7 @@ func TestInvalidSignInStepupNoJWT(t *testing.T) {
 	require.NoError(t, err)
 	err = a.OTP().SignIn(MethodSMS, phone, nil, &LoginOptions{Stepup: true})
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.InvalidStepupJwtError)
+	assert.True(t, errors.InvalidStepupJwtError.Is(err))
 }
 
 func TestEmptyEmailVerifyCodeEmail(t *testing.T) {
@@ -390,7 +390,7 @@ func TestUpdateEmailOTPFailures(t *testing.T) {
 	r.AddCookie(&http.Cookie{Name: "somename", Value: jwtTokenValid})
 	err = a.OTP().UpdateUserEmail("id", "test@test.com", r)
 	assert.Error(t, err)
-	assert.ErrorIs(t, err, errors.RefreshTokenError)
+	assert.True(t, errors.RefreshTokenError.Is(err))
 }
 
 func TestUpdatePhoneOTP(t *testing.T) {
@@ -435,5 +435,5 @@ func TestUpdatePhoneOTPFailures(t *testing.T) {
 	r.AddCookie(&http.Cookie{Name: "somename", Value: jwtTokenValid})
 	err = a.OTP().UpdateUserPhone(MethodSMS, "id", "+11111111111", r)
 	assert.Error(t, err)
-	assert.ErrorIs(t, err, errors.RefreshTokenError)
+	assert.True(t, errors.RefreshTokenError.Is(err))
 }
