@@ -873,3 +873,16 @@ func TestMeNoToken(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, user)
 }
+
+func TestValidationErrorIsFunction(t *testing.T) {
+	err := errors.ApiRateLimitExceeded
+	require.False(t, errors.FailedToRefreshTokenError.Is(err))
+	fErr := errors.FailedToRefreshTokenError
+	require.True(t, errors.FailedToRefreshTokenError.Is(fErr))
+}
+
+func TestErrorStringIncludeDescriptionWhenExist(t *testing.T) {
+	err := errors.ApiRateLimitExceeded
+	err.Description = "API rate limit"
+	require.Equal(t, "[E130429] API rate limit, API rate limit exceeded", err.Error())
+}
