@@ -366,7 +366,7 @@ func TestValidateSessionRequestFailRefreshSessionApiRateLimitError(t *testing.T)
 	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenExpired})
 	ok, cookies, err := a.ValidateSession(request, nil)
 	require.Error(t, err)
-	require.True(t, errors.ApiRateLimitExceeded.Is(err))
+	require.True(t, errors.APIRateLimitExceeded.Is(err))
 	require.False(t, ok)
 	require.Empty(t, cookies)
 }
@@ -765,7 +765,7 @@ func TestExchangeAccessKeyRateLimitError(t *testing.T) {
 	require.NoError(t, err)
 
 	ok, token, err := a.ExchangeAccessKey("foo")
-	require.True(t, errors.ApiRateLimitExceeded.Is(err))
+	require.True(t, errors.APIRateLimitExceeded.Is(err))
 	require.False(t, ok)
 	require.Nil(t, token)
 }
@@ -875,14 +875,14 @@ func TestMeNoToken(t *testing.T) {
 }
 
 func TestValidationErrorIsFunction(t *testing.T) {
-	err := errors.ApiRateLimitExceeded
+	err := errors.APIRateLimitExceeded
 	require.False(t, errors.FailedToRefreshTokenError.Is(err))
 	fErr := errors.FailedToRefreshTokenError
 	require.True(t, errors.FailedToRefreshTokenError.Is(fErr))
 }
 
 func TestErrorStringIncludeDescriptionWhenExist(t *testing.T) {
-	err := errors.ApiRateLimitExceeded
+	err := errors.APIRateLimitExceeded
 	err.Description = "API rate limit"
 	require.Equal(t, "[E130429] API rate limit, API rate limit exceeded", err.Error())
 }
