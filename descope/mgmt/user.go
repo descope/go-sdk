@@ -82,7 +82,7 @@ func makeCreateUpdateUserRequest(loginID, email, phone, displayName string, role
 	return map[string]any{
 		"loginId":     loginID,
 		"email":       email,
-		"phoneNumber": phone,
+		"phone":       phone,
 		"displayName": displayName,
 		"roleNames":   roles,
 		"userTenants": makeAssociatedTenantList(tenants),
