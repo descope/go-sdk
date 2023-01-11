@@ -62,7 +62,7 @@ func (auth *enchantedLink) GetSession(pendingRef string, w http.ResponseWriter) 
 	var err error
 	httpResponse, err := auth.client.DoPostRequest(composeGetSession(), newAuthenticationGetMagicLinkSessionBody(pendingRef), nil, "")
 	if err != nil {
-		if err == errors.UnauthorizedError {
+		if errors.UnauthorizedError.Is(err) {
 			return nil, errors.EnchantedLinkUnauthorized
 		}
 		return nil, err

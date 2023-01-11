@@ -147,7 +147,7 @@ for i := retriesCount; i > 0; i-- {
         // Otherwise they're available via authInfo
         break
     }
-    if err == errors.EnchantedLinkUnauthorized && i > 1 {
+    if errors.EnchantedLinkUnauthorized.Is(err) && i > 1 {
         // poll again after X seconds
         time.Sleep(time.Second * time.Duration(retryInterval))
         continue
@@ -692,7 +692,7 @@ ok, info, err := api.Auth.ValidateSession(nil, nil)
 assert.False(t, ok)
 assert.NotEmpty(t, info)
 assert.EqualValues(t, validateSessionResponse, info.JWT)
-assert.ErrorIs(t, err, errors.NoPublicKeyError)
+assert.True(t, err, errors.NoPublicKeyError.Is(err))
 
 res, err := api.Management.JWT().UpdateJWTWithCustomClaims("some jwt", nil)
 require.NoError(t, err)
