@@ -119,11 +119,11 @@ type User interface {
 	UpdateDisplayName(loginID, displayName string) (*auth.UserResponse, error)
 
 	// Add roles for a user without tenant association. Use AddTenantRoles for users
-	// that are part of a multitenant project.
+	// that are part of a multi-tenant project.
 	AddRoles(loginID string, roles []string) (*auth.UserResponse, error)
 
 	// Remove roles from a user without tenant association. Use RemoveTenantRoles for
-	// users that are part of a multitenant project.
+	// users that are part of a multi-tenant project.
 	RemoveRoles(loginID string, roles []string) (*auth.UserResponse, error)
 
 	// Add a tenant association for an existing user.
