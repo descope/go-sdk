@@ -21,12 +21,15 @@ func TestMockManagement(t *testing.T) {
 					called = true
 					assert.EqualValues(t, expectedLoginID, loginID)
 				},
-				LoadResponse: &auth.UserResponse{UserID: expectedLoginID},
+				CreateResponse: &auth.UserResponse{UserID: expectedLoginID},
+				LoadResponse:   &auth.UserResponse{UserID: expectedLoginID},
 			},
 		},
 	}
 	assert.NotNil(t, descopeClient.Management)
-	require.NoError(t, descopeClient.Management.User().Create(expectedLoginID, "", "", "", nil, nil))
+	r, err := descopeClient.Management.User().Create(expectedLoginID, "", "", "", nil, nil)
+	require.NoError(t, err)
+	assert.EqualValues(t, expectedLoginID, r.UserID)
 	assert.True(t, called)
 
 	u, err := descopeClient.Management.User().Load(expectedLoginID)

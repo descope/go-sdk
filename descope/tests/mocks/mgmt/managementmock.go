@@ -100,11 +100,13 @@ func (m *MockSSO) ConfigureMapping(tenantID string, roleMappings []*mgmt.RoleMap
 // Mock User
 
 type MockUser struct {
-	CreateAssert func(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant)
-	CreateError  error
+	CreateAssert   func(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant)
+	CreateResponse *auth.UserResponse
+	CreateError    error
 
-	UpdateAssert func(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant)
-	UpdateError  error
+	UpdateAssert   func(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant)
+	UpdateResponse *auth.UserResponse
+	UpdateError    error
 
 	DeleteAssert func(loginID string)
 	DeleteError  error
@@ -118,18 +120,18 @@ type MockUser struct {
 	SearchAllError    error
 }
 
-func (m *MockUser) Create(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant) error {
+func (m *MockUser) Create(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant) (*auth.UserResponse, error) {
 	if m.CreateAssert != nil {
 		m.CreateAssert(loginID, email, phone, displayName, roles, tenants)
 	}
-	return m.CreateError
+	return m.CreateResponse, m.CreateError
 }
 
-func (m *MockUser) Update(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant) error {
+func (m *MockUser) Update(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant) (*auth.UserResponse, error) {
 	if m.UpdateAssert != nil {
 		m.UpdateAssert(loginID, email, phone, displayName, roles, tenants)
 	}
-	return m.UpdateError
+	return m.UpdateResponse, m.UpdateError
 }
 
 func (m *MockUser) Delete(loginID string) error {

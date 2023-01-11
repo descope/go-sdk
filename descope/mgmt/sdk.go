@@ -55,7 +55,7 @@ type User interface {
 	// aren't associated with a tenant, while the tenants parameter can be used
 	// to specify which tenants to associate the user with and what roles the
 	// user has in each one.
-	Create(loginID, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) error
+	Create(loginID, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) (*auth.UserResponse, error)
 
 	// Update an existing user.
 	//
@@ -63,7 +63,7 @@ type User interface {
 	//
 	// IMPORTANT: All parameters will override whatever values are currently set
 	// in the existing user. Use carefully.
-	Update(loginID, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) error
+	Update(loginID, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) (*auth.UserResponse, error)
 
 	// Delete an existing user.
 	//

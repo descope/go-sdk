@@ -9,7 +9,11 @@ import (
 )
 
 func TestUserCreateSuccess(t *testing.T) {
-	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+	response := map[string]any{
+		"user": map[string]any{
+			"email": "a@b.c",
+		}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
@@ -18,19 +22,25 @@ func TestUserCreateSuccess(t *testing.T) {
 		roleNames := req["roleNames"].([]any)
 		require.Len(t, roleNames, 1)
 		require.Equal(t, "foo", roleNames[0])
-	}))
-	err := mgmt.User().Create("abc", "foo@bar.com", "", "", []string{"foo"}, nil)
+	}, response))
+	res, err := mgmt.User().Create("abc", "foo@bar.com", "", "", []string{"foo"}, nil)
 	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, "a@b.c", res.Email)
 }
 
 func TestUserCreateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.User().Create("", "foo@bar.com", "", "", nil, nil)
+	_, err := mgmt.User().Create("", "foo@bar.com", "", "", nil, nil)
 	require.Error(t, err)
 }
 
 func TestUserUpdateSuccess(t *testing.T) {
-	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+	response := map[string]any{
+		"user": map[string]any{
+			"email": "a@b.c",
+		}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
@@ -50,14 +60,16 @@ func TestUserUpdateSuccess(t *testing.T) {
 				require.Equal(t, "bar", roleNames[0])
 			}
 		}
-	}))
-	err := mgmt.User().Update("abc", "foo@bar.com", "", "", nil, []*AssociatedTenant{{TenantID: "x", Roles: []string{"foo"}}, {TenantID: "y", Roles: []string{"bar"}}})
+	}, response))
+	res, err := mgmt.User().Update("abc", "foo@bar.com", "", "", nil, []*AssociatedTenant{{TenantID: "x", Roles: []string{"foo"}}, {TenantID: "y", Roles: []string{"bar"}}})
 	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, "a@b.c", res.Email)
 }
 
 func TestUserUpdateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.User().Update("", "foo@bar.com", "", "", nil, nil)
+	_, err := mgmt.User().Update("", "foo@bar.com", "", "", nil, nil)
 	require.Error(t, err)
 }
 

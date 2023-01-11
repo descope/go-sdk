@@ -11,22 +11,28 @@ type user struct {
 	managementBase
 }
 
-func (u *user) Create(loginID, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) error {
+func (u *user) Create(loginID, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) (*auth.UserResponse, error) {
 	if loginID == "" {
-		return errors.NewInvalidArgumentError("loginID")
+		return nil, errors.NewInvalidArgumentError("loginID")
 	}
 	req := makeCreateUpdateUserRequest(loginID, email, phone, displayName, roles, tenants)
-	_, err := u.client.DoPostRequest(api.Routes.ManagementUserCreate(), req, nil, u.conf.ManagementKey)
-	return err
+	res, err := u.client.DoPostRequest(api.Routes.ManagementUserCreate(), req, nil, u.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalUserResponse(res)
 }
 
-func (u *user) Update(loginID, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) error {
+func (u *user) Update(loginID, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) (*auth.UserResponse, error) {
 	if loginID == "" {
-		return errors.NewInvalidArgumentError("loginID")
+		return nil, errors.NewInvalidArgumentError("loginID")
 	}
 	req := makeCreateUpdateUserRequest(loginID, email, phone, displayName, roles, tenants)
-	_, err := u.client.DoPostRequest(api.Routes.ManagementUserUpdate(), req, nil, u.conf.ManagementKey)
-	return err
+	res, err := u.client.DoPostRequest(api.Routes.ManagementUserUpdate(), req, nil, u.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalUserResponse(res)
 }
 
 func (u *user) Delete(loginID string) error {
