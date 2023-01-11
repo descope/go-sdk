@@ -74,6 +74,14 @@ var (
 			userDelete:                  "mgmt/user/delete",
 			userLoad:                    "mgmt/user",
 			userSearchAll:               "mgmt/user/search",
+			userUpdateStatus:            "mgmt/user/update/status",
+			userUpdateEmail:             "mgmt/user/update/email",
+			userUpdatePhone:             "mgmt/user/update/phone",
+			userUpdateName:              "mgmt/user/update/name",
+			userAddTenant:               "mgmt/user/update/tenant/add",
+			userRemoveTenant:            "mgmt/user/update/tenant/remove",
+			userAddRole:                 "mgmt/user/update/role/add",
+			userRemoveRole:              "mgmt/user/update/role/remove",
 			accessKeyCreate:             "mgmt/accesskey/create",
 			accessKeyLoad:               "mgmt/accesskey",
 			accessKeySearchAll:          "mgmt/accesskey/search",
@@ -159,11 +167,19 @@ type mgmtEndpoints struct {
 	tenantDelete  string
 	tenantLoadAll string
 
-	userCreate    string
-	userUpdate    string
-	userDelete    string
-	userLoad      string
-	userSearchAll string
+	userCreate       string
+	userUpdate       string
+	userDelete       string
+	userLoad         string
+	userSearchAll    string
+	userUpdateStatus string
+	userUpdateEmail  string
+	userUpdatePhone  string
+	userUpdateName   string
+	userAddTenant    string
+	userRemoveTenant string
+	userAddRole      string
+	userRemoveRole   string
 
 	accessKeyCreate     string
 	accessKeyLoad       string
@@ -348,6 +364,38 @@ func (e *endpoints) ManagementUserLoad() string {
 
 func (e *endpoints) ManagementUserSearchAll() string {
 	return path.Join(e.version, e.mgmt.userSearchAll)
+}
+
+func (e *endpoints) ManagementUserUpdateStatus() string {
+	return path.Join(e.version, e.mgmt.userUpdateStatus)
+}
+
+func (e *endpoints) ManagementUserUpdateEmail() string {
+	return path.Join(e.version, e.mgmt.userUpdateEmail)
+}
+
+func (e *endpoints) ManagementUserUpdatePhone() string {
+	return path.Join(e.version, e.mgmt.userUpdatePhone)
+}
+
+func (e *endpoints) ManagementUserUpdateDisplayName() string {
+	return path.Join(e.version, e.mgmt.userUpdateName)
+}
+
+func (e *endpoints) ManagementUserAddTenant() string {
+	return path.Join(e.version, e.mgmt.userAddTenant)
+}
+
+func (e *endpoints) ManagementUserRemoveTenant() string {
+	return path.Join(e.version, e.mgmt.userRemoveTenant)
+}
+
+func (e *endpoints) ManagementUserAddRole() string {
+	return path.Join(e.version, e.mgmt.userAddRole)
+}
+
+func (e *endpoints) ManagementUserRemoveRole() string {
+	return path.Join(e.version, e.mgmt.userRemoveRole)
 }
 
 func (e *endpoints) ManagementAccessKeyCreate() string {

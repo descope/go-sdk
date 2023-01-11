@@ -55,7 +55,7 @@ type User interface {
 	// aren't associated with a tenant, while the tenants parameter can be used
 	// to specify which tenants to associate the user with and what roles the
 	// user has in each one.
-	Create(loginID, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) error
+	Create(loginID, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) (*auth.UserResponse, error)
 
 	// Update an existing user.
 	//
@@ -63,7 +63,7 @@ type User interface {
 	//
 	// IMPORTANT: All parameters will override whatever values are currently set
 	// in the existing user. Use carefully.
-	Update(loginID, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) error
+	Update(loginID, email, phone, displayName string, roles []string, tenants []*AssociatedTenant) (*auth.UserResponse, error)
 
 	// Delete an existing user.
 	//
@@ -90,6 +90,53 @@ type User interface {
 	// The limit parameter limits the number of returned users. Leave at 0 to return the
 	// default amount.
 	SearchAll(tenantIDs, roles []string, limit int32) ([]*auth.UserResponse, error)
+
+	// Activate an existing user.
+	Activate(loginID string) (*auth.UserResponse, error)
+
+	// Deactivate an existing user.
+	Deactivate(loginID string) (*auth.UserResponse, error)
+
+	// Update the email address for an existing user.
+	//
+	// The email parameter can be empty in which case the email will be removed.
+	//
+	// The isVerified flag must be true for the user to be able to login with
+	// the email address.
+	UpdateEmail(loginID, email string, isVerified bool) (*auth.UserResponse, error)
+
+	// Update the phone number for an existing user.
+	//
+	// The phone parameter can be empty in which case the phone will be removed.
+	//
+	// The isVerified flag must be true for the user to be able to login with
+	// the phone number.
+	UpdatePhone(loginID, phone string, isVerified bool) (*auth.UserResponse, error)
+
+	// Update an existing user's display name (i.e., their full name).
+	//
+	// The displayName parameter can be empty in which case the name will be removed.
+	UpdateDisplayName(loginID, displayName string) (*auth.UserResponse, error)
+
+	// Add roles for a user without tenant association. Use AddTenantRoles for users
+	// that are part of a multi-tenant project.
+	AddRoles(loginID string, roles []string) (*auth.UserResponse, error)
+
+	// Remove roles from a user without tenant association. Use RemoveTenantRoles for
+	// users that are part of a multi-tenant project.
+	RemoveRoles(loginID string, roles []string) (*auth.UserResponse, error)
+
+	// Add a tenant association for an existing user.
+	AddTenant(loginID string, tenantID string) (*auth.UserResponse, error)
+
+	// Remove a tenant association from an existing user.
+	RemoveTenant(loginID string, tenantID string) (*auth.UserResponse, error)
+
+	// Add roles for a user in a specific tenant.
+	AddTenantRoles(loginID string, tenantID string, roles []string) (*auth.UserResponse, error)
+
+	// Remove roles from a user in a specific tenant.
+	RemoveTenantRoles(loginID string, tenantID string, roles []string) (*auth.UserResponse, error)
 }
 
 // Provides functions for managing access keys in a project.

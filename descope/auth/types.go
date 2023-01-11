@@ -193,6 +193,7 @@ type UserResponse struct {
 	VerifiedPhone bool                `json:"verifiedPhone,omitempty"`
 	RoleNames     []string            `json:"roleNames,omitempty"`
 	UserTenants   []*AssociatedTenant `json:"userTenants,omitempty"`
+	Status        string              `json:"status,omitempty"`
 	Picture       string              `json:"picture,omitempty"`
 }
 
