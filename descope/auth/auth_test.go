@@ -358,7 +358,15 @@ func TestValidateSessionRequestFailRefreshSession(t *testing.T) {
 
 func TestValidateSessionRequestFailRefreshSessionApiRateLimitError(t *testing.T) {
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
-		return &http.Response{StatusCode: http.StatusTooManyRequests, Body: io.NopCloser(bytes.NewBufferString(mockAuthAPIRateLimitErrorResponseBody))}, nil
+		resp := &http.Response{StatusCode: http.StatusTooManyRequests,
+			Body:   io.NopCloser(bytes.NewBufferString(mockAuthAPIRateLimitErrorResponseBody)),
+			Header: http.Header{},
+		}
+		resp.Header.Add("X-Ratelimit-Used", "90")
+		resp.Header.Add("X-Ratelimit-Remaining", "10")
+		resp.Header.Add("X-Ratelimit-Limit", "100")
+		resp.Header.Add("X-Ratelimit-Reset", "1673556497")
+		return resp, nil
 	})
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
@@ -366,9 +374,15 @@ func TestValidateSessionRequestFailRefreshSessionApiRateLimitError(t *testing.T)
 	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenExpired})
 	ok, cookies, err := a.ValidateSession(request, nil)
 	require.Error(t, err)
-	require.True(t, errors.APIRateLimitExceeded.Is(err))
 	require.False(t, ok)
 	require.Empty(t, cookies)
+	require.True(t, errors.APIRateLimitExceeded.Is(err))
+	aErr, ok := err.(*errors.APIRateLimitError)
+	require.True(t, ok)
+	assert.Equal(t, "90", aErr.RateLimitParameters["X-Ratelimit-Used"])
+	assert.Equal(t, "10", aErr.RateLimitParameters["X-Ratelimit-Remaining"])
+	assert.Equal(t, "100", aErr.RateLimitParameters["X-Ratelimit-Limit"])
+	assert.Equal(t, "1673556497", aErr.RateLimitParameters["X-Ratelimit-Reset"])
 }
 
 func TestValidateSessionRequestNoCookie(t *testing.T) {
@@ -883,6 +897,16 @@ func TestValidationErrorIsFunction(t *testing.T) {
 
 func TestErrorStringIncludeDescriptionWhenExist(t *testing.T) {
 	err := errors.APIRateLimitExceeded
-	err.Description = "API rate limit"
-	require.Equal(t, "[E130429] API rate limit, API rate limit exceeded", err.Error())
+	err.Message = "API rate limit exceeded"
+	err.RateLimitParameters = map[string]string{
+		"X-Ratelimit-Used":      "90",
+		"X-Ratelimit-Remaining": "10",
+		"X-Ratelimit-Limit":     "100",
+		"X-Ratelimit-Reset":     "1673556497",
+	}
+	assert.Contains(t, err.Error(), "[E130429] description: API rate limit exceeded, message: API rate limit exceeded")
+	assert.Contains(t, err.Error(), "X-Ratelimit-Used: 90")
+	assert.Contains(t, err.Error(), "X-Ratelimit-Remaining: 10")
+	assert.Contains(t, err.Error(), "X-Ratelimit-Limit: 100")
+	assert.Contains(t, err.Error(), "X-Ratelimit-Reset: 1673556497")
 }

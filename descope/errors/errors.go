@@ -19,7 +19,7 @@ var (
 	MissingRequestError        = NewValidationError("nil request provided")
 	MissingResponseWriterError = NewValidationError("nil response writer provided")
 	InvalidStepupJwtError      = NewValidationError("refresh JWT must be provided for stepup actions")
-	APIRateLimitExceeded       = NewError(APIRateLimitExceededErrorCode, "API rate limit exceeded")
+	APIRateLimitExceeded       = NewAPIRateLimitError(APIRateLimitExceededErrorCode, "API rate limit exceeded")
 )
 
 type WebError struct {
@@ -100,4 +100,44 @@ func (e *ValidationError) Is(err error) bool {
 
 func NewValidationError(message string, args ...interface{}) *ValidationError {
 	return &ValidationError{Message: fmt.Sprintf(message, args...)}
+}
+
+type APIRateLimitError struct {
+	Code                string            `json:"errorCode,omitempty"`
+	Description         string            `json:"errorDescription,omitempty"`
+	Message             string            `json:"message,omitempty"`
+	RateLimitParameters map[string]string `json:"rateLimitParameters,omitempty"`
+}
+
+func (e *APIRateLimitError) Error() string {
+	errStr := fmt.Sprintf("[%s] description: %s, message: %s rateLimitParameters:", e.Code, e.Description, e.Message)
+	for key, val := range e.RateLimitParameters {
+		errStr += fmt.Sprintf(" %s: %s", key, val)
+	}
+	return errStr
+}
+
+func (e *APIRateLimitError) Is(err error) bool {
+	if wErr, ok := err.(*APIRateLimitError); ok {
+		if wErr.Code == e.Code {
+			return true
+		}
+	}
+	return false
+}
+
+func NewAPIRateLimitError(code, description string) *APIRateLimitError {
+	return &APIRateLimitError{
+		Code:        code,
+		Description: description,
+	}
+}
+
+func NewAPIRateLimitErrorFromResponse(code, description string, message string, rateLimitHeaders map[string]string) *APIRateLimitError {
+	return &APIRateLimitError{
+		Code:                code,
+		Description:         description,
+		Message:             message,
+		RateLimitParameters: rateLimitHeaders,
+	}
 }

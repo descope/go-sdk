@@ -662,6 +662,16 @@ func (c *Client) parseResponseError(response *http.Response) error {
 		logger.LogError("failed to load error from response", err)
 		return errors.NewValidationError(string(body))
 	}
+
+	if response.StatusCode == http.StatusTooManyRequests {
+		rateLimitHeaders := map[string]string{}
+		rateLimitHeaders["X-Ratelimit-Used"] = response.Header.Get("X-Ratelimit-Used")
+		rateLimitHeaders["X-Ratelimit-Remaining"] = response.Header.Get("X-Ratelimit-Remaining")
+		rateLimitHeaders["X-Ratelimit-Limit"] = response.Header.Get("X-Ratelimit-Limit")
+		rateLimitHeaders["X-Ratelimit-Reset"] = response.Header.Get("X-Ratelimit-Reset")
+		return errors.NewAPIRateLimitErrorFromResponse(responseErr.Code, responseErr.Description, responseErr.Message, rateLimitHeaders)
+	}
+
 	return responseErr
 }
 
