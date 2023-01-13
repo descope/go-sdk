@@ -48,7 +48,8 @@ func userCreate(args []string) error {
 	for _, tenantID := range flags.Tenants {
 		tenants = append(tenants, &mgmt.AssociatedTenant{TenantID: tenantID})
 	}
-	return descopeClient.Management.User().Create(args[0], flags.Email, flags.Phone, flags.Name, nil, tenants)
+	_, err := descopeClient.Management.User().Create(args[0], flags.Email, flags.Phone, flags.Name, nil, tenants)
+	return err
 }
 
 func userUpdate(args []string) error {
@@ -56,7 +57,8 @@ func userUpdate(args []string) error {
 	for _, tenantID := range flags.Tenants {
 		tenants = append(tenants, &mgmt.AssociatedTenant{TenantID: tenantID})
 	}
-	return descopeClient.Management.User().Update(args[0], flags.Email, flags.Phone, flags.Name, nil, tenants)
+	_, err := descopeClient.Management.User().Update(args[0], flags.Email, flags.Phone, flags.Name, nil, tenants)
+	return err
 }
 
 func userDelete(args []string) error {
