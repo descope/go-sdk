@@ -100,11 +100,13 @@ func (m *MockSSO) ConfigureMapping(tenantID string, roleMappings []*mgmt.RoleMap
 // Mock User
 
 type MockUser struct {
-	CreateAssert func(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant)
-	CreateError  error
+	CreateAssert   func(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant)
+	CreateResponse *auth.UserResponse
+	CreateError    error
 
-	UpdateAssert func(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant)
-	UpdateError  error
+	UpdateAssert   func(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant)
+	UpdateResponse *auth.UserResponse
+	UpdateError    error
 
 	DeleteAssert func(loginID string)
 	DeleteError  error
@@ -116,20 +118,64 @@ type MockUser struct {
 	SearchAllAssert   func(tenantIDs, roles []string, limit int32)
 	SearchAllResponse []*auth.UserResponse
 	SearchAllError    error
+
+	ActivateAssert   func(loginID string)
+	ActivateResponse *auth.UserResponse
+	ActivateError    error
+
+	DeactivateAssert   func(loginID string)
+	DeactivateResponse *auth.UserResponse
+	DeactivateError    error
+
+	UpdateEmailAssert   func(loginID, email string, isVerified bool)
+	UpdateEmailResponse *auth.UserResponse
+	UpdateEmailError    error
+
+	UpdatePhoneAssert   func(loginID, phone string, isVerified bool)
+	UpdatePhoneResponse *auth.UserResponse
+	UpdatePhoneError    error
+
+	UpdateDisplayNameAssert   func(loginID, displayName string)
+	UpdateDisplayNameResponse *auth.UserResponse
+	UpdateDisplayNameError    error
+
+	AddRoleAssert   func(loginID string, roles []string)
+	AddRoleResponse *auth.UserResponse
+	AddRoleError    error
+
+	RemoveRoleAssert   func(loginID string, roles []string)
+	RemoveRoleResponse *auth.UserResponse
+	RemoveRoleError    error
+
+	AddTenantAssert   func(loginID, tenantID string)
+	AddTenantResponse *auth.UserResponse
+	AddTenantError    error
+
+	RemoveTenantAssert   func(loginID, tenantID string)
+	RemoveTenantResponse *auth.UserResponse
+	RemoveTenantError    error
+
+	AddTenantRoleAssert   func(loginID, tenantID string, roles []string)
+	AddTenantRoleResponse *auth.UserResponse
+	AddTenantRoleError    error
+
+	RemoveTenantRoleAssert   func(loginID, tenantID string, roles []string)
+	RemoveTenantRoleResponse *auth.UserResponse
+	RemoveTenantRoleError    error
 }
 
-func (m *MockUser) Create(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant) error {
+func (m *MockUser) Create(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant) (*auth.UserResponse, error) {
 	if m.CreateAssert != nil {
 		m.CreateAssert(loginID, email, phone, displayName, roles, tenants)
 	}
-	return m.CreateError
+	return m.CreateResponse, m.CreateError
 }
 
-func (m *MockUser) Update(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant) error {
+func (m *MockUser) Update(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant) (*auth.UserResponse, error) {
 	if m.UpdateAssert != nil {
 		m.UpdateAssert(loginID, email, phone, displayName, roles, tenants)
 	}
-	return m.UpdateError
+	return m.UpdateResponse, m.UpdateError
 }
 
 func (m *MockUser) Delete(loginID string) error {
@@ -158,6 +204,83 @@ func (m *MockUser) SearchAll(tenantIDs, roles []string, limit int32) ([]*auth.Us
 		m.SearchAllAssert(tenantIDs, roles, limit)
 	}
 	return m.SearchAllResponse, m.SearchAllError
+}
+
+func (m *MockUser) Activate(loginID string) (*auth.UserResponse, error) {
+	if m.ActivateAssert != nil {
+		m.ActivateAssert(loginID)
+	}
+	return m.ActivateResponse, m.ActivateError
+}
+
+func (m *MockUser) Deactivate(loginID string) (*auth.UserResponse, error) {
+	if m.DeactivateAssert != nil {
+		m.DeactivateAssert(loginID)
+	}
+	return m.DeactivateResponse, m.DeactivateError
+}
+
+func (m *MockUser) UpdateEmail(loginID, email string, isVerified bool) (*auth.UserResponse, error) {
+	if m.UpdateEmailAssert != nil {
+		m.UpdateEmailAssert(loginID, email, isVerified)
+	}
+	return m.UpdateEmailResponse, m.UpdateEmailError
+}
+
+func (m *MockUser) UpdatePhone(loginID, phone string, isVerified bool) (*auth.UserResponse, error) {
+	if m.UpdatePhoneAssert != nil {
+		m.UpdatePhoneAssert(loginID, phone, isVerified)
+	}
+	return m.UpdatePhoneResponse, m.UpdatePhoneError
+}
+
+func (m *MockUser) UpdateDisplayName(loginID, displayName string) (*auth.UserResponse, error) {
+	if m.UpdateDisplayNameAssert != nil {
+		m.UpdateDisplayNameAssert(loginID, displayName)
+	}
+	return m.UpdateDisplayNameResponse, m.UpdateDisplayNameError
+}
+
+func (m *MockUser) AddRoles(loginID string, roles []string) (*auth.UserResponse, error) {
+	if m.AddRoleAssert != nil {
+		m.AddRoleAssert(loginID, roles)
+	}
+	return m.AddRoleResponse, m.AddRoleError
+}
+
+func (m *MockUser) RemoveRoles(loginID string, roles []string) (*auth.UserResponse, error) {
+	if m.RemoveRoleAssert != nil {
+		m.RemoveRoleAssert(loginID, roles)
+	}
+	return m.RemoveRoleResponse, m.RemoveRoleError
+}
+
+func (m *MockUser) AddTenant(loginID string, tenantID string) (*auth.UserResponse, error) {
+	if m.AddTenantAssert != nil {
+		m.AddTenantAssert(loginID, tenantID)
+	}
+	return m.AddTenantResponse, m.AddTenantError
+}
+
+func (m *MockUser) RemoveTenant(loginID string, tenantID string) (*auth.UserResponse, error) {
+	if m.RemoveTenantAssert != nil {
+		m.RemoveTenantAssert(loginID, tenantID)
+	}
+	return m.RemoveTenantResponse, m.RemoveTenantError
+}
+
+func (m *MockUser) AddTenantRoles(loginID string, tenantID string, roles []string) (*auth.UserResponse, error) {
+	if m.AddTenantRoleAssert != nil {
+		m.AddTenantRoleAssert(loginID, tenantID, roles)
+	}
+	return m.AddTenantRoleResponse, m.AddTenantRoleError
+}
+
+func (m *MockUser) RemoveTenantRoles(loginID string, tenantID string, roles []string) (*auth.UserResponse, error) {
+	if m.RemoveTenantRoleAssert != nil {
+		m.RemoveTenantRoleAssert(loginID, tenantID, roles)
+	}
+	return m.RemoveTenantRoleResponse, m.RemoveTenantRoleError
 }
 
 // Mock Access Key

@@ -77,9 +77,11 @@ func main() {
 			tenants = append(tenants, &mgmt.AssociatedTenant{TenantID: curr.TenantID, Roles: curr.Roles})
 		}
 
-		err := descopeClient.Management.User().Create(user.LoginID, user.Email, user.Phone, user.DisplayName, user.Roles, tenants)
+		res, err := descopeClient.Management.User().Create(user.LoginID, user.Email, user.Phone, user.DisplayName, user.Roles, tenants)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Error adding user:", err)
+		} else {
+			fmt.Printf("Added user: %v\n", res)
 		}
 	}
 }
