@@ -65,5 +65,5 @@ func TestSAMLStartInvalidForwardResponse(t *testing.T) {
 	require.Error(t, err)
 
 	_, err = a.SAML().Start("test", "", nil, &LoginOptions{Stepup: true}, w)
-	assert.True(t, errors.InvalidStepupJwtError.Is(err))
+	assert.ErrorIs(t, err, errors.InvalidStepupJwtError)
 }

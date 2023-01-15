@@ -48,7 +48,7 @@ func TestSignInMagicLinkStepupNoJWT(t *testing.T) {
 	require.NoError(t, err)
 	err = a.MagicLink().SignIn(MethodEmail, email, "", nil, &LoginOptions{Stepup: true})
 	require.Error(t, err)
-	assert.True(t, errors.InvalidStepupJwtError.Is(err))
+	assert.ErrorIs(t, err, errors.InvalidStepupJwtError)
 }
 
 func TestSignInMagicLinkEmail(t *testing.T) {
@@ -426,5 +426,5 @@ func TestUpdatePhoneMagicLinkFailures(t *testing.T) {
 	r.AddCookie(&http.Cookie{Name: "somename", Value: jwtTokenValid})
 	err = a.MagicLink().UpdateUserPhone(MethodSMS, "id", "+111111111111", "", r)
 	assert.Error(t, err)
-	assert.True(t, errors.RefreshTokenError.Is(err))
+	assert.ErrorIs(t, err, errors.RefreshTokenError)
 }

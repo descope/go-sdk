@@ -7,6 +7,10 @@ const (
 	APIRateLimitExceededErrorCode = "E130429"
 )
 
+const (
+	APIRateLimitRetryAfterHeader = "Retry-After"
+)
+
 var (
 	NoPublicKeyError           = NewPublicKeyValidationError("no public key was found for this project")
 	FailedToRefreshTokenError  = NewValidationError("fail to refresh token")
@@ -46,7 +50,7 @@ func NewNoPublicKeyError() *PublicKeyValidationError {
 
 func (e *WebError) Error() string {
 	if e.Description != "" {
-		return fmt.Sprintf("[%s] %s, %s", e.Code, e.Description, e.Message)
+		return fmt.Sprintf("[%s] description: %s, message: %s", e.Code, e.Description, e.Message)
 	}
 	return fmt.Sprintf("[%s] %s", e.Code, e.Message)
 }
@@ -103,14 +107,12 @@ func NewValidationError(message string, args ...interface{}) *ValidationError {
 }
 
 type APIRateLimitError struct {
-	Code                string            `json:"errorCode,omitempty"`
-	Description         string            `json:"errorDescription,omitempty"`
-	Message             string            `json:"message,omitempty"`
+	*WebError
 	RateLimitParameters map[string]string `json:"rateLimitParameters,omitempty"`
 }
 
 func (e *APIRateLimitError) Error() string {
-	errStr := fmt.Sprintf("[%s] description: %s, message: %s rateLimitParameters:", e.Code, e.Description, e.Message)
+	errStr := e.WebError.Error()
 	for key, val := range e.RateLimitParameters {
 		errStr += fmt.Sprintf(" %s: %s", key, val)
 	}
@@ -128,16 +130,20 @@ func (e *APIRateLimitError) Is(err error) bool {
 
 func NewAPIRateLimitError(code, description string) *APIRateLimitError {
 	return &APIRateLimitError{
-		Code:        code,
-		Description: description,
+		WebError: &WebError{
+			Code:        code,
+			Description: description,
+		},
 	}
 }
 
 func NewAPIRateLimitErrorFromResponse(code, description string, message string, rateLimitHeaders map[string]string) *APIRateLimitError {
 	return &APIRateLimitError{
-		Code:                code,
-		Description:         description,
-		Message:             message,
+		WebError: &WebError{
+			Code:        code,
+			Description: description,
+			Message:     message,
+		},
 		RateLimitParameters: rateLimitHeaders,
 	}
 }

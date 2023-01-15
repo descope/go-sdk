@@ -351,7 +351,7 @@ func TestValidateSessionRequestFailRefreshSession(t *testing.T) {
 	request.AddCookie(&http.Cookie{Name: SessionCookieName, Value: jwtTokenExpired})
 	ok, cookies, err := a.ValidateSession(request, nil)
 	require.Error(t, err)
-	require.True(t, errors.FailedToRefreshTokenError.Is(err))
+	assert.ErrorIs(t, err, errors.FailedToRefreshTokenError)
 	require.False(t, ok)
 	require.Empty(t, cookies)
 }
@@ -362,10 +362,7 @@ func TestValidateSessionRequestFailRefreshSessionApiRateLimitError(t *testing.T)
 			Body:   io.NopCloser(bytes.NewBufferString(mockAuthAPIRateLimitErrorResponseBody)),
 			Header: http.Header{},
 		}
-		resp.Header.Add("X-Ratelimit-Used", "90")
-		resp.Header.Add("X-Ratelimit-Remaining", "10")
-		resp.Header.Add("X-Ratelimit-Limit", "100")
-		resp.Header.Add("X-Ratelimit-Reset", "1673556497")
+		resp.Header.Add(errors.APIRateLimitRetryAfterHeader, "10")
 		return resp, nil
 	})
 	require.NoError(t, err)
@@ -379,10 +376,7 @@ func TestValidateSessionRequestFailRefreshSessionApiRateLimitError(t *testing.T)
 	require.True(t, errors.APIRateLimitExceeded.Is(err))
 	aErr, ok := err.(*errors.APIRateLimitError)
 	require.True(t, ok)
-	assert.Equal(t, "90", aErr.RateLimitParameters["X-Ratelimit-Used"])
-	assert.Equal(t, "10", aErr.RateLimitParameters["X-Ratelimit-Remaining"])
-	assert.Equal(t, "100", aErr.RateLimitParameters["X-Ratelimit-Limit"])
-	assert.Equal(t, "1673556497", aErr.RateLimitParameters["X-Ratelimit-Reset"])
+	assert.Equal(t, "10", aErr.RateLimitParameters[errors.APIRateLimitRetryAfterHeader])
 }
 
 func TestValidateSessionRequestNoCookie(t *testing.T) {
@@ -606,7 +600,7 @@ func TestLogoutEmptyRequest(t *testing.T) {
 
 	err = a.Logout(nil, nil)
 	require.Error(t, err)
-	assert.True(t, errors.MissingRequestError.Is(err))
+	assert.ErrorIs(t, err, errors.MissingRequestError)
 }
 
 func TestLogoutAllEmptyRequest(t *testing.T) {
@@ -617,7 +611,7 @@ func TestLogoutAllEmptyRequest(t *testing.T) {
 
 	err = a.LogoutAll(nil, nil)
 	require.Error(t, err)
-	assert.True(t, errors.MissingRequestError.Is(err))
+	assert.ErrorIs(t, err, errors.MissingRequestError)
 }
 
 func TestLogoutMissingToken(t *testing.T) {
@@ -629,7 +623,7 @@ func TestLogoutMissingToken(t *testing.T) {
 	request := &http.Request{Header: http.Header{}}
 	err = a.Logout(request, nil)
 	require.Error(t, err)
-	assert.True(t, errors.RefreshTokenError.Is(err))
+	assert.ErrorIs(t, err, errors.RefreshTokenError)
 }
 
 func TestLogoutAllMissingToken(t *testing.T) {
@@ -641,7 +635,7 @@ func TestLogoutAllMissingToken(t *testing.T) {
 	request := &http.Request{Header: http.Header{}}
 	err = a.LogoutAll(request, nil)
 	require.Error(t, err)
-	assert.True(t, errors.RefreshTokenError.Is(err))
+	assert.ErrorIs(t, err, errors.RefreshTokenError)
 }
 
 func TestAuthenticationMiddlewareFailure(t *testing.T) {
@@ -767,7 +761,7 @@ func TestExchangeAccessKeyBadRequest(t *testing.T) {
 	require.NoError(t, err)
 
 	ok, token, err := a.ExchangeAccessKey("foo")
-	require.True(t, errors.UnauthorizedError.Is(err))
+	require.ErrorIs(t, err, errors.UnauthorizedError)
 	require.False(t, ok)
 	require.Nil(t, token)
 }
@@ -899,14 +893,7 @@ func TestErrorStringIncludeDescriptionWhenExist(t *testing.T) {
 	err := errors.APIRateLimitExceeded
 	err.Message = "API rate limit exceeded"
 	err.RateLimitParameters = map[string]string{
-		"X-Ratelimit-Used":      "90",
-		"X-Ratelimit-Remaining": "10",
-		"X-Ratelimit-Limit":     "100",
-		"X-Ratelimit-Reset":     "1673556497",
+		errors.APIRateLimitRetryAfterHeader: "10",
 	}
-	assert.Contains(t, err.Error(), "[E130429] description: API rate limit exceeded, message: API rate limit exceeded")
-	assert.Contains(t, err.Error(), "X-Ratelimit-Used: 90")
-	assert.Contains(t, err.Error(), "X-Ratelimit-Remaining: 10")
-	assert.Contains(t, err.Error(), "X-Ratelimit-Limit: 100")
-	assert.Contains(t, err.Error(), "X-Ratelimit-Reset: 1673556497")
+	assert.Contains(t, err.Error(), fmt.Sprintf("%s: 10", errors.APIRateLimitRetryAfterHeader))
 }

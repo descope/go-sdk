@@ -81,7 +81,8 @@ func TestDescopeSDKMock(t *testing.T) {
 	assert.False(t, ok)
 	assert.NotEmpty(t, info)
 	assert.EqualValues(t, validateSessionResponse, info.JWT)
-	assert.True(t, errors.NoPublicKeyError.Is(err))
+	assert.ErrorIs(t, err, errors.NoPublicKeyError)
+	assert.True(t, errors.NoPublicKeyError.Is(err)) //Test also the Is function for this type of error
 
 	res, err := api.Management.JWT().UpdateJWTWithCustomClaims("some jwt", nil)
 	require.NoError(t, err)

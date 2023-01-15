@@ -665,10 +665,7 @@ func (c *Client) parseResponseError(response *http.Response) error {
 
 	if response.StatusCode == http.StatusTooManyRequests {
 		rateLimitHeaders := map[string]string{}
-		rateLimitHeaders["X-Ratelimit-Used"] = response.Header.Get("X-Ratelimit-Used")
-		rateLimitHeaders["X-Ratelimit-Remaining"] = response.Header.Get("X-Ratelimit-Remaining")
-		rateLimitHeaders["X-Ratelimit-Limit"] = response.Header.Get("X-Ratelimit-Limit")
-		rateLimitHeaders["X-Ratelimit-Reset"] = response.Header.Get("X-Ratelimit-Reset")
+		rateLimitHeaders[errors.APIRateLimitRetryAfterHeader] = response.Header.Get(errors.APIRateLimitRetryAfterHeader) // value is in seconds
 		return errors.NewAPIRateLimitErrorFromResponse(responseErr.Code, responseErr.Description, responseErr.Message, rateLimitHeaders)
 	}
 
