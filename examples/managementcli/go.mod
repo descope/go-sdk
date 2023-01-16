@@ -1,6 +1,6 @@
 module github.com/descope/go-sdk/examples/managementcli
 
-go 1.19
+go 1.18
 
 replace github.com/descope/go-sdk => ../../
 
