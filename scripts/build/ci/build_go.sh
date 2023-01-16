@@ -20,3 +20,13 @@ echo 'Building gin web app example..'
 if [ $? -ne 0 ]; then
     exit 1
 fi
+echo 'Building importusers example..'
+(cd examples/importusers && go mod tidy && go mod vendor && go build)
+if [ $? -ne 0 ]; then
+    exit 1
+fi
+echo 'Building managementcli example..'
+(cd examples/managementcli && go mod tidy && go mod vendor && go build)
+if [ $? -ne 0 ]; then
+    exit 1
+fi
