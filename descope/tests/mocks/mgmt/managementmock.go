@@ -1,8 +1,8 @@
 package mocksmgmt
 
 import (
-	"github.com/descope/go-sdk/descope/auth"
-	"github.com/descope/go-sdk/descope/mgmt"
+	"github.com/descope/go-sdk/descope"
+	"github.com/descope/go-sdk/descope/sdk"
 )
 
 type MockManagement struct {
@@ -16,35 +16,35 @@ type MockManagement struct {
 	*MockGroup
 }
 
-func (m *MockManagement) JWT() mgmt.JWT {
+func (m *MockManagement) JWT() sdk.JWT {
 	return m.MockJWT
 }
 
-func (m *MockManagement) SSO() mgmt.SSO {
+func (m *MockManagement) SSO() sdk.SSO {
 	return m.MockSSO
 }
 
-func (m *MockManagement) User() mgmt.User {
+func (m *MockManagement) User() sdk.User {
 	return m.MockUser
 }
 
-func (m *MockManagement) AccessKey() mgmt.AccessKey {
+func (m *MockManagement) AccessKey() sdk.AccessKey {
 	return m.MockAccessKey
 }
 
-func (m *MockManagement) Tenant() mgmt.Tenant {
+func (m *MockManagement) Tenant() sdk.Tenant {
 	return m.MockTenant
 }
 
-func (m *MockManagement) Permission() mgmt.Permission {
+func (m *MockManagement) Permission() sdk.Permission {
 	return m.MockPermission
 }
 
-func (m *MockManagement) Role() mgmt.Role {
+func (m *MockManagement) Role() sdk.Role {
 	return m.MockRole
 }
 
-func (m *MockManagement) Group() mgmt.Group {
+func (m *MockManagement) Group() sdk.Group {
 	return m.MockGroup
 }
 
@@ -72,7 +72,7 @@ type MockSSO struct {
 	ConfigureMetadataAssert func(tenantID, idpMetadataURL string)
 	ConfigureMetadataError  error
 
-	ConfigureMappingAssert func(tenantID string, roleMappings []*mgmt.RoleMapping, attributeMapping *mgmt.AttributeMapping)
+	ConfigureMappingAssert func(tenantID string, roleMappings []*descope.RoleMapping, attributeMapping *descope.AttributeMapping)
 	ConfigureMappingError  error
 }
 
@@ -90,7 +90,7 @@ func (m *MockSSO) ConfigureMetadata(tenantID, idpMetadataURL string) error {
 	return m.ConfigureMetadataError
 }
 
-func (m *MockSSO) ConfigureMapping(tenantID string, roleMappings []*mgmt.RoleMapping, attributeMapping *mgmt.AttributeMapping) error {
+func (m *MockSSO) ConfigureMapping(tenantID string, roleMappings []*descope.RoleMapping, attributeMapping *descope.AttributeMapping) error {
 	if m.ConfigureMappingAssert != nil {
 		m.ConfigureMappingAssert(tenantID, roleMappings, attributeMapping)
 	}
@@ -100,78 +100,78 @@ func (m *MockSSO) ConfigureMapping(tenantID string, roleMappings []*mgmt.RoleMap
 // Mock User
 
 type MockUser struct {
-	CreateAssert   func(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant)
-	CreateResponse *auth.UserResponse
+	CreateAssert   func(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant)
+	CreateResponse *descope.UserResponse
 	CreateError    error
 
-	UpdateAssert   func(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant)
-	UpdateResponse *auth.UserResponse
+	UpdateAssert   func(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant)
+	UpdateResponse *descope.UserResponse
 	UpdateError    error
 
 	DeleteAssert func(loginID string)
 	DeleteError  error
 
 	LoadAssert   func(loginID string)
-	LoadResponse *auth.UserResponse
+	LoadResponse *descope.UserResponse
 	LoadError    error
 
 	SearchAllAssert   func(tenantIDs, roles []string, limit int32)
-	SearchAllResponse []*auth.UserResponse
+	SearchAllResponse []*descope.UserResponse
 	SearchAllError    error
 
 	ActivateAssert   func(loginID string)
-	ActivateResponse *auth.UserResponse
+	ActivateResponse *descope.UserResponse
 	ActivateError    error
 
 	DeactivateAssert   func(loginID string)
-	DeactivateResponse *auth.UserResponse
+	DeactivateResponse *descope.UserResponse
 	DeactivateError    error
 
 	UpdateEmailAssert   func(loginID, email string, isVerified bool)
-	UpdateEmailResponse *auth.UserResponse
+	UpdateEmailResponse *descope.UserResponse
 	UpdateEmailError    error
 
 	UpdatePhoneAssert   func(loginID, phone string, isVerified bool)
-	UpdatePhoneResponse *auth.UserResponse
+	UpdatePhoneResponse *descope.UserResponse
 	UpdatePhoneError    error
 
 	UpdateDisplayNameAssert   func(loginID, displayName string)
-	UpdateDisplayNameResponse *auth.UserResponse
+	UpdateDisplayNameResponse *descope.UserResponse
 	UpdateDisplayNameError    error
 
 	AddRoleAssert   func(loginID string, roles []string)
-	AddRoleResponse *auth.UserResponse
+	AddRoleResponse *descope.UserResponse
 	AddRoleError    error
 
 	RemoveRoleAssert   func(loginID string, roles []string)
-	RemoveRoleResponse *auth.UserResponse
+	RemoveRoleResponse *descope.UserResponse
 	RemoveRoleError    error
 
 	AddTenantAssert   func(loginID, tenantID string)
-	AddTenantResponse *auth.UserResponse
+	AddTenantResponse *descope.UserResponse
 	AddTenantError    error
 
 	RemoveTenantAssert   func(loginID, tenantID string)
-	RemoveTenantResponse *auth.UserResponse
+	RemoveTenantResponse *descope.UserResponse
 	RemoveTenantError    error
 
 	AddTenantRoleAssert   func(loginID, tenantID string, roles []string)
-	AddTenantRoleResponse *auth.UserResponse
+	AddTenantRoleResponse *descope.UserResponse
 	AddTenantRoleError    error
 
 	RemoveTenantRoleAssert   func(loginID, tenantID string, roles []string)
-	RemoveTenantRoleResponse *auth.UserResponse
+	RemoveTenantRoleResponse *descope.UserResponse
 	RemoveTenantRoleError    error
 }
 
-func (m *MockUser) Create(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant) (*auth.UserResponse, error) {
+func (m *MockUser) Create(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
 	if m.CreateAssert != nil {
 		m.CreateAssert(loginID, email, phone, displayName, roles, tenants)
 	}
 	return m.CreateResponse, m.CreateError
 }
 
-func (m *MockUser) Update(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant) (*auth.UserResponse, error) {
+func (m *MockUser) Update(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
 	if m.UpdateAssert != nil {
 		m.UpdateAssert(loginID, email, phone, displayName, roles, tenants)
 	}
@@ -185,98 +185,98 @@ func (m *MockUser) Delete(loginID string) error {
 	return m.DeleteError
 }
 
-func (m *MockUser) Load(loginID string) (*auth.UserResponse, error) {
+func (m *MockUser) Load(loginID string) (*descope.UserResponse, error) {
 	if m.LoadAssert != nil {
 		m.LoadAssert(loginID)
 	}
 	return m.LoadResponse, m.LoadError
 }
 
-func (m *MockUser) LoadByUserID(userID string) (*auth.UserResponse, error) {
+func (m *MockUser) LoadByUserID(userID string) (*descope.UserResponse, error) {
 	if m.LoadAssert != nil {
 		m.LoadAssert(userID)
 	}
 	return m.LoadResponse, m.LoadError
 }
 
-func (m *MockUser) SearchAll(tenantIDs, roles []string, limit int32) ([]*auth.UserResponse, error) {
+func (m *MockUser) SearchAll(tenantIDs, roles []string, limit int32) ([]*descope.UserResponse, error) {
 	if m.SearchAllAssert != nil {
 		m.SearchAllAssert(tenantIDs, roles, limit)
 	}
 	return m.SearchAllResponse, m.SearchAllError
 }
 
-func (m *MockUser) Activate(loginID string) (*auth.UserResponse, error) {
+func (m *MockUser) Activate(loginID string) (*descope.UserResponse, error) {
 	if m.ActivateAssert != nil {
 		m.ActivateAssert(loginID)
 	}
 	return m.ActivateResponse, m.ActivateError
 }
 
-func (m *MockUser) Deactivate(loginID string) (*auth.UserResponse, error) {
+func (m *MockUser) Deactivate(loginID string) (*descope.UserResponse, error) {
 	if m.DeactivateAssert != nil {
 		m.DeactivateAssert(loginID)
 	}
 	return m.DeactivateResponse, m.DeactivateError
 }
 
-func (m *MockUser) UpdateEmail(loginID, email string, isVerified bool) (*auth.UserResponse, error) {
+func (m *MockUser) UpdateEmail(loginID, email string, isVerified bool) (*descope.UserResponse, error) {
 	if m.UpdateEmailAssert != nil {
 		m.UpdateEmailAssert(loginID, email, isVerified)
 	}
 	return m.UpdateEmailResponse, m.UpdateEmailError
 }
 
-func (m *MockUser) UpdatePhone(loginID, phone string, isVerified bool) (*auth.UserResponse, error) {
+func (m *MockUser) UpdatePhone(loginID, phone string, isVerified bool) (*descope.UserResponse, error) {
 	if m.UpdatePhoneAssert != nil {
 		m.UpdatePhoneAssert(loginID, phone, isVerified)
 	}
 	return m.UpdatePhoneResponse, m.UpdatePhoneError
 }
 
-func (m *MockUser) UpdateDisplayName(loginID, displayName string) (*auth.UserResponse, error) {
+func (m *MockUser) UpdateDisplayName(loginID, displayName string) (*descope.UserResponse, error) {
 	if m.UpdateDisplayNameAssert != nil {
 		m.UpdateDisplayNameAssert(loginID, displayName)
 	}
 	return m.UpdateDisplayNameResponse, m.UpdateDisplayNameError
 }
 
-func (m *MockUser) AddRoles(loginID string, roles []string) (*auth.UserResponse, error) {
+func (m *MockUser) AddRoles(loginID string, roles []string) (*descope.UserResponse, error) {
 	if m.AddRoleAssert != nil {
 		m.AddRoleAssert(loginID, roles)
 	}
 	return m.AddRoleResponse, m.AddRoleError
 }
 
-func (m *MockUser) RemoveRoles(loginID string, roles []string) (*auth.UserResponse, error) {
+func (m *MockUser) RemoveRoles(loginID string, roles []string) (*descope.UserResponse, error) {
 	if m.RemoveRoleAssert != nil {
 		m.RemoveRoleAssert(loginID, roles)
 	}
 	return m.RemoveRoleResponse, m.RemoveRoleError
 }
 
-func (m *MockUser) AddTenant(loginID string, tenantID string) (*auth.UserResponse, error) {
+func (m *MockUser) AddTenant(loginID string, tenantID string) (*descope.UserResponse, error) {
 	if m.AddTenantAssert != nil {
 		m.AddTenantAssert(loginID, tenantID)
 	}
 	return m.AddTenantResponse, m.AddTenantError
 }
 
-func (m *MockUser) RemoveTenant(loginID string, tenantID string) (*auth.UserResponse, error) {
+func (m *MockUser) RemoveTenant(loginID string, tenantID string) (*descope.UserResponse, error) {
 	if m.RemoveTenantAssert != nil {
 		m.RemoveTenantAssert(loginID, tenantID)
 	}
 	return m.RemoveTenantResponse, m.RemoveTenantError
 }
 
-func (m *MockUser) AddTenantRoles(loginID string, tenantID string, roles []string) (*auth.UserResponse, error) {
+func (m *MockUser) AddTenantRoles(loginID string, tenantID string, roles []string) (*descope.UserResponse, error) {
 	if m.AddTenantRoleAssert != nil {
 		m.AddTenantRoleAssert(loginID, tenantID, roles)
 	}
 	return m.AddTenantRoleResponse, m.AddTenantRoleError
 }
 
-func (m *MockUser) RemoveTenantRoles(loginID string, tenantID string, roles []string) (*auth.UserResponse, error) {
+func (m *MockUser) RemoveTenantRoles(loginID string, tenantID string, roles []string) (*descope.UserResponse, error) {
 	if m.RemoveTenantRoleAssert != nil {
 		m.RemoveTenantRoleAssert(loginID, tenantID, roles)
 	}
@@ -286,20 +286,20 @@ func (m *MockUser) RemoveTenantRoles(loginID string, tenantID string, roles []st
 // Mock Access Key
 
 type MockAccessKey struct {
-	CreateAssert     func(name string, expireTime int64, roles []string, keyTenants []*mgmt.AssociatedTenant)
-	CreateResponseFn func() (string, *auth.AccessKeyResponse)
+	CreateAssert     func(name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant)
+	CreateResponseFn func() (string, *descope.AccessKeyResponse)
 	CreateError      error
 
 	LoadAssert   func(id string)
-	LoadResponse *auth.AccessKeyResponse
+	LoadResponse *descope.AccessKeyResponse
 	LoadError    error
 
 	SearchAllAssert   func(tenantIDs []string)
-	SearchAllResponse []*auth.AccessKeyResponse
+	SearchAllResponse []*descope.AccessKeyResponse
 	SearchAllError    error
 
 	UpdateAssert   func(id, name string)
-	UpdateResponse *auth.AccessKeyResponse
+	UpdateResponse *descope.AccessKeyResponse
 	UpdateError    error
 
 	DeactivateAssert func(id string)
@@ -312,33 +312,33 @@ type MockAccessKey struct {
 	DeleteError  error
 }
 
-func (m *MockAccessKey) Create(name string, expireTime int64, roles []string, keyTenants []*mgmt.AssociatedTenant) (string, *auth.AccessKeyResponse, error) {
+func (m *MockAccessKey) Create(name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant) (string, *descope.AccessKeyResponse, error) {
 	if m.CreateAssert != nil {
 		m.CreateAssert(name, expireTime, roles, keyTenants)
 	}
 	var cleartext string
-	var key *auth.AccessKeyResponse
+	var key *descope.AccessKeyResponse
 	if m.CreateResponseFn != nil {
 		cleartext, key = m.CreateResponseFn()
 	}
 	return cleartext, key, m.CreateError
 }
 
-func (m *MockAccessKey) Load(id string) (*auth.AccessKeyResponse, error) {
+func (m *MockAccessKey) Load(id string) (*descope.AccessKeyResponse, error) {
 	if m.LoadAssert != nil {
 		m.LoadAssert(id)
 	}
 	return m.LoadResponse, m.LoadError
 }
 
-func (m *MockAccessKey) SearchAll(tenantIDs []string) ([]*auth.AccessKeyResponse, error) {
+func (m *MockAccessKey) SearchAll(tenantIDs []string) ([]*descope.AccessKeyResponse, error) {
 	if m.SearchAllAssert != nil {
 		m.SearchAllAssert(tenantIDs)
 	}
 	return m.SearchAllResponse, m.SearchAllError
 }
 
-func (m *MockAccessKey) Update(id, name string) (*auth.AccessKeyResponse, error) {
+func (m *MockAccessKey) Update(id, name string) (*descope.AccessKeyResponse, error) {
 	if m.UpdateAssert != nil {
 		m.UpdateAssert(id, name)
 	}
@@ -382,7 +382,7 @@ type MockTenant struct {
 	DeleteAssert func(id string)
 	DeleteError  error
 
-	LoadAllResponse []*auth.Tenant
+	LoadAllResponse []*descope.Tenant
 	LoadAllError    error
 }
 
@@ -414,7 +414,7 @@ func (m *MockTenant) Delete(id string) error {
 	return m.DeleteError
 }
 
-func (m *MockTenant) LoadAll() ([]*auth.Tenant, error) {
+func (m *MockTenant) LoadAll() ([]*descope.Tenant, error) {
 	return m.LoadAllResponse, m.LoadAllError
 }
 
@@ -430,7 +430,7 @@ type MockPermission struct {
 	DeleteAssert func(name string)
 	DeleteError  error
 
-	LoadAllResponse []*auth.Permission
+	LoadAllResponse []*descope.Permission
 	LoadAllError    error
 }
 
@@ -455,7 +455,7 @@ func (m *MockPermission) Delete(name string) error {
 	return m.DeleteError
 }
 
-func (m *MockPermission) LoadAll() ([]*auth.Permission, error) {
+func (m *MockPermission) LoadAll() ([]*descope.Permission, error) {
 	return m.LoadAllResponse, m.LoadAllError
 }
 
@@ -471,7 +471,7 @@ type MockRole struct {
 	DeleteAssert func(name string)
 	DeleteError  error
 
-	LoadAllResponse []*auth.Role
+	LoadAllResponse []*descope.Role
 	LoadAllError    error
 }
 
@@ -496,7 +496,7 @@ func (m *MockRole) Delete(name string) error {
 	return m.DeleteError
 }
 
-func (m *MockRole) LoadAll() ([]*auth.Role, error) {
+func (m *MockRole) LoadAll() ([]*descope.Role, error) {
 	return m.LoadAllResponse, m.LoadAllError
 }
 
@@ -504,33 +504,33 @@ func (m *MockRole) LoadAll() ([]*auth.Role, error) {
 
 type MockGroup struct {
 	LoadAllGroupsAssert   func(tenantID string)
-	LoadAllGroupsResponse []*auth.Group
+	LoadAllGroupsResponse []*descope.Group
 	LoadAllGroupsError    error
 
 	LoadAllGroupsForMembersAssert   func(tenantID string, userIDs, loginIDs []string)
-	LoadAllGroupsForMembersResponse []*auth.Group
+	LoadAllGroupsForMembersResponse []*descope.Group
 	LoadAllGroupsForMembersError    error
 
 	LoadAllGroupMembersAssert   func(tenantID, groupID string)
-	LoadAllGroupMembersResponse []*auth.Group
+	LoadAllGroupMembersResponse []*descope.Group
 	LoadAllGroupMembersError    error
 }
 
-func (m *MockGroup) LoadAllGroups(tenantID string) ([]*auth.Group, error) {
+func (m *MockGroup) LoadAllGroups(tenantID string) ([]*descope.Group, error) {
 	if m.LoadAllGroupsAssert != nil {
 		m.LoadAllGroupsAssert(tenantID)
 	}
 	return m.LoadAllGroupsResponse, m.LoadAllGroupsError
 }
 
-func (m *MockGroup) LoadAllGroupsForMembers(tenantID string, userIDs, loginIDs []string) ([]*auth.Group, error) {
+func (m *MockGroup) LoadAllGroupsForMembers(tenantID string, userIDs, loginIDs []string) ([]*descope.Group, error) {
 	if m.LoadAllGroupsForMembersAssert != nil {
 		m.LoadAllGroupsForMembersAssert(tenantID, userIDs, loginIDs)
 	}
 	return m.LoadAllGroupsForMembersResponse, m.LoadAllGroupsForMembersError
 }
 
-func (m *MockGroup) LoadAllGroupMembers(tenantID, groupID string) ([]*auth.Group, error) {
+func (m *MockGroup) LoadAllGroupMembers(tenantID, groupID string) ([]*descope.Group, error) {
 	if m.LoadAllGroupMembersAssert != nil {
 		m.LoadAllGroupMembersAssert(tenantID, groupID)
 	}

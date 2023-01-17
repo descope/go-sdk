@@ -8,8 +8,7 @@ import (
 	"strings"
 
 	"github.com/descope/go-sdk/descope"
-	"github.com/descope/go-sdk/descope/mgmt"
-	"github.com/descope/go-sdk/descope/utils"
+	"github.com/descope/go-sdk/descope/client"
 	"github.com/spf13/cobra"
 )
 
@@ -28,34 +27,34 @@ var flags struct {
 
 // Descope SDK
 
-var descopeClient *descope.DescopeClient
+var descopeClient *client.DescopeClient
 
 func prepare() (err error) {
-	if utils.GetProjectIDEnvVariable() == "" {
+	if os.Getenv(descope.EnvironmentVariableProjectID) == "" {
 		// the projectID can be found in the Project section of the admin console: https://app.descope.com/settings/project
 		return errors.New("the DESCOPE_PROJECT_ID environment variable must be set")
 	}
-	if utils.GetManagementKeyEnvVariable() == "" {
+	if os.Getenv(descope.EnvironmentVariableManagementKey) == "" {
 		// generate a management key in the Company section of the admin console: https://app.descope.com/settings/company
 		return errors.New("the DESCOPE_MANAGEMENT_KEY environment variable must be set")
 	}
-	descopeClient, err = descope.NewDescopeClient()
+	descopeClient, err = client.NewDescopeClient()
 	return err
 }
 
 func userCreate(args []string) error {
-	tenants := []*mgmt.AssociatedTenant{}
+	tenants := []*descope.AssociatedTenant{}
 	for _, tenantID := range flags.Tenants {
-		tenants = append(tenants, &mgmt.AssociatedTenant{TenantID: tenantID})
+		tenants = append(tenants, &descope.AssociatedTenant{TenantID: tenantID})
 	}
 	_, err := descopeClient.Management.User().Create(args[0], flags.Email, flags.Phone, flags.Name, nil, tenants)
 	return err
 }
 
 func userUpdate(args []string) error {
-	tenants := []*mgmt.AssociatedTenant{}
+	tenants := []*descope.AssociatedTenant{}
 	for _, tenantID := range flags.Tenants {
-		tenants = append(tenants, &mgmt.AssociatedTenant{TenantID: tenantID})
+		tenants = append(tenants, &descope.AssociatedTenant{TenantID: tenantID})
 	}
 	_, err := descopeClient.Management.User().Update(args[0], flags.Email, flags.Phone, flags.Name, nil, tenants)
 	return err
@@ -84,9 +83,9 @@ func userSearchAll(args []string) error {
 }
 
 func accessKeyCreate(args []string) error {
-	tenants := []*mgmt.AssociatedTenant{}
+	tenants := []*descope.AssociatedTenant{}
 	for _, tenantID := range flags.Tenants {
-		tenants = append(tenants, &mgmt.AssociatedTenant{TenantID: tenantID})
+		tenants = append(tenants, &descope.AssociatedTenant{TenantID: tenantID})
 	}
 	expireTime, err := strconv.ParseInt(args[1], 10, 64)
 	if err != nil {

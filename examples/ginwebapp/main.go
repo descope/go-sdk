@@ -16,7 +16,7 @@ import (
 	"time"
 
 	"github.com/descope/go-sdk/descope"
-	"github.com/descope/go-sdk/descope/auth"
+	"github.com/descope/go-sdk/descope/client"
 	descopegin "github.com/descope/go-sdk/descope/gin"
 	"github.com/gin-gonic/gin"
 )
@@ -27,7 +27,7 @@ const (
 	port        = "8085"
 )
 
-var client *descope.DescopeClient
+var descopeClient *client.DescopeClient
 
 func main() {
 	log.Println("starting server on port " + port)
@@ -36,7 +36,7 @@ func main() {
 	var err error
 	// Leave projectId param empty to get it from DESCOPE_PROJECT_ID env variable
 	projectID := ""
-	client, err = descope.NewDescopeClientWithConfig(&descope.Config{ProjectID: projectID, SessionJWTViaCookie: true})
+	descopeClient, err = client.NewDescopeClientWithConfig(&client.Config{ProjectID: projectID, SessionJWTViaCookie: true})
 	if err != nil {
 		log.Println("failed to init: " + err.Error())
 		os.Exit(1)
@@ -52,7 +52,7 @@ func main() {
 	r.GET("/otp/verify", handleOTPVerify)
 
 	authorized := r.Group("/")
-	authorized.Use(descopegin.AuthenticationMiddleware(client.Auth, nil, nil))
+	authorized.Use(descopegin.AuthenticationMiddleware(descopeClient, nil, nil))
 	authorized.GET("/private", handleIsHealthy)
 	r.RunTLS(fmt.Sprintf(":%s", port), TLSCertPath, TLSkeyPath)
 }
@@ -73,7 +73,7 @@ func handleIsHealthy(c *gin.Context) {
 
 func handleSignUpOrIn(c *gin.Context) {
 	method, loginID := getMethodAndLoginID(c)
-	err := client.Auth.OTP().SignUpOrIn(method, loginID)
+	err := descopeClient.Auth.OTP().SignUpOrIn(method, loginID)
 	if err != nil {
 		setErrorWithSignUpIn(c, err.Error(), method, loginID)
 	} else {
@@ -89,7 +89,7 @@ func handleOTPVerify(c *gin.Context) {
 		setError(c, "code is empty")
 		return
 	}
-	authInfo, err := client.Auth.OTP().VerifyCode(method, loginID, code, c.Writer)
+	authInfo, err := descopeClient.Auth.OTP().VerifyCode(method, loginID, code, c.Writer)
 	if err != nil {
 		setError(c, err.Error())
 		return
@@ -100,16 +100,16 @@ func handleOTPVerify(c *gin.Context) {
 	setResponse(c, http.StatusOK, helpTxt)
 }
 
-func getMethodAndLoginID(c *gin.Context) (auth.DeliveryMethod, string) {
-	method := auth.MethodEmail
+func getMethodAndLoginID(c *gin.Context) (descope.DeliveryMethod, string) {
+	method := descope.MethodEmail
 	loginID := ""
 	if email := c.Query("email"); email != "" {
 		loginID = email
 	} else if sms := c.Query("sms"); sms != "" {
-		method = auth.MethodSMS
+		method = descope.MethodSMS
 		loginID = sms
 	} else if whatsapp := c.Query("whatsapp"); whatsapp != "" {
-		method = auth.MethodWhatsApp
+		method = descope.MethodWhatsApp
 		loginID = whatsapp
 	}
 	return method, loginID
@@ -119,7 +119,7 @@ func setOK(c *gin.Context) {
 	setResponse(c, http.StatusOK, "OK")
 }
 
-func setErrorWithSignUpIn(c *gin.Context, message string, method auth.DeliveryMethod, loginID string) {
+func setErrorWithSignUpIn(c *gin.Context, message string, method descope.DeliveryMethod, loginID string) {
 	msg := message
 	if method != "" {
 		msg += " method: " + string(method)

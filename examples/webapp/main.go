@@ -18,7 +18,8 @@ import (
 	"time"
 
 	"github.com/descope/go-sdk/descope"
-	"github.com/descope/go-sdk/descope/auth"
+	"github.com/descope/go-sdk/descope/client"
+	"github.com/descope/go-sdk/descope/sdk"
 	"github.com/gorilla/mux"
 )
 
@@ -29,7 +30,7 @@ const (
 	verifyMagicLinkURI = "https://localhost:8085/magiclink/verify"
 )
 
-var client *descope.DescopeClient
+var descopeClient *client.DescopeClient
 var port = "8085"
 
 func main() {
@@ -39,7 +40,7 @@ func main() {
 	router := mux.NewRouter()
 	// Leave projectId param empty to get it from DESCOPE_PROJECT_ID env variable
 	projectID := ""
-	client, err = descope.NewDescopeClientWithConfig(&descope.Config{ProjectID: projectID, SessionJWTViaCookie: true})
+	descopeClient, err = client.NewDescopeClientWithConfig(&client.Config{ProjectID: projectID, SessionJWTViaCookie: true})
 	if err != nil {
 		log.Println("failed to init: " + err.Error())
 		os.Exit(1)
@@ -92,7 +93,7 @@ func main() {
 	router.HandleFunc("/stepup/stepup/verify", handleStepupStepupVerify).Methods(http.MethodGet)
 
 	authRouter := router.Methods(http.MethodGet).Subrouter()
-	authRouter.Use(auth.AuthenticationMiddleware(client.Auth, func(w http.ResponseWriter, r *http.Request, err error) {
+	authRouter.Use(sdk.AuthenticationMiddleware(descopeClient.Auth, func(w http.ResponseWriter, r *http.Request, err error) {
 		setResponse(w, http.StatusUnauthorized, "Unauthorized")
 	}, nil))
 	authRouter.HandleFunc("/private", handleIsHealthy).Methods(http.MethodGet)
@@ -151,7 +152,7 @@ func help(w http.ResponseWriter, r *http.Request) {
 
 func handleSignUp(w http.ResponseWriter, r *http.Request) {
 	method, loginID := getMethodAndLoginID(r)
-	err := client.Auth.OTP().SignUp(method, loginID, &auth.User{Name: "test"})
+	err := descopeClient.Auth.OTP().SignUp(method, loginID, &descope.User{Name: "test"})
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {
@@ -162,7 +163,7 @@ func handleSignUp(w http.ResponseWriter, r *http.Request) {
 
 func handleSignIn(w http.ResponseWriter, r *http.Request) {
 	method, loginID := getMethodAndLoginID(r)
-	err := client.Auth.OTP().SignIn(method, loginID, nil, nil)
+	err := descopeClient.Auth.OTP().SignIn(method, loginID, nil, nil)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {
@@ -181,7 +182,7 @@ func handleVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	authInfo, err := client.Auth.OTP().VerifyCode(method, loginID, code, w)
+	authInfo, err := descopeClient.Auth.OTP().VerifyCode(method, loginID, code, w)
 	if err != nil {
 		setError(w, err.Error())
 		return
@@ -190,11 +191,11 @@ func handleVerify(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleOAuth(w http.ResponseWriter, r *http.Request) {
-	provider := auth.OAuthFacebook
+	provider := descope.OAuthFacebook
 	if p, ok := r.URL.Query()["provider"]; ok {
-		provider = auth.OAuthProvider(p[0])
+		provider = descope.OAuthProvider(p[0])
 	}
-	_, err := client.Auth.OAuth().Start(provider, "https://localhost:8085/oauth/exchange", nil, nil, w)
+	_, err := descopeClient.Auth.OAuth().Start(provider, "https://localhost:8085/oauth/exchange", nil, nil, w)
 	if err != nil {
 		setError(w, err.Error())
 	}
@@ -209,7 +210,7 @@ func finalizeOAuth(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	authInfo, err := client.Auth.OAuth().ExchangeToken(code, w)
+	authInfo, err := descopeClient.Auth.OAuth().ExchangeToken(code, w)
 	if err != nil {
 		setError(w, err.Error())
 		return
@@ -217,7 +218,7 @@ func finalizeOAuth(w http.ResponseWriter, r *http.Request) {
 	sendSuccessAuthResponse(w, authInfo)
 }
 
-func sendSuccessAuthResponse(w http.ResponseWriter, authInfo *auth.AuthenticationInfo) {
+func sendSuccessAuthResponse(w http.ResponseWriter, authInfo *descope.AuthenticationInfo) {
 	helpTxt := "You have properly authenticated, you can check for your JWT in the cookie\n"
 	mr, _ := json.MarshalIndent(authInfo, "", "")
 	helpTxt += string(mr) + "\n"
@@ -226,7 +227,7 @@ func sendSuccessAuthResponse(w http.ResponseWriter, authInfo *auth.Authenticatio
 
 func handleMagicLinkSignIn(w http.ResponseWriter, r *http.Request) {
 	method, loginID := getMethodAndLoginID(r)
-	err := client.Auth.MagicLink().SignIn(method, loginID, verifyMagicLinkURI, nil, nil)
+	err := descopeClient.Auth.MagicLink().SignIn(method, loginID, verifyMagicLinkURI, nil, nil)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 		return
@@ -238,8 +239,8 @@ func handleMagicLinkSignIn(w http.ResponseWriter, r *http.Request) {
 
 func handleMagicLinkSignUp(w http.ResponseWriter, r *http.Request) {
 	method, loginID := getMethodAndLoginID(r)
-	user := &auth.User{Name: "test"}
-	err := client.Auth.MagicLink().SignUp(method, loginID, verifyMagicLinkURI, user)
+	user := &descope.User{Name: "test"}
+	err := descopeClient.Auth.MagicLink().SignUp(method, loginID, verifyMagicLinkURI, user)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 		return
@@ -260,7 +261,7 @@ func handleMagicLinkVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "token is empty")
 		return
 	}
-	authInfo, err := client.Auth.MagicLink().Verify(token, w)
+	authInfo, err := descopeClient.Auth.MagicLink().Verify(token, w)
 	if err != nil {
 		setError(w, err.Error())
 		return
@@ -270,7 +271,7 @@ func handleMagicLinkVerify(w http.ResponseWriter, r *http.Request) {
 
 func handleEnchantedLinkSignIn(w http.ResponseWriter, r *http.Request) {
 	_, loginID := getMethodAndLoginID(r)
-	enchantedRes, err := client.Auth.EnchantedLink().SignIn(loginID, verifyMagicLinkURI, nil, nil)
+	enchantedRes, err := descopeClient.Auth.EnchantedLink().SignIn(loginID, verifyMagicLinkURI, nil, nil)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), "", loginID)
 		return
@@ -284,8 +285,8 @@ func handleEnchantedLinkSignIn(w http.ResponseWriter, r *http.Request) {
 
 func handleEnchantedLinkSignUp(w http.ResponseWriter, r *http.Request) {
 	_, loginID := getMethodAndLoginID(r)
-	user := &auth.User{Name: "test"}
-	enchantedRes, err := client.Auth.EnchantedLink().SignUp(loginID, verifyMagicLinkURI, user)
+	user := &descope.User{Name: "test"}
+	enchantedRes, err := descopeClient.Auth.EnchantedLink().SignUp(loginID, verifyMagicLinkURI, user)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), "", loginID)
 		return
@@ -308,7 +309,7 @@ func handleEnchantedLinkVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "token is empty")
 		return
 	}
-	err := client.Auth.EnchantedLink().Verify(token)
+	err := descopeClient.Auth.EnchantedLink().Verify(token)
 	if err != nil {
 		setError(w, err.Error())
 		return
@@ -327,7 +328,7 @@ func handleEnchantedLinkSession(w http.ResponseWriter, r *http.Request) {
 		setError(w, "token is empty")
 		return
 	}
-	authInfo, err := client.Auth.EnchantedLink().GetSession(tokens[0], w)
+	authInfo, err := descopeClient.Auth.EnchantedLink().GetSession(tokens[0], w)
 	if err != nil {
 		setError(w, err.Error())
 		return
@@ -337,14 +338,14 @@ func handleEnchantedLinkSession(w http.ResponseWriter, r *http.Request) {
 
 func handleWebauthnSigninFinish(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	var t *auth.WebAuthnFinishRequest
+	var t *descope.WebAuthnFinishRequest
 	err := decoder.Decode(&t)
 	if err != nil {
 		setError(w, err.Error())
 		return
 	}
 
-	_, err = client.Auth.WebAuthn().SignInFinish(t, w)
+	_, err = descopeClient.Auth.WebAuthn().SignInFinish(t, w)
 	if err != nil {
 		setError(w, err.Error())
 	}
@@ -352,7 +353,7 @@ func handleWebauthnSigninFinish(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleWebauthnSigninStart(w http.ResponseWriter, r *http.Request) {
-	res, err := client.Auth.WebAuthn().SignInStart(getQuery(r, "id"), getQuery(r, "origin"), nil, nil)
+	res, err := descopeClient.Auth.WebAuthn().SignInStart(getQuery(r, "id"), getQuery(r, "origin"), nil, nil)
 	if err != nil {
 		setError(w, err.Error())
 	}
@@ -363,14 +364,14 @@ func handleWebauthnSigninStart(w http.ResponseWriter, r *http.Request) {
 
 func handleWebauthnSignupStart(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	var t *auth.User
+	var t *descope.User
 	err := decoder.Decode(&t)
 	if err != nil {
 		setError(w, err.Error())
 		return
 	}
 
-	res, err := client.Auth.WebAuthn().SignUpStart(t.Email, t, getQuery(r, "origin"))
+	res, err := descopeClient.Auth.WebAuthn().SignUpStart(t.Email, t, getQuery(r, "origin"))
 	if err != nil {
 		setError(w, err.Error())
 	}
@@ -381,14 +382,14 @@ func handleWebauthnSignupStart(w http.ResponseWriter, r *http.Request) {
 
 func handleWebauthnSignupFinish(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
-	var t *auth.WebAuthnFinishRequest
+	var t *descope.WebAuthnFinishRequest
 	err := decoder.Decode(&t)
 	if err != nil {
 		setError(w, err.Error())
 		return
 	}
 
-	_, err = client.Auth.WebAuthn().SignUpFinish(t, w)
+	_, err = descopeClient.Auth.WebAuthn().SignUpFinish(t, w)
 	if err != nil {
 		setError(w, err.Error())
 	}
@@ -402,7 +403,7 @@ func handleStepup(w http.ResponseWriter, r *http.Request) {
 
 func handleStepupSignUpInEmail(w http.ResponseWriter, r *http.Request) {
 	method, loginID := getMethodAndLoginID(r)
-	err := client.Auth.OTP().SignUpOrIn(method, loginID)
+	err := descopeClient.Auth.OTP().SignUpOrIn(method, loginID)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {
@@ -421,7 +422,7 @@ func handleStepupConfVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	authInfo, err := client.Auth.OTP().VerifyCode(method, loginID, code, w)
+	authInfo, err := descopeClient.Auth.OTP().VerifyCode(method, loginID, code, w)
 	if err != nil {
 		setError(w, err.Error())
 		return
@@ -437,7 +438,7 @@ func handleStepupConfUpdate(w http.ResponseWriter, r *http.Request) {
 	if codes, ok := r.URL.Query()["loginId"]; ok {
 		exID = codes[0]
 	}
-	err := client.Auth.OTP().UpdateUserPhone(method, exID, loginID, r)
+	err := descopeClient.Auth.OTP().UpdateUserPhone(method, exID, loginID, r)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {
@@ -456,7 +457,7 @@ func handleStepupConfUpdateVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	authInfo, err := client.Auth.OTP().VerifyCode(method, loginID, code, nil)
+	authInfo, err := descopeClient.Auth.OTP().VerifyCode(method, loginID, code, nil)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 		return
@@ -468,7 +469,7 @@ func handleStepupConfUpdateVerify(w http.ResponseWriter, r *http.Request) {
 
 func handleStepupLogin(w http.ResponseWriter, r *http.Request) {
 	method, loginID := getMethodAndLoginID(r)
-	err := client.Auth.OTP().SignUpOrIn(method, loginID)
+	err := descopeClient.Auth.OTP().SignUpOrIn(method, loginID)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {
@@ -487,7 +488,7 @@ func handleStepupLoginVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	authInfo, err := client.Auth.OTP().VerifyCode(method, loginID, code, w)
+	authInfo, err := descopeClient.Auth.OTP().VerifyCode(method, loginID, code, w)
 	if err != nil {
 		setError(w, err.Error())
 		return
@@ -501,7 +502,7 @@ func handleStepupLoginVerify(w http.ResponseWriter, r *http.Request) {
 
 func handleStepupStepup(w http.ResponseWriter, r *http.Request) {
 	method, loginID := getMethodAndLoginID(r)
-	err := client.Auth.OTP().SignIn(method, loginID, r, &auth.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"demoKey": "demoValue"}})
+	err := descopeClient.Auth.OTP().SignIn(method, loginID, r, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"demoKey": "demoValue"}})
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {
@@ -520,7 +521,7 @@ func handleStepupStepupVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	authInfo, err := client.Auth.OTP().VerifyCode(method, loginID, code, w)
+	authInfo, err := descopeClient.Auth.OTP().VerifyCode(method, loginID, code, w)
 	if err != nil {
 		setError(w, err.Error())
 		return
@@ -564,7 +565,7 @@ func setError(w http.ResponseWriter, message string) {
 	setResponse(w, http.StatusInternalServerError, message+" ")
 }
 
-func setErrorWithSignUpIn(w http.ResponseWriter, message string, method auth.DeliveryMethod, loginID string) {
+func setErrorWithSignUpIn(w http.ResponseWriter, message string, method descope.DeliveryMethod, loginID string) {
 	msg := message
 	if method != "" {
 		msg += " method: " + string(method)
@@ -580,16 +581,16 @@ func setResponse(w http.ResponseWriter, status int, message string) {
 	w.Write([]byte(message))
 }
 
-func getMethodAndLoginID(r *http.Request) (auth.DeliveryMethod, string) {
-	method := auth.MethodEmail
+func getMethodAndLoginID(r *http.Request) (descope.DeliveryMethod, string) {
+	method := descope.MethodEmail
 	loginID := ""
 	if email, ok := r.URL.Query()["email"]; ok {
 		loginID = email[0]
 	} else if sms, ok := r.URL.Query()["sms"]; ok {
-		method = auth.MethodSMS
+		method = descope.MethodSMS
 		loginID = sms[0]
 	} else if whatsapp, ok := r.URL.Query()["whatsapp"]; ok {
-		method = auth.MethodWhatsApp
+		method = descope.MethodWhatsApp
 		loginID = whatsapp[0]
 	}
 	return method, loginID

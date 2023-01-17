@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/descope/go-sdk/descope/errors"
+	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/logger"
-	"github.com/descope/go-sdk/descope/utils"
 )
 
 const (
