@@ -20,7 +20,7 @@ func (auth *enchantedLink) SignIn(loginID, URI string, r *http.Request, loginOpt
 	if loginOptions.IsJWTRequired() {
 		pswd, err = getValidRefreshToken(r)
 		if err != nil {
-			return nil, errors.InvalidStepupJwtError
+			return nil, errors.ErrInvalidStepUpJWT
 		}
 	}
 	httpResponse, err := auth.client.DoPostRequest(composeEnchantedLinkSignInURL(), newMagicLinkAuthenticationRequestBody(loginID, URI, true, loginOptions), nil, pswd)
@@ -63,9 +63,6 @@ func (auth *enchantedLink) GetSession(pendingRef string, w http.ResponseWriter) 
 	var err error
 	httpResponse, err := auth.client.DoPostRequest(composeGetSession(), newAuthenticationGetMagicLinkSessionBody(pendingRef), nil, "")
 	if err != nil {
-		if err == errors.UnauthorizedError {
-			return nil, errors.EnchantedLinkUnauthorized
-		}
 		return nil, err
 	}
 	return auth.generateAuthenticationInfo(httpResponse, w)

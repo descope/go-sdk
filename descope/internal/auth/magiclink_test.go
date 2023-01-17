@@ -36,11 +36,11 @@ func TestSignInMagicLinkEmptyLoginID(t *testing.T) {
 	require.NoError(t, err)
 	err = a.MagicLink().SignIn(descope.MethodEmail, email, "", nil, nil)
 	require.Error(t, err)
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
 
 	err = a.MagicLink().SignIn(descope.MethodEmail, email, "http://test.me", nil, nil)
 	require.Error(t, err)
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
 }
 
 func TestSignInMagicLinkStepupNoJWT(t *testing.T) {
@@ -49,7 +49,7 @@ func TestSignInMagicLinkStepupNoJWT(t *testing.T) {
 	require.NoError(t, err)
 	err = a.MagicLink().SignIn(descope.MethodEmail, email, "", nil, &descope.LoginOptions{Stepup: true})
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.InvalidStepupJwtError)
+	assert.ErrorIs(t, err, errors.ErrInvalidStepUpJWT)
 }
 
 func TestSignInMagicLinkEmail(t *testing.T) {
@@ -122,11 +122,11 @@ func TestInvalidPhoneSignUpSMS(t *testing.T) {
 	require.NoError(t, err)
 	err = a.MagicLink().SignUp(descope.MethodSMS, phone, "", &descope.User{Name: "test"})
 	require.Error(t, err)
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
 
 	err = a.MagicLink().SignUp(descope.MethodSMS, phone, "http://test.me", &descope.User{Name: "test"})
 	require.Error(t, err)
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
 }
 
 func TestInvalidPhoneSignUpWhatsApp(t *testing.T) {
@@ -135,11 +135,11 @@ func TestInvalidPhoneSignUpWhatsApp(t *testing.T) {
 	require.NoError(t, err)
 	err = a.MagicLink().SignUp(descope.MethodSMS, phone, "", &descope.User{Name: "test"})
 	require.Error(t, err)
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
 
 	err = a.MagicLink().SignUp(descope.MethodSMS, phone, "http://test.me", &descope.User{Name: "test"})
 	require.Error(t, err)
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
 }
 
 func TestInvalidEmailSignUpEmail(t *testing.T) {
@@ -148,11 +148,11 @@ func TestInvalidEmailSignUpEmail(t *testing.T) {
 	require.NoError(t, err)
 	err = a.MagicLink().SignUp(descope.MethodEmail, email, "", &descope.User{Name: "test"})
 	require.Error(t, err)
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
 
 	err = a.MagicLink().SignUp(descope.MethodEmail, email, "http://test.me", &descope.User{Name: "test"})
 	require.Error(t, err)
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
 }
 
 func TestSignUpMagicLinkEmail(t *testing.T) {
@@ -427,5 +427,5 @@ func TestUpdatePhoneMagicLinkFailures(t *testing.T) {
 	r.AddCookie(&http.Cookie{Name: "somename", Value: jwtTokenValid})
 	err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "id", "+111111111111", "", r)
 	assert.Error(t, err)
-	assert.ErrorIs(t, err, errors.RefreshTokenError)
+	assert.ErrorIs(t, err, errors.ErrRefreshToken)
 }

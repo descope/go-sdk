@@ -37,14 +37,14 @@ func (p *provider) selectKey(sink jws.KeySink, key jwk.Key) error {
 	if v := key.Algorithm(); v.String() != "" {
 		var alg jwa.SignatureAlgorithm
 		if err := alg.Accept(v); err != nil {
-			return errors.NewValidationError(`invalid signature algorithm %s: %s`, key.Algorithm(), err)
+			return errors.ErrPublicKey.WithMessage("Invalid signature algorithm %s: %s", key.Algorithm(), err.Error())
 		}
 
 		sink.Key(alg, key)
 		return nil
 	}
 
-	return errors.NewValidationError("algorithm in the message does not match")
+	return errors.ErrPublicKey.WithMessage("Algorithm in the message does not match")
 }
 
 func (p *provider) requestKeys() error {
@@ -109,8 +109,8 @@ func (p *provider) findKey(kid string) (jwk.Key, error) {
 		if key.KeyID() == kid {
 			return key, nil
 		}
-		err = errors.NewNoPublicKeyError()
-		logger.LogError("Provided public key does not match required public key", err)
+		err = errors.ErrPublicKey.WithMessage("Provided public key does not match required public key")
+		logger.LogInfo("Provided public key does not match required public key")
 		return nil, err
 	}
 
@@ -121,8 +121,8 @@ func (p *provider) findKey(kid string) (jwk.Key, error) {
 
 	key, ok := p.keySet[kid]
 	if !ok {
-		err := errors.NewNoPublicKeyError()
-		logger.LogError("Required public key does not exists in key set (key set size [%d])", err, len(p.keySet))
+		err := errors.ErrPublicKey.WithMessage("Required public key does not exist in key set")
+		logger.LogInfo("Required public key does not exist in key set (key set size [%d])", len(p.keySet))
 		return nil, err
 	}
 

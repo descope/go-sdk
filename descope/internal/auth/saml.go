@@ -32,7 +32,7 @@ func (auth *saml) Start(tenant string, redirectURL string, r *http.Request, logi
 	if loginOptions.IsJWTRequired() {
 		pswd, err = getValidRefreshToken(r)
 		if err != nil {
-			return "", errors.InvalidStepupJwtError
+			return "", errors.ErrInvalidStepUpJWT
 		}
 	}
 	httpResponse, err := auth.client.DoPostRequest(composeSAMLStartURL(), loginOptions, &api.HTTPRequest{QueryParams: m}, pswd)

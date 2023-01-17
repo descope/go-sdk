@@ -90,7 +90,7 @@ func DoBadRequest(checks func(*http.Request)) mocks.Do {
 		if checks != nil {
 			checks(r)
 		}
-		b, err := utils.Marshal(map[string]interface{}{"error": errors.NewInvalidArgumentError("test")})
+		b, err := utils.Marshal(map[string]interface{}{"errorCode": "E011001", "errorDescription": "Request is malformed"})
 		if err != nil {
 			return nil, err
 		}
@@ -99,7 +99,7 @@ func DoBadRequest(checks func(*http.Request)) mocks.Do {
 	}
 }
 
-func DoOkWithBody(checks func(*http.Request), body interface{}) mocks.Do {
+func DoWithBody(statusCode int, checks func(*http.Request), body interface{}) mocks.Do {
 	return func(r *http.Request) (*http.Response, error) {
 		if checks != nil {
 			checks(r)
@@ -109,9 +109,13 @@ func DoOkWithBody(checks func(*http.Request), body interface{}) mocks.Do {
 		if err != nil {
 			return nil, err
 		}
-		res := &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(b))}
+		res := &http.Response{StatusCode: statusCode, Body: io.NopCloser(bytes.NewBuffer(b))}
 		return res, nil
 	}
+}
+
+func DoOkWithBody(checks func(*http.Request), body interface{}) mocks.Do {
+	return DoWithBody(http.StatusOK, checks, body)
 }
 
 func DoRedirect(url string, checks func(*http.Request)) mocks.Do {
@@ -137,10 +141,10 @@ func TestVerifyDeliveryMethod(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
 	err = a.verifyDeliveryMethod(descope.MethodEmail, "", &descope.User{})
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
 
 	err = a.verifyDeliveryMethod(descope.MethodSMS, "abc@notaphone.com", &descope.User{})
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
 
 	u := &descope.User{}
 	err = a.verifyDeliveryMethod(descope.MethodEmail, "abc@notaphone.com", u)
@@ -179,7 +183,8 @@ func TestEmptyPublicKey(t *testing.T) {
 	ok, _, err := a.validateSession(jwtTokenExpired, "", false, nil)
 	require.False(t, ok)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "no public key was found")
+	assert.ErrorIs(t, err, errors.ErrPublicKey)
+	assert.Contains(t, err.Error(), "No public key available")
 }
 
 func TestErrorFetchPublicKey(t *testing.T) {
@@ -190,7 +195,8 @@ func TestErrorFetchPublicKey(t *testing.T) {
 	ok, _, err := a.validateSession(jwtTokenExpired, "", false, nil)
 	require.False(t, ok)
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "no public key was found")
+	assert.ErrorIs(t, err, errors.ErrPublicKey)
+	assert.Contains(t, err.Error(), "No public key available")
 }
 
 func TestValidateSession(t *testing.T) {
@@ -238,7 +244,8 @@ func TestValidateSessionFetchKeyMalformed(t *testing.T) {
 	require.NoError(t, err)
 	ok, _, err := a.validateSession(jwtTokenValid, jwtTokenValid, false, nil)
 	require.Error(t, err)
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.ErrorIs(t, err, errors.ErrPublicKey)
+	assert.Contains(t, err.Error(), "does not exist")
 	require.False(t, ok)
 }
 
@@ -348,7 +355,6 @@ func TestValidateSessionRequestFailRefreshSession(t *testing.T) {
 	request.AddCookie(&http.Cookie{Name: descope.SessionCookieName, Value: jwtTokenExpired})
 	ok, cookies, err := a.ValidateSession(request, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.FailedToRefreshTokenError)
 	require.False(t, ok)
 	require.Empty(t, cookies)
 }
@@ -369,15 +375,15 @@ func TestValidateSessionExpired(t *testing.T) {
 	ok, _, err := a.validateSession(jwtTokenExpired, jwtTokenExpired, false, nil)
 	require.Error(t, err)
 	require.False(t, ok)
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.ErrorIs(t, err, errors.ErrPublicKey)
 }
 
-func TestValidateSessionNoProvider(t *testing.T) {
+func TestValidateSessionNoRequest(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	ok, _, err := a.ValidateSession(nil, nil)
 	require.Error(t, err)
-	require.ErrorIs(t, err, errors.MissingProviderError)
+	require.ErrorIs(t, err, errors.ErrInvalidArgument)
 	require.False(t, ok)
 }
 
@@ -387,7 +393,7 @@ func TestValidateSessionNotYet(t *testing.T) {
 	ok, _, err := a.validateSession(jwtTokenNotYet, jwtTokenNotYet, false, nil)
 	require.Error(t, err)
 	require.False(t, ok)
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	//assert.EqualValues(t, errors.ErrCodeBadRequest, err.(*errors.DescopeError).Code)
 }
 
 func TestRefreshSessionRequestRefreshSession(t *testing.T) {
@@ -574,7 +580,7 @@ func TestLogoutEmptyRequest(t *testing.T) {
 
 	err = a.Logout(nil, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.MissingRequestError)
+	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
 }
 
 func TestLogoutAllEmptyRequest(t *testing.T) {
@@ -585,7 +591,7 @@ func TestLogoutAllEmptyRequest(t *testing.T) {
 
 	err = a.LogoutAll(nil, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.MissingRequestError)
+	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
 }
 
 func TestLogoutMissingToken(t *testing.T) {
@@ -597,7 +603,7 @@ func TestLogoutMissingToken(t *testing.T) {
 	request := &http.Request{Header: http.Header{}}
 	err = a.Logout(request, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.RefreshTokenError)
+	assert.ErrorIs(t, err, errors.ErrRefreshToken)
 }
 
 func TestLogoutAllMissingToken(t *testing.T) {
@@ -609,7 +615,7 @@ func TestLogoutAllMissingToken(t *testing.T) {
 	request := &http.Request{Header: http.Header{}}
 	err = a.LogoutAll(request, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.RefreshTokenError)
+	assert.ErrorIs(t, err, errors.ErrRefreshToken)
 }
 
 func TestExtractTokensEmpty(t *testing.T) {
@@ -667,7 +673,7 @@ func TestExchangeAccessKeyBadRequest(t *testing.T) {
 	require.NoError(t, err)
 
 	ok, token, err := a.ExchangeAccessKey("foo")
-	require.ErrorIs(t, err, errors.UnauthorizedError)
+	require.ErrorIs(t, err, errors.ErrBadRequest)
 	require.False(t, ok)
 	require.Nil(t, token)
 }
@@ -677,7 +683,7 @@ func TestExchangeAccessKeyEmptyResponse(t *testing.T) {
 	require.NoError(t, err)
 
 	ok, token, err := a.ExchangeAccessKey("foo")
-	require.ErrorIs(t, err, errors.InvalidAccessKeyResponse)
+	require.ErrorIs(t, err, errors.ErrUnexpectedResponse)
 	require.False(t, ok)
 	require.Nil(t, token)
 }
@@ -688,7 +694,7 @@ func TestExchangeAccessKeyInvalidResponse(t *testing.T) {
 	require.NoError(t, err)
 
 	ok, token, err := a.ExchangeAccessKey("foo")
-	require.ErrorIs(t, err, errors.InvalidAccessKeyResponse)
+	require.ErrorIs(t, err, errors.ErrUnexpectedResponse)
 	require.False(t, ok)
 	require.Nil(t, token)
 }

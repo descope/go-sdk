@@ -149,7 +149,7 @@ func TestEmptyEmailSignIn(t *testing.T) {
 	require.NoError(t, err)
 	err = a.OTP().SignIn(descope.MethodEmail, email, nil, nil)
 	require.Error(t, err)
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
 }
 
 func TestEmptyEmailSignUpOrIn(t *testing.T) {
@@ -158,7 +158,7 @@ func TestEmptyEmailSignUpOrIn(t *testing.T) {
 	require.NoError(t, err)
 	err = a.OTP().SignUpOrIn(descope.MethodEmail, email)
 	require.Error(t, err)
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
 }
 
 func TestInvalidEmailSignUp(t *testing.T) {
@@ -167,7 +167,7 @@ func TestInvalidEmailSignUp(t *testing.T) {
 	require.NoError(t, err)
 	err = a.OTP().SignUp(descope.MethodEmail, email, nil)
 	require.Error(t, err)
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
 }
 
 func TestInvalidSignInStepupNoJWT(t *testing.T) {
@@ -176,7 +176,7 @@ func TestInvalidSignInStepupNoJWT(t *testing.T) {
 	require.NoError(t, err)
 	err = a.OTP().SignIn(descope.MethodSMS, phone, nil, &descope.LoginOptions{Stepup: true})
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.InvalidStepupJwtError)
+	assert.ErrorIs(t, err, errors.ErrInvalidStepUpJWT)
 }
 
 func TestEmptyEmailVerifyCodeEmail(t *testing.T) {
@@ -185,7 +185,7 @@ func TestEmptyEmailVerifyCodeEmail(t *testing.T) {
 	require.NoError(t, err)
 	_, err = a.OTP().VerifyCode(descope.MethodEmail, email, "4444", nil)
 	require.Error(t, err)
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
 }
 
 func TestInvalidVerifyCode(t *testing.T) {
@@ -194,7 +194,7 @@ func TestInvalidVerifyCode(t *testing.T) {
 	require.NoError(t, err)
 	_, err = a.OTP().VerifyCode("", email, "4444", nil)
 	require.Error(t, err)
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
 }
 
 func TestVerifyCodeDetectEmail(t *testing.T) {
@@ -391,7 +391,7 @@ func TestUpdateEmailOTPFailures(t *testing.T) {
 	r.AddCookie(&http.Cookie{Name: "somename", Value: jwtTokenValid})
 	err = a.OTP().UpdateUserEmail("id", "test@test.com", r)
 	assert.Error(t, err)
-	assert.ErrorIs(t, err, errors.RefreshTokenError)
+	assert.ErrorIs(t, err, errors.ErrRefreshToken)
 }
 
 func TestUpdatePhoneOTP(t *testing.T) {
@@ -436,5 +436,5 @@ func TestUpdatePhoneOTPFailures(t *testing.T) {
 	r.AddCookie(&http.Cookie{Name: "somename", Value: jwtTokenValid})
 	err = a.OTP().UpdateUserPhone(descope.MethodSMS, "id", "+11111111111", r)
 	assert.Error(t, err)
-	assert.ErrorIs(t, err, errors.RefreshTokenError)
+	assert.ErrorIs(t, err, errors.ErrRefreshToken)
 }

@@ -20,7 +20,7 @@ func (auth *otp) SignIn(method descope.DeliveryMethod, loginID string, r *http.R
 	if loginOptions.IsJWTRequired() {
 		pswd, err = getValidRefreshToken(r)
 		if err != nil {
-			return errors.InvalidStepupJwtError
+			return errors.ErrInvalidStepUpJWT
 		}
 	}
 

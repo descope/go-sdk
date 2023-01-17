@@ -693,23 +693,22 @@ func (c *Client) parseBody(response *http.Response) (resBytes []byte, err error)
 }
 
 func (c *Client) parseResponseError(response *http.Response) error {
-	if response.StatusCode == http.StatusUnauthorized {
-		return errors.NewUnauthorizedError()
-	}
-	if response.StatusCode == http.StatusNotFound {
-		return errors.NewError("404", fmt.Sprintf("url [%s] not found", response.Request.URL.String()))
-	}
-
 	body, err := c.parseBody(response)
 	if err != nil {
-		return err
+		logger.LogError("failed to process error from server response", err)
+		return errors.ErrUnexpectedResponse
 	}
 
-	var responseErr *errors.WebError
-	if err := json.Unmarshal(body, &responseErr); err != nil {
-		logger.LogError("failed to load error from response", err)
-		return errors.NewValidationError(string(body))
+	var responseErr *errors.DescopeError
+	if err := json.Unmarshal(body, &responseErr); err != nil || responseErr.Code == "" {
+		logger.LogError("failed to parse error from server response", err)
+		return errors.ErrUnexpectedResponse
 	}
+
+	if responseErr.Description == "" {
+		responseErr.Description = "Server error"
+	}
+
 	return responseErr
 }
 

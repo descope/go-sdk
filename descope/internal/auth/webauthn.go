@@ -48,7 +48,7 @@ func (auth *webAuthn) SignInStart(loginID string, origin string, r *http.Request
 	if loginOptions.IsJWTRequired() {
 		pswd, err = getValidRefreshToken(r)
 		if err != nil {
-			return nil, errors.InvalidStepupJwtError
+			return nil, errors.ErrInvalidStepUpJWT
 		}
 	}
 

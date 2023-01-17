@@ -29,7 +29,7 @@ func (auth *oauth) Start(provider descope.OAuthProvider, redirectURL string, r *
 	if loginOptions.IsJWTRequired() {
 		pswd, err = getValidRefreshToken(r)
 		if err != nil {
-			return "", errors.InvalidStepupJwtError
+			return "", errors.ErrInvalidStepUpJWT
 		}
 	}
 

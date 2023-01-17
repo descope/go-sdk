@@ -63,7 +63,7 @@ func TestDescopeSDKMock(t *testing.T) {
 			MockSession: mocksauth.MockSession{
 				ValidateSessionResponseFailure: true,
 				ValidateSessionResponse:        &descope.Token{JWT: validateSessionResponse},
-				ValidateSessionError:           errors.NoPublicKeyError,
+				ValidateSessionError:           errors.ErrPublicKey,
 			},
 		},
 		Management: &mocksmgmt.MockManagement{
@@ -80,7 +80,7 @@ func TestDescopeSDKMock(t *testing.T) {
 	assert.False(t, ok)
 	assert.NotEmpty(t, info)
 	assert.EqualValues(t, validateSessionResponse, info.JWT)
-	assert.ErrorIs(t, err, errors.NoPublicKeyError)
+	assert.ErrorIs(t, err, errors.ErrPublicKey)
 
 	res, err := api.Management.JWT().UpdateJWTWithCustomClaims("some jwt", nil)
 	require.NoError(t, err)

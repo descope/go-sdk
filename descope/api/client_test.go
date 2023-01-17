@@ -161,10 +161,10 @@ func TestPostUnauthorized(t *testing.T) {
 
 	_, err := c.DoPostRequest("path", nil, nil, "")
 	require.Error(t, err)
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.ErrorIs(t, err, errors.ErrUnexpectedResponse)
 }
 
-func TestPostWebError(t *testing.T) {
+func TestPostDescopeError(t *testing.T) {
 	projectID := "test"
 	code := "this is an error"
 	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
@@ -174,7 +174,7 @@ func TestPostWebError(t *testing.T) {
 
 	_, err := c.DoPostRequest("path", nil, nil, "")
 	require.Error(t, err)
-	assert.EqualValues(t, code, err.(*errors.WebError).Code)
+	assert.EqualValues(t, code, err.(*errors.DescopeError).Code)
 }
 
 func TestPostError(t *testing.T) {
@@ -200,7 +200,7 @@ func TestPostUnknownError(t *testing.T) {
 
 	_, err := c.DoPostRequest("path", nil, nil, "")
 	require.Error(t, err)
-	assert.EqualValues(t, code, err.Error())
+	assert.ErrorIs(t, err, errors.ErrUnexpectedResponse)
 }
 
 func TestPostNotFoundError(t *testing.T) {
@@ -212,7 +212,7 @@ func TestPostNotFoundError(t *testing.T) {
 
 	_, err := c.DoPostRequest("path", nil, nil, "")
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "404")
+	assert.ErrorIs(t, err, errors.ErrUnexpectedResponse)
 }
 
 func TestDoRequestDefault(t *testing.T) {
