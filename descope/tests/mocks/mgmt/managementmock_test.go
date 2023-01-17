@@ -4,8 +4,7 @@ import (
 	"testing"
 
 	"github.com/descope/go-sdk/descope"
-	"github.com/descope/go-sdk/descope/auth"
-	"github.com/descope/go-sdk/descope/mgmt"
+	"github.com/descope/go-sdk/descope/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -14,15 +13,15 @@ func TestMockManagement(t *testing.T) {
 	called := false
 	expectedLoginID := "mytestloginID"
 
-	descopeClient := descope.DescopeClient{
+	descopeClient := client.DescopeClient{
 		Management: &MockManagement{
 			MockUser: &MockUser{
-				CreateAssert: func(loginID, email, phone, displayName string, roles []string, tenants []*mgmt.AssociatedTenant) {
+				CreateAssert: func(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) {
 					called = true
 					assert.EqualValues(t, expectedLoginID, loginID)
 				},
-				CreateResponse: &auth.UserResponse{UserID: expectedLoginID},
-				LoadResponse:   &auth.UserResponse{UserID: expectedLoginID},
+				CreateResponse: &descope.UserResponse{UserID: expectedLoginID},
+				LoadResponse:   &descope.UserResponse{UserID: expectedLoginID},
 			},
 		},
 	}

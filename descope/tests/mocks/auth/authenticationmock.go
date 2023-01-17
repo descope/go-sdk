@@ -3,7 +3,8 @@ package mocksauth
 import (
 	"net/http"
 
-	"github.com/descope/go-sdk/descope/auth"
+	"github.com/descope/go-sdk/descope"
+	"github.com/descope/go-sdk/descope/sdk"
 )
 
 type MockAuthentication struct {
@@ -17,79 +18,79 @@ type MockAuthentication struct {
 	MockSession
 }
 
-func (m *MockAuthentication) MagicLink() auth.MagicLink {
+func (m *MockAuthentication) MagicLink() sdk.MagicLink {
 	return m.MockMagicLink
 }
 
-func (m *MockAuthentication) EnchantedLink() auth.EnchantedLink {
+func (m *MockAuthentication) EnchantedLink() sdk.EnchantedLink {
 	return m.MockEnchantedLink
 }
 
-func (m *MockAuthentication) OTP() auth.OTP {
+func (m *MockAuthentication) OTP() sdk.OTP {
 	return m.MockOTP
 }
 
-func (m *MockAuthentication) TOTP() auth.TOTP {
+func (m *MockAuthentication) TOTP() sdk.TOTP {
 	return m.MockTOTP
 }
 
-func (m *MockAuthentication) OAuth() auth.OAuth {
+func (m *MockAuthentication) OAuth() sdk.OAuth {
 	return m.MockOAuth
 }
 
-func (m *MockAuthentication) SAML() auth.SAML {
+func (m *MockAuthentication) SAML() sdk.SAML {
 	return m.MockSAML
 }
 
-func (m *MockAuthentication) WebAuthn() auth.WebAuthn {
+func (m *MockAuthentication) WebAuthn() sdk.WebAuthn {
 	return m.MockWebAuthn
 }
 
 // Mock MagicLink
 
 type MockMagicLink struct {
-	SignInAssert func(method auth.DeliveryMethod, loginID, URI string, r *http.Request, loginOptions *auth.LoginOptions)
+	SignInAssert func(method descope.DeliveryMethod, loginID, URI string, r *http.Request, loginOptions *descope.LoginOptions)
 	SignInError  error
 
-	SignUpAssert func(method auth.DeliveryMethod, loginID, URI string, user *auth.User)
+	SignUpAssert func(method descope.DeliveryMethod, loginID, URI string, user *descope.User)
 	SignUpError  error
 
-	SignUpOrInAssert func(method auth.DeliveryMethod, loginID string, URI string)
+	SignUpOrInAssert func(method descope.DeliveryMethod, loginID string, URI string)
 	SignUpOrInError  error
 
-	VerifyAssert   func(token string, w http.ResponseWriter) (*auth.AuthenticationInfo, error)
+	VerifyAssert   func(token string, w http.ResponseWriter) (*descope.AuthenticationInfo, error)
 	VerifyError    error
-	VerifyResponse *auth.AuthenticationInfo
+	VerifyResponse *descope.AuthenticationInfo
 
 	UpdateUserEmailAssert func(loginID, email, URI string, r *http.Request)
 	UpdateUserEmailError  error
 
-	UpdateUserPhoneAssert func(method auth.DeliveryMethod, loginID, phone, URI string, r *http.Request)
+	UpdateUserPhoneAssert func(method descope.DeliveryMethod, loginID, phone, URI string, r *http.Request)
 	UpdateUserPhoneError  error
 }
 
-func (m *MockMagicLink) SignIn(method auth.DeliveryMethod, loginID, URI string, r *http.Request, loginOptions *auth.LoginOptions) error {
+func (m *MockMagicLink) SignIn(method descope.DeliveryMethod, loginID, URI string, r *http.Request, loginOptions *descope.LoginOptions) error {
 	if m.SignInAssert != nil {
 		m.SignInAssert(method, loginID, URI, r, loginOptions)
 	}
 	return m.SignInError
 }
 
-func (m *MockMagicLink) SignUp(method auth.DeliveryMethod, loginID, URI string, user *auth.User) error {
+func (m *MockMagicLink) SignUp(method descope.DeliveryMethod, loginID, URI string, user *descope.User) error {
 	if m.SignUpAssert != nil {
 		m.SignUpAssert(method, loginID, URI, user)
 	}
 	return m.SignUpError
 }
 
-func (m *MockMagicLink) SignUpOrIn(method auth.DeliveryMethod, loginID string, URI string) error {
+func (m *MockMagicLink) SignUpOrIn(method descope.DeliveryMethod, loginID string, URI string) error {
 	if m.SignUpOrInAssert != nil {
 		m.SignUpOrInAssert(method, loginID, URI)
 	}
 	return m.SignUpOrInError
 }
 
-func (m *MockMagicLink) Verify(token string, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
+func (m *MockMagicLink) Verify(token string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.VerifyAssert != nil {
 		m.VerifyAssert(token, w)
 	}
@@ -103,7 +104,7 @@ func (m *MockMagicLink) UpdateUserEmail(loginID, email, URI string, r *http.Requ
 	return m.UpdateUserEmailError
 }
 
-func (m *MockMagicLink) UpdateUserPhone(method auth.DeliveryMethod, loginID, phone, URI string, r *http.Request) error {
+func (m *MockMagicLink) UpdateUserPhone(method descope.DeliveryMethod, loginID, phone, URI string, r *http.Request) error {
 	if m.UpdateUserPhoneAssert != nil {
 		m.UpdateUserPhoneAssert(method, loginID, phone, URI, r)
 	}
@@ -113,55 +114,55 @@ func (m *MockMagicLink) UpdateUserPhone(method auth.DeliveryMethod, loginID, pho
 // Mock EnchantedLink
 
 type MockEnchantedLink struct {
-	SignInAssert   func(loginID, URI string, r *http.Request, loginOptions *auth.LoginOptions)
+	SignInAssert   func(loginID, URI string, r *http.Request, loginOptions *descope.LoginOptions)
 	SignInError    error
-	SignInResponse *auth.EnchantedLinkResponse
+	SignInResponse *descope.EnchantedLinkResponse
 
-	SignUpAssert   func(loginID, URI string, user *auth.User)
+	SignUpAssert   func(loginID, URI string, user *descope.User)
 	SignUpError    error
-	SignUpResponse *auth.EnchantedLinkResponse
+	SignUpResponse *descope.EnchantedLinkResponse
 
 	SignUpOrInAssert   func(loginID string, URI string)
 	SignUpOrInError    error
-	SignUpOrInResponse *auth.EnchantedLinkResponse
+	SignUpOrInResponse *descope.EnchantedLinkResponse
 
 	GetSessionAssert   func(pendingRef string, w http.ResponseWriter)
-	GetSessionResponse *auth.AuthenticationInfo
+	GetSessionResponse *descope.AuthenticationInfo
 	GetSessionError    error
 
-	VerifyAssert func(token string) (*auth.AuthenticationInfo, error)
+	VerifyAssert func(token string) (*descope.AuthenticationInfo, error)
 	VerifyError  error
 
 	UpdateUserEmailAssert   func(loginID, email, URI string, r *http.Request)
 	UpdateUserEmailError    error
-	UpdateUserEmailResponse *auth.EnchantedLinkResponse
+	UpdateUserEmailResponse *descope.EnchantedLinkResponse
 
-	UpdateUserPhoneAssert func(method auth.DeliveryMethod, loginID, phone, URI string, r *http.Request)
+	UpdateUserPhoneAssert func(method descope.DeliveryMethod, loginID, phone, URI string, r *http.Request)
 	UpdateUserPhoneError  error
 }
 
-func (m *MockEnchantedLink) SignIn(loginID, URI string, r *http.Request, loginOptions *auth.LoginOptions) (*auth.EnchantedLinkResponse, error) {
+func (m *MockEnchantedLink) SignIn(loginID, URI string, r *http.Request, loginOptions *descope.LoginOptions) (*descope.EnchantedLinkResponse, error) {
 	if m.SignInAssert != nil {
 		m.SignInAssert(loginID, URI, r, loginOptions)
 	}
 	return m.SignInResponse, m.SignInError
 }
 
-func (m *MockEnchantedLink) SignUp(loginID, URI string, user *auth.User) (*auth.EnchantedLinkResponse, error) {
+func (m *MockEnchantedLink) SignUp(loginID, URI string, user *descope.User) (*descope.EnchantedLinkResponse, error) {
 	if m.SignUpAssert != nil {
 		m.SignUpAssert(loginID, URI, user)
 	}
 	return m.SignUpResponse, m.SignUpError
 }
 
-func (m *MockEnchantedLink) SignUpOrIn(loginID string, URI string) (*auth.EnchantedLinkResponse, error) {
+func (m *MockEnchantedLink) SignUpOrIn(loginID string, URI string) (*descope.EnchantedLinkResponse, error) {
 	if m.SignUpOrInAssert != nil {
 		m.SignUpOrInAssert(loginID, URI)
 	}
 	return m.SignUpOrInResponse, m.SignUpOrInError
 }
 
-func (m *MockEnchantedLink) GetSession(pendingRef string, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
+func (m *MockEnchantedLink) GetSession(pendingRef string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.GetSessionAssert != nil {
 		m.GetSessionAssert(pendingRef, w)
 	}
@@ -175,7 +176,7 @@ func (m *MockEnchantedLink) Verify(token string) error {
 	return m.VerifyError
 }
 
-func (m *MockEnchantedLink) UpdateUserEmail(loginID, email, URI string, r *http.Request) (*auth.EnchantedLinkResponse, error) {
+func (m *MockEnchantedLink) UpdateUserEmail(loginID, email, URI string, r *http.Request) (*descope.EnchantedLinkResponse, error) {
 	if m.UpdateUserEmailAssert != nil {
 		m.UpdateUserEmailAssert(loginID, email, URI, r)
 	}
@@ -185,48 +186,48 @@ func (m *MockEnchantedLink) UpdateUserEmail(loginID, email, URI string, r *http.
 // Mock OTP
 
 type MockOTP struct {
-	SignInAssert func(method auth.DeliveryMethod, loginID string, r *http.Request, loginOptions *auth.LoginOptions)
+	SignInAssert func(method descope.DeliveryMethod, loginID string, r *http.Request, loginOptions *descope.LoginOptions)
 	SignInError  error
 
-	SignUpAssert func(method auth.DeliveryMethod, loginID string, user *auth.User)
+	SignUpAssert func(method descope.DeliveryMethod, loginID string, user *descope.User)
 	SignUpError  error
 
-	SignUpOrInAssert func(method auth.DeliveryMethod, loginID string)
+	SignUpOrInAssert func(method descope.DeliveryMethod, loginID string)
 	SignUpOrInError  error
 
-	VerifyCodeAssert   func(method auth.DeliveryMethod, loginID string, code string, w http.ResponseWriter)
+	VerifyCodeAssert   func(method descope.DeliveryMethod, loginID string, code string, w http.ResponseWriter)
 	VerifyCodeError    error
-	VerifyCodeResponse *auth.AuthenticationInfo
+	VerifyCodeResponse *descope.AuthenticationInfo
 
 	UpdateUserEmailAssert func(loginID, email string, r *http.Request)
 	UpdateUserEmailError  error
 
-	UpdateUserPhoneAssert func(method auth.DeliveryMethod, loginID, phone string, r *http.Request)
+	UpdateUserPhoneAssert func(method descope.DeliveryMethod, loginID, phone string, r *http.Request)
 	UpdateUserPhoneError  error
 }
 
-func (m *MockOTP) SignIn(method auth.DeliveryMethod, loginID string, r *http.Request, loginOptions *auth.LoginOptions) error {
+func (m *MockOTP) SignIn(method descope.DeliveryMethod, loginID string, r *http.Request, loginOptions *descope.LoginOptions) error {
 	if m.SignInAssert != nil {
 		m.SignInAssert(method, loginID, r, loginOptions)
 	}
 	return m.SignInError
 }
 
-func (m *MockOTP) SignUp(method auth.DeliveryMethod, loginID string, user *auth.User) error {
+func (m *MockOTP) SignUp(method descope.DeliveryMethod, loginID string, user *descope.User) error {
 	if m.SignUpAssert != nil {
 		m.SignUpAssert(method, loginID, user)
 	}
 	return m.SignUpError
 }
 
-func (m *MockOTP) SignUpOrIn(method auth.DeliveryMethod, loginID string) error {
+func (m *MockOTP) SignUpOrIn(method descope.DeliveryMethod, loginID string) error {
 	if m.SignUpOrInAssert != nil {
 		m.SignUpOrInAssert(method, loginID)
 	}
 	return m.SignUpOrInError
 }
 
-func (m *MockOTP) VerifyCode(method auth.DeliveryMethod, loginID string, code string, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
+func (m *MockOTP) VerifyCode(method descope.DeliveryMethod, loginID string, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.VerifyCodeAssert != nil {
 		m.VerifyCodeAssert(method, loginID, code, w)
 	}
@@ -240,7 +241,7 @@ func (m *MockOTP) UpdateUserEmail(loginID, email string, r *http.Request) error 
 	return m.UpdateUserEmailError
 }
 
-func (m *MockOTP) UpdateUserPhone(method auth.DeliveryMethod, loginID, phone string, r *http.Request) error {
+func (m *MockOTP) UpdateUserPhone(method descope.DeliveryMethod, loginID, phone string, r *http.Request) error {
 	if m.UpdateUserPhoneAssert != nil {
 		m.UpdateUserPhoneAssert(method, loginID, phone, r)
 	}
@@ -250,34 +251,34 @@ func (m *MockOTP) UpdateUserPhone(method auth.DeliveryMethod, loginID, phone str
 // Mock TOTP
 
 type MockTOTP struct {
-	SignUpAssert   func(loginID string, user *auth.User)
+	SignUpAssert   func(loginID string, user *descope.User)
 	SignUpError    error
-	SignUpResponse *auth.TOTPResponse
+	SignUpResponse *descope.TOTPResponse
 
-	SignInCodeAssert   func(loginID string, code string, r *http.Request, loginOptions *auth.LoginOptions, w http.ResponseWriter)
+	SignInCodeAssert   func(loginID string, code string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
 	SignInCodeError    error
-	SignInCodeResponse *auth.AuthenticationInfo
+	SignInCodeResponse *descope.AuthenticationInfo
 
 	UpdateUserAssert   func(loginID string, r *http.Request)
 	UpdateUserError    error
-	UpdateUserResponse *auth.TOTPResponse
+	UpdateUserResponse *descope.TOTPResponse
 }
 
-func (m *MockTOTP) SignUp(loginID string, user *auth.User) (*auth.TOTPResponse, error) {
+func (m *MockTOTP) SignUp(loginID string, user *descope.User) (*descope.TOTPResponse, error) {
 	if m.SignUpAssert != nil {
 		m.SignUpAssert(loginID, user)
 	}
 	return m.SignUpResponse, m.SignUpError
 }
 
-func (m *MockTOTP) SignInCode(loginID string, code string, r *http.Request, loginOptions *auth.LoginOptions, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
+func (m *MockTOTP) SignInCode(loginID string, code string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.SignInCodeAssert != nil {
 		m.SignInCodeAssert(loginID, code, r, loginOptions, w)
 	}
 	return m.SignInCodeResponse, m.SignInCodeError
 }
 
-func (m *MockTOTP) UpdateUser(loginID string, r *http.Request) (*auth.TOTPResponse, error) {
+func (m *MockTOTP) UpdateUser(loginID string, r *http.Request) (*descope.TOTPResponse, error) {
 	if m.UpdateUserAssert != nil {
 		m.UpdateUserAssert(loginID, r)
 	}
@@ -287,23 +288,23 @@ func (m *MockTOTP) UpdateUser(loginID string, r *http.Request) (*auth.TOTPRespon
 // Mock OAuth
 
 type MockOAuth struct {
-	StartAssert   func(provider auth.OAuthProvider, returnURL string, r *http.Request, loginOptions *auth.LoginOptions, w http.ResponseWriter)
+	StartAssert   func(provider descope.OAuthProvider, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
 	StartError    error
 	StartResponse string
 
 	ExchangeTokenAssert   func(code string, w http.ResponseWriter)
 	ExchangeTokenError    error
-	ExchangeTokenResponse *auth.AuthenticationInfo
+	ExchangeTokenResponse *descope.AuthenticationInfo
 }
 
-func (m *MockOAuth) Start(provider auth.OAuthProvider, returnURL string, r *http.Request, loginOptions *auth.LoginOptions, w http.ResponseWriter) (string, error) {
+func (m *MockOAuth) Start(provider descope.OAuthProvider, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
 	if m.StartAssert != nil {
 		m.StartAssert(provider, returnURL, r, loginOptions, w)
 	}
 	return m.StartResponse, m.StartError
 }
 
-func (m *MockOAuth) ExchangeToken(code string, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
+func (m *MockOAuth) ExchangeToken(code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.ExchangeTokenAssert != nil {
 		m.ExchangeTokenAssert(code, w)
 	}
@@ -313,23 +314,23 @@ func (m *MockOAuth) ExchangeToken(code string, w http.ResponseWriter) (*auth.Aut
 // Mock SAML
 
 type MockSAML struct {
-	StartAssert   func(tenant string, returnURL string, r *http.Request, loginOptions *auth.LoginOptions, w http.ResponseWriter)
+	StartAssert   func(tenant string, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
 	StartError    error
 	StartResponse string
 
 	ExchangeTokenAssert   func(code string, w http.ResponseWriter)
 	ExchangeTokenError    error
-	ExchangeTokenResponse *auth.AuthenticationInfo
+	ExchangeTokenResponse *descope.AuthenticationInfo
 }
 
-func (m *MockSAML) Start(tenant string, returnURL string, r *http.Request, loginOptions *auth.LoginOptions, w http.ResponseWriter) (redirectURL string, err error) {
+func (m *MockSAML) Start(tenant string, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (redirectURL string, err error) {
 	if m.StartAssert != nil {
 		m.StartAssert(tenant, returnURL, r, loginOptions, w)
 	}
 	return m.StartResponse, m.StartError
 }
 
-func (m *MockSAML) ExchangeToken(code string, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
+func (m *MockSAML) ExchangeToken(code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.ExchangeTokenAssert != nil {
 		m.ExchangeTokenAssert(code, w)
 	}
@@ -339,77 +340,77 @@ func (m *MockSAML) ExchangeToken(code string, w http.ResponseWriter) (*auth.Auth
 // Mock WebAuthn
 
 type MockWebAuthn struct {
-	SignUpStartAssert   func(loginID string, user *auth.User, origin string)
+	SignUpStartAssert   func(loginID string, user *descope.User, origin string)
 	SignUpStartError    error
-	SignUpStartResponse *auth.WebAuthnTransactionResponse
+	SignUpStartResponse *descope.WebAuthnTransactionResponse
 
-	SignUpFinishAssert   func(finishRequest *auth.WebAuthnFinishRequest, w http.ResponseWriter)
+	SignUpFinishAssert   func(finishRequest *descope.WebAuthnFinishRequest, w http.ResponseWriter)
 	SignUpFinishError    error
-	SignUpFinishResponse *auth.AuthenticationInfo
+	SignUpFinishResponse *descope.AuthenticationInfo
 
-	SignInStartAssert   func(loginID string, origin string, r *http.Request, loginOptions *auth.LoginOptions)
+	SignInStartAssert   func(loginID string, origin string, r *http.Request, loginOptions *descope.LoginOptions)
 	SignInStartError    error
-	SignInStartResponse *auth.WebAuthnTransactionResponse
+	SignInStartResponse *descope.WebAuthnTransactionResponse
 
-	SignInFinishAssert   func(finishRequest *auth.WebAuthnFinishRequest, w http.ResponseWriter)
+	SignInFinishAssert   func(finishRequest *descope.WebAuthnFinishRequest, w http.ResponseWriter)
 	SignInFinishError    error
-	SignInFinishResponse *auth.AuthenticationInfo
+	SignInFinishResponse *descope.AuthenticationInfo
 
 	SignUpOrInStartAssert   func(loginID string, origin string)
 	SignUpOrInStartError    error
-	SignUpOrInStartResponse *auth.WebAuthnTransactionResponse
+	SignUpOrInStartResponse *descope.WebAuthnTransactionResponse
 
 	UpdateUserDeviceStartAssert   func(loginID string, origin string, r *http.Request)
 	UpdateUserDeviceStartError    error
-	UpdateUserDeviceStartResponse *auth.WebAuthnTransactionResponse
+	UpdateUserDeviceStartResponse *descope.WebAuthnTransactionResponse
 
-	UpdateUserDeviceFinishAssert func(finishRequest *auth.WebAuthnFinishRequest)
+	UpdateUserDeviceFinishAssert func(finishRequest *descope.WebAuthnFinishRequest)
 	UpdateUserDeviceFinishError  error
 }
 
-func (m *MockWebAuthn) SignUpStart(loginID string, user *auth.User, origin string) (*auth.WebAuthnTransactionResponse, error) {
+func (m *MockWebAuthn) SignUpStart(loginID string, user *descope.User, origin string) (*descope.WebAuthnTransactionResponse, error) {
 	if m.SignUpStartAssert != nil {
 		m.SignUpStartAssert(loginID, user, origin)
 	}
 	return m.SignUpStartResponse, m.SignUpStartError
 }
 
-func (m *MockWebAuthn) SignUpFinish(finishRequest *auth.WebAuthnFinishRequest, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
+func (m *MockWebAuthn) SignUpFinish(finishRequest *descope.WebAuthnFinishRequest, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.SignUpFinishAssert != nil {
 		m.SignUpFinishAssert(finishRequest, w)
 	}
 	return m.SignUpFinishResponse, m.SignUpFinishError
 }
 
-func (m *MockWebAuthn) SignInStart(loginID string, origin string, r *http.Request, loginOptions *auth.LoginOptions) (*auth.WebAuthnTransactionResponse, error) {
+func (m *MockWebAuthn) SignInStart(loginID string, origin string, r *http.Request, loginOptions *descope.LoginOptions) (*descope.WebAuthnTransactionResponse, error) {
 	if m.SignInStartAssert != nil {
 		m.SignInStartAssert(loginID, origin, r, loginOptions)
 	}
 	return m.SignInStartResponse, m.SignInStartError
 }
 
-func (m *MockWebAuthn) SignInFinish(finishRequest *auth.WebAuthnFinishRequest, w http.ResponseWriter) (*auth.AuthenticationInfo, error) {
+func (m *MockWebAuthn) SignInFinish(finishRequest *descope.WebAuthnFinishRequest, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.SignInFinishAssert != nil {
 		m.SignInFinishAssert(finishRequest, w)
 	}
 	return m.SignInFinishResponse, m.SignInFinishError
 }
 
-func (m *MockWebAuthn) SignUpOrInStart(loginID string, origin string) (*auth.WebAuthnTransactionResponse, error) {
+func (m *MockWebAuthn) SignUpOrInStart(loginID string, origin string) (*descope.WebAuthnTransactionResponse, error) {
 	if m.SignUpOrInStartAssert != nil {
 		m.SignUpOrInStartAssert(loginID, origin)
 	}
 	return m.SignUpOrInStartResponse, m.SignUpOrInStartError
 }
 
-func (m *MockWebAuthn) UpdateUserDeviceStart(loginID string, origin string, r *http.Request) (*auth.WebAuthnTransactionResponse, error) {
+func (m *MockWebAuthn) UpdateUserDeviceStart(loginID string, origin string, r *http.Request) (*descope.WebAuthnTransactionResponse, error) {
 	if m.UpdateUserDeviceStartAssert != nil {
 		m.UpdateUserDeviceStartAssert(loginID, origin, r)
 	}
 	return m.UpdateUserDeviceStartResponse, m.UpdateUserDeviceStartError
 }
 
-func (m *MockWebAuthn) UpdateUserDeviceFinish(finishRequest *auth.WebAuthnFinishRequest) error {
+func (m *MockWebAuthn) UpdateUserDeviceFinish(finishRequest *descope.WebAuthnFinishRequest) error {
 	if m.UpdateUserDeviceFinishAssert != nil {
 		m.UpdateUserDeviceFinishAssert(finishRequest)
 	}
@@ -421,36 +422,36 @@ func (m *MockWebAuthn) UpdateUserDeviceFinish(finishRequest *auth.WebAuthnFinish
 type MockSession struct {
 	ValidateSessionAssert          func(r *http.Request, w http.ResponseWriter)
 	ValidateSessionError           error
-	ValidateSessionResponse        *auth.Token
+	ValidateSessionResponse        *descope.Token
 	ValidateSessionResponseFailure bool
 
 	ValidateSessionTokensAssert          func(sessionToken, refreshToken string)
 	ValidateSessionTokensError           error
-	ValidateSessionTokensResponse        *auth.Token
+	ValidateSessionTokensResponse        *descope.Token
 	ValidateSessionTokensResponseFailure bool
 
 	RefreshSessionAssert          func(r *http.Request, w http.ResponseWriter)
 	RefreshSessionError           error
-	RefreshSessionResponse        *auth.Token
+	RefreshSessionResponse        *descope.Token
 	RefreshSessionResponseFailure bool
-	RefreshSessionResponseArray   []*auth.Token
+	RefreshSessionResponseArray   []*descope.Token
 	RefreshSessionResponseCounter int
 
 	ExchangeAccessKeyAssert          func(accessKey string)
 	ExchangeAccessKeyError           error
-	ExchangeAccessKeyResponse        *auth.Token
+	ExchangeAccessKeyResponse        *descope.Token
 	ExchangeAccessKeyResponseFailure bool
 
-	ValidatePermissionsAssert   func(token *auth.Token, permissions []string)
+	ValidatePermissionsAssert   func(token *descope.Token, permissions []string)
 	ValidatePermissionsResponse bool
 
-	ValidateTenantPermissionsAssert   func(token *auth.Token, tenant string, permissions []string)
+	ValidateTenantPermissionsAssert   func(token *descope.Token, tenant string, permissions []string)
 	ValidateTenantPermissionsResponse bool
 
-	ValidateRolesAssert   func(token *auth.Token, roles []string)
+	ValidateRolesAssert   func(token *descope.Token, roles []string)
 	ValidateRolesResponse bool
 
-	ValidateTenantRolesAssert   func(token *auth.Token, tenant string, roles []string)
+	ValidateTenantRolesAssert   func(token *descope.Token, tenant string, roles []string)
 	ValidateTenantRolesResponse bool
 
 	LogoutAssert func(r *http.Request, w http.ResponseWriter)
@@ -461,24 +462,24 @@ type MockSession struct {
 
 	MeAssert   func(r *http.Request)
 	MeError    error
-	MeResponse *auth.UserResponse
+	MeResponse *descope.UserResponse
 }
 
-func (m MockSession) ValidateSession(r *http.Request, w http.ResponseWriter) (bool, *auth.Token, error) {
+func (m MockSession) ValidateSession(r *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
 	if m.ValidateSessionAssert != nil {
 		m.ValidateSessionAssert(r, w)
 	}
 	return !m.ValidateSessionResponseFailure, m.ValidateSessionResponse, m.ValidateSessionError
 }
 
-func (m *MockSession) ValidateSessionTokens(sessionToken, refreshToken string) (bool, *auth.Token, error) {
+func (m *MockSession) ValidateSessionTokens(sessionToken, refreshToken string) (bool, *descope.Token, error) {
 	if m.ValidateSessionTokensAssert != nil {
 		m.ValidateSessionTokensAssert(sessionToken, refreshToken)
 	}
 	return !m.ValidateSessionTokensResponseFailure, m.ValidateSessionTokensResponse, m.ValidateSessionTokensError
 }
 
-func (m *MockSession) RefreshSession(r *http.Request, w http.ResponseWriter) (bool, *auth.Token, error) {
+func (m *MockSession) RefreshSession(r *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
 	if m.RefreshSessionResponseFailure {
 		return false, nil, m.RefreshSessionError
 	}
@@ -500,35 +501,35 @@ func (m *MockSession) RefreshSession(r *http.Request, w http.ResponseWriter) (bo
 	return !m.RefreshSessionResponseFailure, m.RefreshSessionResponse, m.RefreshSessionError
 }
 
-func (m *MockSession) ExchangeAccessKey(accessKey string) (bool, *auth.Token, error) {
+func (m *MockSession) ExchangeAccessKey(accessKey string) (bool, *descope.Token, error) {
 	if m.ExchangeAccessKeyAssert != nil {
 		m.ExchangeAccessKeyAssert(accessKey)
 	}
 	return !m.ExchangeAccessKeyResponseFailure, m.ExchangeAccessKeyResponse, m.ExchangeAccessKeyError
 }
 
-func (m *MockSession) ValidatePermissions(token *auth.Token, permissions []string) bool {
+func (m *MockSession) ValidatePermissions(token *descope.Token, permissions []string) bool {
 	if m.ValidatePermissionsAssert != nil {
 		m.ValidatePermissionsAssert(token, permissions)
 	}
 	return m.ValidatePermissionsResponse
 }
 
-func (m *MockSession) ValidateTenantPermissions(token *auth.Token, tenant string, permissions []string) bool {
+func (m *MockSession) ValidateTenantPermissions(token *descope.Token, tenant string, permissions []string) bool {
 	if m.ValidateTenantPermissionsAssert != nil {
 		m.ValidateTenantPermissionsAssert(token, tenant, permissions)
 	}
 	return m.ValidateTenantPermissionsResponse
 }
 
-func (m *MockSession) ValidateRoles(token *auth.Token, roles []string) bool {
+func (m *MockSession) ValidateRoles(token *descope.Token, roles []string) bool {
 	if m.ValidateRolesAssert != nil {
 		m.ValidateRolesAssert(token, roles)
 	}
 	return m.ValidateRolesResponse
 }
 
-func (m *MockSession) ValidateTenantRoles(token *auth.Token, tenant string, roles []string) bool {
+func (m *MockSession) ValidateTenantRoles(token *descope.Token, tenant string, roles []string) bool {
 	if m.ValidateTenantRolesAssert != nil {
 		m.ValidateTenantRolesAssert(token, tenant, roles)
 	}
@@ -549,7 +550,7 @@ func (m *MockSession) LogoutAll(r *http.Request, w http.ResponseWriter) error {
 	return m.LogoutAllError
 }
 
-func (m *MockSession) Me(r *http.Request) (*auth.UserResponse, error) {
+func (m *MockSession) Me(r *http.Request) (*descope.UserResponse, error) {
 	if m.MeAssert != nil {
 		m.MeAssert(r)
 	}
