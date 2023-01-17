@@ -22,6 +22,7 @@ var (
 	// client service error
 	ErrInvalidArgument    = newClientError("C020001", "Invalid argument")
 	ErrUnexpectedResponse = newClientError("C020002", "Unexpected response")
+	ErrRateLimitExceeded  = newClientError("C020003", "Rate limit exceeded")
 
 	// client functional errors
 	ErrPublicKey        = newClientError("C030001", "Missing or invalid public key")

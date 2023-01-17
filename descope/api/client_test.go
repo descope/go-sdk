@@ -164,6 +164,17 @@ func TestPostUnauthorized(t *testing.T) {
 	assert.ErrorIs(t, err, errors.ErrUnexpectedResponse)
 }
 
+func TestPostRateLimitExceeded(t *testing.T) {
+	projectID := "test"
+	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusTooManyRequests, Header: http.Header{"Retry-After": []string{"10"}}}, nil
+	})})
+
+	_, err := c.DoPostRequest("path", nil, nil, "")
+	require.ErrorIs(t, err, errors.ErrRateLimitExceeded)
+	require.ErrorContains(t, err, "Try again in 10 seconds")
+}
+
 func TestPostDescopeError(t *testing.T) {
 	projectID := "test"
 	code := "this is an error"

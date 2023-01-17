@@ -693,6 +693,13 @@ func (c *Client) parseBody(response *http.Response) (resBytes []byte, err error)
 }
 
 func (c *Client) parseResponseError(response *http.Response) error {
+	if response.StatusCode == http.StatusTooManyRequests {
+		if seconds := response.Header.Get("Retry-After"); seconds != "" {
+			return errors.ErrRateLimitExceeded.WithMessage("Try again in %s seconds", seconds)
+		}
+		return errors.ErrRateLimitExceeded
+	}
+
 	body, err := c.parseBody(response)
 	if err != nil {
 		logger.LogError("failed to process error from server response", err)
