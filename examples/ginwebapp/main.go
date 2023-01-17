@@ -36,7 +36,7 @@ func main() {
 	var err error
 	// Leave projectId param empty to get it from DESCOPE_PROJECT_ID env variable
 	projectID := ""
-	descopeClient, err = client.NewDescopeClientWithConfig(&client.Config{ProjectID: projectID, SessionJWTViaCookie: true})
+	descopeClient, err = client.NewWithConfig(&client.Config{ProjectID: projectID, SessionJWTViaCookie: true})
 	if err != nil {
 		log.Println("failed to init: " + err.Error())
 		os.Exit(1)

@@ -28,14 +28,14 @@ type DescopeClient struct {
 
 // Creates a new DescopeClient object. The value for the Descope projectID must be set
 // in the DESCOPE_PROJECT_ID environment variable.
-func NewDescopeClient() (*DescopeClient, error) {
-	return NewDescopeClientWithConfig(&Config{})
+func New() (*DescopeClient, error) {
+	return NewWithConfig(&Config{})
 }
 
 // Creates a new DescopeClient object with the provided Config object. The value for
 // the Descope projectID should either be provided as a field in the Config parameter
 // or set in the DESCOPE_PROJECT_ID environment variable.
-func NewDescopeClientWithConfig(config *Config) (*DescopeClient, error) {
+func NewWithConfig(config *Config) (*DescopeClient, error) {
 	if config == nil {
 		return nil, errors.NewInvalidArgumentError("config")
 	}

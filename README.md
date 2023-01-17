@@ -26,10 +26,10 @@ A Descope `Project ID` is required to initialize the SDK. Find it on the
 import "github.com/descope/go-sdk/descope/client"
 
 // Initialized after setting the DESCOPE_PROJECT_ID env var
-descopeClient := client.NewDescopeClient()
+descopeClient := client.New()
 
 // ** Or directly **
-descopeClient := client.NewDescopeClientWithConfig(&client.Config{ProjectID: projectID})
+descopeClient := client.NewWithConfig(&client.Config{ProjectID: projectID})
 ```
 
 ## Usage
@@ -362,10 +362,10 @@ Create one in the [Descope Console](https://app.descope.com/settings/company/man
 import "github.com/descope/go-sdk/descope/client"
 
 // Initialized after setting the DESCOPE_PROJECT_ID and the DESCOPE_MANAGEMENT_KEY env vars
-descopeClient := client.NewDescopeClient()
+descopeClient := client.New()
 
 // ** Or directly **
-descopeClient := client.NewDescopeClientWithConfig(&client.Config{
+descopeClient := client.NewWithConfig(&client.Config{
     ProjectID: "project-ID",
     ManagementKey: "management-key",
 })
@@ -403,16 +403,20 @@ if err == nil {
 You can create, update, delete or load users, as well as search according to filters:
 
 ```go
+import (
+    "github.com/descope/go-sdk/descope"
+)
+
 // A user must have a loginID, other fields are optional.
 // Roles should be set directly if no tenants exist, otherwise set
 // on a per-tenant basis.
-err := descopeClient.Management.User().Create("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*mgmt.AssociatedTenant{
+err := descopeClient.Management.User().Create("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*descope.AssociatedTenant{
     {TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},
 })
 
 // Update will override all fields as is. Use carefully.
-err := descopeClient.Management.User().Update("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*mgmt.AssociatedTenant{
+err := descopeClient.Management.User().Update("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*descope.AssociatedTenant{
     {TenantID: "tenant-ID1", RoleNames: []string{"role-name1", "role-name2"}},
     {TenantID: "tenant-ID2"},
 })
@@ -443,7 +447,7 @@ You can create, update, delete or load access keys, as well as search according 
 // An access key must have a name and expireTime, other fields are optional.
 // Roles should be set directly if no tenants exist, otherwise set
 // on a per-tenant basis.
-res, err := descopeClient.Management.AccessKey().Create("access-key-1", 0, nil, []*mgmt.AssociatedTenant{
+res, err := descopeClient.Management.AccessKey().Create("access-key-1", 0, nil, []*descope.AssociatedTenant{
     {TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},
 })
@@ -490,10 +494,10 @@ err := descopeClient.Management.SSO().ConfigureMetadata(tenantID, "https://idp.c
 
 // Map IDP groups to Descope roles, or map user attributes.
 // This function overrides any previous mapping (even when empty). Use carefully.
-roleMapping := []*mgmt.RoleMapping{
+roleMapping := []*descope.RoleMapping{
     {Groups: []string{"IDP_ADMIN"}, Role: "Tenant Admin"},
 }
-attributeMapping := &mgmt.AttributeMapping {
+attributeMapping := &descope.AttributeMapping {
     Name: "IDP_NAME",
     PhoneNumber: "IDP_PHONE",
 }
