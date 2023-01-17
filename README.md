@@ -23,13 +23,13 @@ A Descope `Project ID` is required to initialize the SDK. Find it on the
 [project page in the Descope Console](https://app.descope.com/settings/project).
 
 ```go
-import "github.com/descope/go-sdk/descope"
+import "github.com/descope/go-sdk/descope/client"
 
 // Initialized after setting the DESCOPE_PROJECT_ID env var
-descopeClient := descope.NewDescopeClient()
+descopeClient := client.NewDescopeClient()
 
 // ** Or directly **
-descopeClient := descope.NewDescopeClientWithConfig(&descope.Config{ProjectID: projectID})
+descopeClient := client.NewDescopeClientWithConfig(&client.Config{ProjectID: projectID})
 ```
 
 ## Usage
@@ -45,17 +45,16 @@ The user can either `sign up`, `sign in` or `sign up or in`
 ```go
 import (
     "github.com/descope/go-sdk/descope"
-    "github.com/descope/go-sdk/descope/auth"
 )
 
 // Every user must have a loginID. All other user information is optional
 loginID := "desmond@descope.com"
-user :=  &auth.User{
+user := &descope.User{
     Name: "Desmond Copeland",
     Phone: "212-555-1234",
     Email: loginID,
 }
-err := client.Auth.OTP().SignUp(auth.MethodEmail, loginID, user)
+err := descopeClient.Auth.OTP().SignUp(descope.MethodEmail, loginID, user)
 if err != nil {
     // handle error
 }
@@ -66,7 +65,7 @@ The user will receive a code using the selected delivery method. Verify that cod
 ```go
 // The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
 // Otherwise they're available via authInfo
-authInfo, err :=  descopeClient.OTP().Verify(auth.MethodEmail, loginID, code, w)
+authInfo, err := descopeClient.OTP().Verify(descope.MethodEmail, loginID, code, w)
 if err != nil {
     // handle error
 }
@@ -85,7 +84,7 @@ The user can either `sign up`, `sign in` or `sign up or in`
 ```go
 // If configured globally, the redirect URI is optional. If provided however, it will be used
 // instead of any global configuration
-err := descopeClient.SignUpOrIn(auth.MethodEmail, "desmond@descope.com", "http://myapp.com/verify-magic-link")
+err := descopeClient.SignUpOrIn(descope.MethodEmail, "desmond@descope.com", "http://myapp.com/verify-magic-link")
 if err {
     // handle error
 }
@@ -96,7 +95,7 @@ To verify a magic link, your redirect page must call the validation function on 
 ```go
 // The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
 // Otherwise they're available via authInfo
-authInfo, err := client.Auth.MagicLink().Verify(token, w)
+authInfo, err := descopeClient.Auth.MagicLink().Verify(token, w)
 if err != nil {
     // handle error
 }
@@ -126,7 +125,7 @@ The user can either `sign up`, `sign in` or `sign up or in`
 ```go
 // If configured globally, the redirect URI is optional. If provided however, it will be used
 // instead of any global configuration.
-res, err := client.Auth.EnchantedLink().SignIn(loginID, "http://myapp.com/verify-enchanted-link", nil, nil)
+res, err := descopeClient.Auth.EnchantedLink().SignIn(loginID, "http://myapp.com/verify-enchanted-link", nil, nil)
 if err != nil {
     // handle error
 }
@@ -140,7 +139,7 @@ the previous step. A valid session will be returned only after the user clicks t
 ```go
 // Poll for a certain number of tries / time frame
 for i := retriesCount; i > 0; i-- {
-    authInfo, err := client.Auth.EnchantedLink().GetSession(res.PendingRef, w)
+    authInfo, err := descopeClient.Auth.EnchantedLink().GetSession(res.PendingRef, w)
     if err == nil {
         // The user successfully authenticated using the correct link
         // The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
@@ -240,12 +239,12 @@ Existing users can add TOTP using the `update` function.
 ```go
 // Every user must have a loginID. All other user information is optional
 loginID := "desmond@descope.com"
-user :=  &auth.User{
+user := &descope.User{
     Name: "Desmond Copeland",
     Phone: "212-555-1234",
     Email: loginID,
 }
-totpResponse, err := client.Auth.TOTP().SignUp(auth.MethodEmail, loginID, user)
+totpResponse, err := descopeClient.Auth.TOTP().SignUp(descope.MethodEmail, loginID, user)
 if err != nil {
     // handle error
 }
@@ -311,7 +310,7 @@ instead of using the ValidateSessions function. This middleware will automatical
 request and save the current user ID in the context for further usage. On failure, it will respond with `401 Unauthorized`.
 
 ```go
-r.Use(auth.AuthenticationMiddleware(descopeClient.Auth, nil, nil))
+r.Use(descope.AuthenticationMiddleware(descopeClient.Auth, nil, nil))
 ```
 
 ### Roles & Permission Validation
@@ -360,13 +359,13 @@ To use the management API you'll need a `Management Key` along with your `Projec
 Create one in the [Descope Console](https://app.descope.com/settings/company/managementkeys).
 
 ```go
-import "github.com/descope/go-sdk/descope"
+import "github.com/descope/go-sdk/descope/client"
 
 // Initialized after setting the DESCOPE_PROJECT_ID and the DESCOPE_MANAGEMENT_KEY env vars
-descopeClient := descope.NewDescopeClient()
+descopeClient := client.NewDescopeClient()
 
 // ** Or directly **
-descopeClient := descope.NewDescopeClientWithConfig(&descope.Config{
+descopeClient := client.NewDescopeClientWithConfig(&client.Config{
     ProjectID: "project-ID",
     ManagementKey: "management-key",
 })
@@ -674,7 +673,7 @@ api := DescopeClient{
     Auth: &mocksauth.MockAuthentication{
         MockSession: mocksauth.MockSession{
             ValidateSessionResponseSuccess: false,
-            ValidateSessionResponse:        &auth.Token{JWT: validateSessionResponse},
+            ValidateSessionResponse:        &descope.Token{JWT: validateSessionResponse},
             ValidateSessionError:           errors.NoPublicKeyError,
         },
     },
