@@ -10,7 +10,6 @@ import (
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -36,11 +35,11 @@ func TestSignInMagicLinkEmptyLoginID(t *testing.T) {
 	require.NoError(t, err)
 	err = a.MagicLink().SignIn(descope.MethodEmail, email, "", nil, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
 
 	err = a.MagicLink().SignIn(descope.MethodEmail, email, "http://test.me", nil, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
 }
 
 func TestSignInMagicLinkStepupNoJWT(t *testing.T) {
@@ -49,7 +48,7 @@ func TestSignInMagicLinkStepupNoJWT(t *testing.T) {
 	require.NoError(t, err)
 	err = a.MagicLink().SignIn(descope.MethodEmail, email, "", nil, &descope.LoginOptions{Stepup: true})
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrInvalidStepUpJWT)
+	assert.ErrorIs(t, err, descope.ErrInvalidStepUpJWT)
 }
 
 func TestSignInMagicLinkEmail(t *testing.T) {
@@ -122,11 +121,11 @@ func TestInvalidPhoneSignUpSMS(t *testing.T) {
 	require.NoError(t, err)
 	err = a.MagicLink().SignUp(descope.MethodSMS, phone, "", &descope.User{Name: "test"})
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
 
 	err = a.MagicLink().SignUp(descope.MethodSMS, phone, "http://test.me", &descope.User{Name: "test"})
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
 }
 
 func TestInvalidPhoneSignUpWhatsApp(t *testing.T) {
@@ -135,11 +134,11 @@ func TestInvalidPhoneSignUpWhatsApp(t *testing.T) {
 	require.NoError(t, err)
 	err = a.MagicLink().SignUp(descope.MethodSMS, phone, "", &descope.User{Name: "test"})
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
 
 	err = a.MagicLink().SignUp(descope.MethodSMS, phone, "http://test.me", &descope.User{Name: "test"})
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
 }
 
 func TestInvalidEmailSignUpEmail(t *testing.T) {
@@ -148,11 +147,11 @@ func TestInvalidEmailSignUpEmail(t *testing.T) {
 	require.NoError(t, err)
 	err = a.MagicLink().SignUp(descope.MethodEmail, email, "", &descope.User{Name: "test"})
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
 
 	err = a.MagicLink().SignUp(descope.MethodEmail, email, "http://test.me", &descope.User{Name: "test"})
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
 }
 
 func TestSignUpMagicLinkEmail(t *testing.T) {
@@ -427,5 +426,5 @@ func TestUpdatePhoneMagicLinkFailures(t *testing.T) {
 	r.AddCookie(&http.Cookie{Name: "somename", Value: jwtTokenValid})
 	err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "id", "+111111111111", "", r)
 	assert.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrRefreshToken)
+	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }

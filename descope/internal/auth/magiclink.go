@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/descope/go-sdk/descope"
-	"github.com/descope/go-sdk/descope/errors"
+	"github.com/descope/go-sdk/descope/internal/utils"
 )
 
 type magicLink struct {
@@ -15,12 +15,12 @@ func (auth *magicLink) SignIn(method descope.DeliveryMethod, loginID, URI string
 	var pswd string
 	var err error
 	if loginID == "" {
-		return errors.NewInvalidArgumentError("loginID")
+		return utils.NewInvalidArgumentError("loginID")
 	}
 	if loginOptions.IsJWTRequired() {
 		pswd, err = getValidRefreshToken(r)
 		if err != nil {
-			return errors.ErrInvalidStepUpJWT
+			return descope.ErrInvalidStepUpJWT
 		}
 	}
 
@@ -42,7 +42,7 @@ func (auth *magicLink) SignUp(method descope.DeliveryMethod, loginID, URI string
 
 func (auth *magicLink) SignUpOrIn(method descope.DeliveryMethod, loginID, URI string) error {
 	if loginID == "" {
-		return errors.NewInvalidArgumentError("loginID")
+		return utils.NewInvalidArgumentError("loginID")
 	}
 	_, err := auth.client.DoPostRequest(composeMagicLinkSignUpOrInURL(method), newMagicLinkAuthenticationRequestBody(loginID, URI, false, nil), nil, "")
 	return err
@@ -60,13 +60,13 @@ func (auth *magicLink) Verify(token string, w http.ResponseWriter) (*descope.Aut
 
 func (auth *magicLink) UpdateUserEmail(loginID, email, URI string, r *http.Request) error {
 	if loginID == "" {
-		return errors.NewInvalidArgumentError("loginID")
+		return utils.NewInvalidArgumentError("loginID")
 	}
 	if email == "" {
-		return errors.NewInvalidArgumentError("email")
+		return utils.NewInvalidArgumentError("email")
 	}
 	if !emailRegex.MatchString(email) {
-		return errors.NewInvalidArgumentError("email")
+		return utils.NewInvalidArgumentError("email")
 	}
 	pswd, err := getValidRefreshToken(r)
 	if err != nil {
@@ -78,16 +78,16 @@ func (auth *magicLink) UpdateUserEmail(loginID, email, URI string, r *http.Reque
 
 func (auth *magicLink) UpdateUserPhone(method descope.DeliveryMethod, loginID, phone, URI string, r *http.Request) error {
 	if loginID == "" {
-		return errors.NewInvalidArgumentError("loginID")
+		return utils.NewInvalidArgumentError("loginID")
 	}
 	if phone == "" {
-		return errors.NewInvalidArgumentError("phone")
+		return utils.NewInvalidArgumentError("phone")
 	}
 	if !phoneRegex.MatchString(phone) {
-		return errors.NewInvalidArgumentError("phone")
+		return utils.NewInvalidArgumentError("phone")
 	}
 	if method != descope.MethodSMS && method != descope.MethodWhatsApp {
-		return errors.NewInvalidArgumentError("method")
+		return utils.NewInvalidArgumentError("method")
 	}
 	pswd, err := getValidRefreshToken(r)
 	if err != nil {

@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/descope/go-sdk/descope"
-	"github.com/descope/go-sdk/descope/errors"
 	mocksauth "github.com/descope/go-sdk/descope/tests/mocks/auth"
 	mocksmgmt "github.com/descope/go-sdk/descope/tests/mocks/mgmt"
 	"github.com/stretchr/testify/assert"
@@ -63,7 +62,7 @@ func TestDescopeSDKMock(t *testing.T) {
 			MockSession: mocksauth.MockSession{
 				ValidateSessionResponseFailure: true,
 				ValidateSessionResponse:        &descope.Token{JWT: validateSessionResponse},
-				ValidateSessionError:           errors.ErrPublicKey,
+				ValidateSessionError:           descope.ErrPublicKey,
 			},
 		},
 		Management: &mocksmgmt.MockManagement{
@@ -80,7 +79,7 @@ func TestDescopeSDKMock(t *testing.T) {
 	assert.False(t, ok)
 	assert.NotEmpty(t, info)
 	assert.EqualValues(t, validateSessionResponse, info.JWT)
-	assert.ErrorIs(t, err, errors.ErrPublicKey)
+	assert.ErrorIs(t, err, descope.ErrPublicKey)
 
 	res, err := api.Management.JWT().UpdateJWTWithCustomClaims("some jwt", nil)
 	require.NoError(t, err)

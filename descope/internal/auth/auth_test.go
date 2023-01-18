@@ -12,7 +12,6 @@ import (
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/tests/mocks"
 	"github.com/stretchr/testify/assert"
@@ -141,10 +140,10 @@ func TestVerifyDeliveryMethod(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
 	err = a.verifyDeliveryMethod(descope.MethodEmail, "", &descope.User{})
-	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
 
 	err = a.verifyDeliveryMethod(descope.MethodSMS, "abc@notaphone.com", &descope.User{})
-	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
 
 	u := &descope.User{}
 	err = a.verifyDeliveryMethod(descope.MethodEmail, "abc@notaphone.com", u)
@@ -183,7 +182,7 @@ func TestEmptyPublicKey(t *testing.T) {
 	ok, _, err := a.validateSession(jwtTokenExpired, "", false, nil)
 	require.False(t, ok)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrPublicKey)
+	assert.ErrorIs(t, err, descope.ErrPublicKey)
 	assert.Contains(t, err.Error(), "No public key available")
 }
 
@@ -195,7 +194,7 @@ func TestErrorFetchPublicKey(t *testing.T) {
 	ok, _, err := a.validateSession(jwtTokenExpired, "", false, nil)
 	require.False(t, ok)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrPublicKey)
+	assert.ErrorIs(t, err, descope.ErrPublicKey)
 	assert.Contains(t, err.Error(), "No public key available")
 }
 
@@ -244,7 +243,7 @@ func TestValidateSessionFetchKeyMalformed(t *testing.T) {
 	require.NoError(t, err)
 	ok, _, err := a.validateSession(jwtTokenValid, jwtTokenValid, false, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrPublicKey)
+	assert.ErrorIs(t, err, descope.ErrPublicKey)
 	assert.Contains(t, err.Error(), "does not exist")
 	require.False(t, ok)
 }
@@ -375,7 +374,7 @@ func TestValidateSessionExpired(t *testing.T) {
 	ok, _, err := a.validateSession(jwtTokenExpired, jwtTokenExpired, false, nil)
 	require.Error(t, err)
 	require.False(t, ok)
-	assert.ErrorIs(t, err, errors.ErrPublicKey)
+	assert.ErrorIs(t, err, descope.ErrPublicKey)
 }
 
 func TestValidateSessionNoRequest(t *testing.T) {
@@ -383,7 +382,7 @@ func TestValidateSessionNoRequest(t *testing.T) {
 	require.NoError(t, err)
 	ok, _, err := a.ValidateSession(nil, nil)
 	require.Error(t, err)
-	require.ErrorIs(t, err, errors.ErrInvalidArgument)
+	require.ErrorIs(t, err, descope.ErrInvalidArgument)
 	require.False(t, ok)
 }
 
@@ -393,7 +392,6 @@ func TestValidateSessionNotYet(t *testing.T) {
 	ok, _, err := a.validateSession(jwtTokenNotYet, jwtTokenNotYet, false, nil)
 	require.Error(t, err)
 	require.False(t, ok)
-	//assert.EqualValues(t, errors.ErrCodeBadRequest, err.(*errors.DescopeError).Code)
 }
 
 func TestRefreshSessionRequestRefreshSession(t *testing.T) {
@@ -580,7 +578,7 @@ func TestLogoutEmptyRequest(t *testing.T) {
 
 	err = a.Logout(nil, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
 }
 
 func TestLogoutAllEmptyRequest(t *testing.T) {
@@ -591,7 +589,7 @@ func TestLogoutAllEmptyRequest(t *testing.T) {
 
 	err = a.LogoutAll(nil, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
 }
 
 func TestLogoutMissingToken(t *testing.T) {
@@ -603,7 +601,7 @@ func TestLogoutMissingToken(t *testing.T) {
 	request := &http.Request{Header: http.Header{}}
 	err = a.Logout(request, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrRefreshToken)
+	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }
 
 func TestLogoutAllMissingToken(t *testing.T) {
@@ -615,7 +613,7 @@ func TestLogoutAllMissingToken(t *testing.T) {
 	request := &http.Request{Header: http.Header{}}
 	err = a.LogoutAll(request, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrRefreshToken)
+	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }
 
 func TestExtractTokensEmpty(t *testing.T) {
@@ -673,7 +671,7 @@ func TestExchangeAccessKeyBadRequest(t *testing.T) {
 	require.NoError(t, err)
 
 	ok, token, err := a.ExchangeAccessKey("foo")
-	require.ErrorIs(t, err, errors.ErrBadRequest)
+	require.ErrorIs(t, err, descope.ErrBadRequest)
 	require.False(t, ok)
 	require.Nil(t, token)
 }
@@ -683,7 +681,7 @@ func TestExchangeAccessKeyEmptyResponse(t *testing.T) {
 	require.NoError(t, err)
 
 	ok, token, err := a.ExchangeAccessKey("foo")
-	require.ErrorIs(t, err, errors.ErrUnexpectedResponse)
+	require.ErrorIs(t, err, descope.ErrUnexpectedResponse)
 	require.False(t, ok)
 	require.Nil(t, token)
 }
@@ -694,7 +692,7 @@ func TestExchangeAccessKeyInvalidResponse(t *testing.T) {
 	require.NoError(t, err)
 
 	ok, token, err := a.ExchangeAccessKey("foo")
-	require.ErrorIs(t, err, errors.ErrUnexpectedResponse)
+	require.ErrorIs(t, err, descope.ErrUnexpectedResponse)
 	require.False(t, ok)
 	require.Nil(t, token)
 }

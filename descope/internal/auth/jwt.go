@@ -8,8 +8,8 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jws"
 
+	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/logger"
 )
@@ -37,14 +37,14 @@ func (p *provider) selectKey(sink jws.KeySink, key jwk.Key) error {
 	if v := key.Algorithm(); v.String() != "" {
 		var alg jwa.SignatureAlgorithm
 		if err := alg.Accept(v); err != nil {
-			return errors.ErrPublicKey.WithMessage("Invalid signature algorithm %s: %s", key.Algorithm(), err.Error())
+			return descope.ErrPublicKey.WithMessage("Invalid signature algorithm %s: %s", key.Algorithm(), err.Error())
 		}
 
 		sink.Key(alg, key)
 		return nil
 	}
 
-	return errors.ErrPublicKey.WithMessage("Algorithm in the message does not match")
+	return descope.ErrPublicKey.WithMessage("Algorithm in the message does not match")
 }
 
 func (p *provider) requestKeys() error {
@@ -109,7 +109,7 @@ func (p *provider) findKey(kid string) (jwk.Key, error) {
 		if key.KeyID() == kid {
 			return key, nil
 		}
-		err = errors.ErrPublicKey.WithMessage("Provided public key does not match required public key")
+		err = descope.ErrPublicKey.WithMessage("Provided public key does not match required public key")
 		logger.LogInfo("Provided public key does not match required public key")
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (p *provider) findKey(kid string) (jwk.Key, error) {
 
 	key, ok := p.keySet[kid]
 	if !ok {
-		err := errors.ErrPublicKey.WithMessage("Required public key does not exist in key set")
+		err := descope.ErrPublicKey.WithMessage("Required public key does not exist in key set")
 		logger.LogInfo("Required public key does not exist in key set (key set size [%d])", len(p.keySet))
 		return nil, err
 	}

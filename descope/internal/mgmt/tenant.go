@@ -3,7 +3,6 @@ package mgmt
 import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/internal/utils"
 )
 
@@ -17,7 +16,7 @@ func (t *tenant) Create(name string, selfProvisioningDomains []string) (id strin
 
 func (t *tenant) CreateWithID(id, name string, selfProvisioningDomains []string) error {
 	if id == "" {
-		return errors.NewInvalidArgumentError("id")
+		return utils.NewInvalidArgumentError("id")
 	}
 	_, err := t.createWithID(id, name, selfProvisioningDomains)
 	return err
@@ -25,7 +24,7 @@ func (t *tenant) CreateWithID(id, name string, selfProvisioningDomains []string)
 
 func (t *tenant) createWithID(id, name string, selfProvisioningDomains []string) (string, error) {
 	if name == "" {
-		return "", errors.NewInvalidArgumentError("name")
+		return "", utils.NewInvalidArgumentError("name")
 	}
 	req := makeCreateUpdateTenantRequest(id, name, selfProvisioningDomains)
 	httpRes, err := t.client.DoPostRequest(api.Routes.ManagementTenantCreate(), req, nil, t.conf.ManagementKey)
@@ -43,10 +42,10 @@ func (t *tenant) createWithID(id, name string, selfProvisioningDomains []string)
 
 func (t *tenant) Update(id, name string, selfProvisioningDomains []string) error {
 	if id == "" {
-		return errors.NewInvalidArgumentError("id")
+		return utils.NewInvalidArgumentError("id")
 	}
 	if name == "" {
-		return errors.NewInvalidArgumentError("name")
+		return utils.NewInvalidArgumentError("name")
 	}
 	req := makeCreateUpdateTenantRequest(id, name, selfProvisioningDomains)
 	_, err := t.client.DoPostRequest(api.Routes.ManagementTenantUpdate(), req, nil, t.conf.ManagementKey)
@@ -55,7 +54,7 @@ func (t *tenant) Update(id, name string, selfProvisioningDomains []string) error
 
 func (t *tenant) Delete(id string) error {
 	if id == "" {
-		return errors.NewInvalidArgumentError("id")
+		return utils.NewInvalidArgumentError("id")
 	}
 	req := map[string]any{"id": id}
 	_, err := t.client.DoPostRequest(api.Routes.ManagementTenantDelete(), req, nil, t.conf.ManagementKey)

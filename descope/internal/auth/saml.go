@@ -5,7 +5,6 @@ import (
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/logger"
 )
@@ -20,7 +19,7 @@ type samlStartResponse struct {
 
 func (auth *saml) Start(tenant string, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (url string, err error) {
 	if tenant == "" {
-		return "", errors.NewInvalidArgumentError("tenant")
+		return "", utils.NewInvalidArgumentError("tenant")
 	}
 	m := map[string]string{
 		"tenant": string(tenant),
@@ -32,7 +31,7 @@ func (auth *saml) Start(tenant string, redirectURL string, r *http.Request, logi
 	if loginOptions.IsJWTRequired() {
 		pswd, err = getValidRefreshToken(r)
 		if err != nil {
-			return "", errors.ErrInvalidStepUpJWT
+			return "", descope.ErrInvalidStepUpJWT
 		}
 	}
 	httpResponse, err := auth.client.DoPostRequest(composeSAMLStartURL(), loginOptions, &api.HTTPRequest{QueryParams: m}, pswd)

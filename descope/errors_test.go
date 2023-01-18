@@ -28,3 +28,19 @@ func TestErrorPrint(t *testing.T) {
 	err.Description = ""
 	require.Equal(t, "[foo] qux", err.Error())
 }
+
+func TestWithArg(t *testing.T) {
+	x := &Error{Code: "E123"}
+	require.Equal(t, "[E123]", x.Error())
+
+	y := x.WithMessage("b")
+	require.Equal(t, "[E123] b", y.Error())
+	require.Equal(t, "[E123]", x.Error())
+
+	z := y.WithInfo("qux", 7)
+	require.Equal(t, "[E123] b [qux:7]", z.Error())
+	require.Equal(t, "[E123] b", y.Error())
+
+	z = z.WithInfo("url", `http://example`)
+	require.Equal(t, "[E123] b [qux:7 url:http://example]", z.Error())
+}

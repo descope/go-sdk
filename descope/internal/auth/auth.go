@@ -9,7 +9,6 @@ import (
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/logger"
 	"github.com/descope/go-sdk/descope/sdk"
@@ -87,19 +86,19 @@ func (auth *authenticationService) WebAuthn() sdk.WebAuthn {
 
 func (auth *authenticationService) Logout(request *http.Request, w http.ResponseWriter) error {
 	if request == nil {
-		return errors.NewInvalidArgumentError("request")
+		return utils.NewInvalidArgumentError("request")
 	}
 
 	_, refreshToken := provideTokens(request)
 	if refreshToken == "" {
 		logger.LogDebug("unable to find tokens from cookies")
-		return errors.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
+		return descope.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
 	}
 
 	_, err := auth.validateJWT(refreshToken)
 	if err != nil {
 		logger.LogDebug("invalid refresh token")
-		return errors.ErrRefreshToken.WithMessage("Invalid refresh token")
+		return descope.ErrRefreshToken.WithMessage("Invalid refresh token")
 	}
 
 	httpResponse, err := auth.client.DoPostRequest(api.Routes.Logout(), nil, &api.HTTPRequest{}, refreshToken)
@@ -140,19 +139,19 @@ func (auth *authenticationService) Logout(request *http.Request, w http.Response
 
 func (auth *authenticationService) LogoutAll(request *http.Request, w http.ResponseWriter) error {
 	if request == nil {
-		return errors.NewInvalidArgumentError("request")
+		return utils.NewInvalidArgumentError("request")
 	}
 
 	_, refreshToken := provideTokens(request)
 	if refreshToken == "" {
 		logger.LogDebug("unable to find tokens from cookies")
-		return errors.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
+		return descope.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
 	}
 
 	_, err := auth.validateJWT(refreshToken)
 	if err != nil {
 		logger.LogDebug("invalid refresh token")
-		return errors.ErrRefreshToken.WithMessage("Invalid refresh token")
+		return descope.ErrRefreshToken.WithMessage("Invalid refresh token")
 	}
 
 	httpResponse, err := auth.client.DoPostRequest(api.Routes.LogoutAll(), nil, &api.HTTPRequest{}, refreshToken)
@@ -193,19 +192,19 @@ func (auth *authenticationService) LogoutAll(request *http.Request, w http.Respo
 
 func (auth *authenticationService) Me(request *http.Request) (*descope.UserResponse, error) {
 	if request == nil {
-		return nil, errors.NewInvalidArgumentError("request")
+		return nil, utils.NewInvalidArgumentError("request")
 	}
 
 	_, refreshToken := provideTokens(request)
 	if refreshToken == "" {
 		logger.LogDebug("unable to find tokens from cookies")
-		return nil, errors.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
+		return nil, descope.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
 	}
 
 	_, err := auth.validateJWT(refreshToken)
 	if err != nil {
 		logger.LogDebug("invalid refresh token")
-		return nil, errors.ErrRefreshToken.WithMessage("Invalid refresh token")
+		return nil, descope.ErrRefreshToken.WithMessage("Invalid refresh token")
 	}
 
 	httpResponse, err := auth.client.DoGetRequest(api.Routes.Me(), &api.HTTPRequest{}, refreshToken)
@@ -217,7 +216,7 @@ func (auth *authenticationService) Me(request *http.Request) (*descope.UserRespo
 
 func (auth *authenticationService) ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
 	if request == nil {
-		return false, nil, errors.NewInvalidArgumentError("request")
+		return false, nil, utils.NewInvalidArgumentError("request")
 	}
 
 	// Allow either empty session or refresh tokens if all we want is to validate the session token
@@ -235,7 +234,7 @@ func (auth *authenticationService) ValidateSessionTokens(sessionToken, refreshTo
 
 func (auth *authenticationService) RefreshSession(request *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
 	if request == nil {
-		return false, nil, errors.NewInvalidArgumentError("request")
+		return false, nil, utils.NewInvalidArgumentError("request")
 	}
 
 	// Allow either empty session or refresh tokens if all we want is to validate the session token
@@ -257,12 +256,12 @@ func (auth *authenticationService) ExchangeAccessKey(accessKey string) (success 
 
 	jwtResponse, err := auth.extractJWTResponse(httpResponse.BodyStr)
 	if err != nil || jwtResponse == nil {
-		return false, nil, errors.ErrUnexpectedResponse.WithMessage("Invalid data in access key response")
+		return false, nil, descope.ErrUnexpectedResponse.WithMessage("Invalid data in access key response")
 	}
 
 	tokens, err := auth.extractTokens(jwtResponse)
 	if err != nil || len(tokens) == 0 {
-		return false, nil, errors.ErrUnexpectedResponse.WithMessage("Missing token in JWT response")
+		return false, nil, descope.ErrUnexpectedResponse.WithMessage("Missing token in JWT response")
 	}
 
 	return true, tokens[0], nil
@@ -308,7 +307,7 @@ func (auth *authenticationService) validateSession(sessionToken string, refreshT
 	}
 	if !auth.publicKeysProvider.publicKeyExists() {
 		logger.LogInfo("Cannot validate session, no public key available")
-		return false, nil, errors.ErrPublicKey.WithMessage("No public key available")
+		return false, nil, descope.ErrPublicKey.WithMessage("No public key available")
 	}
 	if err == nil && sessionToken != "" && refreshToken != "" {
 		if tErr == nil {
@@ -422,10 +421,10 @@ func (auth *authenticationsBase) validateJWT(JWT string) (*descope.Token, error)
 	return descope.NewToken(JWT, token), err
 }
 
-func (*authenticationsBase) verifyDeliveryMethod(method descope.DeliveryMethod, loginID string, user *descope.User) *errors.DescopeError {
+func (*authenticationsBase) verifyDeliveryMethod(method descope.DeliveryMethod, loginID string, user *descope.User) *descope.Error {
 	varName := "loginID"
 	if loginID == "" {
-		return errors.NewInvalidArgumentError(varName)
+		return utils.NewInvalidArgumentError(varName)
 	}
 
 	switch method {
@@ -436,7 +435,7 @@ func (*authenticationsBase) verifyDeliveryMethod(method descope.DeliveryMethod, 
 			varName = "user.Email"
 		}
 		if !emailRegex.MatchString(user.Email) {
-			return errors.NewInvalidArgumentError(varName)
+			return utils.NewInvalidArgumentError(varName)
 		}
 	case descope.MethodSMS:
 		if len(user.Phone) == 0 {
@@ -445,7 +444,7 @@ func (*authenticationsBase) verifyDeliveryMethod(method descope.DeliveryMethod, 
 			varName = "user.Phone"
 		}
 		if !phoneRegex.MatchString(user.Phone) {
-			return errors.NewInvalidArgumentError(varName)
+			return utils.NewInvalidArgumentError(varName)
 		}
 	case descope.MethodWhatsApp:
 		if len(user.Phone) == 0 {
@@ -454,7 +453,7 @@ func (*authenticationsBase) verifyDeliveryMethod(method descope.DeliveryMethod, 
 			varName = "user.Phone"
 		}
 		if !phoneRegex.MatchString(user.Phone) {
-			return errors.NewInvalidArgumentError(varName)
+			return utils.NewInvalidArgumentError(varName)
 		}
 	}
 	return nil
@@ -462,7 +461,7 @@ func (*authenticationsBase) verifyDeliveryMethod(method descope.DeliveryMethod, 
 
 func (auth *authenticationsBase) exchangeToken(code string, url string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if code == "" {
-		return nil, errors.NewInvalidArgumentError("code")
+		return nil, utils.NewInvalidArgumentError("code")
 	}
 
 	httpResponse, err := auth.client.DoPostRequest(url, newExchangeTokenBody(code), nil, "")
@@ -528,13 +527,12 @@ func getValidRefreshToken(r *http.Request) (string, error) {
 	_, refreshToken := provideTokens(r)
 	if refreshToken == "" {
 		logger.LogDebug("unable to find tokens from cookies")
-		return "", errors.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
+		return "", descope.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
 	}
 	return refreshToken, nil
 }
 
 func createCookie(token *descope.Token, jwtRes *descope.JWTResponse) *http.Cookie {
-
 	if token != nil {
 		name, _ := token.Claims[claimAttributeName].(string)
 		return &http.Cookie{
@@ -579,18 +577,18 @@ func provideTokens(r *http.Request) (string, string) {
 
 func validateTokenError(err error) (bool, error) {
 	if goErrors.Is(err, jwt.ErrTokenExpired()) {
-		return false, errors.ErrInvalidToken.WithMessage("Token has expired")
+		return false, descope.ErrInvalidToken.WithMessage("Token has expired")
 	}
 	if goErrors.Is(err, jwt.ErrTokenNotYetValid()) {
-		return false, errors.ErrInvalidToken.WithMessage("Token is not yet valid")
+		return false, descope.ErrInvalidToken.WithMessage("Token is not yet valid")
 	}
 	if err != nil {
 		if unwrapped := goErrors.Unwrap(err); unwrapped != nil {
-			if de, ok := unwrapped.(*errors.DescopeError); ok {
+			if de, ok := unwrapped.(*descope.Error); ok {
 				return false, de
 			}
 		}
-		return false, errors.ErrInvalidToken.WithMessage("Failed to verify token: %s", err.Error())
+		return false, descope.ErrInvalidToken.WithMessage("Failed to verify token: %s", err.Error())
 	}
 	return true, nil
 }
@@ -634,7 +632,7 @@ func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (*descope.Enchant
 	var response *descope.EnchantedLinkResponse
 	if err := utils.Unmarshal([]byte(httpResponse.BodyStr), &response); err != nil {
 		logger.LogError("failed to load pending reference from response", err)
-		return response, errors.ErrUnexpectedResponse.WithMessage("Failed to load pending reference")
+		return response, descope.ErrUnexpectedResponse.WithMessage("Failed to load pending reference")
 	}
 	return response, nil
 }

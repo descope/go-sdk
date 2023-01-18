@@ -11,7 +11,6 @@ import (
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -22,7 +21,7 @@ func TestSignInEnchantedLinkEmptyLoginID(t *testing.T) {
 	require.NoError(t, err)
 	_, err = a.EnchantedLink().SignIn(email, "", nil, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
 }
 
 func TestSignInEnchantedLinkStepupNoJwt(t *testing.T) {
@@ -31,7 +30,7 @@ func TestSignInEnchantedLinkStepupNoJwt(t *testing.T) {
 	require.NoError(t, err)
 	_, err = a.EnchantedLink().SignIn(email, "", nil, &descope.LoginOptions{Stepup: true})
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrInvalidStepUpJWT)
+	assert.ErrorIs(t, err, descope.ErrInvalidStepUpJWT)
 }
 
 func TestSignInEnchantedLink(t *testing.T) {
@@ -253,7 +252,7 @@ func TestGetEnchantedLinkSessionStillPending(t *testing.T) {
 	w := httptest.NewRecorder()
 	_, err = a.EnchantedLink().GetSession(pendingRef, w)
 	require.Error(t, err)
-	require.ErrorIs(t, err, errors.ErrEnchantedLinkUnauthorized)
+	require.ErrorIs(t, err, descope.ErrEnchantedLinkUnauthorized)
 }
 
 func TestUpdateUserEmailEnchantedLink(t *testing.T) {

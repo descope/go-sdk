@@ -3,7 +3,7 @@ package mgmt
 import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/errors"
+	"github.com/descope/go-sdk/descope/internal/utils"
 )
 
 type sso struct {
@@ -12,16 +12,16 @@ type sso struct {
 
 func (s *sso) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL string) error {
 	if tenantID == "" {
-		return errors.NewInvalidArgumentError("tenantID")
+		return utils.NewInvalidArgumentError("tenantID")
 	}
 	if idpURL == "" {
-		return errors.NewInvalidArgumentError("idpURL")
+		return utils.NewInvalidArgumentError("idpURL")
 	}
 	if idpCert == "" {
-		return errors.NewInvalidArgumentError("idpCert")
+		return utils.NewInvalidArgumentError("idpCert")
 	}
 	if entityID == "" {
-		return errors.NewInvalidArgumentError("entityID")
+		return utils.NewInvalidArgumentError("entityID")
 	}
 	req := map[string]any{
 		"tenantId":    tenantID,
@@ -36,10 +36,10 @@ func (s *sso) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL
 
 func (s *sso) ConfigureMetadata(tenantID, idpMetadataURL string) error {
 	if tenantID == "" {
-		return errors.NewInvalidArgumentError("tenantID")
+		return utils.NewInvalidArgumentError("tenantID")
 	}
 	if idpMetadataURL == "" {
-		return errors.NewInvalidArgumentError("idpMetadataURL")
+		return utils.NewInvalidArgumentError("idpMetadataURL")
 	}
 	req := map[string]any{
 		"tenantId":       tenantID,
@@ -51,7 +51,7 @@ func (s *sso) ConfigureMetadata(tenantID, idpMetadataURL string) error {
 
 func (s *sso) ConfigureMapping(tenantID string, roleMappings []*descope.RoleMapping, attributeMapping *descope.AttributeMapping) error {
 	if tenantID == "" {
-		return errors.NewInvalidArgumentError("tenantID")
+		return utils.NewInvalidArgumentError("tenantID")
 	}
 	mappings := []map[string]any{}
 	for i := range roleMappings {

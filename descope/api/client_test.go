@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/descope/go-sdk/descope/errors"
+	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/tests/mocks"
 	"github.com/stretchr/testify/assert"
@@ -161,18 +161,27 @@ func TestPostUnauthorized(t *testing.T) {
 
 	_, err := c.DoPostRequest("path", nil, nil, "")
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrUnexpectedResponse)
+	assert.ErrorIs(t, err, descope.ErrUnexpectedResponse)
 }
 
 func TestPostRateLimitExceeded(t *testing.T) {
-	projectID := "test"
-	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
-		return &http.Response{StatusCode: http.StatusTooManyRequests, Header: http.Header{"Retry-After": []string{"10"}}}, nil
+	c := NewClient(ClientParams{ProjectID: "test", DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusTooManyRequests}, nil
 	})})
 
 	_, err := c.DoPostRequest("path", nil, nil, "")
-	require.ErrorIs(t, err, errors.ErrRateLimitExceeded)
+	require.ErrorIs(t, err, descope.ErrRateLimitExceeded)
+	require.ErrorContains(t, err, "Try again")
+	require.Empty(t, err.(*descope.Error).Info)
+
+	c = NewClient(ClientParams{ProjectID: "test", DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusTooManyRequests, Header: http.Header{"Retry-After": []string{"10"}}}, nil
+	})})
+
+	_, err = c.DoPostRequest("path", nil, nil, "")
+	require.ErrorIs(t, err, descope.ErrRateLimitExceeded)
 	require.ErrorContains(t, err, "Try again in 10 seconds")
+	require.Equal(t, 10, err.(*descope.Error).Info[descope.ErrorInfoKeys.RateLimitExceededRetryAfter])
 }
 
 func TestPostDescopeError(t *testing.T) {
@@ -185,7 +194,7 @@ func TestPostDescopeError(t *testing.T) {
 
 	_, err := c.DoPostRequest("path", nil, nil, "")
 	require.Error(t, err)
-	assert.EqualValues(t, code, err.(*errors.DescopeError).Code)
+	assert.EqualValues(t, code, err.(*descope.Error).Code)
 }
 
 func TestPostError(t *testing.T) {
@@ -211,7 +220,7 @@ func TestPostUnknownError(t *testing.T) {
 
 	_, err := c.DoPostRequest("path", nil, nil, "")
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrUnexpectedResponse)
+	assert.ErrorIs(t, err, descope.ErrUnexpectedResponse)
 }
 
 func TestPostNotFoundError(t *testing.T) {
@@ -223,7 +232,7 @@ func TestPostNotFoundError(t *testing.T) {
 
 	_, err := c.DoPostRequest("path", nil, nil, "")
 	require.Error(t, err)
-	assert.ErrorIs(t, err, errors.ErrUnexpectedResponse)
+	assert.ErrorIs(t, err, descope.ErrUnexpectedResponse)
 }
 
 func TestDoRequestDefault(t *testing.T) {

@@ -10,10 +10,11 @@ import (
 	"path"
 	"runtime"
 	"runtime/debug"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/descope/go-sdk/descope/errors"
+	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/logger"
 )
@@ -694,22 +695,22 @@ func (c *Client) parseBody(response *http.Response) (resBytes []byte, err error)
 
 func (c *Client) parseResponseError(response *http.Response) error {
 	if response.StatusCode == http.StatusTooManyRequests {
-		if seconds := response.Header.Get("Retry-After"); seconds != "" {
-			return errors.ErrRateLimitExceeded.WithMessage("Try again in %s seconds", seconds)
+		if seconds, _ := strconv.Atoi(response.Header.Get(descope.ErrorInfoKeys.RateLimitExceededRetryAfter)); seconds != 0 {
+			return descope.ErrRateLimitExceeded.WithMessage("Try again in %d seconds", seconds).WithInfo(descope.ErrorInfoKeys.RateLimitExceededRetryAfter, seconds)
 		}
-		return errors.ErrRateLimitExceeded
+		return descope.ErrRateLimitExceeded.WithMessage("Try again in a few seconds")
 	}
 
 	body, err := c.parseBody(response)
 	if err != nil {
 		logger.LogError("failed to process error from server response", err)
-		return errors.ErrUnexpectedResponse
+		return descope.ErrUnexpectedResponse
 	}
 
-	var responseErr *errors.DescopeError
+	var responseErr *descope.Error
 	if err := json.Unmarshal(body, &responseErr); err != nil || responseErr.Code == "" {
 		logger.LogError("failed to parse error from server response", err)
-		return errors.ErrUnexpectedResponse
+		return descope.ErrUnexpectedResponse
 	}
 
 	if responseErr.Description == "" {

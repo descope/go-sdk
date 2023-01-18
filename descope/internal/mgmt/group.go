@@ -3,7 +3,6 @@ package mgmt
 import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/internal/utils"
 )
 
@@ -13,7 +12,7 @@ type group struct {
 
 func (r *group) LoadAllGroups(tenantID string) ([]*descope.Group, error) {
 	if tenantID == "" {
-		return nil, errors.NewInvalidArgumentError("tenantID")
+		return nil, utils.NewInvalidArgumentError("tenantID")
 	}
 	body := map[string]any{
 		"tenantId": tenantID,
@@ -27,10 +26,10 @@ func (r *group) LoadAllGroups(tenantID string) ([]*descope.Group, error) {
 
 func (r *group) LoadAllGroupsForMembers(tenantID string, userIDs, loginIDs []string) ([]*descope.Group, error) {
 	if tenantID == "" {
-		return nil, errors.NewInvalidArgumentError("tenantID")
+		return nil, utils.NewInvalidArgumentError("tenantID")
 	}
 	if len(userIDs) == 0 && len(loginIDs) == 0 {
-		return nil, errors.NewInvalidArgumentError("userIDs and loginIDs")
+		return nil, utils.NewInvalidArgumentError("userIDs and loginIDs")
 	}
 	body := map[string]any{
 		"tenantId": tenantID,
@@ -46,10 +45,10 @@ func (r *group) LoadAllGroupsForMembers(tenantID string, userIDs, loginIDs []str
 
 func (r *group) LoadAllGroupMembers(tenantID, groupID string) ([]*descope.Group, error) {
 	if tenantID == "" {
-		return nil, errors.NewInvalidArgumentError("tenantID")
+		return nil, utils.NewInvalidArgumentError("tenantID")
 	}
 	if groupID == "" {
-		return nil, errors.NewInvalidArgumentError("groupID")
+		return nil, utils.NewInvalidArgumentError("groupID")
 	}
 	body := map[string]any{
 		"tenantId": tenantID,

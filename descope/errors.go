@@ -2,6 +2,7 @@ package descope
 
 import (
 	"fmt"
+	"strings"
 )
 
 var (
@@ -12,6 +13,8 @@ var (
 	ErrMissingArguments  = newServerError("E011004")
 
 	// server authentication
+	ErrUserAlreadyExists         = newServerError("E062107")
+	ErrInvalidOneTimeCode        = newServerError("E061102")
 	ErrEnchantedLinkUnauthorized = newServerError("E062503")
 
 	// server management
@@ -32,9 +35,10 @@ var (
 	ErrInvalidStepUpJWT = newClientError("C030004", "Refresh token must be provided for stepup actions")
 )
 
-var (
-	ErrorInfoKeyRateLimitRetryAfter = "Retry-After"
-)
+// Additional information might be available in the Error struct for specific errors
+var ErrorInfoKeys = errorInfoKeys{
+	RateLimitExceededRetryAfter: "Retry-After",
+}
 
 type Error struct {
 	Code        string         `json:"errorCode,omitempty"`
@@ -51,7 +55,7 @@ func (e Error) Error() string {
 		str = fmt.Sprintf("%s %s%s", str, e.Description, e.Message)
 	}
 	if len(e.Info) > 0 {
-		str = fmt.Sprintf("%s %v", str, e.Info)
+		str = fmt.Sprintf("%s %s", str, strings.TrimPrefix(fmt.Sprintf("%v", e.Info), "map"))
 	}
 	return str
 }
@@ -64,7 +68,16 @@ func (e Error) Is(err error) bool {
 }
 
 func (e Error) WithMessage(format string, args ...any) *Error {
-	return &Error{Code: e.Code, Description: e.Description, Message: fmt.Sprintf(format, args...)}
+	e.Message = fmt.Sprintf(format, args...)
+	return &e
+}
+
+func (e Error) WithInfo(key string, value any) *Error {
+	if e.Info == nil {
+		e.Info = map[string]any{}
+	}
+	e.Info[key] = value
+	return &e
 }
 
 func newServerError(code string) *Error {
@@ -75,6 +88,6 @@ func newClientError(code, desc string) *Error {
 	return &Error{Code: code, Description: desc}
 }
 
-func NewInvalidArgumentError(arg string) *Error {
-	return ErrInvalidArgument.WithMessage(fmt.Sprintf("The '%s' argument is invalid", arg))
+type errorInfoKeys struct {
+	RateLimitExceededRetryAfter string
 }

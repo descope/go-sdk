@@ -3,7 +3,6 @@ package mgmt
 import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/internal/utils"
 )
 
@@ -13,7 +12,7 @@ type role struct {
 
 func (r *role) Create(name, description string, permissionNames []string) error {
 	if name == "" {
-		return errors.NewInvalidArgumentError("name")
+		return utils.NewInvalidArgumentError("name")
 	}
 	body := map[string]any{
 		"name":            name,
@@ -26,10 +25,10 @@ func (r *role) Create(name, description string, permissionNames []string) error 
 
 func (r *role) Update(name, newName, description string, permissionNames []string) error {
 	if name == "" {
-		return errors.NewInvalidArgumentError("name")
+		return utils.NewInvalidArgumentError("name")
 	}
 	if newName == "" {
-		return errors.NewInvalidArgumentError("newName")
+		return utils.NewInvalidArgumentError("newName")
 	}
 	body := map[string]any{
 		"name":            name,
@@ -43,7 +42,7 @@ func (r *role) Update(name, newName, description string, permissionNames []strin
 
 func (r *role) Delete(name string) error {
 	if name == "" {
-		return errors.NewInvalidArgumentError("name")
+		return utils.NewInvalidArgumentError("name")
 	}
 	body := map[string]any{"name": name}
 	_, err := r.client.DoPostRequest(api.Routes.ManagementRoleDelete(), body, nil, r.conf.ManagementKey)

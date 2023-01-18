@@ -56,7 +56,10 @@ user := &descope.User{
 }
 err := descopeClient.Auth.OTP().SignUp(descope.MethodEmail, loginID, user)
 if err != nil {
-    // handle error
+    if err.Is(descope.ErrUserAlreadyExists) {
+        // user already exists with this loginID
+    }
+    // handle other error cases
 }
 ```
 
@@ -67,7 +70,10 @@ The user will receive a code using the selected delivery method. Verify that cod
 // Otherwise they're available via authInfo
 authInfo, err := descopeClient.OTP().Verify(descope.MethodEmail, loginID, code, w)
 if err != nil {
-    // handle error
+    if err.Is(descope.ErrInvalidOneTimeCode) {
+        // the code was invalid
+    }
+    // handle other error cases
 }
 ```
 
@@ -146,7 +152,7 @@ for i := retriesCount; i > 0; i-- {
         // Otherwise they're available via authInfo
         break
     }
-    if err == errors.EnchantedLinkUnauthorized && i > 1 {
+    if err.Is(descope.ErrEnchantedLinkUnauthorized) && i > 1 {
         // poll again after X seconds
         time.Sleep(time.Second * time.Duration(retryInterval))
         continue
@@ -678,7 +684,7 @@ api := DescopeClient{
         MockSession: mocksauth.MockSession{
             ValidateSessionResponseSuccess: false,
             ValidateSessionResponse:        &descope.Token{JWT: validateSessionResponse},
-            ValidateSessionError:           errors.NoPublicKeyError,
+            ValidateSessionError:           descope.ErrPublicKey,
         },
     },
     Management: &mocksmgmt.MockManagement{
@@ -695,7 +701,7 @@ ok, info, err := api.Auth.ValidateSession(nil, nil)
 assert.False(t, ok)
 assert.NotEmpty(t, info)
 assert.EqualValues(t, validateSessionResponse, info.JWT)
-assert.ErrorIs(t, err, errors.NoPublicKeyError)
+assert.ErrorIs(t, err, descope.ErrPublicKey)
 
 res, err := api.Management.JWT().UpdateJWTWithCustomClaims("some jwt", nil)
 require.NoError(t, err)
