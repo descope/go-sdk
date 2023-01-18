@@ -1,4 +1,4 @@
-package errors
+package descope
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ var (
 	ErrBadRequest        = newServerError("E011001")
 	ErrInvalidArguments  = newServerError("E011002")
 	ErrValidationFailure = newServerError("E011003")
+	ErrMissingArguments  = newServerError("E011004")
 
 	// server authentication
 	ErrEnchantedLinkUnauthorized = newServerError("E062503")
@@ -31,39 +32,49 @@ var (
 	ErrInvalidStepUpJWT = newClientError("C030004", "Refresh token must be provided for stepup actions")
 )
 
-type DescopeError struct {
-	Code        string `json:"errorCode,omitempty"`
-	Description string `json:"errorDescription,omitempty"`
-	Message     string `json:"errorMessage,omitempty"`
+var (
+	ErrorInfoKeyRateLimitRetryAfter = "Retry-After"
+)
+
+type Error struct {
+	Code        string         `json:"errorCode,omitempty"`
+	Description string         `json:"errorDescription,omitempty"`
+	Message     string         `json:"errorMessage,omitempty"`
+	Info        map[string]any `json:"-"`
 }
 
-func (e DescopeError) Error() string {
-	str := fmt.Sprintf("[%s] %s", e.Code, e.Description)
-	if e.Message != "" {
-		str = fmt.Sprintf("%s: %s", str, e.Message)
+func (e Error) Error() string {
+	str := fmt.Sprintf("[%s]", e.Code)
+	if e.Description != "" && e.Message != "" {
+		str = fmt.Sprintf("%s %s: %s", str, e.Description, e.Message)
+	} else if e.Description != "" || e.Message != "" {
+		str = fmt.Sprintf("%s %s%s", str, e.Description, e.Message)
+	}
+	if len(e.Info) > 0 {
+		str = fmt.Sprintf("%s %v", str, e.Info)
 	}
 	return str
 }
 
-func (e DescopeError) Is(err error) bool {
-	if de, ok := err.(*DescopeError); ok {
+func (e Error) Is(err error) bool {
+	if de, ok := err.(*Error); ok {
 		return e.Code == de.Code
 	}
 	return false
 }
 
-func (e DescopeError) WithMessage(format string, args ...any) *DescopeError {
-	return &DescopeError{Code: e.Code, Description: e.Description, Message: fmt.Sprintf(format, args...)}
+func (e Error) WithMessage(format string, args ...any) *Error {
+	return &Error{Code: e.Code, Description: e.Description, Message: fmt.Sprintf(format, args...)}
 }
 
-func newServerError(code string) *DescopeError {
-	return &DescopeError{Code: code}
+func newServerError(code string) *Error {
+	return &Error{Code: code}
 }
 
-func newClientError(code, desc string) *DescopeError {
-	return &DescopeError{Code: code, Description: desc}
+func newClientError(code, desc string) *Error {
+	return &Error{Code: code, Description: desc}
 }
 
-func NewInvalidArgumentError(arg string) *DescopeError {
+func NewInvalidArgumentError(arg string) *Error {
 	return ErrInvalidArgument.WithMessage(fmt.Sprintf("The '%s' argument is invalid", arg))
 }
