@@ -8,7 +8,6 @@ import (
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -98,7 +97,7 @@ func TestSignInWebAuthnStartEmpty(t *testing.T) {
 	res, err := a.WebAuthn().SignInStart("", "https://example.com", nil, nil)
 	require.Error(t, err)
 	assert.Empty(t, res)
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
 }
 
 func TestSignInWebAuthnStepupNoJWT(t *testing.T) {
@@ -107,7 +106,7 @@ func TestSignInWebAuthnStepupNoJWT(t *testing.T) {
 	res, err := a.WebAuthn().SignInStart("a", "https://example.com", nil, &descope.LoginOptions{Stepup: true})
 	require.Error(t, err)
 	assert.Empty(t, res)
-	assert.ErrorIs(t, err, errors.InvalidStepupJwtError)
+	assert.ErrorIs(t, err, descope.ErrInvalidStepUpJWT)
 }
 
 func TestSignUpFinish(t *testing.T) {
@@ -143,7 +142,7 @@ func TestSignUpOrInStartEmpty(t *testing.T) {
 	res, err := a.WebAuthn().SignUpOrInStart("", "https://example.com")
 	require.Error(t, err)
 	assert.Nil(t, res)
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
 }
 
 func TestWebAuthnUpdateUserDeviceStart(t *testing.T) {
@@ -170,7 +169,7 @@ func TestWebAuthnUpdateUserDeviceStartEmpty(t *testing.T) {
 	res, err := a.WebAuthn().UpdateUserDeviceStart("", "https://example.com", r)
 	require.Error(t, err)
 	assert.Empty(t, res)
-	assert.EqualValues(t, errors.BadRequestErrorCode, err.(*errors.WebError).Code)
+	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
 }
 
 func TestWebAuthnUpdateUserDeviceFinish(t *testing.T) {

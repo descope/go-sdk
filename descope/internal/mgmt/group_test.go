@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/descope/go-sdk/descope"
-	"github.com/descope/go-sdk/descope/errors"
+	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/tests/helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -41,7 +41,7 @@ func TestLoadAllGroupsMissingArgument(t *testing.T) {
 	tenantID := ""
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
 	res, err := mgmt.Group().LoadAllGroups(tenantID)
-	require.ErrorContains(t, err, errors.NewInvalidArgumentError("tenantID").Message)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("tenantID").Message)
 	assert.Nil(t, res)
 }
 
@@ -88,7 +88,7 @@ func TestLoadAllGroupsForMembersMissingArgumentUserIDs(t *testing.T) {
 	var loginIDs []string
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
 	res, err := mgmt.Group().LoadAllGroupsForMembers(tenantID, userIDs, loginIDs)
-	require.ErrorContains(t, err, errors.NewInvalidArgumentError("userIDs and loginIDs").Message)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("userIDs and loginIDs").Message)
 	assert.Nil(t, res)
 }
 
@@ -98,7 +98,7 @@ func TestLoadAllGroupsForMembersMissingArgumentTenantID(t *testing.T) {
 	loginIDs := []string{"three", "four"}
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
 	res, err := mgmt.Group().LoadAllGroupsForMembers(tenantID, userIDs, loginIDs)
-	require.ErrorContains(t, err, errors.NewInvalidArgumentError("tenantID").Message)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("tenantID").Message)
 	assert.Nil(t, res)
 }
 
@@ -144,7 +144,7 @@ func TestLoadAllGroupMembersMissingArgument(t *testing.T) {
 	groupID := ""
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
 	res, err := mgmt.Group().LoadAllGroupMembers(tenantID, groupID)
-	require.ErrorContains(t, err, errors.NewInvalidArgumentError("groupID").Message)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("groupID").Message)
 	assert.Nil(t, res)
 }
 
@@ -153,7 +153,7 @@ func TestLoadAllGroupMembersMissingTenantID(t *testing.T) {
 	groupID := "abc"
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
 	res, err := mgmt.Group().LoadAllGroupMembers(tenantID, groupID)
-	require.ErrorContains(t, err, errors.NewInvalidArgumentError("tenantID").Message)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("tenantID").Message)
 	assert.Nil(t, res)
 }
 

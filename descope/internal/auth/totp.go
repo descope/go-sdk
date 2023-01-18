@@ -4,7 +4,6 @@ import (
 	"net/http"
 
 	"github.com/descope/go-sdk/descope"
-	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/internal/utils"
 )
 
@@ -14,7 +13,7 @@ type totp struct {
 
 func (auth *totp) SignUp(loginID string, user *descope.User) (*descope.TOTPResponse, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 
 	httpResponse, err := auth.client.DoPostRequest(composeSignUpTOTPURL(), newSignUPTOTPRequestBody(loginID, user), nil, "")
@@ -31,7 +30,7 @@ func (auth *totp) SignUp(loginID string, user *descope.User) (*descope.TOTPRespo
 
 func (auth *totp) UpdateUser(loginID string, r *http.Request) (*descope.TOTPResponse, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	pswd, err := getValidRefreshToken(r)
 	if err != nil {
@@ -51,7 +50,7 @@ func (auth *totp) UpdateUser(loginID string, r *http.Request) (*descope.TOTPResp
 
 func (auth *totp) SignInCode(loginID string, code string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	var pswd string
 	var err error

@@ -12,7 +12,6 @@ import (
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -68,7 +67,7 @@ func TestOAuthStartForwardResponseStepupNoJWT(t *testing.T) {
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
 	_, err = a.OAuth().Start(provider, landingURL, nil, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, w)
-	assert.ErrorIs(t, err, errors.InvalidStepupJwtError)
+	assert.ErrorIs(t, err, descope.ErrInvalidStepUpJWT)
 }
 
 func TestOAuthStartInvalidForwardResponse(t *testing.T) {

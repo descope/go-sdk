@@ -5,7 +5,6 @@ import (
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/logger"
 )
@@ -29,7 +28,7 @@ func (auth *oauth) Start(provider descope.OAuthProvider, redirectURL string, r *
 	if loginOptions.IsJWTRequired() {
 		pswd, err = getValidRefreshToken(r)
 		if err != nil {
-			return "", errors.InvalidStepupJwtError
+			return "", descope.ErrInvalidStepUpJWT
 		}
 	}
 

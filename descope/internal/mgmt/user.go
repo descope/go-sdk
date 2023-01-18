@@ -3,7 +3,6 @@ package mgmt
 import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/internal/utils"
 )
 
@@ -13,7 +12,7 @@ type user struct {
 
 func (u *user) Create(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	req := makeCreateUpdateUserRequest(loginID, email, phone, displayName, roles, tenants)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserCreate(), req, nil, u.conf.ManagementKey)
@@ -25,7 +24,7 @@ func (u *user) Create(loginID, email, phone, displayName string, roles []string,
 
 func (u *user) Update(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	req := makeCreateUpdateUserRequest(loginID, email, phone, displayName, roles, tenants)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserUpdate(), req, nil, u.conf.ManagementKey)
@@ -37,7 +36,7 @@ func (u *user) Update(loginID, email, phone, displayName string, roles []string,
 
 func (u *user) Delete(loginID string) error {
 	if loginID == "" {
-		return errors.NewInvalidArgumentError("loginID")
+		return utils.NewInvalidArgumentError("loginID")
 	}
 	req := map[string]any{"loginId": loginID}
 	_, err := u.client.DoPostRequest(api.Routes.ManagementUserDelete(), req, nil, u.conf.ManagementKey)
@@ -46,14 +45,14 @@ func (u *user) Delete(loginID string) error {
 
 func (u *user) Load(loginID string) (*descope.UserResponse, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	return u.load(loginID, "")
 }
 
 func (u *user) LoadByUserID(userID string) (*descope.UserResponse, error) {
 	if userID == "" {
-		return nil, errors.NewInvalidArgumentError("userID")
+		return nil, utils.NewInvalidArgumentError("userID")
 	}
 	return u.load("", userID)
 }
@@ -88,7 +87,7 @@ func (u *user) Deactivate(loginID string) (*descope.UserResponse, error) {
 
 func (u *user) updateStatus(loginID string, status string) (*descope.UserResponse, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	req := map[string]any{"loginId": loginID, "status": status}
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserUpdateStatus(), req, nil, u.conf.ManagementKey)
@@ -100,7 +99,7 @@ func (u *user) updateStatus(loginID string, status string) (*descope.UserRespons
 
 func (u *user) UpdateEmail(loginID, email string, isVerified bool) (*descope.UserResponse, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	req := map[string]any{"loginId": loginID, "email": email, "verified": isVerified}
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserUpdateEmail(), req, nil, u.conf.ManagementKey)
@@ -112,7 +111,7 @@ func (u *user) UpdateEmail(loginID, email string, isVerified bool) (*descope.Use
 
 func (u *user) UpdatePhone(loginID, phone string, isVerified bool) (*descope.UserResponse, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	req := map[string]any{"loginId": loginID, "phone": phone, "verified": isVerified}
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserUpdatePhone(), req, nil, u.conf.ManagementKey)
@@ -124,7 +123,7 @@ func (u *user) UpdatePhone(loginID, phone string, isVerified bool) (*descope.Use
 
 func (u *user) UpdateDisplayName(loginID, displayName string) (*descope.UserResponse, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	req := map[string]any{"loginId": loginID, "displayName": displayName}
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserUpdateDisplayName(), req, nil, u.conf.ManagementKey)
@@ -136,7 +135,7 @@ func (u *user) UpdateDisplayName(loginID, displayName string) (*descope.UserResp
 
 func (u *user) AddRoles(loginID string, roles []string) (*descope.UserResponse, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	req := makeUpdateUserRolesRequest(loginID, "", roles)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserAddRole(), req, nil, u.conf.ManagementKey)
@@ -148,7 +147,7 @@ func (u *user) AddRoles(loginID string, roles []string) (*descope.UserResponse, 
 
 func (u *user) RemoveRoles(loginID string, roles []string) (*descope.UserResponse, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	req := makeUpdateUserRolesRequest(loginID, "", roles)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserRemoveRole(), req, nil, u.conf.ManagementKey)
@@ -160,7 +159,7 @@ func (u *user) RemoveRoles(loginID string, roles []string) (*descope.UserRespons
 
 func (u *user) AddTenant(loginID string, tenantID string) (*descope.UserResponse, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	req := makeUpdateUserTenantRequest(loginID, tenantID)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserAddTenant(), req, nil, u.conf.ManagementKey)
@@ -172,7 +171,7 @@ func (u *user) AddTenant(loginID string, tenantID string) (*descope.UserResponse
 
 func (u *user) RemoveTenant(loginID string, tenantID string) (*descope.UserResponse, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	req := makeUpdateUserTenantRequest(loginID, tenantID)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserRemoveTenant(), req, nil, u.conf.ManagementKey)
@@ -184,7 +183,7 @@ func (u *user) RemoveTenant(loginID string, tenantID string) (*descope.UserRespo
 
 func (u *user) AddTenantRoles(loginID string, tenantID string, roles []string) (*descope.UserResponse, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	req := makeUpdateUserRolesRequest(loginID, tenantID, roles)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserAddRole(), req, nil, u.conf.ManagementKey)
@@ -196,7 +195,7 @@ func (u *user) AddTenantRoles(loginID string, tenantID string, roles []string) (
 
 func (u *user) RemoveTenantRoles(loginID string, tenantID string, roles []string) (*descope.UserResponse, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	req := makeUpdateUserRolesRequest(loginID, tenantID, roles)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserRemoveRole(), req, nil, u.conf.ManagementKey)

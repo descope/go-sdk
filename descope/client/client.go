@@ -5,9 +5,9 @@ import (
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/internal/auth"
 	"github.com/descope/go-sdk/descope/internal/mgmt"
+	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/logger"
 	"github.com/descope/go-sdk/descope/sdk"
 )
@@ -37,12 +37,12 @@ func New() (*DescopeClient, error) {
 // or set in the DESCOPE_PROJECT_ID environment variable.
 func NewWithConfig(config *Config) (*DescopeClient, error) {
 	if config == nil {
-		return nil, errors.NewInvalidArgumentError("config")
+		return nil, utils.NewInvalidArgumentError("config")
 	}
 	logger.Init(config.LogLevel, config.Logger)
 
 	if strings.TrimSpace(config.setProjectID()) == "" {
-		return nil, errors.NewValidationError("project id is missing, make sure to add it in the Config struct or the environment variable \"%s\"", descope.EnvironmentVariableProjectID)
+		return nil, descope.ErrMissingProjectID.WithMessage("project id is missing, make sure to add it in the Config struct or the environment variable \"%s\"", descope.EnvironmentVariableProjectID)
 	}
 	if config.setPublicKey() != "" {
 		logger.LogInfo("provided public key is set, forcing only provided public key validation")

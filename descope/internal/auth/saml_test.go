@@ -10,7 +10,6 @@ import (
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/errors"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -66,5 +65,5 @@ func TestSAMLStartInvalidForwardResponse(t *testing.T) {
 	require.Error(t, err)
 
 	_, err = a.SAML().Start("test", "", nil, &descope.LoginOptions{Stepup: true}, w)
-	assert.ErrorIs(t, err, errors.InvalidStepupJwtError)
+	assert.ErrorIs(t, err, descope.ErrInvalidStepUpJWT)
 }

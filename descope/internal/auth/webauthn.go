@@ -5,7 +5,6 @@ import (
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/internal/utils"
 )
 
@@ -41,14 +40,14 @@ func (auth *webAuthn) SignUpFinish(request *descope.WebAuthnFinishRequest, w htt
 
 func (auth *webAuthn) SignInStart(loginID string, origin string, r *http.Request, loginOptions *descope.LoginOptions) (*descope.WebAuthnTransactionResponse, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	var pswd string
 	var err error
 	if loginOptions.IsJWTRequired() {
 		pswd, err = getValidRefreshToken(r)
 		if err != nil {
-			return nil, errors.InvalidStepupJwtError
+			return nil, descope.ErrInvalidStepUpJWT
 		}
 	}
 
@@ -73,7 +72,7 @@ func (auth *webAuthn) SignInFinish(request *descope.WebAuthnFinishRequest, w htt
 
 func (auth *webAuthn) SignUpOrInStart(loginID string, origin string) (*descope.WebAuthnTransactionResponse, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 
 	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignUpOrInStart(), authenticationWebAuthnSignInRequestBody{LoginID: loginID, Origin: origin}, nil, "")
@@ -88,7 +87,7 @@ func (auth *webAuthn) SignUpOrInStart(loginID string, origin string) (*descope.W
 
 func (auth *webAuthn) UpdateUserDeviceStart(loginID string, origin string, r *http.Request) (*descope.WebAuthnTransactionResponse, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 
 	pswd, err := getValidRefreshToken(r)

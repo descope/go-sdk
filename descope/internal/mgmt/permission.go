@@ -3,7 +3,6 @@ package mgmt
 import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/internal/utils"
 )
 
@@ -13,7 +12,7 @@ type permission struct {
 
 func (p *permission) Create(name, description string) error {
 	if name == "" {
-		return errors.NewInvalidArgumentError("name")
+		return utils.NewInvalidArgumentError("name")
 	}
 	body := map[string]any{
 		"name":        name,
@@ -25,10 +24,10 @@ func (p *permission) Create(name, description string) error {
 
 func (p *permission) Update(name, newName, description string) error {
 	if name == "" {
-		return errors.NewInvalidArgumentError("name")
+		return utils.NewInvalidArgumentError("name")
 	}
 	if newName == "" {
-		return errors.NewInvalidArgumentError("newName")
+		return utils.NewInvalidArgumentError("newName")
 	}
 	body := map[string]any{
 		"name":        name,
@@ -41,7 +40,7 @@ func (p *permission) Update(name, newName, description string) error {
 
 func (p *permission) Delete(name string) error {
 	if name == "" {
-		return errors.NewInvalidArgumentError("name")
+		return utils.NewInvalidArgumentError("name")
 	}
 	body := map[string]any{"name": name}
 	_, err := p.client.DoPostRequest(api.Routes.ManagementPermissionDelete(), body, nil, p.conf.ManagementKey)

@@ -10,10 +10,11 @@ import (
 	"path"
 	"runtime"
 	"runtime/debug"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/descope/go-sdk/descope/errors"
+	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/logger"
 )
@@ -693,23 +694,29 @@ func (c *Client) parseBody(response *http.Response) (resBytes []byte, err error)
 }
 
 func (c *Client) parseResponseError(response *http.Response) error {
-	if response.StatusCode == http.StatusUnauthorized {
-		return errors.NewUnauthorizedError()
-	}
-	if response.StatusCode == http.StatusNotFound {
-		return errors.NewError("404", fmt.Sprintf("url [%s] not found", response.Request.URL.String()))
+	if response.StatusCode == http.StatusTooManyRequests {
+		if seconds, _ := strconv.Atoi(response.Header.Get(descope.ErrorInfoKeys.RateLimitExceededRetryAfter)); seconds != 0 {
+			return descope.ErrRateLimitExceeded.WithMessage("Try again in %d seconds", seconds).WithInfo(descope.ErrorInfoKeys.RateLimitExceededRetryAfter, seconds)
+		}
+		return descope.ErrRateLimitExceeded.WithMessage("Try again in a few seconds")
 	}
 
 	body, err := c.parseBody(response)
 	if err != nil {
-		return err
+		logger.LogError("failed to process error from server response", err)
+		return descope.ErrUnexpectedResponse
 	}
 
-	var responseErr *errors.WebError
-	if err := json.Unmarshal(body, &responseErr); err != nil {
-		logger.LogError("failed to load error from response", err)
-		return errors.NewValidationError(string(body))
+	var responseErr *descope.Error
+	if err := json.Unmarshal(body, &responseErr); err != nil || responseErr.Code == "" {
+		logger.LogError("failed to parse error from server response", err)
+		return descope.ErrUnexpectedResponse
 	}
+
+	if responseErr.Description == "" {
+		responseErr.Description = "Server error"
+	}
+
 	return responseErr
 }
 

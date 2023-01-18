@@ -19,7 +19,7 @@ type MagicLink interface {
 	// returns an error upon failure.
 	SignUp(method descope.DeliveryMethod, loginID, URI string, user *descope.User) error
 
-	// SignUpOrIn - Use to login in using loginID, if user does not exists, a new user will be created
+	// SignUpOrIn - Use to login in using loginID, if user does not exist, a new user will be created
 	// with the given loginID.
 	// choose the selected delivery method for verification (see auth/DeliveryMethod).
 	// optional to add user metadata for farther user details such as name and more.
@@ -53,7 +53,7 @@ type EnchantedLink interface {
 	// returns an error upon failure.
 	SignUp(loginID, URI string, user *descope.User) (*descope.EnchantedLinkResponse, error)
 
-	// SignUpOrIn - Use to login in using loginID, if user does not exists, a new user will be created
+	// SignUpOrIn - Use to login in using loginID, if user does not exist, a new user will be created
 	// with the given loginID.
 	// optional to add user metadata for farther user details such as name and more.
 	// returns an error upon failure.
@@ -84,7 +84,7 @@ type OTP interface {
 	// returns an error upon failure.
 	SignUp(method descope.DeliveryMethod, loginID string, user *descope.User) error
 
-	// SignUpOrIn - Use to login in using loginID, if user does not exists, a new user will be created
+	// SignUpOrIn - Use to login in using loginID, if user does not exist, a new user will be created
 	// with the given loginID.
 	SignUpOrIn(method descope.DeliveryMethod, loginID string) error
 

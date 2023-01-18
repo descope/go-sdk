@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/descope/go-sdk/descope"
-	"github.com/descope/go-sdk/descope/errors"
+	"github.com/descope/go-sdk/descope/internal/utils"
 )
 
 type enchantedLink struct {
@@ -15,12 +15,12 @@ func (auth *enchantedLink) SignIn(loginID, URI string, r *http.Request, loginOpt
 	var pswd string
 	var err error
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	if loginOptions.IsJWTRequired() {
 		pswd, err = getValidRefreshToken(r)
 		if err != nil {
-			return nil, errors.InvalidStepupJwtError
+			return nil, descope.ErrInvalidStepUpJWT
 		}
 	}
 	httpResponse, err := auth.client.DoPostRequest(composeEnchantedLinkSignInURL(), newMagicLinkAuthenticationRequestBody(loginID, URI, true, loginOptions), nil, pswd)
@@ -32,7 +32,7 @@ func (auth *enchantedLink) SignIn(loginID, URI string, r *http.Request, loginOpt
 
 func (auth *enchantedLink) SignUp(loginID, URI string, user *descope.User) (*descope.EnchantedLinkResponse, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	if user == nil {
 		user = &descope.User{}
@@ -50,7 +50,7 @@ func (auth *enchantedLink) SignUp(loginID, URI string, user *descope.User) (*des
 
 func (auth *enchantedLink) SignUpOrIn(loginID, URI string) (*descope.EnchantedLinkResponse, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	httpResponse, err := auth.client.DoPostRequest(composeEnchantedLinkSignUpOrInURL(), newMagicLinkAuthenticationRequestBody(loginID, URI, true, nil), nil, "")
 	if err != nil {
@@ -63,9 +63,6 @@ func (auth *enchantedLink) GetSession(pendingRef string, w http.ResponseWriter) 
 	var err error
 	httpResponse, err := auth.client.DoPostRequest(composeGetSession(), newAuthenticationGetMagicLinkSessionBody(pendingRef), nil, "")
 	if err != nil {
-		if err == errors.UnauthorizedError {
-			return nil, errors.EnchantedLinkUnauthorized
-		}
 		return nil, err
 	}
 	return auth.generateAuthenticationInfo(httpResponse, w)
@@ -81,13 +78,13 @@ func (auth *enchantedLink) Verify(token string) error {
 
 func (auth *enchantedLink) UpdateUserEmail(loginID, email, URI string, r *http.Request) (*descope.EnchantedLinkResponse, error) {
 	if loginID == "" {
-		return nil, errors.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	if email == "" {
-		return nil, errors.NewInvalidArgumentError("email")
+		return nil, utils.NewInvalidArgumentError("email")
 	}
 	if !emailRegex.MatchString(email) {
-		return nil, errors.NewInvalidArgumentError("email")
+		return nil, utils.NewInvalidArgumentError("email")
 	}
 	pswd, err := getValidRefreshToken(r)
 	if err != nil {

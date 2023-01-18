@@ -6,7 +6,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/descope/go-sdk/descope/errors"
 	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/tests/mocks"
 )
@@ -48,7 +47,7 @@ func DoBadRequest(checks func(*http.Request)) mocks.Do {
 		if checks != nil {
 			checks(r)
 		}
-		b, err := utils.Marshal(map[string]any{"error": errors.NewInvalidArgumentError("test")})
+		b, err := utils.Marshal(map[string]any{"foo": "bar"})
 		if err != nil {
 			return nil, err
 		}
