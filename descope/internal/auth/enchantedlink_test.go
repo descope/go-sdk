@@ -21,7 +21,7 @@ func TestSignInEnchantedLinkEmptyLoginID(t *testing.T) {
 	require.NoError(t, err)
 	_, err = a.EnchantedLink().SignIn(email, "", nil, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
 
 func TestSignInEnchantedLinkStepupNoJwt(t *testing.T) {

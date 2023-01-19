@@ -166,21 +166,19 @@ func TestPostUnauthorized(t *testing.T) {
 
 func TestPostRateLimitExceeded(t *testing.T) {
 	c := NewClient(ClientParams{ProjectID: "test", DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
-		return &http.Response{StatusCode: http.StatusTooManyRequests}, nil
+		return &http.Response{StatusCode: http.StatusTooManyRequests, Body: io.NopCloser(strings.NewReader(`{"errorCode":"E130429"}`))}, nil
 	})})
 
 	_, err := c.DoPostRequest("path", nil, nil, "")
 	require.ErrorIs(t, err, descope.ErrRateLimitExceeded)
-	require.ErrorContains(t, err, "Try again")
 	require.Empty(t, err.(*descope.Error).Info)
 
 	c = NewClient(ClientParams{ProjectID: "test", DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
-		return &http.Response{StatusCode: http.StatusTooManyRequests, Header: http.Header{"Retry-After": []string{"10"}}}, nil
+		return &http.Response{StatusCode: http.StatusTooManyRequests, Header: http.Header{"Retry-After": []string{"10"}}, Body: io.NopCloser(strings.NewReader(`{"errorCode":"E130429"}`))}, nil
 	})})
 
 	_, err = c.DoPostRequest("path", nil, nil, "")
 	require.ErrorIs(t, err, descope.ErrRateLimitExceeded)
-	require.ErrorContains(t, err, "Try again in 10 seconds")
 	require.Equal(t, 10, err.(*descope.Error).Info[descope.ErrorInfoKeys.RateLimitExceededRetryAfter])
 }
 

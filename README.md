@@ -56,7 +56,7 @@ user := &descope.User{
 }
 err := descopeClient.Auth.OTP().SignUp(descope.MethodEmail, loginID, user)
 if err != nil {
-    if err.Is(descope.ErrUserAlreadyExists) {
+    if errors.Is(err, descope.ErrUserAlreadyExists) {
         // user already exists with this loginID
     }
     // handle other error cases
@@ -70,7 +70,7 @@ The user will receive a code using the selected delivery method. Verify that cod
 // Otherwise they're available via authInfo
 authInfo, err := descopeClient.OTP().Verify(descope.MethodEmail, loginID, code, w)
 if err != nil {
-    if err.Is(descope.ErrInvalidOneTimeCode) {
+    if errors.Is(err, descope.ErrInvalidOneTimeCode) {
         // the code was invalid
     }
     // handle other error cases
@@ -152,7 +152,7 @@ for i := retriesCount; i > 0; i-- {
         // Otherwise they're available via authInfo
         break
     }
-    if err.Is(descope.ErrEnchantedLinkUnauthorized) && i > 1 {
+    if errors.Is(err, descope.ErrEnchantedLinkUnauthorized) && i > 1 {
         // poll again after X seconds
         time.Sleep(time.Second * time.Duration(retryInterval))
         continue

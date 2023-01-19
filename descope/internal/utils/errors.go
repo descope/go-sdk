@@ -7,5 +7,5 @@ import (
 )
 
 func NewInvalidArgumentError(arg string) *descope.Error {
-	return descope.ErrInvalidArgument.WithMessage(fmt.Sprintf("The '%s' argument is invalid", arg))
+	return descope.ErrInvalidArguments.WithMessage(fmt.Sprintf("The %s argument is invalid", arg))
 }
