@@ -140,10 +140,10 @@ func TestVerifyDeliveryMethod(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
 	err = a.verifyDeliveryMethod(descope.MethodEmail, "", &descope.User{})
-	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 
 	err = a.verifyDeliveryMethod(descope.MethodSMS, "abc@notaphone.com", &descope.User{})
-	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 
 	u := &descope.User{}
 	err = a.verifyDeliveryMethod(descope.MethodEmail, "abc@notaphone.com", u)
@@ -382,7 +382,7 @@ func TestValidateSessionNoRequest(t *testing.T) {
 	require.NoError(t, err)
 	ok, _, err := a.ValidateSession(nil, nil)
 	require.Error(t, err)
-	require.ErrorIs(t, err, descope.ErrInvalidArgument)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.False(t, ok)
 }
 
@@ -578,7 +578,7 @@ func TestLogoutEmptyRequest(t *testing.T) {
 
 	err = a.Logout(nil, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
 
 func TestLogoutAllEmptyRequest(t *testing.T) {
@@ -589,7 +589,7 @@ func TestLogoutAllEmptyRequest(t *testing.T) {
 
 	err = a.LogoutAll(nil, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
 
 func TestLogoutMissingToken(t *testing.T) {

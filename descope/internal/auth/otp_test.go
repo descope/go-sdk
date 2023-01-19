@@ -148,7 +148,7 @@ func TestEmptyEmailSignIn(t *testing.T) {
 	require.NoError(t, err)
 	err = a.OTP().SignIn(descope.MethodEmail, email, nil, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
 
 func TestEmptyEmailSignUpOrIn(t *testing.T) {
@@ -157,7 +157,7 @@ func TestEmptyEmailSignUpOrIn(t *testing.T) {
 	require.NoError(t, err)
 	err = a.OTP().SignUpOrIn(descope.MethodEmail, email)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
 
 func TestInvalidEmailSignUp(t *testing.T) {
@@ -166,7 +166,7 @@ func TestInvalidEmailSignUp(t *testing.T) {
 	require.NoError(t, err)
 	err = a.OTP().SignUp(descope.MethodEmail, email, nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
 
 func TestInvalidSignInStepupNoJWT(t *testing.T) {
@@ -184,7 +184,7 @@ func TestEmptyEmailVerifyCodeEmail(t *testing.T) {
 	require.NoError(t, err)
 	_, err = a.OTP().VerifyCode(descope.MethodEmail, email, "4444", nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
 
 func TestInvalidVerifyCode(t *testing.T) {
@@ -193,7 +193,7 @@ func TestInvalidVerifyCode(t *testing.T) {
 	require.NoError(t, err)
 	_, err = a.OTP().VerifyCode("", email, "4444", nil)
 	require.Error(t, err)
-	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
 
 func TestVerifyCodeDetectEmail(t *testing.T) {

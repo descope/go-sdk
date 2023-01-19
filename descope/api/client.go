@@ -659,19 +659,20 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 		defer response.Body.Close()
 	}
 	if !isResponseOK(response) {
-		err = c.parseResponseError(response)
+		err = c.parseDescopeError(response)
 		logger.LogInfo("failed sending request to [%s], error: [%s]", url, err)
 		return nil, err
 	}
 
 	resBytes, err := c.parseBody(response)
 	if err != nil {
-		return nil, err
+		return nil, descope.ErrUnexpectedResponse
 	}
 
 	if options.ResBodyObj != nil {
 		if err = utils.Unmarshal(resBytes, &options.ResBodyObj); err != nil {
-			return nil, err
+			logger.LogError("failed parsing body from request to [%s]", err, url)
+			return nil, descope.ErrInvalidResponse
 		}
 	}
 
@@ -693,31 +694,30 @@ func (c *Client) parseBody(response *http.Response) (resBytes []byte, err error)
 	return
 }
 
-func (c *Client) parseResponseError(response *http.Response) error {
-	if response.StatusCode == http.StatusTooManyRequests {
-		if seconds, _ := strconv.Atoi(response.Header.Get(descope.ErrorInfoKeys.RateLimitExceededRetryAfter)); seconds != 0 {
-			return descope.ErrRateLimitExceeded.WithMessage("Try again in %d seconds", seconds).WithInfo(descope.ErrorInfoKeys.RateLimitExceededRetryAfter, seconds)
-		}
-		return descope.ErrRateLimitExceeded.WithMessage("Try again in a few seconds")
-	}
-
+func (c *Client) parseDescopeError(response *http.Response) *descope.Error {
 	body, err := c.parseBody(response)
 	if err != nil {
 		logger.LogError("failed to process error from server response", err)
 		return descope.ErrUnexpectedResponse
 	}
 
-	var responseErr *descope.Error
-	if err := json.Unmarshal(body, &responseErr); err != nil || responseErr.Code == "" {
+	var descopeErr *descope.Error
+	if err := json.Unmarshal(body, &descopeErr); err != nil || descopeErr.Code == "" {
 		logger.LogError("failed to parse error from server response", err)
 		return descope.ErrUnexpectedResponse
 	}
 
-	if responseErr.Description == "" {
-		responseErr.Description = "Server error"
+	if descopeErr.Is(descope.ErrRateLimitExceeded) {
+		if seconds, _ := strconv.Atoi(response.Header.Get(descope.ErrorInfoKeys.RateLimitExceededRetryAfter)); seconds != 0 {
+			descopeErr = descopeErr.WithInfo(descope.ErrorInfoKeys.RateLimitExceededRetryAfter, seconds)
+		}
 	}
 
-	return responseErr
+	if descopeErr.Description == "" {
+		descopeErr.Description = "Server error"
+	}
+
+	return descopeErr
 }
 
 func isResponseOK(response *http.Response) bool {

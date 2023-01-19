@@ -97,7 +97,7 @@ func TestSignInWebAuthnStartEmpty(t *testing.T) {
 	res, err := a.WebAuthn().SignInStart("", "https://example.com", nil, nil)
 	require.Error(t, err)
 	assert.Empty(t, res)
-	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
 
 func TestSignInWebAuthnStepupNoJWT(t *testing.T) {
@@ -142,7 +142,7 @@ func TestSignUpOrInStartEmpty(t *testing.T) {
 	res, err := a.WebAuthn().SignUpOrInStart("", "https://example.com")
 	require.Error(t, err)
 	assert.Nil(t, res)
-	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
 
 func TestWebAuthnUpdateUserDeviceStart(t *testing.T) {
@@ -169,7 +169,7 @@ func TestWebAuthnUpdateUserDeviceStartEmpty(t *testing.T) {
 	res, err := a.WebAuthn().UpdateUserDeviceStart("", "https://example.com", r)
 	require.Error(t, err)
 	assert.Empty(t, res)
-	assert.ErrorIs(t, err, descope.ErrInvalidArgument)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
 
 func TestWebAuthnUpdateUserDeviceFinish(t *testing.T) {

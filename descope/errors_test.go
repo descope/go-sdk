@@ -12,7 +12,7 @@ func TestErrorIs(t *testing.T) {
 	require.ErrorIs(t, ErrBadRequest, &Error{Code: ErrBadRequest.Code, Description: "foo", Message: "bar"})
 
 	require.NotErrorIs(t, ErrBadRequest, &Error{})
-	require.NotErrorIs(t, ErrBadRequest, ErrInvalidArgument)
+	require.NotErrorIs(t, ErrBadRequest, ErrInvalidArguments)
 
 	require.ErrorIs(t, ErrManagementUserNotFound, ErrManagementUserNotFound)
 	require.NotErrorIs(t, ErrManagementUserNotFound, ErrBadRequest)

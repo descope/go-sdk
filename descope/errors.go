@@ -20,13 +20,15 @@ var (
 	// server management
 	ErrManagementUserNotFound = newServerError("E112102")
 
+	// server infra
+	ErrRateLimitExceeded = newServerError("E130429")
+
 	// client setup
 	ErrMissingProjectID = newClientError("C010001", "Missing project ID")
 
 	// client service error
-	ErrInvalidArgument    = newClientError("C020001", "Invalid argument")
-	ErrUnexpectedResponse = newClientError("C020002", "Unexpected response")
-	ErrRateLimitExceeded  = newClientError("C020003", "Rate limit exceeded")
+	ErrUnexpectedResponse = newClientError("C020001", "Unexpected response")
+	ErrInvalidResponse    = newClientError("C020002", "Invalid response")
 
 	// client functional errors
 	ErrPublicKey        = newClientError("C030001", "Missing or invalid public key")
