@@ -353,6 +353,27 @@ if !descopeClient.Auth.ValidateRoles(sessionToken, []string{"Role to validate"})
 }
 ```
 
+### Logging Out
+
+You can log out a user from an active session by providing their `refresh_token` for that session.
+After calling this function, you must invalidate or remove any cookies you have created. Providing
+a `http.ResponseWriter` will do this automatically.
+
+```go
+// Refresh token will be taken from the request header or cookies automatically
+// If provided, the optional `w http.ResponseWriter` will empty out the session cookies automatically.
+descopeClient.logout(request, w)
+```
+
+It is also possible to sign the user out of all the devices they are currently signed-in with. Calling `logout_all` will
+invalidate all user's refresh tokens. After calling this function, you must invalidate or remove any cookies you have created.
+
+```go
+// Refresh token will be taken from the request header or cookies automatically
+// If provided, the optional `w http.ResponseWriter` will empty out the session cookies automatically.
+descopeClient.logout(request, w)
+```
+
 ## Management API
 
 It is very common for some form of management or automation to be required. These can be performed
