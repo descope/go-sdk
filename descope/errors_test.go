@@ -53,9 +53,9 @@ func TestIsError(t *testing.T) {
 }
 
 func TestStatusCode(t *testing.T) {
-	var unauth *Error = newServerError("E123").WithInfo(ErrorInfoKeys.HTTPResponseStatusCode, 401)
-	var notfound *Error = newServerError("E234").WithInfo(ErrorInfoKeys.HTTPResponseStatusCode, 404)
-	var other *Error = newServerError("E345").WithInfo(ErrorInfoKeys.HTTPResponseStatusCode, 500)
+	unauth := newServerError("E123").WithInfo(ErrorInfoKeys.HTTPResponseStatusCode, 401)
+	notfound := newServerError("E234").WithInfo(ErrorInfoKeys.HTTPResponseStatusCode, 404)
+	other := newServerError("E345").WithInfo(ErrorInfoKeys.HTTPResponseStatusCode, 500)
 	require.True(t, IsUnauthorizedError(unauth))
 	require.True(t, IsNotFoundError(notfound))
 	require.False(t, IsUnauthorizedError(nil))
