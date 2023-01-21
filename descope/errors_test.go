@@ -3,6 +3,7 @@ package descope
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -43,4 +44,24 @@ func TestWithArg(t *testing.T) {
 
 	z = z.WithInfo("url", `http://example`)
 	require.Equal(t, "[E123] b [qux:7 url:http://example]", z.Error())
+}
+
+func TestIsError(t *testing.T) {
+	require.True(t, IsError(ErrBadRequest))
+	require.False(t, IsError(nil))
+	require.False(t, IsError(assert.AnError))
+}
+
+func TestStatusCode(t *testing.T) {
+	unauth := newServerError("E123").WithInfo(ErrorInfoKeys.HTTPResponseStatusCode, 401)
+	notfound := newServerError("E234").WithInfo(ErrorInfoKeys.HTTPResponseStatusCode, 404)
+	other := newServerError("E345").WithInfo(ErrorInfoKeys.HTTPResponseStatusCode, 500)
+	require.True(t, IsUnauthorizedError(unauth))
+	require.True(t, IsNotFoundError(notfound))
+	require.False(t, IsUnauthorizedError(nil))
+	require.False(t, IsNotFoundError(nil))
+	require.False(t, IsUnauthorizedError(other))
+	require.False(t, IsNotFoundError(other))
+	require.False(t, IsUnauthorizedError(assert.AnError))
+	require.False(t, IsNotFoundError(assert.AnError))
 }

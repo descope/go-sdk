@@ -659,7 +659,7 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 		defer response.Body.Close()
 	}
 	if !isResponseOK(response) {
-		err = c.parseDescopeError(response)
+		err = c.parseDescopeError(response).WithInfo(descope.ErrorInfoKeys.HTTPResponseStatusCode, response.StatusCode)
 		logger.LogInfo("failed sending request to [%s], error: [%s]", url, err)
 		return nil, err
 	}
