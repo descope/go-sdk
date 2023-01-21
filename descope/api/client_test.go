@@ -171,7 +171,7 @@ func TestPostRateLimitExceeded(t *testing.T) {
 
 	_, err := c.DoPostRequest("path", nil, nil, "")
 	require.ErrorIs(t, err, descope.ErrRateLimitExceeded)
-	require.Empty(t, err.(*descope.Error).Info)
+	require.Nil(t, err.(*descope.Error).Info[descope.ErrorInfoKeys.RateLimitExceededRetryAfter])
 
 	c = NewClient(ClientParams{ProjectID: "test", DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusTooManyRequests, Header: http.Header{"Retry-After": []string{"10"}}, Body: io.NopCloser(strings.NewReader(`{"errorCode":"E130429"}`))}, nil

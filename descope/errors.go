@@ -2,6 +2,7 @@ package descope
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 )
 
@@ -37,8 +38,10 @@ var (
 	ErrInvalidStepUpJWT = newClientError("C030004", "Refresh token must be provided for stepup actions")
 )
 
-// Additional information might be available in the Error struct for specific errors
+// Additional information that might be available in the
+// Error struct's Info map for specific errors
 var ErrorInfoKeys = errorInfoKeys{
+	HTTPResponseStatusCode:      "Status-Code",
 	RateLimitExceededRetryAfter: "Retry-After",
 }
 
@@ -49,7 +52,7 @@ type Error struct {
 	Info        map[string]any `json:"-"`
 }
 
-func (e Error) Error() string {
+func (e *Error) Error() string {
 	str := fmt.Sprintf("[%s]", e.Code)
 	if e.Description != "" && e.Message != "" {
 		str = fmt.Sprintf("%s %s: %s", str, e.Description, e.Message)
@@ -62,7 +65,7 @@ func (e Error) Error() string {
 	return str
 }
 
-func (e Error) Is(err error) bool {
+func (e *Error) Is(err error) bool {
 	if de, ok := err.(*Error); ok {
 		return e.Code == de.Code
 	}
@@ -82,6 +85,33 @@ func (e Error) WithInfo(key string, value any) *Error {
 	return &e
 }
 
+func (e *Error) IsUnauthorized() bool {
+	return e != nil && e.Info[ErrorInfoKeys.HTTPResponseStatusCode] == http.StatusUnauthorized
+}
+
+func (e *Error) IsNotFound() bool {
+	return e != nil && e.Info[ErrorInfoKeys.HTTPResponseStatusCode] == http.StatusNotFound
+}
+
+func IsError(err error) bool {
+	_, ok := err.(*Error)
+	return ok
+}
+
+func IsUnauthorizedError(err error) bool {
+	if e, ok := err.(*Error); ok {
+		return e.IsUnauthorized()
+	}
+	return false
+}
+
+func IsNotFoundError(err error) bool {
+	if e, ok := err.(*Error); ok {
+		return e.IsNotFound()
+	}
+	return false
+}
+
 func newServerError(code string) *Error {
 	return &Error{Code: code}
 }
@@ -91,5 +121,6 @@ func newClientError(code, desc string) *Error {
 }
 
 type errorInfoKeys struct {
+	HTTPResponseStatusCode      string
 	RateLimitExceededRetryAfter string
 }

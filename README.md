@@ -73,6 +73,9 @@ if err != nil {
     if errors.Is(err, descope.ErrInvalidOneTimeCode) {
         // the code was invalid
     }
+    if descope.IsUnauthorizedError(err) {
+        // login failed for some other reason
+    }
     // handle other error cases
 }
 ```
