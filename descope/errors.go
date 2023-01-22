@@ -25,17 +25,17 @@ var (
 	ErrRateLimitExceeded = newServerError("E130429")
 
 	// client setup
-	ErrMissingProjectID = newClientError("C010001", "Missing project ID")
+	ErrMissingProjectID = newClientError("G010001", "Missing project ID")
 
 	// client service error
-	ErrUnexpectedResponse = newClientError("C020001", "Unexpected response")
-	ErrInvalidResponse    = newClientError("C020002", "Invalid response")
+	ErrUnexpectedResponse = newClientError("G020001", "Unexpected response")
+	ErrInvalidResponse    = newClientError("G020002", "Invalid response")
 
 	// client functional errors
-	ErrPublicKey        = newClientError("C030001", "Missing or invalid public key")
-	ErrInvalidToken     = newClientError("C030002", "Invalid token")
-	ErrRefreshToken     = newClientError("C030003", "Missing or invalid refresh token")
-	ErrInvalidStepUpJWT = newClientError("C030004", "Refresh token must be provided for stepup actions")
+	ErrPublicKey        = newClientError("G030001", "Missing or invalid public key")
+	ErrInvalidToken     = newClientError("G030002", "Invalid token")
+	ErrRefreshToken     = newClientError("G030003", "Missing or invalid refresh token")
+	ErrInvalidStepUpJWT = newClientError("G030004", "Refresh token must be provided for stepup actions")
 )
 
 // Additional information that might be available in the
@@ -67,7 +67,7 @@ func (e *Error) Error() string {
 
 func (e *Error) Is(err error) bool {
 	if de, ok := err.(*Error); ok {
-		return e.Code == de.Code
+		return e != nil && e.Code == de.Code
 	}
 	return false
 }
@@ -91,11 +91,6 @@ func (e *Error) IsUnauthorized() bool {
 
 func (e *Error) IsNotFound() bool {
 	return e != nil && e.Info[ErrorInfoKeys.HTTPResponseStatusCode] == http.StatusNotFound
-}
-
-func IsError(err error) bool {
-	_, ok := err.(*Error)
-	return ok
 }
 
 func IsUnauthorizedError(err error) bool {
