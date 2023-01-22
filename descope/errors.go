@@ -67,7 +67,7 @@ func (e *Error) Error() string {
 
 func (e *Error) Is(err error) bool {
 	if de, ok := err.(*Error); ok {
-		return e.Code == de.Code
+		return e != nil && e.Code == de.Code
 	}
 	return false
 }
