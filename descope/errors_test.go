@@ -46,12 +46,6 @@ func TestWithArg(t *testing.T) {
 	require.Equal(t, "[E123] b [qux:7 url:http://example]", z.Error())
 }
 
-func TestIsError(t *testing.T) {
-	require.True(t, IsError(ErrBadRequest))
-	require.False(t, IsError(nil))
-	require.False(t, IsError(assert.AnError))
-}
-
 func TestStatusCode(t *testing.T) {
 	unauth := newServerError("E123").WithInfo(ErrorInfoKeys.HTTPResponseStatusCode, 401)
 	notfound := newServerError("E234").WithInfo(ErrorInfoKeys.HTTPResponseStatusCode, 404)

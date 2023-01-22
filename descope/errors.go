@@ -93,11 +93,6 @@ func (e *Error) IsNotFound() bool {
 	return e != nil && e.Info[ErrorInfoKeys.HTTPResponseStatusCode] == http.StatusNotFound
 }
 
-func IsError(err error) bool {
-	_, ok := err.(*Error)
-	return ok
-}
-
 func IsUnauthorizedError(err error) bool {
 	if e, ok := err.(*Error); ok {
 		return e.IsUnauthorized()
