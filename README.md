@@ -650,6 +650,23 @@ if err != nil {
 }
 ```
 
+## API Rate limits
+
+Handle API rate limits by comparing the error to the ErrRateLimitExceeded error, which includes the Info map with the key "RateLimitExceededRetryAfter." This key indicates how many seconds until the next valid API call can take place. More information on Descope's rate limit is covered here: https://docs.descope.com/rate-limit
+
+```go
+err := client.Auth.MagicLink().SignUpOrIn(auth.MethodEmail, "desmond@descope.com", "http://myapp.com/verify-magic-link")
+if err != nil {
+    if errors.Is(err, descope.ErrRateLimitExceeded) {
+        if rateLimitErr, ok := err.(*descope.Error); ok {
+            retryAfterSeconds := rateLimitErr.Info[descope.ErrorInfoKeys.RateLimitExceededRetryAfter]
+            // This variable indicates how many seconds until the next valid API call can take place.
+        }
+    }
+     // handle other error cases
+}
+```
+
 ## Code Examples
 
 You can find various usage examples in the [examples folder](https://github.com/descope/go-sdk/blob/main/examples).
