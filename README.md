@@ -282,12 +282,24 @@ The session and refresh JWTs should be returned to the caller, and passed with e
 ### Session Validation
 
 Every secure request performed between your client and server needs to be validated. The client sends
-the session and refresh tokens with every request, and they are validated using:
+the session and refresh tokens with every request, and they are validated using one of the following:
 
 When using cookies you can call:
 
 ```go
-if authorized, sessionToken, err := descopeClient.Auth.ValidateSession(r, w); !authorized {
+// Validate the session. Will return an error if expired
+if authorized, sessionToken, err := descopeClient.Auth.ValidateSessionWithRequest(r, w); !authorized {
+    // unauthorized error
+}
+
+// If ValidateSessionWithRequest raises an exception, you will need to refresh the session using
+if authorized, sessionToken, err := descopeClient.Auth.RefreshSessionWithRequest(r, w); !authorized {
+    // unauthorized error
+}
+
+// Alternatively, you could combine the two and
+// have the session validated and automatically refreshed when expired
+if authorized, sessionToken, err := descopeClient.Auth.ValidateAndRefreshSessionWithRequest(r, w); !authorized {
     // unauthorized error
 }
 ```
@@ -295,16 +307,27 @@ if authorized, sessionToken, err := descopeClient.Auth.ValidateSession(r, w); !a
 Alternatively, tokens can be validated directly:
 
 ```go
-if authorized, sessionToken, err := descopeClient.Auth.ValidateSessionTokens(sessionToken, refreshToken); !authorized {
+// Validate the session. Will return an error if expired
+if authorized, sessionToken, err := descopeClient.Auth.ValidateSessionWithToken(sessionToken); !authorized {
+    // unauthorized error
+}
+
+// If ValidateSessionWithRequest raises an exception, you will need to refresh the session using
+if authorized, sessionToken, err := descopeClient.Auth.RefreshSessionWithToken(refreshToken); !authorized {
+    // unauthorized error
+}
+
+// Alternatively, you could combine the two and
+// have the session validated and automatically refreshed when expired
+if authorized, sessionToken, err := descopeClient.Auth.ValidateAndRefreshSessionWithTokens(sessionToken, refreshToken); !authorized {
     // unauthorized error
 }
 ```
 
-These function will validate the session and also refresh it in the event it has expired.
-It returns the given session token if it's still valid, or a new one if it was refreshed.
-Make sure to return the session token from the response to the client if tokens are validated directly.
+Choose the right session validation and refresh combination that suits your needs.
 
-The `refreshToken` is optional here to validate a session, but is required to refresh the session in the event it has expired.
+Refreshed sessions return the same response as is returned when users first sign up / log in,
+Make sure to return the session token from the response to the client if tokens are validated directly.
 
 Usually, the tokens can be passed in and out via HTTP headers or via a cookie.
 The implementation can defer according to your implementation. See our [examples](#code-examples) for a few examples.

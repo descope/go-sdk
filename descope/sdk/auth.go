@@ -200,22 +200,45 @@ type Authentication interface {
 	SAML() SAML
 	WebAuthn() WebAuthn
 
-	// ValidateSession - Use to validate a session of a given request.
+	// ValidateSessionWithRequest - Use to validate a session of a given request.
+	// Should be called before any private API call that requires authorization.
+	// Alternatively use ValidateSessionWithToken with the token directly.
+	// returns true upon success or false, the session token and an error upon failure.
+	ValidateSessionWithRequest(request *http.Request) (bool, *descope.Token, error)
+
+	// ValidateSessionWithToken - Use to validate a session token directly.
+	// Should be called before any private API call that requires authorization.
+	// Alternatively use ValidateSessionWithRequest with the incoming request.
+	// returns true upon success or false, the session token and an error upon failure.
+	ValidateSessionWithToken(sessionToken string) (bool, *descope.Token, error)
+
+	// ValidateSessionWithRequest - Use to refresh an expired session of a given request.
+	// Should be called when a session has expired (failed validation) to renew it.
+	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
+	// Alternatively use RefreshSessionWithToken with the refresh token directly.
+	// returns true upon success or false, the updated session token and an error upon failure.
+	RefreshSessionWithRequest(request *http.Request, w http.ResponseWriter) (bool, *descope.Token, error)
+
+	// RefreshSessionWithToken - Use to refresh an expired session with a given refresh token.
+	// Should be called when a session has expired (failed validation) to renew it.
+	// Alternatively use RefreshSessionWithRequest with the incoming request.
+	// returns true upon success or false, the updated session token and an error upon failure.
+	RefreshSessionWithToken(refreshToken string) (bool, *descope.Token, error)
+
+	// ValidateAndRefreshSessionWithRequest - Use to validate a session of a given request.
 	// Should be called before any private API call that requires authorization.
 	// In case the request cookie can be renewed an automatic renewal is called and returns a new set of cookies to use.
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
-	// returns true upon success or false and an error upon failure.
-	ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *descope.Token, error)
+	// Alternatively use ValidateAndRefreshSessionWithTokens with the tokens directly.
+	// returns true upon success or false, the potentially updated session token and an error upon failure.
+	ValidateAndRefreshSessionWithRequest(request *http.Request, w http.ResponseWriter) (bool, *descope.Token, error)
 
-	// ValidateSessionTokens - Use to validate a session of a given token.
+	// ValidateAndRefreshSessionWithTokens - Use to validate a session with the session and refresh tokens.
 	// Should be called before any private API call that requires authorization.
-	// returns true upon success or false and an error upon failure.
-	ValidateSessionTokens(sessionToken, refreshToken string) (bool, *descope.Token, error)
-
-	// RefreshSession - Use to force refresh of a JWT token, even though it is not expired.
-	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
-	// returns true upon success or false and an error upon failure.
-	RefreshSession(request *http.Request, w http.ResponseWriter) (bool, *descope.Token, error)
+	// In case the request cookie can be renewed an automatic renewal is called and returns a new set of cookies to use.
+	// Alternatively use ValidateAndRefreshSessionWithRequest with the incoming request.
+	// returns true upon success or false, the potentially updated session token and an error upon failure.
+	ValidateAndRefreshSessionWithTokens(sessionToken, refreshToken string) (bool, *descope.Token, error)
 
 	// ExchangeAccessKey - Use to exchange an access key for a session token.
 	ExchangeAccessKey(accessKey string) (bool, *descope.Token, error)
@@ -224,6 +247,7 @@ type Authentication interface {
 	// the specified permissions.
 	// This is a shortcut for ValidateTenantPermissions(token, "", permissions)
 	ValidatePermissions(token *descope.Token, permissions []string) bool
+
 	// ValidateTenantPermissions - Use to ensure that a validated session token has been
 	// granted the specified permissions for a specific tenant.
 	ValidateTenantPermissions(token *descope.Token, tenant string, permissions []string) bool

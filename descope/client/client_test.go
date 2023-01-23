@@ -60,9 +60,9 @@ func TestDescopeSDKMock(t *testing.T) {
 	api := DescopeClient{
 		Auth: &mocksauth.MockAuthentication{
 			MockSession: mocksauth.MockSession{
-				ValidateSessionResponseFailure: true,
-				ValidateSessionResponse:        &descope.Token{JWT: validateSessionResponse},
-				ValidateSessionError:           descope.ErrPublicKey,
+				ValidateAndRefreshSessionResponseFailure: true,
+				ValidateAndRefreshSessionResponse:        &descope.Token{JWT: validateSessionResponse},
+				ValidateAndRefreshSessionError:           descope.ErrPublicKey,
 			},
 		},
 		Management: &mocksmgmt.MockManagement{
@@ -75,7 +75,7 @@ func TestDescopeSDKMock(t *testing.T) {
 			},
 		},
 	}
-	ok, info, err := api.Auth.ValidateSession(nil, nil)
+	ok, info, err := api.Auth.ValidateAndRefreshSessionWithRequest(nil, nil)
 	assert.False(t, ok)
 	assert.NotEmpty(t, info)
 	assert.EqualValues(t, validateSessionResponse, info.JWT)

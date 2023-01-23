@@ -420,17 +420,28 @@ func (m *MockWebAuthn) UpdateUserDeviceFinish(finishRequest *descope.WebAuthnFin
 // Mock Session
 
 type MockSession struct {
-	ValidateSessionAssert          func(r *http.Request, w http.ResponseWriter)
+	ValidateAndRefreshSessionAssert          func(r *http.Request, w http.ResponseWriter)
+	ValidateAndRefreshSessionError           error
+	ValidateAndRefreshSessionResponse        *descope.Token
+	ValidateAndRefreshSessionResponseFailure bool
+
+	ValidateAndRefreshSessionTokensAssert          func(sessionToken, refreshToken string)
+	ValidateAndRefreshSessionTokensError           error
+	ValidateAndRefreshSessionTokensResponse        *descope.Token
+	ValidateAndRefreshSessionTokensResponseFailure bool
+
+	ValidateSessionAssert          func(r *http.Request)
 	ValidateSessionError           error
 	ValidateSessionResponse        *descope.Token
 	ValidateSessionResponseFailure bool
 
-	ValidateSessionTokensAssert          func(sessionToken, refreshToken string)
-	ValidateSessionTokensError           error
-	ValidateSessionTokensResponse        *descope.Token
-	ValidateSessionTokensResponseFailure bool
+	ValidateSessionTokenAssert          func(sessionToken string)
+	ValidateSessionTokenError           error
+	ValidateSessionTokenResponse        *descope.Token
+	ValidateSessionTokenResponseFailure bool
 
 	RefreshSessionAssert          func(r *http.Request, w http.ResponseWriter)
+	RefreshSessionTokenAssert     func(refreshToken string)
 	RefreshSessionError           error
 	RefreshSessionResponse        *descope.Token
 	RefreshSessionResponseFailure bool
@@ -465,21 +476,21 @@ type MockSession struct {
 	MeResponse *descope.UserResponse
 }
 
-func (m MockSession) ValidateSession(r *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
+func (m *MockSession) ValidateSessionWithRequest(r *http.Request) (bool, *descope.Token, error) {
 	if m.ValidateSessionAssert != nil {
-		m.ValidateSessionAssert(r, w)
+		m.ValidateSessionAssert(r)
 	}
 	return !m.ValidateSessionResponseFailure, m.ValidateSessionResponse, m.ValidateSessionError
 }
 
-func (m *MockSession) ValidateSessionTokens(sessionToken, refreshToken string) (bool, *descope.Token, error) {
-	if m.ValidateSessionTokensAssert != nil {
-		m.ValidateSessionTokensAssert(sessionToken, refreshToken)
+func (m *MockSession) ValidateSessionWithToken(sessionToken string) (bool, *descope.Token, error) {
+	if m.ValidateSessionTokenAssert != nil {
+		m.ValidateSessionTokenAssert(sessionToken)
 	}
-	return !m.ValidateSessionTokensResponseFailure, m.ValidateSessionTokensResponse, m.ValidateSessionTokensError
+	return !m.ValidateSessionTokenResponseFailure, m.ValidateSessionTokenResponse, m.ValidateSessionTokenError
 }
 
-func (m *MockSession) RefreshSession(r *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
+func (m *MockSession) RefreshSessionWithRequest(r *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
 	if m.RefreshSessionResponseFailure {
 		return false, nil, m.RefreshSessionError
 	}
@@ -499,6 +510,41 @@ func (m *MockSession) RefreshSession(r *http.Request, w http.ResponseWriter) (bo
 	}
 
 	return !m.RefreshSessionResponseFailure, m.RefreshSessionResponse, m.RefreshSessionError
+}
+
+func (m *MockSession) RefreshSessionWithToken(refreshToken string) (bool, *descope.Token, error) {
+	if m.RefreshSessionResponseFailure {
+		return false, nil, m.RefreshSessionError
+	}
+
+	if m.RefreshSessionTokenAssert != nil {
+		m.RefreshSessionTokenAssert(refreshToken)
+	}
+
+	if len(m.RefreshSessionResponseArray) > 0 && m.RefreshSessionResponseCounter < len(m.RefreshSessionResponseArray) {
+		currentRefreshResponse := m.RefreshSessionResponseArray[m.RefreshSessionResponseCounter]
+		m.RefreshSessionResponseCounter++
+		return true, currentRefreshResponse, nil
+	}
+
+	if m.RefreshSessionResponse != nil {
+		return true, m.RefreshSessionResponse, nil
+	}
+
+	return !m.RefreshSessionResponseFailure, m.RefreshSessionResponse, m.RefreshSessionError
+}
+
+func (m *MockSession) ValidateAndRefreshSessionWithRequest(r *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
+	if m.ValidateAndRefreshSessionAssert != nil {
+		m.ValidateAndRefreshSessionAssert(r, w)
+	}
+	return !m.ValidateAndRefreshSessionResponseFailure, m.ValidateAndRefreshSessionResponse, m.ValidateAndRefreshSessionError
+}
+func (m *MockSession) ValidateAndRefreshSessionWithTokens(sessionToken, refreshToken string) (bool, *descope.Token, error) {
+	if m.ValidateAndRefreshSessionTokensAssert != nil {
+		m.ValidateAndRefreshSessionTokensAssert(sessionToken, refreshToken)
+	}
+	return !m.ValidateAndRefreshSessionTokensResponseFailure, m.ValidateAndRefreshSessionTokensResponse, m.ValidateAndRefreshSessionTokensError
 }
 
 func (m *MockSession) ExchangeAccessKey(accessKey string) (bool, *descope.Token, error) {
