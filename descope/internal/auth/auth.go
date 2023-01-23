@@ -22,6 +22,7 @@ type AuthParams struct {
 	ProjectID           string
 	PublicKey           string
 	SessionJWTViaCookie bool
+	CookieDomain        string
 }
 
 type authenticationsBase struct {
@@ -125,11 +126,11 @@ func (auth *authenticationService) Logout(request *http.Request, w http.Response
 	jwtResponse.CookieExpiration = 0
 
 	// delete cookies by not specifying max-age (e.i. max-age=0)
-	cookies = append(cookies, createCookie(&descope.Token{
+	cookies = append(cookies, auth.createCookie(&descope.Token{
 		JWT:    "",
 		Claims: map[string]interface{}{claimAttributeName: descope.SessionCookieName},
 	}, jwtResponse))
-	cookies = append(cookies, createCookie(&descope.Token{JWT: "",
+	cookies = append(cookies, auth.createCookie(&descope.Token{JWT: "",
 		Claims: map[string]interface{}{claimAttributeName: descope.RefreshCookieName},
 	}, jwtResponse))
 
@@ -178,11 +179,11 @@ func (auth *authenticationService) LogoutAll(request *http.Request, w http.Respo
 	jwtResponse.CookieExpiration = 0
 
 	// delete cookies by not specifying max-age (e.i. max-age=0)
-	cookies = append(cookies, createCookie(&descope.Token{
+	cookies = append(cookies, auth.createCookie(&descope.Token{
 		JWT:    "",
 		Claims: map[string]interface{}{claimAttributeName: descope.SessionCookieName},
 	}, jwtResponse))
-	cookies = append(cookies, createCookie(&descope.Token{JWT: "",
+	cookies = append(cookies, auth.createCookie(&descope.Token{JWT: "",
 		Claims: map[string]interface{}{claimAttributeName: descope.RefreshCookieName},
 	}, jwtResponse))
 
@@ -214,37 +215,120 @@ func (auth *authenticationService) Me(request *http.Request) (*descope.UserRespo
 	return auth.extractUserResponse(httpResponse.BodyStr)
 }
 
-func (auth *authenticationService) ValidateSession(request *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
+func (auth *authenticationService) ensurePublicKeys() error {
+	if !auth.publicKeysProvider.publicKeyExists() {
+		logger.LogInfo("Cannot validate or refresh session, no public key available")
+		return descope.ErrPublicKey.WithMessage("No public key available")
+	}
+	return nil
+}
+
+// Validate Session
+
+func (auth *authenticationService) ValidateSessionWithRequest(request *http.Request) (bool, *descope.Token, error) {
 	if request == nil {
 		return false, nil, utils.NewInvalidArgumentError("request")
 	}
-
-	// Allow either empty session or refresh tokens if all we want is to validate the session token
-	sessionToken, refreshToken := provideTokens(request)
-	if sessionToken == "" && refreshToken == "" {
-		logger.LogDebug("unable to find token from cookies")
-		return false, nil, nil
+	sessionToken, _ := provideTokens(request)
+	if sessionToken == "" {
+		return false, nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain session token")
 	}
-	return auth.validateSession(sessionToken, refreshToken, false, w)
+	return auth.validateSession(sessionToken)
 }
 
-func (auth *authenticationService) ValidateSessionTokens(sessionToken, refreshToken string) (bool, *descope.Token, error) {
-	return auth.validateSession(sessionToken, refreshToken, false, nil)
+func (auth *authenticationService) ValidateSessionWithToken(sessionToken string) (bool, *descope.Token, error) {
+	if sessionToken == "" {
+		return false, nil, utils.NewInvalidArgumentError("sessionToken")
+	}
+	return auth.validateSession(sessionToken)
 }
 
-func (auth *authenticationService) RefreshSession(request *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
+func (auth *authenticationService) validateSession(sessionToken string) (valid bool, token *descope.Token, err error) {
+	token, err = auth.validateJWT(sessionToken)
+	if err := auth.ensurePublicKeys(); err != nil {
+		return false, nil, err
+	}
+	valid, err = validateTokenError(err)
+	return
+}
+
+// Refresh Session
+
+func (auth *authenticationService) RefreshSessionWithRequest(request *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
 	if request == nil {
 		return false, nil, utils.NewInvalidArgumentError("request")
 	}
+	_, refreshToken := provideTokens(request)
+	if refreshToken == "" {
+		return false, nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain refresh token")
+	}
+	return auth.refreshSession(refreshToken, w)
+}
 
-	// Allow either empty session or refresh tokens if all we want is to validate the session token
-	sessionToken, refreshToken := provideTokens(request)
-	if sessionToken == "" && refreshToken == "" {
-		logger.LogDebug("unable to find token from cookies")
-		return false, nil, nil
+func (auth *authenticationService) RefreshSessionWithToken(refreshToken string) (bool, *descope.Token, error) {
+	if refreshToken == "" {
+		return false, nil, utils.NewInvalidArgumentError("refreshToken")
+	}
+	return auth.refreshSession(refreshToken, nil)
+}
+
+func (auth *authenticationService) refreshSession(refreshToken string, w http.ResponseWriter) (bool, *descope.Token, error) {
+	token, err := auth.validateJWT(refreshToken)
+	if err := auth.ensurePublicKeys(); err != nil {
+		return false, nil, err
+	}
+	if valid, err := validateTokenError(err); !valid {
+		return false, nil, err
 	}
 
-	return auth.validateSession(sessionToken, refreshToken, true, w)
+	// refresh session token
+	httpResponse, err := auth.client.DoPostRequest(api.Routes.RefreshToken(), nil, &api.HTTPRequest{}, refreshToken)
+	if err != nil {
+		return false, nil, err
+	}
+	info, err := auth.generateAuthenticationInfoWithRefreshToken(httpResponse, token, w)
+	if err != nil {
+		return false, nil, err
+	}
+	// No need to check for error again because validateTokenError will return false for any non-nil error
+	info.SessionToken.RefreshExpiration = token.Expiration
+	return true, info.SessionToken, nil
+}
+
+// Validate & Refresh Session
+
+func (auth *authenticationService) ValidateAndRefreshSessionWithRequest(request *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
+	if request == nil {
+		return false, nil, utils.NewInvalidArgumentError("request")
+	}
+	sessionToken, refreshToken := provideTokens(request)
+	if sessionToken == "" {
+		return false, nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain session token")
+	}
+	if refreshToken == "" {
+		return false, nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain refresh token")
+	}
+	return auth.validateAndRefreshSessionWithTokens(sessionToken, refreshToken, w)
+}
+
+func (auth *authenticationService) ValidateAndRefreshSessionWithTokens(sessionToken, refreshToken string) (bool, *descope.Token, error) {
+	if sessionToken == "" {
+		return false, nil, utils.NewInvalidArgumentError("sessionToken")
+	}
+	if refreshToken == "" {
+		return false, nil, utils.NewInvalidArgumentError("refreshToken")
+	}
+	return auth.validateAndRefreshSessionWithTokens(sessionToken, refreshToken, nil)
+}
+
+func (auth *authenticationService) validateAndRefreshSessionWithTokens(sessionToken, refreshToken string, w http.ResponseWriter) (valid bool, token *descope.Token, err error) {
+	if valid, token, err = auth.validateSession(sessionToken); valid {
+		return
+	}
+	if valid, token, err = auth.refreshSession(refreshToken, w); valid {
+		return
+	}
+	return false, nil, err
 }
 
 func (auth *authenticationService) ExchangeAccessKey(accessKey string) (success bool, SessionToken *descope.Token, err error) {
@@ -293,52 +377,6 @@ func (auth *authenticationService) ValidateTenantRoles(token *descope.Token, ten
 		}
 	}
 	return true
-}
-
-func (auth *authenticationService) validateSession(sessionToken string, refreshToken string, forceRefresh bool, w http.ResponseWriter) (bool, *descope.Token, error) {
-	// Make sure to try and validate either JWT because in the process we make sure we have the public keys
-	var token, tToken *descope.Token
-	var err, tErr error
-	if sessionToken != "" {
-		token, err = auth.validateJWT(sessionToken)
-	}
-	if refreshToken != "" {
-		tToken, tErr = auth.validateJWT(refreshToken)
-	}
-	if !auth.publicKeysProvider.publicKeyExists() {
-		logger.LogInfo("Cannot validate session, no public key available")
-		return false, nil, descope.ErrPublicKey.WithMessage("No public key available")
-	}
-	if err == nil && sessionToken != "" && refreshToken != "" {
-		if tErr == nil {
-			token.RefreshExpiration = tToken.Expiration
-		} else {
-			logger.LogError("cannot validate refresh token, refresh expiration will not be available", tErr)
-		}
-	}
-	if sessionToken == "" || err != nil || forceRefresh {
-		// check refresh token
-		if refreshToken == "" {
-			return false, nil, err
-		}
-		if ok, err := validateTokenError(tErr); !ok {
-			return false, nil, err
-		}
-		// auto-refresh session token
-		httpResponse, err := auth.client.DoPostRequest(api.Routes.RefreshToken(), nil, &api.HTTPRequest{}, refreshToken)
-		if err != nil {
-			return false, nil, err
-		}
-		info, err := auth.generateAuthenticationInfoWithRefreshToken(httpResponse, tToken, w)
-		if err != nil {
-			return false, nil, err
-		}
-		// No need to check for error again because validateTokenError will return false for any non-nil error
-		info.SessionToken.RefreshExpiration = tToken.Expiration
-		return true, info.SessionToken, nil
-	}
-
-	return true, token, nil
 }
 
 func (auth *authenticationsBase) extractJWTResponse(bodyStr string) (*descope.JWTResponse, error) {
@@ -500,7 +538,7 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 			refreshToken = tokens[i]
 		}
 		if addToCookie {
-			ck := createCookie(tokens[i], jwtResponse)
+			ck := auth.createCookie(tokens[i], jwtResponse)
 			if ck != nil {
 				cookies = append(cookies, ck)
 			}
@@ -532,12 +570,17 @@ func getValidRefreshToken(r *http.Request) (string, error) {
 	return refreshToken, nil
 }
 
-func createCookie(token *descope.Token, jwtRes *descope.JWTResponse) *http.Cookie {
+func (auth *authenticationsBase) createCookie(token *descope.Token, jwtRes *descope.JWTResponse) *http.Cookie {
+	// Take cookie domain for conf, fallback to JWTResponse
+	cookieDomain := auth.conf.CookieDomain
+	if cookieDomain == "" {
+		cookieDomain = jwtRes.CookieDomain
+	}
 	if token != nil {
 		name, _ := token.Claims[claimAttributeName].(string)
 		return &http.Cookie{
 			Path:     jwtRes.CookiePath,
-			Domain:   jwtRes.CookieDomain,
+			Domain:   cookieDomain,
 			Name:     name,
 			Value:    token.JWT,
 			HttpOnly: true,
