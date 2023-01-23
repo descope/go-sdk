@@ -32,6 +32,8 @@ type Config struct {
 	// defaults to leaving it for calling function, use cookie if session jwt will stay small (less than 1k)
 	// session cookie can grow bigger, in case of using authorization, or adding custom claims
 	SessionJWTViaCookie bool
+	// When using cookies, set the cookie domain here. Alternatively this can be done via the Descope console.
+	SessionJWTCookieDomain string
 }
 
 func (c *Config) setProjectID() string {
