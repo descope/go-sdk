@@ -10,7 +10,7 @@ import (
 
 func AuthenticationMiddleware(auth sdk.Authentication, onFailure func(*gin.Context, error), onSuccess func(*gin.Context, *descope.Token)) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		if ok, token, err := auth.ValidateSession(c.Request, c.Writer); ok {
+		if ok, token, err := auth.ValidateAndRefreshSessionWithRequest(c.Request, c.Writer); ok {
 			if onSuccess != nil {
 				onSuccess(c, token)
 			} else {

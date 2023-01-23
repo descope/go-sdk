@@ -744,7 +744,7 @@ api := DescopeClient{
         },
     },
 }
-ok, info, err := api.Auth.ValidateSession(nil, nil)
+ok, info, err := api.Auth.ValidateAndRefreshSessionWithRequest(nil, nil)
 assert.False(t, ok)
 assert.NotEmpty(t, info)
 assert.EqualValues(t, validateSessionResponse, info.JWT)

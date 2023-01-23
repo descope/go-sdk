@@ -452,7 +452,7 @@ func TestValidateSessionRequestHeader(t *testing.T) {
 }
 
 func TestValidateSessionRequestRefreshSession(t *testing.T) {
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuthConf(&AuthParams{ProjectID: "a", PublicKey: publicKey, CookieDomain: "cookiedomain.com"}, nil, func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
 	})
 	a.conf.SessionJWTViaCookie = true
@@ -469,6 +469,9 @@ func TestValidateSessionRequestRefreshSession(t *testing.T) {
 	require.Len(t, b.Result().Cookies(), 2)
 	sessionCookie := b.Result().Cookies()[0]
 	require.NoError(t, err)
+	assert.Equal(t, "cookiedomain.com", sessionCookie.Domain)
+	// Change domain so we can easily compare the rest of the values
+	sessionCookie.Domain = mockAuthSessionCookie.Domain
 	assert.EqualValues(t, mockAuthSessionCookie.Value, sessionCookie.Value)
 }
 

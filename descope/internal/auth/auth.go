@@ -22,6 +22,7 @@ type AuthParams struct {
 	ProjectID           string
 	PublicKey           string
 	SessionJWTViaCookie bool
+	CookieDomain        string
 }
 
 type authenticationsBase struct {
@@ -125,11 +126,11 @@ func (auth *authenticationService) Logout(request *http.Request, w http.Response
 	jwtResponse.CookieExpiration = 0
 
 	// delete cookies by not specifying max-age (e.i. max-age=0)
-	cookies = append(cookies, createCookie(&descope.Token{
+	cookies = append(cookies, auth.createCookie(&descope.Token{
 		JWT:    "",
 		Claims: map[string]interface{}{claimAttributeName: descope.SessionCookieName},
 	}, jwtResponse))
-	cookies = append(cookies, createCookie(&descope.Token{JWT: "",
+	cookies = append(cookies, auth.createCookie(&descope.Token{JWT: "",
 		Claims: map[string]interface{}{claimAttributeName: descope.RefreshCookieName},
 	}, jwtResponse))
 
@@ -178,11 +179,11 @@ func (auth *authenticationService) LogoutAll(request *http.Request, w http.Respo
 	jwtResponse.CookieExpiration = 0
 
 	// delete cookies by not specifying max-age (e.i. max-age=0)
-	cookies = append(cookies, createCookie(&descope.Token{
+	cookies = append(cookies, auth.createCookie(&descope.Token{
 		JWT:    "",
 		Claims: map[string]interface{}{claimAttributeName: descope.SessionCookieName},
 	}, jwtResponse))
-	cookies = append(cookies, createCookie(&descope.Token{JWT: "",
+	cookies = append(cookies, auth.createCookie(&descope.Token{JWT: "",
 		Claims: map[string]interface{}{claimAttributeName: descope.RefreshCookieName},
 	}, jwtResponse))
 
@@ -232,17 +233,17 @@ func (auth *authenticationService) ValidateSessionWithRequest(request *http.Requ
 	if sessionToken == "" {
 		return false, nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain session token")
 	}
-	return auth.validateSessionZZ(sessionToken)
+	return auth.validateSession(sessionToken)
 }
 
 func (auth *authenticationService) ValidateSessionWithToken(sessionToken string) (bool, *descope.Token, error) {
 	if sessionToken == "" {
 		return false, nil, utils.NewInvalidArgumentError("sessionToken")
 	}
-	return auth.validateSessionZZ(sessionToken)
+	return auth.validateSession(sessionToken)
 }
 
-func (auth *authenticationService) validateSessionZZ(sessionToken string) (valid bool, token *descope.Token, err error) { // TODO: RENAME ME
+func (auth *authenticationService) validateSession(sessionToken string) (valid bool, token *descope.Token, err error) {
 	token, err = auth.validateJWT(sessionToken)
 	if err := auth.ensurePublicKeys(); err != nil {
 		return false, nil, err
@@ -321,7 +322,7 @@ func (auth *authenticationService) ValidateAndRefreshSessionWithTokens(sessionTo
 }
 
 func (auth *authenticationService) validateAndRefreshSessionWithTokens(sessionToken, refreshToken string, w http.ResponseWriter) (valid bool, token *descope.Token, err error) {
-	if valid, token, err = auth.validateSessionZZ(sessionToken); valid {
+	if valid, token, err = auth.validateSession(sessionToken); valid {
 		return
 	}
 	if valid, token, err = auth.refreshSession(refreshToken, w); valid {
@@ -537,7 +538,7 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 			refreshToken = tokens[i]
 		}
 		if addToCookie {
-			ck := createCookie(tokens[i], jwtResponse)
+			ck := auth.createCookie(tokens[i], jwtResponse)
 			if ck != nil {
 				cookies = append(cookies, ck)
 			}
@@ -569,12 +570,17 @@ func getValidRefreshToken(r *http.Request) (string, error) {
 	return refreshToken, nil
 }
 
-func createCookie(token *descope.Token, jwtRes *descope.JWTResponse) *http.Cookie {
+func (auth *authenticationsBase) createCookie(token *descope.Token, jwtRes *descope.JWTResponse) *http.Cookie {
+	// Take cookie domain for conf, fallback to JWTResponse
+	cookieDomain := auth.conf.CookieDomain
+	if cookieDomain == "" {
+		cookieDomain = jwtRes.CookieDomain
+	}
 	if token != nil {
 		name, _ := token.Claims[claimAttributeName].(string)
 		return &http.Cookie{
 			Path:     jwtRes.CookiePath,
-			Domain:   jwtRes.CookieDomain,
+			Domain:   cookieDomain,
 			Name:     name,
 			Value:    token.JWT,
 			HttpOnly: true,
