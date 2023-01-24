@@ -179,7 +179,7 @@ func TestEmptyPublicKey(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("[]"))}, nil
 	}))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateSessionWithToken(jwtTokenExpired)
+	ok, _, err := a.ValidateSessionWithToken(jwtTokenExpired, "")
 	require.False(t, ok)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrPublicKey)
@@ -191,7 +191,7 @@ func TestErrorFetchPublicKey(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusInternalServerError, Body: io.NopCloser(strings.NewReader("what"))}, nil
 	}))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateSessionWithToken(jwtTokenExpired)
+	ok, _, err := a.ValidateSessionWithToken(jwtTokenExpired, "")
 	require.False(t, ok)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrPublicKey)
@@ -224,15 +224,16 @@ func TestValidateSessionWithRequestInvalidInput(t *testing.T) {
 func TestValidateSessionWithToken(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateSessionWithToken(jwtTokenValid)
+	ok, token, err := a.ValidateSessionWithToken(jwtTokenValid, jwtRTokenValid)
 	require.NoError(t, err)
+	require.NotEmpty(t, token.RefreshExpiration)
 	require.True(t, ok)
 }
 
 func TestValidateSessionWithTokenInvalidInput(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateSessionWithToken("")
+	ok, _, err := a.ValidateSessionWithToken("", "")
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.False(t, ok)
 }
@@ -240,7 +241,7 @@ func TestValidateSessionWithTokenInvalidInput(t *testing.T) {
 func TestValidateSessionWithTokenNoPublicKey(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateSessionWithToken(jwtTokenValid)
+	ok, _, err := a.ValidateSessionWithToken(jwtTokenValid, "")
 	assert.ErrorIs(t, err, descope.ErrPublicKey)
 	require.False(t, ok)
 }
@@ -248,7 +249,7 @@ func TestValidateSessionWithTokenNoPublicKey(t *testing.T) {
 func TestValidateSessionWithTokenExpired(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateSessionWithToken(jwtTokenExpired)
+	ok, _, err := a.ValidateSessionWithToken(jwtTokenExpired, "")
 	require.Error(t, err)
 	require.False(t, ok)
 }
@@ -394,11 +395,11 @@ func TestValidateSessionFetchKeyCalledOnce(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf(`{"keys":[%s]}`, publicKey)))}, nil
 	}))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateSessionWithToken(jwtTokenValid)
+	ok, _, err := a.ValidateSessionWithToken(jwtTokenValid, "")
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.EqualValues(t, 1, count)
-	ok, _, err = a.ValidateSessionWithToken(jwtTokenValid)
+	ok, _, err = a.ValidateSessionWithToken(jwtTokenValid, "")
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.EqualValues(t, 1, count)
@@ -423,7 +424,7 @@ func TestValidateSessionFailWithInvalidKey(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", publicKey)))}, nil
 	}))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateSessionWithToken(jwtTokenValid)
+	ok, _, err := a.ValidateSessionWithToken(jwtTokenValid, "")
 	require.Error(t, err)
 	require.False(t, ok)
 	require.Zero(t, count)
@@ -705,7 +706,7 @@ func BenchmarkValidateSession(b *testing.B) {
 	require.NoError(b, err)
 
 	for n := 0; n < b.N; n++ {
-		_, _, _ = a.ValidateSessionWithToken(jwtTokenValid)
+		_, _, _ = a.ValidateSessionWithToken(jwtTokenValid, "")
 	}
 }
 

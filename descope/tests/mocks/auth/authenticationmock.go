@@ -435,7 +435,7 @@ type MockSession struct {
 	ValidateSessionResponse        *descope.Token
 	ValidateSessionResponseFailure bool
 
-	ValidateSessionTokenAssert          func(sessionToken string)
+	ValidateSessionTokenAssert          func(sessionToken, refreshToken string)
 	ValidateSessionTokenError           error
 	ValidateSessionTokenResponse        *descope.Token
 	ValidateSessionTokenResponseFailure bool
@@ -483,9 +483,9 @@ func (m *MockSession) ValidateSessionWithRequest(r *http.Request) (bool, *descop
 	return !m.ValidateSessionResponseFailure, m.ValidateSessionResponse, m.ValidateSessionError
 }
 
-func (m *MockSession) ValidateSessionWithToken(sessionToken string) (bool, *descope.Token, error) {
+func (m *MockSession) ValidateSessionWithToken(sessionToken, refreshToken string) (bool, *descope.Token, error) {
 	if m.ValidateSessionTokenAssert != nil {
-		m.ValidateSessionTokenAssert(sessionToken)
+		m.ValidateSessionTokenAssert(sessionToken, refreshToken)
 	}
 	return !m.ValidateSessionTokenResponseFailure, m.ValidateSessionTokenResponse, m.ValidateSessionTokenError
 }

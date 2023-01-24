@@ -229,22 +229,28 @@ func (auth *authenticationService) ValidateSessionWithRequest(request *http.Requ
 	if request == nil {
 		return false, nil, utils.NewInvalidArgumentError("request")
 	}
-	sessionToken, _ := provideTokens(request)
+	sessionToken, refreshToken := provideTokens(request)
 	if sessionToken == "" {
 		return false, nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain session token")
 	}
-	return auth.validateSession(sessionToken)
+	return auth.validateSession(sessionToken, refreshToken)
 }
 
-func (auth *authenticationService) ValidateSessionWithToken(sessionToken string) (bool, *descope.Token, error) {
+func (auth *authenticationService) ValidateSessionWithToken(sessionToken, refreshToken string) (bool, *descope.Token, error) {
 	if sessionToken == "" {
 		return false, nil, utils.NewInvalidArgumentError("sessionToken")
 	}
-	return auth.validateSession(sessionToken)
+	return auth.validateSession(sessionToken, refreshToken)
 }
 
-func (auth *authenticationService) validateSession(sessionToken string) (valid bool, token *descope.Token, err error) {
+func (auth *authenticationService) validateSession(sessionToken, refreshToken string) (valid bool, token *descope.Token, err error) {
 	token, err = auth.validateJWT(sessionToken)
+	// Update refresh expiration if refresh token present
+	if refreshToken != "" && err == nil {
+		if rToken, err := auth.validateJWT(refreshToken); err == nil {
+			token.RefreshExpiration = rToken.Expiration
+		}
+	}
 	if err := auth.ensurePublicKeys(); err != nil {
 		return false, nil, err
 	}
@@ -322,7 +328,7 @@ func (auth *authenticationService) ValidateAndRefreshSessionWithTokens(sessionTo
 }
 
 func (auth *authenticationService) validateAndRefreshSessionWithTokens(sessionToken, refreshToken string, w http.ResponseWriter) (valid bool, token *descope.Token, err error) {
-	if valid, token, err = auth.validateSession(sessionToken); valid {
+	if valid, token, err = auth.validateSession(sessionToken, refreshToken); valid {
 		return
 	}
 	if valid, token, err = auth.refreshSession(refreshToken, w); valid {

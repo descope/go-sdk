@@ -308,7 +308,7 @@ Alternatively, tokens can be validated directly:
 
 ```go
 // Validate the session. Will return an error if expired
-if authorized, sessionToken, err := descopeClient.Auth.ValidateSessionWithToken(sessionToken); !authorized {
+if authorized, sessionToken, err := descopeClient.Auth.ValidateSessionWithToken(sessionToken, refreshToken); !authorized {
     // unauthorized error
 }
 

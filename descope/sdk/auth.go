@@ -208,9 +208,10 @@ type Authentication interface {
 
 	// ValidateSessionWithToken - Use to validate a session token directly.
 	// Should be called before any private API call that requires authorization.
+	// RefreshToken here is optional, and will only be used to update the session token metadata.
 	// Alternatively use ValidateSessionWithRequest with the incoming request.
 	// returns true upon success or false, the session token and an error upon failure.
-	ValidateSessionWithToken(sessionToken string) (bool, *descope.Token, error)
+	ValidateSessionWithToken(sessionToken, refreshToken string) (bool, *descope.Token, error)
 
 	// ValidateSessionWithRequest - Use to refresh an expired session of a given request.
 	// Should be called when a session has expired (failed validation) to renew it.
