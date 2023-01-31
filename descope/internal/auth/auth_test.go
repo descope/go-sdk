@@ -14,6 +14,7 @@ import (
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/tests/mocks"
+	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -481,6 +482,20 @@ func TestValidateSessionNotYet(t *testing.T) {
 	ok, _, err := a.ValidateAndRefreshSessionWithTokens(jwtTokenNotYet, jwtTokenNotYet)
 	require.Error(t, err)
 	require.False(t, ok)
+}
+
+func TestConvertError(t *testing.T) {
+	err := convertTokenError(jwt.ErrTokenExpired())
+	require.ErrorIs(t, err, descope.ErrInvalidToken)
+	require.NotEmpty(t, err.(*descope.Error).Message)
+	err = convertTokenError(jwt.ErrTokenNotYetValid())
+	require.ErrorIs(t, err, descope.ErrInvalidToken)
+	require.NotEmpty(t, err.(*descope.Error).Message)
+	err = convertTokenError(jwt.ErrInvalidIssuedAt())
+	require.ErrorIs(t, err, descope.ErrInvalidToken)
+	require.Empty(t, err.(*descope.Error).Message)
+	err = convertTokenError(nil)
+	require.Nil(t, err)
 }
 
 func TestLogout(t *testing.T) {
