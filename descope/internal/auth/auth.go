@@ -449,7 +449,7 @@ func (auth *authenticationsBase) validateJWT(JWT string) (*descope.Token, error)
 	// if the validation failed and we got an error from `convertTokenError` that's not
 	// just about the token being invalid that would usually just mean that fetching
 	// the public key failed because of something important, and we should include
-	// the in the returned error
+	// the reason in the returned error
 	if !auth.publicKeysProvider.publicKeyExists() {
 		logger.LogInfo("Cannot validate or refresh session, no public key available")
 		if descope.ErrInvalidToken.Is(err) {
