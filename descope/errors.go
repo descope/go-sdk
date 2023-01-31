@@ -28,8 +28,8 @@ var (
 	ErrMissingProjectID = newClientError("G010001", "Missing project ID")
 
 	// client service error
-	ErrUnexpectedResponse = newClientError("G020001", "Unexpected response")
-	ErrInvalidResponse    = newClientError("G020002", "Invalid response")
+	ErrUnexpectedResponse = newClientError("G020001", "Unexpected server response")
+	ErrInvalidResponse    = newClientError("G020002", "Invalid server response")
 
 	// client functional errors
 	ErrPublicKey        = newClientError("G030001", "Missing or invalid public key")
