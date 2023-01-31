@@ -215,14 +215,6 @@ func (auth *authenticationService) Me(request *http.Request) (*descope.UserRespo
 	return auth.extractUserResponse(httpResponse.BodyStr)
 }
 
-func (auth *authenticationService) ensurePublicKeys() error {
-	if !auth.publicKeysProvider.publicKeyExists() {
-		logger.LogInfo("Cannot validate or refresh session, no public key available")
-		return descope.ErrPublicKey.WithMessage("No public key available")
-	}
-	return nil
-}
-
 // Validate Session
 
 func (auth *authenticationService) ValidateSessionWithRequest(request *http.Request) (bool, *descope.Token, error) {
@@ -245,11 +237,10 @@ func (auth *authenticationService) ValidateSessionWithToken(sessionToken string)
 
 func (auth *authenticationService) validateSession(sessionToken string) (valid bool, token *descope.Token, err error) {
 	token, err = auth.validateJWT(sessionToken)
-	if err := auth.ensurePublicKeys(); err != nil {
+	if err != nil {
 		return false, nil, err
 	}
-	valid, err = validateTokenError(err)
-	return
+	return true, token, nil
 }
 
 // Refresh Session
@@ -274,10 +265,7 @@ func (auth *authenticationService) RefreshSessionWithToken(refreshToken string) 
 
 func (auth *authenticationService) refreshSession(refreshToken string, w http.ResponseWriter) (bool, *descope.Token, error) {
 	token, err := auth.validateJWT(refreshToken)
-	if err := auth.ensurePublicKeys(); err != nil {
-		return false, nil, err
-	}
-	if valid, err := validateTokenError(err); !valid {
+	if err != nil {
 		return false, nil, err
 	}
 
@@ -455,7 +443,22 @@ func (auth *authenticationsBase) validateJWT(JWT string) (*descope.Token, error)
 		if parseErr != nil {
 			err = parseErr
 		}
+		err = convertTokenError(err)
 	}
+
+	// if the validation failed and we got an error from `convertTokenError` that's not
+	// just about the token being invalid that would usually just mean that fetching
+	// the public key failed because of something important, and we should include
+	// the in the returned error
+	if !auth.publicKeysProvider.publicKeyExists() {
+		logger.LogInfo("Cannot validate or refresh session, no public key available")
+		if descope.ErrInvalidToken.Is(err) {
+			err = descope.ErrPublicKey
+		} else if !descope.ErrPublicKey.Is(err) {
+			err = descope.ErrPublicKey.WithMessage("%s", err.Error())
+		}
+	}
+
 	return descope.NewToken(JWT, token), err
 }
 
@@ -618,22 +621,26 @@ func provideTokens(r *http.Request) (string, string) {
 	return sessionToken, refreshCookie.Value
 }
 
-func validateTokenError(err error) (bool, error) {
+func convertTokenError(err error) error {
 	if goErrors.Is(err, jwt.ErrTokenExpired()) {
-		return false, descope.ErrInvalidToken.WithMessage("Token has expired")
+		return descope.ErrInvalidToken.WithMessage("Token has expired")
 	}
 	if goErrors.Is(err, jwt.ErrTokenNotYetValid()) {
-		return false, descope.ErrInvalidToken.WithMessage("Token is not yet valid")
+		return descope.ErrInvalidToken.WithMessage("Token is not yet valid")
+	}
+	var validationErr jwt.ValidationError
+	if goErrors.As(err, &validationErr) {
+		return descope.ErrInvalidToken
 	}
 	if err != nil {
 		if unwrapped := goErrors.Unwrap(err); unwrapped != nil {
 			if de, ok := unwrapped.(*descope.Error); ok {
-				return false, de
+				return de
 			}
 		}
-		return false, descope.ErrInvalidToken.WithMessage("Failed to verify token: %s", err.Error())
+		return descope.ErrInvalidToken.WithMessage("Failed to verify token: %s", err.Error())
 	}
-	return true, nil
+	return nil
 }
 
 func getAuthorizationClaimItems(token *descope.Token, tenant string, claim string) []string {

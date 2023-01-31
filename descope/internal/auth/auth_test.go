@@ -183,7 +183,7 @@ func TestEmptyPublicKey(t *testing.T) {
 	require.False(t, ok)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrPublicKey)
-	assert.Contains(t, err.Error(), "No public key available")
+	assert.Contains(t, err.Error(), descope.ErrInvalidResponse.Description)
 }
 
 func TestErrorFetchPublicKey(t *testing.T) {
@@ -195,7 +195,7 @@ func TestErrorFetchPublicKey(t *testing.T) {
 	require.False(t, ok)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrPublicKey)
-	assert.Contains(t, err.Error(), "No public key available")
+	assert.Contains(t, err.Error(), descope.ErrInvalidResponse.Description)
 }
 
 // Validate Session

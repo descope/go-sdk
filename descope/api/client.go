@@ -665,8 +665,9 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 	}
 
 	resBytes, err := c.parseBody(response)
-	if err != nil {
-		return nil, descope.ErrUnexpectedResponse
+	if err != nil { // notest
+		logger.LogError("failed processing body from request to [%s]", err, url)
+		return nil, descope.ErrInvalidResponse
 	}
 
 	if options.ResBodyObj != nil {
@@ -687,7 +688,6 @@ func (c *Client) parseBody(response *http.Response) (resBytes []byte, err error)
 	if response.Body != nil {
 		resBytes, err = io.ReadAll(response.Body)
 		if err != nil {
-			logger.LogError("failed reading body from request to [%s]", err, response.Request.URL.String())
 			return nil, err
 		}
 	}
@@ -696,15 +696,15 @@ func (c *Client) parseBody(response *http.Response) (resBytes []byte, err error)
 
 func (c *Client) parseDescopeError(response *http.Response) *descope.Error {
 	body, err := c.parseBody(response)
-	if err != nil {
+	if err != nil { // notest
 		logger.LogError("failed to process error from server response", err)
-		return descope.ErrUnexpectedResponse
+		return descope.ErrInvalidResponse
 	}
 
 	var descopeErr *descope.Error
 	if err := json.Unmarshal(body, &descopeErr); err != nil || descopeErr.Code == "" {
 		logger.LogError("failed to parse error from server response", err)
-		return descope.ErrUnexpectedResponse
+		return descope.ErrInvalidResponse
 	}
 
 	if descopeErr.Is(descope.ErrRateLimitExceeded) {

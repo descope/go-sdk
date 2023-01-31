@@ -161,7 +161,8 @@ func TestPostUnauthorized(t *testing.T) {
 
 	_, err := c.DoPostRequest("path", nil, nil, "")
 	require.Error(t, err)
-	assert.ErrorIs(t, err, descope.ErrUnexpectedResponse)
+	assert.ErrorIs(t, err, descope.ErrInvalidResponse)
+	assert.True(t, descope.IsUnauthorizedError(err))
 }
 
 func TestPostRateLimitExceeded(t *testing.T) {
@@ -218,7 +219,7 @@ func TestPostUnknownError(t *testing.T) {
 
 	_, err := c.DoPostRequest("path", nil, nil, "")
 	require.Error(t, err)
-	assert.ErrorIs(t, err, descope.ErrUnexpectedResponse)
+	assert.ErrorIs(t, err, descope.ErrInvalidResponse)
 }
 
 func TestPostNotFoundError(t *testing.T) {
@@ -230,7 +231,8 @@ func TestPostNotFoundError(t *testing.T) {
 
 	_, err := c.DoPostRequest("path", nil, nil, "")
 	require.Error(t, err)
-	assert.ErrorIs(t, err, descope.ErrUnexpectedResponse)
+	assert.ErrorIs(t, err, descope.ErrInvalidResponse)
+	assert.True(t, descope.IsNotFoundError(err))
 }
 
 func TestDoRequestDefault(t *testing.T) {
