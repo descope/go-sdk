@@ -290,8 +290,8 @@ func (auth *authenticationService) ValidateAndRefreshSessionWithRequest(request 
 		return false, nil, utils.NewInvalidArgumentError("request")
 	}
 	sessionToken, refreshToken := provideTokens(request)
-	if sessionToken == "" {
-		return false, nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain session token")
+	if sessionToken == "" && refreshToken == "" {
+		return false, nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain any tokens")
 	}
 	if refreshToken == "" {
 		return false, nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain refresh token")
@@ -300,8 +300,8 @@ func (auth *authenticationService) ValidateAndRefreshSessionWithRequest(request 
 }
 
 func (auth *authenticationService) ValidateAndRefreshSessionWithTokens(sessionToken, refreshToken string) (bool, *descope.Token, error) {
-	if sessionToken == "" {
-		return false, nil, utils.NewInvalidArgumentError("sessionToken")
+	if sessionToken == "" && refreshToken == "" {
+		return false, nil, descope.ErrMissingArguments.WithMessage("Both sessionToken and refreshToken are empty")
 	}
 	if refreshToken == "" {
 		return false, nil, utils.NewInvalidArgumentError("refreshToken")
@@ -310,8 +310,11 @@ func (auth *authenticationService) ValidateAndRefreshSessionWithTokens(sessionTo
 }
 
 func (auth *authenticationService) validateAndRefreshSessionWithTokens(sessionToken, refreshToken string, w http.ResponseWriter) (valid bool, token *descope.Token, err error) {
-	if valid, token, err = auth.validateSession(sessionToken); valid {
-		return
+	// Validate & refresh defaults to "refresh only" when not given a session token
+	if sessionToken != "" {
+		if valid, token, err = auth.validateSession(sessionToken); valid {
+			return
+		}
 	}
 	if valid, token, err = auth.refreshSession(refreshToken, w); valid {
 		return
