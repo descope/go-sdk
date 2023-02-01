@@ -336,6 +336,13 @@ func TestValidateAndRefreshSessionWithRequest(t *testing.T) {
 	ok, _, err = a.ValidateAndRefreshSessionWithRequest(request, nil)
 	require.NoError(t, err)
 	require.True(t, ok)
+
+	// Refresh missing
+	request = &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: descope.SessionCookieName, Value: jwtTokenValid})
+	ok, _, err = a.ValidateAndRefreshSessionWithRequest(request, nil)
+	require.NoError(t, err)
+	require.True(t, ok)
 }
 
 func TestValidateAndRefreshSessionWithRequestInvalidInput(t *testing.T) {
@@ -345,13 +352,6 @@ func TestValidateAndRefreshSessionWithRequestInvalidInput(t *testing.T) {
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.False(t, ok)
 	ok, _, err = a.ValidateAndRefreshSessionWithRequest(&http.Request{Header: http.Header{}}, nil)
-	require.ErrorIs(t, err, descope.ErrMissingArguments)
-	require.False(t, ok)
-
-	// test only session
-	request := &http.Request{Header: http.Header{}}
-	request.AddCookie(&http.Cookie{Name: descope.SessionCookieName, Value: jwtTokenValid})
-	ok, _, err = a.ValidateAndRefreshSessionWithRequest(request, nil)
 	require.ErrorIs(t, err, descope.ErrMissingArguments)
 	require.False(t, ok)
 }
@@ -368,6 +368,9 @@ func TestValidateAndRefreshSessionWithToken(t *testing.T) {
 	ok, _, err = a.ValidateAndRefreshSessionWithTokens("", jwtRTokenValid)
 	require.NoError(t, err)
 	require.True(t, ok)
+	ok, _, err = a.ValidateAndRefreshSessionWithTokens(jwtTokenValid, "")
+	require.NoError(t, err)
+	require.True(t, ok)
 }
 
 func TestValidateAndRefreshSessionWithTokenInvalidInput(t *testing.T) {
@@ -375,9 +378,6 @@ func TestValidateAndRefreshSessionWithTokenInvalidInput(t *testing.T) {
 	require.NoError(t, err)
 	ok, _, err := a.ValidateAndRefreshSessionWithTokens("", "")
 	require.ErrorIs(t, err, descope.ErrMissingArguments)
-	require.False(t, ok)
-	ok, _, err = a.ValidateAndRefreshSessionWithTokens(jwtTokenValid, "")
-	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.False(t, ok)
 }
 
