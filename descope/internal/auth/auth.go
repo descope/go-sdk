@@ -290,31 +290,26 @@ func (auth *authenticationService) ValidateAndRefreshSessionWithRequest(request 
 		return false, nil, utils.NewInvalidArgumentError("request")
 	}
 	sessionToken, refreshToken := provideTokens(request)
-	if sessionToken == "" {
-		return false, nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain session token")
-	}
-	if refreshToken == "" {
-		return false, nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain refresh token")
-	}
 	return auth.validateAndRefreshSessionWithTokens(sessionToken, refreshToken, w)
 }
 
 func (auth *authenticationService) ValidateAndRefreshSessionWithTokens(sessionToken, refreshToken string) (bool, *descope.Token, error) {
-	if sessionToken == "" {
-		return false, nil, utils.NewInvalidArgumentError("sessionToken")
-	}
-	if refreshToken == "" {
-		return false, nil, utils.NewInvalidArgumentError("refreshToken")
-	}
 	return auth.validateAndRefreshSessionWithTokens(sessionToken, refreshToken, nil)
 }
 
 func (auth *authenticationService) validateAndRefreshSessionWithTokens(sessionToken, refreshToken string, w http.ResponseWriter) (valid bool, token *descope.Token, err error) {
-	if valid, token, err = auth.validateSession(sessionToken); valid {
-		return
+	if sessionToken == "" && refreshToken == "" {
+		return false, nil, descope.ErrMissingArguments.WithMessage("Both sessionToken and refreshToken are empty")
 	}
-	if valid, token, err = auth.refreshSession(refreshToken, w); valid {
-		return
+	if sessionToken != "" {
+		if valid, token, err = auth.validateSession(sessionToken); valid {
+			return
+		}
+	}
+	if refreshToken != "" {
+		if valid, token, err = auth.refreshSession(refreshToken, w); valid {
+			return
+		}
 	}
 	return false, nil, err
 }
