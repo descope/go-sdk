@@ -584,7 +584,7 @@ func (auth *authenticationsBase) createCookie(token *descope.Token, jwtRes *desc
 			HttpOnly: true,
 			MaxAge:   int(jwtRes.CookieMaxAge),
 			Expires:  time.Unix(int64(jwtRes.CookieExpiration), 0),
-			SameSite: http.SameSiteNoneMode,
+			SameSite: http.SameSiteStrictMode,
 			Secure:   true,
 		}
 	}
