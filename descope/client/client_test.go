@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/descope/go-sdk/descope"
+	"github.com/descope/go-sdk/descope/logger"
 	mocksauth "github.com/descope/go-sdk/descope/tests/mocks/auth"
 	mocksmgmt "github.com/descope/go-sdk/descope/tests/mocks/mgmt"
 	"github.com/stretchr/testify/assert"
@@ -39,6 +40,22 @@ func TestEnvVariablePublicKey(t *testing.T) {
 	assert.EqualValues(t, expectedPublicKey, a.config.PublicKey)
 	assert.NotNil(t, a.Auth)
 	assert.NotNil(t, a.Management)
+}
+
+func TestConcurrentClients(t *testing.T) {
+	// This test should be run with the 'race' flag, to ensure that
+	// creating two client in a concurrent manner is safe
+
+	c, err := NewWithConfig(&Config{ProjectID: "a", PublicKey: "test", LogLevel: logger.LogDebugLevel})
+	assert.NoError(t, err)
+	go func() {
+		_, err2 := NewWithConfig(&Config{ProjectID: "a", PublicKey: "test", LogLevel: logger.LogDebugLevel})
+		assert.NoError(t, err2)
+	}()
+
+	// SignUpOrIn is called to trigger logging, to ensure it is safe
+	// during a concurrent creation of another client
+	_ = c.Auth.OTP().SignUpOrIn(descope.MethodEmail, "test@test.com")
 }
 
 func TestEmptyProjectID(t *testing.T) {
