@@ -25,8 +25,10 @@ type Config struct {
 	// CustomDefaultHeaders (optional, nil) - add custom headers to all requests used to communicate with descope services.
 	CustomDefaultHeaders map[string]string
 	// LogLevel (optional, LogNone) - set a log level (Debug/Info/None) for the sdk to use when logging.
+	// Note that this attribute will be used to init a global logger once, in a goroutine safe manner
 	LogLevel logger.LogLevel
 	// LoggerInterface (optional, log.Default()) - set the logger instance to use for logging with the sdk.
+	// Note that this attribute will be used to init a global logger once, in a goroutine safe manner
 	Logger logger.LoggerInterface
 	// State whether session jwt should be sent to client in cookie or let the calling function handle the transfer of the jwt,
 	// defaults to leaving it for calling function, use cookie if session jwt will stay small (less than 1k)

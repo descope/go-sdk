@@ -97,7 +97,7 @@ func (to *Token) AuthFactors() []AuthFactor {
 				if ok {
 					afs = append(afs, AuthFactor(af))
 				} else {
-					logger.LogInfo("Unkown authfactor type [%T]", factorsArr[i]) //notest
+					logger.LogInfo("Unknown auth-factor type [%T]", factorsArr[i]) //notest
 				}
 			}
 		} else {
