@@ -41,7 +41,7 @@ func (auth *oauth) Start(provider descope.OAuthProvider, redirectURL string, r *
 		res := &oauthStartResponse{}
 		err = utils.Unmarshal([]byte(httpResponse.BodyStr), res)
 		if err != nil {
-			logger.LogError("failed to parse location from response for [%s]", err, provider)
+			logger.LogError("Failed to parse location from response for [%s]", err, provider)
 			return "", err
 		}
 		url = res.URL

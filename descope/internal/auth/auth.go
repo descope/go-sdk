@@ -92,13 +92,13 @@ func (auth *authenticationService) Logout(request *http.Request, w http.Response
 
 	_, refreshToken := provideTokens(request)
 	if refreshToken == "" {
-		logger.LogDebug("unable to find tokens from cookies")
+		logger.LogDebug("Unable to find tokens from cookies")
 		return descope.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
 	}
 
 	_, err := auth.validateJWT(refreshToken)
 	if err != nil {
-		logger.LogDebug("invalid refresh token")
+		logger.LogDebug("Invalid refresh token")
 		return descope.ErrRefreshToken.WithMessage("Invalid refresh token")
 	}
 
@@ -145,13 +145,13 @@ func (auth *authenticationService) LogoutAll(request *http.Request, w http.Respo
 
 	_, refreshToken := provideTokens(request)
 	if refreshToken == "" {
-		logger.LogDebug("unable to find tokens from cookies")
+		logger.LogDebug("Unable to find tokens from cookies")
 		return descope.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
 	}
 
 	_, err := auth.validateJWT(refreshToken)
 	if err != nil {
-		logger.LogDebug("invalid refresh token")
+		logger.LogDebug("Invalid refresh token")
 		return descope.ErrRefreshToken.WithMessage("Invalid refresh token")
 	}
 
@@ -198,13 +198,13 @@ func (auth *authenticationService) Me(request *http.Request) (*descope.UserRespo
 
 	_, refreshToken := provideTokens(request)
 	if refreshToken == "" {
-		logger.LogDebug("unable to find tokens from cookies")
+		logger.LogDebug("Unable to find tokens from cookies")
 		return nil, descope.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
 	}
 
 	_, err := auth.validateJWT(refreshToken)
 	if err != nil {
-		logger.LogDebug("invalid refresh token")
+		logger.LogDebug("Invalid refresh token")
 		return nil, descope.ErrRefreshToken.WithMessage("Invalid refresh token")
 	}
 
@@ -317,7 +317,7 @@ func (auth *authenticationService) validateAndRefreshSessionWithTokens(sessionTo
 func (auth *authenticationService) ExchangeAccessKey(accessKey string) (success bool, SessionToken *descope.Token, err error) {
 	httpResponse, err := auth.client.DoPostRequest(api.Routes.ExchangeAccessKey(), nil, &api.HTTPRequest{}, accessKey)
 	if err != nil {
-		logger.LogError("failed to exchange access key", err)
+		logger.LogError("Failed to exchange access key", err)
 		return false, nil, err
 	}
 
@@ -369,7 +369,7 @@ func (auth *authenticationsBase) extractJWTResponse(bodyStr string) (*descope.JW
 	jRes := descope.JWTResponse{}
 	err := utils.Unmarshal([]byte(bodyStr), &jRes)
 	if err != nil {
-		logger.LogError("unable to parse jwt response", err)
+		logger.LogError("Unable to parse jwt response", err)
 		return nil, err
 	}
 	return &jRes, nil
@@ -382,7 +382,7 @@ func (auth *authenticationsBase) extractUserResponse(bodyStr string) (*descope.U
 	res := descope.UserResponse{}
 	err := utils.Unmarshal([]byte(bodyStr), &res)
 	if err != nil {
-		logger.LogError("unable to parse user response", err)
+		logger.LogError("Unable to parse user response", err)
 		return nil, err
 	}
 	return &res, nil
@@ -518,7 +518,7 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 	}
 	tokens, err := auth.extractTokens(jwtResponse)
 	if err != nil {
-		logger.LogError("unable to extract tokens from request [%s]", err, httpResponse.Req.URL)
+		logger.LogError("Unable to extract tokens from request [%s]", err, httpResponse.Req.URL)
 		return nil, err
 	}
 
@@ -548,7 +548,7 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 			if cookies[i].Name == descope.RefreshCookieName {
 				refreshToken, err = auth.validateJWT(cookies[i].Value)
 				if err != nil {
-					logger.LogDebug("validation of refresh token failed: %s", err.Error())
+					logger.LogDebug("Validation of refresh token failed: %s", err.Error())
 					return nil, err
 				}
 			}
@@ -562,7 +562,7 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 func getValidRefreshToken(r *http.Request) (string, error) {
 	_, refreshToken := provideTokens(r)
 	if refreshToken == "" {
-		logger.LogDebug("unable to find tokens from cookies")
+		logger.LogDebug("Unable to find tokens from cookies")
 		return "", descope.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
 	}
 	return refreshToken, nil
@@ -667,7 +667,7 @@ func getAuthorizationClaimItems(token *descope.Token, tenant string, claim strin
 
 	// warn if it seems like programmer forgot the tenant ID
 	if len(items) == 0 && tenant == "" && len(token.GetTenants()) != 0 {
-		logger.LogDebug("no authorization items found but tenant might need to be specified")
+		logger.LogDebug("No authorization items found but tenant might need to be specified")
 	}
 
 	return items
@@ -676,7 +676,7 @@ func getAuthorizationClaimItems(token *descope.Token, tenant string, claim strin
 func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (*descope.EnchantedLinkResponse, error) {
 	var response *descope.EnchantedLinkResponse
 	if err := utils.Unmarshal([]byte(httpResponse.BodyStr), &response); err != nil {
-		logger.LogError("failed to load pending reference from response", err)
+		logger.LogError("Failed to load pending reference from response", err)
 		return response, descope.ErrUnexpectedResponse.WithMessage("Failed to load pending reference")
 	}
 	return response, nil

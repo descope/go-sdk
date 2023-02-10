@@ -61,7 +61,7 @@ func TestConcurrentClients(t *testing.T) {
 func TestEmptyProjectID(t *testing.T) {
 	_, err := New()
 	require.Error(t, err)
-	assert.Contains(t, err.Error(), "project id is missing")
+	assert.Contains(t, err.Error(), "Project ID is missing")
 }
 
 func TestEmptyConfig(t *testing.T) {

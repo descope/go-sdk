@@ -42,10 +42,10 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 	logger.Init(config.LogLevel, config.Logger)
 
 	if strings.TrimSpace(config.setProjectID()) == "" {
-		return nil, descope.ErrMissingProjectID.WithMessage("project id is missing, make sure to add it in the Config struct or the environment variable \"%s\"", descope.EnvironmentVariableProjectID)
+		return nil, descope.ErrMissingProjectID.WithMessage("Project ID is missing, make sure to add it in the Config struct or the environment variable \"%s\"", descope.EnvironmentVariableProjectID)
 	}
 	if config.setPublicKey() != "" {
-		logger.LogInfo("provided public key is set, forcing only provided public key validation")
+		logger.LogInfo("Provided public key is set, forcing only provided public key validation")
 	}
 	config.setManagementKey()
 

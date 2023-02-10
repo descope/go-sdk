@@ -25,7 +25,7 @@ func AuthenticationMiddleware(auth Authentication, onFailure func(http.ResponseW
 				}
 			} else {
 				if err != nil {
-					logger.LogError("request failed because token is invalid", err)
+					logger.LogError("Request failed because token is invalid", err)
 				}
 				if onFailure != nil {
 					onFailure(w, r, err)
