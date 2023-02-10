@@ -86,6 +86,6 @@ func (mgmt *managementService) Group() sdk.Group {
 
 func (mgmt *managementService) ensureManagementKey() {
 	if mgmt.conf.ManagementKey == "" {
-		logger.LogInfo("management key is missing, make sure to add it in the Config struct or the environment variable \"%s\"", descope.EnvironmentVariableManagementKey) // notest
+		logger.LogInfo("Management key is missing, make sure to add it in the Config struct or the environment variable \"%s\"", descope.EnvironmentVariableManagementKey) // notest
 	}
 }

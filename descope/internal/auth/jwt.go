@@ -78,7 +78,7 @@ func (p *provider) requestKeys() error {
 		tempKeySet[pk.KeyID()] = pk
 	}
 
-	logger.LogDebug("refresh keys set with %d key(s)", len(tempKeySet))
+	logger.LogDebug("Refresh keys set with %d key(s)", len(tempKeySet))
 	p.keySet = tempKeySet
 	return nil
 }
@@ -91,7 +91,7 @@ func (p *provider) providedPublicKey() (jwk.Key, error) {
 	if p.conf.PublicKey != "" {
 		jk, err := jwk.ParseKey([]byte(p.conf.PublicKey))
 		if err != nil {
-			logger.LogDebug("unable to parse key")
+			logger.LogDebug("Unable to parse key")
 			return nil, err
 		}
 		p.providedKey, _ = jk.PublicKey()
@@ -115,7 +115,7 @@ func (p *provider) findKey(kid string) (jwk.Key, error) {
 	}
 
 	if err := p.requestKeys(); err != nil {
-		logger.LogDebug("failed to retrieve public keys from API [%s]", err)
+		logger.LogDebug("Failed to retrieve public keys from API [%s]", err)
 		return nil, err
 	}
 
@@ -133,7 +133,7 @@ func (p *provider) FetchKeys(_ context.Context, sink jws.KeySink, sig *jws.Signa
 	wantedKid := sig.ProtectedHeaders().KeyID()
 	v, ok := p.keySet[wantedKid]
 	if !ok {
-		logger.LogDebug("key was not found, looking for key id [%s]", wantedKid)
+		logger.LogDebug("Key was not found, looking for key id [%s]", wantedKid)
 		if key, err := p.findKey(wantedKid); key != nil {
 			v = key
 		} else {

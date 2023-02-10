@@ -648,10 +648,10 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 	req.Header.Set(AuthorizationHeaderName, BearerAuthorizationPrefix+bearer)
 	c.addDescopeHeaders(req)
 
-	logger.LogDebug("sending request to [%s]", url)
+	logger.LogDebug("Sending request to [%s]", url)
 	response, err := c.httpClient.Do(req)
 	if err != nil {
-		logger.LogError("failed sending request to [%s]", err, url)
+		logger.LogError("Failed sending request to [%s]", err, url)
 		return nil, err
 	}
 
@@ -660,19 +660,19 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 	}
 	if !isResponseOK(response) {
 		err = c.parseDescopeError(response).WithInfo(descope.ErrorInfoKeys.HTTPResponseStatusCode, response.StatusCode)
-		logger.LogInfo("failed sending request to [%s], error: [%s]", url, err)
+		logger.LogInfo("Failed sending request to [%s], error: [%s]", url, err)
 		return nil, err
 	}
 
 	resBytes, err := c.parseBody(response)
 	if err != nil { // notest
-		logger.LogError("failed processing body from request to [%s]", err, url)
+		logger.LogError("Failed processing body from request to [%s]", err, url)
 		return nil, descope.ErrInvalidResponse
 	}
 
 	if options.ResBodyObj != nil {
 		if err = utils.Unmarshal(resBytes, &options.ResBodyObj); err != nil {
-			logger.LogError("failed parsing body from request to [%s]", err, url)
+			logger.LogError("Failed parsing body from request to [%s]", err, url)
 			return nil, descope.ErrInvalidResponse
 		}
 	}
@@ -697,13 +697,13 @@ func (c *Client) parseBody(response *http.Response) (resBytes []byte, err error)
 func (c *Client) parseDescopeError(response *http.Response) *descope.Error {
 	body, err := c.parseBody(response)
 	if err != nil { // notest
-		logger.LogError("failed to process error from server response", err)
+		logger.LogError("Failed to process error from server response", err)
 		return descope.ErrInvalidResponse
 	}
 
 	var descopeErr *descope.Error
 	if err := json.Unmarshal(body, &descopeErr); err != nil || descopeErr.Code == "" {
-		logger.LogError("failed to parse error from server response", err)
+		logger.LogError("Failed to parse error from server response", err)
 		return descope.ErrInvalidResponse
 	}
 

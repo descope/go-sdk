@@ -43,7 +43,7 @@ func (auth *saml) Start(tenant string, redirectURL string, r *http.Request, logi
 		res := &samlStartResponse{}
 		err = utils.Unmarshal([]byte(httpResponse.BodyStr), res)
 		if err != nil {
-			logger.LogError("failed to parse saml location from response for [%s]", err, tenant)
+			logger.LogError("Failed to parse saml location from response for [%s]", err, tenant)
 			return "", err
 		}
 		url = res.URL
