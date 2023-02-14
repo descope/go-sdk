@@ -189,9 +189,11 @@ type AccessKey interface {
 type SSO interface {
 	// Configure SSO setting for a tenant manually.
 	//
-	// All parameters are required. The idpURL is the URL for the identity provider and idpCert
+	// tenantID, idpURL, idpCert, entityID, are required. The idpURL is the URL for the identity provider and idpCert
 	// is the certificated provided by the identity provider.
-	ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL string) error
+	// redirectURL is optional, however if not given it has to be set when starting an SSO authentication via the request.
+	// domain is optional, it is used to map users to this tenant when authenticating via SSO.
+	ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL, domain string) error
 
 	// Configure SSO setting for a tenant by fetching SSO settings from an IDP metadata URL.
 	ConfigureMetadata(tenantID, idpMetadataURL string) error
