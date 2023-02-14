@@ -43,10 +43,6 @@ Send a user a one-time password (OTP) using your preferred delivery method (_ema
 The user can either `sign up`, `sign in` or `sign up or in`
 
 ```go
-import (
-    "github.com/descope/go-sdk/descope"
-)
-
 // Every user must have a loginID. All other user information is optional
 loginID := "desmond@descope.com"
 user := &descope.User{
@@ -271,7 +267,7 @@ the app produces.
 ```go
 // The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
 // Otherwise they're available via authInfo
-authInfo, err := descopeClient.TOTP().sign_in_code(loginID, code, nil, nil, w)
+authInfo, err := descopeClient.TOTP().SignInCode(loginID, code, nil, nil, w)
 if err != nil {
     // handle error
 }
@@ -381,7 +377,7 @@ if !descopeClient.Auth.ValidateRoles(sessionToken, []string{"Role to validate"})
 
 ### Logging Out
 
-You can log out a user from an active session by providing their `refresh_token` for that session.
+You can log out a user from an active session by providing their `refreshToken` for that session.
 After calling this function, you must invalidate or remove any cookies you have created. Providing
 a `http.ResponseWriter` will do this automatically.
 
@@ -391,13 +387,13 @@ a `http.ResponseWriter` will do this automatically.
 descopeClient.logout(request, w)
 ```
 
-It is also possible to sign the user out of all the devices they are currently signed-in with. Calling `logout_all` will
+It is also possible to sign the user out of all the devices they are currently signed-in with. Calling `logoutAll` will
 invalidate all user's refresh tokens. After calling this function, you must invalidate or remove any cookies you have created.
 
 ```go
 // Refresh token will be taken from the request header or cookies automatically
 // If provided, the optional `w http.ResponseWriter` will empty out the session cookies automatically.
-descopeClient.logout(request, w)
+descopeClient.logoutAll(request, w)
 ```
 
 ## Management API
@@ -456,10 +452,6 @@ if err == nil {
 You can create, update, delete or load users, as well as search according to filters:
 
 ```go
-import (
-    "github.com/descope/go-sdk/descope"
-)
-
 // A user must have a loginID, other fields are optional.
 // Roles should be set directly if no tenants exist, otherwise set
 // on a per-tenant basis.
@@ -678,7 +670,7 @@ if err != nil {
 Handle API rate limits by comparing the error to the ErrRateLimitExceeded error, which includes the Info map with the key "RateLimitExceededRetryAfter." This key indicates how many seconds until the next valid API call can take place. More information on Descope's rate limit is covered here: [Descope rate limit reference page](https://docs.descope.com/rate-limit)
 
 ```go
-err := client.Auth.MagicLink().SignUpOrIn(descope.MethodEmail, "desmond@descope.com", "http://myapp.com/verify-magic-link")
+err := descopeClient.Auth.MagicLink().SignUpOrIn(descope.MethodEmail, "desmond@descope.com", "http://myapp.com/verify-magic-link")
 if err != nil {
     if errors.Is(err, descope.ErrRateLimitExceeded) {
         if rateLimitErr, ok := err.(*descope.Error); ok {
