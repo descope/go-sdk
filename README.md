@@ -397,7 +397,7 @@ invalidate all user's refresh tokens. After calling this function, you must inva
 ```go
 // Refresh token will be taken from the request header or cookies automatically
 // If provided, the optional `w http.ResponseWriter` will empty out the session cookies automatically.
-descopeClient.logout(request, w)
+descopeClient.logoutAll(request, w)
 ```
 
 ## Management API
