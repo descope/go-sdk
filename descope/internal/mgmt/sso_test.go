@@ -19,20 +19,21 @@ func TestSSOConfigureSettingsSuccess(t *testing.T) {
 		require.Equal(t, "mycert", req["idpCert"])
 		require.Equal(t, "entity", req["entityId"])
 		require.Equal(t, "https://redirect", req["redirectURL"])
+		require.Equal(t, "domain.com", req["domain"])
 	}))
-	err := mgmt.SSO().ConfigureSettings("abc", "http://idpURL", "mycert", "entity", "https://redirect")
+	err := mgmt.SSO().ConfigureSettings("abc", "http://idpURL", "mycert", "entity", "https://redirect", "domain.com")
 	require.NoError(t, err)
 }
 
 func TestSSOConfigureSettingsError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.SSO().ConfigureSettings("", "http://idpURL", "mycert", "entity", "")
+	err := mgmt.SSO().ConfigureSettings("", "http://idpURL", "mycert", "entity", "", "")
 	require.Error(t, err)
-	err = mgmt.SSO().ConfigureSettings("abc", "", "mycert", "entity", "")
+	err = mgmt.SSO().ConfigureSettings("abc", "", "mycert", "entity", "", "")
 	require.Error(t, err)
-	err = mgmt.SSO().ConfigureSettings("abc", "http://idpURL", "", "entity", "")
+	err = mgmt.SSO().ConfigureSettings("abc", "http://idpURL", "", "entity", "", "")
 	require.Error(t, err)
-	err = mgmt.SSO().ConfigureSettings("abc", "http://idpURL", "mycert", "", "")
+	err = mgmt.SSO().ConfigureSettings("abc", "http://idpURL", "mycert", "", "", "")
 	require.Error(t, err)
 }
 

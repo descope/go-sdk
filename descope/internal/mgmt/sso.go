@@ -10,7 +10,7 @@ type sso struct {
 	managementBase
 }
 
-func (s *sso) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL string) error {
+func (s *sso) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL, domain string) error {
 	if tenantID == "" {
 		return utils.NewInvalidArgumentError("tenantID")
 	}
@@ -29,6 +29,7 @@ func (s *sso) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL
 		"idpCert":     idpCert,
 		"entityId":    entityID,
 		"redirectURL": redirectURL,
+		"domain":      domain,
 	}
 	_, err := s.client.DoPostRequest(api.Routes.ManagementSSOConfigure(), req, nil, s.conf.ManagementKey)
 	return err

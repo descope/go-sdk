@@ -532,7 +532,8 @@ idpURL := "https://idp.com"
 entityID := "my-idp-entity-id"
 idpCert := "<your-cert-here>"
 redirectURL := "https://my-app.com/handle-saml" // Global redirect URL for SSO/SAML
-err := descopeClient.Management.SSO().ConfigureSettings(tenantID, idpURL, entityID, idpCert, redirectURL)
+domain := "domain.com" // Users logging in from this domain will be logged in to this tenant
+err := descopeClient.Management.SSO().ConfigureSettings(tenantID, idpURL, entityID, idpCert, redirectURL, domain)
 
 // Alternatively, configure using an SSO metadata URL
 err := descopeClient.Management.SSO().ConfigureMetadata(tenantID, "https://idp.com/my-idp-metadata")

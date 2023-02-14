@@ -66,7 +66,7 @@ func (m *MockJWT) UpdateJWTWithCustomClaims(jwt string, customClaims map[string]
 // Mock SSO
 
 type MockSSO struct {
-	ConfigureSettingsAssert func(tenantID, idpURL, idpCert, entityID, redirectURL string)
+	ConfigureSettingsAssert func(tenantID, idpURL, idpCert, entityID, redirectURL, domain string)
 	ConfigureSettingsError  error
 
 	ConfigureMetadataAssert func(tenantID, idpMetadataURL string)
@@ -76,9 +76,9 @@ type MockSSO struct {
 	ConfigureMappingError  error
 }
 
-func (m *MockSSO) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL string) error {
+func (m *MockSSO) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL, domain string) error {
 	if m.ConfigureSettingsAssert != nil {
-		m.ConfigureSettingsAssert(tenantID, idpURL, idpCert, entityID, redirectURL)
+		m.ConfigureSettingsAssert(tenantID, idpURL, idpCert, entityID, redirectURL, domain)
 	}
 	return m.ConfigureSettingsError
 }
