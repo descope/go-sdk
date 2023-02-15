@@ -428,7 +428,7 @@ func (e *endpoints) ManagementAccessKeyDelete() string {
 }
 
 func (e *endpoints) ManagementSSOConfigure() string {
-	return path.Join(e.versionV2, e.mgmt.ssoConfigure)
+	return path.Join(e.version, e.mgmt.ssoConfigure)
 }
 
 func (e *endpoints) ManagementSSOMetadata() string {
