@@ -68,16 +68,23 @@ func (u *user) load(loginID, userID string) (*descope.UserResponse, error) {
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) SearchAll(tenantIDs, roles []string, limit, page int32) ([]*descope.UserResponse, error) {
-	if limit < 0 {
+func (u *user) SearchAll(options *descope.UserSearchOptions) ([]*descope.UserResponse, error) {
+	// Init empty options if non given
+	if options == nil {
+		options = &descope.UserSearchOptions{}
+	}
+
+	// Make sure limit is non-negative
+	if options.Limit < 0 {
 		return nil, utils.NewInvalidArgumentError("limit")
 	}
 
-	if page < 0 {
+	// Make sure page is non-negative
+	if options.Page < 0 {
 		return nil, utils.NewInvalidArgumentError("page")
 	}
 
-	req := makeSearchAllRequest(tenantIDs, roles, limit, page)
+	req := makeSearchAllRequest(options)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserSearchAll(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -239,12 +246,12 @@ func makeUpdateUserRolesRequest(loginID, tenantID string, roles []string) map[st
 	}
 }
 
-func makeSearchAllRequest(tenantIDs, roles []string, limit, page int32) map[string]any {
+func makeSearchAllRequest(options *descope.UserSearchOptions) map[string]any {
 	return map[string]any{
-		"tenantIds": tenantIDs,
-		"roleNames": roles,
-		"limit":     limit,
-		"page":      page,
+		"tenantIds": options.TenantIDs,
+		"roleNames": options.Roles,
+		"limit":     options.Limit,
+		"page":      options.Page,
 	}
 }
 

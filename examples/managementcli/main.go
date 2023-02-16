@@ -83,7 +83,7 @@ func userSearchAll(args []string) error {
 		return err
 	}
 
-	res, err := descopeClient.Management.User().SearchAll(nil, nil, int32(limit), int32(page))
+	res, err := descopeClient.Management.User().SearchAll(&descope.UserSearchOptions{Limit: int32(limit), Page: int32(page)})
 	if err == nil {
 		for _, u := range res {
 			fmt.Println("Found:", u)

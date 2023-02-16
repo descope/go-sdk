@@ -246,6 +246,23 @@ type Role struct {
 	PermissionNames []string `json:"permissionNames,omitempty"`
 }
 
+// Options for searching and filtering users
+//
+// The TenantIDs parameter is an optional array of tenant IDs to filter by.
+//
+// The roles parameter is an optional array of role names to filter by.
+//
+// The limit parameter limits the number of returned users. Leave at 0 to return the
+// default amount.
+//
+// The page parameter allow to paginate over the results. Pages start at 0 and must non-negative.
+type UserSearchOptions struct {
+	TenantIDs []string
+	Roles     []string
+	Limit     int32
+	Page      int32
+}
+
 type GroupMember struct {
 	LoginID string `json:"loginID,omitempty"`
 	UserID  string `json:"userId,omitempty"`

@@ -477,7 +477,7 @@ userRes, err := descopeClient.Management.User().LoadByUserID("<user-id>")
 
 // Search all users, optionally according to tenant and/or role filter
 // Results can be paginated using the limit and page parameters
-usersResp, err := descopeClient.Management.User().SearchAll([]string{"my-tenant-id"}, nil, 0, 0)
+usersResp, err := descopeClient.Management.User().SearchAll(&descope.UserSearchOptions{TenantIDs: []string{"my-tenant-id"}})
 if err == nil {
     for _, user := range usersResp {
         // Do something

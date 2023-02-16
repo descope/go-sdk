@@ -166,8 +166,9 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 		require.EqualValues(t, tenantIDs[0], req["tenantIds"].([]any)[0])
 		require.EqualValues(t, roleNames[0], req["roleNames"].([]any)[0])
 		require.EqualValues(t, 100, req["limit"])
+		require.EqualValues(t, 0, req["page"])
 	}, response))
-	res, err := m.User().SearchAll(tenantIDs, roleNames, 100, 0)
+	res, err := m.User().SearchAll(&descope.UserSearchOptions{TenantIDs: tenantIDs, Roles: roleNames, Limit: 100})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res, 1)
@@ -176,19 +177,19 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 
 func TestSearchAllUsersError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().SearchAll(nil, nil, 100, 0)
+	res, err := m.User().SearchAll(nil)
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestSearchAllUsersBadRequest(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().SearchAll(nil, nil, -1, 0)
+	res, err := m.User().SearchAll(&descope.UserSearchOptions{Limit: -1})
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.Contains(t, err.Error(), "limit")
 	require.Nil(t, res)
 
-	res, err = m.User().SearchAll(nil, nil, 100, -1)
+	res, err = m.User().SearchAll(&descope.UserSearchOptions{Page: -1})
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.Contains(t, err.Error(), "page")
 	require.Nil(t, res)
