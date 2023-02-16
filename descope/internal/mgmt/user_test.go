@@ -167,7 +167,7 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 		require.EqualValues(t, roleNames[0], req["roleNames"].([]any)[0])
 		require.EqualValues(t, 100, req["limit"])
 	}, response))
-	res, err := m.User().SearchAll(tenantIDs, roleNames, 100)
+	res, err := m.User().SearchAll(tenantIDs, roleNames, 100, 0)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res, 1)
@@ -176,8 +176,21 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 
 func TestSearchAllUsersError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().SearchAll(nil, nil, 100)
+	res, err := m.User().SearchAll(nil, nil, 100, 0)
 	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestSearchAllUsersBadRequest(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := m.User().SearchAll(nil, nil, -1, 0)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Contains(t, err.Error(), "limit")
+	require.Nil(t, res)
+
+	res, err = m.User().SearchAll(nil, nil, 100, -1)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Contains(t, err.Error(), "page")
 	require.Nil(t, res)
 }
 

@@ -81,7 +81,9 @@ type User interface {
 	//
 	// The limit parameter limits the number of returned users. Leave at 0 to return the
 	// default amount.
-	SearchAll(tenantIDs, roles []string, limit int32) ([]*descope.UserResponse, error)
+	//
+	// The page parameter allow to paginate over the results. Pages start at 0 and must non-negative.
+	SearchAll(tenantIDs, roles []string, limit, page int32) ([]*descope.UserResponse, error)
 
 	// Activate an existing user.
 	Activate(loginID string) (*descope.UserResponse, error)

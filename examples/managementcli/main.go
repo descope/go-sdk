@@ -73,7 +73,17 @@ func userLoad(args []string) error {
 }
 
 func userSearchAll(args []string) error {
-	res, err := descopeClient.Management.User().SearchAll(nil, nil, 0)
+	limit, err := strconv.ParseInt(args[0], 10, 64)
+	if err != nil {
+		return err
+	}
+
+	page, err := strconv.ParseInt(args[1], 10, 64)
+	if err != nil {
+		return err
+	}
+
+	res, err := descopeClient.Management.User().SearchAll(nil, nil, int32(limit), int32(page))
 	if err == nil {
 		for _, u := range res {
 			fmt.Println("Found:", u)
@@ -367,6 +377,7 @@ func main() {
 
 	addCommand(userSearchAll, "user-search-all", "Search existing users", func(cmd *cobra.Command) {
 		// Currently not accepting any filters
+		cmd.Args = cobra.ExactArgs(2)
 		cmd.DisableFlagsInUseLine = true
 	})
 
