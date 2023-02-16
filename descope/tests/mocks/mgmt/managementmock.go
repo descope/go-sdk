@@ -115,7 +115,7 @@ type MockUser struct {
 	LoadResponse *descope.UserResponse
 	LoadError    error
 
-	SearchAllAssert   func(tenantIDs, roles []string, limit int32)
+	SearchAllAssert   func(options *descope.UserSearchOptions)
 	SearchAllResponse []*descope.UserResponse
 	SearchAllError    error
 
@@ -199,9 +199,9 @@ func (m *MockUser) LoadByUserID(userID string) (*descope.UserResponse, error) {
 	return m.LoadResponse, m.LoadError
 }
 
-func (m *MockUser) SearchAll(tenantIDs, roles []string, limit int32) ([]*descope.UserResponse, error) {
+func (m *MockUser) SearchAll(options *descope.UserSearchOptions) ([]*descope.UserResponse, error) {
 	if m.SearchAllAssert != nil {
-		m.SearchAllAssert(tenantIDs, roles, limit)
+		m.SearchAllAssert(options)
 	}
 	return m.SearchAllResponse, m.SearchAllError
 }

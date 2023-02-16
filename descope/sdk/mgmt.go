@@ -75,13 +75,10 @@ type User interface {
 
 	// Search all users according to given filters
 	//
-	// The tenantIDs parameter is an optional array of tenant IDs to filter by.
-	//
-	// The roles parameter is an optional array of role names to filter by.
-	//
-	// The limit parameter limits the number of returned users. Leave at 0 to return the
-	// default amount.
-	SearchAll(tenantIDs, roles []string, limit int32) ([]*descope.UserResponse, error)
+	// The options optional parameter allows to fine-tune the search filters
+	// and results. Using nil will result in a filter-less query with a set amount of
+	// results.
+	SearchAll(options *descope.UserSearchOptions) ([]*descope.UserResponse, error)
 
 	// Activate an existing user.
 	Activate(loginID string) (*descope.UserResponse, error)
