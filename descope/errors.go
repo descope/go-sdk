@@ -9,9 +9,9 @@ import (
 var (
 	// server common
 	ErrBadRequest        = newServerError("E011001")
-	ErrInvalidArguments  = newServerError("E011002")
+	ErrMissingArguments  = newServerError("E011002")
 	ErrValidationFailure = newServerError("E011003")
-	ErrMissingArguments  = newServerError("E011004")
+	ErrInvalidArguments  = newServerError("E011004")
 
 	// server authentication
 	ErrUserAlreadyExists         = newServerError("E062107")
