@@ -11,10 +11,18 @@ type user struct {
 }
 
 func (u *user) Create(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
+	return u.create(loginID, email, phone, displayName, roles, tenants, false)
+}
+
+func (u *user) Invite(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
+	return u.create(loginID, email, phone, displayName, roles, tenants, true)
+}
+
+func (u *user) create(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant, invite bool) (*descope.UserResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
-	req := makeCreateUpdateUserRequest(loginID, email, phone, displayName, roles, tenants)
+	req := makeCreateUserRequest(loginID, email, phone, displayName, roles, tenants, invite)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserCreate(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -26,7 +34,7 @@ func (u *user) Update(loginID, email, phone, displayName string, roles []string,
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
-	req := makeCreateUpdateUserRequest(loginID, email, phone, displayName, roles, tenants)
+	req := makeUpdateUserRequest(loginID, email, phone, displayName, roles, tenants)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserUpdate(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -220,7 +228,13 @@ func (u *user) RemoveTenantRoles(loginID string, tenantID string, roles []string
 	return unmarshalUserResponse(res)
 }
 
-func makeCreateUpdateUserRequest(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) map[string]any {
+func makeCreateUserRequest(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant, invite bool) map[string]any {
+	req := makeUpdateUserRequest(loginID, email, phone, displayName, roles, tenants)
+	req["invite"] = invite
+	return req
+}
+
+func makeUpdateUserRequest(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) map[string]any {
 	return map[string]any{
 		"loginId":     loginID,
 		"email":       email,

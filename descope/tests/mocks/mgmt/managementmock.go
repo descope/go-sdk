@@ -104,6 +104,10 @@ type MockUser struct {
 	CreateResponse *descope.UserResponse
 	CreateError    error
 
+	InviteAssert   func(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant)
+	InviteResponse *descope.UserResponse
+	InviteError    error
+
 	UpdateAssert   func(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant)
 	UpdateResponse *descope.UserResponse
 	UpdateError    error
@@ -169,6 +173,13 @@ func (m *MockUser) Create(loginID, email, phone, displayName string, roles []str
 		m.CreateAssert(loginID, email, phone, displayName, roles, tenants)
 	}
 	return m.CreateResponse, m.CreateError
+}
+
+func (m *MockUser) Invite(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
+	if m.InviteAssert != nil {
+		m.InviteAssert(loginID, email, phone, displayName, roles, tenants)
+	}
+	return m.InviteResponse, m.InviteError
 }
 
 func (m *MockUser) Update(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {

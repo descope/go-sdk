@@ -28,6 +28,11 @@ func TestUserCreateSuccess(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
+
+	res, err = m.User().Invite("abc", "foo@bar.com", "", "", []string{"foo"}, nil)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, "a@b.c", res.Email)
 }
 
 func TestUserCreateError(t *testing.T) {

@@ -49,6 +49,17 @@ type User interface {
 	// user has in each one.
 	Create(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error)
 
+	// Create a new user and invite them via an email message.
+	//
+	// Functions exactly the same as the Create function with the additional invitation
+	// behavior. See the documentation above for the general creation behavior.
+	//
+	// IMPORTANT: Since the invitation is sent by email, make sure either
+	// the email is explicitly set, or the loginID itself is an email address.
+	// You must configure the invitation URL in the Descope console prior to
+	// calling the method.
+	Invite(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error)
+
 	// Update an existing user.
 	//
 	// The parameters follow the same convention as those for the Create function.

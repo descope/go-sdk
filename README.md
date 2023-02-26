@@ -460,6 +460,14 @@ err := descopeClient.Management.User().Create("desmond@descope.com", "desmond@de
     {TenantID: "tenant-ID2"},
 })
 
+// Alternatively, a user can be created and invited via an email message.
+// Make sure to configure the invite URL in the Descope console prior to using this function,
+// and that an email address is provided in the information.
+err := descopeClient.Management.User().Invite("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*descope.AssociatedTenant{
+    {TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
+    {TenantID: "tenant-ID2"},
+})
+
 // Update will override all fields as is. Use carefully.
 err := descopeClient.Management.User().Update("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*descope.AssociatedTenant{
     {TenantID: "tenant-ID1", RoleNames: []string{"role-name1", "role-name2"}},
