@@ -38,6 +38,8 @@ var (
 			updateTOTP:                   "auth/totp/update",
 			verifyTOTPCode:               "auth/totp/verify",
 			verifyCode:                   "auth/otp/verify",
+			signUpPassword:               "auth/password/signup",
+			signInPassword:               "auth/password/signin",
 			signInMagicLink:              "auth/magiclink/signin",
 			signUpMagicLink:              "auth/magiclink/signup",
 			signUpOrInMagicLink:          "auth/magiclink/signup-in",
@@ -134,6 +136,8 @@ type authEndpoints struct {
 	updateTOTP                   string
 	verifyTOTPCode               string
 	verifyCode                   string
+	signUpPassword               string
+	signInPassword               string
 	signInMagicLink              string
 	signUpMagicLink              string
 	signUpOrInMagicLink          string
@@ -230,6 +234,12 @@ func (e *endpoints) VerifyCode() string {
 }
 func (e *endpoints) VerifyTOTPCode() string {
 	return path.Join(e.version, e.auth.verifyTOTPCode)
+}
+func (e *endpoints) SignUpPassword() string {
+	return path.Join(e.version, e.auth.signUpPassword)
+}
+func (e *endpoints) SignInPassword() string {
+	return path.Join(e.version, e.auth.signInPassword)
 }
 func (e *endpoints) SignInMagicLink() string {
 	return path.Join(e.version, e.auth.signInMagicLink)

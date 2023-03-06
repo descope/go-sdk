@@ -36,14 +36,17 @@ type WebAuthnFinishRequest struct {
 
 type AuthFactor string
 
-const AuthFactorUnknown AuthFactor = ""
-const AuthFactorEmail AuthFactor = "email"
-const AuthFactorPhone AuthFactor = "sms"
-const AuthFactorSaml AuthFactor = "fed"
-const AuthFactorOAuth AuthFactor = "oauth"
-const AuthFactorWebauthn AuthFactor = "webauthn"
-const AuthFactorTOTP AuthFactor = "totp"
-const AuthFactorMFA AuthFactor = "mfa"
+const (
+	AuthFactorUnknown  AuthFactor = ""
+	AuthFactorEmail    AuthFactor = "email"
+	AuthFactorPhone    AuthFactor = "sms"
+	AuthFactorSaml     AuthFactor = "fed"
+	AuthFactorOAuth    AuthFactor = "oauth"
+	AuthFactorWebauthn AuthFactor = "webauthn"
+	AuthFactorTOTP     AuthFactor = "totp"
+	AuthFactorMFA      AuthFactor = "mfa"
+	AuthFactorPassword AuthFactor = "pwd"
+)
 
 type Token struct {
 	RefreshExpiration int64                  `json:"refreshExpiration,omitempty"`

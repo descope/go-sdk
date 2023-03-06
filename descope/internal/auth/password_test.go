@@ -1,0 +1,99 @@
+package auth
+
+import (
+	"bytes"
+	"io"
+	"net/http"
+	"testing"
+
+	"github.com/descope/go-sdk/descope"
+	"github.com/descope/go-sdk/descope/api"
+	"github.com/descope/go-sdk/descope/internal/utils"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+)
+
+func TestPasswordSignUp(t *testing.T) {
+	loginID := "someID"
+	password := "password"
+	name := "foo"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, api.Routes.SignUpPassword(), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, loginID, body["loginId"])
+		assert.NotNil(t, body["user"])
+		assert.EqualValues(t, password, body["password"])
+
+		resp := &descope.JWTResponse{
+			RefreshJwt: jwtTokenValid,
+			User: &descope.UserResponse{
+				User: descope.User{
+					Name: name,
+				},
+				LoginIDs: []string{loginID},
+			},
+			FirstSeen: true,
+		}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	authInfo, err := a.Password().SignUp(loginID, nil, password, nil)
+	require.NoError(t, err)
+	assert.NotNil(t, authInfo)
+	assert.EqualValues(t, loginID, authInfo.User.LoginIDs[0])
+	assert.True(t, authInfo.FirstSeen)
+	assert.Equal(t, name, authInfo.User.Name)
+}
+
+func TestPasswordSignUpFailure(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	_, err = a.Password().SignUp("", &descope.User{Name: "test"}, "foo", nil)
+	assert.Error(t, err)
+}
+
+func TestPasswordSignIn(t *testing.T) {
+	loginID := "someID"
+	password := "password"
+	name := "foo"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, api.Routes.SignInPassword(), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, loginID, body["loginId"])
+		assert.EqualValues(t, password, body["password"])
+
+		resp := &descope.JWTResponse{
+			RefreshJwt: jwtTokenValid,
+			User: &descope.UserResponse{
+				User: descope.User{
+					Name: name,
+				},
+				LoginIDs: []string{loginID},
+			},
+			FirstSeen: false,
+		}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	authInfo, err := a.Password().SignIn(loginID, password, nil)
+	require.NoError(t, err)
+	assert.NotNil(t, authInfo)
+	assert.EqualValues(t, loginID, authInfo.User.LoginIDs[0])
+	assert.False(t, authInfo.FirstSeen)
+	assert.Equal(t, name, authInfo.User.Name)
+}
+
+func TestPasswordSignInFailure(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	_, err = a.Password().SignIn("", "foo", nil)
+	assert.Error(t, err)
+}
