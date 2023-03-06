@@ -64,7 +64,7 @@ The user will receive a code using the selected delivery method. Verify that cod
 ```go
 // The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
 // Otherwise they're available via authInfo
-authInfo, err := descopeClient.OTP().Verify(descope.MethodEmail, loginID, code, w)
+authInfo, err := descopeClient.Auth.OTP().VerifyCode(descope.MethodEmail, loginID, code, w)
 if err != nil {
     if errors.Is(err, descope.ErrInvalidOneTimeCode) {
         // the code was invalid
@@ -89,7 +89,7 @@ The user can either `sign up`, `sign in` or `sign up or in`
 ```go
 // If configured globally, the redirect URI is optional. If provided however, it will be used
 // instead of any global configuration
-err := descopeClient.SignUpOrIn(descope.MethodEmail, "desmond@descope.com", "http://myapp.com/verify-magic-link")
+err := descopeClient.Auth.MagicLink().SignUpOrIn(descope.MethodEmail, "desmond@descope.com", "http://myapp.com/verify-magic-link")
 if err {
     // handle error
 }
@@ -166,7 +166,7 @@ for i := retriesCount; i > 0; i-- {
 To verify an enchanted link, your redirect page must call the validation function on the token (`t`) parameter (`https://your-redirect-address.com/verify?t=<token>`). Once the token is verified, the session polling will receive a valid response.
 
 ```go
-if err := descopeClient.EnchantedLink().Verify(token); err != nil {
+if err := descopeClient.Auth.EnchantedLink().Verify(token); err != nil {
     // token is invalid
 } else {
     // token is valid
@@ -184,7 +184,7 @@ Users can authenticate using their social logins, using the OAuth protocol. Conf
 // If configured globally, the return URL is optional. If provided however, it will be used
 // instead of any global configuration.
 // Redirect the user to the returned URL to start the OAuth redirect chain
-url, err := descopeClient.OAuth().Start("google", "https://my-app.com/handle-oauth", nil, nil, w)
+url, err := descopeClient.Auth.OAuth().Start("google", "https://my-app.com/handle-oauth", nil, nil, w)
 if err != nil {
     // handle error
 }
@@ -195,7 +195,7 @@ The user will authenticate with the authentication provider, and will be redirec
 ```go
 // The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
 // Otherwise they're available via authInfo
-authInfo, err := descopeClient.OAuth().ExchangeToken(code, w)
+authInfo, err := descopeClient.Auth.OAuth().ExchangeToken(code, w)
 if err != nil {
     // handle error
 }
@@ -212,7 +212,7 @@ Users can authenticate to a specific tenant using SAML or Single Sign On. Config
 // If configured globally, the return URL is optional. If provided however, it will be used
 // instead of any global configuration.
 // Redirect the user to the returned URL to start the SSO/SAML redirect chain
-url, err := descopeClient.SAML().Start("my-tenant-ID", "https://my-app.com/handle-saml", nil, nil, w)
+url, err := descopeClient.Auth.SAML().Start("my-tenant-ID", "https://my-app.com/handle-saml", nil, nil, w)
 if err != nil {
     // handle error
 }
@@ -223,7 +223,7 @@ The user will authenticate with the authentication provider configured for that 
 ```go
 // The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
 // Otherwise they're available via authInfo
-authInfo, err := descopeClient.OAuth().ExchangeToken(code, w)
+authInfo, err := descopeClient.Auth.SAML().ExchangeToken(code, w)
 if err != nil {
     // handle error
 }
@@ -249,7 +249,7 @@ user := &descope.User{
     Phone: "212-555-1234",
     Email: loginID,
 }
-totpResponse, err := descopeClient.Auth.TOTP().SignUp(descope.MethodEmail, loginID, user)
+totpResponse, err := descopeClient.Auth.TOTP().SignUp(loginID, user)
 if err != nil {
     // handle error
 }
@@ -267,7 +267,7 @@ the app produces.
 ```go
 // The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
 // Otherwise they're available via authInfo
-authInfo, err := descopeClient.TOTP().SignInCode(loginID, code, nil, nil, w)
+authInfo, err := descopeClient.Auth.TOTP().SignInCode(loginID, code, nil, nil, w)
 if err != nil {
     // handle error
 }
@@ -338,7 +338,11 @@ instead of using the ValidateSessions function. This middleware will automatical
 request and save the current user ID in the context for further usage. On failure, it will respond with `401 Unauthorized`.
 
 ```go
-r.Use(descope.AuthenticationMiddleware(descopeClient.Auth, nil, nil))
+import "github.com/descope/go-sdk/descope/sdk"
+
+// ...
+
+r.Use(sdk.AuthenticationMiddleware(descopeClient.Auth, nil, nil))
 ```
 
 ### Roles & Permission Validation
@@ -384,7 +388,7 @@ a `http.ResponseWriter` will do this automatically.
 ```go
 // Refresh token will be taken from the request header or cookies automatically
 // If provided, the optional `w http.ResponseWriter` will empty out the session cookies automatically.
-descopeClient.logout(request, w)
+descopeClient.Auth.Logout(request, w)
 ```
 
 It is also possible to sign the user out of all the devices they are currently signed-in with. Calling `logoutAll` will
@@ -393,7 +397,7 @@ invalidate all user's refresh tokens. After calling this function, you must inva
 ```go
 // Refresh token will be taken from the request header or cookies automatically
 // If provided, the optional `w http.ResponseWriter` will empty out the session cookies automatically.
-descopeClient.logoutAll(request, w)
+descopeClient.Auth.LogoutAll(request, w)
 ```
 
 ## Management API
