@@ -82,6 +82,9 @@ func main() {
 	router.HandleFunc("/webauthn/signin/start", handleWebauthnSigninStart).Methods(http.MethodPost)
 	router.HandleFunc("/webauthn/signin/finish", handleWebauthnSigninFinish).Methods(http.MethodPost)
 
+	router.HandleFunc("/password/signup", handlePasswordSignUp).Methods(http.MethodGet)
+	router.HandleFunc("/password/signin", handlePasswordSignIn).Methods(http.MethodGet)
+
 	router.HandleFunc("/stepup", handleStepup).Methods(http.MethodGet)
 	router.HandleFunc("/stepup/conf", handleStepupSignUpInEmail).Methods(http.MethodGet)
 	router.HandleFunc("/stepup/conf/verify", handleStepupConfVerify).Methods(http.MethodGet)
@@ -394,6 +397,28 @@ func handleWebauthnSignupFinish(w http.ResponseWriter, r *http.Request) {
 		setError(w, err.Error())
 	}
 	setOK(w)
+}
+
+func handlePasswordSignUp(w http.ResponseWriter, r *http.Request) {
+	loginID := getQuery(r, "id")
+	password := getQuery(r, "password")
+	authInfo, err := descopeClient.Auth.Password().SignUp(loginID, nil, password, nil)
+	if err != nil {
+		setError(w, err.Error())
+		return
+	}
+	sendSuccessAuthResponse(w, authInfo)
+}
+
+func handlePasswordSignIn(w http.ResponseWriter, r *http.Request) {
+	loginID := getQuery(r, "id")
+	password := getQuery(r, "password")
+	authInfo, err := descopeClient.Auth.Password().SignIn(loginID, password, nil)
+	if err != nil {
+		setError(w, err.Error())
+		return
+	}
+	sendSuccessAuthResponse(w, authInfo)
 }
 
 func handleStepup(w http.ResponseWriter, r *http.Request) {

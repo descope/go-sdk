@@ -41,6 +41,17 @@ type authenticationWebAuthnAddDeviceRequestBody struct {
 	Origin  string `json:"origin"`
 }
 
+type authenticationPasswordSignUpRequestBody struct {
+	LoginID  string        `json:"loginId,omitempty"`
+	Password string        `json:"password"`
+	User     *descope.User `json:"user"`
+}
+
+type authenticationPasswordSignInRequestBody struct {
+	LoginID  string `json:"loginId,omitempty"`
+	Password string `json:"password"`
+}
+
 type authenticationVerifyRequestBody struct {
 	*authenticationRequestBody `json:",inline"`
 	Code                       string `json:"code"`

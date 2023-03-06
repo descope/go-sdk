@@ -6,7 +6,6 @@ import (
 	"github.com/descope/go-sdk/descope"
 )
 
-// Implementation in descope/auth/auth.go
 type MagicLink interface {
 	// SignIn - Use to login a user based on a magic link that will be sent either email or a phone
 	// and choose the selected delivery method for verification (see auth/DeliveryMethod).
@@ -124,6 +123,18 @@ type TOTP interface {
 	UpdateUser(loginID string, request *http.Request) (*descope.TOTPResponse, error)
 }
 
+type Password interface {
+	// SignUp - Use to create a new user that authenticates with a password.
+	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
+	// returns a list of cookies or an error upon failure.
+	SignUp(loginID string, user *descope.User, password string, w http.ResponseWriter) (*descope.AuthenticationInfo, error)
+
+	// SignIn - Use to login a user based on authenticating with a password.
+	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
+	// returns a list of cookies or an error upon failure.
+	SignIn(loginID string, password string, w http.ResponseWriter) (*descope.AuthenticationInfo, error)
+}
+
 type OAuth interface {
 	// Start - Use to start an OAuth authentication using the given OAuthProvider.
 	// returns an error upon failure and a string represent the redirect URL upon success.
@@ -196,6 +207,7 @@ type Authentication interface {
 	EnchantedLink() EnchantedLink
 	OTP() OTP
 	TOTP() TOTP
+	Password() Password
 	OAuth() OAuth
 	SAML() SAML
 	WebAuthn() WebAuthn

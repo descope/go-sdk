@@ -12,6 +12,7 @@ type MockAuthentication struct {
 	*MockEnchantedLink
 	*MockOTP
 	*MockTOTP
+	*MockPassword
 	*MockOAuth
 	*MockSAML
 	*MockWebAuthn
@@ -32,6 +33,10 @@ func (m *MockAuthentication) OTP() sdk.OTP {
 
 func (m *MockAuthentication) TOTP() sdk.TOTP {
 	return m.MockTOTP
+}
+
+func (m *MockAuthentication) Password() sdk.Password {
+	return m.MockPassword
 }
 
 func (m *MockAuthentication) OAuth() sdk.OAuth {
@@ -283,6 +288,32 @@ func (m *MockTOTP) UpdateUser(loginID string, r *http.Request) (*descope.TOTPRes
 		m.UpdateUserAssert(loginID, r)
 	}
 	return m.UpdateUserResponse, m.UpdateUserError
+}
+
+// Mock Password
+
+type MockPassword struct {
+	SignUpAssert   func(loginID string, user *descope.User, password string, w http.ResponseWriter)
+	SignUpError    error
+	SignUpResponse *descope.AuthenticationInfo
+
+	SignInAssert   func(loginID string, password string, w http.ResponseWriter)
+	SignInError    error
+	SignInResponse *descope.AuthenticationInfo
+}
+
+func (m *MockPassword) SignUp(loginID string, user *descope.User, password string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+	if m.SignUpAssert != nil {
+		m.SignUpAssert(loginID, user, password, w)
+	}
+	return m.SignUpResponse, m.SignUpError
+}
+
+func (m *MockPassword) SignIn(loginID string, password string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+	if m.SignInAssert != nil {
+		m.SignInAssert(loginID, password, w)
+	}
+	return m.SignInResponse, m.SignInError
 }
 
 // Mock OAuth

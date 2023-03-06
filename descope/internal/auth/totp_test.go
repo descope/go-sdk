@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestSignUp(t *testing.T) {
+func TestTOTPSignUp(t *testing.T) {
 	loginID := "someID"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeSignUpTOTPURL(), r.URL.RequestURI())
@@ -39,14 +39,14 @@ func TestSignUp(t *testing.T) {
 	assert.NotNil(t, token)
 }
 
-func TestSignUpTOTPFailure(t *testing.T) {
+func TestTOTPSignUpFailure(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
 	_, err = a.TOTP().SignUp("", &descope.User{Name: "test"})
 	assert.Error(t, err)
 }
 
-func TestUpdateTOTP(t *testing.T) {
+func TestTOTPUpdate(t *testing.T) {
 	loginID := "someID"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeUpdateTOTPURL(), r.URL.RequestURI())
@@ -77,7 +77,7 @@ func TestUpdateTOTP(t *testing.T) {
 	assert.NotNil(t, token)
 }
 
-func TestUpodateTOTPFailure(t *testing.T) {
+func TestTOTPUpdateFailure(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
@@ -85,7 +85,7 @@ func TestUpodateTOTPFailure(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestVerifyTOTP(t *testing.T) {
+func TestTOTPVerify(t *testing.T) {
 	loginID := "someID"
 	code := "123456"
 	firstSeen := true
@@ -128,7 +128,7 @@ func TestVerifyTOTP(t *testing.T) {
 	assert.Equal(t, picture, authInfo.User.Picture)
 }
 
-func TestVerifyTOTPLoginOptions(t *testing.T) {
+func TestTOTPVerifyLoginOptions(t *testing.T) {
 	loginID := "someID"
 	code := "123456"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
@@ -166,7 +166,7 @@ func TestVerifyTOTPLoginOptions(t *testing.T) {
 	assert.EqualValues(t, loginID, authInfo.User.LoginIDs[0])
 }
 
-func TestVerifyTOTPFailure(t *testing.T) {
+func TestTOTPVerifyFailure(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
 	_, err = a.TOTP().SignInCode("", "code", nil, nil, nil)

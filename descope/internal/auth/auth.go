@@ -38,6 +38,7 @@ type authenticationService struct {
 	magicLink     sdk.MagicLink
 	enchantedLink sdk.EnchantedLink
 	totp          sdk.TOTP
+	password      sdk.Password
 	webAuthn      sdk.WebAuthn
 	oauth         sdk.OAuth
 	saml          sdk.SAML
@@ -54,6 +55,7 @@ func NewAuth(conf AuthParams, c *api.Client) (*authenticationService, error) {
 	authenticationService.saml = &saml{authenticationsBase: base}
 	authenticationService.webAuthn = &webAuthn{authenticationsBase: base}
 	authenticationService.totp = &totp{authenticationsBase: base}
+	authenticationService.password = &password{authenticationsBase: base}
 	return authenticationService, nil
 }
 
@@ -71,6 +73,10 @@ func (auth *authenticationService) OTP() sdk.OTP {
 
 func (auth *authenticationService) TOTP() sdk.TOTP {
 	return auth.totp
+}
+
+func (auth *authenticationService) Password() sdk.Password {
+	return auth.password
 }
 
 func (auth *authenticationService) OAuth() sdk.OAuth {
