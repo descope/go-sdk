@@ -20,8 +20,9 @@ type authenticationSignUpRequestBody struct {
 }
 
 type authenticationWebAuthnSignUpRequestBody struct {
-	User   *descope.WebauthnUserRequest `json:"user"`
-	Origin string                       `json:"origin"`
+	LoginID string        `json:"loginId,omitempty"`
+	Origin  string        `json:"origin"`
+	User    *descope.User `json:"user"`
 }
 
 type authenticationWebAuthnSignInRequestBody struct {
