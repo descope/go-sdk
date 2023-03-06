@@ -16,11 +16,7 @@ func (auth *webAuthn) SignUpStart(loginID string, user *descope.User, origin str
 	if user == nil {
 		user = &descope.User{}
 	}
-	uRes := &descope.WebauthnUserRequest{LoginID: loginID}
-	if user != nil {
-		uRes.Name = user.Name
-	}
-	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignUpStart(), authenticationWebAuthnSignUpRequestBody{User: uRes, Origin: origin}, nil, "")
+	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignUpStart(), authenticationWebAuthnSignUpRequestBody{LoginID: loginID, User: user, Origin: origin}, nil, "")
 	if err != nil {
 		return nil, err
 	}

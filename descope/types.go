@@ -178,12 +178,6 @@ type User struct {
 	Email string `json:"email,omitempty"`
 }
 
-type WebauthnUserRequest struct {
-	LoginID string `json:"loginId,omitempty"`
-	Name    string `json:"name,omitempty"`
-	Icon    string `json:"icon,omitempty"`
-}
-
 type UserResponse struct {
 	User          `json:",inline"`
 	UserID        string              `json:"userId,omitempty"`
