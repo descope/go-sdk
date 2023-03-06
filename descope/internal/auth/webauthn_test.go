@@ -18,7 +18,7 @@ func TestSignUpStart(t *testing.T) {
 		req := authenticationWebAuthnSignUpRequestBody{}
 		err := readBody(r, &req)
 		require.NoError(t, err)
-		assert.EqualValues(t, "test@test.com", req.User.LoginID)
+		assert.EqualValues(t, "test@test.com", req.LoginID)
 		assert.EqualValues(t, "test2@test.com", req.User.Name)
 	}, expectedResponse))
 	require.NoError(t, err)
@@ -33,7 +33,7 @@ func TestSignUpStartNilUser(t *testing.T) {
 		req := authenticationWebAuthnSignUpRequestBody{}
 		err := readBody(r, &req)
 		require.NoError(t, err)
-		assert.EqualValues(t, "test@test.com", req.User.LoginID)
+		assert.EqualValues(t, "test@test.com", req.LoginID)
 	}, expectedResponse))
 	require.NoError(t, err)
 	res, err := a.WebAuthn().SignUpStart("test@test.com", nil, "https://example.com")
