@@ -275,6 +275,39 @@ if err != nil {
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
 
+### Passwords
+
+The user can also authenticate with a password, though it's recommended to prefer
+passwordless authenticator methods if possible. Sign up requires providing a valid
+password that meets all the requirements configured in the Descope console.
+
+```go
+// Every user must have a loginID. All other user information is optional
+loginID := "desmond@descope.com"
+password := "qYlvi65KaX"
+user := &descope.User{
+    Name: "Desmond Copeland",
+    Email: loginID,
+}
+authInfo, err := descopeClient.Auth.Password().SignUp(loginID, user, password, nil)
+if err != nil {
+    // handle error
+}
+```
+
+The user can later sign in using the same loginID and password.
+
+```go
+// The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
+// Otherwise they're available via authInfo
+authInfo, err := descopeClient.Auth.Password().SignIn(loginID, password, w)
+if err != nil {
+    // handle error
+}
+```
+
+The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
+
 ### Session Validation
 
 Every secure request performed between your client and server needs to be validated. The client sends
