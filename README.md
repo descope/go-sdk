@@ -277,9 +277,10 @@ The session and refresh JWTs should be returned to the caller, and passed with e
 
 ### Passwords
 
-The user can also authenticate with a password, though it's recommended to prefer
-passwordless authenticator methods if possible. Sign up requires providing a valid
-password that meets all the requirements configured in the Descope console.
+The user can also authenticate with a password, though it's recommended to
+prefer passwordless authentication methods if possible. Sign up requires the
+caller to provide a valid password that meets all the requirements configured
+for the password authentication method in the Descope console.
 
 ```go
 // Every user must have a loginID. All other user information is optional
