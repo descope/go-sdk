@@ -129,7 +129,7 @@ type Password interface {
 	// returns a list of cookies or an error upon failure.
 	SignUp(loginID string, user *descope.User, password string, w http.ResponseWriter) (*descope.AuthenticationInfo, error)
 
-	// SignIn - Use to login a user based on authenticating with a password.
+	// SignIn - Use to login a user by authenticating with a password.
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	// returns a list of cookies or an error upon failure.
 	SignIn(loginID string, password string, w http.ResponseWriter) (*descope.AuthenticationInfo, error)
