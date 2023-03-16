@@ -9,20 +9,20 @@ import (
 type MagicLink interface {
 	// SignIn - Use to login a user based on a magic link that will be sent either email or a phone
 	// and choose the selected delivery method for verification (see auth/DeliveryMethod).
-	// returns the masked address where the link was sent (email or phone) to and an error upon failure.
+	// returns the masked address where the link was sent (email or phone) or an error upon failure.
 	SignIn(method descope.DeliveryMethod, loginID, URI string, r *http.Request, loginOptions *descope.LoginOptions) (maskedAddress string, err error)
 
 	// SignUp - Use to create a new user based on the given loginID either email or a phone.
 	// choose the selected delivery method for verification (see auth/DeliveryMethod).
 	// optional to add user metadata for farther user details such as name and more.
-	// returns the masked address where the link was sent (email or phone) to and an error upon failure.
+	// returns the masked address where the link was sent (email or phone) or an error upon failure.
 	SignUp(method descope.DeliveryMethod, loginID, URI string, user *descope.User) (maskedAddress string, err error)
 
 	// SignUpOrIn - Use to login in using loginID, if user does not exist, a new user will be created
 	// with the given loginID.
 	// choose the selected delivery method for verification (see auth/DeliveryMethod).
 	// optional to add user metadata for farther user details such as name and more.
-	// returns the masked address where the link was sent (email or phone) to and an error upon failure.
+	// returns the masked address where the link was sent (email or phone) or an error upon failure.
 	SignUpOrIn(method descope.DeliveryMethod, loginID string, URI string) (maskedAddress string, err error)
 
 	// Verify - Use to verify a SignIn/SignUp request, based on the magic link token generated.
@@ -32,14 +32,14 @@ type MagicLink interface {
 	// UpdateUserEmail - Use to update email and validate via magiclink
 	// LoginID of user whom we want to update
 	// Request is needed to obtain JWT and send it to Descope, for verification
-	// returns the masked address where the link was sent (email or phone) to and an error upon failure.
+	// returns the masked email where the link was sent or an error upon failure.
 	UpdateUserEmail(loginID, email, URI string, request *http.Request) (maskedAddress string, err error)
 
 	// UpdateUserPhone - Use to update phone and validate via magiclink
 	// allowed methods are phone based methods - whatsapp and SMS
 	// LoginID of user whom we want to update
 	// Request is needed to obtain JWT and send it to Descope, for verification
-	// returns the masked address where the link was sent (email or phone) to and an error upon failure.
+	// returns the masked phone where the link was sent or an error upon failure.
 	UpdateUserPhone(method descope.DeliveryMethod, loginID, phone, URI string, request *http.Request) (maskedAddress string, err error)
 }
 
@@ -76,18 +76,18 @@ type EnchantedLink interface {
 type OTP interface {
 	// SignIn - Use to login a user based on the given loginID either email or a phone
 	// and choose the selected delivery method for verification. (see auth/DeliveryMethod)
-	// returns the masked address where the code was sent (email or phone) to and an error upon failure.
+	// returns the masked address where the code was sent (email or phone) or an error upon failure.
 	SignIn(method descope.DeliveryMethod, loginID string, r *http.Request, loginOptions *descope.LoginOptions) (maskedAddress string, err error)
 
 	// SignUp - Use to create a new user based on the given loginID either email or a phone.
 	// choose the selected delivery method for verification. (see auth/DeliveryMethod)
 	// optional to add user metadata for farther user details such as name and more.
-	// returns the masked address where the code was sent (email or phone) to and an error upon failure.
+	// returns the masked address where the code was sent (email or phone) or an error upon failure.
 	SignUp(method descope.DeliveryMethod, loginID string, user *descope.User) (maskedAddress string, err error)
 
 	// SignUpOrIn - Use to login in using loginID, if user does not exist, a new user will be created
 	// with the given loginID.
-	// returns the masked address where the code was sent (email or phone) to and an error upon failure.
+	// returns the masked address where the code was sent (email or phone) or an error upon failure.
 	SignUpOrIn(method descope.DeliveryMethod, loginID string) (maskedAddress string, err error)
 
 	// VerifyCode - Use to verify a SignIn/SignUp based on the given loginID either an email or a phone
@@ -100,14 +100,14 @@ type OTP interface {
 	// UpdateUserEmail - Use to a update email, and verify via OTP
 	// LoginID of user whom we want to update
 	// Request is needed to obtain JWT and send it to Descope, for verification
-	// returns the masked address where the code was sent (email or phone) to and an error upon failure.
+	// returns the masked email where the code was sent or an error upon failure.
 	UpdateUserEmail(loginID, email string, request *http.Request) (maskedAddress string, err error)
 
 	// UpdateUserPhone - Use to update phone and validate via OTP
 	// allowed methods are phone based methods - whatsapp and SMS
 	// LoginID of user whom we want to update
 	// Request is needed to obtain JWT and send it to Descope, for verification
-	// returns the masked address where the code was sent (email or phone) to and an error upon failure.
+	// returns the masked phone where the code was sent or an error upon failure.
 	UpdateUserPhone(method descope.DeliveryMethod, loginID, phone string, request *http.Request) (maskedAddress string, err error)
 }
 
