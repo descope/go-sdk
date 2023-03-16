@@ -155,22 +155,22 @@ func help(w http.ResponseWriter, r *http.Request) {
 
 func handleSignUp(w http.ResponseWriter, r *http.Request) {
 	method, loginID := getMethodAndLoginID(r)
-	err := descopeClient.Auth.OTP().SignUp(method, loginID, &descope.User{Name: "test"})
+	masked, err := descopeClient.Auth.OTP().SignUp(method, loginID, &descope.User{Name: "test"})
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {
-		helpTxt := "to verify code received go to /otp/verify?" + string(method) + "=" + loginID + "&code=<code>"
+		helpTxt := fmt.Sprintf("Code was sent to %s, to verify code received go to /otp/verify?%s=%s&code=<code>", masked, string(method), loginID)
 		setResponse(w, http.StatusOK, helpTxt)
 	}
 }
 
 func handleSignIn(w http.ResponseWriter, r *http.Request) {
 	method, loginID := getMethodAndLoginID(r)
-	err := descopeClient.Auth.OTP().SignIn(method, loginID, nil, nil)
+	masked, err := descopeClient.Auth.OTP().SignIn(method, loginID, nil, nil)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {
-		helpTxt := "to verify code received go to /otp/verify?" + string(method) + "=" + loginID + "&code=<code>"
+		helpTxt := fmt.Sprintf("Code was sent to %s to verify code received go to /otp/verify?%s=%s&code=<code>", masked, string(method), loginID)
 		setResponse(w, http.StatusOK, helpTxt)
 	}
 }
@@ -230,26 +230,24 @@ func sendSuccessAuthResponse(w http.ResponseWriter, authInfo *descope.Authentica
 
 func handleMagicLinkSignIn(w http.ResponseWriter, r *http.Request) {
 	method, loginID := getMethodAndLoginID(r)
-	err := descopeClient.Auth.MagicLink().SignIn(method, loginID, verifyMagicLinkURI, nil, nil)
+	masked, err := descopeClient.Auth.MagicLink().SignIn(method, loginID, verifyMagicLinkURI, nil, nil)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 		return
 	}
-	helpTxt := "You should have received a magiclink by " + string(method) + "\n"
-	helpTxt += "Copy it to this browser in order to complete the signin"
+	helpTxt := fmt.Sprintf("You should have received a magiclink by %s here: %s.\nCopy it to this browser in order to complete the signin", string(method), masked)
 	setResponse(w, http.StatusOK, helpTxt)
 }
 
 func handleMagicLinkSignUp(w http.ResponseWriter, r *http.Request) {
 	method, loginID := getMethodAndLoginID(r)
 	user := &descope.User{Name: "test"}
-	err := descopeClient.Auth.MagicLink().SignUp(method, loginID, verifyMagicLinkURI, user)
+	masked, err := descopeClient.Auth.MagicLink().SignUp(method, loginID, verifyMagicLinkURI, user)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 		return
 	}
-	helpTxt := "You should have received a magiclink by " + string(method) + "\n"
-	helpTxt += "Copy it to this browser in order to complete the sign up"
+	helpTxt := fmt.Sprintf("You should have received a magiclink by %s here: %s.\nCopy it to this browser in order to complete the sign up", string(method), masked)
 	setResponse(w, http.StatusOK, helpTxt)
 }
 
@@ -428,11 +426,11 @@ func handleStepup(w http.ResponseWriter, r *http.Request) {
 
 func handleStepupSignUpInEmail(w http.ResponseWriter, r *http.Request) {
 	method, loginID := getMethodAndLoginID(r)
-	err := descopeClient.Auth.OTP().SignUpOrIn(method, loginID)
+	masked, err := descopeClient.Auth.OTP().SignUpOrIn(method, loginID)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {
-		helpTxt := "to verify code received go to /stepup/conf/verify?" + string(method) + "=" + loginID + "&code=<code>"
+		helpTxt := fmt.Sprintf("Code was sent to %s, to verify code received go to /stepup/conf/verify?%s=%s&code=<code>", masked, string(method), loginID)
 		setResponse(w, http.StatusOK, helpTxt)
 	}
 }
@@ -463,11 +461,11 @@ func handleStepupConfUpdate(w http.ResponseWriter, r *http.Request) {
 	if codes, ok := r.URL.Query()["loginId"]; ok {
 		exID = codes[0]
 	}
-	err := descopeClient.Auth.OTP().UpdateUserPhone(method, exID, loginID, r)
+	masked, err := descopeClient.Auth.OTP().UpdateUserPhone(method, exID, loginID, r)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {
-		helpTxt := "to verify code received go to /stepup/conf/update/verify?" + string(method) + "=" + exID + "&code=<code>"
+		helpTxt := fmt.Sprintf("Code was sent to %s, to verify code received go to /stepup/conf/update/verify?%s=%s&code=<code>", masked, string(method), exID)
 		setResponse(w, http.StatusOK, helpTxt)
 	}
 }
@@ -494,11 +492,11 @@ func handleStepupConfUpdateVerify(w http.ResponseWriter, r *http.Request) {
 
 func handleStepupLogin(w http.ResponseWriter, r *http.Request) {
 	method, loginID := getMethodAndLoginID(r)
-	err := descopeClient.Auth.OTP().SignUpOrIn(method, loginID)
+	masked, err := descopeClient.Auth.OTP().SignUpOrIn(method, loginID)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {
-		helpTxt := "to verify code received go to /stepup/login/verify?" + string(method) + "=" + loginID + "&code=<code>"
+		helpTxt := fmt.Sprintf("Code was sent to %s, to verify code received go to /stepup/login/verify?%s=%s&code=<code>", masked, string(method), loginID)
 		setResponse(w, http.StatusOK, helpTxt)
 	}
 }
@@ -527,11 +525,11 @@ func handleStepupLoginVerify(w http.ResponseWriter, r *http.Request) {
 
 func handleStepupStepup(w http.ResponseWriter, r *http.Request) {
 	method, loginID := getMethodAndLoginID(r)
-	err := descopeClient.Auth.OTP().SignIn(method, loginID, r, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"demoKey": "demoValue"}})
+	masked, err := descopeClient.Auth.OTP().SignIn(method, loginID, r, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"demoKey": "demoValue"}})
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {
-		helpTxt := "to verify code received go to /stepup/stepup/verify?" + string(method) + "=" + loginID + "&code=<code>"
+		helpTxt := fmt.Sprintf("Code was sent to %s, to verify code received go to /stepup/stepup/verify?%s=%s&code=<code>", masked, string(method), loginID)
 		setResponse(w, http.StatusOK, helpTxt)
 	}
 }

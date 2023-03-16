@@ -55,7 +55,7 @@ func TestConcurrentClients(t *testing.T) {
 
 	// SignUpOrIn is called to trigger logging, to ensure it is safe
 	// during a concurrent creation of another client
-	_ = c.Auth.OTP().SignUpOrIn(descope.MethodEmail, "test@test.com")
+	_, _ = c.Auth.OTP().SignUpOrIn(descope.MethodEmail, "test@test.com")
 }
 
 func TestEmptyProjectID(t *testing.T) {

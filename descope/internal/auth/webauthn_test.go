@@ -12,6 +12,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type authenticationWebAuthnSignUpOrInRequestBody struct {
+	LoginID string `json:"loginId,omitempty"`
+	Origin  string `json:"origin"`
+}
+
 func TestSignUpStart(t *testing.T) {
 	expectedResponse := descope.WebAuthnTransactionResponse{TransactionID: "a"}
 	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {

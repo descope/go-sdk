@@ -74,25 +74,25 @@ type MockMagicLink struct {
 	UpdateUserPhoneError  error
 }
 
-func (m *MockMagicLink) SignIn(method descope.DeliveryMethod, loginID, URI string, r *http.Request, loginOptions *descope.LoginOptions) error {
+func (m *MockMagicLink) SignIn(method descope.DeliveryMethod, loginID, URI string, r *http.Request, loginOptions *descope.LoginOptions) (string, error) {
 	if m.SignInAssert != nil {
 		m.SignInAssert(method, loginID, URI, r, loginOptions)
 	}
-	return m.SignInError
+	return "", m.SignInError
 }
 
-func (m *MockMagicLink) SignUp(method descope.DeliveryMethod, loginID, URI string, user *descope.User) error {
+func (m *MockMagicLink) SignUp(method descope.DeliveryMethod, loginID, URI string, user *descope.User) (string, error) {
 	if m.SignUpAssert != nil {
 		m.SignUpAssert(method, loginID, URI, user)
 	}
-	return m.SignUpError
+	return "", m.SignUpError
 }
 
-func (m *MockMagicLink) SignUpOrIn(method descope.DeliveryMethod, loginID string, URI string) error {
+func (m *MockMagicLink) SignUpOrIn(method descope.DeliveryMethod, loginID string, URI string) (string, error) {
 	if m.SignUpOrInAssert != nil {
 		m.SignUpOrInAssert(method, loginID, URI)
 	}
-	return m.SignUpOrInError
+	return "", m.SignUpOrInError
 }
 
 func (m *MockMagicLink) Verify(token string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
@@ -102,18 +102,18 @@ func (m *MockMagicLink) Verify(token string, w http.ResponseWriter) (*descope.Au
 	return m.VerifyResponse, m.VerifyError
 }
 
-func (m *MockMagicLink) UpdateUserEmail(loginID, email, URI string, r *http.Request) error {
+func (m *MockMagicLink) UpdateUserEmail(loginID, email, URI string, r *http.Request) (string, error) {
 	if m.UpdateUserEmailAssert != nil {
 		m.UpdateUserEmailAssert(loginID, email, URI, r)
 	}
-	return m.UpdateUserEmailError
+	return "", m.UpdateUserEmailError
 }
 
-func (m *MockMagicLink) UpdateUserPhone(method descope.DeliveryMethod, loginID, phone, URI string, r *http.Request) error {
+func (m *MockMagicLink) UpdateUserPhone(method descope.DeliveryMethod, loginID, phone, URI string, r *http.Request) (string, error) {
 	if m.UpdateUserPhoneAssert != nil {
 		m.UpdateUserPhoneAssert(method, loginID, phone, URI, r)
 	}
-	return m.UpdateUserPhoneError
+	return "", m.UpdateUserPhoneError
 }
 
 // Mock EnchantedLink
@@ -211,25 +211,25 @@ type MockOTP struct {
 	UpdateUserPhoneError  error
 }
 
-func (m *MockOTP) SignIn(method descope.DeliveryMethod, loginID string, r *http.Request, loginOptions *descope.LoginOptions) error {
+func (m *MockOTP) SignIn(method descope.DeliveryMethod, loginID string, r *http.Request, loginOptions *descope.LoginOptions) (string, error) {
 	if m.SignInAssert != nil {
 		m.SignInAssert(method, loginID, r, loginOptions)
 	}
-	return m.SignInError
+	return "", m.SignInError
 }
 
-func (m *MockOTP) SignUp(method descope.DeliveryMethod, loginID string, user *descope.User) error {
+func (m *MockOTP) SignUp(method descope.DeliveryMethod, loginID string, user *descope.User) (string, error) {
 	if m.SignUpAssert != nil {
 		m.SignUpAssert(method, loginID, user)
 	}
-	return m.SignUpError
+	return "", m.SignUpError
 }
 
-func (m *MockOTP) SignUpOrIn(method descope.DeliveryMethod, loginID string) error {
+func (m *MockOTP) SignUpOrIn(method descope.DeliveryMethod, loginID string) (string, error) {
 	if m.SignUpOrInAssert != nil {
 		m.SignUpOrInAssert(method, loginID)
 	}
-	return m.SignUpOrInError
+	return "", m.SignUpOrInError
 }
 
 func (m *MockOTP) VerifyCode(method descope.DeliveryMethod, loginID string, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
@@ -239,18 +239,18 @@ func (m *MockOTP) VerifyCode(method descope.DeliveryMethod, loginID string, code
 	return m.VerifyCodeResponse, m.VerifyCodeError
 }
 
-func (m *MockOTP) UpdateUserEmail(loginID, email string, r *http.Request) error {
+func (m *MockOTP) UpdateUserEmail(loginID, email string, r *http.Request) (string, error) {
 	if m.UpdateUserEmailAssert != nil {
 		m.UpdateUserEmailAssert(loginID, email, r)
 	}
-	return m.UpdateUserEmailError
+	return "", m.UpdateUserEmailError
 }
 
-func (m *MockOTP) UpdateUserPhone(method descope.DeliveryMethod, loginID, phone string, r *http.Request) error {
+func (m *MockOTP) UpdateUserPhone(method descope.DeliveryMethod, loginID, phone string, r *http.Request) (string, error) {
 	if m.UpdateUserPhoneAssert != nil {
 		m.UpdateUserPhoneAssert(method, loginID, phone, r)
 	}
-	return m.UpdateUserPhoneError
+	return "", m.UpdateUserPhoneError
 }
 
 // Mock TOTP

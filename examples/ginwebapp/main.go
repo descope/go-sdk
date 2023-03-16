@@ -73,11 +73,11 @@ func handleIsHealthy(c *gin.Context) {
 
 func handleSignUpOrIn(c *gin.Context) {
 	method, loginID := getMethodAndLoginID(c)
-	err := descopeClient.Auth.OTP().SignUpOrIn(method, loginID)
+	masked, err := descopeClient.Auth.OTP().SignUpOrIn(method, loginID)
 	if err != nil {
 		setErrorWithSignUpIn(c, err.Error(), method, loginID)
 	} else {
-		helpTxt := "to verify code received go to /otp/verify?" + string(method) + "=" + loginID + "&code=<code>"
+		helpTxt := fmt.Sprintf("to verify code received to %s go to /otp/verify?%s=%s&code=<code>", masked, string(method), loginID)
 		setResponse(c, http.StatusOK, helpTxt)
 	}
 }

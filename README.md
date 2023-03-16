@@ -50,7 +50,7 @@ user := &descope.User{
     Phone: "212-555-1234",
     Email: loginID,
 }
-err := descopeClient.Auth.OTP().SignUp(descope.MethodEmail, loginID, user)
+maskedAddress, err := descopeClient.Auth.OTP().SignUp(descope.MethodEmail, loginID, user)
 if err != nil {
     if errors.Is(err, descope.ErrUserAlreadyExists) {
         // user already exists with this loginID
@@ -89,7 +89,7 @@ The user can either `sign up`, `sign in` or `sign up or in`
 ```go
 // If configured globally, the redirect URI is optional. If provided however, it will be used
 // instead of any global configuration
-err := descopeClient.Auth.MagicLink().SignUpOrIn(descope.MethodEmail, "desmond@descope.com", "http://myapp.com/verify-magic-link")
+maskedAddress, err := descopeClient.Auth.MagicLink().SignUpOrIn(descope.MethodEmail, "desmond@descope.com", "http://myapp.com/verify-magic-link")
 if err {
     // handle error
 }
