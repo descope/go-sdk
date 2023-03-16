@@ -808,3 +808,36 @@ func setCookies(cookies []*http.Cookie, w http.ResponseWriter) {
 		http.SetCookie(w, cookies[i])
 	}
 }
+
+type Masked interface {
+	GetMasked() string
+}
+
+type MaskedEmailRes struct {
+	MaskedEmail string `json:"maskedEmail,omitempty"` // Masked email to which the message was sent
+}
+
+func (mer *MaskedEmailRes) GetMasked() string {
+	return mer.MaskedEmail
+}
+
+type MaskedPhoneRes struct {
+	MaskedPhone string `json:"maskedPhone,omitempty"` // Masked phone to which the message was sent
+}
+
+func (mer *MaskedPhoneRes) GetMasked() string {
+	return mer.MaskedPhone
+}
+
+func getMaskedValue(method descope.DeliveryMethod) Masked {
+	var m Masked
+	switch method {
+	case descope.MethodSMS:
+		fallthrough
+	case descope.MethodWhatsApp:
+		m = &MaskedPhoneRes{}
+	case descope.MethodEmail:
+		m = &MaskedEmailRes{}
+	}
+	return m
+}

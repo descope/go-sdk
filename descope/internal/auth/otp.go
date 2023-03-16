@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/descope/go-sdk/descope"
+	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
 )
 
@@ -11,42 +12,46 @@ type otp struct {
 	authenticationsBase
 }
 
-func (auth *otp) SignIn(method descope.DeliveryMethod, loginID string, r *http.Request, loginOptions *descope.LoginOptions) error {
+func (auth *otp) SignIn(method descope.DeliveryMethod, loginID string, r *http.Request, loginOptions *descope.LoginOptions) (string, error) {
 	var pswd string
 	var err error
 	if loginID == "" {
-		return utils.NewInvalidArgumentError("loginID")
+		return "", utils.NewInvalidArgumentError("loginID")
 	}
 	if loginOptions.IsJWTRequired() {
 		pswd, err = getValidRefreshToken(r)
 		if err != nil {
-			return descope.ErrInvalidStepUpJWT
+			return "", descope.ErrInvalidStepUpJWT
 		}
 	}
-
-	_, err = auth.client.DoPostRequest(composeSignInURL(method), newSignInRequestBody(loginID, loginOptions), nil, pswd)
-	return err
+	masked := getMaskedValue(method)
+	options := &api.HTTPRequest{ResBodyObj: masked}
+	_, err = auth.client.DoPostRequest(composeSignInURL(method), newSignInRequestBody(loginID, loginOptions), options, pswd)
+	return masked.GetMasked(), err
 }
 
-func (auth *otp) SignUp(method descope.DeliveryMethod, loginID string, user *descope.User) error {
+func (auth *otp) SignUp(method descope.DeliveryMethod, loginID string, user *descope.User) (string, error) {
 	if user == nil {
 		user = &descope.User{}
 	}
 	if err := auth.verifyDeliveryMethod(method, loginID, user); err != nil {
-		return err
+		return "", err
 	}
-
-	_, err := auth.client.DoPostRequest(composeSignUpURL(method), newAuthenticationSignUpRequestBody(method, loginID, user), nil, "")
-	return err
+	masked := getMaskedValue(method)
+	options := &api.HTTPRequest{ResBodyObj: masked}
+	_, err := auth.client.DoPostRequest(composeSignUpURL(method), newAuthenticationSignUpRequestBody(method, loginID, user), options, "")
+	return masked.GetMasked(), err
 }
 
-func (auth *otp) SignUpOrIn(method descope.DeliveryMethod, loginID string) error {
+func (auth *otp) SignUpOrIn(method descope.DeliveryMethod, loginID string) (string, error) {
 	if loginID == "" {
-		return utils.NewInvalidArgumentError("loginID")
+		return "", utils.NewInvalidArgumentError("loginID")
 	}
 
-	_, err := auth.client.DoPostRequest(composeSignUpOrInURL(method), newSignInRequestBody(loginID, nil), nil, "")
-	return err
+	masked := getMaskedValue(method)
+	options := &api.HTTPRequest{ResBodyObj: masked}
+	_, err := auth.client.DoPostRequest(composeSignUpOrInURL(method), newSignInRequestBody(loginID, nil), options, "")
+	return masked.GetMasked(), err
 }
 
 func (auth *otp) VerifyCode(method descope.DeliveryMethod, loginID string, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
@@ -73,41 +78,45 @@ func (auth *otp) VerifyCode(method descope.DeliveryMethod, loginID string, code 
 	return auth.generateAuthenticationInfo(httpResponse, w)
 }
 
-func (auth *otp) UpdateUserEmail(loginID, email string, r *http.Request) error {
+func (auth *otp) UpdateUserEmail(loginID, email string, r *http.Request) (string, error) {
 	if loginID == "" {
-		return utils.NewInvalidArgumentError("loginID")
+		return "", utils.NewInvalidArgumentError("loginID")
 	}
 	if email == "" {
-		return utils.NewInvalidArgumentError("email")
+		return "", utils.NewInvalidArgumentError("email")
 	}
 	if !emailRegex.MatchString(email) {
-		return utils.NewInvalidArgumentError("email")
+		return "", utils.NewInvalidArgumentError("email")
 	}
 	pswd, err := getValidRefreshToken(r)
 	if err != nil {
-		return err
+		return "", err
 	}
-	_, err = auth.client.DoPostRequest(composeUpdateUserEmailOTP(), newOTPUpdateEmailRequestBody(loginID, email), nil, pswd)
-	return err
+	masked := getMaskedValue(descope.MethodEmail)
+	options := &api.HTTPRequest{ResBodyObj: masked}
+	_, err = auth.client.DoPostRequest(composeUpdateUserEmailOTP(), newOTPUpdateEmailRequestBody(loginID, email), options, pswd)
+	return masked.GetMasked(), err
 }
 
-func (auth *otp) UpdateUserPhone(method descope.DeliveryMethod, loginID, phone string, r *http.Request) error {
+func (auth *otp) UpdateUserPhone(method descope.DeliveryMethod, loginID, phone string, r *http.Request) (string, error) {
 	if loginID == "" {
-		return utils.NewInvalidArgumentError("loginID")
+		return "", utils.NewInvalidArgumentError("loginID")
 	}
 	if phone == "" {
-		return utils.NewInvalidArgumentError("phone")
+		return "", utils.NewInvalidArgumentError("phone")
 	}
 	if !phoneRegex.MatchString(phone) {
-		return utils.NewInvalidArgumentError("phone")
+		return "", utils.NewInvalidArgumentError("phone")
 	}
 	if method != descope.MethodSMS && method != descope.MethodWhatsApp {
-		return utils.NewInvalidArgumentError("method")
+		return "", utils.NewInvalidArgumentError("method")
 	}
 	pswd, err := getValidRefreshToken(r)
 	if err != nil {
-		return err
+		return "", err
 	}
-	_, err = auth.client.DoPostRequest(composeUpdateUserPhoneOTP(method), newOTPUpdatePhoneRequestBody(loginID, phone), nil, pswd)
-	return err
+	masked := getMaskedValue(descope.MethodSMS)
+	options := &api.HTTPRequest{ResBodyObj: masked}
+	_, err = auth.client.DoPostRequest(composeUpdateUserPhoneOTP(method), newOTPUpdatePhoneRequestBody(loginID, phone), options, pswd)
+	return masked.GetMasked(), err
 }
