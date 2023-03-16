@@ -38,6 +38,7 @@ func TestSignInEnchantedLink(t *testing.T) {
 	uri := "http://test.me"
 	pendingRefResponse := "pending_ref"
 	loginID := "loginID"
+	maskedEmail := "t**@email.com"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeEnchantedLinkSignInURL(), r.URL.RequestURI())
 
@@ -47,14 +48,15 @@ func TestSignInEnchantedLink(t *testing.T) {
 		assert.EqualValues(t, uri, m["URI"])
 		return &http.Response{
 			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","linkId": "%s"}`, pendingRefResponse, loginID))),
+			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","linkId": "%s", "maskedEmail":"%s"}`, pendingRefResponse, loginID, maskedEmail))),
 		}, nil
 	})
 	require.NoError(t, err)
 	response, err := a.EnchantedLink().SignIn(email, uri, nil, nil)
 	require.NoError(t, err)
-	require.Equal(t, pendingRefResponse, response.PendingRef)
-	require.Equal(t, loginID, response.LinkID)
+	require.EqualValues(t, pendingRefResponse, response.PendingRef)
+	require.EqualValues(t, loginID, response.LinkID)
+	require.EqualValues(t, maskedEmail, response.MaskedEmail)
 }
 
 func TestSignInEnchantedLinkStepup(t *testing.T) {
@@ -85,8 +87,8 @@ func TestSignInEnchantedLinkStepup(t *testing.T) {
 	require.NoError(t, err)
 	response, err := a.EnchantedLink().SignIn(email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
 	require.NoError(t, err)
-	require.Equal(t, pendingRefResponse, response.PendingRef)
-	require.Equal(t, loginID, response.LinkID)
+	require.EqualValues(t, pendingRefResponse, response.PendingRef)
+	require.EqualValues(t, loginID, response.LinkID)
 }
 
 func TestSignInEnchantedLinkInvalidResponse(t *testing.T) {
@@ -126,8 +128,8 @@ func TestSignUpEnchantedLink(t *testing.T) {
 	require.NoError(t, err)
 	response, err := a.EnchantedLink().SignUp(email, uri, &descope.User{Name: "test"})
 	require.NoError(t, err)
-	require.Equal(t, pendingRefResponse, response.PendingRef)
-	require.Equal(t, loginID, response.LinkID)
+	require.EqualValues(t, pendingRefResponse, response.PendingRef)
+	require.EqualValues(t, loginID, response.LinkID)
 }
 
 func TestSignUpOrInEnchantedLink(t *testing.T) {
@@ -150,8 +152,8 @@ func TestSignUpOrInEnchantedLink(t *testing.T) {
 	require.NoError(t, err)
 	response, err := a.EnchantedLink().SignUpOrIn(email, uri)
 	require.NoError(t, err)
-	require.Equal(t, pendingRefResponse, response.PendingRef)
-	require.Equal(t, loginID, response.LinkID)
+	require.EqualValues(t, pendingRefResponse, response.PendingRef)
+	require.EqualValues(t, loginID, response.LinkID)
 }
 
 func TestSignUpEnchantedLinkEmptyLoginID(t *testing.T) {

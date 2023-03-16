@@ -31,11 +31,6 @@ type authenticationWebAuthnSignInRequestBody struct {
 	LoginOptions *descope.LoginOptions `json:"loginOptions,omitempty"`
 }
 
-type authenticationWebAuthnSignUpOrInRequestBody struct {
-	LoginID string `json:"loginId,omitempty"`
-	Origin  string `json:"origin"`
-}
-
 type authenticationWebAuthnAddDeviceRequestBody struct {
 	LoginID string `json:"loginId,omitempty"`
 	Origin  string `json:"origin"`
