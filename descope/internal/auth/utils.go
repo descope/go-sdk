@@ -52,6 +52,22 @@ type authenticationPasswordSignInRequestBody struct {
 	Password string `json:"password"`
 }
 
+type authenticationPasswordResetRequestBody struct {
+	LoginID     string `json:"loginId,omitempty"`
+	RedirectURL string `json:"redirectUrl,omitempty"`
+}
+
+type authenticationPasswordUpdateRequestBody struct {
+	LoginID     string `json:"loginId,omitempty"`
+	NewPassword string `json:"newPassword,omitempty"`
+}
+
+type authenticationPasswordReplaceRequestBody struct {
+	LoginID     string `json:"loginId,omitempty"`
+	OldPassword string `json:"oldPassword,omitempty"`
+	NewPassword string `json:"newPassword,omitempty"`
+}
+
 type authenticationVerifyRequestBody struct {
 	*authenticationRequestBody `json:",inline"`
 	Code                       string `json:"code"`

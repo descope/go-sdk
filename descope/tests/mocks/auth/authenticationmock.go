@@ -300,6 +300,18 @@ type MockPassword struct {
 	SignInAssert   func(loginID string, password string, w http.ResponseWriter)
 	SignInError    error
 	SignInResponse *descope.AuthenticationInfo
+
+	ResetAssert func(loginID, redirectURL string)
+	ResetError  error
+
+	UpdateAssert func(loginID, newPassword string, r *http.Request)
+	UpdateError  error
+
+	ReplaceAssert func(loginID, oldPassword, newPassword string)
+	ReplaceError  error
+
+	PolicyResponse *descope.PasswordPolicy
+	PolicyError    error
 }
 
 func (m *MockPassword) SignUp(loginID string, user *descope.User, password string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
@@ -314,6 +326,31 @@ func (m *MockPassword) SignIn(loginID string, password string, w http.ResponseWr
 		m.SignInAssert(loginID, password, w)
 	}
 	return m.SignInResponse, m.SignInError
+}
+
+func (m *MockPassword) SendPasswordReset(loginID, redirectURL string) error {
+	if m.ResetAssert != nil {
+		m.ResetAssert(loginID, redirectURL)
+	}
+	return m.ResetError
+}
+
+func (m *MockPassword) UpdateUserPassword(loginID, newPassword string, r *http.Request) error {
+	if m.UpdateAssert != nil {
+		m.UpdateAssert(loginID, newPassword, r)
+	}
+	return m.ResetError
+}
+
+func (m *MockPassword) ReplaceUserPassword(loginID, oldPassword, newPassword string) error {
+	if m.ReplaceAssert != nil {
+		m.ReplaceAssert(loginID, oldPassword, newPassword)
+	}
+	return m.ResetError
+}
+
+func (m *MockPassword) GetPasswordPolicy() (*descope.PasswordPolicy, error) {
+	return m.PolicyResponse, m.PolicyError
 }
 
 // Mock OAuth
