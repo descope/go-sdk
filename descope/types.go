@@ -34,10 +34,10 @@ type WebAuthnFinishRequest struct {
 	Response      string `json:"response,omitempty"`
 }
 
-// PasswordPolicy - represents a part of the password policy being enforced
-// that can be validated in the client side prior to sending a password
-// to Descope for a better UX. Either way, the comprehensive policy is always
-// enforced by Descope
+// PasswordPolicy - represents the rules for valid passwords configured in the policy
+// in the Descope console. This can be used to implement client-side validation of new
+// user passwords for a better user experience. Either way, the comprehensive
+// policy is always enforced by Descope on the server side.
 type PasswordPolicy struct {
 	MinLength       int32 `json:"minLength,omitempty"`
 	Lowercase       bool  `json:"lowercase,omitempty"`
