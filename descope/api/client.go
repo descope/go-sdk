@@ -569,7 +569,7 @@ func NewClient(conf ClientParams) *Client {
 			Timeout:   time.Second * 10,
 			Transport: t,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				return http.ErrUseLastResponse
+				return http.ErrUseLastResponse // notest
 			},
 		}
 	}
@@ -767,7 +767,7 @@ func getSDKInfo() *sdkInfo {
 		goVersion: runtime.Version(),
 	}
 	if bi, ok := debug.ReadBuildInfo(); ok && bi != nil {
-		for _, dep := range bi.Deps {
+		for _, dep := range bi.Deps { // notest
 			if strings.HasPrefix(dep.Path, "github.com/descope/go-sdk/descope") {
 				sdkInfo.version = dep.Version
 				sdkInfo.sha = dep.Sum

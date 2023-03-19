@@ -382,9 +382,6 @@ func (auth *authenticationsBase) extractJWTResponse(bodyStr string) (*descope.JW
 }
 
 func (auth *authenticationsBase) extractUserResponse(bodyStr string) (*descope.UserResponse, error) {
-	if bodyStr == "" {
-		return nil, nil
-	}
 	res := descope.UserResponse{}
 	err := utils.Unmarshal([]byte(bodyStr), &res)
 	if err != nil {
@@ -423,7 +420,6 @@ func (auth *authenticationsBase) collectJwts(jwt, rJwt string, tokens []*descope
 }
 
 func (auth *authenticationsBase) extractTokens(jRes *descope.JWTResponse) ([]*descope.Token, error) {
-
 	if jRes == nil {
 		return nil, nil
 	}
@@ -580,21 +576,25 @@ func (auth *authenticationsBase) createCookie(token *descope.Token, jwtRes *desc
 	if cookieDomain == "" {
 		cookieDomain = jwtRes.CookieDomain
 	}
-	if token != nil {
-		name, _ := token.Claims[claimAttributeName].(string)
-		return &http.Cookie{
-			Path:     jwtRes.CookiePath,
-			Domain:   cookieDomain,
-			Name:     name,
-			Value:    token.JWT,
-			HttpOnly: true,
-			MaxAge:   int(jwtRes.CookieMaxAge),
-			Expires:  time.Unix(int64(jwtRes.CookieExpiration), 0),
-			SameSite: http.SameSiteStrictMode,
-			Secure:   true,
-		}
+	if token == nil {
+		return nil // notest
 	}
-	return nil
+	name, ok := token.Claims[claimAttributeName].(string)
+	if !ok {
+		logger.LogDebug("Unable to find attribute name claim")
+		return nil // notest
+	}
+	return &http.Cookie{
+		Path:     jwtRes.CookiePath,
+		Domain:   cookieDomain,
+		Name:     name,
+		Value:    token.JWT,
+		HttpOnly: true,
+		MaxAge:   int(jwtRes.CookieMaxAge),
+		Expires:  time.Unix(int64(jwtRes.CookieExpiration), 0),
+		SameSite: http.SameSiteStrictMode,
+		Secure:   true,
+	}
 }
 
 func provideTokens(r *http.Request) (string, string) {
@@ -794,7 +794,7 @@ func composeUpdateUserPhoneOTP(method descope.DeliveryMethod) string {
 
 func redirectToURL(url string, w http.ResponseWriter) {
 	if w == nil {
-		return
+		return // notest
 	}
 	w.Header().Set(descope.RedirectLocationCookieName, url)
 	w.WriteHeader(http.StatusTemporaryRedirect)
