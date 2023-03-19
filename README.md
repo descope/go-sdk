@@ -318,9 +318,9 @@ _NOTE: SendPasswordReset will only work if the user has a validated email addres
 In the [password authentication method](https://app.descope.com/settings/authentication/password) in the Descope console, it is possible to define which alternative authentication method can be used in order to authenticate the user, in order to reset and update their password.
 
 ```go
-// Start the reset process by sending a password reset prompt. In this case we'll assume
-// Magic Link is defined as the reset method
-// The optional redirect URL is used by the magic link the same as for "regular" authentication
+// Start the reset process by sending a password reset prompt. In this example we'll assume
+// that magic link is configured as the reset method. The optional redirect URL is used in the
+// same way as in regular magic link authentication.
 loginID := "desmond@descope.com"
 redirectURL := "https://myapp.com/password-reset"
 err := descopeClient.Auth.Password().SendPasswordReset(loginID, redirectURL)
