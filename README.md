@@ -339,7 +339,7 @@ err := descopeClient.Auth.Password().UpdateUserPassword(loginID, newPassword, r)
 Alternatively, it is also possible to replace an existing active password with a new one.
 
 ```go
-// The request (r) is required to make sure the user is authenticated.
+// Replaces the user's current password with a new one
 err := descopeClient.Auth.Password().ReplaceUserPassword(loginID, oldPassword, newPassword)
 ```
 
