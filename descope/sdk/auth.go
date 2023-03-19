@@ -159,7 +159,7 @@ type Password interface {
 	// This function requires the current or 'oldPassword' to be active.
 	// If the user can be successfully authenticated using the oldPassword, the user's
 	// password will be updated to newPassword.
-	// NewPassword should conform to the password policy defined in the password settings
+	// NewPassword must conform to the password policy defined in the password settings
 	// in the Descope console.
 	ReplaceUserPassword(loginID, oldPassword, newPassword string) error
 
