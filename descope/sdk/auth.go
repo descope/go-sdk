@@ -163,10 +163,10 @@ type Password interface {
 	// in the Descope console.
 	ReplaceUserPassword(loginID, oldPassword, newPassword string) error
 
-	// GetPasswordPolicy - fetch a subsection of the password policy defined in the
-	// Descope console. The goal is to allow client-side validation prior to sending a
-	// new passwords to Descope for better UX.
-	// Either way, the comprehensive policy is always enforced by Descope
+	// GetPasswordPolicy - fetch the rules for valid passwords configured in the policy
+	// in the Descope console. This can be used to implement client-side validation of new
+	// user passwords for a better user experience. Either way, the comprehensive
+	// policy is always enforced by Descope on the server side.
 	GetPasswordPolicy() (*descope.PasswordPolicy, error)
 }
 
