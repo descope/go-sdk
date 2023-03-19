@@ -34,6 +34,18 @@ type WebAuthnFinishRequest struct {
 	Response      string `json:"response,omitempty"`
 }
 
+// PasswordPolicy - represents the rules for valid passwords configured in the policy
+// in the Descope console. This can be used to implement client-side validation of new
+// user passwords for a better user experience. Either way, the comprehensive
+// policy is always enforced by Descope on the server side.
+type PasswordPolicy struct {
+	MinLength       int32 `json:"minLength,omitempty"`
+	Lowercase       bool  `json:"lowercase,omitempty"`
+	Uppercase       bool  `json:"uppercase,omitempty"`
+	Number          bool  `json:"number,omitempty"`
+	NonAlphanumeric bool  `json:"nonAlphanumeric,omitempty"`
+}
+
 type AuthFactor string
 
 const (

@@ -138,6 +138,36 @@ type Password interface {
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	// returns a list of cookies or an error upon failure.
 	SignIn(loginID string, password string, w http.ResponseWriter) (*descope.AuthenticationInfo, error)
+
+	// SendPasswordReset - sends a password reset prompt to the user with the given
+	// loginID according to the password settings defined in the Descope console.
+	// The user must be verified according to the configured password reset method.
+	// Once verified, use UpdateUserPassword to change the user's password.
+	// RedirectURL is an optional parameter that is used by Magic Link or Enchanted Link
+	// if those are the chosen reset methods. See the Magic Link and Enchanted Link sections
+	// for more details.
+	SendPasswordReset(loginID, redirectURL string) error
+
+	// UpdateUserPassword - updates a user's password according to the given loginID.
+	// This function requires the user to have an active session.
+	// Request is needed to obtain a JWT and send it to Descope, for verification.
+	// NewPassword must conform to the password policy defined in the password settings
+	// in the Descope console.
+	UpdateUserPassword(loginID, newPassword string, r *http.Request) error
+
+	// ReplaceUserPassword - updates a user's password according to the given loginID.
+	// This function requires the current or 'oldPassword' to be active.
+	// If the user can be successfully authenticated using the oldPassword, the user's
+	// password will be updated to newPassword.
+	// NewPassword must conform to the password policy defined in the password settings
+	// in the Descope console.
+	ReplaceUserPassword(loginID, oldPassword, newPassword string) error
+
+	// GetPasswordPolicy - fetch the rules for valid passwords configured in the policy
+	// in the Descope console. This can be used to implement client-side validation of new
+	// user passwords for a better user experience. Either way, the comprehensive
+	// policy is always enforced by Descope on the server side.
+	GetPasswordPolicy() (*descope.PasswordPolicy, error)
 }
 
 type OAuth interface {
