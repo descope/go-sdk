@@ -43,7 +43,10 @@ const (
 )
 
 var (
-	mockAuthSessionCookie = &http.Cookie{Value: jwtTokenValid, Name: descope.SessionCookieName}
+	mockAuthSessionCookie        = &http.Cookie{Value: jwtTokenValid, Name: descope.SessionCookieName}
+	mockAuthRefreshCookie        = &http.Cookie{Value: jwtTokenValid, Name: descope.RefreshCookieName}
+	mockAuthInvalidSessionCookie = &http.Cookie{Value: jwtTokenExpired, Name: descope.SessionCookieName}
+	mockAuthInvalidRefreshCookie = &http.Cookie{Value: jwtTokenExpired, Name: descope.RefreshCookieName}
 
 	mockAuthSessionBody             = fmt.Sprintf(`{"sessionJwt": "%s", "refreshJwt": "%s", "cookiePath": "%s", "cookieDomain": "%s" }`, jwtTokenValid, jwtRTokenValid, "/my-path", "my-domain")
 	mockAuthSessionBodyNoRefreshJwt = fmt.Sprintf(`{"sessionJwt": "%s", "cookiePath": "%s", "cookieDomain": "%s" }`, jwtTokenValid, "/my-path", "my-domain")
