@@ -150,8 +150,8 @@ type Password interface {
 
 	// UpdateUserPassword - updates a user's password according to the given loginID.
 	// This function requires the user to have an active session.
-	// Request is needed to obtain JWT and send it to Descope, for verification.
-	// NewPassword should conform to the password policy defined in the password settings
+	// Request is needed to obtain a JWT and send it to Descope, for verification.
+	// NewPassword must conform to the password policy defined in the password settings
 	// in the Descope console.
 	UpdateUserPassword(loginID, newPassword string, r *http.Request) error
 
