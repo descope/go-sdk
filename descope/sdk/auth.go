@@ -139,9 +139,9 @@ type Password interface {
 	// returns a list of cookies or an error upon failure.
 	SignIn(loginID string, password string, w http.ResponseWriter) (*descope.AuthenticationInfo, error)
 
-	// SendPasswordReset - sends a password reset prompt to user with the given loginID
-	// according to the password settings defined in the Descope console.
-	// The user must the be verified according to the chosen password reset method.
+	// SendPasswordReset - sends a password reset prompt to the user with the given
+	// loginID according to the password settings defined in the Descope console.
+	// The user must be verified according to the configured password reset method.
 	// Once verified, use UpdateUserPassword to change the user's password.
 	// RedirectURL is an optional parameter that is used by Magic Link or Enchanted Link
 	// if those are the chosen reset methods. See the Magic Link and Enchanted Link sections
