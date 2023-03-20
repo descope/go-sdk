@@ -733,6 +733,38 @@ if err == nil {
 }
 ```
 
+### Manage Flows
+
+You can import and export flows and screens, or the project them:
+
+```go
+// Export the flow and it's matching screens based on the given id
+res, err := descopeClient.Management.Flow().ExportFlow("sign-up")
+if err == nil {
+    fmt.Println(res.Flow)
+    fmt.Println(res.Screens)
+}
+
+// Import the given flow and screens as the given id
+res, err := descopeClient.Management.Group().ImportFlow("sign-up", flow, screens)
+if err == nil {
+    fmt.Println(res.Flow)
+    fmt.Println(res.Screens)
+}
+
+// Export the current theme of the project
+res, err := descopeClient.Management.Group().ExportTheme()
+if err == nil {
+    fmt.Println(res)
+}
+
+// Import the given theme to the project
+res, err := descopeClient.Management.Group().ImportTheme(theme)
+if err == nil {
+    fmt.Println(res)
+}
+```
+
 ### Manage JWTs
 
 You can add custom claims to a valid JWT.

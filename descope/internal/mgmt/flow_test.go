@@ -89,3 +89,10 @@ func TestImportThemeSuccess(t *testing.T) {
 	require.NoError(t, err)
 	assert.EqualValues(t, theme, res)
 }
+
+func TestImportThemeMissingArgument(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.Flow().ImportTheme(nil)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("theme").Message)
+	assert.Nil(t, res)
+}
