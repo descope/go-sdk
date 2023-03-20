@@ -303,7 +303,7 @@ type Screen struct {
 }
 
 type FlowResponse struct {
-	Flow    Flow      `json:"flow"`
+	Flow    *Flow     `json:"flow"`
 	Screens []*Screen `json:"screens"`
 }
 

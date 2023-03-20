@@ -14,7 +14,7 @@ import (
 func TestExportFlowSuccess(t *testing.T) {
 	flowID := "abc"
 	response := &descope.FlowResponse{
-		Flow:    descope.Flow{ID: flowID},
+		Flow:    &descope.Flow{ID: flowID},
 		Screens: []*descope.Screen{},
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -39,7 +39,7 @@ func TestExportFlowMissingArgument(t *testing.T) {
 func TestImportFlowSuccess(t *testing.T) {
 	flowID := "abc"
 	response := &descope.FlowResponse{
-		Flow:    descope.Flow{ID: flowID},
+		Flow:    &descope.Flow{ID: flowID},
 		Screens: []*descope.Screen{{}},
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -50,7 +50,7 @@ func TestImportFlowSuccess(t *testing.T) {
 		require.NotEmpty(t, req["flow"])
 		require.Len(t, req["screens"], 1)
 	}, response))
-	res, err := mgmt.Flow().ImportFlow(flowID, &response.Flow, response.Screens)
+	res, err := mgmt.Flow().ImportFlow(flowID, response.Flow, response.Screens)
 	require.NoError(t, err)
 	assert.EqualValues(t, response, res)
 }
