@@ -29,8 +29,8 @@ func (r *flow) ImportFlow(flowID string, flow *descope.Flow, screens []*descope.
 		return nil, utils.NewInvalidArgumentError("flowID")
 	}
 	body := map[string]any{
-		"flowId": flowID,
-		"flow": flow,
+		"flowId":  flowID,
+		"flow":    flow,
 		"screens": screens,
 	}
 	res, err := r.client.DoPostRequest(api.Routes.ManagementFlowImport(), body, nil, r.conf.ManagementKey)

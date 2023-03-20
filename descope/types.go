@@ -286,32 +286,32 @@ type Group struct {
 }
 
 type Flow struct {
-	ID      string        `json:"id"`
-	Name string        `json:"name"`
+	ID          string `json:"id"`
+	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
-	DSL any `json:"dsl"`
-	Disabled bool `json:"disabled"`
-	ETag string `json:"etag,omitempty"`
+	DSL         any    `json:"dsl"`
+	Disabled    bool   `json:"disabled"`
+	ETag        string `json:"etag,omitempty"`
 }
 
 type Screen struct {
-	ID      string        `json:"id"`
-	FlowID string        `json:"flowId"`
-	Inputs any `json:"inputs,omitempty"`
-	Interactions any `json:"interactions,omitempty"`
-	HTMLTemplate any `json:"htmlTemplate"`
+	ID           string `json:"id"`
+	FlowID       string `json:"flowId"`
+	Inputs       any    `json:"inputs,omitempty"`
+	Interactions any    `json:"interactions,omitempty"`
+	HTMLTemplate any    `json:"htmlTemplate"`
 }
 
 type FlowResponse struct {
-	Flow Flow `json:"flow"`
+	Flow    Flow      `json:"flow"`
 	Screens []*Screen `json:"screens"`
 }
 
 type Theme struct {
-	ID      string        `json:"id"`
-	CSSTemplate any `json:"cssTemplate,omitempty"`
+	ID          string `json:"id"`
+	CSSTemplate any    `json:"cssTemplate,omitempty"`
 }
-  
+
 type DeliveryMethod string
 
 type OAuthProvider string

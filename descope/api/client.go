@@ -111,10 +111,10 @@ var (
 			groupLoadAllGroups:          "mgmt/group/all",
 			groupLoadAllGroupsForMember: "mgmt/group/member/all",
 			groupLoadAllGroupMembers:    "mgmt/group/members",
-			flowExport: "mgmt/flow/export",
-			flowImport: "mgmt/flow/import",
-			themeExport: "mgmt/theme/export",
-			themeImport: "mgmt/theme/import",
+			flowExport:                  "mgmt/flow/export",
+			flowImport:                  "mgmt/flow/import",
+			themeExport:                 "mgmt/theme/export",
+			themeImport:                 "mgmt/theme/import",
 		},
 		logout:    "auth/logout",
 		logoutAll: "auth/logoutall",
@@ -225,8 +225,8 @@ type mgmtEndpoints struct {
 	groupLoadAllGroupsForMember string
 	groupLoadAllGroupMembers    string
 
-	flowExport string
-	flowImport string
+	flowExport  string
+	flowImport  string
 	themeExport string
 	themeImport string
 }

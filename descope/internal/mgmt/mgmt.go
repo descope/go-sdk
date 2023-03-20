@@ -28,7 +28,7 @@ type managementService struct {
 	permission sdk.Permission
 	role       sdk.Role
 	group      sdk.Group
-	flow		sdk.Flow
+	flow       sdk.Flow
 }
 
 func NewManagement(conf ManagementParams, c *api.Client) *managementService {
