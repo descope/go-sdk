@@ -38,7 +38,7 @@ func prepare() (err error) {
 		// generate a management key in the Company section of the admin console: https://app.descope.com/settings/company
 		return errors.New("the DESCOPE_MANAGEMENT_KEY environment variable must be set")
 	}
-	descopeClient, err = client.New()
+	descopeClient, err = client.NewWithConfig(&client.Config{ DescopeBaseURL: "https://localhost:8443" })
 	return err
 }
 
@@ -228,6 +228,32 @@ func groupAllForTenant(args []string) error {
 		for _, p := range res {
 			fmt.Printf("Found group: %s, %s. Members: %v\n", p.ID, p.Display, p.Members)
 		}
+	}
+	return err
+}
+
+func exportFlow(args []string) error {
+	flowID := args[0]
+	res, err := descopeClient.Management.Flow().ExportFlow(flowID)
+	if err == nil {
+			fmt.Printf("Found flow [%s] named %s with %d screens", res.Flow.ID, res.Flow.Name, len(res.Screens))
+	}
+	return err
+}
+
+func importFlow(args []string) error {
+	
+	res, err := descopeClient.Management.Flow().ExportFlow(flowID)
+	if err == nil {
+			fmt.Printf("Found flow [%s] named %s with %d screens", res.Flow.ID, res.Flow.Name, len(res.Screens))
+	}
+	return err
+}
+
+func exportTheme(args []string) error {
+	res, err := descopeClient.Management.Flow().ExportTheme()
+	if err == nil {
+			fmt.Printf("Found flow [%s] named %s with %d screens", res.Flow.ID, res.Flow.Name, len(res.Screens))
 	}
 	return err
 }
@@ -422,6 +448,11 @@ func main() {
 	})
 
 	addCommand(groupAllForTenant, "group-all-for-tenant <tenantId>", "Load all groups for a given tenant id", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(1)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(exportFlow, "export-flow <flowId>", "Export the flow and screens for a given flow id", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 		cmd.DisableFlagsInUseLine = true
 	})
