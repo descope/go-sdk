@@ -39,7 +39,7 @@ func prepare() (err error) {
 		// generate a management key in the Company section of the admin console: https://app.descope.com/settings/company
 		return errors.New("the DESCOPE_MANAGEMENT_KEY environment variable must be set")
 	}
-	descopeClient, err = client.NewWithConfig(&client.Config{DescopeBaseURL: "https://localhost:8443"})
+	descopeClient, err = client.New()
 	return err
 }
 
@@ -249,7 +249,7 @@ func exportFlow(args []string) error {
 	}
 	err = writeToFile(fmt.Sprintf("%s.json", flowID), res)
 	if err == nil {
-		fmt.Printf("Found flow [%s] named %s with %d screens", res.Flow.ID, res.Flow.Name, len(res.Screens))
+		fmt.Printf("Found flow [%s] named %s with %d screens\n", res.Flow.ID, res.Flow.Name, len(res.Screens))
 	}
 	return err
 }
@@ -269,7 +269,7 @@ func importFlow(args []string) error {
 
 	res, err := descopeClient.Management.Flow().ImportFlow(flowID, data.Flow, data.Screens)
 	if err == nil {
-		fmt.Printf("Imported flow [%s] named %s with %d screens", res.Flow.ID, res.Flow.Name, len(res.Screens))
+		fmt.Printf("Imported flow [%s] named %s with %d screens\n", res.Flow.ID, res.Flow.Name, len(res.Screens))
 	}
 	return err
 }
@@ -288,7 +288,7 @@ func importTheme(args []string) error {
 
 	_, err = descopeClient.Management.Flow().ImportTheme(data)
 	if err == nil {
-		fmt.Print("Imported theme")
+		fmt.Println("Imported theme")
 	}
 	return err
 }
@@ -300,7 +300,7 @@ func exportTheme(args []string) error {
 	}
 	err = writeToFile("theme.json", res)
 	if err == nil {
-		fmt.Print("Found theme")
+		fmt.Println("Found theme")
 	}
 	return err
 }
