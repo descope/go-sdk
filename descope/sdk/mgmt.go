@@ -296,13 +296,19 @@ type Flow interface {
 	// Export a flow and its screens by the flow id.
 	ExportFlow(flowID string) (*descope.FlowResponse, error)
 
-	// Import a flow and its screens of a given flow id.
+	// Import a flow and its screens as a given flow id. This will override the existing flow.
+	// Returns the new flow and screens after a successful import or an error on failure.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
 	ImportFlow(flowID string, flow *descope.Flow, screens []*descope.Screen) (*descope.FlowResponse, error)
 
-	// Export the project theme
+	// Export the project theme.
 	ExportTheme() (*descope.Theme, error)
 
-	// Import a given theme
+	// Import a given theme. This will override the existing project theme.
+	// Returns the new theme after a successful import or an error on failure.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
 	ImportTheme(theme *descope.Theme) (*descope.Theme, error)
 }
 
