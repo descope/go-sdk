@@ -859,3 +859,5 @@ If you need help you can email [Descope Support](mailto:support@descope.com)
 ## License
 
 The Descope SDK for Go is licensed for use under the terms and conditions of the [MIT license Agreement](https://github.com/descope/go-sdk/blob/main/LICENSE).
+
+// TODO - test stuff - create, get, search, delete, generate
