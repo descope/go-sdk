@@ -40,6 +40,10 @@ var (
 			verifyCode:                   "auth/otp/verify",
 			signUpPassword:               "auth/password/signup",
 			signInPassword:               "auth/password/signin",
+			sendResetPassword:            "auth/password/reset",
+			updateUserPassword:           "auth/password/update",
+			replaceUserPassword:          "auth/password/replace",
+			passwordPolicy:               "auth/password/policy",
 			signInMagicLink:              "auth/magiclink/signin",
 			signUpMagicLink:              "auth/magiclink/signup",
 			signUpOrInMagicLink:          "auth/magiclink/signup-in",
@@ -138,6 +142,10 @@ type authEndpoints struct {
 	verifyCode                   string
 	signUpPassword               string
 	signInPassword               string
+	sendResetPassword            string
+	updateUserPassword           string
+	replaceUserPassword          string
+	passwordPolicy               string
 	signInMagicLink              string
 	signUpMagicLink              string
 	signUpOrInMagicLink          string
@@ -240,6 +248,18 @@ func (e *endpoints) SignUpPassword() string {
 }
 func (e *endpoints) SignInPassword() string {
 	return path.Join(e.version, e.auth.signInPassword)
+}
+func (e *endpoints) SendResetPassword() string {
+	return path.Join(e.version, e.auth.sendResetPassword)
+}
+func (e *endpoints) UpdateUserPassword() string {
+	return path.Join(e.version, e.auth.updateUserPassword)
+}
+func (e *endpoints) ReplaceUserPassword() string {
+	return path.Join(e.version, e.auth.replaceUserPassword)
+}
+func (e *endpoints) PasswordPolicy() string {
+	return path.Join(e.version, e.auth.passwordPolicy)
 }
 func (e *endpoints) SignInMagicLink() string {
 	return path.Join(e.version, e.auth.signInMagicLink)
@@ -549,7 +569,7 @@ func NewClient(conf ClientParams) *Client {
 			Timeout:   time.Second * 10,
 			Transport: t,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
-				return http.ErrUseLastResponse
+				return http.ErrUseLastResponse // notest
 			},
 		}
 	}
@@ -747,7 +767,7 @@ func getSDKInfo() *sdkInfo {
 		goVersion: runtime.Version(),
 	}
 	if bi, ok := debug.ReadBuildInfo(); ok && bi != nil {
-		for _, dep := range bi.Deps {
+		for _, dep := range bi.Deps { // notest
 			if strings.HasPrefix(dep.Path, "github.com/descope/go-sdk/descope") {
 				sdkInfo.version = dep.Version
 				sdkInfo.sha = dep.Sum

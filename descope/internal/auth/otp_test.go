@@ -24,7 +24,7 @@ func TestValidEmailSignInEmail(t *testing.T) {
 		assert.EqualValues(t, email, body["loginId"])
 	}))
 	require.NoError(t, err)
-	err = a.OTP().SignIn(descope.MethodEmail, email, nil, nil)
+	_, err = a.OTP().SignIn(descope.MethodEmail, email, nil, nil)
 	require.NoError(t, err)
 }
 
@@ -45,13 +45,14 @@ func TestValidEmailSignInEmailStepup(t *testing.T) {
 		assert.EqualValues(t, "test", bearers[1])
 	}))
 	require.NoError(t, err)
-	err = a.OTP().SignIn(descope.MethodEmail, email, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
+	_, err = a.OTP().SignIn(descope.MethodEmail, email, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
 	require.NoError(t, err)
 }
 
 func TestSignUpEmail(t *testing.T) {
 	email := "test@email.com"
-	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+	maskedEmail := "t***@email.com"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeSignUpURL(descope.MethodEmail), r.URL.RequestURI())
 
 		m, err := readBodyMap(r)
@@ -59,15 +60,21 @@ func TestSignUpEmail(t *testing.T) {
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, email, m["loginId"])
 		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
-	}))
+		resp := MaskedEmailRes{MaskedEmail: maskedEmail}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
 	require.NoError(t, err)
-	err = a.OTP().SignUp(descope.MethodEmail, email, &descope.User{Name: "test"})
+	me, err := a.OTP().SignUp(descope.MethodEmail, email, &descope.User{Name: "test"})
 	require.NoError(t, err)
+	assert.EqualValues(t, maskedEmail, me)
 }
 
 func TestSignUpSMS(t *testing.T) {
 	phone := "943248329844"
-	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+	maskedPhone := "*********44"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeSignUpURL(descope.MethodSMS), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
@@ -75,15 +82,21 @@ func TestSignUpSMS(t *testing.T) {
 		assert.EqualValues(t, phone, body["phone"])
 		assert.EqualValues(t, phone, body["loginId"])
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
-	}))
+		resp := MaskedPhoneRes{MaskedPhone: maskedPhone}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
 	require.NoError(t, err)
-	err = a.OTP().SignUp(descope.MethodSMS, phone, &descope.User{Name: "test"})
+	mp, err := a.OTP().SignUp(descope.MethodSMS, phone, &descope.User{Name: "test"})
 	require.NoError(t, err)
+	require.EqualValues(t, maskedPhone, mp)
 }
 
 func TestSignUpWhatsApp(t *testing.T) {
 	phone := "943248329844"
-	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+	maskedPhone := "*********44"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeSignUpURL(descope.MethodWhatsApp), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
@@ -91,10 +104,15 @@ func TestSignUpWhatsApp(t *testing.T) {
 		assert.EqualValues(t, phone, body["whatsapp"])
 		assert.EqualValues(t, phone, body["loginId"])
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
-	}))
+		resp := MaskedPhoneRes{MaskedPhone: maskedPhone}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
 	require.NoError(t, err)
-	err = a.OTP().SignUp(descope.MethodWhatsApp, phone, &descope.User{Name: "test"})
+	mp, err := a.OTP().SignUp(descope.MethodWhatsApp, phone, &descope.User{Name: "test"})
 	require.NoError(t, err)
+	require.EqualValues(t, maskedPhone, mp)
 }
 
 func TestSignUpOrInWhatsApp(t *testing.T) {
@@ -108,7 +126,7 @@ func TestSignUpOrInWhatsApp(t *testing.T) {
 		assert.Nil(t, body["user"])
 	}))
 	require.NoError(t, err)
-	err = a.OTP().SignUpOrIn(descope.MethodWhatsApp, loginID)
+	_, err = a.OTP().SignUpOrIn(descope.MethodWhatsApp, loginID)
 	require.NoError(t, err)
 }
 
@@ -123,7 +141,7 @@ func TestSignUpOrInSMS(t *testing.T) {
 		assert.Nil(t, body["user"])
 	}))
 	require.NoError(t, err)
-	err = a.OTP().SignUpOrIn(descope.MethodSMS, loginID)
+	_, err = a.OTP().SignUpOrIn(descope.MethodSMS, loginID)
 	require.NoError(t, err)
 }
 
@@ -138,7 +156,7 @@ func TestSignUpOrInEmail(t *testing.T) {
 		assert.Nil(t, body["user"])
 	}))
 	require.NoError(t, err)
-	err = a.OTP().SignUpOrIn(descope.MethodEmail, loginID)
+	_, err = a.OTP().SignUpOrIn(descope.MethodEmail, loginID)
 	require.NoError(t, err)
 }
 
@@ -146,7 +164,7 @@ func TestEmptyEmailSignIn(t *testing.T) {
 	email := ""
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.OTP().SignIn(descope.MethodEmail, email, nil, nil)
+	_, err = a.OTP().SignIn(descope.MethodEmail, email, nil, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
@@ -155,7 +173,7 @@ func TestEmptyEmailSignUpOrIn(t *testing.T) {
 	email := ""
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.OTP().SignUpOrIn(descope.MethodEmail, email)
+	_, err = a.OTP().SignUpOrIn(descope.MethodEmail, email)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
@@ -164,7 +182,7 @@ func TestInvalidEmailSignUp(t *testing.T) {
 	email := "+8222941449"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.OTP().SignUp(descope.MethodEmail, email, nil)
+	_, err = a.OTP().SignUp(descope.MethodEmail, email, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
@@ -173,7 +191,7 @@ func TestInvalidSignInStepupNoJWT(t *testing.T) {
 	phone := "+8222941449"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.OTP().SignIn(descope.MethodSMS, phone, nil, &descope.LoginOptions{Stepup: true})
+	_, err = a.OTP().SignIn(descope.MethodSMS, phone, nil, &descope.LoginOptions{Stepup: true})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidStepUpJWT)
 }
@@ -352,7 +370,8 @@ func TestVerifyCodeEmailResponseNil(t *testing.T) {
 func TestUpdateEmailOTP(t *testing.T) {
 	loginID := "943248329844"
 	email := "test@test.com"
-	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+	maskedEmail := "t***@test.com"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeUpdateUserEmailOTP(), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
@@ -362,12 +381,17 @@ func TestUpdateEmailOTP(t *testing.T) {
 		u, p := getProjectAndJwt(r)
 		assert.NotEmpty(t, u)
 		assert.NotEmpty(t, p)
-	}))
+		resp := MaskedEmailRes{MaskedEmail: maskedEmail}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	err = a.OTP().UpdateUserEmail(loginID, email, r)
+	me, err := a.OTP().UpdateUserEmail(loginID, email, r)
 	require.NoError(t, err)
+	require.EqualValues(t, maskedEmail, me)
 }
 
 func TestUpdateEmailOTPFailures(t *testing.T) {
@@ -376,19 +400,19 @@ func TestUpdateEmailOTPFailures(t *testing.T) {
 
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.OTP().UpdateUserEmail("", "email", r)
+	_, err = a.OTP().UpdateUserEmail("", "email", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "loginID"))
-	err = a.OTP().UpdateUserEmail("id", "", r)
+	_, err = a.OTP().UpdateUserEmail("id", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "email"))
-	err = a.OTP().UpdateUserEmail("id", "email", r)
+	_, err = a.OTP().UpdateUserEmail("id", "email", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "email"))
 
 	r = &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: "somename", Value: jwtTokenValid})
-	err = a.OTP().UpdateUserEmail("id", "test@test.com", r)
+	_, err = a.OTP().UpdateUserEmail("id", "test@test.com", r)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }
@@ -396,7 +420,8 @@ func TestUpdateEmailOTPFailures(t *testing.T) {
 func TestUpdatePhoneOTP(t *testing.T) {
 	loginID := "943248329844"
 	phone := "+111111111111"
-	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+	maskedPhone := "+*******111"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeUpdateUserPhoneOTP(descope.MethodSMS), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
@@ -406,12 +431,18 @@ func TestUpdatePhoneOTP(t *testing.T) {
 		u, p := getProjectAndJwt(r)
 		assert.NotEmpty(t, u)
 		assert.NotEmpty(t, p)
-	}))
+		resp := MaskedPhoneRes{MaskedPhone: maskedPhone}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	err = a.OTP().UpdateUserPhone(descope.MethodSMS, loginID, phone, r)
+	mp, err := a.OTP().UpdateUserPhone(descope.MethodSMS, loginID, phone, r)
 	require.NoError(t, err)
+	require.EqualValues(t, maskedPhone, mp)
+
 }
 
 func TestUpdatePhoneOTPFailures(t *testing.T) {
@@ -419,21 +450,21 @@ func TestUpdatePhoneOTPFailures(t *testing.T) {
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.OTP().UpdateUserPhone(descope.MethodSMS, "", "+11111111111", r)
+	_, err = a.OTP().UpdateUserPhone(descope.MethodSMS, "", "+11111111111", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "loginID"))
-	err = a.OTP().UpdateUserPhone(descope.MethodSMS, "id", "", r)
+	_, err = a.OTP().UpdateUserPhone(descope.MethodSMS, "id", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "phone"))
-	err = a.OTP().UpdateUserPhone(descope.MethodSMS, "id", "aaaaa", r)
+	_, err = a.OTP().UpdateUserPhone(descope.MethodSMS, "id", "aaaaa", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "phone"))
-	err = a.OTP().UpdateUserPhone(descope.MethodEmail, "id", "+11111111111", r)
+	_, err = a.OTP().UpdateUserPhone(descope.MethodEmail, "id", "+11111111111", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "method"))
 	r = &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: "somename", Value: jwtTokenValid})
-	err = a.OTP().UpdateUserPhone(descope.MethodSMS, "id", "+11111111111", r)
+	_, err = a.OTP().UpdateUserPhone(descope.MethodSMS, "id", "+11111111111", r)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }

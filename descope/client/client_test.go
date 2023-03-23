@@ -42,6 +42,21 @@ func TestEnvVariablePublicKey(t *testing.T) {
 	assert.NotNil(t, a.Management)
 }
 
+func TestEnvVariableManagementKey(t *testing.T) {
+	expectedManagementKey := "test"
+	err := os.Setenv(descope.EnvironmentVariableManagementKey, expectedManagementKey)
+	defer func() {
+		err = os.Setenv(descope.EnvironmentVariableManagementKey, "")
+		require.NoError(t, err)
+	}()
+	require.NoError(t, err)
+	a, err := NewWithConfig(&Config{ProjectID: "a"})
+	require.NoError(t, err)
+	assert.EqualValues(t, expectedManagementKey, a.config.ManagementKey)
+	assert.NotNil(t, a.Auth)
+	assert.NotNil(t, a.Management)
+}
+
 func TestConcurrentClients(t *testing.T) {
 	// This test should be run with the 'race' flag, to ensure that
 	// creating two client in a concurrent manner is safe
@@ -55,7 +70,7 @@ func TestConcurrentClients(t *testing.T) {
 
 	// SignUpOrIn is called to trigger logging, to ensure it is safe
 	// during a concurrent creation of another client
-	_ = c.Auth.OTP().SignUpOrIn(descope.MethodEmail, "test@test.com")
+	_, _ = c.Auth.OTP().SignUpOrIn(descope.MethodEmail, "test@test.com")
 }
 
 func TestEmptyProjectID(t *testing.T) {

@@ -34,6 +34,18 @@ type WebAuthnFinishRequest struct {
 	Response      string `json:"response,omitempty"`
 }
 
+// PasswordPolicy - represents the rules for valid passwords configured in the policy
+// in the Descope console. This can be used to implement client-side validation of new
+// user passwords for a better user experience. Either way, the comprehensive
+// policy is always enforced by Descope on the server side.
+type PasswordPolicy struct {
+	MinLength       int32 `json:"minLength,omitempty"`
+	Lowercase       bool  `json:"lowercase,omitempty"`
+	Uppercase       bool  `json:"uppercase,omitempty"`
+	Number          bool  `json:"number,omitempty"`
+	NonAlphanumeric bool  `json:"nonAlphanumeric,omitempty"`
+}
+
 type AuthFactor string
 
 const (
@@ -137,8 +149,9 @@ type JWTResponse struct {
 }
 
 type EnchantedLinkResponse struct {
-	PendingRef string `json:"pendingRef,omitempty"` // Pending referral code used to poll enchanted link authentication status
-	LinkID     string `json:"linkId,omitempty"`     // Link id, on which link the user should click
+	PendingRef  string `json:"pendingRef,omitempty"`  // Pending referral code used to poll enchanted link authentication status
+	LinkID      string `json:"linkId,omitempty"`      // Link id, on which link the user should click
+	MaskedEmail string `json:"maskedEmail,omitempty"` // Masked email to which the email was sent
 }
 
 func NewAuthenticationInfo(jRes *JWTResponse, sessionToken, refreshToken *Token) *AuthenticationInfo {

@@ -31,11 +31,6 @@ type authenticationWebAuthnSignInRequestBody struct {
 	LoginOptions *descope.LoginOptions `json:"loginOptions,omitempty"`
 }
 
-type authenticationWebAuthnSignUpOrInRequestBody struct {
-	LoginID string `json:"loginId,omitempty"`
-	Origin  string `json:"origin"`
-}
-
 type authenticationWebAuthnAddDeviceRequestBody struct {
 	LoginID string `json:"loginId,omitempty"`
 	Origin  string `json:"origin"`
@@ -50,6 +45,22 @@ type authenticationPasswordSignUpRequestBody struct {
 type authenticationPasswordSignInRequestBody struct {
 	LoginID  string `json:"loginId,omitempty"`
 	Password string `json:"password"`
+}
+
+type authenticationPasswordResetRequestBody struct {
+	LoginID     string `json:"loginId,omitempty"`
+	RedirectURL string `json:"redirectUrl,omitempty"`
+}
+
+type authenticationPasswordUpdateRequestBody struct {
+	LoginID     string `json:"loginId,omitempty"`
+	NewPassword string `json:"newPassword,omitempty"`
+}
+
+type authenticationPasswordReplaceRequestBody struct {
+	LoginID     string `json:"loginId,omitempty"`
+	OldPassword string `json:"oldPassword,omitempty"`
+	NewPassword string `json:"newPassword,omitempty"`
 }
 
 type authenticationVerifyRequestBody struct {

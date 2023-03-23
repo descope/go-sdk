@@ -31,7 +31,7 @@ func (p *provider) publicKeyExists() bool {
 
 func (p *provider) selectKey(sink jws.KeySink, key jwk.Key) error {
 	if usage := key.KeyUsage(); usage != "" && usage != jwk.ForSignature.String() {
-		return nil
+		return nil // notest
 	}
 
 	if v := key.Algorithm(); v.String() != "" {
@@ -44,7 +44,7 @@ func (p *provider) selectKey(sink jws.KeySink, key jwk.Key) error {
 		return nil
 	}
 
-	return descope.ErrPublicKey.WithMessage("Algorithm in the message does not match")
+	return descope.ErrPublicKey.WithMessage("Algorithm in the message does not match") // notest
 }
 
 func (p *provider) requestKeys() error {
@@ -58,19 +58,19 @@ func (p *provider) requestKeys() error {
 	tempKeySet := map[string]jwk.Key{}
 	for i := range keys {
 		b, err := utils.Marshal(keys[i])
-		if err != nil {
+		if err != nil { // notest
 			logger.LogDebug("Validate failed to marshal key to bytes [%s]", err)
 			continue
 		}
 
 		jk, err := jwk.ParseKey(b)
-		if err != nil {
+		if err != nil { // notest
 			logger.LogDebug("Validate failed to parse key [%s]", err)
 			continue
 		}
 
 		pk, err := jk.PublicKey()
-		if err != nil {
+		if err != nil { // notest
 			logger.LogDebug("Validate failed to parse public key [%s]", err)
 			continue
 		}

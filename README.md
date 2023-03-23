@@ -50,7 +50,7 @@ user := &descope.User{
     Phone: "212-555-1234",
     Email: loginID,
 }
-err := descopeClient.Auth.OTP().SignUp(descope.MethodEmail, loginID, user)
+maskedAddress, err := descopeClient.Auth.OTP().SignUp(descope.MethodEmail, loginID, user)
 if err != nil {
     if errors.Is(err, descope.ErrUserAlreadyExists) {
         // user already exists with this loginID
@@ -89,7 +89,7 @@ The user can either `sign up`, `sign in` or `sign up or in`
 ```go
 // If configured globally, the redirect URI is optional. If provided however, it will be used
 // instead of any global configuration
-err := descopeClient.Auth.MagicLink().SignUpOrIn(descope.MethodEmail, "desmond@descope.com", "http://myapp.com/verify-magic-link")
+maskedAddress, err := descopeClient.Auth.MagicLink().SignUpOrIn(descope.MethodEmail, "desmond@descope.com", "http://myapp.com/verify-magic-link")
 if err {
     // handle error
 }
@@ -277,9 +277,10 @@ The session and refresh JWTs should be returned to the caller, and passed with e
 
 ### Passwords
 
-The user can also authenticate with a password, though it's recommended to prefer
-passwordless authenticator methods if possible. Sign up requires providing a valid
-password that meets all the requirements configured in the Descope console.
+The user can also authenticate with a password, though it's recommended to
+prefer passwordless authentication methods if possible. Sign up requires the
+caller to provide a valid password that meets all the requirements configured
+for the [password authentication method](https://app.descope.com/settings/authentication/password) in the Descope console.
 
 ```go
 // Every user must have a loginID. All other user information is optional
@@ -307,6 +308,40 @@ if err != nil {
 ```
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
+
+In case the user needs to update their password, one of two methods are available: Resetting their password or replacing their password
+
+**Changing Passwords**
+
+_NOTE: SendPasswordReset will only work if the user has a validated email address. Otherwise password reset prompts cannot be sent._
+
+In the [password authentication method](https://app.descope.com/settings/authentication/password) in the Descope console, it is possible to define which alternative authentication method can be used in order to authenticate the user, in order to reset and update their password.
+
+```go
+// Start the reset process by sending a password reset prompt. In this example we'll assume
+// that magic link is configured as the reset method. The optional redirect URL is used in the
+// same way as in regular magic link authentication.
+loginID := "desmond@descope.com"
+redirectURL := "https://myapp.com/password-reset"
+err := descopeClient.Auth.Password().SendPasswordReset(loginID, redirectURL)
+```
+
+The magic link, in this case, must then be verified like any other magic link (see the [magic link section](#magic-link) for more details). However, after verifying the user, it is expected
+to allow them to provide a new password instead of the old one. Since the user is now authenticated, this is possible via:
+
+```go
+// The request (r) is required to make sure the user is authenticated.
+err := descopeClient.Auth.Password().UpdateUserPassword(loginID, newPassword, r)
+```
+
+`UpdateUserPassword` can always be called when the user is authenticated and has a valid session.
+
+Alternatively, it is also possible to replace an existing active password with a new one.
+
+```go
+// Replaces the user's current password with a new one
+err := descopeClient.Auth.Password().ReplaceUserPassword(loginID, oldPassword, newPassword)
+```
 
 ### Session Validation
 

@@ -33,11 +33,11 @@ func TestSignInMagicLinkEmptyLoginID(t *testing.T) {
 	email := ""
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.MagicLink().SignIn(descope.MethodEmail, email, "", nil, nil)
+	_, err = a.MagicLink().SignIn(descope.MethodEmail, email, "", nil, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 
-	err = a.MagicLink().SignIn(descope.MethodEmail, email, "http://test.me", nil, nil)
+	_, err = a.MagicLink().SignIn(descope.MethodEmail, email, "http://test.me", nil, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
@@ -46,7 +46,7 @@ func TestSignInMagicLinkStepupNoJWT(t *testing.T) {
 	email := "e@e.com"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.MagicLink().SignIn(descope.MethodEmail, email, "", nil, &descope.LoginOptions{Stepup: true})
+	_, err = a.MagicLink().SignIn(descope.MethodEmail, email, "", nil, &descope.LoginOptions{Stepup: true})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidStepUpJWT)
 }
@@ -54,24 +54,29 @@ func TestSignInMagicLinkStepupNoJWT(t *testing.T) {
 func TestSignInMagicLinkEmail(t *testing.T) {
 	email := "test@email.com"
 	uri := "http://test.me"
-
-	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+	maskedEmail := "t***@email.com"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeMagicLinkSignInURL(descope.MethodEmail), r.URL.RequestURI())
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, email, body["loginId"])
 		assert.EqualValues(t, uri, body["URI"])
-	}))
+		resp := MaskedEmailRes{MaskedEmail: maskedEmail}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
 	require.NoError(t, err)
-	err = a.MagicLink().SignIn(descope.MethodEmail, email, uri, nil, nil)
+	me, err := a.MagicLink().SignIn(descope.MethodEmail, email, uri, nil, nil)
 	require.NoError(t, err)
+	require.EqualValues(t, maskedEmail, me)
 }
 
 func TestSignInMagicLinkEmailLoginOptions(t *testing.T) {
 	email := "test@email.com"
 	uri := "http://test.me"
-
-	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+	maskedEmail := "t***@email.com"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeMagicLinkSignInURL(descope.MethodEmail), r.URL.RequestURI())
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
@@ -85,17 +90,22 @@ func TestSignInMagicLinkEmailLoginOptions(t *testing.T) {
 		bearers := strings.Split(bearer, ":")
 		require.Len(t, bearers, 2)
 		assert.EqualValues(t, "test", bearers[1])
-	}))
+		resp := MaskedEmailRes{MaskedEmail: maskedEmail}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
 	require.NoError(t, err)
-	err = a.MagicLink().SignIn(descope.MethodEmail, email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
+	me, err := a.MagicLink().SignIn(descope.MethodEmail, email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
 	require.NoError(t, err)
+	require.EqualValues(t, maskedEmail, me)
 }
 
 func TestSignInMagicLinkEmailLoginOptionsMFA(t *testing.T) {
 	email := "test@email.com"
 	uri := "http://test.me"
 
-	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeMagicLinkSignInURL(descope.MethodEmail), r.URL.RequestURI())
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
@@ -109,9 +119,13 @@ func TestSignInMagicLinkEmailLoginOptionsMFA(t *testing.T) {
 		bearers := strings.Split(bearer, ":")
 		require.Len(t, bearers, 2)
 		assert.EqualValues(t, "test", bearers[1])
-	}))
+		resp := MaskedEmailRes{MaskedEmail: "a"}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
 	require.NoError(t, err)
-	err = a.MagicLink().SignIn(descope.MethodEmail, email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{MFA: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
+	_, err = a.MagicLink().SignIn(descope.MethodEmail, email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{MFA: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
 	require.NoError(t, err)
 }
 
@@ -119,11 +133,11 @@ func TestInvalidPhoneSignUpSMS(t *testing.T) {
 	phone := "thisisemail@af.com"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.MagicLink().SignUp(descope.MethodSMS, phone, "", &descope.User{Name: "test"})
+	_, err = a.MagicLink().SignUp(descope.MethodSMS, phone, "", &descope.User{Name: "test"})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 
-	err = a.MagicLink().SignUp(descope.MethodSMS, phone, "http://test.me", &descope.User{Name: "test"})
+	_, err = a.MagicLink().SignUp(descope.MethodSMS, phone, "http://test.me", &descope.User{Name: "test"})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
@@ -132,11 +146,11 @@ func TestInvalidPhoneSignUpWhatsApp(t *testing.T) {
 	phone := "thisisemail@af.com"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.MagicLink().SignUp(descope.MethodSMS, phone, "", &descope.User{Name: "test"})
+	_, err = a.MagicLink().SignUp(descope.MethodSMS, phone, "", &descope.User{Name: "test"})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 
-	err = a.MagicLink().SignUp(descope.MethodSMS, phone, "http://test.me", &descope.User{Name: "test"})
+	_, err = a.MagicLink().SignUp(descope.MethodSMS, phone, "http://test.me", &descope.User{Name: "test"})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
@@ -145,11 +159,11 @@ func TestInvalidEmailSignUpEmail(t *testing.T) {
 	email := "943248329844"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.MagicLink().SignUp(descope.MethodEmail, email, "", &descope.User{Name: "test"})
+	_, err = a.MagicLink().SignUp(descope.MethodEmail, email, "", &descope.User{Name: "test"})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 
-	err = a.MagicLink().SignUp(descope.MethodEmail, email, "http://test.me", &descope.User{Name: "test"})
+	_, err = a.MagicLink().SignUp(descope.MethodEmail, email, "http://test.me", &descope.User{Name: "test"})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
@@ -157,7 +171,8 @@ func TestInvalidEmailSignUpEmail(t *testing.T) {
 func TestSignUpMagicLinkEmail(t *testing.T) {
 	email := "test@email.com"
 	uri := "http://test.me"
-	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+	maskedEmail := "t***@email.com"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeMagicLinkSignUpURL(descope.MethodEmail), r.URL.RequestURI())
 
 		m, err := readBodyMap(r)
@@ -166,16 +181,21 @@ func TestSignUpMagicLinkEmail(t *testing.T) {
 		assert.EqualValues(t, uri, m["URI"])
 		assert.EqualValues(t, email, m["loginId"])
 		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
-	}))
+		resp := MaskedEmailRes{MaskedEmail: maskedEmail}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
 	require.NoError(t, err)
-	err = a.MagicLink().SignUp(descope.MethodEmail, email, uri, &descope.User{Name: "test"})
+	me, err := a.MagicLink().SignUp(descope.MethodEmail, email, uri, &descope.User{Name: "test"})
 	require.NoError(t, err)
+	require.EqualValues(t, maskedEmail, me)
 }
 
 func TestSignUpMagicLinkEmailNoUser(t *testing.T) {
 	email := "test@email.com"
 	uri := "http://test.me"
-	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeMagicLinkSignUpURL(descope.MethodEmail), r.URL.RequestURI())
 
 		m, err := readBodyMap(r)
@@ -184,16 +204,21 @@ func TestSignUpMagicLinkEmailNoUser(t *testing.T) {
 		assert.EqualValues(t, uri, m["URI"])
 		assert.EqualValues(t, email, m["loginId"])
 		assert.EqualValues(t, email, m["user"].(map[string]interface{})["email"])
-	}))
+		resp := MaskedEmailRes{MaskedEmail: "t"}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
 	require.NoError(t, err)
-	err = a.MagicLink().SignUp(descope.MethodEmail, email, uri, nil)
+	_, err = a.MagicLink().SignUp(descope.MethodEmail, email, uri, nil)
 	require.NoError(t, err)
 }
 
 func TestSignUpOrInMagicLinkEmail(t *testing.T) {
 	email := "test@email.com"
 	uri := "http://test.me"
-	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+	maskedEmail := "t***@email.com"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeMagicLinkSignUpOrInURL(descope.MethodEmail), r.URL.RequestURI())
 
 		m, err := readBodyMap(r)
@@ -201,24 +226,30 @@ func TestSignUpOrInMagicLinkEmail(t *testing.T) {
 		assert.EqualValues(t, email, m["loginId"])
 		assert.EqualValues(t, uri, m["URI"])
 		assert.Nil(t, m["user"])
-	}))
+		resp := MaskedEmailRes{MaskedEmail: maskedEmail}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
 	require.NoError(t, err)
-	err = a.MagicLink().SignUpOrIn(descope.MethodEmail, email, uri)
+	me, err := a.MagicLink().SignUpOrIn(descope.MethodEmail, email, uri)
 	require.NoError(t, err)
+	require.EqualValues(t, maskedEmail, me)
 }
 
 func TestSignUpOrInMagicLinkNoLoginID(t *testing.T) {
 	uri := "http://test.me"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.MagicLink().SignUpOrIn(descope.MethodSMS, "", uri)
+	_, err = a.MagicLink().SignUpOrIn(descope.MethodSMS, "", uri)
 	require.Error(t, err)
 }
 
 func TestSignUpOrInMagicLinkSMS(t *testing.T) {
 	email := "test@email.com"
 	uri := "http://test.me"
-	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+	phone := "*****1111"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeMagicLinkSignUpOrInURL(descope.MethodSMS), r.URL.RequestURI())
 
 		m, err := readBodyMap(r)
@@ -226,16 +257,22 @@ func TestSignUpOrInMagicLinkSMS(t *testing.T) {
 		assert.EqualValues(t, email, m["loginId"])
 		assert.EqualValues(t, uri, m["URI"])
 		assert.Nil(t, m["user"])
-	}))
+		resp := MaskedPhoneRes{MaskedPhone: phone}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
 	require.NoError(t, err)
-	err = a.MagicLink().SignUpOrIn(descope.MethodSMS, email, uri)
+	mp, err := a.MagicLink().SignUpOrIn(descope.MethodSMS, email, uri)
 	require.NoError(t, err)
+	require.EqualValues(t, phone, mp)
 }
 
 func TestSignUpOrInMagicLinkWhatsapp(t *testing.T) {
 	email := "test@email.com"
 	uri := "http://test.me"
-	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+	phone := "*****1111"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeMagicLinkSignUpOrInURL(descope.MethodWhatsApp), r.URL.RequestURI())
 
 		m, err := readBodyMap(r)
@@ -243,10 +280,15 @@ func TestSignUpOrInMagicLinkWhatsapp(t *testing.T) {
 		assert.EqualValues(t, email, m["loginId"])
 		assert.EqualValues(t, uri, m["URI"])
 		assert.Nil(t, m["user"])
-	}))
+		resp := MaskedPhoneRes{MaskedPhone: phone}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
 	require.NoError(t, err)
-	err = a.MagicLink().SignUpOrIn(descope.MethodWhatsApp, email, uri)
+	mp, err := a.MagicLink().SignUpOrIn(descope.MethodWhatsApp, email, uri)
 	require.NoError(t, err)
+	require.EqualValues(t, phone, mp)
 }
 
 func TestSignUpMagicLinkSMS(t *testing.T) {
@@ -263,7 +305,7 @@ func TestSignUpMagicLinkSMS(t *testing.T) {
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
-	err = a.MagicLink().SignUp(descope.MethodSMS, phone, uri, &descope.User{Name: "test"})
+	_, err = a.MagicLink().SignUp(descope.MethodSMS, phone, uri, &descope.User{Name: "test"})
 	require.NoError(t, err)
 }
 
@@ -281,7 +323,7 @@ func TestSignUpMagicLinkWhatsApp(t *testing.T) {
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
-	err = a.MagicLink().SignUp(descope.MethodWhatsApp, phone, uri, &descope.User{Name: "test"})
+	_, err = a.MagicLink().SignUp(descope.MethodWhatsApp, phone, uri, &descope.User{Name: "test"})
 	require.NoError(t, err)
 }
 
@@ -344,8 +386,9 @@ func TestVerifyMagicLinkCodeNoSession(t *testing.T) {
 func TestUpdateUserEmail(t *testing.T) {
 	loginID := "943248329844"
 	email := "test@test.com"
+	maskedEmail := "t***@test.com"
 	uri := "https://some.url.com"
-	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeUpdateUserEmailMagicLink(), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
@@ -357,12 +400,18 @@ func TestUpdateUserEmail(t *testing.T) {
 		u, p := getProjectAndJwt(r)
 		assert.NotEmpty(t, u)
 		assert.NotEmpty(t, p)
-	}))
+		resp := MaskedEmailRes{MaskedEmail: maskedEmail}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	err = a.MagicLink().UpdateUserEmail(loginID, email, uri, r)
+	me, err := a.MagicLink().UpdateUserEmail(loginID, email, uri, r)
 	require.NoError(t, err)
+	require.EqualValues(t, maskedEmail, me)
 }
 
 func TestUpdateEmailMagicLinkFailures(t *testing.T) {
@@ -370,13 +419,13 @@ func TestUpdateEmailMagicLinkFailures(t *testing.T) {
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.MagicLink().UpdateUserEmail("", "email@email.com", "", r)
+	_, err = a.MagicLink().UpdateUserEmail("", "email@email.com", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "loginID"))
-	err = a.MagicLink().UpdateUserEmail("id", "", "", r)
+	_, err = a.MagicLink().UpdateUserEmail("id", "", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "email"))
-	err = a.MagicLink().UpdateUserEmail("id", "email", "", r)
+	_, err = a.MagicLink().UpdateUserEmail("id", "email", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "email"))
 }
@@ -384,8 +433,9 @@ func TestUpdateEmailMagicLinkFailures(t *testing.T) {
 func TestUpdateUserPhone(t *testing.T) {
 	loginID := "943248329844"
 	phone := "+111111111111"
+	maskedPhone := "*****1111"
 	uri := "https://some.url.com"
-	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeUpdateUserPhoneMagiclink(descope.MethodSMS), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
@@ -397,12 +447,17 @@ func TestUpdateUserPhone(t *testing.T) {
 		u, p := getProjectAndJwt(r)
 		assert.NotEmpty(t, u)
 		assert.NotEmpty(t, p)
-	}))
+		resp := MaskedPhoneRes{MaskedPhone: maskedPhone}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, loginID, phone, uri, r)
+	mp, err := a.MagicLink().UpdateUserPhone(descope.MethodSMS, loginID, phone, uri, r)
 	require.NoError(t, err)
+	require.EqualValues(t, maskedPhone, mp)
 }
 
 func TestUpdatePhoneMagicLinkFailures(t *testing.T) {
@@ -410,21 +465,21 @@ func TestUpdatePhoneMagicLinkFailures(t *testing.T) {
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "", "+1111111111", "", r)
+	_, err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "", "+1111111111", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "loginID"))
-	err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "id", "", "", r)
+	_, err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "id", "", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "phone"))
-	err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "id", "phone", "", r)
+	_, err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "id", "phone", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "phone"))
-	err = a.MagicLink().UpdateUserPhone(descope.MethodEmail, "id", "+1111111111", "", r)
+	_, err = a.MagicLink().UpdateUserPhone(descope.MethodEmail, "id", "+1111111111", "", r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "method"))
 	r = &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: "somename", Value: jwtTokenValid})
-	err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "id", "+111111111111", "", r)
+	_, err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "id", "+111111111111", "", r)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }

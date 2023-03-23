@@ -123,7 +123,7 @@ func TestSignUpFinish(t *testing.T) {
 func TestSignUpOrInStart(t *testing.T) {
 	expectedResponse := descope.WebAuthnTransactionResponse{TransactionID: "a", Create: true}
 	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
-		req := authenticationWebAuthnSignUpOrInRequestBody{}
+		req := authenticationWebAuthnSignInRequestBody{}
 		err := readBody(r, &req)
 		require.NoError(t, err)
 		assert.EqualValues(t, "test@test.com", req.LoginID)

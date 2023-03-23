@@ -43,7 +43,10 @@ const (
 )
 
 var (
-	mockAuthSessionCookie = &http.Cookie{Value: jwtTokenValid, Name: descope.SessionCookieName}
+	mockAuthSessionCookie        = &http.Cookie{Value: jwtTokenValid, Name: descope.SessionCookieName}
+	mockAuthRefreshCookie        = &http.Cookie{Value: jwtTokenValid, Name: descope.RefreshCookieName}
+	mockAuthInvalidSessionCookie = &http.Cookie{Value: jwtTokenExpired, Name: descope.SessionCookieName}
+	mockAuthInvalidRefreshCookie = &http.Cookie{Value: jwtTokenExpired, Name: descope.RefreshCookieName}
 
 	mockAuthSessionBody             = fmt.Sprintf(`{"sessionJwt": "%s", "refreshJwt": "%s", "cookiePath": "%s", "cookieDomain": "%s" }`, jwtTokenValid, jwtRTokenValid, "/my-path", "my-domain")
 	mockAuthSessionBodyNoRefreshJwt = fmt.Sprintf(`{"sessionJwt": "%s", "cookiePath": "%s", "cookieDomain": "%s" }`, jwtTokenValid, "/my-path", "my-domain")
@@ -142,8 +145,9 @@ func TestVerifyDeliveryMethod(t *testing.T) {
 	require.NoError(t, err)
 	err = a.verifyDeliveryMethod(descope.MethodEmail, "", &descope.User{})
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
-
 	err = a.verifyDeliveryMethod(descope.MethodSMS, "abc@notaphone.com", &descope.User{})
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+	err = a.verifyDeliveryMethod(descope.MethodWhatsApp, "abc@notaphone.com", &descope.User{})
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 
 	u := &descope.User{}
@@ -159,9 +163,14 @@ func TestVerifyDeliveryMethod(t *testing.T) {
 	err = a.verifyDeliveryMethod(descope.MethodSMS, "+19999999999", u)
 	assert.Nil(t, err)
 	assert.NotEmpty(t, u.Phone)
+	err = a.verifyDeliveryMethod(descope.MethodWhatsApp, "+19999999999", u)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, u.Phone)
 
 	u = &descope.User{Phone: "+19999999999"}
 	err = a.verifyDeliveryMethod(descope.MethodSMS, "my username", u)
+	assert.Nil(t, err)
+	err = a.verifyDeliveryMethod(descope.MethodWhatsApp, "my username", u)
 	assert.Nil(t, err)
 }
 
@@ -451,6 +460,19 @@ func TestValidateSessionFailWithInvalidKey(t *testing.T) {
 	require.Zero(t, count)
 }
 
+func TestValidateSessionFailWithInvalidAlgorithm(t *testing.T) {
+	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, mocks.Do(func(r *http.Request) (*http.Response, error) {
+		badKey := strings.ReplaceAll(publicKey, "ES384", "ES123")
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf(`{"keys":[%s]}`, badKey)))}, nil
+	}))
+	require.NoError(t, err)
+	ok, _, err := a.validateAndRefreshSessionWithTokens(jwtTokenValid, jwtTokenValid, nil)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, descope.ErrPublicKey)
+	assert.Contains(t, err.Error(), "Invalid signature algorithm")
+	require.False(t, ok)
+}
+
 func TestValidateSessionRequest(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
@@ -543,6 +565,9 @@ func TestLogout(t *testing.T) {
 	assert.EqualValues(t, descope.RefreshCookieName, c2.Name)
 	assert.EqualValues(t, "/my-path", c2.Path)
 	assert.EqualValues(t, "my-domain", c2.Domain)
+
+	err = a.Logout(request, nil)
+	require.NoError(t, err)
 }
 
 func TestLogoutAll(t *testing.T) {
@@ -568,6 +593,9 @@ func TestLogoutAll(t *testing.T) {
 	assert.EqualValues(t, descope.RefreshCookieName, c2.Name)
 	assert.EqualValues(t, "/my-path", c2.Path)
 	assert.EqualValues(t, "my-domain", c2.Domain)
+
+	err = a.LogoutAll(request, nil)
+	require.NoError(t, err)
 }
 
 func TestLogoutNoClaims(t *testing.T) {
@@ -721,8 +749,11 @@ func TestExtractTokensEmpty(t *testing.T) {
 func TestExtractTokensInvalid(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	tokens, err := a.extractTokens(&descope.JWTResponse{RefreshJwt: "aaaaa"})
-	require.Error(t, err)
+	tokens, err := a.extractTokens(&descope.JWTResponse{SessionJwt: "aaaaa"})
+	require.ErrorIs(t, err, descope.ErrPublicKey)
+	require.Empty(t, tokens)
+	tokens, err = a.extractTokens(&descope.JWTResponse{RefreshJwt: "aaaaa"})
+	require.ErrorIs(t, err, descope.ErrPublicKey)
 	require.Empty(t, tokens)
 }
 
@@ -795,6 +826,9 @@ func TestValidatePermissions(t *testing.T) {
 	a, err := newTestAuth(nil, DoOkWithBody(nil, ""))
 	require.NoError(t, err)
 
+	require.True(t, a.ValidatePermissions(nil, []string{}))
+	require.False(t, a.ValidatePermissions(nil, []string{"foo"}))
+
 	require.True(t, a.ValidatePermissions(mockAuthorizationToken, []string{}))
 	require.True(t, a.ValidatePermissions(mockAuthorizationToken, []string{"foo"}))
 	require.True(t, a.ValidatePermissions(mockAuthorizationToken, []string{"foo", "bar"}))
@@ -819,6 +853,9 @@ func TestValidatePermissions(t *testing.T) {
 func TestValidateRoles(t *testing.T) {
 	a, err := newTestAuth(nil, DoOkWithBody(nil, ""))
 	require.NoError(t, err)
+
+	require.True(t, a.ValidateRoles(nil, []string{}))
+	require.False(t, a.ValidateRoles(nil, []string{"foo"}))
 
 	require.True(t, a.ValidateRoles(mockAuthorizationToken, []string{}))
 	require.True(t, a.ValidateRoles(mockAuthorizationToken, []string{"abc"}))
@@ -861,7 +898,7 @@ func TestMeNoRequest(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	user, err := a.Me(nil)
-	assert.Error(t, err)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 	assert.Nil(t, user)
 }
 
@@ -870,6 +907,32 @@ func TestMeNoToken(t *testing.T) {
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	user, err := a.Me(request)
-	assert.Error(t, err)
+	assert.ErrorIs(t, err, descope.ErrRefreshToken)
+	assert.ErrorContains(t, err, "Unable to find tokens")
+	assert.Nil(t, user)
+}
+
+func TestMeInvalidToken(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenExpired})
+
+	user, err := a.Me(request)
+	assert.ErrorIs(t, err, descope.ErrRefreshToken)
+	assert.ErrorContains(t, err, "Invalid refresh token")
+	assert.Nil(t, user)
+}
+
+func TestMeEmptyResponse(t *testing.T) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(""))}, nil
+	})
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
+
+	user, err := a.Me(request)
+	assert.ErrorContains(t, err, "JSON input")
 	assert.Nil(t, user)
 }
