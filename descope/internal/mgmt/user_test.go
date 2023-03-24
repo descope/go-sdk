@@ -6,6 +6,7 @@ import (
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/tests/helpers"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,6 +24,7 @@ func TestUserCreateSuccess(t *testing.T) {
 		roleNames := req["roleNames"].([]any)
 		require.Len(t, roleNames, 1)
 		require.Equal(t, "foo", roleNames[0])
+		require.Nil(t, req["test"])
 	}, response))
 	res, err := m.User().Create("abc", "foo@bar.com", "", "", []string{"foo"}, nil)
 	require.NoError(t, err)
@@ -30,6 +32,28 @@ func TestUserCreateSuccess(t *testing.T) {
 	require.Equal(t, "a@b.c", res.Email)
 
 	res, err = m.User().Invite("abc", "foo@bar.com", "", "", []string{"foo"}, nil)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, "a@b.c", res.Email)
+}
+
+func TestUserCreateForTestSuccess(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"email": "a@b.c",
+		}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, "foo@bar.com", req["email"])
+		roleNames := req["roleNames"].([]any)
+		require.Len(t, roleNames, 1)
+		require.Equal(t, "foo", roleNames[0])
+		require.EqualValues(t, true, req["test"])
+	}, response))
+	res, err := m.User().CreateForTest("abc", "foo@bar.com", "", "", []string{"foo"}, nil)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
@@ -88,6 +112,17 @@ func TestUserDeleteSuccess(t *testing.T) {
 	}))
 	err := m.User().Delete("abc")
 	require.NoError(t, err)
+}
+
+func TestDeleteAllTestUsersSuccess(t *testing.T) {
+	visited := false
+	m := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		visited = true
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+	}))
+	err := m.User().DeleteAllTestUsers()
+	require.NoError(t, err)
+	assert.True(t, visited)
 }
 
 func TestUserDeleteError(t *testing.T) {
@@ -580,4 +615,161 @@ func TestUserRemoveTenantRoleError(t *testing.T) {
 	res, err := m.User().RemoveTenantRoles("abc", "123", []string{"foo", "bar"})
 	require.Error(t, err)
 	require.Nil(t, res)
+}
+
+func TestGenerateOTPForTestUserSuccess(t *testing.T) {
+	loginID := "some-id"
+	code := "123456"
+	response := map[string]any{
+		"loginId": loginID,
+		"code":    code,
+	}
+	visited := false
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		visited = true
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, loginID, req["loginId"])
+		require.Equal(t, string(descope.MethodSMS), req["deliveryMethod"])
+	}, response))
+	resCode, err := m.User().GenerateOTPForTestUser(descope.MethodSMS, loginID, nil)
+	require.NoError(t, err)
+	require.NotEmpty(t, resCode)
+	require.True(t, visited)
+	assert.EqualValues(t, code, resCode)
+}
+
+func TestGenerateOTPForTestUserNoLoginID(t *testing.T) {
+	loginID := "some-id"
+	code := "123456"
+	response := map[string]any{
+		"loginId": loginID,
+		"code":    code,
+	}
+	visited := false
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		visited = true
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, loginID, req["loginId"])
+		require.Equal(t, string(descope.MethodSMS), req["deliveryMethod"])
+	}, response))
+	resCode, err := m.User().GenerateOTPForTestUser(descope.MethodSMS, "", nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Contains(t, err.Error(), "loginID")
+	require.Empty(t, resCode)
+	require.False(t, visited)
+}
+
+func TestGenerateMagicLinkForTestUserSuccess(t *testing.T) {
+	loginID := "some-id"
+	URI := "uri"
+	link := "https://link.com?t=123"
+	pendingRef := "pend"
+	response := map[string]any{
+		"loginId":    loginID,
+		"link":       link,
+		"pendingRef": pendingRef,
+	}
+	visited := false
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		visited = true
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, loginID, req["loginId"])
+		require.Equal(t, string(descope.MethodSMS), req["deliveryMethod"])
+		require.Equal(t, URI, req["URI"])
+		require.Equal(t, true, req["crossDevice"])
+	}, response))
+	resLink, err := m.User().GenerateMagicLinkForTestUser(descope.MethodSMS, loginID, URI, true, nil)
+	require.NoError(t, err)
+	require.NotEmpty(t, resLink)
+	require.True(t, visited)
+	assert.EqualValues(t, link, resLink)
+}
+
+func TestGenerateMagicLinkForTestUserNoLoginID(t *testing.T) {
+	loginID := "some-id"
+	URI := "uri"
+	link := "https://link.com?t=123"
+	pendingRef := "pend"
+	response := map[string]any{
+		"loginId":    loginID,
+		"link":       link,
+		"pendingRef": pendingRef,
+	}
+	visited := false
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		visited = true
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, loginID, req["loginId"])
+		require.Equal(t, string(descope.MethodSMS), req["deliveryMethod"])
+		require.Equal(t, URI, req["URI"])
+		require.Equal(t, true, req["crossDevice"])
+	}, response))
+	resLink, err := m.User().GenerateMagicLinkForTestUser(descope.MethodSMS, "", URI, true, nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Contains(t, err.Error(), "loginID")
+	require.Empty(t, resLink)
+	require.False(t, visited)
+}
+
+func TestGenerateEnchantedLinkForTestUserSuccess(t *testing.T) {
+	loginID := "some-id"
+	URI := "uri"
+	link := "https://link.com?t=123"
+	pendingRef := "pend"
+	response := map[string]any{
+		"loginId":    loginID,
+		"link":       link,
+		"pendingRef": pendingRef,
+	}
+	visited := false
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		visited = true
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, loginID, req["loginId"])
+		require.Equal(t, URI, req["URI"])
+	}, response))
+	resLink, resPendingRef, err := m.User().GenerateEnchantedLinkForTestUser(loginID, URI, nil)
+	require.NoError(t, err)
+	require.NotEmpty(t, resLink)
+	require.NotEmpty(t, resPendingRef)
+	require.True(t, visited)
+	assert.EqualValues(t, link, resLink)
+	assert.EqualValues(t, pendingRef, resPendingRef)
+}
+
+func TestGenerateEnchantedLinkForTestUserNoLoginID(t *testing.T) {
+	loginID := "some-id"
+	URI := "uri"
+	link := "https://link.com?t=123"
+	pendingRef := "pend"
+	response := map[string]any{
+		"loginId":    loginID,
+		"link":       link,
+		"pendingRef": pendingRef,
+	}
+	visited := false
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		visited = true
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, loginID, req["loginId"])
+		require.Equal(t, URI, req["URI"])
+	}, response))
+	resLink, resPendingRef, err := m.User().GenerateEnchantedLinkForTestUser("", URI, nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Contains(t, err.Error(), "loginID")
+	require.Empty(t, resLink)
+	require.Empty(t, resPendingRef)
+	require.False(t, visited)
 }
