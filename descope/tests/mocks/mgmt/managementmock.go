@@ -14,6 +14,7 @@ type MockManagement struct {
 	*MockPermission
 	*MockRole
 	*MockGroup
+	*MockFlow
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -46,6 +47,10 @@ func (m *MockManagement) Role() sdk.Role {
 
 func (m *MockManagement) Group() sdk.Group {
 	return m.MockGroup
+}
+
+func (m *MockManagement) Flow() sdk.Flow {
+	return m.MockFlow
 }
 
 // Mock JWT
@@ -546,4 +551,52 @@ func (m *MockGroup) LoadAllGroupMembers(tenantID, groupID string) ([]*descope.Gr
 		m.LoadAllGroupMembersAssert(tenantID, groupID)
 	}
 	return m.LoadAllGroupMembersResponse, m.LoadAllGroupMembersError
+}
+
+// Mock Flows
+
+type MockFlow struct {
+	ExportFlowAssert   func(flowID string)
+	ExportFlowResponse *descope.FlowResponse
+	ExportFlowError    error
+
+	ExportThemeAssert   func()
+	ExportThemeResponse *descope.Theme
+	ExportThemeError    error
+
+	ImportFlowAssert   func(flowID string, flow *descope.Flow, screens []*descope.Screen)
+	ImportFlowResponse *descope.FlowResponse
+	ImportFlowError    error
+
+	ImportThemeAssert   func(theme *descope.Theme)
+	ImportThemeResponse *descope.Theme
+	ImportThemeError    error
+}
+
+func (m *MockFlow) ExportFlow(flowID string) (*descope.FlowResponse, error) {
+	if m.ExportFlowAssert != nil {
+		m.ExportFlowAssert(flowID)
+	}
+	return m.ExportFlowResponse, m.ExportFlowError
+}
+
+func (m *MockFlow) ExportTheme() (*descope.Theme, error) {
+	if m.ExportThemeAssert != nil {
+		m.ExportThemeAssert()
+	}
+	return m.ExportThemeResponse, m.ExportThemeError
+}
+
+func (m *MockFlow) ImportFlow(flowID string, flow *descope.Flow, screens []*descope.Screen) (*descope.FlowResponse, error) {
+	if m.ImportFlowAssert != nil {
+		m.ImportFlowAssert(flowID, flow, screens)
+	}
+	return m.ImportFlowResponse, m.ImportFlowError
+}
+
+func (m *MockFlow) ImportTheme(theme *descope.Theme) (*descope.Theme, error) {
+	if m.ImportThemeAssert != nil {
+		m.ImportThemeAssert(theme)
+	}
+	return m.ImportThemeResponse, m.ImportThemeError
 }

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -232,6 +233,78 @@ func groupAllForTenant(args []string) error {
 	return err
 }
 
+func writeToFile(fileName string, data any) error {
+	b, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(fileName, b, 0644)
+}
+
+func exportFlow(args []string) error {
+	flowID := args[0]
+	res, err := descopeClient.Management.Flow().ExportFlow(flowID)
+	if err != nil {
+		return err
+	}
+	err = writeToFile(fmt.Sprintf("%s.json", flowID), res)
+	if err == nil {
+		fmt.Printf("Found flow [%s] named %s with %d screens\n", res.Flow.ID, res.Flow.Name, len(res.Screens))
+	}
+	return err
+}
+
+func importFlow(args []string) error {
+	fileName := args[0]
+	flowID := args[1]
+	b, err := os.ReadFile(fileName)
+	if err != nil {
+		return err
+	}
+	data := &descope.FlowResponse{}
+	err = json.Unmarshal(b, data)
+	if err != nil {
+		return err
+	}
+
+	res, err := descopeClient.Management.Flow().ImportFlow(flowID, data.Flow, data.Screens)
+	if err == nil {
+		fmt.Printf("Imported flow [%s] named %s with %d screens\n", res.Flow.ID, res.Flow.Name, len(res.Screens))
+	}
+	return err
+}
+
+func importTheme(args []string) error {
+	fileName := args[0]
+	b, err := os.ReadFile(fileName)
+	if err != nil {
+		return err
+	}
+	data := &descope.Theme{}
+	err = json.Unmarshal(b, data)
+	if err != nil {
+		return err
+	}
+
+	_, err = descopeClient.Management.Flow().ImportTheme(data)
+	if err == nil {
+		fmt.Println("Imported theme")
+	}
+	return err
+}
+
+func exportTheme(args []string) error {
+	res, err := descopeClient.Management.Flow().ExportTheme()
+	if err != nil {
+		return err
+	}
+	err = writeToFile("theme.json", res)
+	if err == nil {
+		fmt.Println("Found theme")
+	}
+	return err
+}
+
 func groupAllForMembersUserIDs(args []string) error {
 	tenantID := args[0]
 	userIDs := strings.Split(args[1], ",")
@@ -422,6 +495,25 @@ func main() {
 	})
 
 	addCommand(groupAllForTenant, "group-all-for-tenant <tenantId>", "Load all groups for a given tenant id", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(1)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(exportFlow, "export-flow <flowId>", "Export the flow and screens for a given flow id", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(1)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(importFlow, "import-flow <fileName> <flowId>", "load flow and screens from given fileName and import as flowId", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(2)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(exportTheme, "export-theme", "Export the theme for the project", func(cmd *cobra.Command) {
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(importTheme, "import-theme <fileName>", "Import a theme for the project", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 		cmd.DisableFlagsInUseLine = true
 	})
