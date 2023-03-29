@@ -237,11 +237,11 @@ func (u *user) RemoveTenantRoles(loginID string, tenantID string, roles []string
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) GenerateOTPForTestUser(method descope.DeliveryMethod, loginID string, loginOptions *descope.LoginOptions) (code string, err error) {
+func (u *user) GenerateOTPForTestUser(method descope.DeliveryMethod, loginID string) (code string, err error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
-	req := makeGenerateOTPForTestUserRequestBody(method, loginID, loginOptions)
+	req := makeGenerateOTPForTestUserRequestBody(method, loginID)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserGenerateOTPForTest(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return "", err
@@ -249,11 +249,11 @@ func (u *user) GenerateOTPForTestUser(method descope.DeliveryMethod, loginID str
 	return unmarshalGenerateOTPForTestResponse(res)
 }
 
-func (u *user) GenerateMagicLinkForTestUser(method descope.DeliveryMethod, loginID, URI string, crossDevice bool, loginOptions *descope.LoginOptions) (link string, err error) {
+func (u *user) GenerateMagicLinkForTestUser(method descope.DeliveryMethod, loginID, URI string) (link string, err error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
-	req := makeGenerateMagicLinkForTestUserRequestBody(method, loginID, URI, crossDevice, loginOptions)
+	req := makeGenerateMagicLinkForTestUserRequestBody(method, loginID, URI)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserGenerateMagicLinkForTest(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return "", err
@@ -262,11 +262,11 @@ func (u *user) GenerateMagicLinkForTestUser(method descope.DeliveryMethod, login
 	return link, err
 }
 
-func (u *user) GenerateEnchantedLinkForTestUser(loginID, URI string, loginOptions *descope.LoginOptions) (link, pendingRef string, err error) {
+func (u *user) GenerateEnchantedLinkForTestUser(loginID, URI string) (link, pendingRef string, err error) {
 	if loginID == "" {
 		return "", "", utils.NewInvalidArgumentError("loginID")
 	}
-	req := makeGenerateEnchantedLinkForTestUserRequestBody(loginID, URI, loginOptions)
+	req := makeGenerateEnchantedLinkForTestUserRequestBody(loginID, URI)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserGenerateEnchantedLinkForTest(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return "", "", err
@@ -366,33 +366,29 @@ type generateEnchantedLinkForTestUserRequestBody struct {
 	LoginOptions                    *descope.LoginOptions `json:"loginOptions,omitempty"`
 }
 
-func makeGenerateOTPForTestUserRequestBody(method descope.DeliveryMethod, loginID string, loginOptions *descope.LoginOptions) *generateOTPForTestUserRequestBody {
+func makeGenerateOTPForTestUserRequestBody(method descope.DeliveryMethod, loginID string) *generateOTPForTestUserRequestBody {
 	return &generateOTPForTestUserRequestBody{
 		generateForTestUserRequestBody: &generateForTestUserRequestBody{
-			LoginID:      loginID,
-			LoginOptions: loginOptions,
+			LoginID: loginID,
 		},
 		DeliveryMethod: string(method),
 	}
 }
 
-func makeGenerateMagicLinkForTestUserRequestBody(method descope.DeliveryMethod, loginID, URI string, crossDevice bool, loginOptions *descope.LoginOptions) *generateMagicLinkForTestUserRequestBody {
+func makeGenerateMagicLinkForTestUserRequestBody(method descope.DeliveryMethod, loginID, URI string) *generateMagicLinkForTestUserRequestBody {
 	return &generateMagicLinkForTestUserRequestBody{
 		generateForTestUserRequestBody: &generateForTestUserRequestBody{
-			LoginID:      loginID,
-			LoginOptions: loginOptions,
+			LoginID: loginID,
 		},
 		DeliveryMethod: string(method),
 		URI:            URI,
-		CrossDevice:    crossDevice,
 	}
 }
 
-func makeGenerateEnchantedLinkForTestUserRequestBody(loginID, URI string, loginOptions *descope.LoginOptions) *generateEnchantedLinkForTestUserRequestBody {
+func makeGenerateEnchantedLinkForTestUserRequestBody(loginID, URI string) *generateEnchantedLinkForTestUserRequestBody {
 	return &generateEnchantedLinkForTestUserRequestBody{
 		generateForTestUserRequestBody: &generateForTestUserRequestBody{
-			LoginID:      loginID,
-			LoginOptions: loginOptions,
+			LoginID: loginID,
 		},
 		URI: URI,
 	}
