@@ -109,6 +109,10 @@ type MockUser struct {
 	CreateResponse *descope.UserResponse
 	CreateError    error
 
+	CreateTestUserAssert   func(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant)
+	CreateTestUserResponse *descope.UserResponse
+	CreateTestUserError    error
+
 	InviteAssert   func(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant)
 	InviteResponse *descope.UserResponse
 	InviteError    error
@@ -119,6 +123,9 @@ type MockUser struct {
 
 	DeleteAssert func(loginID string)
 	DeleteError  error
+
+	DeleteAllTestUsersAssert func()
+	DeleteAllTestUsersError  error
 
 	LoadAssert   func(loginID string)
 	LoadResponse *descope.UserResponse
@@ -171,6 +178,19 @@ type MockUser struct {
 	RemoveTenantRoleAssert   func(loginID, tenantID string, roles []string)
 	RemoveTenantRoleResponse *descope.UserResponse
 	RemoveTenantRoleError    error
+
+	GenerateOTPForTestUserAssert   func(method descope.DeliveryMethod, loginID string)
+	GenerateOTPForTestUserResponse string
+	GenerateOTPForTestUserError    error
+
+	GenerateMagicLinkForTestUserAssert   func(method descope.DeliveryMethod, loginID, URI string)
+	GenerateMagicLinkForTestUserResponse string
+	GenerateMagicLinkForTestUserError    error
+
+	GenerateEnchantedLinkForTestUserAssert             func(loginID, URI string)
+	GenerateEnchantedLinkForTestUserResponseLink       string
+	GenerateEnchantedLinkForTestUserResponsePendingRef string
+	GenerateEnchantedLinkForTestUserError              error
 }
 
 func (m *MockUser) Create(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
@@ -178,6 +198,13 @@ func (m *MockUser) Create(loginID, email, phone, displayName string, roles []str
 		m.CreateAssert(loginID, email, phone, displayName, roles, tenants)
 	}
 	return m.CreateResponse, m.CreateError
+}
+
+func (m *MockUser) CreateTestUser(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
+	if m.CreateTestUserAssert != nil {
+		m.CreateTestUserAssert(loginID, email, phone, displayName, roles, tenants)
+	}
+	return m.CreateTestUserResponse, m.CreateTestUserError
 }
 
 func (m *MockUser) Invite(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
@@ -199,6 +226,13 @@ func (m *MockUser) Delete(loginID string) error {
 		m.DeleteAssert(loginID)
 	}
 	return m.DeleteError
+}
+
+func (m *MockUser) DeleteAllTestUsers() error {
+	if m.DeleteAllTestUsersAssert != nil {
+		m.DeleteAllTestUsersAssert()
+	}
+	return m.DeleteAllTestUsersError
 }
 
 func (m *MockUser) Load(loginID string) (*descope.UserResponse, error) {
@@ -297,6 +331,27 @@ func (m *MockUser) RemoveTenantRoles(loginID string, tenantID string, roles []st
 		m.RemoveTenantRoleAssert(loginID, tenantID, roles)
 	}
 	return m.RemoveTenantRoleResponse, m.RemoveTenantRoleError
+}
+
+func (m *MockUser) GenerateOTPForTestUser(method descope.DeliveryMethod, loginID string) (code string, err error) {
+	if m.GenerateOTPForTestUserAssert != nil {
+		m.GenerateOTPForTestUserAssert(method, loginID)
+	}
+	return m.GenerateOTPForTestUserResponse, m.GenerateOTPForTestUserError
+}
+
+func (m *MockUser) GenerateMagicLinkForTestUser(method descope.DeliveryMethod, loginID, URI string) (link string, err error) {
+	if m.GenerateMagicLinkForTestUserAssert != nil {
+		m.GenerateMagicLinkForTestUserAssert(method, loginID, URI)
+	}
+	return m.GenerateMagicLinkForTestUserResponse, m.GenerateMagicLinkForTestUserError
+}
+
+func (m *MockUser) GenerateEnchantedLinkForTestUser(loginID, URI string) (link, pendingRef string, err error) {
+	if m.GenerateEnchantedLinkForTestUserAssert != nil {
+		m.GenerateEnchantedLinkForTestUserAssert(loginID, URI)
+	}
+	return m.GenerateEnchantedLinkForTestUserResponseLink, m.GenerateEnchantedLinkForTestUserResponsePendingRef, m.GenerateEnchantedLinkForTestUserError
 }
 
 // Mock Access Key

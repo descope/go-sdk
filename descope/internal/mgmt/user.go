@@ -11,18 +11,22 @@ type user struct {
 }
 
 func (u *user) Create(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
-	return u.create(loginID, email, phone, displayName, roles, tenants, false)
+	return u.create(loginID, email, phone, displayName, roles, tenants, false, false)
+}
+
+func (u *user) CreateTestUser(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
+	return u.create(loginID, email, phone, displayName, roles, tenants, false, true)
 }
 
 func (u *user) Invite(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
-	return u.create(loginID, email, phone, displayName, roles, tenants, true)
+	return u.create(loginID, email, phone, displayName, roles, tenants, true, false)
 }
 
-func (u *user) create(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant, invite bool) (*descope.UserResponse, error) {
+func (u *user) create(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool) (*descope.UserResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
-	req := makeCreateUserRequest(loginID, email, phone, displayName, roles, tenants, invite)
+	req := makeCreateUserRequest(loginID, email, phone, displayName, roles, tenants, invite, test)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserCreate(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -48,6 +52,11 @@ func (u *user) Delete(loginID string) error {
 	}
 	req := map[string]any{"loginId": loginID}
 	_, err := u.client.DoPostRequest(api.Routes.ManagementUserDelete(), req, nil, u.conf.ManagementKey)
+	return err
+}
+
+func (u *user) DeleteAllTestUsers() error {
+	_, err := u.client.DoDeleteRequest(api.Routes.ManagementUserDeleteAllTestUsers(), nil, u.conf.ManagementKey)
 	return err
 }
 
@@ -228,9 +237,49 @@ func (u *user) RemoveTenantRoles(loginID string, tenantID string, roles []string
 	return unmarshalUserResponse(res)
 }
 
-func makeCreateUserRequest(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant, invite bool) map[string]any {
+func (u *user) GenerateOTPForTestUser(method descope.DeliveryMethod, loginID string) (code string, err error) {
+	if loginID == "" {
+		return "", utils.NewInvalidArgumentError("loginID")
+	}
+	req := makeGenerateOTPForTestUserRequestBody(method, loginID)
+	res, err := u.client.DoPostRequest(api.Routes.ManagementUserGenerateOTPForTest(), req, nil, u.conf.ManagementKey)
+	if err != nil {
+		return "", err
+	}
+	return unmarshalGenerateOTPForTestResponse(res)
+}
+
+func (u *user) GenerateMagicLinkForTestUser(method descope.DeliveryMethod, loginID, URI string) (link string, err error) {
+	if loginID == "" {
+		return "", utils.NewInvalidArgumentError("loginID")
+	}
+	req := makeGenerateMagicLinkForTestUserRequestBody(method, loginID, URI)
+	res, err := u.client.DoPostRequest(api.Routes.ManagementUserGenerateMagicLinkForTest(), req, nil, u.conf.ManagementKey)
+	if err != nil {
+		return "", err
+	}
+	link, _, err = unmarshalGenerateLinkForTestResponse(res)
+	return link, err
+}
+
+func (u *user) GenerateEnchantedLinkForTestUser(loginID, URI string) (link, pendingRef string, err error) {
+	if loginID == "" {
+		return "", "", utils.NewInvalidArgumentError("loginID")
+	}
+	req := makeGenerateEnchantedLinkForTestUserRequestBody(loginID, URI)
+	res, err := u.client.DoPostRequest(api.Routes.ManagementUserGenerateEnchantedLinkForTest(), req, nil, u.conf.ManagementKey)
+	if err != nil {
+		return "", "", err
+	}
+	return unmarshalGenerateLinkForTestResponse(res)
+}
+
+func makeCreateUserRequest(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool) map[string]any {
 	req := makeUpdateUserRequest(loginID, email, phone, displayName, roles, tenants)
 	req["invite"] = invite
+	if test {
+		req["test"] = true
+	}
 	return req
 }
 
@@ -262,10 +311,12 @@ func makeUpdateUserRolesRequest(loginID, tenantID string, roles []string) map[st
 
 func makeSearchAllRequest(options *descope.UserSearchOptions) map[string]any {
 	return map[string]any{
-		"tenantIds": options.TenantIDs,
-		"roleNames": options.Roles,
-		"limit":     options.Limit,
-		"page":      options.Page,
+		"tenantIds":     options.TenantIDs,
+		"roleNames":     options.Roles,
+		"limit":         options.Limit,
+		"page":          options.Page,
+		"testUsersOnly": options.TestUsersOnly,
+		"withTestUser":  options.WithTestUsers,
 	}
 }
 
@@ -289,4 +340,81 @@ func unmarshalUserSearchAllResponse(res *api.HTTPResponse) ([]*descope.UserRespo
 		return nil, err
 	}
 	return ures.Users, err
+}
+
+type generateForTestUserRequestBody struct {
+	LoginID string `json:"loginId,omitempty"`
+}
+
+type generateOTPForTestUserRequestBody struct {
+	*generateForTestUserRequestBody `json:",inline"`
+	DeliveryMethod                  string `json:"deliveryMethod,omitempty"`
+}
+
+type generateMagicLinkForTestUserRequestBody struct {
+	*generateForTestUserRequestBody `json:",inline"`
+	DeliveryMethod                  string `json:"deliveryMethod,omitempty"`
+	URI                             string `json:"URI,omitempty"`
+}
+
+type generateEnchantedLinkForTestUserRequestBody struct {
+	*generateForTestUserRequestBody `json:",inline"`
+	URI                             string `json:"URI,omitempty"`
+}
+
+func makeGenerateOTPForTestUserRequestBody(method descope.DeliveryMethod, loginID string) *generateOTPForTestUserRequestBody {
+	return &generateOTPForTestUserRequestBody{
+		generateForTestUserRequestBody: &generateForTestUserRequestBody{
+			LoginID: loginID,
+		},
+		DeliveryMethod: string(method),
+	}
+}
+
+func makeGenerateMagicLinkForTestUserRequestBody(method descope.DeliveryMethod, loginID, URI string) *generateMagicLinkForTestUserRequestBody {
+	return &generateMagicLinkForTestUserRequestBody{
+		generateForTestUserRequestBody: &generateForTestUserRequestBody{
+			LoginID: loginID,
+		},
+		DeliveryMethod: string(method),
+		URI:            URI,
+	}
+}
+
+func makeGenerateEnchantedLinkForTestUserRequestBody(loginID, URI string) *generateEnchantedLinkForTestUserRequestBody {
+	return &generateEnchantedLinkForTestUserRequestBody{
+		generateForTestUserRequestBody: &generateForTestUserRequestBody{
+			LoginID: loginID,
+		},
+		URI: URI,
+	}
+}
+
+type GenerateOTPForTestResponse struct {
+	LoginID string `json:"loginId,omitempty"`
+	Code    string `json:"code,omitempty"`
+}
+
+type GenerateLinkForTestResponse struct {
+	LoginID    string `json:"loginId,omitempty"`
+	Link       string `json:"link,omitempty"`
+	PendingRef string `json:"pendingRef,omitempty"`
+}
+
+func unmarshalGenerateOTPForTestResponse(res *api.HTTPResponse) (string, error) {
+	resBody := &GenerateOTPForTestResponse{}
+	err := utils.Unmarshal([]byte(res.BodyStr), &resBody)
+	if err != nil {
+		return "", err
+	}
+	return resBody.Code, err
+}
+
+func unmarshalGenerateLinkForTestResponse(res *api.HTTPResponse) (string, string, error) {
+	resBody := &GenerateLinkForTestResponse{}
+	err := utils.Unmarshal([]byte(res.BodyStr), &resBody)
+	if err != nil {
+		return "", "", err
+	}
+	return resBody.Link, resBody.PendingRef, err
 }

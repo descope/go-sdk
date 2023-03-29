@@ -527,7 +527,7 @@ You can create, update, delete or load users, as well as search according to fil
 // A user must have a loginID, other fields are optional.
 // Roles should be set directly if no tenants exist, otherwise set
 // on a per-tenant basis.
-err := descopeClient.Management.User().Create("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*descope.AssociatedTenant{
+user, err := descopeClient.Management.User().Create("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*descope.AssociatedTenant{
     {TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},
 })
@@ -777,6 +777,43 @@ updatedJWT, err := descopeClient.Management.JWT().UpdateJWTWithCustomClaims("ori
 if err != nil {
     // handle error
 }
+```
+
+### Utils for your end to end (e2e) tests and integration tests
+
+To ease your e2e tests, we exposed dedicated management methods,
+that way, you don't need to use 3rd party messaging services in order to receive sign-in/up Emails or SMS, and avoid the need of parsing the code and token from them.
+
+```go
+// User for test can be created, this user will be able to generate code/link without
+// the need of 3rd party messaging services.
+// Test user must have a loginID, other fields are optional.
+// Roles should be set directly if no tenants exist, otherwise set
+// on a per-tenant basis.
+user, err := descopeClient.Management.User().CreateTestUser("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*descope.AssociatedTenant{
+    {TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
+    {TenantID: "tenant-ID2"},
+})
+
+// Now test user got created, and this user will be available until you delete it,
+// you can use any management operation for test user CRUD.
+// You can also delete all test users.
+err = descopeClient.Management.User().DeleteAllTestUsers()
+
+// OTP code can be generated for test user, for example:
+code, err := descopeClient.Management.User().GenerateOTPForTestUser(descope.MethodEmail, "desmond@descope.com")
+// Now you can verify the code is valid (using descopeClient.Auth.OTP().VerifyCode for example)
+
+// Same as OTP, magic link can be generated for test user, for example:
+link, err := descopeClient.Management.User().GenerateMagicLinkForTestUser(descope.MethodEmail, "desmond@descope.com", "")
+// Now you can verify the link is valid (using descopeClient.Auth.MagicLink().Verify for example)
+
+// Enchanted link can be generated for test user, for example:
+link, err := descopeClient.Management.User().GenerateEnchantedLinkForTestUser("desmond@descope.com", "")
+// Now you can verify the link is valid (using descopeClient.Auth.EnchantedLink().Verify for example)
+
+// Note 1: The generate code/link methods, work only for test users, will not work for regular users.
+// Note 2: In case of testing sign-in / sign-up methods with test users, need to make sure to generate the code prior calling the sign-in / sign-up methods (such as: descopeClient.Auth.MagicLink().SignUpOrIn)
 ```
 
 ## API Rate limits

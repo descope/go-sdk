@@ -72,49 +72,53 @@ var (
 			exchangeAccessKey:            "auth/accesskey/exchange",
 		},
 		mgmt: mgmtEndpoints{
-			tenantCreate:                "mgmt/tenant/create",
-			tenantUpdate:                "mgmt/tenant/update",
-			tenantDelete:                "mgmt/tenant/delete",
-			tenantLoadAll:               "mgmt/tenant/all",
-			userCreate:                  "mgmt/user/create",
-			userUpdate:                  "mgmt/user/update",
-			userDelete:                  "mgmt/user/delete",
-			userLoad:                    "mgmt/user",
-			userSearchAll:               "mgmt/user/search",
-			userUpdateStatus:            "mgmt/user/update/status",
-			userUpdateEmail:             "mgmt/user/update/email",
-			userUpdatePhone:             "mgmt/user/update/phone",
-			userUpdateName:              "mgmt/user/update/name",
-			userAddTenant:               "mgmt/user/update/tenant/add",
-			userRemoveTenant:            "mgmt/user/update/tenant/remove",
-			userAddRole:                 "mgmt/user/update/role/add",
-			userRemoveRole:              "mgmt/user/update/role/remove",
-			accessKeyCreate:             "mgmt/accesskey/create",
-			accessKeyLoad:               "mgmt/accesskey",
-			accessKeySearchAll:          "mgmt/accesskey/search",
-			accessKeyUpdate:             "mgmt/accesskey/update",
-			accessKeyDeactivate:         "mgmt/accesskey/deactivate",
-			accessKeyActivate:           "mgmt/accesskey/activate",
-			accessKeyDelete:             "mgmt/accesskey/delete",
-			ssoConfigure:                "mgmt/sso/settings",
-			ssoMetadata:                 "mgmt/sso/metadata",
-			ssoMapping:                  "mgmt/sso/mapping",
-			updateJWT:                   "mgmt/jwt/update",
-			permissionCreate:            "mgmt/permission/create",
-			permissionUpdate:            "mgmt/permission/update",
-			permissionDelete:            "mgmt/permission/delete",
-			permissionLoadAll:           "mgmt/permission/all",
-			roleCreate:                  "mgmt/role/create",
-			roleUpdate:                  "mgmt/role/update",
-			roleDelete:                  "mgmt/role/delete",
-			roleLoadAll:                 "mgmt/role/all",
-			groupLoadAllGroups:          "mgmt/group/all",
-			groupLoadAllGroupsForMember: "mgmt/group/member/all",
-			groupLoadAllGroupMembers:    "mgmt/group/members",
-			flowExport:                  "mgmt/flow/export",
-			flowImport:                  "mgmt/flow/import",
-			themeExport:                 "mgmt/theme/export",
-			themeImport:                 "mgmt/theme/import",
+			tenantCreate:                     "mgmt/tenant/create",
+			tenantUpdate:                     "mgmt/tenant/update",
+			tenantDelete:                     "mgmt/tenant/delete",
+			tenantLoadAll:                    "mgmt/tenant/all",
+			userCreate:                       "mgmt/user/create",
+			userUpdate:                       "mgmt/user/update",
+			userDelete:                       "mgmt/user/delete",
+			userDeleteAllTestUsers:           "mgmt/user/test/delete/all",
+			userLoad:                         "mgmt/user",
+			userSearchAll:                    "mgmt/user/search",
+			userUpdateStatus:                 "mgmt/user/update/status",
+			userUpdateEmail:                  "mgmt/user/update/email",
+			userUpdatePhone:                  "mgmt/user/update/phone",
+			userUpdateName:                   "mgmt/user/update/name",
+			userAddTenant:                    "mgmt/user/update/tenant/add",
+			userRemoveTenant:                 "mgmt/user/update/tenant/remove",
+			userAddRole:                      "mgmt/user/update/role/add",
+			userRemoveRole:                   "mgmt/user/update/role/remove",
+			userGenerateOTPForTest:           "mgmt/tests/generate/otp",
+			userGenerateMagicLinkForTest:     "mgmt/tests/generate/magiclink",
+			userGenerateEnchantedLinkForTest: "mgmt/tests/generate/enchantedlink",
+			accessKeyCreate:                  "mgmt/accesskey/create",
+			accessKeyLoad:                    "mgmt/accesskey",
+			accessKeySearchAll:               "mgmt/accesskey/search",
+			accessKeyUpdate:                  "mgmt/accesskey/update",
+			accessKeyDeactivate:              "mgmt/accesskey/deactivate",
+			accessKeyActivate:                "mgmt/accesskey/activate",
+			accessKeyDelete:                  "mgmt/accesskey/delete",
+			ssoConfigure:                     "mgmt/sso/settings",
+			ssoMetadata:                      "mgmt/sso/metadata",
+			ssoMapping:                       "mgmt/sso/mapping",
+			updateJWT:                        "mgmt/jwt/update",
+			permissionCreate:                 "mgmt/permission/create",
+			permissionUpdate:                 "mgmt/permission/update",
+			permissionDelete:                 "mgmt/permission/delete",
+			permissionLoadAll:                "mgmt/permission/all",
+			roleCreate:                       "mgmt/role/create",
+			roleUpdate:                       "mgmt/role/update",
+			roleDelete:                       "mgmt/role/delete",
+			roleLoadAll:                      "mgmt/role/all",
+			groupLoadAllGroups:               "mgmt/group/all",
+			groupLoadAllGroupsForMember:      "mgmt/group/member/all",
+			groupLoadAllGroupMembers:         "mgmt/group/members",
+			flowExport:                       "mgmt/flow/export",
+			flowImport:                       "mgmt/flow/import",
+			themeExport:                      "mgmt/theme/export",
+			themeImport:                      "mgmt/theme/import",
 		},
 		logout:    "auth/logout",
 		logoutAll: "auth/logoutall",
@@ -184,19 +188,24 @@ type mgmtEndpoints struct {
 	tenantDelete  string
 	tenantLoadAll string
 
-	userCreate       string
-	userUpdate       string
-	userDelete       string
-	userLoad         string
-	userSearchAll    string
-	userUpdateStatus string
-	userUpdateEmail  string
-	userUpdatePhone  string
-	userUpdateName   string
-	userAddTenant    string
-	userRemoveTenant string
-	userAddRole      string
-	userRemoveRole   string
+	userCreate             string
+	userUpdate             string
+	userDelete             string
+	userDeleteAllTestUsers string
+	userLoad               string
+	userSearchAll          string
+	userUpdateStatus       string
+	userUpdateEmail        string
+	userUpdatePhone        string
+	userUpdateName         string
+	userAddTenant          string
+	userRemoveTenant       string
+	userAddRole            string
+	userRemoveRole         string
+
+	userGenerateOTPForTest           string
+	userGenerateMagicLinkForTest     string
+	userGenerateEnchantedLinkForTest string
 
 	accessKeyCreate     string
 	accessKeyLoad       string
@@ -398,6 +407,10 @@ func (e *endpoints) ManagementUserDelete() string {
 	return path.Join(e.version, e.mgmt.userDelete)
 }
 
+func (e *endpoints) ManagementUserDeleteAllTestUsers() string {
+	return path.Join(e.version, e.mgmt.userDeleteAllTestUsers)
+}
+
 func (e *endpoints) ManagementUserLoad() string {
 	return path.Join(e.version, e.mgmt.userLoad)
 }
@@ -436,6 +449,18 @@ func (e *endpoints) ManagementUserAddRole() string {
 
 func (e *endpoints) ManagementUserRemoveRole() string {
 	return path.Join(e.version, e.mgmt.userRemoveRole)
+}
+
+func (e *endpoints) ManagementUserGenerateOTPForTest() string {
+	return path.Join(e.version, e.mgmt.userGenerateOTPForTest)
+}
+
+func (e *endpoints) ManagementUserGenerateMagicLinkForTest() string {
+	return path.Join(e.version, e.mgmt.userGenerateMagicLinkForTest)
+}
+
+func (e *endpoints) ManagementUserGenerateEnchantedLinkForTest() string {
+	return path.Join(e.version, e.mgmt.userGenerateEnchantedLinkForTest)
 }
 
 func (e *endpoints) ManagementAccessKeyCreate() string {
@@ -619,6 +644,10 @@ func NewClient(conf ClientParams) *Client {
 
 func (c *Client) DoGetRequest(uri string, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
 	return c.DoRequest(http.MethodGet, uri, nil, options, pswd)
+}
+
+func (c *Client) DoDeleteRequest(uri string, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
+	return c.DoRequest(http.MethodDelete, uri, nil, options, pswd)
 }
 
 func (c *Client) DoPostRequest(uri string, body interface{}, options *HTTPRequest, pswd string) (*HTTPResponse, error) {

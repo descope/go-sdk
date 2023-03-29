@@ -49,6 +49,16 @@ type User interface {
 	// user has in each one.
 	Create(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error)
 
+	// Create a new test user.
+	//
+	// The loginID is required and will determine what the user will use to
+	// sign in, make sure the login id is unique for test. All other fields are optional.
+	//
+	// You can later generate OTP, Magic link and enchanted link to use in the test without the need
+	// of 3rd party messaging services
+	// Those users are not counted as part of the monthly active users
+	CreateTestUser(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error)
+
 	// Create a new user and invite them via an email message.
 	//
 	// Functions exactly the same as the Create function with the additional invitation
@@ -72,6 +82,11 @@ type User interface {
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	Delete(loginID string) error
+
+	// Delete all test users in the project.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteAllTestUsers() error
 
 	// Load an existing user.
 	//
@@ -137,6 +152,26 @@ type User interface {
 
 	// Remove roles from a user in a specific tenant.
 	RemoveTenantRoles(loginID string, tenantID string, roles []string) (*descope.UserResponse, error)
+
+	// Generate OTP for the given login ID of a test user.
+	// Choose the selected delivery method for verification. (see auth/DeliveryMethod)
+	// It returns the code for the login (exactly as it sent via Email or SMS)
+	// This is useful when running tests and don't want to use 3rd party messaging services
+	// The redirect URI is optional. If provided however, it will be used instead of any global configuration.
+	GenerateOTPForTestUser(method descope.DeliveryMethod, loginID string) (code string, err error)
+
+	// Generate Magic Link for the given login ID of a test user.
+	// Choose the selected delivery method for verification. (see auth/DeliveryMethod)
+	// It returns the link for the login (exactly as it sent via Email)
+	// This is useful when running tests and don't want to use 3rd party messaging services
+	// The redirect URI is optional. If provided however, it will be used instead of any global configuration.
+	GenerateMagicLinkForTestUser(method descope.DeliveryMethod, loginID, URI string) (link string, err error)
+
+	// Generate Enchanted Link for the given login ID of a test user.
+	// It returns the link for the login (exactly as it sent via Email) and pendingRef which is used to poll for a valid session
+	// This is useful when running tests and don't want to use 3rd party messaging services
+	// The redirect URI is optional. If provided however, it will be used instead of any global configuration.
+	GenerateEnchantedLinkForTestUser(loginID, URI string) (link, pendingRef string, err error)
 }
 
 // Provides functions for managing access keys in a project.

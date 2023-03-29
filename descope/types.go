@@ -204,6 +204,7 @@ type UserResponse struct {
 	UserTenants   []*AssociatedTenant `json:"userTenants,omitempty"`
 	Status        string              `json:"status,omitempty"`
 	Picture       string              `json:"picture,omitempty"`
+	Test          bool                `json:"test,omitempty"`
 }
 
 type AccessKeyResponse struct {
@@ -267,10 +268,12 @@ type Role struct {
 //
 // The page parameter allow to paginate over the results. Pages start at 0 and must non-negative.
 type UserSearchOptions struct {
-	TenantIDs []string
-	Roles     []string
-	Limit     int32
-	Page      int32
+	TenantIDs     []string
+	Roles         []string
+	Limit         int32
+	Page          int32
+	WithTestUsers bool
+	TestUsersOnly bool
 }
 
 type GroupMember struct {
