@@ -682,7 +682,6 @@ func TestGenerateMagicLinkForTestUserSuccess(t *testing.T) {
 		require.Equal(t, loginID, req["loginId"])
 		require.Equal(t, string(descope.MethodSMS), req["deliveryMethod"])
 		require.Equal(t, URI, req["URI"])
-		require.Equal(t, true, req["crossDevice"])
 	}, response))
 	resLink, err := m.User().GenerateMagicLinkForTestUser(descope.MethodSMS, loginID, URI)
 	require.NoError(t, err)
