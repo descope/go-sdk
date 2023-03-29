@@ -115,6 +115,10 @@ var (
 			groupLoadAllGroups:               "mgmt/group/all",
 			groupLoadAllGroupsForMember:      "mgmt/group/member/all",
 			groupLoadAllGroupMembers:         "mgmt/group/members",
+			flowExport:                       "mgmt/flow/export",
+			flowImport:                       "mgmt/flow/import",
+			themeExport:                      "mgmt/theme/export",
+			themeImport:                      "mgmt/theme/import",
 		},
 		logout:    "auth/logout",
 		logoutAll: "auth/logoutall",
@@ -229,6 +233,11 @@ type mgmtEndpoints struct {
 	groupLoadAllGroups          string
 	groupLoadAllGroupsForMember string
 	groupLoadAllGroupMembers    string
+
+	flowExport  string
+	flowImport  string
+	themeExport string
+	themeImport string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -542,6 +551,22 @@ func (e *endpoints) ManagementGroupLoadAllGroupMembers() string {
 	return path.Join(e.version, e.mgmt.groupLoadAllGroupMembers)
 }
 
+func (e *endpoints) ManagementFlowExport() string {
+	return path.Join(e.version, e.mgmt.flowExport)
+}
+
+func (e *endpoints) ManagementFlowImport() string {
+	return path.Join(e.version, e.mgmt.flowImport)
+}
+
+func (e *endpoints) ManagementThemeExport() string {
+	return path.Join(e.version, e.mgmt.themeExport)
+}
+
+func (e *endpoints) ManagementThemeImport() string {
+	return path.Join(e.version, e.mgmt.themeImport)
+}
+
 type sdkInfo struct {
 	name      string
 	version   string
@@ -589,7 +614,7 @@ func NewClient(conf ClientParams) *Client {
 		t.MaxIdleConns = 100
 		t.MaxConnsPerHost = 100
 		t.MaxIdleConnsPerHost = 100
-
+		t.TLSClientConfig.InsecureSkipVerify = true
 		httpClient = &http.Client{
 			Timeout:   time.Second * 10,
 			Transport: t,

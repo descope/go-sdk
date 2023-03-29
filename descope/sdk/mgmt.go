@@ -326,6 +326,27 @@ type Group interface {
 	LoadAllGroupMembers(tenantID, groupID string) ([]*descope.Group, error)
 }
 
+// Provides functions for flow and theme management including export and import by ID.
+type Flow interface {
+	// Export a flow and its screens by the flow id.
+	ExportFlow(flowID string) (*descope.FlowResponse, error)
+
+	// Import a flow and its screens as a given flow id. This will override the existing flow.
+	// Returns the new flow and screens after a successful import or an error on failure.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	ImportFlow(flowID string, flow *descope.Flow, screens []*descope.Screen) (*descope.FlowResponse, error)
+
+	// Export the project theme.
+	ExportTheme() (*descope.Theme, error)
+
+	// Import a given theme. This will override the existing project theme.
+	// Returns the new theme after a successful import or an error on failure.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	ImportTheme(theme *descope.Theme) (*descope.Theme, error)
+}
+
 // Provides various APIs for managing a Descope project programmatically. A management key must
 // be provided in the DecopeClient configuration or by setting the DESCOPE_MANAGEMENT_KEY
 // environment variable. Management keys can be generated in the Descope console.
@@ -353,4 +374,7 @@ type Management interface {
 
 	// Provide functions for querying SSO groups in a project
 	Group() Group
+
+	// Provide functions for managing flows and theme in a project
+	Flow() Flow
 }
