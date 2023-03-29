@@ -109,9 +109,9 @@ type MockUser struct {
 	CreateResponse *descope.UserResponse
 	CreateError    error
 
-	CreateForTestAssert   func(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant)
-	CreateForTestResponse *descope.UserResponse
-	CreateForTestError    error
+	CreateTestUserAssert   func(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant)
+	CreateTestUserResponse *descope.UserResponse
+	CreateTestUserError    error
 
 	InviteAssert   func(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant)
 	InviteResponse *descope.UserResponse
@@ -200,11 +200,11 @@ func (m *MockUser) Create(loginID, email, phone, displayName string, roles []str
 	return m.CreateResponse, m.CreateError
 }
 
-func (m *MockUser) CreateForTest(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
-	if m.CreateForTestAssert != nil {
-		m.CreateForTestAssert(loginID, email, phone, displayName, roles, tenants)
+func (m *MockUser) CreateTestUser(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
+	if m.CreateTestUserAssert != nil {
+		m.CreateTestUserAssert(loginID, email, phone, displayName, roles, tenants)
 	}
-	return m.CreateForTestResponse, m.CreateForTestError
+	return m.CreateTestUserResponse, m.CreateTestUserError
 }
 
 func (m *MockUser) Invite(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {

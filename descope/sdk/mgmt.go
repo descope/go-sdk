@@ -57,7 +57,7 @@ type User interface {
 	// You can later generate OTP, Magic link and enchanted link to use in the test without the need
 	// of 3rd party messaging services
 	// Those users are not counted as part of the monthly active users
-	CreateForTest(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error)
+	CreateTestUser(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error)
 
 	// Create a new user and invite them via an email message.
 	//

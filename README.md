@@ -782,7 +782,7 @@ if err != nil {
 ### Utils for your end to end (e2e) tests and integration tests
 
 To ease your e2e tests, we exposed dedicated management methods,
-that way, you won't need to use 3rd party messaging services to get the actual sign-in/up email or sms.
+that way, you don't need to use 3rd party messaging services in order to receive sign-in/up Emails or SMS, and avoid the need of parsing the code and token from them.
 
 ```go
 // User for test can be created, this user will be able to generate code/link without
@@ -790,7 +790,7 @@ that way, you won't need to use 3rd party messaging services to get the actual s
 // Test user must have a loginID, other fields are optional.
 // Roles should be set directly if no tenants exist, otherwise set
 // on a per-tenant basis.
-user, err := descopeClient.Management.User().CreateForTest("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*descope.AssociatedTenant{
+user, err := descopeClient.Management.User().CreateTestUser("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*descope.AssociatedTenant{
     {TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},
 })

@@ -37,7 +37,7 @@ func TestUserCreateSuccess(t *testing.T) {
 	require.Equal(t, "a@b.c", res.Email)
 }
 
-func TestUserCreateForTestSuccess(t *testing.T) {
+func TestUserCreateTestUserSuccess(t *testing.T) {
 	response := map[string]any{
 		"user": map[string]any{
 			"email": "a@b.c",
@@ -53,7 +53,7 @@ func TestUserCreateForTestSuccess(t *testing.T) {
 		require.Equal(t, "foo", roleNames[0])
 		require.EqualValues(t, true, req["test"])
 	}, response))
-	res, err := m.User().CreateForTest("abc", "foo@bar.com", "", "", []string{"foo"}, nil)
+	res, err := m.User().CreateTestUser("abc", "foo@bar.com", "", "", []string{"foo"}, nil)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)

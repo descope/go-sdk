@@ -14,7 +14,7 @@ func (u *user) Create(loginID, email, phone, displayName string, roles []string,
 	return u.create(loginID, email, phone, displayName, roles, tenants, false, false)
 }
 
-func (u *user) CreateForTest(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
+func (u *user) CreateTestUser(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
 	return u.create(loginID, email, phone, displayName, roles, tenants, false, true)
 }
 
@@ -343,8 +343,7 @@ func unmarshalUserSearchAllResponse(res *api.HTTPResponse) ([]*descope.UserRespo
 }
 
 type generateForTestUserRequestBody struct {
-	LoginID      string                `json:"loginId,omitempty"`
-	LoginOptions *descope.LoginOptions `json:"loginOptions,omitempty"`
+	LoginID string `json:"loginId,omitempty"`
 }
 
 type generateOTPForTestUserRequestBody struct {
@@ -354,16 +353,13 @@ type generateOTPForTestUserRequestBody struct {
 
 type generateMagicLinkForTestUserRequestBody struct {
 	*generateForTestUserRequestBody `json:",inline"`
-	DeliveryMethod                  string                `json:"deliveryMethod,omitempty"`
-	URI                             string                `json:"URI,omitempty"`
-	CrossDevice                     bool                  `json:"crossDevice,omitempty"`
-	LoginOptions                    *descope.LoginOptions `json:"loginOptions,omitempty"`
+	DeliveryMethod                  string `json:"deliveryMethod,omitempty"`
+	URI                             string `json:"URI,omitempty"`
 }
 
 type generateEnchantedLinkForTestUserRequestBody struct {
 	*generateForTestUserRequestBody `json:",inline"`
-	URI                             string                `json:"URI,omitempty"`
-	LoginOptions                    *descope.LoginOptions `json:"loginOptions,omitempty"`
+	URI                             string `json:"URI,omitempty"`
 }
 
 func makeGenerateOTPForTestUserRequestBody(method descope.DeliveryMethod, loginID string) *generateOTPForTestUserRequestBody {
