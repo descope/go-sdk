@@ -809,7 +809,7 @@ link, err := descopeClient.Management.User().GenerateMagicLinkForTestUser(descop
 // Now you can verify the link is valid (using descopeClient.Auth.MagicLink().Verify for example)
 
 // Enchanted link can be generated for test user, for example:
-link, err := descopeClient.Management.User().GenerateEnchantedLinkForTestUser("desmond@descope.com", "")
+link, pendingRef, err := descopeClient.Management.User().GenerateEnchantedLinkForTestUser("desmond@descope.com", "")
 // Now you can verify the link is valid (using descopeClient.Auth.EnchantedLink().Verify for example)
 
 // Note 1: The generate code/link methods, work only for test users, will not work for regular users.
