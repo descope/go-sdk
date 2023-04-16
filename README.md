@@ -735,7 +735,7 @@ if err == nil {
 
 ### Manage Flows
 
-You can import and export flows and screens, or the project them:
+You can import and export flows and screens, or the project theme:
 
 ```go
 // Export the flow and it's matching screens based on the given id
