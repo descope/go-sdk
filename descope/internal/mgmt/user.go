@@ -311,12 +311,13 @@ func makeUpdateUserRolesRequest(loginID, tenantID string, roles []string) map[st
 
 func makeSearchAllRequest(options *descope.UserSearchOptions) map[string]any {
 	return map[string]any{
-		"tenantIds":     options.TenantIDs,
-		"roleNames":     options.Roles,
-		"limit":         options.Limit,
-		"page":          options.Page,
-		"testUsersOnly": options.TestUsersOnly,
-		"withTestUser":  options.WithTestUsers,
+		"tenantIds":        options.TenantIDs,
+		"roleNames":        options.Roles,
+		"limit":            options.Limit,
+		"page":             options.Page,
+		"testUsersOnly":    options.TestUsersOnly,
+		"withTestUser":     options.WithTestUsers,
+		"customAttributes": options.CustomAttributes,
 	}
 }
 

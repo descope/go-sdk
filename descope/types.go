@@ -267,13 +267,18 @@ type Role struct {
 // default amount.
 //
 // The page parameter allow to paginate over the results. Pages start at 0 and must non-negative.
+//
+// The customAttributes map is an optional filter for custom attributes
+// where the keys are the attribute names and the values are either a value we are searching for or list of these values in a slice.
+// We currently support string, int and bool values
 type UserSearchOptions struct {
-	TenantIDs     []string
-	Roles         []string
-	Limit         int32
-	Page          int32
-	WithTestUsers bool
-	TestUsersOnly bool
+	TenantIDs        []string
+	Roles            []string
+	Limit            int32
+	Page             int32
+	WithTestUsers    bool
+	TestUsersOnly    bool
+	CustomAttributes map[string]any
 }
 
 type GroupMember struct {
