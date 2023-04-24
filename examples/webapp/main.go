@@ -461,7 +461,7 @@ func handleStepupConfUpdate(w http.ResponseWriter, r *http.Request) {
 	if codes, ok := r.URL.Query()["loginId"]; ok {
 		exID = codes[0]
 	}
-	masked, err := descopeClient.Auth.OTP().UpdateUserPhone(method, exID, loginID, r)
+	masked, err := descopeClient.Auth.OTP().UpdateUserPhone(method, exID, loginID, nil, r)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {

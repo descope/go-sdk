@@ -31,16 +31,18 @@ type MagicLink interface {
 
 	// UpdateUserEmail - Use to update email and validate via magiclink
 	// LoginID of user whom we want to update
+	// UpdateOptions to determine whether to add email as a login id and if to merge with existing user in that case
 	// Request is needed to obtain JWT and send it to Descope, for verification
 	// returns the masked email where the link was sent or an error upon failure.
-	UpdateUserEmail(loginID, email, URI string, request *http.Request) (maskedAddress string, err error)
+	UpdateUserEmail(loginID, email, URI string, updateOptions *descope.UpdateOptions, request *http.Request) (maskedAddress string, err error)
 
 	// UpdateUserPhone - Use to update phone and validate via magiclink
 	// allowed methods are phone based methods - whatsapp and SMS
 	// LoginID of user whom we want to update
+	// UpdateOptions to determine whether to add email as a login id and if to merge with existing user in that case
 	// Request is needed to obtain JWT and send it to Descope, for verification
 	// returns the masked phone where the link was sent or an error upon failure.
-	UpdateUserPhone(method descope.DeliveryMethod, loginID, phone, URI string, request *http.Request) (maskedAddress string, err error)
+	UpdateUserPhone(method descope.DeliveryMethod, loginID, phone, URI string, updateOptions *descope.UpdateOptions, request *http.Request) (maskedAddress string, err error)
 }
 
 type EnchantedLink interface {
@@ -69,8 +71,9 @@ type EnchantedLink interface {
 
 	// UpdateUserEmail - Use to update email and validate via enchanted link
 	// LoginID of user whom we want to update
+	// UpdateOptions to determine whether to add email as a login id and if to merge with existing user in that case
 	// Request is needed to obtain JWT and send it to Descope, for verification
-	UpdateUserEmail(loginID, email, URI string, request *http.Request) (*descope.EnchantedLinkResponse, error)
+	UpdateUserEmail(loginID, email, URI string, updateOptions *descope.UpdateOptions, request *http.Request) (*descope.EnchantedLinkResponse, error)
 }
 
 type OTP interface {
@@ -99,16 +102,18 @@ type OTP interface {
 
 	// UpdateUserEmail - Use to a update email, and verify via OTP
 	// LoginID of user whom we want to update
+	// UpdateOptions to determine whether to add email as a login id and if to merge with existing user in that case
 	// Request is needed to obtain JWT and send it to Descope, for verification
 	// returns the masked email where the code was sent or an error upon failure.
-	UpdateUserEmail(loginID, email string, request *http.Request) (maskedAddress string, err error)
+	UpdateUserEmail(loginID, email string, updateOptions *descope.UpdateOptions, request *http.Request) (maskedAddress string, err error)
 
 	// UpdateUserPhone - Use to update phone and validate via OTP
 	// allowed methods are phone based methods - whatsapp and SMS
 	// LoginID of user whom we want to update
+	// UpdateOptions to determine whether to add email as a login id and if to merge with existing user in that case
 	// Request is needed to obtain JWT and send it to Descope, for verification
 	// returns the masked phone where the code was sent or an error upon failure.
-	UpdateUserPhone(method descope.DeliveryMethod, loginID, phone string, request *http.Request) (maskedAddress string, err error)
+	UpdateUserPhone(method descope.DeliveryMethod, loginID, phone string, updateOptions *descope.UpdateOptions, request *http.Request) (maskedAddress string, err error)
 }
 
 type TOTP interface {

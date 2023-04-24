@@ -371,6 +371,7 @@ func TestUpdateEmailOTP(t *testing.T) {
 	loginID := "943248329844"
 	email := "test@test.com"
 	maskedEmail := "t***@test.com"
+	checkOptions := true
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeUpdateUserEmailOTP(), r.URL.RequestURI())
 
@@ -378,6 +379,14 @@ func TestUpdateEmailOTP(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, loginID, body["loginId"])
 		assert.EqualValues(t, email, body["email"])
+		if checkOptions {
+			assert.EqualValues(t, true, body["addToLoginIDs"])
+			assert.EqualValues(t, true, body["onMergeUseExisting"])
+		} else {
+			assert.EqualValues(t, nil, body["addToLoginIDs"])
+			assert.EqualValues(t, nil, body["onMergeUseExisting"])
+		}
+
 		u, p := getProjectAndJwt(r)
 		assert.NotEmpty(t, u)
 		assert.NotEmpty(t, p)
@@ -389,9 +398,14 @@ func TestUpdateEmailOTP(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	me, err := a.OTP().UpdateUserEmail(loginID, email, r)
+	me, err := a.OTP().UpdateUserEmail(loginID, email, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true}, r)
 	require.NoError(t, err)
 	require.EqualValues(t, maskedEmail, me)
+	checkOptions = false
+	me, err = a.OTP().UpdateUserEmail(loginID, email, nil, r)
+	require.NoError(t, err)
+	require.EqualValues(t, maskedEmail, me)
+
 }
 
 func TestUpdateEmailOTPFailures(t *testing.T) {
@@ -400,19 +414,19 @@ func TestUpdateEmailOTPFailures(t *testing.T) {
 
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.OTP().UpdateUserEmail("", "email", r)
+	_, err = a.OTP().UpdateUserEmail("", "email", nil, r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "loginID"))
-	_, err = a.OTP().UpdateUserEmail("id", "", r)
+	_, err = a.OTP().UpdateUserEmail("id", "", nil, r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "email"))
-	_, err = a.OTP().UpdateUserEmail("id", "email", r)
+	_, err = a.OTP().UpdateUserEmail("id", "email", nil, r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "email"))
 
 	r = &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: "somename", Value: jwtTokenValid})
-	_, err = a.OTP().UpdateUserEmail("id", "test@test.com", r)
+	_, err = a.OTP().UpdateUserEmail("id", "test@test.com", nil, r)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }
@@ -421,6 +435,7 @@ func TestUpdatePhoneOTP(t *testing.T) {
 	loginID := "943248329844"
 	phone := "+111111111111"
 	maskedPhone := "+*******111"
+	checkOptions := true
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeUpdateUserPhoneOTP(descope.MethodSMS), r.URL.RequestURI())
 
@@ -428,6 +443,14 @@ func TestUpdatePhoneOTP(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, loginID, body["loginId"])
 		assert.EqualValues(t, phone, body["phone"])
+		if checkOptions {
+			assert.EqualValues(t, true, body["addToLoginIDs"])
+			assert.EqualValues(t, true, body["onMergeUseExisting"])
+		} else {
+			assert.EqualValues(t, nil, body["addToLoginIDs"])
+			assert.EqualValues(t, nil, body["onMergeUseExisting"])
+		}
+
 		u, p := getProjectAndJwt(r)
 		assert.NotEmpty(t, u)
 		assert.NotEmpty(t, p)
@@ -439,10 +462,13 @@ func TestUpdatePhoneOTP(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	mp, err := a.OTP().UpdateUserPhone(descope.MethodSMS, loginID, phone, r)
+	mp, err := a.OTP().UpdateUserPhone(descope.MethodSMS, loginID, phone, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true}, r)
 	require.NoError(t, err)
 	require.EqualValues(t, maskedPhone, mp)
-
+	checkOptions = false
+	mp, err = a.OTP().UpdateUserPhone(descope.MethodSMS, loginID, phone, nil, r)
+	require.NoError(t, err)
+	require.EqualValues(t, maskedPhone, mp)
 }
 
 func TestUpdatePhoneOTPFailures(t *testing.T) {
@@ -450,21 +476,21 @@ func TestUpdatePhoneOTPFailures(t *testing.T) {
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.OTP().UpdateUserPhone(descope.MethodSMS, "", "+11111111111", r)
+	_, err = a.OTP().UpdateUserPhone(descope.MethodSMS, "", "+11111111111", nil, r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "loginID"))
-	_, err = a.OTP().UpdateUserPhone(descope.MethodSMS, "id", "", r)
+	_, err = a.OTP().UpdateUserPhone(descope.MethodSMS, "id", "", nil, r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "phone"))
-	_, err = a.OTP().UpdateUserPhone(descope.MethodSMS, "id", "aaaaa", r)
+	_, err = a.OTP().UpdateUserPhone(descope.MethodSMS, "id", "aaaaa", nil, r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "phone"))
-	_, err = a.OTP().UpdateUserPhone(descope.MethodEmail, "id", "+11111111111", r)
+	_, err = a.OTP().UpdateUserPhone(descope.MethodEmail, "id", "+11111111111", nil, r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "method"))
 	r = &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: "somename", Value: jwtTokenValid})
-	_, err = a.OTP().UpdateUserPhone(descope.MethodSMS, "id", "+11111111111", r)
+	_, err = a.OTP().UpdateUserPhone(descope.MethodSMS, "id", "+11111111111", nil, r)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }

@@ -63,7 +63,7 @@ func (auth *magicLink) Verify(token string, w http.ResponseWriter) (*descope.Aut
 	return auth.generateAuthenticationInfo(httpResponse, w)
 }
 
-func (auth *magicLink) UpdateUserEmail(loginID, email, URI string, r *http.Request) (string, error) {
+func (auth *magicLink) UpdateUserEmail(loginID, email, URI string, updateOptions *descope.UpdateOptions, r *http.Request) (string, error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
@@ -77,13 +77,16 @@ func (auth *magicLink) UpdateUserEmail(loginID, email, URI string, r *http.Reque
 	if err != nil {
 		return "", err
 	}
+	if updateOptions == nil {
+		updateOptions = &descope.UpdateOptions{}
+	}
 	masked := getMaskedValue(descope.MethodEmail)
 	options := &api.HTTPRequest{ResBodyObj: masked}
-	_, err = auth.client.DoPostRequest(composeUpdateUserEmailMagicLink(), newMagicLinkUpdateEmailRequestBody(loginID, email, URI, false), options, pswd)
+	_, err = auth.client.DoPostRequest(composeUpdateUserEmailMagicLink(), newMagicLinkUpdateEmailRequestBody(loginID, email, URI, false, updateOptions), options, pswd)
 	return masked.GetMasked(), err
 }
 
-func (auth *magicLink) UpdateUserPhone(method descope.DeliveryMethod, loginID, phone, URI string, r *http.Request) (string, error) {
+func (auth *magicLink) UpdateUserPhone(method descope.DeliveryMethod, loginID, phone, URI string, updateOptions *descope.UpdateOptions, r *http.Request) (string, error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
@@ -100,8 +103,11 @@ func (auth *magicLink) UpdateUserPhone(method descope.DeliveryMethod, loginID, p
 	if err != nil {
 		return "", err
 	}
+	if updateOptions == nil {
+		updateOptions = &descope.UpdateOptions{}
+	}
 	masked := getMaskedValue(descope.MethodSMS)
 	options := &api.HTTPRequest{ResBodyObj: masked}
-	_, err = auth.client.DoPostRequest(composeUpdateUserPhoneMagiclink(method), newMagicLinkUpdatePhoneRequestBody(loginID, phone, URI, false), options, pswd)
+	_, err = auth.client.DoPostRequest(composeUpdateUserPhoneMagiclink(method), newMagicLinkUpdatePhoneRequestBody(loginID, phone, URI, false, updateOptions), options, pswd)
 	return masked.GetMasked(), err
 }

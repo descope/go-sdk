@@ -261,6 +261,7 @@ func TestUpdateUserEmailEnchantedLink(t *testing.T) {
 	loginID := "943248329844"
 	email := "test@test.com"
 	uri := "https://some.url.com"
+	checkOptions := true
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
 		assert.EqualValues(t, composeUpdateUserEmailEnchantedLink(), r.URL.RequestURI())
 
@@ -269,6 +270,13 @@ func TestUpdateUserEmailEnchantedLink(t *testing.T) {
 		assert.EqualValues(t, loginID, body["loginId"])
 		assert.EqualValues(t, email, body["email"])
 		assert.EqualValues(t, uri, body["URI"])
+		if checkOptions {
+			assert.EqualValues(t, true, body["addToLoginIDs"])
+			assert.EqualValues(t, true, body["onMergeUseExisting"])
+		} else {
+			assert.EqualValues(t, nil, body["addToLoginIDs"])
+			assert.EqualValues(t, nil, body["onMergeUseExisting"])
+		}
 		assert.True(t, body["crossDevice"].(bool))
 		u, p := getProjectAndJwt(r)
 		assert.NotEmpty(t, u)
@@ -277,7 +285,10 @@ func TestUpdateUserEmailEnchantedLink(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	_, err = a.EnchantedLink().UpdateUserEmail(loginID, email, uri, r)
+	_, err = a.EnchantedLink().UpdateUserEmail(loginID, email, uri, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true}, r)
+	require.NoError(t, err)
+	checkOptions = false
+	_, err = a.EnchantedLink().UpdateUserEmail(loginID, email, uri, nil, r)
 	require.NoError(t, err)
 }
 
@@ -289,11 +300,11 @@ func TestUpdateUserEmailEnchantedLinkMissingArgs(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	_, err = a.EnchantedLink().UpdateUserEmail("", email, uri, r)
+	_, err = a.EnchantedLink().UpdateUserEmail("", email, uri, nil, r)
 	require.Error(t, err)
-	_, err = a.EnchantedLink().UpdateUserEmail(loginID, "", uri, r)
+	_, err = a.EnchantedLink().UpdateUserEmail(loginID, "", uri, nil, r)
 	require.Error(t, err)
-	_, err = a.EnchantedLink().UpdateUserEmail(loginID, "not_a_valid_email", uri, r)
+	_, err = a.EnchantedLink().UpdateUserEmail(loginID, "not_a_valid_email", uri, nil, r)
 	require.Error(t, err)
 }
 

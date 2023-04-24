@@ -221,6 +221,11 @@ func (ur *UserResponse) GetCreatedTime() time.Time {
 	return time.Unix(int64(ur.CreatedTime), 0)
 }
 
+type UpdateOptions struct {
+	AddToLoginIDs      bool `json:"addToLoginIDs,omitempty"`
+	OnMergeUseExisting bool `json:"onMergeUseExisting,omitempty"`
+}
+
 type AccessKeyResponse struct {
 	ID          string              `json:"id,omitempty"`
 	Name        string              `json:"name,omitempty"`

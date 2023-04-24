@@ -79,13 +79,15 @@ type totpSignUpRequestBody struct {
 }
 
 type otpUpdateEmailRequestBody struct {
-	LoginID string `json:"loginId,omitempty"`
-	Email   string `json:"email,omitempty"`
+	*descope.UpdateOptions `json:",inline"`
+	LoginID                string `json:"loginId,omitempty"`
+	Email                  string `json:"email,omitempty"`
 }
 
 type otpUpdatePhoneRequestBody struct {
-	LoginID string `json:"loginId,omitempty"`
-	Phone   string `json:"phone,omitempty"`
+	*descope.UpdateOptions `json:",inline"`
+	LoginID                string `json:"loginId,omitempty"`
+	Phone                  string `json:"phone,omitempty"`
 }
 
 type magicLinkAuthenticationRequestBody struct {
@@ -102,17 +104,19 @@ type magicLinkAuthenticationSignUpRequestBody struct {
 }
 
 type magicLinkUpdateEmailRequestBody struct {
-	Email       string `json:"email,inline"`
-	LoginID     string `json:"loginId,inline"`
-	URI         string `json:"URI,omitempty"`
-	CrossDevice bool   `json:"crossDevice,omitempty"`
+	*descope.UpdateOptions `json:",inline"`
+	Email                  string `json:"email,inline"`
+	LoginID                string `json:"loginId,inline"`
+	URI                    string `json:"URI,omitempty"`
+	CrossDevice            bool   `json:"crossDevice,omitempty"`
 }
 
 type magicLinkUpdatePhoneRequestBody struct {
-	Phone       string `json:"phone,inline"`
-	LoginID     string `json:"loginId,inline"`
-	URI         string `json:"URI,omitempty"`
-	CrossDevice bool   `json:"crossDevice,omitempty"`
+	*descope.UpdateOptions `json:",inline"`
+	Phone                  string `json:"phone,inline"`
+	LoginID                string `json:"loginId,inline"`
+	URI                    string `json:"URI,omitempty"`
+	CrossDevice            bool   `json:"crossDevice,omitempty"`
 }
 
 type magicLinkAuthenticationVerifyRequestBody struct {
@@ -146,12 +150,12 @@ func newSignUPTOTPRequestBody(loginID string, user *descope.User) *totpSignUpReq
 	return &totpSignUpRequestBody{LoginID: loginID, User: user}
 }
 
-func newOTPUpdateEmailRequestBody(loginID, email string) *otpUpdateEmailRequestBody {
-	return &otpUpdateEmailRequestBody{LoginID: loginID, Email: email}
+func newOTPUpdateEmailRequestBody(loginID, email string, updateOptions *descope.UpdateOptions) *otpUpdateEmailRequestBody {
+	return &otpUpdateEmailRequestBody{LoginID: loginID, Email: email, UpdateOptions: updateOptions}
 }
 
-func newOTPUpdatePhoneRequestBody(loginID, phone string) *otpUpdatePhoneRequestBody {
-	return &otpUpdatePhoneRequestBody{LoginID: loginID, Phone: phone}
+func newOTPUpdatePhoneRequestBody(loginID, phone string, updateOptions *descope.UpdateOptions) *otpUpdatePhoneRequestBody {
+	return &otpUpdatePhoneRequestBody{LoginID: loginID, Phone: phone, UpdateOptions: updateOptions}
 }
 
 func newMagicLinkAuthenticationRequestBody(value, URI string, crossDevice bool, loginOptions *descope.LoginOptions) *magicLinkAuthenticationRequestBody {
@@ -184,12 +188,12 @@ func newAuthenticationVerifyTOTPRequestBody(value string, code string, loginOpti
 	return &authenticationVerifyTOTPRequestBody{authenticationVerifyRequestBody: newAuthenticationVerifyRequestBody(value, code), LoginOptions: loginOptions}
 }
 
-func newMagicLinkUpdateEmailRequestBody(loginID, email string, URI string, crossDevice bool) *magicLinkUpdateEmailRequestBody {
-	return &magicLinkUpdateEmailRequestBody{LoginID: loginID, Email: email, URI: URI, CrossDevice: crossDevice}
+func newMagicLinkUpdateEmailRequestBody(loginID, email string, URI string, crossDevice bool, updateOptions *descope.UpdateOptions) *magicLinkUpdateEmailRequestBody {
+	return &magicLinkUpdateEmailRequestBody{LoginID: loginID, Email: email, URI: URI, CrossDevice: crossDevice, UpdateOptions: updateOptions}
 }
 
-func newMagicLinkUpdatePhoneRequestBody(loginID, phone string, URI string, crossDevice bool) *magicLinkUpdatePhoneRequestBody {
-	return &magicLinkUpdatePhoneRequestBody{LoginID: loginID, Phone: phone, URI: URI, CrossDevice: crossDevice}
+func newMagicLinkUpdatePhoneRequestBody(loginID, phone string, URI string, crossDevice bool, updateOptions *descope.UpdateOptions) *magicLinkUpdatePhoneRequestBody {
+	return &magicLinkUpdatePhoneRequestBody{LoginID: loginID, Phone: phone, URI: URI, CrossDevice: crossDevice, UpdateOptions: updateOptions}
 }
 
 func newAuthenticationGetMagicLinkSessionBody(pendingRef string) *authenticationGetMagicLinkSessionBody {
