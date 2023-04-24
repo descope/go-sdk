@@ -48,7 +48,12 @@ func userCreate(args []string) error {
 	for _, tenantID := range flags.Tenants {
 		tenants = append(tenants, &descope.AssociatedTenant{TenantID: tenantID})
 	}
-	_, err := descopeClient.Management.User().Create(args[0], flags.Email, flags.Phone, flags.Name, nil, tenants)
+	user := &descope.UserRequest{}
+	user.Email = "foo@bar.com"
+	user.Phone = flags.Phone
+	user.Name = flags.Name
+	user.Tenants = tenants
+	_, err := descopeClient.Management.User().Create(args[0], user)
 	return err
 }
 
@@ -57,7 +62,13 @@ func userUpdate(args []string) error {
 	for _, tenantID := range flags.Tenants {
 		tenants = append(tenants, &descope.AssociatedTenant{TenantID: tenantID})
 	}
-	_, err := descopeClient.Management.User().Update(args[0], flags.Email, flags.Phone, flags.Name, nil, tenants)
+	user := &descope.UserRequest{}
+	user.Email = "foo@bar.com"
+	user.Phone = flags.Phone
+	user.Name = flags.Name
+	user.Tenants = tenants
+
+	_, err := descopeClient.Management.User().Update(args[0], user)
 	return err
 }
 

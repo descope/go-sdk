@@ -41,23 +41,24 @@ type User interface {
 	// Create a new user.
 	//
 	// The loginID is required and will determine what the user will use to
-	// sign in. All other fields are optional.
+	// sign in. user is optional, and if provided, all attributes within it are optional
 	//
 	// The roles parameter is an optional list of the user's roles for users that
 	// aren't associated with a tenant, while the tenants parameter can be used
 	// to specify which tenants to associate the user with and what roles the
 	// user has in each one.
-	Create(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error)
+	Create(loginID string, user *descope.UserRequest) (*descope.UserResponse, error)
 
 	// Create a new test user.
 	//
 	// The loginID is required and will determine what the user will use to
-	// sign in, make sure the login id is unique for test. All other fields are optional.
+	// sign in, make sure the login id is unique for test. user is optional, and if provided,
+	// all attributes within it are optional
 	//
 	// You can later generate OTP, Magic link and enchanted link to use in the test without the need
 	// of 3rd party messaging services
 	// Those users are not counted as part of the monthly active users
-	CreateTestUser(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error)
+	CreateTestUser(loginID string, user *descope.UserRequest) (*descope.UserResponse, error)
 
 	// Create a new user and invite them via an email message.
 	//
@@ -68,7 +69,7 @@ type User interface {
 	// the email is explicitly set, or the loginID itself is an email address.
 	// You must configure the invitation URL in the Descope console prior to
 	// calling the method.
-	Invite(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error)
+	Invite(loginID string, user *descope.UserRequest) (*descope.UserResponse, error)
 
 	// Update an existing user.
 	//
@@ -76,7 +77,7 @@ type User interface {
 	//
 	// IMPORTANT: All parameters will override whatever values are currently set
 	// in the existing user. Use carefully.
-	Update(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error)
+	Update(loginID string, user *descope.UserRequest) (*descope.UserResponse, error)
 
 	// Delete an existing user.
 	//

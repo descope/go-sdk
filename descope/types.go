@@ -2,6 +2,7 @@ package descope
 
 import (
 	"strings"
+	"time"
 
 	"github.com/descope/go-sdk/descope/logger"
 	"github.com/lestrrat-go/jwx/v2/jwt"
@@ -194,17 +195,30 @@ type User struct {
 	Email string `json:"email,omitempty"`
 }
 
+type UserRequest struct {
+	User             `json:",inline"`
+	Roles            []string            `json:"roles,omitempty"`
+	Tenants          []*AssociatedTenant `json:"tenants,omitempty"`
+	CustomAttributes map[string]any      `json:"customAttributes,omitempty"`
+}
+
 type UserResponse struct {
-	User          `json:",inline"`
-	UserID        string              `json:"userId,omitempty"`
-	LoginIDs      []string            `json:"loginIds,omitempty"`
-	VerifiedEmail bool                `json:"verifiedEmail,omitempty"`
-	VerifiedPhone bool                `json:"verifiedPhone,omitempty"`
-	RoleNames     []string            `json:"roleNames,omitempty"`
-	UserTenants   []*AssociatedTenant `json:"userTenants,omitempty"`
-	Status        string              `json:"status,omitempty"`
-	Picture       string              `json:"picture,omitempty"`
-	Test          bool                `json:"test,omitempty"`
+	User             `json:",inline"`
+	UserID           string              `json:"userId,omitempty"`
+	LoginIDs         []string            `json:"loginIds,omitempty"`
+	VerifiedEmail    bool                `json:"verifiedEmail,omitempty"`
+	VerifiedPhone    bool                `json:"verifiedPhone,omitempty"`
+	RoleNames        []string            `json:"roleNames,omitempty"`
+	UserTenants      []*AssociatedTenant `json:"userTenants,omitempty"`
+	Status           string              `json:"status,omitempty"`
+	Picture          string              `json:"picture,omitempty"`
+	Test             bool                `json:"test,omitempty"`
+	CustomAttributes map[string]any      `json:"customAttributes,omitempty"`
+	CreatedTime      int32               `json:"createdTime,omitempty"`
+}
+
+func (ur *UserResponse) GetCreatedTime() time.Time {
+	return time.Unix(int64(ur.CreatedTime), 0)
 }
 
 type AccessKeyResponse struct {
@@ -255,6 +269,11 @@ type Role struct {
 	Name            string   `json:"name"`
 	Description     string   `json:"description,omitempty"`
 	PermissionNames []string `json:"permissionNames,omitempty"`
+	CreatedTime     int32    `json:"createdTime,omitempty"`
+}
+
+func (r *Role) GetCreatedTime() time.Time {
+	return time.Unix(int64(r.CreatedTime), 0)
 }
 
 // Options for searching and filtering users

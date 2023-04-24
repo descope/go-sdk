@@ -10,23 +10,32 @@ type user struct {
 	managementBase
 }
 
-func (u *user) Create(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
-	return u.create(loginID, email, phone, displayName, roles, tenants, false, false)
+func (u *user) Create(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
+	if user == nil {
+		user = &descope.UserRequest{}
+	}
+	return u.create(loginID, user.Email, user.Phone, user.Name, user.Roles, user.Tenants, false, false, user.CustomAttributes)
 }
 
-func (u *user) CreateTestUser(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
-	return u.create(loginID, email, phone, displayName, roles, tenants, false, true)
+func (u *user) CreateTestUser(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
+	if user == nil {
+		user = &descope.UserRequest{}
+	}
+	return u.create(loginID, user.Email, user.Phone, user.Name, user.Roles, user.Tenants, false, true, user.CustomAttributes)
 }
 
-func (u *user) Invite(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
-	return u.create(loginID, email, phone, displayName, roles, tenants, true, false)
+func (u *user) Invite(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
+	if user == nil {
+		user = &descope.UserRequest{}
+	}
+	return u.create(loginID, user.Email, user.Phone, user.Name, user.Roles, user.Tenants, true, false, user.CustomAttributes)
 }
 
-func (u *user) create(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool) (*descope.UserResponse, error) {
+func (u *user) create(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any) (*descope.UserResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
-	req := makeCreateUserRequest(loginID, email, phone, displayName, roles, tenants, invite, test)
+	req := makeCreateUserRequest(loginID, email, phone, displayName, roles, tenants, invite, test, customAttributes)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserCreate(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -34,11 +43,14 @@ func (u *user) create(loginID, email, phone, displayName string, roles []string,
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) Update(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
+func (u *user) Update(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
-	req := makeUpdateUserRequest(loginID, email, phone, displayName, roles, tenants)
+	if user == nil {
+		user = &descope.UserRequest{}
+	}
+	req := makeUpdateUserRequest(loginID, user.Email, user.Phone, user.Name, user.Roles, user.Tenants, user.CustomAttributes)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserUpdate(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -274,8 +286,8 @@ func (u *user) GenerateEnchantedLinkForTestUser(loginID, URI string) (link, pend
 	return unmarshalGenerateLinkForTestResponse(res)
 }
 
-func makeCreateUserRequest(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool) map[string]any {
-	req := makeUpdateUserRequest(loginID, email, phone, displayName, roles, tenants)
+func makeCreateUserRequest(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any) map[string]any {
+	req := makeUpdateUserRequest(loginID, email, phone, displayName, roles, tenants, customAttributes)
 	req["invite"] = invite
 	if test {
 		req["test"] = true
@@ -283,14 +295,15 @@ func makeCreateUserRequest(loginID, email, phone, displayName string, roles []st
 	return req
 }
 
-func makeUpdateUserRequest(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) map[string]any {
+func makeUpdateUserRequest(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant, customAttributes map[string]any) map[string]any {
 	return map[string]any{
-		"loginId":     loginID,
-		"email":       email,
-		"phone":       phone,
-		"displayName": displayName,
-		"roleNames":   roles,
-		"userTenants": makeAssociatedTenantList(tenants),
+		"loginId":          loginID,
+		"email":            email,
+		"phone":            phone,
+		"displayName":      displayName,
+		"roleNames":        roles,
+		"userTenants":      makeAssociatedTenantList(tenants),
+		"customAttributes": customAttributes,
 	}
 }
 
