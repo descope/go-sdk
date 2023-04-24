@@ -607,6 +607,8 @@ err := descopeClient.Management.AccessKey().Delete("access-key-id")
 You can manage SSO settings and map SSO group roles and user attributes.
 
 ```go
+// TODO
+
 // You can configure SSO settings manually by setting the required fields directly
 tenantID := "tenant-id" // Which tenant this configuration is for
 idpURL := "https://idp.com"

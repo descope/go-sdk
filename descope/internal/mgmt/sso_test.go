@@ -5,9 +5,86 @@ import (
 	"testing"
 
 	"github.com/descope/go-sdk/descope"
+	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/tests/helpers"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func TestGetSSOSettingsSuccess(t *testing.T) {
+	tenantID := "abc"
+	response := map[string]any{
+		"tenantID":       tenantID,
+		"idpEntityID":    "idpEntityID",
+		"idpSSOURL":      "idpSSOURL",
+		"idpCertificate": "idpCertificate",
+		"idpMetadataURL": "idpMetadataURL",
+		"spEntityId":     "spEntityId",
+		"spACSUrl":       "spACSUrl",
+		"spCertificate":  "spCertificate",
+		"userMapping": map[string]string{
+			"name":        "name",
+			"email":       "email",
+			"username":    "username",
+			"phoneNumber": "phoneNumber",
+			"group":       "group",
+		},
+		"groupsMapping": []map[string]any{
+			{
+				"role": map[string]string{
+					"id":   "role.id",
+					"name": "role.name",
+				},
+				"groups": []string{"group1"},
+			},
+		},
+		"redirectURL": "redirectURL",
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		params := helpers.ReadParams(r)
+		require.Equal(t, tenantID, params["tenantId"])
+	}, response))
+	res, err := mgmt.SSO().GetSettings(tenantID)
+	require.NoError(t, err)
+	assert.EqualValues(t, tenantID, res.TenantID)
+	assert.EqualValues(t, "idpEntityID", res.IdpEntityID)
+	assert.EqualValues(t, "idpSSOURL", res.IdpSSOURL)
+	assert.EqualValues(t, "idpCertificate", res.IdpCertificate)
+	assert.EqualValues(t, "idpMetadataURL", res.IdpMetadataURL)
+	assert.EqualValues(t, "spEntityId", res.SpEntityID)
+	assert.EqualValues(t, "spACSUrl", res.SpACSUrl)
+	assert.EqualValues(t, "spCertificate", res.SpCertificate)
+	assert.EqualValues(t, "email", res.UserMapping.Email)
+	assert.EqualValues(t, "group", res.UserMapping.Group)
+	assert.EqualValues(t, "name", res.UserMapping.Name)
+	assert.EqualValues(t, "phoneNumber", res.UserMapping.PhoneNumber)
+	assert.EqualValues(t, "username", res.UserMapping.Username)
+	require.Len(t, res.GroupsMapping, 1)
+	assert.EqualValues(t, []string{"group1"}, res.GroupsMapping[0].Groups)
+	assert.EqualValues(t, "role.id", res.GroupsMapping[0].Role.Id)
+	assert.EqualValues(t, "role.name", res.GroupsMapping[0].Role.Name)
+	assert.EqualValues(t, "redirectURL", res.RedirectURL)
+}
+
+func TestGetSSOSettingsError(t *testing.T) {
+	tenantID := "abc"
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		params := helpers.ReadParams(r)
+		require.Equal(t, tenantID, params["tenantId"])
+	}))
+	res, err := mgmt.SSO().GetSettings(tenantID)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
+func TestGetSSOSettingsErrorMissingTenantID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {}))
+	res, err := mgmt.SSO().GetSettings("")
+	require.ErrorIs(t, err, utils.NewInvalidArgumentError("tenantID"))
+	assert.Nil(t, res)
+}
 
 func TestSSOConfigureSettingsSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {

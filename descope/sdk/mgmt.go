@@ -230,6 +230,11 @@ type AccessKey interface {
 
 // Provides functions for configuring SSO for a project.
 type SSO interface {
+	// Get SSO setting for a tenant.
+	//
+	// tenantID is required.
+	GetSettings(tenantID string) (*descope.SSOSettingsResponse, error)
+
 	// Configure SSO setting for a tenant manually.
 	//
 	// tenantID, idpURL, idpCert, entityID, are required. The idpURL is the URL for the identity provider and idpCert

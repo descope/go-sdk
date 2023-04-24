@@ -71,6 +71,10 @@ func (m *MockJWT) UpdateJWTWithCustomClaims(jwt string, customClaims map[string]
 // Mock SSO
 
 type MockSSO struct {
+	GetSettingsAssert   func(tenantID string)
+	GetSettingsResponse *descope.SSOSettingsResponse
+	GetSettingsError    error
+
 	ConfigureSettingsAssert func(tenantID, idpURL, idpCert, entityID, redirectURL, domain string)
 	ConfigureSettingsError  error
 
@@ -79,6 +83,13 @@ type MockSSO struct {
 
 	ConfigureMappingAssert func(tenantID string, roleMappings []*descope.RoleMapping, attributeMapping *descope.AttributeMapping)
 	ConfigureMappingError  error
+}
+
+func (m *MockSSO) GetSettings(tenantID string) (*descope.SSOSettingsResponse, error) {
+	if m.GetSettingsAssert != nil {
+		m.GetSettingsAssert(tenantID)
+	}
+	return m.GetSettingsResponse, m.GetSettingsError
 }
 
 func (m *MockSSO) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL, domain string) error {

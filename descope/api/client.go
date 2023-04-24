@@ -100,7 +100,7 @@ var (
 			accessKeyDeactivate:              "mgmt/accesskey/deactivate",
 			accessKeyActivate:                "mgmt/accesskey/activate",
 			accessKeyDelete:                  "mgmt/accesskey/delete",
-			ssoConfigure:                     "mgmt/sso/settings",
+			ssoSettings:                      "mgmt/sso/settings",
 			ssoMetadata:                      "mgmt/sso/metadata",
 			ssoMapping:                       "mgmt/sso/mapping",
 			updateJWT:                        "mgmt/jwt/update",
@@ -215,10 +215,10 @@ type mgmtEndpoints struct {
 	accessKeyActivate   string
 	accessKeyDelete     string
 
-	ssoConfigure string
-	ssoMetadata  string
-	ssoMapping   string
-	updateJWT    string
+	ssoSettings string
+	ssoMetadata string
+	ssoMapping  string
+	updateJWT   string
 
 	permissionCreate  string
 	permissionUpdate  string
@@ -491,8 +491,8 @@ func (e *endpoints) ManagementAccessKeyDelete() string {
 	return path.Join(e.version, e.mgmt.accessKeyDelete)
 }
 
-func (e *endpoints) ManagementSSOConfigure() string {
-	return path.Join(e.version, e.mgmt.ssoConfigure)
+func (e *endpoints) ManagementSSOSettings() string {
+	return path.Join(e.version, e.mgmt.ssoSettings)
 }
 
 func (e *endpoints) ManagementSSOMetadata() string {
