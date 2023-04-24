@@ -62,7 +62,7 @@ func TestGetSSOSettingsSuccess(t *testing.T) {
 	assert.EqualValues(t, "username", res.UserMapping.Username)
 	require.Len(t, res.GroupsMapping, 1)
 	assert.EqualValues(t, []string{"group1"}, res.GroupsMapping[0].Groups)
-	assert.EqualValues(t, "role.id", res.GroupsMapping[0].Role.Id)
+	assert.EqualValues(t, "role.id", res.GroupsMapping[0].Role.ID)
 	assert.EqualValues(t, "role.name", res.GroupsMapping[0].Role.Name)
 	assert.EqualValues(t, "redirectURL", res.RedirectURL)
 }
