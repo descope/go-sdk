@@ -81,3 +81,13 @@ func TestNewTokenWithProjectID(t *testing.T) {
 	assert.EqualValues(t, 0, resToken.RefreshExpiration)
 	assert.EqualValues(t, expiration.Unix(), resToken.Expiration)
 }
+
+func TestGetCreatedTime(t *testing.T) {
+	now := time.Now()
+	ct := now.Unix()
+	now = time.Unix(ct, 0)
+	u := UserResponse{CreatedTime: int32(ct)}
+	assert.True(t, u.GetCreatedTime().Equal(now))
+	r := Role{CreatedTime: int32(ct)}
+	assert.True(t, r.GetCreatedTime().Equal(now))
+}

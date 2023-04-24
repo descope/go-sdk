@@ -41,7 +41,7 @@ type User interface {
 	// Create a new user.
 	//
 	// The loginID is required and will determine what the user will use to
-	// sign in. All other fields are optional.
+	// sign in. user is optional, and if provided, all attributes within it are optional
 	//
 	// The roles parameter is an optional list of the user's roles for users that
 	// aren't associated with a tenant, while the tenants parameter can be used
@@ -52,7 +52,8 @@ type User interface {
 	// Create a new test user.
 	//
 	// The loginID is required and will determine what the user will use to
-	// sign in, make sure the login id is unique for test. All other fields are optional.
+	// sign in, make sure the login id is unique for test. user is optional, and if provided,
+	// all attributes within it are optional
 	//
 	// You can later generate OTP, Magic link and enchanted link to use in the test without the need
 	// of 3rd party messaging services

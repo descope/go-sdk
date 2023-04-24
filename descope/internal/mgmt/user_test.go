@@ -76,6 +76,18 @@ func TestUserCreateError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestUserCreateUpdateOrInviteWithNoUser(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	_, err := m.User().Create("abc", nil)
+	require.NoError(t, err)
+	_, err = m.User().CreateTestUser("abc", nil)
+	require.NoError(t, err)
+	_, err = m.User().Invite("abc", nil)
+	require.NoError(t, err)
+	_, err = m.User().Update("abc", nil)
+	require.NoError(t, err)
+}
+
 func TestUserUpdateSuccess(t *testing.T) {
 	response := map[string]any{
 		"user": map[string]any{
