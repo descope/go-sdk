@@ -527,24 +527,36 @@ You can create, update, delete or load users, as well as search according to fil
 // A user must have a loginID, other fields are optional.
 // Roles should be set directly if no tenants exist, otherwise set
 // on a per-tenant basis.
-user, err := descopeClient.Management.User().Create("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*descope.AssociatedTenant{
-    {TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
+userReq := &descope.UserRequest{}
+userReq.Email = "desmond@descope.com"
+userReq.Name = "Desmond Copeland"
+userReq.Tenants = []*descope.AssociatedTenant{
+    {TenantID: "tenant-ID1", Roles: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},
-})
+}
+user, err := descopeClient.Management.User().Create("desmond@descope.com", userReq)
 
 // Alternatively, a user can be created and invited via an email message.
 // Make sure to configure the invite URL in the Descope console prior to using this function,
 // and that an email address is provided in the information.
-err := descopeClient.Management.User().Invite("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*descope.AssociatedTenant{
-    {TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
+userReqInvite := &descope.UserRequest{}
+userReqInvite.Email = "desmond@descope.com"
+userReqInvite.Name = "Desmond Copeland"
+userReqInvite.Tenants = []*descope.AssociatedTenant{
+    {TenantID: "tenant-ID1", Roles: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},
-})
+}
+err := descopeClient.Management.User().Invite("desmond@descope.com", userReqInvite)
 
 // Update will override all fields as is. Use carefully.
-err := descopeClient.Management.User().Update("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*descope.AssociatedTenant{
-    {TenantID: "tenant-ID1", RoleNames: []string{"role-name1", "role-name2"}},
+userReqUpdate := &descope.UserRequest{}
+userReqUpdate.Email = "desmond@descope.com"
+userReqUpdate.Name = "Desmond Copeland"
+userReqUpdate.Tenants = []*descope.AssociatedTenant{
+    {TenantID: "tenant-ID1", Roles: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},
-})
+}
+err := descopeClient.Management.User().Update("desmond@descope.com", userReqUpdate)
 
 // User deletion cannot be undone. Use carefully.
 err := descopeClient.Management.User().Delete("desmond@descope.com")

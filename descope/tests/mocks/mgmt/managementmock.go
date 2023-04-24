@@ -105,19 +105,19 @@ func (m *MockSSO) ConfigureMapping(tenantID string, roleMappings []*descope.Role
 // Mock User
 
 type MockUser struct {
-	CreateAssert   func(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant)
+	CreateAssert   func(loginID string, user *descope.UserRequest)
 	CreateResponse *descope.UserResponse
 	CreateError    error
 
-	CreateTestUserAssert   func(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant)
+	CreateTestUserAssert   func(loginID string, user *descope.UserRequest)
 	CreateTestUserResponse *descope.UserResponse
 	CreateTestUserError    error
 
-	InviteAssert   func(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant)
+	InviteAssert   func(loginID string, user *descope.UserRequest)
 	InviteResponse *descope.UserResponse
 	InviteError    error
 
-	UpdateAssert   func(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant)
+	UpdateAssert   func(loginID string, user *descope.UserRequest)
 	UpdateResponse *descope.UserResponse
 	UpdateError    error
 
@@ -193,30 +193,30 @@ type MockUser struct {
 	GenerateEnchantedLinkForTestUserError              error
 }
 
-func (m *MockUser) Create(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
+func (m *MockUser) Create(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
 	if m.CreateAssert != nil {
-		m.CreateAssert(loginID, email, phone, displayName, roles, tenants)
+		m.CreateAssert(loginID, user)
 	}
 	return m.CreateResponse, m.CreateError
 }
 
-func (m *MockUser) CreateTestUser(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
+func (m *MockUser) CreateTestUser(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
 	if m.CreateTestUserAssert != nil {
-		m.CreateTestUserAssert(loginID, email, phone, displayName, roles, tenants)
+		m.CreateTestUserAssert(loginID, user)
 	}
 	return m.CreateTestUserResponse, m.CreateTestUserError
 }
 
-func (m *MockUser) Invite(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
+func (m *MockUser) Invite(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
 	if m.InviteAssert != nil {
-		m.InviteAssert(loginID, email, phone, displayName, roles, tenants)
+		m.InviteAssert(loginID, user)
 	}
 	return m.InviteResponse, m.InviteError
 }
 
-func (m *MockUser) Update(loginID, email, phone, displayName string, roles []string, tenants []*descope.AssociatedTenant) (*descope.UserResponse, error) {
+func (m *MockUser) Update(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
 	if m.UpdateAssert != nil {
-		m.UpdateAssert(loginID, email, phone, displayName, roles, tenants)
+		m.UpdateAssert(loginID, user)
 	}
 	return m.UpdateResponse, m.UpdateError
 }

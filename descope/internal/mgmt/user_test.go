@@ -15,6 +15,7 @@ func TestUserCreateSuccess(t *testing.T) {
 		"user": map[string]any{
 			"email": "a@b.c",
 		}}
+	ca := map[string]any{"ak": "av"}
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
@@ -25,13 +26,18 @@ func TestUserCreateSuccess(t *testing.T) {
 		require.Len(t, roleNames, 1)
 		require.Equal(t, "foo", roleNames[0])
 		require.Nil(t, req["test"])
+		assert.EqualValues(t, ca, req["customAttributes"])
 	}, response))
-	res, err := m.User().Create("abc", "foo@bar.com", "", "", []string{"foo"}, nil)
+	user := &descope.UserRequest{}
+	user.Email = "foo@bar.com"
+	user.Roles = []string{"foo"}
+	user.CustomAttributes = ca
+	res, err := m.User().Create("abc", user)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
 
-	res, err = m.User().Invite("abc", "foo@bar.com", "", "", []string{"foo"}, nil)
+	res, err = m.User().Invite("abc", user)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
@@ -53,7 +59,10 @@ func TestUserCreateTestUserSuccess(t *testing.T) {
 		require.Equal(t, "foo", roleNames[0])
 		require.EqualValues(t, true, req["test"])
 	}, response))
-	res, err := m.User().CreateTestUser("abc", "foo@bar.com", "", "", []string{"foo"}, nil)
+	user := &descope.UserRequest{}
+	user.Email = "foo@bar.com"
+	user.Roles = []string{"foo"}
+	res, err := m.User().CreateTestUser("abc", user)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
@@ -61,7 +70,9 @@ func TestUserCreateTestUserSuccess(t *testing.T) {
 
 func TestUserCreateError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	_, err := m.User().Create("", "foo@bar.com", "", "", nil, nil)
+	user := &descope.UserRequest{}
+	user.Email = "foo@bar.com"
+	_, err := m.User().Create("", user)
 	require.Error(t, err)
 }
 
@@ -91,7 +102,10 @@ func TestUserUpdateSuccess(t *testing.T) {
 			}
 		}
 	}, response))
-	res, err := m.User().Update("abc", "foo@bar.com", "", "", nil, []*descope.AssociatedTenant{{TenantID: "x", Roles: []string{"foo"}}, {TenantID: "y", Roles: []string{"bar"}}})
+	user := &descope.UserRequest{}
+	user.Email = "foo@bar.com"
+	user.Tenants = []*descope.AssociatedTenant{{TenantID: "x", Roles: []string{"foo"}}, {TenantID: "y", Roles: []string{"bar"}}}
+	res, err := m.User().Update("abc", user)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
@@ -99,7 +113,9 @@ func TestUserUpdateSuccess(t *testing.T) {
 
 func TestUserUpdateError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	_, err := m.User().Update("", "foo@bar.com", "", "", nil, nil)
+	user := &descope.UserRequest{}
+	user.Email = "foo@bar.com"
+	_, err := m.User().Update("", user)
 	require.Error(t, err)
 }
 
