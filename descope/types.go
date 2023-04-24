@@ -53,17 +53,17 @@ type GroupsMapping struct {
 }
 
 type SSOSettingsResponse struct {
-	TenantID       string           `json:"tenantID,omitempty"`
-	IdpEntityID    string           `json:"idpEntityID,omitempty"`
-	IdpSSOURL      string           `json:"idpSSOURL,omitempty"`
+	TenantID       string           `json:"tenantId,omitempty"`
+	IdpEntityID    string           `json:"idpEntityId,omitempty"`
+	IdpSSOURL      string           `json:"idpSSOUrl,omitempty"`
 	IdpCertificate string           `json:"idpCertificate,omitempty"`
-	IdpMetadataURL string           `json:"idpMetadataURL,omitempty"`
+	IdpMetadataURL string           `json:"idpMetadataUrl,omitempty"`
 	SpEntityID     string           `json:"spEntityId,omitempty"`
 	SpACSUrl       string           `json:"spACSUrl,omitempty"`
 	SpCertificate  string           `json:"spCertificate,omitempty"`
 	UserMapping    *UserMapping     `json:"userMapping,omitempty"`
 	GroupsMapping  []*GroupsMapping `json:"groupsMapping,omitempty"`
-	RedirectURL    string           `json:"redirectURL,omitempty"`
+	RedirectURL    string           `json:"redirectUrl,omitempty"`
 }
 
 // PasswordPolicy - represents the rules for valid passwords configured in the policy
