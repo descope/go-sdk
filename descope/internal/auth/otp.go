@@ -78,7 +78,7 @@ func (auth *otp) VerifyCode(method descope.DeliveryMethod, loginID string, code 
 	return auth.generateAuthenticationInfo(httpResponse, w)
 }
 
-func (auth *otp) UpdateUserEmail(loginID, email string, r *http.Request) (string, error) {
+func (auth *otp) UpdateUserEmail(loginID, email string, updateOptions *descope.UpdateOptions, r *http.Request) (string, error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
@@ -92,13 +92,16 @@ func (auth *otp) UpdateUserEmail(loginID, email string, r *http.Request) (string
 	if err != nil {
 		return "", err
 	}
+	if updateOptions == nil {
+		updateOptions = &descope.UpdateOptions{}
+	}
 	masked := getMaskedValue(descope.MethodEmail)
 	options := &api.HTTPRequest{ResBodyObj: masked}
-	_, err = auth.client.DoPostRequest(composeUpdateUserEmailOTP(), newOTPUpdateEmailRequestBody(loginID, email), options, pswd)
+	_, err = auth.client.DoPostRequest(composeUpdateUserEmailOTP(), newOTPUpdateEmailRequestBody(loginID, email, updateOptions), options, pswd)
 	return masked.GetMasked(), err
 }
 
-func (auth *otp) UpdateUserPhone(method descope.DeliveryMethod, loginID, phone string, r *http.Request) (string, error) {
+func (auth *otp) UpdateUserPhone(method descope.DeliveryMethod, loginID, phone string, updateOptions *descope.UpdateOptions, r *http.Request) (string, error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
@@ -115,8 +118,11 @@ func (auth *otp) UpdateUserPhone(method descope.DeliveryMethod, loginID, phone s
 	if err != nil {
 		return "", err
 	}
+	if updateOptions == nil {
+		updateOptions = &descope.UpdateOptions{}
+	}
 	masked := getMaskedValue(descope.MethodSMS)
 	options := &api.HTTPRequest{ResBodyObj: masked}
-	_, err = auth.client.DoPostRequest(composeUpdateUserPhoneOTP(method), newOTPUpdatePhoneRequestBody(loginID, phone), options, pswd)
+	_, err = auth.client.DoPostRequest(composeUpdateUserPhoneOTP(method), newOTPUpdatePhoneRequestBody(loginID, phone, updateOptions), options, pswd)
 	return masked.GetMasked(), err
 }

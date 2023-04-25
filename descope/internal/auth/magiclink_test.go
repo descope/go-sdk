@@ -388,6 +388,7 @@ func TestUpdateUserEmail(t *testing.T) {
 	email := "test@test.com"
 	maskedEmail := "t***@test.com"
 	uri := "https://some.url.com"
+	checkOptions := true
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeUpdateUserEmailMagicLink(), r.URL.RequestURI())
 
@@ -397,6 +398,14 @@ func TestUpdateUserEmail(t *testing.T) {
 		assert.EqualValues(t, email, body["email"])
 		assert.EqualValues(t, uri, body["URI"])
 		assert.Nil(t, body["crossDevice"])
+		if checkOptions {
+			assert.EqualValues(t, true, body["addToLoginIDs"])
+			assert.EqualValues(t, true, body["onMergeUseExisting"])
+		} else {
+			assert.EqualValues(t, nil, body["addToLoginIDs"])
+			assert.EqualValues(t, nil, body["onMergeUseExisting"])
+		}
+
 		u, p := getProjectAndJwt(r)
 		assert.NotEmpty(t, u)
 		assert.NotEmpty(t, p)
@@ -409,7 +418,11 @@ func TestUpdateUserEmail(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	me, err := a.MagicLink().UpdateUserEmail(loginID, email, uri, r)
+	me, err := a.MagicLink().UpdateUserEmail(loginID, email, uri, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true}, r)
+	require.NoError(t, err)
+	require.EqualValues(t, maskedEmail, me)
+	checkOptions = false
+	me, err = a.MagicLink().UpdateUserEmail(loginID, email, uri, nil, r)
 	require.NoError(t, err)
 	require.EqualValues(t, maskedEmail, me)
 }
@@ -419,13 +432,13 @@ func TestUpdateEmailMagicLinkFailures(t *testing.T) {
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.MagicLink().UpdateUserEmail("", "email@email.com", "", r)
+	_, err = a.MagicLink().UpdateUserEmail("", "email@email.com", "", nil, r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "loginID"))
-	_, err = a.MagicLink().UpdateUserEmail("id", "", "", r)
+	_, err = a.MagicLink().UpdateUserEmail("id", "", "", nil, r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "email"))
-	_, err = a.MagicLink().UpdateUserEmail("id", "email", "", r)
+	_, err = a.MagicLink().UpdateUserEmail("id", "email", "", nil, r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "email"))
 }
@@ -435,6 +448,7 @@ func TestUpdateUserPhone(t *testing.T) {
 	phone := "+111111111111"
 	maskedPhone := "*****1111"
 	uri := "https://some.url.com"
+	checkOptions := true
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeUpdateUserPhoneMagiclink(descope.MethodSMS), r.URL.RequestURI())
 
@@ -443,6 +457,13 @@ func TestUpdateUserPhone(t *testing.T) {
 		assert.EqualValues(t, loginID, body["loginId"])
 		assert.EqualValues(t, phone, body["phone"])
 		assert.EqualValues(t, uri, body["URI"])
+		if checkOptions {
+			assert.EqualValues(t, true, body["addToLoginIDs"])
+			assert.EqualValues(t, true, body["onMergeUseExisting"])
+		} else {
+			assert.EqualValues(t, nil, body["addToLoginIDs"])
+			assert.EqualValues(t, nil, body["onMergeUseExisting"])
+		}
 		assert.Nil(t, body["crossDevice"])
 		u, p := getProjectAndJwt(r)
 		assert.NotEmpty(t, u)
@@ -455,7 +476,11 @@ func TestUpdateUserPhone(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	mp, err := a.MagicLink().UpdateUserPhone(descope.MethodSMS, loginID, phone, uri, r)
+	mp, err := a.MagicLink().UpdateUserPhone(descope.MethodSMS, loginID, phone, uri, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true}, r)
+	require.NoError(t, err)
+	require.EqualValues(t, maskedPhone, mp)
+	checkOptions = false
+	mp, err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, loginID, phone, uri, nil, r)
 	require.NoError(t, err)
 	require.EqualValues(t, maskedPhone, mp)
 }
@@ -465,21 +490,21 @@ func TestUpdatePhoneMagicLinkFailures(t *testing.T) {
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "", "+1111111111", "", r)
+	_, err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "", "+1111111111", "", nil, r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "loginID"))
-	_, err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "id", "", "", r)
+	_, err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "id", "", "", nil, r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "phone"))
-	_, err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "id", "phone", "", r)
+	_, err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "id", "phone", "", nil, r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "phone"))
-	_, err = a.MagicLink().UpdateUserPhone(descope.MethodEmail, "id", "+1111111111", "", r)
+	_, err = a.MagicLink().UpdateUserPhone(descope.MethodEmail, "id", "+1111111111", "", nil, r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "method"))
 	r = &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: "somename", Value: jwtTokenValid})
-	_, err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "id", "+111111111111", "", r)
+	_, err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "id", "+111111111111", "", nil, r)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }

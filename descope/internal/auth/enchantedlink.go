@@ -76,7 +76,7 @@ func (auth *enchantedLink) Verify(token string) error {
 	return nil
 }
 
-func (auth *enchantedLink) UpdateUserEmail(loginID, email, URI string, r *http.Request) (*descope.EnchantedLinkResponse, error) {
+func (auth *enchantedLink) UpdateUserEmail(loginID, email, URI string, updateOptions *descope.UpdateOptions, r *http.Request) (*descope.EnchantedLinkResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
@@ -90,7 +90,10 @@ func (auth *enchantedLink) UpdateUserEmail(loginID, email, URI string, r *http.R
 	if err != nil {
 		return nil, err
 	}
-	httpResponse, err := auth.client.DoPostRequest(composeUpdateUserEmailEnchantedLink(), newMagicLinkUpdateEmailRequestBody(loginID, email, URI, true), nil, pswd)
+	if updateOptions == nil {
+		updateOptions = &descope.UpdateOptions{}
+	}
+	httpResponse, err := auth.client.DoPostRequest(composeUpdateUserEmailEnchantedLink(), newMagicLinkUpdateEmailRequestBody(loginID, email, URI, true, updateOptions), nil, pswd)
 	if err != nil {
 		return nil, err
 	}
