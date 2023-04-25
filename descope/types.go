@@ -200,6 +200,7 @@ type UserRequest struct {
 	Roles            []string            `json:"roles,omitempty"`
 	Tenants          []*AssociatedTenant `json:"tenants,omitempty"`
 	CustomAttributes map[string]any      `json:"customAttributes,omitempty"`
+	Picture          string              `json:"picture,omitempty"`
 }
 
 type UserResponse struct {
