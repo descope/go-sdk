@@ -35,6 +35,38 @@ type WebAuthnFinishRequest struct {
 	Response      string `json:"response,omitempty"`
 }
 
+type UserMapping struct {
+	Name        string `json:"name,omitempty"`
+	Email       string `json:"email,omitempty"`
+	Username    string `json:"username,omitempty"`
+	PhoneNumber string `json:"phoneNumber,omitempty"`
+	Group       string `json:"group,omitempty"`
+}
+
+type RoleItem struct {
+	ID   string `json:"id,omitempty"`
+	Name string `json:"name,omitempty"`
+}
+
+type GroupsMapping struct {
+	Role   *RoleItem `json:"role,omitempty"`
+	Groups []string  `json:"groups,omitempty"`
+}
+
+type SSOSettingsResponse struct {
+	TenantID       string           `json:"tenantId,omitempty"`
+	IdpEntityID    string           `json:"idpEntityId,omitempty"`
+	IdpSSOURL      string           `json:"idpSSOUrl,omitempty"`
+	IdpCertificate string           `json:"idpCertificate,omitempty"`
+	IdpMetadataURL string           `json:"idpMetadataUrl,omitempty"`
+	SpEntityID     string           `json:"spEntityId,omitempty"`
+	SpACSUrl       string           `json:"spACSUrl,omitempty"`
+	SpCertificate  string           `json:"spCertificate,omitempty"`
+	UserMapping    *UserMapping     `json:"userMapping,omitempty"`
+	GroupsMapping  []*GroupsMapping `json:"groupsMapping,omitempty"`
+	RedirectURL    string           `json:"redirectUrl,omitempty"`
+}
+
 // PasswordPolicy - represents the rules for valid passwords configured in the policy
 // in the Descope console. This can be used to implement client-side validation of new
 // user passwords for a better user experience. Either way, the comprehensive
