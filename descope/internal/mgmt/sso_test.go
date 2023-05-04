@@ -39,6 +39,7 @@ func TestGetSSOSettingsSuccess(t *testing.T) {
 			},
 		},
 		"redirectURL": "redirectURL",
+		"domain":      "lulu",
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -65,6 +66,7 @@ func TestGetSSOSettingsSuccess(t *testing.T) {
 	assert.EqualValues(t, "role.id", res.GroupsMapping[0].Role.ID)
 	assert.EqualValues(t, "role.name", res.GroupsMapping[0].Role.Name)
 	assert.EqualValues(t, "redirectURL", res.RedirectURL)
+	assert.EqualValues(t, "lulu", res.Domain)
 }
 
 func TestGetSSOSettingsError(t *testing.T) {
