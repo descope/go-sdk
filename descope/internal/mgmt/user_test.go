@@ -430,6 +430,74 @@ func TestUserUpdateNameError(t *testing.T) {
 	require.Nil(t, res)
 }
 
+func TestUserUpdatePictureSuccess(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"name": "foo",
+		}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, "foo", req["picture"])
+	}, response))
+	res, err := m.User().UpdatePicture("abc", "foo")
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, "foo", res.Name)
+}
+
+func TestUserUpdatePictureBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := m.User().UpdatePicture("", "foo")
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserUpdatePictureError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := m.User().UpdatePicture("abc", "foo")
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserUpdateCustomAttributeSuccess(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"name": "foo",
+		}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, "foo", req["attributeKey"])
+		require.Equal(t, "bar", req["attributeValue"])
+	}, response))
+	res, err := m.User().UpdateCustomAttribute("abc", "foo", "bar")
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, "foo", res.Name)
+}
+
+func TestUserUpdateCustomAttributeBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := m.User().UpdateCustomAttribute("", "foo", "bar")
+	require.Error(t, err)
+	require.Nil(t, res)
+	res, err = m.User().UpdateCustomAttribute("id", "", "bar")
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserUpdateCustomAttributeError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := m.User().UpdateCustomAttribute("abc", "foo", "bar")
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
 func TestUserAddRoleSuccess(t *testing.T) {
 	response := map[string]any{
 		"user": map[string]any{

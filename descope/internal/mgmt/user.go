@@ -177,6 +177,33 @@ func (u *user) UpdateDisplayName(loginID, displayName string) (*descope.UserResp
 	return unmarshalUserResponse(res)
 }
 
+func (u *user) UpdatePicture(loginID, picture string) (*descope.UserResponse, error) {
+	if loginID == "" {
+		return nil, utils.NewInvalidArgumentError("loginID")
+	}
+	req := map[string]any{"loginId": loginID, "picture": picture}
+	res, err := u.client.DoPostRequest(api.Routes.ManagementUserUpdatePicture(), req, nil, u.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalUserResponse(res)
+}
+
+func (u *user) UpdateCustomAttribute(loginID, key string, value any) (*descope.UserResponse, error) {
+	if loginID == "" {
+		return nil, utils.NewInvalidArgumentError("loginID")
+	}
+	if key == "" {
+		return nil, utils.NewInvalidArgumentError("key")
+	}
+	req := map[string]any{"loginId": loginID, "attributeKey": key, "attributeValue": value}
+	res, err := u.client.DoPostRequest(api.Routes.ManagementUserUpdateCustomAttribute(), req, nil, u.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalUserResponse(res)
+}
+
 func (u *user) AddRoles(loginID string, roles []string) (*descope.UserResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
