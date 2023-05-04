@@ -32,9 +32,42 @@ descopeClient := client.New()
 descopeClient := client.NewWithConfig(&client.Config{ProjectID: projectID})
 ```
 
-## Usage
+## Authentication Functions
 
-Here are some examples how to manage and authenticate users:
+These sections show how to use the SDK to perform various authentication/authorization functions:
+
+1. [OTP Authentication](#otp-authentication)
+2. [Magic Link](#magic-link)
+3. [Enchanted Link](#enchanted-link)
+4. [OAuth](#oauth)
+5. [SSO/SAML](#ssosaml)
+6. [TOTP Authentication](#totp-authentication)
+7. [Passwords](#passwords)
+8. [Session Validation](#session-validation)
+9. [Roles & Permission Validation](#roles--permission-validation)
+10. [Logging Out](#logging-out)
+
+## API Managment Function
+
+These sections show how to use the SDK to perform API management functions:
+
+1. [Setup](#setup-1)
+2. [Manage Tenants](#manage-tenants)
+3. [Manage Users](#manage-users)
+4. [Manage Access Keys](#manage-access-keys)
+5. [Manage SSO Setting](#manage-sso-setting)
+6. [Manage Permissions](#manage-permissions)
+7. [Manage Roles](#manage-roles)
+8. [Query SSO Groups](#query-sso-groups)
+7. [Manage Flows](#manage-flows)
+8. [Manage JWTs](#manage-jwts)
+9. [Utils for your end to end (e2e) tests and integration tests](#utils-for-your-end-to-end-e2e-tests-and-integration-tests)
+
+If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
+
+If you're developing unit tests, see how you can use our mocks package underneath the [Unit Testing and Data Mocks](#unit-testing-and-data-mocks) section.
+
+---
 
 ### OTP Authentication
 
@@ -829,24 +862,6 @@ link, pendingRef, err := descopeClient.Management.User().GenerateEnchantedLinkFo
 
 // Note 1: The generate code/link methods, work only for test users, will not work for regular users.
 // Note 2: In case of testing sign-in / sign-up methods with test users, need to make sure to generate the code prior calling the sign-in / sign-up methods (such as: descopeClient.Auth.MagicLink().SignUpOrIn)
-```
-
-## API Rate limits
-
-Handle API rate limits by comparing the error to the ErrRateLimitExceeded error, which includes the Info map with the key "RateLimitExceededRetryAfter." This key indicates how many seconds until the next valid API call can take place. More information on Descope's rate limit is covered here: [Descope rate limit reference page](https://docs.descope.com/rate-limit)
-
-```go
-err := descopeClient.Auth.MagicLink().SignUpOrIn(descope.MethodEmail, "desmond@descope.com", "http://myapp.com/verify-magic-link")
-if err != nil {
-    if errors.Is(err, descope.ErrRateLimitExceeded) {
-        if rateLimitErr, ok := err.(*descope.Error); ok {
-            if retryAfterSeconds, ok := rateLimitErr.Info[descope.ErrorInfoKeys.RateLimitExceededRetryAfter].(int); ok {
-                // This variable indicates how many seconds until the next valid API call can take place.
-            }
-        }
-    }
-     // handle other error cases
-}
 ```
 
 ## Code Examples
