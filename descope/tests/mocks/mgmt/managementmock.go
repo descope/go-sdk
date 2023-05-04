@@ -166,6 +166,14 @@ type MockUser struct {
 	UpdateDisplayNameResponse *descope.UserResponse
 	UpdateDisplayNameError    error
 
+	UpdatePictureAssert   func(loginID, picture string)
+	UpdatePictureResponse *descope.UserResponse
+	UpdatePictureError    error
+
+	UpdateCustomAttributeAssert   func(loginID, key string, value any)
+	UpdateCustomAttributeResponse *descope.UserResponse
+	UpdateCustomAttributeError    error
+
 	AddRoleAssert   func(loginID string, roles []string)
 	AddRoleResponse *descope.UserResponse
 	AddRoleError    error
@@ -300,6 +308,20 @@ func (m *MockUser) UpdateDisplayName(loginID, displayName string) (*descope.User
 		m.UpdateDisplayNameAssert(loginID, displayName)
 	}
 	return m.UpdateDisplayNameResponse, m.UpdateDisplayNameError
+}
+
+func (m *MockUser) UpdatePicture(loginID, picture string) (*descope.UserResponse, error) {
+	if m.UpdatePictureAssert != nil {
+		m.UpdatePictureAssert(loginID, picture)
+	}
+	return m.UpdatePictureResponse, m.UpdatePictureError
+}
+
+func (m *MockUser) UpdateCustomAttribute(loginID, key string, value any) (*descope.UserResponse, error) {
+	if m.UpdateCustomAttributeAssert != nil {
+		m.UpdateCustomAttributeAssert(loginID, key, value)
+	}
+	return m.UpdateCustomAttributeResponse, m.UpdateCustomAttributeError
 }
 
 func (m *MockUser) AddRoles(loginID string, roles []string) (*descope.UserResponse, error) {

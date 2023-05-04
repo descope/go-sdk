@@ -134,6 +134,17 @@ type User interface {
 	// The displayName parameter can be empty in which case the name will be removed.
 	UpdateDisplayName(loginID, displayName string) (*descope.UserResponse, error)
 
+	// Update an existing user's picture (i.e., url to the avatar).
+	//
+	// The picture parameter can be empty in which case the picture will be removed.
+	UpdatePicture(loginID, picture string) (*descope.UserResponse, error)
+
+	// Update an existing user's custom attribute.
+	//
+	// key should be a custom attribute that was already declared in the Descope console app.
+	// value should match the type of the declared attribute
+	UpdateCustomAttribute(loginID, key string, value any) (*descope.UserResponse, error)
+
 	// Add roles for a user without tenant association. Use AddTenantRoles for users
 	// that are part of a multi-tenant project.
 	AddRoles(loginID string, roles []string) (*descope.UserResponse, error)

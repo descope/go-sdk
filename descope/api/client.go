@@ -86,6 +86,8 @@ var (
 			userUpdateEmail:                  "mgmt/user/update/email",
 			userUpdatePhone:                  "mgmt/user/update/phone",
 			userUpdateName:                   "mgmt/user/update/name",
+			userUpdatePicture:                "mgmt/user/update/picture",
+			userUpdateCustomAttribute:        "mgmt/user/update/customAttribute",
 			userAddTenant:                    "mgmt/user/update/tenant/add",
 			userRemoveTenant:                 "mgmt/user/update/tenant/remove",
 			userAddRole:                      "mgmt/user/update/role/add",
@@ -188,20 +190,22 @@ type mgmtEndpoints struct {
 	tenantDelete  string
 	tenantLoadAll string
 
-	userCreate             string
-	userUpdate             string
-	userDelete             string
-	userDeleteAllTestUsers string
-	userLoad               string
-	userSearchAll          string
-	userUpdateStatus       string
-	userUpdateEmail        string
-	userUpdatePhone        string
-	userUpdateName         string
-	userAddTenant          string
-	userRemoveTenant       string
-	userAddRole            string
-	userRemoveRole         string
+	userCreate                string
+	userUpdate                string
+	userDelete                string
+	userDeleteAllTestUsers    string
+	userLoad                  string
+	userSearchAll             string
+	userUpdateStatus          string
+	userUpdateEmail           string
+	userUpdatePhone           string
+	userUpdateName            string
+	userUpdatePicture         string
+	userUpdateCustomAttribute string
+	userAddTenant             string
+	userRemoveTenant          string
+	userAddRole               string
+	userRemoveRole            string
 
 	userGenerateOTPForTest           string
 	userGenerateMagicLinkForTest     string
@@ -433,6 +437,14 @@ func (e *endpoints) ManagementUserUpdatePhone() string {
 
 func (e *endpoints) ManagementUserUpdateDisplayName() string {
 	return path.Join(e.version, e.mgmt.userUpdateName)
+}
+
+func (e *endpoints) ManagementUserUpdatePicture() string {
+	return path.Join(e.version, e.mgmt.userUpdatePicture)
+}
+
+func (e *endpoints) ManagementUserUpdateCustomAttribute() string {
+	return path.Join(e.version, e.mgmt.userUpdateCustomAttribute)
 }
 
 func (e *endpoints) ManagementUserAddTenant() string {
