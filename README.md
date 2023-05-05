@@ -59,9 +59,9 @@ These sections show how to use the SDK to perform API management functions:
 6. [Manage Permissions](#manage-permissions)
 7. [Manage Roles](#manage-roles)
 8. [Query SSO Groups](#query-sso-groups)
-7. [Manage Flows](#manage-flows)
-8. [Manage JWTs](#manage-jwts)
-9. [Utils for your end to end (e2e) tests and integration tests](#utils-for-your-end-to-end-e2e-tests-and-integration-tests)
+9. [Manage Flows](#manage-flows)
+10. [Manage JWTs](#manage-jwts)
+11. [Utils for your end to end (e2e) tests and integration tests](#utils-for-your-end-to-end-e2e-tests-and-integration-tests)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
