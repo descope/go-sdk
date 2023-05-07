@@ -65,7 +65,7 @@ If you wish to run any of our code samples and play with them, check out our [Co
 
 If you're developing unit tests, see how you can use our mocks package underneath the [Unit Testing and Data Mocks](#unit-testing-and-data-mocks) section.
 
-If you're performing end-to-end testing, check out the [Utils for your end to end (e2e) tests and integration tests](#utils-for-your-end-to-end-e2e-tests-and-integration-tests) section.
+If you're performing end-to-end testing, check out the [Utils for your end to end (e2e) tests and integration tests](#utils-for-your-end-to-end-e2e-tests-and-integration-tests) section. You will need to use the `descopeClient` object created under [Setup](#setup-1) guide.
 
 For rate limiting information, please confer to the [API Rate Limits](#api-rate-limits) section.
 
