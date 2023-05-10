@@ -249,6 +249,9 @@ type UserResponse struct {
 	Test             bool                `json:"test,omitempty"`
 	CustomAttributes map[string]any      `json:"customAttributes,omitempty"`
 	CreatedTime      int32               `json:"createdTime,omitempty"`
+	TOTP             bool                `json:"totp,omitempty"`
+	SAML             bool                `json:"saml,omitempty"`
+	OAuth            map[string]bool     `json:"oauth,omitempty"`
 }
 
 func (ur *UserResponse) GetCreatedTime() time.Time {
