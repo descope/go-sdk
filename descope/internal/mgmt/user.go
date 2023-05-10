@@ -285,7 +285,7 @@ func (u *user) SetPassword(loginID string, newPassword string) error {
 	}
 
 	req := makeSetPasswordRequest(loginID, newPassword)
-	_, err := u.client.DoPostRequest(api.Routes.ManagementUserGenerateEnchantedLinkForTest(), req, nil, u.conf.ManagementKey)
+	_, err := u.client.DoPostRequest(api.Routes.ManagementUserSetPassword(), req, nil, u.conf.ManagementKey)
 	return err
 }
 
@@ -295,7 +295,7 @@ func (u *user) ExpirePassword(loginID string) error {
 	}
 
 	req := makeExpirePasswordRequest(loginID)
-	_, err := u.client.DoPostRequest(api.Routes.ManagementUserGenerateEnchantedLinkForTest(), req, nil, u.conf.ManagementKey)
+	_, err := u.client.DoPostRequest(api.Routes.ManagementUserExpirePassword(), req, nil, u.conf.ManagementKey)
 	return err
 }
 
