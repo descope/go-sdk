@@ -276,6 +276,29 @@ func (u *user) RemoveTenantRoles(loginID string, tenantID string, roles []string
 	return unmarshalUserResponse(res)
 }
 
+func (u *user) SetPassword(loginID string, newPassword string) error {
+	if loginID == "" {
+		return utils.NewInvalidArgumentError("loginID")
+	}
+	if newPassword == "" {
+		return utils.NewInvalidArgumentError("newPassword")
+	}
+
+	req := makeSetPasswordRequest(loginID, newPassword)
+	_, err := u.client.DoPostRequest(api.Routes.ManagementUserGenerateEnchantedLinkForTest(), req, nil, u.conf.ManagementKey)
+	return err
+}
+
+func (u *user) ExpirePassword(loginID string) error {
+	if loginID == "" {
+		return utils.NewInvalidArgumentError("loginID")
+	}
+
+	req := makeExpirePasswordRequest(loginID)
+	_, err := u.client.DoPostRequest(api.Routes.ManagementUserGenerateEnchantedLinkForTest(), req, nil, u.conf.ManagementKey)
+	return err
+}
+
 func (u *user) GenerateOTPForTestUser(method descope.DeliveryMethod, loginID string) (code string, err error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
@@ -347,6 +370,19 @@ func makeUpdateUserRolesRequest(loginID, tenantID string, roles []string) map[st
 		"loginId":   loginID,
 		"tenantId":  tenantID,
 		"roleNames": roles,
+	}
+}
+
+func makeSetPasswordRequest(loginID string, newPassword string) map[string]any {
+	return map[string]any{
+		"loginId":     loginID,
+		"newPassword": newPassword,
+	}
+}
+
+func makeExpirePasswordRequest(loginID string) map[string]any {
+	return map[string]any{
+		"loginId": loginID,
 	}
 }
 

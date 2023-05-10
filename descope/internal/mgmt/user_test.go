@@ -714,6 +714,57 @@ func TestUserRemoveTenantRoleError(t *testing.T) {
 	require.Nil(t, res)
 }
 
+func TestUserSetPasswordSuccess(t *testing.T) {
+	response := map[string]any{}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, "123", req["newPassword"])
+	}, response))
+	err := m.User().SetPassword("abc", "123")
+	require.NoError(t, err)
+}
+
+func TestUserSetPasswordBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	err := m.User().SetPassword("", "123")
+	require.Error(t, err)
+	err = m.User().SetPassword("abc", "")
+	require.Error(t, err)
+}
+
+func TestSetUserPasswordError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	err := m.User().SetPassword("abc", "123")
+	require.Error(t, err)
+}
+
+func TestUserExpirePasswordSuccess(t *testing.T) {
+	response := map[string]any{}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+	}, response))
+	err := m.User().ExpirePassword("abc")
+	require.NoError(t, err)
+}
+
+func TestUserExpirePasswordBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	err := m.User().ExpirePassword("")
+	require.Error(t, err)
+}
+
+func TestExpireUserPasswordError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	err := m.User().ExpirePassword("abc")
+	require.Error(t, err)
+}
+
 func TestGenerateOTPForTestUserSuccess(t *testing.T) {
 	loginID := "some-id"
 	code := "123456"
