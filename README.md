@@ -521,7 +521,7 @@ if err == nil {
 
 ### Manage Users
 
-You can create, update, delete or load users, as well as search according to filters:
+You can create, update, delete or load users, as well as setting new password, expire password and search according to filters:
 
 ```go
 // A user must have a loginID, other fields are optional.
@@ -575,6 +575,13 @@ if err == nil {
         // Do something
     }
 }
+
+// Set a new password for a user
+// Note that the new password will be initially set as expired, and the user will need to replace it before logging in. 
+err := descopeClient.Management.User().SetPassword("<login-id>", "<new-password>")
+
+// Expire user password
+err := descopeClient.Management.User().ExpirePassword("<login-id>")
 ```
 
 ### Manage Access Keys
