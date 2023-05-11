@@ -581,7 +581,7 @@ if err == nil {
 
 You can set or expire a user's password.
 Note: When setting a password, it will be initially set as expired.
-The user could not log-in with this password, and must replace it.
+The user could not log-in an expired password, and must replace it.
 
 ```go
 // Set a user's password
