@@ -17,6 +17,7 @@ var (
 	ErrUserAlreadyExists         = newServerError("E062107")
 	ErrInvalidOneTimeCode        = newServerError("E061102")
 	ErrEnchantedLinkUnauthorized = newServerError("E062503")
+	ErrPasswordExpired           = newServerError("E062909")
 
 	// server management
 	ErrManagementUserNotFound = newServerError("E112102")

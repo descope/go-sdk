@@ -276,15 +276,15 @@ func (u *user) RemoveTenantRoles(loginID string, tenantID string, roles []string
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) SetPassword(loginID string, newPassword string) error {
+func (u *user) SetPassword(loginID string, password string) error {
 	if loginID == "" {
 		return utils.NewInvalidArgumentError("loginID")
 	}
-	if newPassword == "" {
-		return utils.NewInvalidArgumentError("newPassword")
+	if password == "" {
+		return utils.NewInvalidArgumentError("password")
 	}
 
-	req := makeSetPasswordRequest(loginID, newPassword)
+	req := makeSetPasswordRequest(loginID, password)
 	_, err := u.client.DoPostRequest(api.Routes.ManagementUserSetPassword(), req, nil, u.conf.ManagementKey)
 	return err
 }
@@ -373,10 +373,10 @@ func makeUpdateUserRolesRequest(loginID, tenantID string, roles []string) map[st
 	}
 }
 
-func makeSetPasswordRequest(loginID string, newPassword string) map[string]any {
+func makeSetPasswordRequest(loginID string, password string) map[string]any {
 	return map[string]any{
-		"loginId":     loginID,
-		"newPassword": newPassword,
+		"loginId":  loginID,
+		"password": password,
 	}
 }
 

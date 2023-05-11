@@ -721,7 +721,7 @@ func TestUserSetPasswordSuccess(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["loginId"])
-		require.Equal(t, "123", req["newPassword"])
+		require.Equal(t, "123", req["password"])
 	}, response))
 	err := m.User().SetPassword("abc", "123")
 	require.NoError(t, err)
