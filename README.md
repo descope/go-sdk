@@ -521,7 +521,7 @@ if err == nil {
 
 ### Manage Users
 
-You can create, update, delete or load users, as well as setting new password, expire password and search according to filters:
+You can create, update, delete or load users, as well as search according to filters:
 
 ```go
 // A user must have a loginID, other fields are optional.
@@ -575,13 +575,30 @@ if err == nil {
         // Do something
     }
 }
+```
 
-// Set a new password for a user
-// Note that the new password will be initially set as expired, and the user will need to replace it before logging in. 
-err := descopeClient.Management.User().SetPassword("<login-id>", "<new-password>")
+#### Set or Expire User Password
 
-// Expire user password
+You can set or expire a user's password.
+Note: When setting a password, it will be initially set as expired.
+The user could not log-in with this password, and must replace it.
+
+```go
+// Set a user's password
+err := descopeClient.Management.User().SetPassword("<login-id>", "<some-password>")
+
+// Or alternatively, expire a user password
 err := descopeClient.Management.User().ExpirePassword("<login-id>")
+
+// Later, if the user is signing in with an expired password, the returned error will be ErrPasswordExpired
+authInfo, err := descopeClient.Auth.Password().SignIn("<login-id>", "<some-password>", w)
+if err != nil {
+     if errors.Is(err, descope.ErrPasswordExpired) {
+        // Handle a case when the error is expired, the user should replace/reset the password
+        // Use descopeClient.Auth.Password().ReplaceUserPassword("<login-id>", "<some-password>", "<new-password>")
+     }
+     // Handle other errors
+}
 ```
 
 ### Manage Access Keys
