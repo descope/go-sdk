@@ -116,6 +116,44 @@ func (to *Token) GetTenantValue(tenant, key string) any {
 	return nil
 }
 
+func (to *Token) IsPermitted(permission string) bool {
+	permitted := false
+	if to.Claims != nil {
+		if rawPerm, ok := to.Claims[ClaimAuthorizedGlobalPermissions]; ok {
+			if permissions, ok := rawPerm.([]any); ok {
+				for i := range permissions {
+					if permissions[i] == permission {
+						permitted = true
+						break
+					}
+				}
+			}
+		}
+	}
+	return permitted
+}
+
+func (to *Token) IsPermittedPerTenant(tenant string, permission string) bool {
+	permitted := false
+	tenants := to.getTenants()
+	tPermissions, ok := tenants[tenant]
+	if ok {
+		if tPermissionsMap, ok := tPermissions.(map[string]any); ok {
+			if rawPerm, ok := tPermissionsMap[ClaimAuthorizedGlobalPermissions]; ok {
+				if permissions, ok := rawPerm.([]any); ok {
+					for i := range permissions {
+						if permissions[i] == permission {
+							permitted = true
+							break
+						}
+					}
+				}
+			}
+		}
+	}
+	return permitted
+}
+
 func (to *Token) getTenants() map[string]any {
 	if to.Claims != nil {
 		if tenants, ok := to.Claims[ClaimAuthorizedTenants].(map[string]any); ok {
@@ -404,9 +442,10 @@ const (
 
 	RedirectLocationCookieName = "Location"
 
-	ContextUserIDProperty               = "DESCOPE_USER_ID"
-	ContextUserIDPropertyKey ContextKey = ContextUserIDProperty
-	ClaimAuthorizedTenants              = "tenants"
+	ContextUserIDProperty                       = "DESCOPE_USER_ID"
+	ContextUserIDPropertyKey         ContextKey = ContextUserIDProperty
+	ClaimAuthorizedTenants                      = "tenants"
+	ClaimAuthorizedGlobalPermissions            = "permissions"
 
 	EnvironmentVariableProjectID     = "DESCOPE_PROJECT_ID"
 	EnvironmentVariablePublicKey     = "DESCOPE_PUBLIC_KEY"
