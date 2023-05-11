@@ -172,8 +172,7 @@ type User interface {
 	SetPassword(loginID string, password string) error
 
 	// Expire the password for the given login ID.
-	// Note: The user could not log-in with this password, and must replace it.
-	// Upon user sign-in with an expired password, the user will get `errors.ErrPasswordExpired` error.
+	// Note: user sign-in with an expired password, the user will get `errors.ErrPasswordExpired` error.
 	// Use the `ResetPassword` or `ReplacePassword` methods to reset/replace the password.
 	ExpirePassword(loginID string) error
 
