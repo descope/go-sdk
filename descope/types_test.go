@@ -91,3 +91,34 @@ func TestGetCreatedTime(t *testing.T) {
 	r := Role{CreatedTime: int32(ct)}
 	assert.True(t, r.GetCreatedTime().Equal(now))
 }
+
+func TestIsPermittedPerTenant(t *testing.T) {
+	tenantID := "somestring"
+	dt := &Token{
+		Claims: map[string]any{
+			ClaimAuthorizedTenants: map[string]any{
+				tenantID: map[string]any{
+					ClaimAuthorizedGlobalPermissions: []any{"a", "b", "c"},
+				},
+			},
+		},
+	}
+	p := dt.IsPermittedPerTenant(tenantID, "a")
+	assert.True(t, p)
+	p = dt.IsPermittedPerTenant(tenantID+"a", "a")
+	assert.False(t, p)
+	p = dt.IsPermittedPerTenant(tenantID, "d")
+	assert.False(t, p)
+}
+
+func TestIsPermitted(t *testing.T) {
+	dt := &Token{
+		Claims: map[string]any{
+			ClaimAuthorizedGlobalPermissions: []any{"a", "b", "c"},
+		},
+	}
+	p := dt.IsPermitted("a")
+	assert.True(t, p)
+	p = dt.IsPermitted("d")
+	assert.False(t, p)
+}
