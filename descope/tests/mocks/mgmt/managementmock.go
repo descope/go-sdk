@@ -198,6 +198,12 @@ type MockUser struct {
 	RemoveTenantRoleResponse *descope.UserResponse
 	RemoveTenantRoleError    error
 
+	SetPasswordAssert func(loginID, password string)
+	SetPasswordError  error
+
+	ExpirePasswordAssert func(loginID string)
+	ExpirePasswordError  error
+
 	GenerateOTPForTestUserAssert   func(method descope.DeliveryMethod, loginID string)
 	GenerateOTPForTestUserResponse string
 	GenerateOTPForTestUserError    error
@@ -364,6 +370,20 @@ func (m *MockUser) RemoveTenantRoles(loginID string, tenantID string, roles []st
 		m.RemoveTenantRoleAssert(loginID, tenantID, roles)
 	}
 	return m.RemoveTenantRoleResponse, m.RemoveTenantRoleError
+}
+
+func (m *MockUser) SetPassword(loginID string, password string) error {
+	if m.SetPasswordAssert != nil {
+		m.SetPasswordAssert(loginID, password)
+	}
+	return m.SetPasswordError
+}
+
+func (m *MockUser) ExpirePassword(loginID string) error {
+	if m.ExpirePasswordAssert != nil {
+		m.ExpirePasswordAssert(loginID)
+	}
+	return m.ExpirePasswordError
 }
 
 func (m *MockUser) GenerateOTPForTestUser(method descope.DeliveryMethod, loginID string) (code string, err error) {

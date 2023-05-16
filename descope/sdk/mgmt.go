@@ -165,6 +165,17 @@ type User interface {
 	// Remove roles from a user in a specific tenant.
 	RemoveTenantRoles(loginID string, tenantID string, roles []string) (*descope.UserResponse, error)
 
+	// Set a password for the given login ID.
+	// Note: The password will automatically be set as expired.
+	// The user will not be able to log-in with this password, and will be required to replace it on next login.
+	// See also: ExpirePassword
+	SetPassword(loginID string, password string) error
+
+	// Expire the password for the given login ID.
+	// Note: user sign-in with an expired password, the user will get `errors.ErrPasswordExpired` error.
+	// Use the `ResetPassword` or `ReplacePassword` methods to reset/replace the password.
+	ExpirePassword(loginID string) error
+
 	// Generate OTP for the given login ID of a test user.
 	// Choose the selected delivery method for verification. (see auth/DeliveryMethod)
 	// It returns the code for the login (exactly as it sent via Email or SMS)

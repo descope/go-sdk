@@ -65,6 +65,7 @@ type SSOSettingsResponse struct {
 	UserMapping    *UserMapping     `json:"userMapping,omitempty"`
 	GroupsMapping  []*GroupsMapping `json:"groupsMapping,omitempty"`
 	RedirectURL    string           `json:"redirectUrl,omitempty"`
+	Domain         string           `json:"domain,omitempty"`
 }
 
 // PasswordPolicy - represents the rules for valid passwords configured in the policy
@@ -113,6 +114,44 @@ func (to *Token) GetTenantValue(tenant, key string) any {
 		return info[key]
 	}
 	return nil
+}
+
+func (to *Token) IsPermitted(permission string) bool {
+	permitted := false
+	if to.Claims != nil {
+		if rawPerm, ok := to.Claims[ClaimAuthorizedGlobalPermissions]; ok {
+			if permissions, ok := rawPerm.([]any); ok {
+				for i := range permissions {
+					if permissions[i] == permission {
+						permitted = true
+						break
+					}
+				}
+			}
+		}
+	}
+	return permitted
+}
+
+func (to *Token) IsPermittedPerTenant(tenant string, permission string) bool {
+	permitted := false
+	tenants := to.getTenants()
+	tPermissions, ok := tenants[tenant]
+	if ok {
+		if tPermissionsMap, ok := tPermissions.(map[string]any); ok {
+			if rawPerm, ok := tPermissionsMap[ClaimAuthorizedGlobalPermissions]; ok {
+				if permissions, ok := rawPerm.([]any); ok {
+					for i := range permissions {
+						if permissions[i] == permission {
+							permitted = true
+							break
+						}
+					}
+				}
+			}
+		}
+	}
+	return permitted
 }
 
 func (to *Token) getTenants() map[string]any {
@@ -248,6 +287,9 @@ type UserResponse struct {
 	Test             bool                `json:"test,omitempty"`
 	CustomAttributes map[string]any      `json:"customAttributes,omitempty"`
 	CreatedTime      int32               `json:"createdTime,omitempty"`
+	TOTP             bool                `json:"totp,omitempty"`
+	SAML             bool                `json:"saml,omitempty"`
+	OAuth            map[string]bool     `json:"oauth,omitempty"`
 }
 
 func (ur *UserResponse) GetCreatedTime() time.Time {
@@ -400,9 +442,10 @@ const (
 
 	RedirectLocationCookieName = "Location"
 
-	ContextUserIDProperty               = "DESCOPE_USER_ID"
-	ContextUserIDPropertyKey ContextKey = ContextUserIDProperty
-	ClaimAuthorizedTenants              = "tenants"
+	ContextUserIDProperty                       = "DESCOPE_USER_ID"
+	ContextUserIDPropertyKey         ContextKey = ContextUserIDProperty
+	ClaimAuthorizedTenants                      = "tenants"
+	ClaimAuthorizedGlobalPermissions            = "permissions"
 
 	EnvironmentVariableProjectID     = "DESCOPE_PROJECT_ID"
 	EnvironmentVariablePublicKey     = "DESCOPE_PUBLIC_KEY"

@@ -104,6 +104,17 @@ func userSearchAll(args []string) error {
 	return err
 }
 
+func setUserPassword(args []string) error {
+	loginID := args[0]
+	password := args[1]
+	return descopeClient.Management.User().SetPassword(loginID, password)
+}
+
+func expireUserPassword(args []string) error {
+	loginID := args[0]
+	return descopeClient.Management.User().ExpirePassword(loginID)
+}
+
 func accessKeyCreate(args []string) error {
 	tenants := []*descope.AssociatedTenant{}
 	for _, tenantID := range flags.Tenants {
@@ -462,6 +473,16 @@ func main() {
 	addCommand(userSearchAll, "user-search-all", "Search existing users", func(cmd *cobra.Command) {
 		// Currently not accepting any filters
 		cmd.Args = cobra.ExactArgs(2)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(setUserPassword, "user-set-password <loginId> <password>", "Set user password (The password will be initially set as expired)", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(2)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(expireUserPassword, "user-expire-password <loginId>", "Expire user password", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(1)
 		cmd.DisableFlagsInUseLine = true
 	})
 

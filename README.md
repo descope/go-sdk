@@ -612,6 +612,30 @@ if err == nil {
 }
 ```
 
+#### Set or Expire User Password
+
+You can set or expire a user's password.
+Note: When setting a password, it will automatically be set as expired.
+The user will not be able log-in using an expired password, and will be required replace it on next login.
+
+```go
+// Set a user's password
+err := descopeClient.Management.User().SetPassword("<login-id>", "<some-password>")
+
+// Or alternatively, expire a user password
+err := descopeClient.Management.User().ExpirePassword("<login-id>")
+
+// Later, if the user is signing in with an expired password, the returned error will be ErrPasswordExpired
+authInfo, err := descopeClient.Auth.Password().SignIn("<login-id>", "<some-password>", w)
+if err != nil {
+     if errors.Is(err, descope.ErrPasswordExpired) {
+        // Handle a case when the error is expired, the user should replace/reset the password
+        // Use descopeClient.Auth.Password().ReplaceUserPassword("<login-id>", "<some-password>", "<new-password>")
+     }
+     // Handle other errors
+}
+```
+
 ### Manage Access Keys
 
 You can create, update, delete or load access keys, as well as search according to filters:
