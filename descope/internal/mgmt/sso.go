@@ -24,6 +24,20 @@ func (s *sso) GetSettings(tenantID string) (*descope.SSOSettingsResponse, error)
 	return unmarshalSSOSettingsResponse(res)
 }
 
+func (s *sso) DeleteSettings(tenantID string) error {
+	if tenantID == "" {
+		return utils.NewInvalidArgumentError("tenantID")
+	}
+	req := &api.HTTPRequest{
+		QueryParams: map[string]string{"tenantId": tenantID},
+	}
+	_, err := s.client.DoDeleteRequest(api.Routes.ManagementSSOSettings(), req, s.conf.ManagementKey)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (s *sso) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL, domain string) error {
 	if tenantID == "" {
 		return utils.NewInvalidArgumentError("tenantID")

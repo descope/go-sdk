@@ -75,6 +75,9 @@ type MockSSO struct {
 	GetSettingsResponse *descope.SSOSettingsResponse
 	GetSettingsError    error
 
+	DeleteSettingsAssert func(tenantID string)
+	DeleteSettingsError  error
+
 	ConfigureSettingsAssert func(tenantID, idpURL, idpCert, entityID, redirectURL, domain string)
 	ConfigureSettingsError  error
 
@@ -90,6 +93,13 @@ func (m *MockSSO) GetSettings(tenantID string) (*descope.SSOSettingsResponse, er
 		m.GetSettingsAssert(tenantID)
 	}
 	return m.GetSettingsResponse, m.GetSettingsError
+}
+
+func (m *MockSSO) DeleteSettings(tenantID string) error {
+	if m.DeleteSettingsAssert != nil {
+		m.DeleteSettingsAssert(tenantID)
+	}
+	return m.DeleteSettingsError
 }
 
 func (m *MockSSO) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL, domain string) error {

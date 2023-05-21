@@ -69,6 +69,28 @@ func TestGetSSOSettingsSuccess(t *testing.T) {
 	assert.EqualValues(t, "lulu", res.Domain)
 }
 
+func TestDeleteSSOSettingsSuccess(t *testing.T) {
+	tenantID := "abc"
+
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		params := helpers.ReadParams(r)
+		require.Equal(t, tenantID, params["tenantId"])
+	}, map[string]any{}))
+	err := mgmt.SSO().DeleteSettings(tenantID)
+	assert.NoError(t, err)
+}
+
+func TestDeleteSSOSettingsError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		called = true
+	}, map[string]any{}))
+	err := mgmt.SSO().DeleteSettings("")
+	assert.Error(t, err)
+	assert.False(t, called)
+}
+
 func TestGetSSOSettingsError(t *testing.T) {
 	tenantID := "abc"
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
