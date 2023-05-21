@@ -258,6 +258,8 @@ type SSO interface {
 	// tenantID is required.
 	GetSettings(tenantID string) (*descope.SSOSettingsResponse, error)
 
+	// tenantID is required.
+	DeleteSettings(tenantID string) error
 	// Configure SSO setting for a tenant manually.
 	//
 	// tenantID, idpURL, idpCert, entityID, are required. The idpURL is the URL for the identity provider and idpCert
