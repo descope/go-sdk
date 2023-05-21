@@ -713,7 +713,7 @@ Certifcate contents
 -----END CERTIFICATE-----
 ```
 
-// To delete SSO settings, call the following functions
+// To delete SSO settings, call the following method
 err := descopeClient.Management.SSO().DeleteSettings("tenant-id")
 
 ### Manage Permissions
