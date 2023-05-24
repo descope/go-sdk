@@ -856,6 +856,24 @@ if err != nil {
 }
 ```
 
+### Search audit
+
+You can perform an audit search for either specific values or full-text across the fields. Audit search is limited to the last 30 days.
+
+```go
+// Full text search on the last 10 days
+res, err := descopeClient.Management.Audit().Search(&descope.AuditSearchOptions{From: time.Now().AddDate(0, 0, -10), Text: "some-text"})
+if err == nil {
+    fmt.Println(res)
+}
+
+// Search successful logins in the last 30 days
+res, err := descopeClient.Management.Audit().Search(&descope.AuditSearchOptions{Actions: []string{"LoginSucceed"}})
+if err == nil {
+    fmt.Println(res)
+}
+```
+
 ## Code Examples
 
 You can find various usage examples in the [examples folder](https://github.com/descope/go-sdk/blob/main/examples).
