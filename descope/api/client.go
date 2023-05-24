@@ -123,6 +123,7 @@ var (
 			flowImport:                       "mgmt/flow/import",
 			themeExport:                      "mgmt/theme/export",
 			themeImport:                      "mgmt/theme/import",
+			auditSearch:                      "mgmt/audit/search",
 		},
 		logout:    "auth/logout",
 		logoutAll: "auth/logoutall",
@@ -246,6 +247,8 @@ type mgmtEndpoints struct {
 	flowImport  string
 	themeExport string
 	themeImport string
+
+	auditSearch string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -589,6 +592,10 @@ func (e *endpoints) ManagementThemeExport() string {
 
 func (e *endpoints) ManagementThemeImport() string {
 	return path.Join(e.version, e.mgmt.themeImport)
+}
+
+func (e *endpoints) ManagementAuditSearch() string {
+	return path.Join(e.version, e.mgmt.auditSearch)
 }
 
 type sdkInfo struct {
