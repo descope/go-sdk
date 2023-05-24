@@ -363,12 +363,21 @@ func groupAllGroupMembers(args []string) error {
 	return err
 }
 
+func auditFullTextSearch(args []string) error {
+	res, err := descopeClient.Management.Audit().Search(&descope.AuditSearchOptions{Text: args[0]})
+	if err == nil {
+		var b []byte
+		b, err = json.MarshalIndent(res, "", "  ")
+		fmt.Println(string(b))
+	}
+	return err
+}
+
 // Command line setup
 
 var cli = &cobra.Command{
-	Use:               "managementcli",
-	Short:             "A command line utility for working with the Descope management APIs",
-	CompletionOptions: cobra.CompletionOptions{HiddenDefaultCmd: true},
+	Use:   "managementcli",
+	Short: "A command line utility for working with the Descope management APIs",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		return prepare()
 	},
@@ -562,6 +571,11 @@ func main() {
 
 	addCommand(groupAllGroupMembers, "group-members <tenantId> <groupId>", "Load all group's members by the given group id", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(auditFullTextSearch, "audit-search <text>", "Full text search last 30 days of audit", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(1)
 		cmd.DisableFlagsInUseLine = true
 	})
 
