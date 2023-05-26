@@ -2,6 +2,7 @@ package mgmt
 
 import (
 	"net/http"
+	"strconv"
 	"testing"
 	"time"
 
@@ -17,7 +18,7 @@ func TestAuditSearch(t *testing.T) {
 			ProjectID:     "p1",
 			UserID:        "u1",
 			Action:        "a1",
-			Occurred:      time.Now().AddDate(0, 0, -1).UnixMilli(),
+			Occurred:      strconv.FormatInt(time.Now().AddDate(0, 0, -1).UnixMilli(), 10),
 			Device:        "d1",
 			Method:        "m1",
 			Geo:           "US",
@@ -30,7 +31,7 @@ func TestAuditSearch(t *testing.T) {
 			ProjectID:     "p1",
 			UserID:        "u2",
 			Action:        "a2",
-			Occurred:      time.Now().AddDate(0, 0, -1).UnixMilli(),
+			Occurred:      strconv.FormatInt(time.Now().AddDate(0, 0, -1).UnixMilli(), 10),
 			Device:        "d2",
 			Method:        "m2",
 			Geo:           "US",
@@ -78,7 +79,7 @@ func TestAuditSearch(t *testing.T) {
 	assert.Equal(t, response.Audits[0].ProjectID, res[0].ProjectID)
 	assert.Equal(t, response.Audits[0].UserID, res[0].UserID)
 	assert.Equal(t, response.Audits[0].Action, res[0].Action)
-	assert.Equal(t, response.Audits[0].Occurred, res[0].Occurred.UnixMilli())
+	assert.Equal(t, response.Audits[0].Occurred, strconv.FormatInt(res[0].Occurred.UnixMilli(), 10))
 	assert.Equal(t, response.Audits[0].Device, res[0].Device)
 	assert.Equal(t, response.Audits[0].Method, res[0].Method)
 	assert.Equal(t, response.Audits[0].Geo, res[0].Geo)

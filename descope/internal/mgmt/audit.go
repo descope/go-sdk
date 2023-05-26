@@ -1,6 +1,7 @@
 package mgmt
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/descope/go-sdk/descope"
@@ -39,7 +40,7 @@ type apiAuditRecord struct {
 	ProjectID     string   `json:"projectId,omitempty"`
 	UserID        string   `json:"userId,omitempty"`
 	Action        string   `json:"action,omitempty"`
-	Occurred      int64    `json:"occurred,omitempty"`
+	Occurred      string   `json:"occurred,omitempty"`
 	Device        string   `json:"device,omitempty"`
 	Method        string   `json:"method,omitempty"`
 	Geo           string   `json:"geo,omitempty"`
@@ -62,11 +63,15 @@ func unmarshalAuditRecords(res *api.HTTPResponse) ([]*descope.AuditRecord, error
 	}
 	var records []*descope.AuditRecord
 	for _, rec := range auditRes.Audits {
+		occurred, err := strconv.ParseInt(rec.Occurred, 10, 64)
+		if err != nil {
+			return nil, err
+		}
 		records = append(records, &descope.AuditRecord{
 			ProjectID:     rec.ProjectID,
 			UserID:        rec.UserID,
 			Action:        rec.Action,
-			Occurred:      time.UnixMilli(rec.Occurred),
+			Occurred:      time.UnixMilli(occurred),
 			Device:        rec.Device,
 			Method:        rec.Method,
 			Geo:           rec.Geo,
