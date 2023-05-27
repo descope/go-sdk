@@ -7,10 +7,12 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/client"
 	"github.com/spf13/cobra"
+	"github.com/tj/go-naturaldate"
 )
 
 // Command line flags
@@ -39,7 +41,12 @@ func prepare() (err error) {
 		// generate a management key in the Company section of the admin console: https://app.descope.com/settings/company
 		return errors.New("the DESCOPE_MANAGEMENT_KEY environment variable must be set")
 	}
-	descopeClient, err = client.New()
+	baseUrl := os.Getenv(descope.EnvironmentVariableBaseURL)
+	if baseUrl != "" {
+		descopeClient, err = client.NewWithConfig(&client.Config{DescopeBaseURL: baseUrl})
+	} else {
+		descopeClient, err = client.New()
+	}
 	return err
 }
 
@@ -364,7 +371,12 @@ func groupAllGroupMembers(args []string) error {
 }
 
 func auditFullTextSearch(args []string) error {
-	res, err := descopeClient.Management.Audit().Search(&descope.AuditSearchOptions{Text: args[0]})
+	from, err := naturaldate.Parse(args[1], time.Now(), naturaldate.WithDirection(naturaldate.Past))
+	if err != nil {
+		return err
+	}
+	fmt.Println(from)
+	res, err := descopeClient.Management.Audit().Search(&descope.AuditSearchOptions{Text: args[0], From: from})
 	if err == nil {
 		var b []byte
 		b, err = json.MarshalIndent(res, "", "  ")
@@ -574,8 +586,8 @@ func main() {
 		cmd.DisableFlagsInUseLine = true
 	})
 
-	addCommand(auditFullTextSearch, "audit-search <text>", "Full text search last 30 days of audit", func(cmd *cobra.Command) {
-		cmd.Args = cobra.ExactArgs(1)
+	addCommand(auditFullTextSearch, "audit-search <text> <from>", "Full text search up to last 30 days of audit. From can be specified in plain English (last 5 minutes, last day)", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(2)
 		cmd.DisableFlagsInUseLine = true
 	})
 
