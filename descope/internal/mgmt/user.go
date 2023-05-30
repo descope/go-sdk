@@ -1,8 +1,6 @@
 package mgmt
 
 import (
-	"fmt"
-
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
@@ -443,7 +441,6 @@ func unmarshalUserSearchAllResponse(res *api.HTTPResponse) ([]*descope.UserRespo
 
 func unmarshalProviderTokenResponse(res *api.HTTPResponse) (*descope.ProviderTokenResponse, error) {
 	resBody := &descope.ProviderTokenResponse{}
-	fmt.Println(res.BodyStr)
 	err := utils.Unmarshal([]byte(res.BodyStr), &resBody)
 	if err != nil {
 		return nil, err
