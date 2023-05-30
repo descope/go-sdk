@@ -177,8 +177,8 @@ type User interface {
 	ExpirePassword(loginID string) error
 
 	// Get the provider token for the given login ID.
-	// Only users that sign-in using social providers will have stored token.
-	// Notes: The 'Manage tokens from provider' setting must be enabled.
+	// Only users that sign-in using social providers will have token.
+	// Note: The 'Manage tokens from provider' setting must be enabled.
 	GetProviderToken(loginID, provider string) (*descope.ProviderTokenResponse, error)
 
 	// Generate OTP for the given login ID of a test user.
