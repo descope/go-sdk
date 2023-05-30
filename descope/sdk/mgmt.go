@@ -176,6 +176,11 @@ type User interface {
 	// Use the `ResetPassword` or `ReplacePassword` methods to reset/replace the password.
 	ExpirePassword(loginID string) error
 
+	// Get the provider token for the given login ID.
+	// Only users that sign-in using social providers will have stored token.
+	// Notes: The 'Manage tokens from provider' setting must be enabled.
+	GetProviderToken(loginID, provider string) (*descope.ProviderTokenResponse, error)
+
 	// Generate OTP for the given login ID of a test user.
 	// Choose the selected delivery method for verification. (see auth/DeliveryMethod)
 	// It returns the code for the login (exactly as it sent via Email or SMS)
