@@ -765,6 +765,40 @@ func TestExpireUserPasswordError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestUserProviderTokenSuccess(t *testing.T) {
+	response := map[string]any{
+		"provider": "pro",
+	}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		params := helpers.ReadParams(r)
+		require.Equal(t, "abc", params["loginId"])
+		require.Equal(t, "pro", params["provider"])
+	}, response))
+	res, err := m.User().GetProviderToken("abc", "pro")
+	require.NoError(t, err)
+	require.NotEmpty(t, res)
+	assert.EqualValues(t, "pro", res.Provider)
+}
+
+func TestUserProviderTokenBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := m.User().GetProviderToken("", "pro")
+	require.Error(t, err)
+	require.Empty(t, res)
+
+	res, err = m.User().GetProviderToken("abc", "")
+	require.Error(t, err)
+	require.Empty(t, res)
+}
+
+func TestUserProviderTokenError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := m.User().GetProviderToken("abc", "pro")
+	require.Error(t, err)
+	require.Empty(t, res)
+}
+
 func TestGenerateOTPForTestUserSuccess(t *testing.T) {
 	loginID := "some-id"
 	code := "123456"

@@ -94,6 +94,7 @@ var (
 			userRemoveRole:                   "mgmt/user/update/role/remove",
 			userSetPassword:                  "mgmt/user/password/set",
 			userExpirePassword:               "mgmt/user/password/expire",
+			userGetProviderToken:             "mgmt/user/provider/token",
 			userGenerateOTPForTest:           "mgmt/tests/generate/otp",
 			userGenerateMagicLinkForTest:     "mgmt/tests/generate/magiclink",
 			userGenerateEnchantedLinkForTest: "mgmt/tests/generate/enchantedlink",
@@ -210,6 +211,7 @@ type mgmtEndpoints struct {
 	userRemoveRole            string
 	userSetPassword           string
 	userExpirePassword        string
+	userGetProviderToken      string
 
 	userGenerateOTPForTest           string
 	userGenerateMagicLinkForTest     string
@@ -473,6 +475,10 @@ func (e *endpoints) ManagementUserSetPassword() string {
 
 func (e *endpoints) ManagementUserExpirePassword() string {
 	return path.Join(e.version, e.mgmt.userExpirePassword)
+}
+
+func (e *endpoints) ManagementUserGetProviderToken() string {
+	return path.Join(e.version, e.mgmt.userGetProviderToken)
 }
 
 func (e *endpoints) ManagementUserGenerateOTPForTest() string {

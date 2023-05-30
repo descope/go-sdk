@@ -115,6 +115,16 @@ func expireUserPassword(args []string) error {
 	return descopeClient.Management.User().ExpirePassword(loginID)
 }
 
+func getUserProviderToken(args []string) error {
+	loginID := args[0]
+	provider := args[1]
+	res, err := descopeClient.Management.User().GetProviderToken(loginID, provider)
+	if err == nil {
+		fmt.Println("Found:", res)
+	}
+	return err
+}
+
 func accessKeyCreate(args []string) error {
 	tenants := []*descope.AssociatedTenant{}
 	for _, tenantID := range flags.Tenants {
@@ -483,6 +493,11 @@ func main() {
 
 	addCommand(expireUserPassword, "user-expire-password <loginId>", "Expire user password", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(getUserProviderToken, "user-provider-token <loginId> <provider>", "Get user provider token", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(2)
 		cmd.DisableFlagsInUseLine = true
 	})
 

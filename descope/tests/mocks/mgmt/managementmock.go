@@ -214,6 +214,10 @@ type MockUser struct {
 	ExpirePasswordAssert func(loginID string)
 	ExpirePasswordError  error
 
+	GetProviderTokenAssert   func(loginID, provider string)
+	GetProviderTokenResponse *descope.ProviderTokenResponse
+	GetProviderTokenError    error
+
 	GenerateOTPForTestUserAssert   func(method descope.DeliveryMethod, loginID string)
 	GenerateOTPForTestUserResponse string
 	GenerateOTPForTestUserError    error
@@ -394,6 +398,13 @@ func (m *MockUser) ExpirePassword(loginID string) error {
 		m.ExpirePasswordAssert(loginID)
 	}
 	return m.ExpirePasswordError
+}
+
+func (m *MockUser) GetProviderToken(loginID, provider string) (*descope.ProviderTokenResponse, error) {
+	if m.GetProviderTokenAssert != nil {
+		m.GetProviderTokenAssert(loginID, provider)
+	}
+	return m.GetProviderTokenResponse, m.GetProviderTokenError
 }
 
 func (m *MockUser) GenerateOTPForTestUser(method descope.DeliveryMethod, loginID string) (code string, err error) {
