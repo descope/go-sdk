@@ -299,6 +299,25 @@ func (u *user) ExpirePassword(loginID string) error {
 	return err
 }
 
+func (u *user) GetProviderToken(loginID, provider string) (*descope.ProviderTokenResponse, error) {
+	if loginID == "" {
+		return nil, utils.NewInvalidArgumentError("loginID")
+	}
+	if provider == "" {
+		return nil, utils.NewInvalidArgumentError("provider")
+	}
+
+	req := &api.HTTPRequest{
+		QueryParams: map[string]string{"loginId": loginID, "provider": provider},
+	}
+	res, err := u.client.DoGetRequest(api.Routes.ManagementUserGetProviderToken(), req, u.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return unmarshalProviderTokenResponse(res)
+}
+
 func (u *user) GenerateOTPForTestUser(method descope.DeliveryMethod, loginID string) (code string, err error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
@@ -418,6 +437,15 @@ func unmarshalUserSearchAllResponse(res *api.HTTPResponse) ([]*descope.UserRespo
 		return nil, err
 	}
 	return ures.Users, err
+}
+
+func unmarshalProviderTokenResponse(res *api.HTTPResponse) (*descope.ProviderTokenResponse, error) {
+	resBody := &descope.ProviderTokenResponse{}
+	err := utils.Unmarshal([]byte(res.BodyStr), &resBody)
+	if err != nil {
+		return nil, err
+	}
+	return resBody, err
 }
 
 type generateForTestUserRequestBody struct {

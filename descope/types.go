@@ -296,6 +296,14 @@ func (ur *UserResponse) GetCreatedTime() time.Time {
 	return time.Unix(int64(ur.CreatedTime), 0)
 }
 
+type ProviderTokenResponse struct {
+	Provider       string   `json:"provider,omitempty"`
+	ProviderUserID string   `json:"providerUserID,omitempty"`
+	AccessToken    string   `json:"accessToken,omitempty"`
+	Expiration     uint32   `json:"expiration,omitempty"`
+	Scopes         []string `json:"scopes,omitempty"`
+}
+
 type UpdateOptions struct {
 	AddToLoginIDs      bool `json:"addToLoginIDs,omitempty"`
 	OnMergeUseExisting bool `json:"onMergeUseExisting,omitempty"`
