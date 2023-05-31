@@ -15,6 +15,7 @@ type MockManagement struct {
 	*MockRole
 	*MockGroup
 	*MockFlow
+	*MockAudit
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -51,6 +52,10 @@ func (m *MockManagement) Group() sdk.Group {
 
 func (m *MockManagement) Flow() sdk.Flow {
 	return m.MockFlow
+}
+
+func (m *MockManagement) Audit() sdk.Audit {
+	return m.MockAudit
 }
 
 // Mock JWT
@@ -728,4 +733,18 @@ func (m *MockFlow) ImportTheme(theme *descope.Theme) (*descope.Theme, error) {
 		m.ImportThemeAssert(theme)
 	}
 	return m.ImportThemeResponse, m.ImportThemeError
+}
+
+// Mock Audit
+type MockAudit struct {
+	SearchAssert   func(*descope.AuditSearchOptions)
+	SearchResponse []*descope.AuditRecord
+	SearchError    error
+}
+
+func (m *MockAudit) Search(options *descope.AuditSearchOptions) ([]*descope.AuditRecord, error) {
+	if m.SearchAssert != nil {
+		m.SearchAssert(options)
+	}
+	return m.SearchResponse, m.SearchError
 }

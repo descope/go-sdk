@@ -7,10 +7,12 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/client"
 	"github.com/spf13/cobra"
+	"github.com/tj/go-naturaldate"
 )
 
 // Command line flags
@@ -39,7 +41,12 @@ func prepare() (err error) {
 		// generate a management key in the Company section of the admin console: https://app.descope.com/settings/company
 		return errors.New("the DESCOPE_MANAGEMENT_KEY environment variable must be set")
 	}
-	descopeClient, err = client.New()
+	baseUrl := os.Getenv(descope.EnvironmentVariableBaseURL)
+	if baseUrl != "" {
+		descopeClient, err = client.NewWithConfig(&client.Config{DescopeBaseURL: baseUrl})
+	} else {
+		descopeClient, err = client.New()
+	}
 	return err
 }
 
@@ -373,12 +380,26 @@ func groupAllGroupMembers(args []string) error {
 	return err
 }
 
+func auditFullTextSearch(args []string) error {
+	from, err := naturaldate.Parse(args[1], time.Now(), naturaldate.WithDirection(naturaldate.Past))
+	if err != nil {
+		return err
+	}
+	fmt.Println(from)
+	res, err := descopeClient.Management.Audit().Search(&descope.AuditSearchOptions{Text: args[0], From: from})
+	if err == nil {
+		var b []byte
+		b, err = json.MarshalIndent(res, "", "  ")
+		fmt.Println(string(b))
+	}
+	return err
+}
+
 // Command line setup
 
 var cli = &cobra.Command{
-	Use:               "managementcli",
-	Short:             "A command line utility for working with the Descope management APIs",
-	CompletionOptions: cobra.CompletionOptions{HiddenDefaultCmd: true},
+	Use:   "managementcli",
+	Short: "A command line utility for working with the Descope management APIs",
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		return prepare()
 	},
@@ -576,6 +597,11 @@ func main() {
 	})
 
 	addCommand(groupAllGroupMembers, "group-members <tenantId> <groupId>", "Load all group's members by the given group id", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(2)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(auditFullTextSearch, "audit-search <text> <from>", "Full text search up to last 30 days of audit. From can be specified in plain English (last 5 minutes, last day)", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
 		cmd.DisableFlagsInUseLine = true
 	})

@@ -427,6 +427,39 @@ type Theme struct {
 	CSSTemplate any    `json:"cssTemplate,omitempty"`
 }
 
+type AuditRecord struct {
+	ProjectID     string    `json:"projectId,omitempty"`
+	UserID        string    `json:"userId,omitempty"`
+	Action        string    `json:"action,omitempty"`
+	Occurred      time.Time `json:"occurred,omitempty"`
+	Device        string    `json:"device,omitempty"`
+	Method        string    `json:"method,omitempty"`
+	Geo           string    `json:"geo,omitempty"`
+	RemoteAddress string    `json:"remoteAddress,omitempty"`
+	LoginIDs      []string  `json:"loginIds,omitempty"`
+	Tenants       []string
+	Data          map[string]interface{} `json:"data,omitempty"`
+}
+
+// AuditSearchOptions to filter which audits we should retrieve.
+// All parameters are optional.
+// `From` is currently limited to 30 days
+type AuditSearchOptions struct {
+	UserIDs         []string  `json:"userIds,omitempty"`         // List of user IDs to filter by
+	Actions         []string  `json:"actions,omitempty"`         // List of actions to filter by
+	ExcludedActions []string  `json:"excludedActions"`           // List of actions to exclude
+	From            time.Time `json:"from,omitempty"`            // Retrieve records newer than given time. Limited to no older than 30 days.
+	To              time.Time `json:"to,omitempty"`              // Retrieve records older than given time.
+	Devices         []string  `json:"devices,omitempty"`         // List of devices to filter by. Current devices supported are "Bot"/"Mobile"/"Desktop"/"Tablet"/"Unknown"
+	Methods         []string  `json:"methods,omitempty"`         // List of methods to filter by. Current auth methods are "otp"/"totp"/"magiclink"/"oauth"/"saml"/"password"
+	Geos            []string  `json:"geos,omitempty"`            // List of geos to filter by. Geo is currently country code like "US", "IL", etc.
+	RemoteAddresses []string  `json:"remoteAddresses,omitempty"` // List of remote addresses to filter by
+	LoginIDs        []string  `json:"loginIds,omitempty"`        // List of login IDs to filter by
+	Tenants         []string  `json:"tenants"`                   // List of tenants to filter by
+	NoTenants       bool      `json:"noTenants"`                 // Should audits without any tenants always be included
+	Text            string    `json:"text"`                      // Free text search across all fields
+}
+
 type DeliveryMethod string
 
 type OAuthProvider string
@@ -458,4 +491,5 @@ const (
 	EnvironmentVariableProjectID     = "DESCOPE_PROJECT_ID"
 	EnvironmentVariablePublicKey     = "DESCOPE_PUBLIC_KEY"
 	EnvironmentVariableManagementKey = "DESCOPE_MANAGEMENT_KEY"
+	EnvironmentVariableBaseURL       = "DESCOPE_BASE_URL"
 )

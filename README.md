@@ -60,6 +60,7 @@ These sections show how to use the SDK to perform API management functions. Befo
 7. [Query SSO Groups](#query-sso-groups)
 8. [Manage Flows](#manage-flows)
 9. [Manage JWTs](#manage-jwts)
+10. [Search Audit](#search-audit)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -853,6 +854,24 @@ updatedJWT, err := descopeClient.Management.JWT().UpdateJWTWithCustomClaims("ori
 })
 if err != nil {
     // handle error
+}
+```
+
+### Search Audit
+
+You can perform an audit search for either specific values or full-text across the fields. Audit search is limited to the last 30 days.
+
+```go
+// Full text search on the last 10 days
+res, err := descopeClient.Management.Audit().Search(&descope.AuditSearchOptions{From: time.Now().AddDate(0, 0, -10), Text: "some-text"})
+if err == nil {
+    fmt.Println(res)
+}
+
+// Search successful logins in the last 30 days
+res, err := descopeClient.Management.Audit().Search(&descope.AuditSearchOptions{Actions: []string{"LoginSucceed"}})
+if err == nil {
+    fmt.Println(res)
 }
 ```
 

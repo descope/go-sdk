@@ -382,6 +382,11 @@ type Flow interface {
 	ImportTheme(theme *descope.Theme) (*descope.Theme, error)
 }
 
+// Provides search project audit trail
+type Audit interface {
+	Search(*descope.AuditSearchOptions) ([]*descope.AuditRecord, error)
+}
+
 // Provides various APIs for managing a Descope project programmatically. A management key must
 // be provided in the DecopeClient configuration or by setting the DESCOPE_MANAGEMENT_KEY
 // environment variable. Management keys can be generated in the Descope console.
@@ -412,4 +417,7 @@ type Management interface {
 
 	// Provide functions for managing flows and theme in a project
 	Flow() Flow
+
+	// Provides search project audit trail
+	Audit() Audit
 }

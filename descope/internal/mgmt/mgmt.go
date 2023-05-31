@@ -29,6 +29,7 @@ type managementService struct {
 	role       sdk.Role
 	group      sdk.Group
 	flow       sdk.Flow
+	audit      sdk.Audit
 }
 
 func NewManagement(conf ManagementParams, c *api.Client) *managementService {
@@ -43,6 +44,7 @@ func NewManagement(conf ManagementParams, c *api.Client) *managementService {
 	service.role = &role{managementBase: base}
 	service.group = &group{managementBase: base}
 	service.flow = &flow{managementBase: base}
+	service.audit = &audit{managementBase: base}
 	return service
 }
 
@@ -89,6 +91,11 @@ func (mgmt *managementService) Group() sdk.Group {
 func (mgmt *managementService) Flow() sdk.Flow {
 	mgmt.ensureManagementKey()
 	return mgmt.flow
+}
+
+func (mgmt *managementService) Audit() sdk.Audit {
+	mgmt.ensureManagementKey()
+	return mgmt.audit
 }
 
 func (mgmt *managementService) ensureManagementKey() {
