@@ -456,7 +456,7 @@ func main() {
 		cmd.DisableFlagsInUseLine = true
 	})
 
-	addCommand(accessKeyUpdate, "access-key-update", "Update an access key <id>", func(cmd *cobra.Command) {
+	addCommand(accessKeyUpdate, "access-key-update", "Update an access key <id> <name>", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
 		cmd.DisableFlagsInUseLine = true
 	})
