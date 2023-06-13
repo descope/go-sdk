@@ -324,6 +324,13 @@ func strictCookies(t *testing.T, response *httptest.ResponseRecorder) {
 		require.Equal(t, cookie.SameSite, http.SameSiteStrictMode)
 	}
 }
+
+func laxCookies(t *testing.T, response *httptest.ResponseRecorder) {
+	for _, cookie := range response.Result().Cookies() {
+		require.Equal(t, cookie.SameSite, http.SameSiteLaxMode)
+	}
+}
+
 func TestValidateAndRefreshSessionWithRequest(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
@@ -362,6 +369,17 @@ func TestValidateAndRefreshSessionWithRequest(t *testing.T) {
 	response = httptest.NewRecorder()
 	ok, _, err = a.ValidateAndRefreshSessionWithRequest(request, response)
 	strictCookies(t, response)
+	require.NoError(t, err)
+	require.True(t, ok)
+
+	a, err = newTestAuthConf(&AuthParams{CookieSameSite: http.SameSiteLaxMode, ProjectID: "a", PublicKey: publicKey}, nil, DoOk(nil))
+	require.NoError(t, err)
+	request = &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: descope.SessionCookieName, Value: jwtTokenExpired})
+	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
+	response = httptest.NewRecorder()
+	ok, _, err = a.ValidateAndRefreshSessionWithRequest(request, response)
+	laxCookies(t, response)
 	require.NoError(t, err)
 	require.True(t, ok)
 }
