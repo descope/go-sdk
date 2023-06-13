@@ -1,6 +1,8 @@
 package client
 
 import (
+	"net/http"
+
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/logger"
@@ -36,6 +38,8 @@ type Config struct {
 	SessionJWTViaCookie bool
 	// When using cookies, set the cookie domain here. Alternatively this can be done via the Descope console.
 	SessionJWTCookieDomain string
+	// When using cookies, set the cookie same site here. Default is SameSiteStrictMode, In production make sure to use SameSiteStrictMode, for security purposes.
+	SessionJWTCookieSameSite http.SameSite
 }
 
 func (c *Config) setProjectID() string {
