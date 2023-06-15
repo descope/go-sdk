@@ -7,9 +7,6 @@ inputs:
   go_version:
     description: "Go version to use"
     required: true
-  token:
-    description: "Github token"
-    required: true
 runs:
   using: "composite"
   steps:
@@ -40,4 +37,4 @@ runs:
         type: lcov
         result_path: coverage.lcov
         min_coverage: ${{ inputs.min_coverage }}
-        token: ${{ inputs.token }}
+        token: ${{ github.token }}
