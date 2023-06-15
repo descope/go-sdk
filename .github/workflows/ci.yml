@@ -1,6 +1,6 @@
 name: CI
 
-on: [push, pull_request]
+on: [pull_request]
 
 env:
   GO_VERSION: 1.18
@@ -39,3 +39,4 @@ jobs:
         with:
           go_version: ${{ env.GO_VERSION }}
           min_coverage: 100
+          token: ${{ secrets.GITHUB_TOKEN }}
