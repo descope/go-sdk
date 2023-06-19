@@ -51,7 +51,13 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 
 	c := api.NewClient(api.ClientParams{BaseURL: config.DescopeBaseURL, CustomDefaultHeaders: config.CustomDefaultHeaders, DefaultClient: config.DefaultClient, ProjectID: config.ProjectID})
 
-	authService, err := auth.NewAuth(auth.AuthParams{ProjectID: config.ProjectID, PublicKey: config.PublicKey, SessionJWTViaCookie: config.SessionJWTViaCookie, CookieDomain: config.SessionJWTCookieDomain}, c)
+	authService, err := auth.NewAuth(auth.AuthParams{
+		ProjectID:           config.ProjectID,
+		PublicKey:           config.PublicKey,
+		SessionJWTViaCookie: config.SessionJWTViaCookie,
+		CookieDomain:        config.SessionJWTCookieDomain,
+		CookieSameSite:      config.SessionJWTCookieSameSite,
+	}, c)
 	if err != nil {
 		return nil, err
 	}
