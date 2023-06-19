@@ -690,6 +690,10 @@ func (m *MockGroup) LoadAllGroupMembers(tenantID, groupID string) ([]*descope.Gr
 // Mock Flows
 
 type MockFlow struct {
+	ListFlowsAssert   func()
+	ListFlowsResponse *descope.FlowsResponse
+	ListFlowsError    error
+
 	ExportFlowAssert   func(flowID string)
 	ExportFlowResponse *descope.FlowResponse
 	ExportFlowError    error
@@ -705,6 +709,13 @@ type MockFlow struct {
 	ImportThemeAssert   func(theme *descope.Theme)
 	ImportThemeResponse *descope.Theme
 	ImportThemeError    error
+}
+
+func (m *MockFlow) ListFlows() (*descope.FlowsResponse, error) {
+	if m.ListFlowsAssert != nil {
+		m.ListFlowsAssert()
+	}
+	return m.ListFlowsResponse, m.ListFlowsError
 }
 
 func (m *MockFlow) ExportFlow(flowID string) (*descope.FlowResponse, error) {

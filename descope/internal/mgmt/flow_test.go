@@ -11,10 +11,23 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestListFlowsSuccess(t *testing.T) {
+	response := &descope.FlowsResponse{
+		Flows: []*descope.FlowMetadata{{ID: "abc"}},
+		Total: 1,
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+	}, response))
+	res, err := mgmt.Flow().ListFlows()
+	require.NoError(t, err)
+	assert.EqualValues(t, response, res)
+}
+
 func TestExportFlowSuccess(t *testing.T) {
 	flowID := "abc"
 	response := &descope.FlowResponse{
-		Flow:    &descope.Flow{ID: flowID},
+		Flow:    &descope.Flow{FlowMetadata: descope.FlowMetadata{ID: flowID}},
 		Screens: []*descope.Screen{},
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -39,7 +52,7 @@ func TestExportFlowMissingArgument(t *testing.T) {
 func TestImportFlowSuccess(t *testing.T) {
 	flowID := "abc"
 	response := &descope.FlowResponse{
-		Flow:    &descope.Flow{ID: flowID},
+		Flow:    &descope.Flow{FlowMetadata: descope.FlowMetadata{ID: flowID}},
 		Screens: []*descope.Screen{{}},
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {

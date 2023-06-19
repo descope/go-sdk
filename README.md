@@ -813,9 +813,15 @@ if err == nil {
 
 ### Manage Flows
 
-You can import and export flows and screens, or the project theme:
+You can list, import and export flows and screens, or the project theme:
 
 ```go
+// List all your flows
+res, err := descopeClient.Management.Flow().ListFlows()
+if err == nil {
+    fmt.Println(res.Total)
+    fmt.Println(res.Flows[0].ID)
+}
 // Export the flow and it's matching screens based on the given id
 res, err := descopeClient.Management.Flow().ExportFlow("sign-up")
 if err == nil {
