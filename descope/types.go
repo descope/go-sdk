@@ -401,12 +401,16 @@ type Group struct {
 }
 
 type Flow struct {
+	FlowMetadata
+	DSL  any    `json:"dsl"`
+	ETag string `json:"etag,omitempty"`
+}
+
+type FlowMetadata struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
-	DSL         any    `json:"dsl"`
 	Disabled    bool   `json:"disabled"`
-	ETag        string `json:"etag,omitempty"`
 }
 
 type Screen struct {
@@ -420,6 +424,11 @@ type Screen struct {
 type FlowResponse struct {
 	Flow    *Flow     `json:"flow"`
 	Screens []*Screen `json:"screens"`
+}
+
+type FlowsResponse struct {
+	Flows []*FlowMetadata `json:"flows"`
+	Total int             `json:"total"`
 }
 
 type Theme struct {

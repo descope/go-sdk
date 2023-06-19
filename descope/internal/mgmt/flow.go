@@ -10,6 +10,14 @@ type flow struct {
 	managementBase
 }
 
+func (r *flow) ListFlows() (*descope.FlowsResponse, error) {
+	res, err := r.client.DoPostRequest(api.Routes.ManagementListFlows(), nil, nil, r.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalFlowsResponse(res)
+}
+
 func (r *flow) ExportFlow(flowID string) (*descope.FlowResponse, error) {
 	if flowID == "" {
 		return nil, utils.NewInvalidArgumentError("flowID")
@@ -61,6 +69,16 @@ func (r *flow) ImportTheme(theme *descope.Theme) (*descope.Theme, error) {
 	}
 	return unmarshalTheme(res)
 
+}
+
+func unmarshalFlowsResponse(res *api.HTTPResponse) (*descope.FlowsResponse, error) {
+	var a *descope.FlowsResponse
+	err := utils.Unmarshal([]byte(res.BodyStr), &a)
+	if err != nil {
+		// notest
+		return nil, err
+	}
+	return a, nil
 }
 
 func unmarshalFlowResponse(res *api.HTTPResponse) (*descope.FlowResponse, error) {

@@ -363,6 +363,8 @@ type Group interface {
 
 // Provides functions for flow and theme management including export and import by ID.
 type Flow interface {
+	// Returns metadata of all project flows
+	ListFlows() (*descope.FlowsResponse, error)
 	// Export a flow and its screens by the flow id.
 	ExportFlow(flowID string) (*descope.FlowResponse, error)
 
