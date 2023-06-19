@@ -280,6 +280,16 @@ func writeToFile(fileName string, data any) error {
 	return os.WriteFile(fileName, b, 0644)
 }
 
+func listFlows(args []string) error {
+	res, err := descopeClient.Management.Flow().ListFlows()
+	if err == nil {
+		for _, f := range res.Flows {
+			fmt.Printf("ID: %s, Name: %s, Description: %s, Disabled: %T\n", f.ID, f.Name, f.Description, f.Disabled)
+		}
+	}
+	return err
+}
+
 func exportFlow(args []string) error {
 	flowID := args[0]
 	res, err := descopeClient.Management.Flow().ExportFlow(flowID)
@@ -564,6 +574,10 @@ func main() {
 
 	addCommand(groupAllForTenant, "group-all-for-tenant <tenantId>", "Load all groups for a given tenant id", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(listFlows, "list-flows", "List all flows in project", func(cmd *cobra.Command) {
 		cmd.DisableFlagsInUseLine = true
 	})
 
