@@ -284,7 +284,7 @@ func listFlows(args []string) error {
 	res, err := descopeClient.Management.Flow().ListFlows()
 	if err == nil {
 		for _, f := range res.Flows {
-			fmt.Printf("ID: %s, Name: %s, Description: %s, Disabled: %T\n", f.ID, f.Name, f.Description, f.Disabled)
+			fmt.Printf("ID: %s, Name: %s, Description: %s, Disabled: %t\n", f.ID, f.Name, f.Description, f.Disabled)
 		}
 	}
 	return err
