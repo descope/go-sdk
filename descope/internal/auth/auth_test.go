@@ -869,6 +869,15 @@ func TestValidatePermissions(t *testing.T) {
 
 	require.True(t, a.ValidateTenantPermissions(mockAuthorizationTenantToken, "t1", []string{}))
 	require.False(t, a.ValidateTenantPermissions(mockAuthorizationTenantToken, "t2", []string{}))
+	// check when the value of the claim is not a map
+	require.False(t, a.ValidateTenantPermissions(
+		&descope.Token{Claims: map[string]any{
+			descope.ClaimAuthorizedTenants: map[string]interface{}{"t1": true},
+		}},
+		"t1",
+		[]string{"foo"},
+	))
+
 }
 
 func TestValidateRoles(t *testing.T) {
