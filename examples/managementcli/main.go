@@ -94,7 +94,7 @@ func userLoad(args []string) error {
 func userUpdateLoginID(args []string) error {
 	res, err := descopeClient.Management.User().UpdateLoginID(args[0], args[1])
 	if err == nil {
-		fmt.Println("Update user:", res)
+		fmt.Println("Updated user:", res)
 	}
 	return err
 }
