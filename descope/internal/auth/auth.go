@@ -346,6 +346,9 @@ func (auth *authenticationService) ValidatePermissions(token *descope.Token, per
 }
 
 func (auth *authenticationService) ValidateTenantPermissions(token *descope.Token, tenant string, permissions []string) bool {
+	if tenant != "" && !isAssociatedWithTenant(token, tenant) {
+		return false
+	}
 	granted := getAuthorizationClaimItems(token, tenant, claimPermissions)
 	for i := range permissions {
 		if !slices.Contains(granted, permissions[i]) {
@@ -360,6 +363,9 @@ func (auth *authenticationService) ValidateRoles(token *descope.Token, roles []s
 }
 
 func (auth *authenticationService) ValidateTenantRoles(token *descope.Token, tenant string, roles []string) bool {
+	if tenant != "" && !isAssociatedWithTenant(token, tenant) {
+		return false
+	}
 	membership := getAuthorizationClaimItems(token, tenant, claimRoles)
 	for i := range roles {
 		if !slices.Contains(membership, roles[i]) {
@@ -684,6 +690,11 @@ func getAuthorizationClaimItems(token *descope.Token, tenant string, claim strin
 	}
 
 	return items
+}
+
+func isAssociatedWithTenant(token *descope.Token, tenant string) bool {
+	ts := token.GetTenants()
+	return slices.Contains(ts, tenant)
 }
 
 func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (*descope.EnchantedLinkResponse, error) {
