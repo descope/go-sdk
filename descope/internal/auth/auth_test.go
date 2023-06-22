@@ -56,7 +56,7 @@ var (
 	permissions                  = []interface{}{"foo", "bar"}
 	roles                        = []interface{}{"abc", "xyz"}
 	mockAuthorizationToken       = &descope.Token{Claims: map[string]any{claimPermissions: permissions, claimRoles: roles}}
-	mockAuthorizationTenantToken = &descope.Token{Claims: map[string]any{descope.ClaimAuthorizedTenants: map[string]any{"kuku": mockAuthorizationToken.Claims}}}
+	mockAuthorizationTenantToken = &descope.Token{Claims: map[string]any{descope.ClaimAuthorizedTenants: map[string]any{"kuku": mockAuthorizationToken.Claims, "t1": map[string]any{}}}}
 )
 
 func readBodyMap(r *http.Request) (m map[string]interface{}, err error) {
@@ -857,7 +857,7 @@ func TestValidatePermissions(t *testing.T) {
 	require.False(t, a.ValidatePermissions(mockAuthorizationTenantToken, []string{"foo", "bar"}))
 	require.False(t, a.ValidatePermissions(mockAuthorizationTenantToken, []string{"foo", "bar", "qux"}))
 
-	require.True(t, a.ValidateTenantPermissions(mockAuthorizationToken, "kuku", []string{}))
+	require.False(t, a.ValidateTenantPermissions(mockAuthorizationToken, "kuku", []string{}))
 	require.False(t, a.ValidateTenantPermissions(mockAuthorizationToken, "kuku", []string{"foo"}))
 	require.False(t, a.ValidateTenantPermissions(mockAuthorizationToken, "kuku", []string{"foo", "bar"}))
 	require.False(t, a.ValidateTenantPermissions(mockAuthorizationToken, "kuku", []string{"foo", "bar", "qux"}))
@@ -866,6 +866,18 @@ func TestValidatePermissions(t *testing.T) {
 	require.True(t, a.ValidateTenantPermissions(mockAuthorizationTenantToken, "kuku", []string{"foo"}))
 	require.True(t, a.ValidateTenantPermissions(mockAuthorizationTenantToken, "kuku", []string{"foo", "bar"}))
 	require.False(t, a.ValidateTenantPermissions(mockAuthorizationTenantToken, "kuku", []string{"foo", "bar", "qux"}))
+
+	require.True(t, a.ValidateTenantPermissions(mockAuthorizationTenantToken, "t1", []string{}))
+	require.False(t, a.ValidateTenantPermissions(mockAuthorizationTenantToken, "t2", []string{}))
+	// check when the value of the claim is not a map
+	require.False(t, a.ValidateTenantPermissions(
+		&descope.Token{Claims: map[string]any{
+			descope.ClaimAuthorizedTenants: map[string]interface{}{"t1": true},
+		}},
+		"t1",
+		[]string{"foo"},
+	))
+
 }
 
 func TestValidateRoles(t *testing.T) {
@@ -885,7 +897,7 @@ func TestValidateRoles(t *testing.T) {
 	require.False(t, a.ValidateRoles(mockAuthorizationTenantToken, []string{"abc", "xyz"}))
 	require.False(t, a.ValidateRoles(mockAuthorizationTenantToken, []string{"abc", "xyz", "tuv"}))
 
-	require.True(t, a.ValidateTenantRoles(mockAuthorizationToken, "kuku", []string{}))
+	require.False(t, a.ValidateTenantRoles(mockAuthorizationToken, "kuku", []string{}))
 	require.False(t, a.ValidateTenantRoles(mockAuthorizationToken, "kuku", []string{"abc"}))
 	require.False(t, a.ValidateTenantRoles(mockAuthorizationToken, "kuku", []string{"abc", "xyz"}))
 	require.False(t, a.ValidateTenantRoles(mockAuthorizationToken, "kuku", []string{"abc", "xyz", "tuv"}))
@@ -894,6 +906,9 @@ func TestValidateRoles(t *testing.T) {
 	require.True(t, a.ValidateTenantRoles(mockAuthorizationTenantToken, "kuku", []string{"abc"}))
 	require.True(t, a.ValidateTenantRoles(mockAuthorizationTenantToken, "kuku", []string{"abc", "xyz"}))
 	require.False(t, a.ValidateTenantRoles(mockAuthorizationTenantToken, "kuku", []string{"abc", "xyz", "tuv"}))
+
+	require.True(t, a.ValidateTenantRoles(mockAuthorizationTenantToken, "t1", []string{}))
+	require.False(t, a.ValidateTenantRoles(mockAuthorizationTenantToken, "t2", []string{}))
 }
 
 func TestMe(t *testing.T) {
