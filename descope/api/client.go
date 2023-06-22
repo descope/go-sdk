@@ -83,6 +83,7 @@ var (
 			userLoad:                         "mgmt/user",
 			userSearchAll:                    "mgmt/user/search",
 			userUpdateStatus:                 "mgmt/user/update/status",
+			userUpdateLoginID:                "mgmt/user/update/loginid",
 			userUpdateEmail:                  "mgmt/user/update/email",
 			userUpdatePhone:                  "mgmt/user/update/phone",
 			userUpdateName:                   "mgmt/user/update/name",
@@ -202,6 +203,7 @@ type mgmtEndpoints struct {
 	userLoad                  string
 	userSearchAll             string
 	userUpdateStatus          string
+	userUpdateLoginID         string
 	userUpdateEmail           string
 	userUpdatePhone           string
 	userUpdateName            string
@@ -436,6 +438,10 @@ func (e *endpoints) ManagementUserSearchAll() string {
 
 func (e *endpoints) ManagementUserUpdateStatus() string {
 	return path.Join(e.version, e.mgmt.userUpdateStatus)
+}
+
+func (e *endpoints) ManagementUserUpdateLoginID() string {
+	return path.Join(e.version, e.mgmt.userUpdateLoginID)
 }
 
 func (e *endpoints) ManagementUserUpdateEmail() string {

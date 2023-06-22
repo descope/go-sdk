@@ -169,6 +169,10 @@ type MockUser struct {
 	DeactivateResponse *descope.UserResponse
 	DeactivateError    error
 
+	UpdateLoginIDAssert   func(loginID, newLoginID string)
+	UpdateLoginIDResponse *descope.UserResponse
+	UpdateLoginIDError    error
+
 	UpdateEmailAssert   func(loginID, email string, isVerified bool)
 	UpdateEmailResponse *descope.UserResponse
 	UpdateEmailError    error
@@ -312,6 +316,13 @@ func (m *MockUser) Deactivate(loginID string) (*descope.UserResponse, error) {
 		m.DeactivateAssert(loginID)
 	}
 	return m.DeactivateResponse, m.DeactivateError
+}
+
+func (m *MockUser) UpdateLoginID(loginID, newLoginID string) (*descope.UserResponse, error) {
+	if m.UpdateLoginIDAssert != nil {
+		m.UpdateLoginIDAssert(loginID, newLoginID)
+	}
+	return m.UpdateLoginIDResponse, m.UpdateEmailError
 }
 
 func (m *MockUser) UpdateEmail(loginID, email string, isVerified bool) (*descope.UserResponse, error) {

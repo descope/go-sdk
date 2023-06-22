@@ -141,6 +141,18 @@ func (u *user) updateStatus(loginID string, status string) (*descope.UserRespons
 	return unmarshalUserResponse(res)
 }
 
+func (u *user) UpdateLoginID(loginID, newLoginID string) (*descope.UserResponse, error) {
+	if loginID == "" {
+		return nil, utils.NewInvalidArgumentError("loginID")
+	}
+	req := map[string]any{"loginId": loginID, "newLoginId": newLoginID}
+	res, err := u.client.DoPostRequest(api.Routes.ManagementUserUpdateLoginID(), req, nil, u.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalUserResponse(res)
+}
+
 func (u *user) UpdateEmail(loginID, email string, isVerified bool) (*descope.UserResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")

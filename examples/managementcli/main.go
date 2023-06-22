@@ -91,6 +91,14 @@ func userLoad(args []string) error {
 	return err
 }
 
+func userUpdateLoginID(args []string) error {
+	res, err := descopeClient.Management.User().UpdateLoginID(args[0], args[1])
+	if err == nil {
+		fmt.Println("Update user:", res)
+	}
+	return err
+}
+
 func userSearchAll(args []string) error {
 	limit, err := strconv.ParseInt(args[0], 10, 64)
 	if err != nil {
@@ -508,6 +516,11 @@ func main() {
 
 	addCommand(userLoad, "user-load <id>", "Load an existing user", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
+		cmd.DisableFlagsInUseLine = true
+	})
+
+	addCommand(userUpdateLoginID, "user-update-loginid <id> <new-id>", "Update loginid of user", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(2)
 		cmd.DisableFlagsInUseLine = true
 	})
 
