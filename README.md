@@ -594,6 +594,9 @@ userReqUpdate.Tenants = []*descope.AssociatedTenant{
 }
 err := descopeClient.Management.User().Update("desmond@descope.com", userReqUpdate)
 
+// Update loginID of a user, or remove a login ID (last login ID cannot be removed)
+err := descopeClient.Management.User().UpdateLoginID("desmond@descope.com", "bane@descope.com")
+
 // User deletion cannot be undone. Use carefully.
 err := descopeClient.Management.User().Delete("desmond@descope.com")
 

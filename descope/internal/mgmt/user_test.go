@@ -328,6 +328,31 @@ func TestUserDeactivateError(t *testing.T) {
 	require.Nil(t, res)
 }
 
+func TestUserUpdateLoginIDSuccess(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"email":         "a@b.c",
+			"verifiedEmail": true,
+		}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, "a@b.c", req["newLoginId"])
+	}, response))
+	res, err := m.User().UpdateLoginID("abc", "a@b.c")
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
+func TestUserUpdateLoginIDBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := m.User().UpdateLoginID("", "a@b.c")
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
 func TestUserUpdateEmailSuccess(t *testing.T) {
 	response := map[string]any{
 		"user": map[string]any{

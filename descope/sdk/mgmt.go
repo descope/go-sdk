@@ -113,6 +113,11 @@ type User interface {
 	// Deactivate an existing user.
 	Deactivate(loginID string) (*descope.UserResponse, error)
 
+	// Change current loginID to new one
+	// Leave empty to remove the current login ID
+	// Pay attention that if this is the only login ID, it cannot be removed
+	UpdateLoginID(loginID string, newLoginID string) (*descope.UserResponse, error)
+
 	// Update the email address for an existing user.
 	//
 	// The email parameter can be empty in which case the email will be removed.
