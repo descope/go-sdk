@@ -97,6 +97,10 @@ func TestUserUpdateSuccess(t *testing.T) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
+		_, ok := req["verifiedEmail"]
+		assert.False(t, ok)
+		_, ok = req["verifiedPhone"]
+		assert.False(t, ok)
 		require.Equal(t, "abc", req["loginId"])
 		require.Equal(t, "foo@bar.com", req["email"])
 		userTenants := req["userTenants"].([]any)
@@ -117,6 +121,33 @@ func TestUserUpdateSuccess(t *testing.T) {
 	user := &descope.UserRequest{}
 	user.Email = "foo@bar.com"
 	user.Tenants = []*descope.AssociatedTenant{{TenantID: "x", Roles: []string{"foo"}}, {TenantID: "y", Roles: []string{"bar"}}}
+	res, err := m.User().Update("abc", user)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, "a@b.c", res.Email)
+}
+
+func TestUserUpdateVerifiedAttributes(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"email": "a@b.c",
+		}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		_, ok := req["verifiedEmail"]
+		assert.True(t, ok)
+		_, ok = req["verifiedPhone"]
+		assert.True(t, ok)
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, "foo@bar.com", req["email"])
+	}, response))
+	user := &descope.UserRequest{}
+	user.Email = "foo@bar.com"
+	tr := true
+	user.VerifiedEmail = &tr
+	user.VerifiedPhone = &tr
 	res, err := m.User().Update("abc", user)
 	require.NoError(t, err)
 	require.NotNil(t, res)

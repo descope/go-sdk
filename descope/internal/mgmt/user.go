@@ -50,7 +50,7 @@ func (u *user) Update(loginID string, user *descope.UserRequest) (*descope.UserR
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
-	req := makeUpdateUserRequest(loginID, user.Email, user.Phone, user.Name, user.Picture, user.Roles, user.Tenants, user.CustomAttributes)
+	req := makeUpdateUserRequest(loginID, user.Email, user.Phone, user.Name, user.Picture, user.Roles, user.Tenants, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserUpdate(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -368,7 +368,7 @@ func (u *user) GenerateEnchantedLinkForTestUser(loginID, URI string) (link, pend
 }
 
 func makeCreateUserRequest(loginID, email, phone, displayName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any) map[string]any {
-	req := makeUpdateUserRequest(loginID, email, phone, displayName, picture, roles, tenants, customAttributes)
+	req := makeUpdateUserRequest(loginID, email, phone, displayName, picture, roles, tenants, customAttributes, nil, nil)
 	req["invite"] = invite
 	if test {
 		req["test"] = true
@@ -376,8 +376,8 @@ func makeCreateUserRequest(loginID, email, phone, displayName, picture string, r
 	return req
 }
 
-func makeUpdateUserRequest(loginID, email, phone, displayName, picture string, roles []string, tenants []*descope.AssociatedTenant, customAttributes map[string]any) map[string]any {
-	return map[string]any{
+func makeUpdateUserRequest(loginID, email, phone, displayName, picture string, roles []string, tenants []*descope.AssociatedTenant, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool) map[string]any {
+	res := map[string]any{
 		"loginId":          loginID,
 		"email":            email,
 		"phone":            phone,
@@ -387,6 +387,13 @@ func makeUpdateUserRequest(loginID, email, phone, displayName, picture string, r
 		"customAttributes": customAttributes,
 		"picture":          picture,
 	}
+	if verifiedEmail != nil {
+		res["verifiedEmail"] = *verifiedEmail
+	}
+	if verifiedPhone != nil {
+		res["verifiedPhone"] = *verifiedPhone
+	}
+	return res
 }
 
 func makeUpdateUserTenantRequest(loginID, tenantID string) map[string]any {

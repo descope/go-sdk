@@ -272,6 +272,8 @@ type UserRequest struct {
 	Tenants          []*AssociatedTenant `json:"tenants,omitempty"`
 	CustomAttributes map[string]any      `json:"customAttributes,omitempty"`
 	Picture          string              `json:"picture,omitempty"`
+	VerifiedEmail    *bool               `json:"verifiedEmail,omitempty"`
+	VerifiedPhone    *bool               `json:"verifiedPhone,omitempty"`
 }
 
 type UserResponse struct {
