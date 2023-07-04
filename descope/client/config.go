@@ -12,7 +12,7 @@ import (
 type Config struct {
 	// ProjectID (required, "") - used to validate and authenticate against descope services.
 	ProjectID string
-	// PublicKey (optional, "") - used to provide a management key that's required
+	// ManagementKey (optional, "") - used to provide a management key that's required
 	// for using any of the Management APIs. If empty, this value is retrieved
 	// from the DESCOPE_MANAGEMENT_KEY environement variable instead. If neither
 	// values are set then any Management API call with fail.
