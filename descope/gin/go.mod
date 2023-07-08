@@ -3,7 +3,7 @@ module github.com/descope/go-sdk/descope/gin
 go 1.18
 
 require (
-	github.com/descope/go-sdk v1.5.2
+	github.com/descope/go-sdk v1.5.3
 	github.com/gin-gonic/gin v1.9.1
 )
 
