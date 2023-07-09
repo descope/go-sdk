@@ -546,6 +546,9 @@ err := descopeClient.Management.Tenant().Update("my-custom-id", "My Tenant", []s
 // Tenant deletion cannot be undone. Use carefully.
 err := descopeClient.Management.Tenant().Delete("my-custom-id")
 
+// Load tenant by id
+tenant, err := descopeClient.Management.Tenant().Load("my-custom-id")
+
 // Load all tenants
 res, err := descopeClient.Management.Tenant().LoadAll()
 if err == nil {
