@@ -61,6 +61,20 @@ func (t *tenant) Delete(id string) error {
 	return err
 }
 
+func (t *tenant) Load(id string) (*descope.Tenant, error) {
+	if id == "" {
+		return nil, utils.NewInvalidArgumentError("id")
+	}
+	req := &api.HTTPRequest{
+		QueryParams: map[string]string{"id": id},
+	}
+	res, err := t.client.DoGetRequest(api.Routes.ManagementTenantLoad(), req, t.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalLoadTenantResponse(res)
+}
+
 func (t *tenant) LoadAll() ([]*descope.Tenant, error) {
 	res, err := t.client.DoGetRequest(api.Routes.ManagementTenantLoadAll(), nil, t.conf.ManagementKey)
 	if err != nil {
@@ -71,6 +85,15 @@ func (t *tenant) LoadAll() ([]*descope.Tenant, error) {
 
 func makeCreateUpdateTenantRequest(id, name string, selfProvisioningDomains []string) map[string]any {
 	return map[string]any{"id": id, "name": name, "selfProvisioningDomains": selfProvisioningDomains}
+}
+
+func unmarshalLoadTenantResponse(res *api.HTTPResponse) (*descope.Tenant, error) {
+	var tres *descope.Tenant
+	err := utils.Unmarshal([]byte(res.BodyStr), &tres)
+	if err != nil {
+		return nil, err
+	}
+	return tres, nil
 }
 
 func unmarshalLoadAllTenantsResponse(res *api.HTTPResponse) ([]*descope.Tenant, error) {
