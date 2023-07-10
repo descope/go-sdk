@@ -63,7 +63,7 @@ func (s *sso) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL
 	return err
 }
 
-func (s *sso) ConfigureMetadata(tenantID, idpMetadataURL string) error {
+func (s *sso) ConfigureMetadata(tenantID, idpMetadataURL, redirectURL, domain string) error {
 	if tenantID == "" {
 		return utils.NewInvalidArgumentError("tenantID")
 	}
@@ -73,6 +73,8 @@ func (s *sso) ConfigureMetadata(tenantID, idpMetadataURL string) error {
 	req := map[string]any{
 		"tenantId":       tenantID,
 		"idpMetadataURL": idpMetadataURL,
+		"redirectURL":    redirectURL,
+		"domain":         domain,
 	}
 	_, err := s.client.DoPostRequest(api.Routes.ManagementSSOMetadata(), req, nil, s.conf.ManagementKey)
 	return err

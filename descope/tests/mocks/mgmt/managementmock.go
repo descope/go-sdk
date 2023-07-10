@@ -86,7 +86,7 @@ type MockSSO struct {
 	ConfigureSettingsAssert func(tenantID, idpURL, idpCert, entityID, redirectURL, domain string)
 	ConfigureSettingsError  error
 
-	ConfigureMetadataAssert func(tenantID, idpMetadataURL string)
+	ConfigureMetadataAssert func(tenantID, idpMetadataURL, redirectURL, domain string)
 	ConfigureMetadataError  error
 
 	ConfigureMappingAssert func(tenantID string, roleMappings []*descope.RoleMapping, attributeMapping *descope.AttributeMapping)
@@ -114,9 +114,9 @@ func (m *MockSSO) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirec
 	return m.ConfigureSettingsError
 }
 
-func (m *MockSSO) ConfigureMetadata(tenantID, idpMetadataURL string) error {
+func (m *MockSSO) ConfigureMetadata(tenantID, idpMetadataURL, redirectURL, domain string) error {
 	if m.ConfigureMetadataAssert != nil {
-		m.ConfigureMetadataAssert(tenantID, idpMetadataURL)
+		m.ConfigureMetadataAssert(tenantID, idpMetadataURL, redirectURL, domain)
 	}
 	return m.ConfigureMetadataError
 }

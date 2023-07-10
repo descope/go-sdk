@@ -698,7 +698,7 @@ domain := "domain.com" // Users logging in from this domain will be logged in to
 err := descopeClient.Management.SSO().ConfigureSettings(tenantID, idpURL, entityID, idpCert, redirectURL, domain)
 
 // Alternatively, configure using an SSO metadata URL
-err := descopeClient.Management.SSO().ConfigureMetadata(tenantID, "https://idp.com/my-idp-metadata")
+err := descopeClient.Management.SSO().ConfigureMetadata(tenantID, "https://idp.com/my-idp-metadata", redirectURL, domain)
 
 // Map IDP groups to Descope roles, or map user attributes.
 // This function overrides any previous mapping (even when empty). Use carefully.

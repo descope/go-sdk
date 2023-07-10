@@ -145,16 +145,18 @@ func TestSSOConfigureMetadataSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["tenantId"])
 		require.Equal(t, "http://idpURL", req["idpMetadataURL"])
+		require.Equal(t, "https://redirect", req["redirectURL"])
+		require.Equal(t, "domain.com", req["domain"])
 	}))
-	err := mgmt.SSO().ConfigureMetadata("abc", "http://idpURL")
+	err := mgmt.SSO().ConfigureMetadata("abc", "http://idpURL", "https://redirect", "domain.com")
 	require.NoError(t, err)
 }
 
 func TestSSOConfigureMetadataError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.SSO().ConfigureMetadata("", "http://idpURL")
+	err := mgmt.SSO().ConfigureMetadata("", "http://idpURL", "https://redirect", "domain.com")
 	require.Error(t, err)
-	err = mgmt.SSO().ConfigureMetadata("abc", "")
+	err = mgmt.SSO().ConfigureMetadata("abc", "", "https://redirect", "domain.com")
 	require.Error(t, err)
 }
 
