@@ -32,6 +32,9 @@ type Tenant interface {
 	// IMPORTANT: This action is irreversible. Use carefully.
 	Delete(id string) error
 
+	// Load project tenant by id
+	Load(id string) (*descope.Tenant, error)
+
 	// Load all project tenants
 	LoadAll() ([]*descope.Tenant, error)
 }

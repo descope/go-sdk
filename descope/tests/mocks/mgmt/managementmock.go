@@ -543,6 +543,10 @@ type MockTenant struct {
 	DeleteAssert func(id string)
 	DeleteError  error
 
+	LoadAssert   func(id string)
+	LoadResponse *descope.Tenant
+	LoadError    error
+
 	LoadAllResponse []*descope.Tenant
 	LoadAllError    error
 }
@@ -573,6 +577,13 @@ func (m *MockTenant) Delete(id string) error {
 		m.DeleteAssert(id)
 	}
 	return m.DeleteError
+}
+
+func (m *MockTenant) Load(id string) (*descope.Tenant, error) {
+	if m.LoadAssert != nil {
+		m.LoadAssert(id)
+	}
+	return m.LoadResponse, m.LoadError
 }
 
 func (m *MockTenant) LoadAll() ([]*descope.Tenant, error) {

@@ -99,7 +99,7 @@ func TestTenantDeleteError(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestTenantLoadSuccess(t *testing.T) {
+func TestAllTenantsLoadSuccess(t *testing.T) {
 	response := map[string]any{
 		"tenants": []map[string]any{{
 			"id":                      "t1",
@@ -119,9 +119,48 @@ func TestTenantLoadSuccess(t *testing.T) {
 	require.Equal(t, "domain.com", res[0].SelfProvisioningDomains[0])
 }
 
-func TestTenantLoadError(t *testing.T) {
+func TestAllTenantsLoadError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
 	res, err := mgmt.Tenant().LoadAll()
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestTenantLoadSuccess(t *testing.T) {
+	response := map[string]any{
+		"id":                      "t1",
+		"name":                    "abc",
+		"selfProvisioningDomains": []string{"domain.com"},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+	}, response))
+	res, err := mgmt.Tenant().Load("t1")
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, "t1", res.ID)
+	require.Equal(t, "abc", res.Name)
+	require.Len(t, res.SelfProvisioningDomains, 1)
+	require.Equal(t, "domain.com", res.SelfProvisioningDomains[0])
+}
+
+func TestTenantLoadError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := mgmt.Tenant().Load("t1")
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestTenantLoadNoIDError(t *testing.T) {
+	response := map[string]any{
+		"id":                      "t1",
+		"name":                    "abc",
+		"selfProvisioningDomains": []string{"domain.com"},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+	}, response))
+	res, err := mgmt.Tenant().Load("")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
