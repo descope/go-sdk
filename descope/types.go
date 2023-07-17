@@ -326,8 +326,9 @@ type AccessKeyResponse struct {
 // to denote which tenant the user / access key belongs to. Roles is an optional list of
 // roles for the user / access key in this specific tenant.
 type AssociatedTenant struct {
-	TenantID string   `json:"tenantId"`
-	Roles    []string `json:"roleNames,omitempty"`
+	TenantID   string   `json:"tenantId"`
+	TenantName string   `json:"tenantName"`
+	Roles      []string `json:"roleNames,omitempty"`
 }
 
 // Represents a mapping between a set of groups of users and a role that will be assigned to them.
