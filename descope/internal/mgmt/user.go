@@ -433,6 +433,7 @@ func makeSearchAllRequest(options *descope.UserSearchOptions) map[string]any {
 		"testUsersOnly":    options.TestUsersOnly,
 		"withTestUser":     options.WithTestUsers,
 		"customAttributes": options.CustomAttributes,
+		"statuses":         options.Statuses,
 	}
 }
 
