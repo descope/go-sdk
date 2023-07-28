@@ -384,12 +384,21 @@ func (r *Role) GetCreatedTime() time.Time {
 type UserSearchOptions struct {
 	TenantIDs        []string
 	Roles            []string
+	Statuses         []UserStatus
 	Limit            int32
 	Page             int32
 	WithTestUsers    bool
 	TestUsersOnly    bool
 	CustomAttributes map[string]any
 }
+
+type UserStatus string
+
+const (
+	UserStatusEnabled  UserStatus = "enabled"
+	UserStatusDisabled UserStatus = "disabled"
+	UserStatusInvited  UserStatus = "invited"
+)
 
 type GroupMember struct {
 	LoginID string `json:"loginID,omitempty"`
