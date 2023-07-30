@@ -1013,16 +1013,16 @@ func TestGenerateEnchantedLinkForTestUserNoLoginID(t *testing.T) {
 }
 func TestCreateEmbeddedLink(t *testing.T) {
 	readyToken := "orgjwt"
-	loginId := "sometext"
+	loginID := "sometext"
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		require.EqualValues(t, loginId, req["loginId"])
+		require.EqualValues(t, loginID, req["loginId"])
 		require.NotEmpty(t, req["customClaims"])
 
 	}, map[string]interface{}{"token": readyToken}))
-	token, err := mgmt.User().CreateEmbeddedLink(loginId, map[string]any{"ak": "av"})
+	token, err := mgmt.User().CreateEmbeddedLink(loginID, map[string]any{"ak": "av"})
 	require.NoError(t, err)
 	require.EqualValues(t, readyToken, token)
 }
