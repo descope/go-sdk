@@ -1007,7 +1007,7 @@ link, pendingRef, err := descopeClient.Management.User().GenerateEnchantedLinkFo
 // Note 2: In case of testing sign-in / sign-up methods with test users, need to make sure to generate the code prior calling the sign-in / sign-up methods (such as: descopeClient.Auth.MagicLink().SignUpOrIn)
 
 // Embedded links can be created to directly receive a verifiable token without sending it.
-// This token that can be verified using the magic link 'verify' function, either directly or through a flow.
+// This token can then be verified using the magic link 'verify' function, either directly or through a flow.
 token, err := descopeClient.Management.User().GenerateEmbeddedLink("desmond@descope.com", map[string]any{"key1":"value1"})
 ```
 
