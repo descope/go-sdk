@@ -371,11 +371,11 @@ type embeddedLinkRes struct {
 	Token string `json:"token"`
 }
 
-func (u *user) CreateEmbeddedLink(loginID string, customClaims map[string]any) (string, error) {
+func (u *user) GenerateEmbeddedLink(loginID string, customClaims map[string]any) (string, error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginId")
 	}
-	res, err := u.client.DoPostRequest(api.Routes.ManagementCreateEmbeddedLink(), map[string]any{
+	res, err := u.client.DoPostRequest(api.Routes.ManagementGenerateEmbeddedLink(), map[string]any{
 		"loginId":      loginID,
 		"customClaims": customClaims,
 	}, nil, u.conf.ManagementKey)

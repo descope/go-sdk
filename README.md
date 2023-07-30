@@ -1008,7 +1008,7 @@ link, pendingRef, err := descopeClient.Management.User().GenerateEnchantedLinkFo
 
 // Embedded link can be created via the following call,
 // The return value is a token that can be verified via magic link, or using flows
-token, err := descopeClient.Management.User().CreateEmbeddedLink("desmond@descope.com", map[string]any{"key1":"value1"})
+token, err := descopeClient.Management.User().GenerateEmbeddedLink("desmond@descope.com", map[string]any{"key1":"value1"})
 ```
 
 # API Rate Limits

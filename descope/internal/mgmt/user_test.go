@@ -1011,7 +1011,7 @@ func TestGenerateEnchantedLinkForTestUserNoLoginID(t *testing.T) {
 	require.Empty(t, resPendingRef)
 	require.False(t, visited)
 }
-func TestCreateEmbeddedLink(t *testing.T) {
+func TestGenerateEmbeddedLink(t *testing.T) {
 	readyToken := "orgjwt"
 	loginID := "sometext"
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -1022,29 +1022,29 @@ func TestCreateEmbeddedLink(t *testing.T) {
 		require.NotEmpty(t, req["customClaims"])
 
 	}, map[string]interface{}{"token": readyToken}))
-	token, err := mgmt.User().CreateEmbeddedLink(loginID, map[string]any{"ak": "av"})
+	token, err := mgmt.User().GenerateEmbeddedLink(loginID, map[string]any{"ak": "av"})
 	require.NoError(t, err)
 	require.EqualValues(t, readyToken, token)
 }
 
-func TestCreateEmbeddedLinkMissingLoginID(t *testing.T) {
+func TestGenerateEmbeddedLinkMissingLoginID(t *testing.T) {
 	called := false
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		called = true
 
 	}))
-	token, err := mgmt.User().CreateEmbeddedLink("", map[string]any{"ak": "av"})
+	token, err := mgmt.User().GenerateEmbeddedLink("", map[string]any{"ak": "av"})
 	require.Error(t, err)
 	require.False(t, called)
 	require.Empty(t, token)
 }
 
-func TestCreateEmbeddedLinkHTTPError(t *testing.T) {
+func TestGenerateEmbeddedLinkHTTPError(t *testing.T) {
 	called := false
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
 		called = true
 	}))
-	token, err := mgmt.User().CreateEmbeddedLink("test", map[string]any{"ak": "av"})
+	token, err := mgmt.User().GenerateEmbeddedLink("test", map[string]any{"ak": "av"})
 	require.Error(t, err)
 	require.True(t, called)
 	require.Empty(t, token)

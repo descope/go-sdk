@@ -211,7 +211,7 @@ type User interface {
 
 	// Generate an embedded link token, later can be used to authenticate via magiclink verify method
 	// Or via flow verify step
-	CreateEmbeddedLink(loginID string, customClaims map[string]any) (string, error)
+	GenerateEmbeddedLink(loginID string, customClaims map[string]any) (string, error)
 }
 
 // Provides functions for managing access keys in a project.

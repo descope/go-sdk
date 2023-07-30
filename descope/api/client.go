@@ -556,7 +556,7 @@ func (e *endpoints) ManagementUpdateJWT() string {
 	return path.Join(e.version, e.mgmt.updateJWT)
 }
 
-func (e *endpoints) ManagementCreateEmbeddedLink() string {
+func (e *endpoints) ManagementGenerateEmbeddedLink() string {
 	return path.Join(e.version, e.mgmt.createEmbeddedLink)
 }
 
