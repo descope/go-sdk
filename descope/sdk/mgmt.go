@@ -210,7 +210,7 @@ type User interface {
 	GenerateEnchantedLinkForTestUser(loginID, URI string) (link, pendingRef string, err error)
 
 	// Generate an embedded link token, later can be used to authenticate via magiclink verify method
-	// Or via flow verify step
+	// or via flow verify step
 	GenerateEmbeddedLink(loginID string, customClaims map[string]any) (string, error)
 }
 

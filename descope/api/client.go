@@ -100,6 +100,7 @@ var (
 			userGenerateOTPForTest:           "mgmt/tests/generate/otp",
 			userGenerateMagicLinkForTest:     "mgmt/tests/generate/magiclink",
 			userGenerateEnchantedLinkForTest: "mgmt/tests/generate/enchantedlink",
+			userCreateEmbeddedLink:           "mgmt/user/signin/embeddedlink",
 			accessKeyCreate:                  "mgmt/accesskey/create",
 			accessKeyLoad:                    "mgmt/accesskey",
 			accessKeySearchAll:               "mgmt/accesskey/search",
@@ -111,7 +112,6 @@ var (
 			ssoMetadata:                      "mgmt/sso/metadata",
 			ssoMapping:                       "mgmt/sso/mapping",
 			updateJWT:                        "mgmt/jwt/update",
-			createEmbeddedLink:               "mgmt/user/signin/embeddedlink",
 			permissionCreate:                 "mgmt/permission/create",
 			permissionUpdate:                 "mgmt/permission/update",
 			permissionDelete:                 "mgmt/permission/delete",
@@ -223,6 +223,7 @@ type mgmtEndpoints struct {
 	userGenerateOTPForTest           string
 	userGenerateMagicLinkForTest     string
 	userGenerateEnchantedLinkForTest string
+	userCreateEmbeddedLink           string
 
 	accessKeyCreate     string
 	accessKeyLoad       string
@@ -232,11 +233,10 @@ type mgmtEndpoints struct {
 	accessKeyActivate   string
 	accessKeyDelete     string
 
-	ssoSettings        string
-	ssoMetadata        string
-	ssoMapping         string
-	updateJWT          string
-	createEmbeddedLink string
+	ssoSettings string
+	ssoMetadata string
+	ssoMapping  string
+	updateJWT   string
 
 	permissionCreate  string
 	permissionUpdate  string
@@ -557,7 +557,7 @@ func (e *endpoints) ManagementUpdateJWT() string {
 }
 
 func (e *endpoints) ManagementGenerateEmbeddedLink() string {
-	return path.Join(e.version, e.mgmt.createEmbeddedLink)
+	return path.Join(e.version, e.mgmt.userCreateEmbeddedLink)
 }
 
 func (e *endpoints) ManagementPermissionCreate() string {

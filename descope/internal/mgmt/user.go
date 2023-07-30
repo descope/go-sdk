@@ -373,7 +373,7 @@ type embeddedLinkRes struct {
 
 func (u *user) GenerateEmbeddedLink(loginID string, customClaims map[string]any) (string, error) {
 	if loginID == "" {
-		return "", utils.NewInvalidArgumentError("loginId")
+		return "", utils.NewInvalidArgumentError("loginID")
 	}
 	res, err := u.client.DoPostRequest(api.Routes.ManagementGenerateEmbeddedLink(), map[string]any{
 		"loginId":      loginID,
