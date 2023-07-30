@@ -367,6 +367,29 @@ func (u *user) GenerateEnchantedLinkForTestUser(loginID, URI string) (link, pend
 	return unmarshalGenerateLinkForTestResponse(res)
 }
 
+type embeddedLinkRes struct {
+	Token string `json:"token"`
+}
+
+func (u *user) CreateEmbeddedLink(loginID string, customClaims map[string]any) (string, error) {
+	if loginID == "" {
+		return "", utils.NewInvalidArgumentError("loginId")
+	}
+	res, err := u.client.DoPostRequest(api.Routes.ManagementCreateEmbeddedLink(), map[string]any{
+		"loginId":      loginID,
+		"customClaims": customClaims,
+	}, nil, u.conf.ManagementKey)
+	if err != nil {
+		return "", err
+	}
+	tRes := &embeddedLinkRes{}
+	err = utils.Unmarshal([]byte(res.BodyStr), tRes)
+	if err != nil {
+		return "", err //notest
+	}
+	return tRes.Token, nil
+}
+
 func makeCreateUserRequest(loginID, email, phone, displayName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any) map[string]any {
 	req := makeUpdateUserRequest(loginID, email, phone, displayName, picture, roles, tenants, customAttributes, nil, nil)
 	req["invite"] = invite

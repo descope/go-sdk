@@ -1005,6 +1005,10 @@ link, pendingRef, err := descopeClient.Management.User().GenerateEnchantedLinkFo
 
 // Note 1: The generate code/link methods, work only for test users, will not work for regular users.
 // Note 2: In case of testing sign-in / sign-up methods with test users, need to make sure to generate the code prior calling the sign-in / sign-up methods (such as: descopeClient.Auth.MagicLink().SignUpOrIn)
+
+// Embedded link can be created via the following call,
+// The return value is a token that can be verified via magic link, or using flows
+token, err := descopeClient.Management.User().CreateEmbeddedLink("desmond@descope.com", map[string]any{"key1":"value1"})
 ```
 
 # API Rate Limits

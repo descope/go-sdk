@@ -111,6 +111,7 @@ var (
 			ssoMetadata:                      "mgmt/sso/metadata",
 			ssoMapping:                       "mgmt/sso/mapping",
 			updateJWT:                        "mgmt/jwt/update",
+			createEmbeddedLink:               "mgmt/user/signin/embeddedlink",
 			permissionCreate:                 "mgmt/permission/create",
 			permissionUpdate:                 "mgmt/permission/update",
 			permissionDelete:                 "mgmt/permission/delete",
@@ -231,10 +232,11 @@ type mgmtEndpoints struct {
 	accessKeyActivate   string
 	accessKeyDelete     string
 
-	ssoSettings string
-	ssoMetadata string
-	ssoMapping  string
-	updateJWT   string
+	ssoSettings        string
+	ssoMetadata        string
+	ssoMapping         string
+	updateJWT          string
+	createEmbeddedLink string
 
 	permissionCreate  string
 	permissionUpdate  string
@@ -552,6 +554,10 @@ func (e *endpoints) ManagementSSOMapping() string {
 
 func (e *endpoints) ManagementUpdateJWT() string {
 	return path.Join(e.version, e.mgmt.updateJWT)
+}
+
+func (e *endpoints) ManagementCreateEmbeddedLink() string {
+	return path.Join(e.version, e.mgmt.createEmbeddedLink)
 }
 
 func (e *endpoints) ManagementPermissionCreate() string {

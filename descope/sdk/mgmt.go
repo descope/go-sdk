@@ -208,6 +208,10 @@ type User interface {
 	// This is useful when running tests and don't want to use 3rd party messaging services
 	// The redirect URI is optional. If provided however, it will be used instead of any global configuration.
 	GenerateEnchantedLinkForTestUser(loginID, URI string) (link, pendingRef string, err error)
+
+	// Generate an embedded link token, later can be used to authenticate via magiclink verify method
+	// Or via flow verify step
+	CreateEmbeddedLink(loginID string, customClaims map[string]any) (string, error)
 }
 
 // Provides functions for managing access keys in a project.
