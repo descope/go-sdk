@@ -100,7 +100,6 @@ var (
 			userGenerateOTPForTest:           "mgmt/tests/generate/otp",
 			userGenerateMagicLinkForTest:     "mgmt/tests/generate/magiclink",
 			userGenerateEnchantedLinkForTest: "mgmt/tests/generate/enchantedlink",
-			userCreateEmbeddedLink:           "mgmt/user/signin/embeddedlink",
 			accessKeyCreate:                  "mgmt/accesskey/create",
 			accessKeyLoad:                    "mgmt/accesskey",
 			accessKeySearchAll:               "mgmt/accesskey/search",
@@ -223,7 +222,6 @@ type mgmtEndpoints struct {
 	userGenerateOTPForTest           string
 	userGenerateMagicLinkForTest     string
 	userGenerateEnchantedLinkForTest string
-	userCreateEmbeddedLink           string
 
 	accessKeyCreate     string
 	accessKeyLoad       string
@@ -554,10 +552,6 @@ func (e *endpoints) ManagementSSOMapping() string {
 
 func (e *endpoints) ManagementUpdateJWT() string {
 	return path.Join(e.version, e.mgmt.updateJWT)
-}
-
-func (e *endpoints) ManagementGenerateEmbeddedLink() string {
-	return path.Join(e.version, e.mgmt.userCreateEmbeddedLink)
 }
 
 func (e *endpoints) ManagementPermissionCreate() string {
