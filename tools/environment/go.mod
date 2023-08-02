@@ -1,13 +1,13 @@
-module github.com/descope/go-sdk/examples/managementcli
+module github.com/descope/go-sdk/tools/environment
 
 go 1.18
 
 replace github.com/descope/go-sdk => ../../
 
 require (
-	github.com/descope/go-sdk v0.0.0-20221114171656-dc158057b926
+	github.com/descope/go-sdk v0.0.0-00010101000000-000000000000
 	github.com/spf13/cobra v1.7.0
-	github.com/tj/go-naturaldate v1.3.0
+	golang.org/x/exp v0.0.0-20230801115018-d63ba01acd4b
 )
 
 require (
@@ -23,6 +23,5 @@ require (
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	golang.org/x/crypto v0.9.0 // indirect
-	golang.org/x/exp v0.0.0-20230728194245-b0cb94b80691 // indirect
 	golang.org/x/sys v0.8.0 // indirect
 )

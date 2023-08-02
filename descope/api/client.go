@@ -128,6 +128,8 @@ var (
 			flowImport:                       "mgmt/flow/import",
 			themeExport:                      "mgmt/theme/export",
 			themeImport:                      "mgmt/theme/import",
+			environmentExport:                "mgmt/environment/export",
+			environmentImport:                "mgmt/environment/import",
 			auditSearch:                      "mgmt/audit/search",
 		},
 		logout:    "auth/logout",
@@ -257,6 +259,9 @@ type mgmtEndpoints struct {
 	flowImport  string
 	themeExport string
 	themeImport string
+
+	environmentExport string
+	environmentImport string
 
 	auditSearch string
 }
@@ -622,6 +627,14 @@ func (e *endpoints) ManagementThemeExport() string {
 
 func (e *endpoints) ManagementThemeImport() string {
 	return path.Join(e.version, e.mgmt.themeImport)
+}
+
+func (e *endpoints) ManagementEnvironmentExport() string {
+	return path.Join(e.version, e.mgmt.environmentExport)
+}
+
+func (e *endpoints) ManagementEnvironmentImport() string {
+	return path.Join(e.version, e.mgmt.environmentImport)
 }
 
 func (e *endpoints) ManagementAuditSearch() string {

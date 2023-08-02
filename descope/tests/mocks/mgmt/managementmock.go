@@ -15,6 +15,7 @@ type MockManagement struct {
 	*MockRole
 	*MockGroup
 	*MockFlow
+	*MockEnvironment
 	*MockAudit
 }
 
@@ -52,6 +53,10 @@ func (m *MockManagement) Group() sdk.Group {
 
 func (m *MockManagement) Flow() sdk.Flow {
 	return m.MockFlow
+}
+
+func (m *MockManagement) Environment() sdk.Environment {
+	return m.MockEnvironment
 }
 
 func (m *MockManagement) Audit() sdk.Audit {
@@ -777,6 +782,27 @@ func (m *MockFlow) ImportTheme(theme *descope.Theme) (*descope.Theme, error) {
 		m.ImportThemeAssert(theme)
 	}
 	return m.ImportThemeResponse, m.ImportThemeError
+}
+
+// Mock Environment
+
+type MockEnvironment struct {
+	ExportRawResponse map[string]any
+	ExportRawError    error
+
+	ImportRawAssert func(body map[string]any)
+	ImportRawError  error
+}
+
+func (m *MockEnvironment) ExportRaw() (map[string]any, error) {
+	return m.ExportRawResponse, m.ExportRawError
+}
+
+func (m *MockEnvironment) ImportRaw(body map[string]any) error {
+	if m.ImportRawAssert != nil {
+		m.ImportRawAssert(body)
+	}
+	return m.ExportRawError
 }
 
 // Mock Audit
