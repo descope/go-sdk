@@ -239,6 +239,10 @@ type MockUser struct {
 	GenerateEnchantedLinkForTestUserResponseLink       string
 	GenerateEnchantedLinkForTestUserResponsePendingRef string
 	GenerateEnchantedLinkForTestUserError              error
+
+	GenerateEmbeddedLinkAssert   func(loginID string, customClaims map[string]any)
+	GenerateEmbeddedLinkResponse string
+	GenerateEmbeddedLinkError    error
 }
 
 func (m *MockUser) Create(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
@@ -442,6 +446,13 @@ func (m *MockUser) GenerateEnchantedLinkForTestUser(loginID, URI string) (link, 
 		m.GenerateEnchantedLinkForTestUserAssert(loginID, URI)
 	}
 	return m.GenerateEnchantedLinkForTestUserResponseLink, m.GenerateEnchantedLinkForTestUserResponsePendingRef, m.GenerateEnchantedLinkForTestUserError
+}
+
+func (m *MockUser) GenerateEmbeddedLink(loginID string, customClaims map[string]any) (string, error) {
+	if m.GenerateEmbeddedLinkAssert != nil {
+		m.GenerateEmbeddedLinkAssert(loginID, customClaims)
+	}
+	return m.GenerateEmbeddedLinkResponse, m.GenerateEmbeddedLinkError
 }
 
 // Mock Access Key
