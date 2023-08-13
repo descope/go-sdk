@@ -31,10 +31,9 @@ func prepare(projectID string) (err error) {
 // Command line flags
 
 var Flags struct {
-	Path    string
-	Split   []string
-	Extract []string
-	Debug   bool
+	Path   string
+	Format string
+	Debug  bool
 }
 
 // Command line setup
@@ -70,15 +69,14 @@ func addCommand(action func([]string) error, use string, help string, setup func
 }
 
 func main() {
-	addCommand(environmentExport, "export-project <ProjectID>", "Export the environment for a project", func(cmd *cobra.Command) {
+	addCommand(EnvironmentExport, "export-project <ProjectID>", "Export the environment for a project", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 		cmd.Flags().StringVar(&Flags.Path, "path", "", "The path to export the project into")
-		cmd.Flags().StringSliceVar(&Flags.Extract, "extract", nil, "Extract large values into asset files from: none, flows, styles, others, or all")
-		cmd.Flags().StringSliceVar(&Flags.Split, "split", nil, "Split large objects into smaller files: none, flows, styles, or all")
+		cmd.Flags().StringVar(&Flags.Format, "format", "split", "The export format: 'split' (default) or 'whole'")
 		cmd.Flags().BoolVar(&Flags.Debug, "debug", false, "Saves an export.json trace file")
 	})
 
-	addCommand(environmentImport, "import-project <ProjectID>", "Import the environment for a project", func(cmd *cobra.Command) {
+	addCommand(EnvironmentImport, "import-project <ProjectID>", "Import the environment for a project", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 		cmd.Flags().StringVar(&Flags.Path, "path", "", "The path to import the project from")
 		cmd.Flags().BoolVar(&Flags.Debug, "debug", false, "Saves an import.json trace file")

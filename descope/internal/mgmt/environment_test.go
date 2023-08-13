@@ -13,7 +13,7 @@ func TestEnvironmentExportRaw(t *testing.T) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-	}, map[string]any{"foo": "bar"}))
+	}, map[string]any{"files": map[string]any{"foo": "bar"}}))
 	m, err := mgmt.Environment().ExportRaw()
 	require.NoError(t, err)
 	require.NotNil(t, m)
@@ -25,7 +25,9 @@ func TestEnvironmentImportRaw(t *testing.T) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		require.EqualValues(t, "bar", req["foo"])
+		files, ok := req["files"].(map[string]any)
+		require.True(t, ok)
+		require.Equal(t, "bar", files["foo"])
 	}))
 	err := mgmt.Environment().ImportRaw(map[string]any{"foo": "bar"})
 	require.NoError(t, err)

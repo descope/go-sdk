@@ -790,7 +790,7 @@ type MockEnvironment struct {
 	ExportRawResponse map[string]any
 	ExportRawError    error
 
-	ImportRawAssert func(body map[string]any)
+	ImportRawAssert func(files map[string]any)
 	ImportRawError  error
 }
 
@@ -798,9 +798,9 @@ func (m *MockEnvironment) ExportRaw() (map[string]any, error) {
 	return m.ExportRawResponse, m.ExportRawError
 }
 
-func (m *MockEnvironment) ImportRaw(body map[string]any) error {
+func (m *MockEnvironment) ImportRaw(files map[string]any) error {
 	if m.ImportRawAssert != nil {
-		m.ImportRawAssert(body)
+		m.ImportRawAssert(files)
 	}
 	return m.ExportRawError
 }

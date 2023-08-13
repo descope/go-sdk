@@ -420,7 +420,7 @@ type Environment interface {
 	//
 	// This API is meant to be used via the 'environment' command line tool that can be
 	// found in the '/tools' directory.
-	ImportRaw(map[string]any) error
+	ImportRaw(files map[string]any) error
 }
 
 // Provides search project audit trail

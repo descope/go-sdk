@@ -5,6 +5,10 @@ import (
 	"github.com/descope/go-sdk/descope/internal/utils"
 )
 
+type environmentBody struct {
+	Files map[string]any `json:"files"`
+}
+
 type environment struct {
 	managementBase
 }
@@ -15,14 +19,15 @@ func (e *environment) ExportRaw() (map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	var m map[string]any
-	if err := utils.Unmarshal([]byte(res.BodyStr), &m); err != nil {
+	var export environmentBody
+	if err := utils.Unmarshal([]byte(res.BodyStr), &export); err != nil {
 		return nil, err // notest
 	}
-	return m, nil
+	return export.Files, nil
 }
 
-func (e *environment) ImportRaw(body map[string]any) error {
+func (e *environment) ImportRaw(files map[string]any) error {
+	body := environmentBody{Files: files}
 	_, err := e.client.DoPostRequest(api.Routes.ManagementEnvironmentImport(), body, nil, e.conf.ManagementKey)
 	return err
 }
