@@ -66,16 +66,16 @@ func (auth *password) UpdateUserPassword(loginID, newPassword string, r *http.Re
 	return nil
 }
 
-func (auth *password) ReplaceUserPassword(loginID, oldPassword, newPassword string) error {
+func (auth *password) ReplaceUserPassword(loginID, oldPassword, newPassword string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if loginID == "" {
-		return utils.NewInvalidArgumentError("loginID")
+		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 
-	_, err := auth.client.DoPostRequest(api.Routes.ReplaceUserPassword(), authenticationPasswordReplaceRequestBody{LoginID: loginID, OldPassword: oldPassword, NewPassword: newPassword}, nil, "")
+	res, err := auth.client.DoPostRequest(api.Routes.ReplaceUserPassword(), authenticationPasswordReplaceRequestBody{LoginID: loginID, OldPassword: oldPassword, NewPassword: newPassword}, nil, "")
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return auth.generateAuthenticationInfo(res, w)
 }
 
 func (auth *password) GetPasswordPolicy() (*descope.PasswordPolicy, error) {

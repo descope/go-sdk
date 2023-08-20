@@ -166,7 +166,7 @@ type Password interface {
 	// password will be updated to newPassword.
 	// NewPassword must conform to the password policy defined in the password settings
 	// in the Descope console.
-	ReplaceUserPassword(loginID, oldPassword, newPassword string) error
+	ReplaceUserPassword(loginID, oldPassword, newPassword string, w http.ResponseWriter) (*descope.AuthenticationInfo, error)
 
 	// GetPasswordPolicy - fetch the rules for valid passwords configured in the policy
 	// in the Descope console. This can be used to implement client-side validation of new
