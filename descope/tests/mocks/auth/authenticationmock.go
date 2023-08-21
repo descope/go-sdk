@@ -304,8 +304,9 @@ type MockPassword struct {
 	UpdateAssert func(loginID, newPassword string, r *http.Request)
 	UpdateError  error
 
-	ReplaceAssert func(loginID, oldPassword, newPassword string)
-	ReplaceError  error
+	ReplaceAssert   func(loginID, oldPassword, newPassword string, w http.ResponseWriter)
+	ReplaceError    error
+	ReplaceResponse *descope.AuthenticationInfo
 
 	PolicyResponse *descope.PasswordPolicy
 	PolicyError    error
@@ -339,11 +340,11 @@ func (m *MockPassword) UpdateUserPassword(loginID, newPassword string, r *http.R
 	return m.ResetError
 }
 
-func (m *MockPassword) ReplaceUserPassword(loginID, oldPassword, newPassword string) error {
+func (m *MockPassword) ReplaceUserPassword(loginID, oldPassword, newPassword string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.ReplaceAssert != nil {
-		m.ReplaceAssert(loginID, oldPassword, newPassword)
+		m.ReplaceAssert(loginID, oldPassword, newPassword, w)
 	}
-	return m.ResetError
+	return m.ReplaceResponse, m.ReplaceError
 }
 
 func (m *MockPassword) GetPasswordPolicy() (*descope.PasswordPolicy, error) {
