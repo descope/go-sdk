@@ -26,10 +26,10 @@ A Descope `Project ID` is required to initialize the SDK. Find it on the
 import "github.com/descope/go-sdk/descope/client"
 
 // Initialized after setting the DESCOPE_PROJECT_ID env var
-descopeClient := client.New()
+descopeClient, err := client.New()
 
 // ** Or directly **
-descopeClient := client.NewWithConfig(&client.Config{ProjectID: projectID})
+descopeClient, err := client.NewWithConfig(&client.Config{ProjectID: projectID})
 ```
 
 ## Authentication Functions
@@ -519,10 +519,10 @@ Create one in the [Descope Console](https://app.descope.com/settings/company/man
 import "github.com/descope/go-sdk/descope/client"
 
 // Initialized after setting the DESCOPE_PROJECT_ID and the DESCOPE_MANAGEMENT_KEY env vars
-descopeClient := client.New()
+descopeClient, err := client.New()
 
 // ** Or directly **
-descopeClient := client.NewWithConfig(&client.Config{
+descopeClient, err := client.NewWithConfig(&client.Config{
     ProjectID: "project-ID",
     ManagementKey: "management-key",
 })
