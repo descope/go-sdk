@@ -33,10 +33,11 @@ var (
 	ErrInvalidResponse    = newClientError("G020002", "Invalid server response")
 
 	// client functional errors
-	ErrPublicKey        = newClientError("G030001", "Missing or invalid public key")
-	ErrInvalidToken     = newClientError("G030002", "Invalid token")
-	ErrRefreshToken     = newClientError("G030003", "Missing or invalid refresh token")
-	ErrInvalidStepUpJWT = newClientError("G030004", "Refresh token must be provided for stepup actions")
+	ErrPublicKey               = newClientError("G030001", "Missing or invalid public key")
+	ErrInvalidToken            = newClientError("G030002", "Invalid token")
+	ErrRefreshToken            = newClientError("G030003", "Missing or invalid refresh token")
+	ErrInvalidStepUpJWT        = newClientError("G030004", "Refresh token must be provided for stepup actions")
+	ErrTokenExpiredByLoggedOut = newClientError("E064001", "JWT Expired due to logout")
 )
 
 // Additional information that might be available in the
