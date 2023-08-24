@@ -18,6 +18,7 @@ var (
 	ErrInvalidOneTimeCode        = newServerError("E061102")
 	ErrEnchantedLinkUnauthorized = newServerError("E062503")
 	ErrPasswordExpired           = newServerError("E062909")
+	ErrTokenExpiredByLoggedOut   = newServerError("E064001")
 
 	// server management
 	ErrManagementUserNotFound = newServerError("E112102")

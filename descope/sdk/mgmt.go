@@ -181,7 +181,7 @@ type User interface {
 
 	// Expire the password for the given login ID.
 	// Note: user sign-in with an expired password, the user will get `errors.ErrPasswordExpired` error.
-	// Use the `ResetPassword` or `ReplacePassword` methods to reset/replace the password.
+	// Use the `SendPasswordReset` or `ReplaceUserPassword` methods to reset/replace the password.
 	ExpirePassword(loginID string) error
 
 	// Get the provider token for the given login ID.

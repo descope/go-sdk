@@ -26,10 +26,10 @@ A Descope `Project ID` is required to initialize the SDK. Find it on the
 import "github.com/descope/go-sdk/descope/client"
 
 // Initialized after setting the DESCOPE_PROJECT_ID env var
-descopeClient := client.New()
+descopeClient, err := client.New()
 
 // ** Or directly **
-descopeClient := client.NewWithConfig(&client.Config{ProjectID: projectID})
+descopeClient, err := client.NewWithConfig(&client.Config{ProjectID: projectID})
 ```
 
 ## Authentication Functions
@@ -376,7 +376,7 @@ Alternatively, it is also possible to replace an existing active password with a
 
 ```go
 // Replaces the user's current password with a new one
-err := descopeClient.Auth.Password().ReplaceUserPassword(loginID, oldPassword, newPassword)
+authInfo, err := descopeClient.Auth.Password().ReplaceUserPassword(loginID, oldPassword, newPassword. w)
 ```
 
 ### Session Validation
@@ -519,10 +519,10 @@ Create one in the [Descope Console](https://app.descope.com/settings/company/man
 import "github.com/descope/go-sdk/descope/client"
 
 // Initialized after setting the DESCOPE_PROJECT_ID and the DESCOPE_MANAGEMENT_KEY env vars
-descopeClient := client.New()
+descopeClient, err := client.New()
 
 // ** Or directly **
-descopeClient := client.NewWithConfig(&client.Config{
+descopeClient, err := client.NewWithConfig(&client.Config{
     ProjectID: "project-ID",
     ManagementKey: "management-key",
 })
@@ -637,7 +637,7 @@ authInfo, err := descopeClient.Auth.Password().SignIn("<login-id>", "<some-passw
 if err != nil {
      if errors.Is(err, descope.ErrPasswordExpired) {
         // Handle a case when the error is expired, the user should replace/reset the password
-        // Use descopeClient.Auth.Password().ReplaceUserPassword("<login-id>", "<some-password>", "<new-password>")
+        // Use descopeClient.Auth.Password().ReplaceUserPassword("<login-id>", "<some-password>", "<new-password>", w)
      }
      // Handle other errors
 }
