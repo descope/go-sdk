@@ -159,6 +159,7 @@ func TestPasswordUpdateFailure(t *testing.T) {
 
 func TestPasswordReplace(t *testing.T) {
 	loginID := "someID"
+	name := "foo"
 	oldPassword := "abc123!@"
 	newPassword := "abc123!@#"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
@@ -170,19 +171,34 @@ func TestPasswordReplace(t *testing.T) {
 		assert.EqualValues(t, oldPassword, body["oldPassword"])
 		assert.EqualValues(t, newPassword, body["newPassword"])
 
-		respBytes, err := utils.Marshal("")
+		resp := &descope.JWTResponse{
+			RefreshJwt: jwtTokenValid,
+			User: &descope.UserResponse{
+				User: descope.User{
+					Name: name,
+				},
+				LoginIDs: []string{loginID},
+			},
+			FirstSeen: false,
+		}
+		respBytes, err := utils.Marshal(resp)
 		require.NoError(t, err)
+
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	err = a.Password().ReplaceUserPassword(loginID, oldPassword, newPassword)
+	authInfo, err := a.Password().ReplaceUserPassword(loginID, oldPassword, newPassword, nil)
 	require.NoError(t, err)
+	assert.NotNil(t, authInfo)
+	assert.EqualValues(t, loginID, authInfo.User.LoginIDs[0])
+	assert.False(t, authInfo.FirstSeen)
+	assert.Equal(t, name, authInfo.User.Name)
 }
 
 func TestPasswordReplaceFailure(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.Password().ReplaceUserPassword("", "", "")
+	_, err = a.Password().ReplaceUserPassword("", "", "", nil)
 	assert.Error(t, err)
 }
 
