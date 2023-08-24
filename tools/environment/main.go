@@ -69,14 +69,14 @@ func addCommand(action func([]string) error, use string, help string, setup func
 }
 
 func main() {
-	addCommand(EnvironmentExport, "export-project <ProjectID>", "Export the environment for a project", func(cmd *cobra.Command) {
+	addCommand(EnvironmentExport, "export-project <ProjectID>", "Export all configuration from a project", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 		cmd.Flags().StringVar(&Flags.Path, "path", "", "The path to export the project into")
 		cmd.Flags().StringVar(&Flags.Format, "format", "split", "The export format: 'split' (default) or 'whole'")
 		cmd.Flags().BoolVar(&Flags.Debug, "debug", false, "Saves an export.json trace file")
 	})
 
-	addCommand(EnvironmentImport, "import-project <ProjectID>", "Import the environment for a project", func(cmd *cobra.Command) {
+	addCommand(EnvironmentImport, "import-project <ProjectID>", "Import all configuration into a project", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 		cmd.Flags().StringVar(&Flags.Path, "path", "", "The path to import the project from")
 		cmd.Flags().BoolVar(&Flags.Debug, "debug", false, "Saves an import.json trace file")

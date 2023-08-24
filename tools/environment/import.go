@@ -23,7 +23,7 @@ func (im *importer) Import() error {
 	}
 
 	if Flags.Debug {
-		WriteDebugFile(im.root, "debug/export.json", im.files)
+		WriteDebugFile(im.root, "debug/import.log", im.files)
 	}
 
 	fmt.Println("* Importing environment...")
@@ -86,7 +86,7 @@ func (im *importer) readFile(fullpath string) error {
 	}
 
 	if !skipped {
-		fmt.Printf("  - %s", relpath)
+		fmt.Printf("  - %s\n", relpath)
 	}
 	return nil
 }

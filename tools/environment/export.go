@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"golang.org/x/exp/maps"
 )
@@ -24,7 +25,7 @@ func (ex *exporter) Export() error {
 	}
 
 	if Flags.Debug {
-		WriteDebugFile(ex.root, "debug/export.json", files)
+		WriteDebugFile(ex.root, "debug/export.log", files)
 	}
 
 	fmt.Println("* Writing files...")
@@ -81,10 +82,10 @@ func (ex *exporter) writeBytes(path string, bytes []byte) error {
 func (ex *exporter) ensurePath(path string) (string, error) {
 	dir, file := filepath.Split(path)
 	fullpath := ex.root
-	for _, d := range filepath.SplitList(dir) {
-		fullpath = filepath.Join(fullpath, d)
-		if _, err := os.Stat(fullpath); os.IsNotExist(err) {
-			if err := os.Mkdir(fullpath, 0755); err != nil {
+	if dir != "" {
+		for _, d := range strings.Split(filepath.Clean(dir), string(filepath.Separator)) {
+			fullpath = filepath.Join(fullpath, d)
+			if err := os.Mkdir(fullpath, 0755); !os.IsExist(err) {
 				return "", err
 			}
 		}
@@ -102,7 +103,9 @@ func EnvironmentExport(args []string) error {
 	root := Flags.Path
 	if root == "" {
 		root = "env-" + args[0]
-		os.Mkdir(root, 0755)
+		if err := os.Mkdir(root, 0755); !os.IsExist(err) {
+			return errors.New("cannot create export path: " + root)
+		}
 	} else {
 		root = filepath.Clean(root)
 		if info, err := os.Stat(root); os.IsNotExist(err) {
