@@ -1049,3 +1049,59 @@ func TestGenerateEmbeddedLinkHTTPError(t *testing.T) {
 	require.True(t, called)
 	require.Empty(t, token)
 }
+
+func TestUserCreateWithVerifiedEmailUserSuccess(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"email": "a@b.c",
+		}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, "foo@bar.com", req["email"])
+		roleNames := req["roleNames"].([]any)
+		require.Len(t, roleNames, 1)
+		require.Equal(t, "foo", roleNames[0])
+		require.EqualValues(t, true, req["test"])
+		require.EqualValues(t, true, req["verifiedEmail"])
+	}, response))
+	user := &descope.UserRequest{}
+	user.Email = "foo@bar.com"
+	tr := true
+	user.VerifiedEmail = &tr
+	user.Roles = []string{"foo"}
+	res, err := m.User().CreateTestUser("abc", user)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, "a@b.c", res.Email)
+}
+
+func TestUserCreateWithVerifiedPhoneUserSuccess(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"email": "a@b.c",
+		}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, "foo@bar.com", req["email"])
+		roleNames := req["roleNames"].([]any)
+		require.Len(t, roleNames, 1)
+		require.Equal(t, "foo", roleNames[0])
+		require.EqualValues(t, true, req["test"])
+		require.EqualValues(t, false, req["verifiedPhone"])
+	}, response))
+	user := &descope.UserRequest{}
+	user.Email = "foo@bar.com"
+	tr := false
+	user.VerifiedPhone = &tr
+	user.Roles = []string{"foo"}
+	res, err := m.User().CreateTestUser("abc", user)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, "a@b.c", res.Email)
+}

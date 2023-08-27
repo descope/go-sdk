@@ -14,28 +14,28 @@ func (u *user) Create(loginID string, user *descope.UserRequest) (*descope.UserR
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
-	return u.create(loginID, user.Email, user.Phone, user.Name, user.Picture, user.Roles, user.Tenants, false, false, user.CustomAttributes)
+	return u.create(loginID, user.Email, user.Phone, user.Name, user.Picture, user.Roles, user.Tenants, false, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone)
 }
 
 func (u *user) CreateTestUser(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
-	return u.create(loginID, user.Email, user.Phone, user.Name, user.Picture, user.Roles, user.Tenants, false, true, user.CustomAttributes)
+	return u.create(loginID, user.Email, user.Phone, user.Name, user.Picture, user.Roles, user.Tenants, false, true, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone)
 }
 
 func (u *user) Invite(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
-	return u.create(loginID, user.Email, user.Phone, user.Name, user.Picture, user.Roles, user.Tenants, true, false, user.CustomAttributes)
+	return u.create(loginID, user.Email, user.Phone, user.Name, user.Picture, user.Roles, user.Tenants, true, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone)
 }
 
-func (u *user) create(loginID, email, phone, displayName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any) (*descope.UserResponse, error) {
+func (u *user) create(loginID, email, phone, displayName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool) (*descope.UserResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
-	req := makeCreateUserRequest(loginID, email, phone, displayName, picture, roles, tenants, invite, test, customAttributes)
+	req := makeCreateUserRequest(loginID, email, phone, displayName, picture, roles, tenants, invite, test, customAttributes, verifiedEmail, verifiedPhone)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserCreate(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -390,8 +390,8 @@ func (u *user) GenerateEmbeddedLink(loginID string, customClaims map[string]any)
 	return tRes.Token, nil
 }
 
-func makeCreateUserRequest(loginID, email, phone, displayName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any) map[string]any {
-	req := makeUpdateUserRequest(loginID, email, phone, displayName, picture, roles, tenants, customAttributes, nil, nil)
+func makeCreateUserRequest(loginID, email, phone, displayName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool) map[string]any {
+	req := makeUpdateUserRequest(loginID, email, phone, displayName, picture, roles, tenants, customAttributes, verifiedEmail, verifiedPhone)
 	req["invite"] = invite
 	if test {
 		req["test"] = true
