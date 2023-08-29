@@ -406,15 +406,17 @@ type Flow interface {
 }
 
 // Provides functions for exporting and importing project settings, flows, styles, etc.
-type Environment interface {
-	// Exports the environment for a project and returns the raw JSON result as a map.
+type Project interface {
+	// Exports all settings and configurations for a project and returns the raw JSON
+	// result as a map.
 	//
 	// This API is meant to be used via the 'environment' command line tool that can be
 	// found in the '/tools' directory.
 	ExportRaw() (map[string]any, error)
 
-	// Imports the environment for a project overriding any current configuration.
-
+	// Imports all settings and configurations for a project overriding any current
+	// configuration.
+	//
 	// The input is expected to be a raw JSON map in the same format as the one returned
 	// by calls to ExportRaw.
 	//
@@ -459,9 +461,9 @@ type Management interface {
 	// Provide functions for managing flows and theme in a project
 	Flow() Flow
 
-	// Provide functions for exporting and importing project environments
-	Environment() Environment
-
 	// Provides search project audit trail
 	Audit() Audit
+
+	// Provide functions for managing projects
+	Project() Project
 }

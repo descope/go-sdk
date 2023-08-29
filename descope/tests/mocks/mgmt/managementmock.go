@@ -15,7 +15,7 @@ type MockManagement struct {
 	*MockRole
 	*MockGroup
 	*MockFlow
-	*MockEnvironment
+	*MockProject
 	*MockAudit
 }
 
@@ -55,8 +55,8 @@ func (m *MockManagement) Flow() sdk.Flow {
 	return m.MockFlow
 }
 
-func (m *MockManagement) Environment() sdk.Environment {
-	return m.MockEnvironment
+func (m *MockManagement) Project() sdk.Project {
+	return m.MockProject
 }
 
 func (m *MockManagement) Audit() sdk.Audit {
@@ -784,9 +784,9 @@ func (m *MockFlow) ImportTheme(theme *descope.Theme) (*descope.Theme, error) {
 	return m.ImportThemeResponse, m.ImportThemeError
 }
 
-// Mock Environment
+// Mock Project
 
-type MockEnvironment struct {
+type MockProject struct {
 	ExportRawResponse map[string]any
 	ExportRawError    error
 
@@ -794,11 +794,11 @@ type MockEnvironment struct {
 	ImportRawError  error
 }
 
-func (m *MockEnvironment) ExportRaw() (map[string]any, error) {
+func (m *MockProject) ExportRaw() (map[string]any, error) {
 	return m.ExportRawResponse, m.ExportRawError
 }
 
-func (m *MockEnvironment) ImportRaw(files map[string]any) error {
+func (m *MockProject) ImportRaw(files map[string]any) error {
 	if m.ImportRawAssert != nil {
 		m.ImportRawAssert(files)
 	}

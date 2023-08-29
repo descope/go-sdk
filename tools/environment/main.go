@@ -69,17 +69,17 @@ func addCommand(action func([]string) error, use string, help string, setup func
 }
 
 func main() {
-	addCommand(EnvironmentExport, "export-project <ProjectID>", "Export all configuration from a project", func(cmd *cobra.Command) {
+	addCommand(ExportProject, "export-project <ProjectID>", "Export all configuration from a project", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 		cmd.Flags().StringVar(&Flags.Path, "path", "", "The path to export the project into")
 		cmd.Flags().StringVar(&Flags.Format, "format", "split", "The export format: 'split' (default) or 'whole'")
-		cmd.Flags().BoolVar(&Flags.Debug, "debug", false, "Saves an export.json trace file")
+		cmd.Flags().BoolVar(&Flags.Debug, "debug", false, "Saves an export.log trace file in the debug directory")
 	})
 
-	addCommand(EnvironmentImport, "import-project <ProjectID>", "Import all configuration into a project", func(cmd *cobra.Command) {
+	addCommand(ImportProject, "import-project <ProjectID>", "Import all configuration into a project", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 		cmd.Flags().StringVar(&Flags.Path, "path", "", "The path to import the project from")
-		cmd.Flags().BoolVar(&Flags.Debug, "debug", false, "Saves an import.json trace file")
+		cmd.Flags().BoolVar(&Flags.Debug, "debug", false, "Saves an import.log trace file in the debug directory")
 	})
 
 	cli.SetHelpCommand(&cobra.Command{Hidden: true})

@@ -26,9 +26,9 @@ func (im *importer) Import() error {
 		WriteDebugFile(im.root, "debug/import.log", im.files)
 	}
 
-	fmt.Println("* Importing environment...")
-	if err := descopeClient.Management.Environment().ImportRaw(im.files); err != nil {
-		return err
+	fmt.Println("* Importing project...")
+	if err := descopeClient.Management.Project().ImportRaw(im.files); err != nil {
+		return fmt.Errorf("failed to import project: %w", err)
 	}
 
 	fmt.Println("* Done")
@@ -38,7 +38,7 @@ func (im *importer) Import() error {
 func (im *importer) readFiles(path string) error {
 	info, err := os.ReadDir(path)
 	if err != nil {
-		return fmt.Errorf("error reading import files from path %s: %w", path, err)
+		return fmt.Errorf("failed to read import files from path %s: %w", path, err)
 	}
 
 	for _, entry := range info {
@@ -60,12 +60,12 @@ func (im *importer) readFiles(path string) error {
 func (im *importer) readFile(fullpath string) error {
 	relpath, err := filepath.Rel(im.root, fullpath)
 	if err != nil {
-		return fmt.Errorf("error parsing import file path %s: %w", fullpath, err)
+		return fmt.Errorf("failed to parse import file path %s: %w", fullpath, err)
 	}
 
 	bytes, err := os.ReadFile(fullpath)
 	if err != nil {
-		return fmt.Errorf("error reading import file %s: %w", relpath, err)
+		return fmt.Errorf("failed to read import file %s: %w", relpath, err)
 	}
 
 	skipped := false
@@ -74,7 +74,7 @@ func (im *importer) readFile(fullpath string) error {
 	case ".json":
 		var m map[string]any
 		if err = json.Unmarshal(bytes, &m); err != nil {
-			return fmt.Errorf("error convert import json file %s: %w", relpath, err)
+			return fmt.Errorf("failed to convert import json file %s: %w", relpath, err)
 		}
 		im.files[relpath] = m
 	case ".txt", ".html":
@@ -91,7 +91,7 @@ func (im *importer) readFile(fullpath string) error {
 	return nil
 }
 
-func EnvironmentImport(args []string) error {
+func ImportProject(args []string) error {
 	root := Flags.Path
 	if root == "" {
 		root = "env-" + args[0]
