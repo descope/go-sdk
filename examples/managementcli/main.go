@@ -33,20 +33,20 @@ var flags struct {
 var descopeClient *client.DescopeClient
 
 func prepare() (err error) {
-	if os.Getenv(descope.EnvironmentVariableProjectID) == "" {
+	descopeConfig := &client.Config{
+		ProjectID:      os.Getenv(descope.EnvironmentVariableProjectID),
+		ManagementKey:  os.Getenv(descope.EnvironmentVariableManagementKey),
+		DescopeBaseURL: os.Getenv(descope.EnvironmentVariableBaseURL),
+	}
+	if descopeConfig.ProjectID == "" {
 		// the projectID can be found in the Project section of the admin console: https://app.descope.com/settings/project
 		return errors.New("the DESCOPE_PROJECT_ID environment variable must be set")
 	}
-	if os.Getenv(descope.EnvironmentVariableManagementKey) == "" {
+	if descopeConfig.ManagementKey == "" {
 		// generate a management key in the Company section of the admin console: https://app.descope.com/settings/company
 		return errors.New("the DESCOPE_MANAGEMENT_KEY environment variable must be set")
 	}
-	baseUrl := os.Getenv(descope.EnvironmentVariableBaseURL)
-	if baseUrl != "" {
-		descopeClient, err = client.NewWithConfig(&client.Config{DescopeBaseURL: baseUrl})
-	} else {
-		descopeClient, err = client.New()
-	}
+	descopeClient, err = client.NewWithConfig(descopeConfig)
 	return err
 }
 
@@ -432,7 +432,7 @@ var cli = &cobra.Command{
 }
 
 func addCommand(action func([]string) error, use string, help string, setup func(*cobra.Command)) {
-	command := &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   use,
 		Short: help,
 		Run: func(_ *cobra.Command, args []string) {
@@ -441,9 +441,10 @@ func addCommand(action func([]string) error, use string, help string, setup func
 			}
 		},
 	}
-	setup(command)
-	command.Flags().SortFlags = false
-	cli.AddCommand(command)
+	setup(cmd)
+	cmd.DisableFlagsInUseLine = !cmd.HasLocalFlags()
+	cmd.Flags().SortFlags = false
+	cli.AddCommand(cmd)
 }
 
 func main() {
@@ -465,7 +466,6 @@ func main() {
 
 	addCommand(userDelete, "user-delete <loginID>", "Delete an existing user", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(accessKeyCreate, "access-key-create <name> <expireTime>", "Create a new access key", func(cmd *cobra.Command) {
@@ -475,31 +475,25 @@ func main() {
 
 	addCommand(accessKeyLoad, "access-key-load", "Load an access key <id>", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(accessKeySearchAll, "access-key-search-all", "Search all access keys", func(cmd *cobra.Command) {
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(accessKeyUpdate, "access-key-update", "Update an access key <id> <name>", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(accessKeyDeactivate, "access-key-deactivate", "Deactivate an access key <id>", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(accessKeyActivate, "access-key-activate", "Activate an access key <id>", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(accessKeyDelete, "access-key-delete", "Delete an access key <id>", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(tenantCreate, "tenant-create <name>", "Create a new tenant", func(cmd *cobra.Command) {
@@ -515,46 +509,37 @@ func main() {
 
 	addCommand(tenantDelete, "tenant-delete <id>", "Delete an existing tenant", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(tenantLoad, "tenant-load", "Load tenant by id", func(cmd *cobra.Command) {
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(tenantLoadAll, "tenant-all", "Load all tenants", func(cmd *cobra.Command) {
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(userLoad, "user-load <id>", "Load an existing user", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(userUpdateLoginID, "user-update-loginid <id> <new-id>", "Update loginid of user", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(userSearchAll, "user-search-all", "Search existing users", func(cmd *cobra.Command) {
 		// Currently not accepting any filters
 		cmd.Args = cobra.ExactArgs(2)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(setUserPassword, "user-set-password <loginId> <password>", "Set user password (The password will be initially set as expired)", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(expireUserPassword, "user-expire-password <loginId>", "Expire user password", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(getUserProviderToken, "user-provider-token <loginId> <provider>", "Get user provider token", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(permissionCreate, "permission-create <name>", "Create a new permission", func(cmd *cobra.Command) {
@@ -569,11 +554,9 @@ func main() {
 
 	addCommand(permissionDelete, "permission-delete <name>", "Delete a permission", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(permissionAll, "permission-all", "Load all permissions", func(cmd *cobra.Command) {
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(roleCreate, "role-create <name>", "Create a new role", func(cmd *cobra.Command) {
@@ -590,59 +573,47 @@ func main() {
 
 	addCommand(roleDelete, "role-delete <name>", "Delete a role", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(roleAll, "role-all", "Load all roles", func(cmd *cobra.Command) {
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(groupAllForTenant, "group-all-for-tenant <tenantId>", "Load all groups for a given tenant id", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(listFlows, "list-flows", "List all flows in project", func(cmd *cobra.Command) {
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(exportFlow, "export-flow <flowId>", "Export the flow and screens for a given flow id", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(importFlow, "import-flow <fileName> <flowId>", "load flow and screens from given fileName and import as flowId", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(exportTheme, "export-theme", "Export the theme for the project", func(cmd *cobra.Command) {
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(importTheme, "import-theme <fileName>", "Import a theme for the project", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(groupAllForMembersUserIDs, "group-all-for-members-user-ids <tenantId> <userIDs>", "Load all groups for the given user's ID (can be found in the user's JWT)", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(groupAllForMembersLoginIDs, "group-all-for-members-loginIDs <tenantId> <loginIDs>", "Load all groups for the given user's loginIDs (used for sign-in)", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(groupAllGroupMembers, "group-members <tenantId> <groupId>", "Load all group's members by the given group id", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	addCommand(auditFullTextSearch, "audit-search <text> <from>", "Full text search up to last 30 days of audit. From can be specified in plain English (last 5 minutes, last day)", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
-		cmd.DisableFlagsInUseLine = true
 	})
 
 	err := cli.Execute()

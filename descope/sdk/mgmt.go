@@ -405,6 +405,26 @@ type Flow interface {
 	ImportTheme(theme *descope.Theme) (*descope.Theme, error)
 }
 
+// Provides functions for exporting and importing project settings, flows, styles, etc.
+type Project interface {
+	// Exports all settings and configurations for a project and returns the raw JSON
+	// result as a map.
+	//
+	// This API is meant to be used via the 'environment' command line tool that can be
+	// found in the '/tools' directory.
+	ExportRaw() (map[string]any, error)
+
+	// Imports all settings and configurations for a project overriding any current
+	// configuration.
+	//
+	// The input is expected to be a raw JSON map in the same format as the one returned
+	// by calls to ExportRaw.
+	//
+	// This API is meant to be used via the 'environment' command line tool that can be
+	// found in the '/tools' directory.
+	ImportRaw(files map[string]any) error
+}
+
 // Provides search project audit trail
 type Audit interface {
 	Search(*descope.AuditSearchOptions) ([]*descope.AuditRecord, error)
@@ -443,4 +463,7 @@ type Management interface {
 
 	// Provides search project audit trail
 	Audit() Audit
+
+	// Provide functions for managing projects
+	Project() Project
 }

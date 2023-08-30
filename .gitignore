@@ -18,6 +18,7 @@ examples/webapp/webapp
 examples/ginwebapp/ginwebapp
 examples/managementcli/managementcli
 examples/importusers/importusers
+tools/environment/environment
 
 # Test binary, build with `go test -c`
 *.test
