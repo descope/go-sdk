@@ -61,6 +61,7 @@ These sections show how to use the SDK to perform API management functions. Befo
 8. [Manage Flows](#manage-flows)
 9. [Manage JWTs](#manage-jwts)
 10. [Search Audit](#search-audit)
+11. [Embedded Links](#embedded-links)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -869,6 +870,13 @@ if err != nil {
 }
 ```
 
+### Embedded links
+```go
+// Embedded links can be created to directly receive a verifiable token without sending it.
+// This token can then be verified using the magic link 'verify' function, either directly or through a flow.
+token, err := descopeClient.Management.User().GenerateEmbeddedLink("desmond@descope.com", map[string]any{"key1":"value1"})
+```
+
 ### Search Audit
 
 You can perform an audit search for either specific values or full-text across the fields. Audit search is limited to the last 30 days.
@@ -1006,9 +1014,6 @@ link, pendingRef, err := descopeClient.Management.User().GenerateEnchantedLinkFo
 // Note 1: The generate code/link methods, work only for test users, will not work for regular users.
 // Note 2: In case of testing sign-in / sign-up methods with test users, need to make sure to generate the code prior calling the sign-in / sign-up methods (such as: descopeClient.Auth.MagicLink().SignUpOrIn)
 
-// Embedded links can be created to directly receive a verifiable token without sending it.
-// This token can then be verified using the magic link 'verify' function, either directly or through a flow.
-token, err := descopeClient.Management.User().GenerateEmbeddedLink("desmond@descope.com", map[string]any{"key1":"value1"})
 ```
 
 # API Rate Limits
