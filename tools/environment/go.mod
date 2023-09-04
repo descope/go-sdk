@@ -5,7 +5,7 @@ go 1.18
 replace github.com/descope/go-sdk => ../../
 
 require (
-	github.com/descope/go-sdk v0.9.4
+	github.com/descope/go-sdk v1.5.5
 	github.com/spf13/cobra v1.7.0
 	golang.org/x/exp v0.0.0-20230801115018-d63ba01acd4b
 )
