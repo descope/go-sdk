@@ -37,7 +37,42 @@ func TestUserCreateSuccess(t *testing.T) {
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
 
-	res, err = m.User().Invite("abc", user)
+	res, err = m.User().Invite("abc", user, nil)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, "a@b.c", res.Email)
+
+	res, err = m.User().Invite("abc", user, &descope.InviteOptions{InviteURL: "https://some.domain.com"})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, "a@b.c", res.Email)
+}
+
+func TestUserCreateSuccessWithOptions(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"email": "a@b.c",
+		}}
+	ca := map[string]any{"ak": "av"}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, "foo@bar.com", req["email"])
+		roleNames := req["roleNames"].([]any)
+		require.Len(t, roleNames, 1)
+		require.Equal(t, "foo", roleNames[0])
+		require.Nil(t, req["test"])
+		assert.EqualValues(t, ca, req["customAttributes"])
+		assert.EqualValues(t, "https://some.domain.com", req["inviteUrl"])
+	}, response))
+	user := &descope.UserRequest{}
+	user.Email = "foo@bar.com"
+	user.Roles = []string{"foo"}
+	user.CustomAttributes = ca
+
+	res, err := m.User().Invite("abc", user, &descope.InviteOptions{InviteURL: "https://some.domain.com"})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
@@ -82,7 +117,7 @@ func TestUserCreateUpdateOrInviteWithNoUser(t *testing.T) {
 	require.NoError(t, err)
 	_, err = m.User().CreateTestUser("abc", nil)
 	require.NoError(t, err)
-	_, err = m.User().Invite("abc", nil)
+	_, err = m.User().Invite("abc", nil, nil)
 	require.NoError(t, err)
 	_, err = m.User().Update("abc", nil)
 	require.NoError(t, err)
