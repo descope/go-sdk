@@ -260,6 +260,10 @@ func NewToken(JWT string, token jwt.Token) *Token {
 	}
 }
 
+type InviteOptions struct {
+	InviteURL string `json:"inviteUrl,omitempty"`
+}
+
 type User struct {
 	Name  string `json:"name,omitempty"`
 	Phone string `json:"phone,omitempty"`

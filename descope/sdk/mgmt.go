@@ -72,7 +72,7 @@ type User interface {
 	// the email is explicitly set, or the loginID itself is an email address.
 	// You must configure the invitation URL in the Descope console prior to
 	// calling the method.
-	Invite(loginID string, user *descope.UserRequest) (*descope.UserResponse, error)
+	Invite(loginID string, user *descope.UserRequest, options *descope.InviteOptions) (*descope.UserResponse, error)
 
 	// Update an existing user.
 	//

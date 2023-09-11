@@ -144,7 +144,7 @@ type MockUser struct {
 	CreateTestUserResponse *descope.UserResponse
 	CreateTestUserError    error
 
-	InviteAssert   func(loginID string, user *descope.UserRequest)
+	InviteAssert   func(loginID string, user *descope.UserRequest, options *descope.InviteOptions)
 	InviteResponse *descope.UserResponse
 	InviteError    error
 
@@ -264,9 +264,9 @@ func (m *MockUser) CreateTestUser(loginID string, user *descope.UserRequest) (*d
 	return m.CreateTestUserResponse, m.CreateTestUserError
 }
 
-func (m *MockUser) Invite(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
+func (m *MockUser) Invite(loginID string, user *descope.UserRequest, options *descope.InviteOptions) (*descope.UserResponse, error) {
 	if m.InviteAssert != nil {
-		m.InviteAssert(loginID, user)
+		m.InviteAssert(loginID, user, options)
 	}
 	return m.InviteResponse, m.InviteError
 }

@@ -586,7 +586,9 @@ userReqInvite.Tenants = []*descope.AssociatedTenant{
     {TenantID: "tenant-ID1", Roles: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},
 }
-err := descopeClient.Management.User().Invite("desmond@descope.com", userReqInvite)
+// options can be nil, and in this case, value will be taken from project settings page
+options := &descope.InviteOptions{InviteURL: "https://sub.domain.com"} 
+err := descopeClient.Management.User().Invite("desmond@descope.com", userReqInvite, options)
 
 // Update will override all fields as is. Use carefully.
 userReqUpdate := &descope.UserRequest{}
