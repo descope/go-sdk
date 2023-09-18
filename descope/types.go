@@ -394,6 +394,8 @@ type UserSearchOptions struct {
 	WithTestUsers    bool
 	TestUsersOnly    bool
 	CustomAttributes map[string]any
+	Emails           []string
+	Phones           []string
 }
 
 type UserStatus string
