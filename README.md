@@ -377,7 +377,7 @@ Alternatively, it is also possible to replace an existing active password with a
 
 ```go
 // Replaces the user's current password with a new one
-authInfo, err := descopeClient.Auth.Password().ReplaceUserPassword(loginID, oldPassword, newPassword. w)
+authInfo, err := descopeClient.Auth.Password().ReplaceUserPassword(loginID, oldPassword, newPassword, w)
 ```
 
 ### Session Validation
