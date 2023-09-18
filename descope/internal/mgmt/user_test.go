@@ -303,8 +303,18 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 		require.EqualValues(t, 100, req["limit"])
 		require.EqualValues(t, 0, req["page"])
 		require.EqualValues(t, map[string]any{"a": "b"}, req["customAttributes"])
+		require.EqualValues(t, []any{"a@b.com"}, req["emails"])
+		require.EqualValues(t, []any{"+11111111"}, req["phones"])
 	}, response))
-	res, err := m.User().SearchAll(&descope.UserSearchOptions{Statuses: []descope.UserStatus{descope.UserStatusDisabled}, TenantIDs: tenantIDs, Roles: roleNames, Limit: 100, CustomAttributes: map[string]any{"a": "b"}})
+	res, err := m.User().SearchAll(&descope.UserSearchOptions{
+		Statuses:         []descope.UserStatus{descope.UserStatusDisabled},
+		TenantIDs:        tenantIDs,
+		Roles:            roleNames,
+		Limit:            100,
+		CustomAttributes: map[string]any{"a": "b"},
+		Emails:           []string{"a@b.com"},
+		Phones:           []string{"+11111111"},
+	})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res, 1)
