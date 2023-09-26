@@ -294,6 +294,8 @@ type UserResponse struct {
 	CustomAttributes map[string]any      `json:"customAttributes,omitempty"`
 	CreatedTime      int32               `json:"createdTime,omitempty"`
 	TOTP             bool                `json:"totp,omitempty"`
+	WebAuthn         bool                `json:"webauthn,omitempty"`
+	Password         bool                `json:"password,omitempty"`
 	SAML             bool                `json:"saml,omitempty"`
 	OAuth            map[string]bool     `json:"oauth,omitempty"`
 }
