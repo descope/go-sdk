@@ -609,7 +609,7 @@ func (m *MockTenant) LoadAll() ([]*descope.Tenant, error) {
 	return m.LoadAllResponse, m.LoadAllError
 }
 
-func (m *MockTenant) SearchAll(options *descope.TenantSearchOptions) ([]*descope.Tenant, error) {
+func (m *MockTenant) SearchAll(_ *descope.TenantSearchOptions) ([]*descope.Tenant, error) {
 	return m.SearchAllResponse, m.SearchAllError
 }
 
