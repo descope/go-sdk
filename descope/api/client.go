@@ -77,6 +77,7 @@ var (
 			tenantDelete:                     "mgmt/tenant/delete",
 			tenantLoad:                       "mgmt/tenant",
 			tenantLoadAll:                    "mgmt/tenant/all",
+			tenantSearchAll:                  "mgmt/tenant/search",
 			userCreate:                       "mgmt/user/create",
 			userUpdate:                       "mgmt/user/update",
 			userDelete:                       "mgmt/user/delete",
@@ -195,11 +196,12 @@ type authEndpoints struct {
 }
 
 type mgmtEndpoints struct {
-	tenantCreate  string
-	tenantUpdate  string
-	tenantDelete  string
-	tenantLoad    string
-	tenantLoadAll string
+	tenantCreate    string
+	tenantUpdate    string
+	tenantDelete    string
+	tenantLoad      string
+	tenantLoadAll   string
+	tenantSearchAll string
 
 	userCreate                string
 	userUpdate                string
@@ -423,6 +425,10 @@ func (e *endpoints) ManagementTenantLoad() string {
 
 func (e *endpoints) ManagementTenantLoadAll() string {
 	return path.Join(e.version, e.mgmt.tenantLoadAll)
+}
+
+func (e *endpoints) ManagementTenantSearchAll() string {
+	return path.Join(e.version, e.mgmt.tenantSearchAll)
 }
 
 func (e *endpoints) ManagementUserCreate() string {

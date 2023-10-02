@@ -10,23 +10,29 @@ type tenant struct {
 	managementBase
 }
 
-func (t *tenant) Create(name string, selfProvisioningDomains []string) (id string, err error) {
-	return t.createWithID("", name, selfProvisioningDomains)
+func (t *tenant) Create(tenantRequest *descope.TenantRequest) (id string, err error) {
+	if tenantRequest == nil {
+		tenantRequest = &descope.TenantRequest{}
+	}
+	return t.createWithID("", tenantRequest)
 }
 
-func (t *tenant) CreateWithID(id, name string, selfProvisioningDomains []string) error {
+func (t *tenant) CreateWithID(id string, tenantRequest *descope.TenantRequest) error {
 	if id == "" {
 		return utils.NewInvalidArgumentError("id")
 	}
-	_, err := t.createWithID(id, name, selfProvisioningDomains)
+	if tenantRequest == nil {
+		tenantRequest = &descope.TenantRequest{}
+	}
+	_, err := t.createWithID(id, tenantRequest)
 	return err
 }
 
-func (t *tenant) createWithID(id, name string, selfProvisioningDomains []string) (string, error) {
-	if name == "" {
+func (t *tenant) createWithID(id string, tenantRequest *descope.TenantRequest) (string, error) {
+	if tenantRequest.Name == "" {
 		return "", utils.NewInvalidArgumentError("name")
 	}
-	req := makeCreateUpdateTenantRequest(id, name, selfProvisioningDomains)
+	req := makeCreateUpdateTenantRequest(id, tenantRequest)
 	httpRes, err := t.client.DoPostRequest(api.Routes.ManagementTenantCreate(), req, nil, t.conf.ManagementKey)
 	if err != nil {
 		return "", err
@@ -40,14 +46,14 @@ func (t *tenant) createWithID(id, name string, selfProvisioningDomains []string)
 	return res.ID, nil
 }
 
-func (t *tenant) Update(id, name string, selfProvisioningDomains []string) error {
+func (t *tenant) Update(id string, tenantRequest *descope.TenantRequest) error {
 	if id == "" {
 		return utils.NewInvalidArgumentError("id")
 	}
-	if name == "" {
+	if tenantRequest.Name == "" {
 		return utils.NewInvalidArgumentError("name")
 	}
-	req := makeCreateUpdateTenantRequest(id, name, selfProvisioningDomains)
+	req := makeCreateUpdateTenantRequest(id, tenantRequest)
 	_, err := t.client.DoPostRequest(api.Routes.ManagementTenantUpdate(), req, nil, t.conf.ManagementKey)
 	return err
 }
@@ -83,8 +89,22 @@ func (t *tenant) LoadAll() ([]*descope.Tenant, error) {
 	return unmarshalLoadAllTenantsResponse(res)
 }
 
-func makeCreateUpdateTenantRequest(id, name string, selfProvisioningDomains []string) map[string]any {
-	return map[string]any{"id": id, "name": name, "selfProvisioningDomains": selfProvisioningDomains}
+func (t *tenant) SearchAll(options *descope.TenantSearchOptions) ([]*descope.Tenant, error) {
+	// Init empty options if non given
+	if options == nil {
+		options = &descope.TenantSearchOptions{}
+	}
+
+	req := makeSearchTenantRequest(options)
+	res, err := t.client.DoPostRequest(api.Routes.ManagementTenantSearchAll(), req, nil, t.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalLoadAllTenantsResponse(res)
+}
+
+func makeCreateUpdateTenantRequest(id string, tenantRequest *descope.TenantRequest) map[string]any {
+	return map[string]any{"id": id, "name": tenantRequest.Name, "selfProvisioningDomains": tenantRequest.SelfProvisioningDomains, "customAttributes": tenantRequest.CustomAttributes}
 }
 
 func unmarshalLoadTenantResponse(res *api.HTTPResponse) (*descope.Tenant, error) {
@@ -105,4 +125,13 @@ func unmarshalLoadAllTenantsResponse(res *api.HTTPResponse) ([]*descope.Tenant, 
 		return nil, err
 	}
 	return tres.Tenants, nil
+}
+
+func makeSearchTenantRequest(options *descope.TenantSearchOptions) map[string]any {
+	return map[string]any{
+		"tenantIds":                     options.IDs,
+		"tenantNames":                   options.Names,
+		"tenantSelfProvisioningDomains": options.SelfProvisioningDomains,
+		"customAttributes":              options.CustomAttributes,
+	}
 }
