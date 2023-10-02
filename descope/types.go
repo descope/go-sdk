@@ -352,9 +352,23 @@ type AttributeMapping struct {
 }
 
 type Tenant struct {
-	ID                      string   `json:"id"`
-	Name                    string   `json:"name"`
-	SelfProvisioningDomains []string `json:"selfProvisioningDomains"`
+	ID                      string         `json:"id"`
+	Name                    string         `json:"name"`
+	SelfProvisioningDomains []string       `json:"selfProvisioningDomains"`
+	CustomAttributes        map[string]any `json:"customAttributes,omitempty"`
+}
+
+type TenantRequest struct {
+	Name                    string         `json:"name"`
+	SelfProvisioningDomains []string       `json:"selfProvisioningDomains"`
+	CustomAttributes        map[string]any `json:"customAttributes,omitempty"`
+}
+
+type TenantSearchOptions struct {
+	IDs                     []string
+	Names                   []string
+	SelfProvisioningDomains []string
+	CustomAttributes        map[string]any
 }
 
 type Permission struct {

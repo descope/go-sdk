@@ -194,10 +194,11 @@ func accessKeyDelete(args []string) error {
 }
 
 func tenantCreate(args []string) error {
+	tr := &descope.TenantRequest{Name: args[0], SelfProvisioningDomains: flags.Domains}
 	if flags.LoginID != "" {
-		return descopeClient.Management.Tenant().CreateWithID(flags.LoginID, args[0], flags.Domains)
+		return descopeClient.Management.Tenant().CreateWithID(flags.LoginID, tr)
 	}
-	tenantID, err := descopeClient.Management.Tenant().Create(args[0], flags.Domains)
+	tenantID, err := descopeClient.Management.Tenant().Create(tr)
 	if err == nil {
 		fmt.Println("Created new tenant with id:", tenantID)
 	}
@@ -205,10 +206,13 @@ func tenantCreate(args []string) error {
 }
 
 func tenantUpdate(args []string) error {
+
 	if flags.LoginID != "" {
-		return descopeClient.Management.Tenant().CreateWithID(flags.LoginID, args[0], flags.Domains)
+		tr := &descope.TenantRequest{Name: args[0], SelfProvisioningDomains: flags.Domains}
+		return descopeClient.Management.Tenant().CreateWithID(flags.LoginID, tr)
 	}
-	return descopeClient.Management.Tenant().Update(args[0], args[1], flags.Domains)
+	tr := &descope.TenantRequest{Name: args[1], SelfProvisioningDomains: flags.Domains}
+	return descopeClient.Management.Tenant().Update(args[0], tr)
 }
 
 func tenantDelete(args []string) error {

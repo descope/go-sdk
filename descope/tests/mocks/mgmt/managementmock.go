@@ -546,14 +546,14 @@ func (m *MockAccessKey) Delete(id string) error {
 // Mock Tenant
 
 type MockTenant struct {
-	CreateAssert   func(name string, selfProvisioningDomains []string)
+	CreateAssert   func(tenantRequest *descope.TenantRequest)
 	CreateResponse string
 	CreateError    error
 
-	CreateWithIDAssert func(id, name string, selfProvisioningDomains []string)
+	CreateWithIDAssert func(id string, tenantRequest *descope.TenantRequest)
 	CreateWithIDError  error
 
-	UpdateAssert func(id, name string, selfProvisioningDomains []string)
+	UpdateAssert func(id string, tenantRequest *descope.TenantRequest)
 	UpdateError  error
 
 	DeleteAssert func(id string)
@@ -565,25 +565,28 @@ type MockTenant struct {
 
 	LoadAllResponse []*descope.Tenant
 	LoadAllError    error
+
+	SearchAllResponse []*descope.Tenant
+	SearchAllError    error
 }
 
-func (m *MockTenant) Create(name string, selfProvisioningDomains []string) (id string, err error) {
+func (m *MockTenant) Create(tenantRequest *descope.TenantRequest) (id string, err error) {
 	if m.CreateAssert != nil {
-		m.CreateAssert(name, selfProvisioningDomains)
+		m.CreateAssert(tenantRequest)
 	}
 	return m.CreateResponse, m.CreateError
 }
 
-func (m *MockTenant) CreateWithID(id, name string, selfProvisioningDomains []string) error {
+func (m *MockTenant) CreateWithID(id string, tenantRequest *descope.TenantRequest) error {
 	if m.CreateWithIDAssert != nil {
-		m.CreateWithIDAssert(id, name, selfProvisioningDomains)
+		m.CreateWithIDAssert(id, tenantRequest)
 	}
 	return m.CreateWithIDError
 }
 
-func (m *MockTenant) Update(id, name string, selfProvisioningDomains []string) error {
+func (m *MockTenant) Update(id string, tenantRequest *descope.TenantRequest) error {
 	if m.UpdateAssert != nil {
-		m.UpdateAssert(id, name, selfProvisioningDomains)
+		m.UpdateAssert(id, tenantRequest)
 	}
 	return m.UpdateError
 }
@@ -604,6 +607,10 @@ func (m *MockTenant) Load(id string) (*descope.Tenant, error) {
 
 func (m *MockTenant) LoadAll() ([]*descope.Tenant, error) {
 	return m.LoadAllResponse, m.LoadAllError
+}
+
+func (m *MockTenant) SearchAll(_ *descope.TenantSearchOptions) ([]*descope.Tenant, error) {
+	return m.SearchAllResponse, m.SearchAllError
 }
 
 // Mock Permission

@@ -6,26 +6,26 @@ import "github.com/descope/go-sdk/descope"
 type Tenant interface {
 	// Create a new tenant with the given name.
 	//
-	// selfProvisioningDomains is an optional list of domains that are associated with this
+	// tenantRequest.SelfProvisioningDomains is an optional list of domains that are associated with this
 	// tenant. Users authenticating from these domains will be associated with this tenant.
 	//
-	// The tenant name must be unique per project. The tenant ID is generated automatically
+	// The tenant tenantRequest.Name must be unique per project. The tenant ID is generated automatically
 	// for the tenant.
-	Create(name string, selfProvisioningDomains []string) (id string, err error)
+	Create(tenantRequest *descope.TenantRequest) (id string, err error)
 
 	// Create a new tenant with the given name and ID.
 	//
-	// selfProvisioningDomains is an optional list of domains that are associated with this
+	// tenantRequest.SelfProvisioningDomains is an optional list of domains that are associated with this
 	// tenant. Users authenticating from these domains will be associated with this tenant.
 	//
-	// Both the name and ID must be unique per project.
-	CreateWithID(id, name string, selfProvisioningDomains []string) error
+	// Both the tenantRequest.Name and ID must be unique per project.
+	CreateWithID(id string, tenantRequest *descope.TenantRequest) error
 
 	// Update an existing tenant's name and domains.
 	//
 	// IMPORTANT: All parameters are required and will override whatever value is currently
 	// set in the existing tenant. Use carefully.
-	Update(id, name string, selfProvisioningDomains []string) error
+	Update(id string, tenantRequest *descope.TenantRequest) error
 
 	// Delete an existing tenant.
 	//
@@ -37,6 +37,13 @@ type Tenant interface {
 
 	// Load all project tenants
 	LoadAll() ([]*descope.Tenant, error)
+
+	// Search all tenants according to given filters
+	//
+	// The options optional parameter allows to fine-tune the search filters
+	// and results. Using nil will result in a filter-less query with a set amount of
+	// results.
+	SearchAll(options *descope.TenantSearchOptions) ([]*descope.Tenant, error)
 }
 
 // Provides functions for managing users in a project.
