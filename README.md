@@ -620,6 +620,13 @@ if err == nil {
         // Do something
     }
 }
+
+// Logout given user from all its devices, by login ID
+err := descopeClient.Management.User().LogoutUser("<login id>")
+
+// Logout given user from all its devices, by user ID
+err := LogoutUserByUserID("<user id>")
+
 ```
 
 #### Set or Expire User Password

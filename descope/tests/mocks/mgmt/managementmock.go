@@ -248,6 +248,9 @@ type MockUser struct {
 	GenerateEmbeddedLinkAssert   func(loginID string, customClaims map[string]any)
 	GenerateEmbeddedLinkResponse string
 	GenerateEmbeddedLinkError    error
+
+	LogoutAssert func(id string)
+	LogoutError  error
 }
 
 func (m *MockUser) Create(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
@@ -304,6 +307,20 @@ func (m *MockUser) LoadByUserID(userID string) (*descope.UserResponse, error) {
 		m.LoadAssert(userID)
 	}
 	return m.LoadResponse, m.LoadError
+}
+
+func (m *MockUser) LogoutUser(loginID string) error {
+	if m.LogoutAssert != nil {
+		m.LogoutAssert(loginID)
+	}
+	return m.LogoutError
+}
+
+func (m *MockUser) LogoutUserByUserID(userID string) error {
+	if m.LogoutAssert != nil {
+		m.LogoutAssert(userID)
+	}
+	return m.LogoutError
 }
 
 func (m *MockUser) SearchAll(options *descope.UserSearchOptions) ([]*descope.UserResponse, error) {

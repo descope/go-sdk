@@ -330,6 +330,25 @@ func (u *user) GetProviderToken(loginID, provider string) (*descope.ProviderToke
 	return unmarshalProviderTokenResponse(res)
 }
 
+func (u *user) LogoutUser(loginID string) error {
+	if len(loginID) == 0 {
+		return utils.NewInvalidArgumentError("loginID")
+	}
+	return u.logoutUser("", loginID)
+}
+
+func (u *user) LogoutUserByUserID(userID string) error {
+	if len(userID) == 0 {
+		return utils.NewInvalidArgumentError("userID")
+	}
+	return u.logoutUser(userID, "")
+}
+
+func (u *user) logoutUser(userID string, loginID string) error {
+	_, err := u.client.DoPostRequest(api.Routes.ManagementUserLogoutAllDevices(), map[string]any{"userId": userID, "loginId": loginID}, nil, u.conf.ManagementKey)
+	return err
+}
+
 func (u *user) GenerateOTPForTestUser(method descope.DeliveryMethod, loginID string) (code string, err error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
