@@ -285,6 +285,46 @@ func TestUserLoadByUserIDError(t *testing.T) {
 	require.Nil(t, res)
 }
 
+func TestUserLogoutUserByUserIDSuccess(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, "abc", req["userId"])
+		assert.EqualValues(t, "", req["loginId"])
+	}, nil))
+	err := m.User().LogoutUserByUserID("abc")
+	require.NoError(t, err)
+}
+
+func TestUserLogoutUserByLoginIDSuccess(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, "", req["userId"])
+		assert.EqualValues(t, "abc", req["loginId"])
+	}, nil))
+	err := m.User().LogoutUser("abc")
+	require.NoError(t, err)
+}
+
+func TestUserLogoutUserByUserIdErr(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		assert.Fail(t, "shouldn't get here")
+	}, nil))
+	err := m.User().LogoutUserByUserID("")
+	require.Error(t, err)
+}
+
+func TestUserLogoutUserByLoginIdErr(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		assert.Fail(t, "shouldn't get here")
+	}, nil))
+	err := m.User().LogoutUser("")
+	require.Error(t, err)
+}
+
 func TestSearchAllUsersSuccess(t *testing.T) {
 	response := map[string]any{
 		"users": []map[string]any{{

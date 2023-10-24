@@ -123,6 +123,12 @@ type User interface {
 	// Deactivate an existing user.
 	Deactivate(loginID string) (*descope.UserResponse, error)
 
+	// Logout given user from all their devices, by login ID
+	LogoutUser(loginID string) error
+
+	// Logout given user from all their devices, by user ID
+	LogoutUserByUserID(userID string) error
+
 	// Change current loginID to new one
 	// Leave empty to remove the current login ID
 	// Pay attention that if this is the only login ID, it cannot be removed

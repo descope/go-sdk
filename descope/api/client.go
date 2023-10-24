@@ -98,6 +98,7 @@ var (
 			userSetPassword:                  "mgmt/user/password/set",
 			userExpirePassword:               "mgmt/user/password/expire",
 			userGetProviderToken:             "mgmt/user/provider/token",
+			userLogoutAllDevices:             "mgmt/user/logout",
 			userGenerateOTPForTest:           "mgmt/tests/generate/otp",
 			userGenerateMagicLinkForTest:     "mgmt/tests/generate/magiclink",
 			userGenerateEnchantedLinkForTest: "mgmt/tests/generate/enchantedlink",
@@ -223,6 +224,7 @@ type mgmtEndpoints struct {
 	userSetPassword           string
 	userExpirePassword        string
 	userGetProviderToken      string
+	userLogoutAllDevices      string
 
 	userGenerateOTPForTest           string
 	userGenerateMagicLinkForTest     string
@@ -509,6 +511,10 @@ func (e *endpoints) ManagementUserExpirePassword() string {
 
 func (e *endpoints) ManagementUserGetProviderToken() string {
 	return path.Join(e.version, e.mgmt.userGetProviderToken)
+}
+
+func (e *endpoints) ManagementUserLogoutAllDevices() string {
+	return path.Join(e.version, e.mgmt.userLogoutAllDevices)
 }
 
 func (e *endpoints) ManagementUserGenerateOTPForTest() string {
