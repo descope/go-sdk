@@ -625,7 +625,7 @@ if err == nil {
 err := descopeClient.Management.User().LogoutUser("<login id>")
 
 // Logout given user from all its devices, by user ID
-err := LogoutUserByUserID("<user id>")
+err := descopeClient.Management.User()LogoutUserByUserID("<user id>")
 
 ```
 
