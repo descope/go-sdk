@@ -132,6 +132,8 @@ var (
 			themeImport:                      "mgmt/theme/import",
 			projectExport:                    "mgmt/project/export",
 			projectImport:                    "mgmt/project/import",
+			projectUpdateName:                "mgmt/project/update/name",
+			projectClone:                     "mgmt/project/clone",
 			auditSearch:                      "mgmt/audit/search",
 		},
 		logout:    "auth/logout",
@@ -264,8 +266,10 @@ type mgmtEndpoints struct {
 	themeExport string
 	themeImport string
 
-	projectExport string
-	projectImport string
+	projectExport     string
+	projectImport     string
+	projectUpdateName string
+	projectClone      string
 
 	auditSearch string
 }
@@ -647,6 +651,14 @@ func (e *endpoints) ManagementProjectExport() string {
 
 func (e *endpoints) ManagementProjectImport() string {
 	return path.Join(e.version, e.mgmt.projectImport)
+}
+
+func (e *endpoints) ManagementProjectUpdateName() string {
+	return path.Join(e.version, e.mgmt.projectUpdateName)
+}
+
+func (e *endpoints) ManagementProjectClone() string {
+	return path.Join(e.version, e.mgmt.projectClone)
 }
 
 func (e *endpoints) ManagementAuditSearch() string {

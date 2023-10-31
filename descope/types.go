@@ -503,11 +503,31 @@ type AuditSearchOptions struct {
 	Text            string    `json:"text"`                      // Free text search across all fields
 }
 
+type NewProjectResponse struct {
+	ProjectID                string         `json:"projectId"`
+	ProjectName              string         `json:"projectName"`
+	ProjectSettingsWeb       map[string]any `json:"projectSettingsWeb"`
+	AuthMethodsMagicLink     map[string]any `json:"authMethodsMagicLink"`
+	AuthMethodsOTP           map[string]any `json:"authMethodsOTP"`
+	AuthMethodsSAML          map[string]any `json:"authMethodsSAML"`
+	AuthMethodsOAuth         map[string]any `json:"authMethodsOAuth"`
+	AuthMethodsWebAuthn      map[string]any `json:"authMethodsWebAuthn"`
+	AuthMethodsTOTP          map[string]any `json:"authMethodsTOTP"`
+	MessagingProvidersWeb    map[string]any `json:"messagingProvidersWeb"`
+	AuthMethodsEnchantedLink map[string]any `json:"authMethodsEnchantedLink"`
+	AuthMethodsPassword      map[string]any `json:"authMethodsPassword"`
+	AuthMethodsOIDCIDP       map[string]any `json:"authMethodsOIDCIDP"`
+	AuthMethodsEmbeddedLink  map[string]any `json:"authMethodsEmbeddedLink"`
+	Tag                      string         `json:"tag"`
+}
+
 type DeliveryMethod string
 
 type OAuthProvider string
 
 type ContextKey string
+
+type ProjectTag string
 
 const (
 	MethodWhatsApp DeliveryMethod = "whatsapp"
@@ -520,6 +540,9 @@ const (
 	OAuthMicrosoft OAuthProvider = "microsoft"
 	OAuthGitlab    OAuthProvider = "gitlab"
 	OAuthApple     OAuthProvider = "apple"
+
+	ProjectTagNone       ProjectTag = ""
+	ProjectTagProduction ProjectTag = "production"
 
 	SessionCookieName = "DS"
 	RefreshCookieName = "DSR"

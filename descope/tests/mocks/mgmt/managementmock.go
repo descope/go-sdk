@@ -816,6 +816,13 @@ type MockProject struct {
 
 	ImportRawAssert func(files map[string]any)
 	ImportRawError  error
+
+	UpdateNameAssert func(name string)
+	UpdateNameError  error
+
+	CloneAssert   func(name string, tag descope.ProjectTag)
+	CloneResponse *descope.NewProjectResponse
+	CloneError    error
 }
 
 func (m *MockProject) ExportRaw() (map[string]any, error) {
@@ -827,6 +834,21 @@ func (m *MockProject) ImportRaw(files map[string]any) error {
 		m.ImportRawAssert(files)
 	}
 	return m.ExportRawError
+}
+
+func (m *MockProject) UpdateName(name string) error {
+	if m.UpdateNameAssert != nil {
+		m.UpdateNameAssert(name)
+	}
+
+	return m.UpdateNameError
+}
+
+func (m *MockProject) Clone(name string, tag descope.ProjectTag) (*descope.NewProjectResponse, error) {
+	if m.CloneAssert != nil {
+		m.CloneAssert(name, tag)
+	}
+	return m.CloneResponse, m.CloneError
 }
 
 // Mock Audit
