@@ -416,7 +416,15 @@ func makeCreateUserRequest(loginID, email, phone, displayName, picture string, r
 		req["test"] = true
 	}
 	if options != nil {
-		req["inviteUrl"] = options.InviteURL
+		if len(options.InviteURL) > 0 {
+			req["inviteUrl"] = options.InviteURL
+		}
+		if options.SendMail != nil {
+			req["sendMail"] = *options.SendMail
+		}
+		if options.SendSMS != nil {
+			req["sendSMS"] = *options.SendSMS
+		}
 	}
 	return req
 }
