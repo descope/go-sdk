@@ -262,6 +262,8 @@ func NewToken(JWT string, token jwt.Token) *Token {
 
 type InviteOptions struct {
 	InviteURL string `json:"inviteUrl,omitempty"`
+	SendMail  *bool  `json:"sendMail,omitempty"` // send invite via mail, default is according to project settings
+	SendSMS   *bool  `json:"sendSMS,omitempty"`  // send invite via text message, default is according to project settings
 }
 
 type User struct {

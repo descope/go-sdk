@@ -16,6 +16,7 @@ func TestUserCreateSuccess(t *testing.T) {
 			"email": "a@b.c",
 		}}
 	ca := map[string]any{"ak": "av"}
+	i := 0
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
@@ -27,6 +28,15 @@ func TestUserCreateSuccess(t *testing.T) {
 		require.Equal(t, "foo", roleNames[0])
 		require.Nil(t, req["test"])
 		assert.EqualValues(t, ca, req["customAttributes"])
+
+		if i == 2 {
+			assert.True(t, true, req["sendSMS"])
+			assert.EqualValues(t, false, req["sendMail"])
+		} else {
+			assert.Nil(t, req["sendSMS"])
+			assert.Nil(t, req["sendMail"])
+		}
+		i++
 	}, response))
 	user := &descope.UserRequest{}
 	user.Email = "foo@bar.com"
@@ -42,7 +52,9 @@ func TestUserCreateSuccess(t *testing.T) {
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
 
-	res, err = m.User().Invite("abc", user, &descope.InviteOptions{InviteURL: "https://some.domain.com"})
+	sendSMS := true
+	sendMail := false
+	res, err = m.User().Invite("abc", user, &descope.InviteOptions{InviteURL: "https://some.domain.com", SendSMS: &sendSMS, SendMail: &sendMail})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
@@ -66,6 +78,8 @@ func TestUserCreateSuccessWithOptions(t *testing.T) {
 		require.Nil(t, req["test"])
 		assert.EqualValues(t, ca, req["customAttributes"])
 		assert.EqualValues(t, "https://some.domain.com", req["inviteUrl"])
+		assert.Nil(t, req["sendMail"])
+		assert.Nil(t, req["sendSMS"])
 	}, response))
 	user := &descope.UserRequest{}
 	user.Email = "foo@bar.com"
