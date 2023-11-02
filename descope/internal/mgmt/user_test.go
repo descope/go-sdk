@@ -92,6 +92,81 @@ func TestUserCreateSuccessWithOptions(t *testing.T) {
 	require.Equal(t, "a@b.c", res.Email)
 }
 
+func TestUsersInviteBatchSuccess(t *testing.T) {
+	response := map[string]any{
+		"createdUsers": []map[string]any{
+			{"email": "one@one.com"},
+		},
+		"failedUsers": []map[string]any{
+			{
+				"user": map[string]any{
+					"email": "two@two.com",
+				},
+				"failure": "some failure",
+			},
+		},
+	}
+	ca := map[string]any{"ak": "av"}
+
+	users := []*descope.BatchUser{}
+
+	u1 := &descope.BatchUser{}
+	u1.LoginID = "one"
+	u1.Email = "one@one.com"
+	u1.Roles = []string{"one"}
+	u1.CustomAttributes = ca
+
+	u2 := &descope.BatchUser{}
+	u2.LoginID = "two"
+	u2.Email = "two@two.com"
+	u2.Roles = []string{"two"}
+
+	users = append(users, u1, u2)
+
+	sendSMS := true
+
+	called := false
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		called = true
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, true, req["invite"])
+		assert.EqualValues(t, "https://some.domain.com", req["inviteUrl"])
+		assert.Nil(t, req["sendMail"])
+		assert.EqualValues(t, true, req["sendSMS"])
+		usersRes := req["users"].([]any)
+		userRes1 := usersRes[0].(map[string]any)
+		userRes2 := usersRes[1].(map[string]any)
+		require.Equal(t, u1.LoginID, userRes1["loginId"])
+		require.Equal(t, u1.Email, userRes1["email"])
+		assert.EqualValues(t, ca, userRes1["customAttributes"])
+		roleNames := userRes1["roleNames"].([]any)
+		require.Len(t, roleNames, 1)
+		require.Equal(t, u1.Roles[0], roleNames[0])
+
+		require.Equal(t, u2.LoginID, userRes2["loginId"])
+		require.Equal(t, u2.Email, userRes2["email"])
+		assert.Nil(t, userRes2["customAttributes"])
+		roleNames = userRes2["roleNames"].([]any)
+		require.Len(t, roleNames, 1)
+		require.Equal(t, u2.Roles[0], roleNames[0])
+	}, response))
+
+	res, err := m.User().InviteBatch(users, &descope.InviteOptions{
+		InviteURL: "https://some.domain.com",
+		SendSMS:   &sendSMS,
+	})
+	require.True(t, called)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Len(t, res.CreatedUsers, 1)
+	require.Len(t, res.FailedUsers, 1)
+	assert.EqualValues(t, u1.Email, res.CreatedUsers[0].Email)
+	assert.EqualValues(t, u2.Email, res.FailedUsers[0].User.Email)
+	assert.EqualValues(t, "some failure", res.FailedUsers[0].Failure)
+}
+
 func TestUserCreateTestUserSuccess(t *testing.T) {
 	response := map[string]any{
 		"user": map[string]any{

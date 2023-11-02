@@ -70,16 +70,27 @@ type User interface {
 	// Those users are not counted as part of the monthly active users
 	CreateTestUser(loginID string, user *descope.UserRequest) (*descope.UserResponse, error)
 
-	// Create a new user and invite them via an email message.
+	// Create a new user and invite via an email / text message.
 	//
 	// Functions exactly the same as the Create function with the additional invitation
 	// behavior. See the documentation above for the general creation behavior.
 	//
-	// IMPORTANT: Since the invitation is sent by email, make sure either
-	// the email is explicitly set, or the loginID itself is an email address.
+	// IMPORTANT: Since the invitation is sent by email / phone, make sure either
+	// the email / phone is explicitly set, or the loginID itself is an email address / phone number.
 	// You must configure the invitation URL in the Descope console prior to
 	// calling the method.
 	Invite(loginID string, user *descope.UserRequest, options *descope.InviteOptions) (*descope.UserResponse, error)
+
+	// Create users in batch and invite them via an email / text message.
+	//
+	// Functions exactly the same as the Create function with the additional invitation
+	// behavior. See the documentation above for the general creation behavior.
+	//
+	// IMPORTANT: Since the invitation is sent by email / phone, make sure either
+	// the email / phone is explicitly set, or the loginID itself is an email address / phone number.
+	// You must configure the invitation URL in the Descope console prior to
+	// calling the method.
+	InviteBatch(users []*descope.BatchUser, options *descope.InviteOptions) (*descope.UsersBatchResponse, error)
 
 	// Update an existing user.
 	//

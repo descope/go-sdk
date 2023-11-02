@@ -282,6 +282,11 @@ type UserRequest struct {
 	VerifiedPhone    *bool               `json:"verifiedPhone,omitempty"`
 }
 
+type BatchUser struct {
+	LoginID     string `json:"loginId,omitempty"`
+	UserRequest `json:",inline"`
+}
+
 type UserResponse struct {
 	User             `json:",inline"`
 	UserID           string              `json:"userId,omitempty"`
@@ -300,6 +305,16 @@ type UserResponse struct {
 	Password         bool                `json:"password,omitempty"`
 	SAML             bool                `json:"saml,omitempty"`
 	OAuth            map[string]bool     `json:"oauth,omitempty"`
+}
+
+type UsersFailedResponse struct {
+	Failure string        `json:"failure,omitempty"`
+	User    *UserResponse `json:"user,omitempty"`
+}
+
+type UsersBatchResponse struct {
+	CreatedUsers []*UserResponse        `json:"createdUsers,omitempty"`
+	FailedUsers  []*UsersFailedResponse `json:"failedUsers,omitempty"`
 }
 
 func (ur *UserResponse) GetCreatedTime() time.Time {
