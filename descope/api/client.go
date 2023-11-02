@@ -79,6 +79,7 @@ var (
 			tenantLoadAll:                    "mgmt/tenant/all",
 			tenantSearchAll:                  "mgmt/tenant/search",
 			userCreate:                       "mgmt/user/create",
+			userCreateBatch:                  "mgmt/user/create/batch",
 			userUpdate:                       "mgmt/user/update",
 			userDelete:                       "mgmt/user/delete",
 			userDeleteAllTestUsers:           "mgmt/user/test/delete/all",
@@ -205,6 +206,7 @@ type mgmtEndpoints struct {
 	tenantSearchAll string
 
 	userCreate                string
+	userCreateBatch           string
 	userUpdate                string
 	userDelete                string
 	userDeleteAllTestUsers    string
@@ -435,6 +437,10 @@ func (e *endpoints) ManagementTenantSearchAll() string {
 
 func (e *endpoints) ManagementUserCreate() string {
 	return path.Join(e.version, e.mgmt.userCreate)
+}
+
+func (e *endpoints) ManagementUserCreateBatch() string {
+	return path.Join(e.version, e.mgmt.userCreateBatch)
 }
 
 func (e *endpoints) ManagementUserUpdate() string {
