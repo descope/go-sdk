@@ -133,6 +133,21 @@ var (
 			projectExport:                    "mgmt/project/export",
 			projectImport:                    "mgmt/project/import",
 			auditSearch:                      "mgmt/audit/search",
+			authzSchemaSave:                  "mgmt/authz/schema/save",
+			authzSchemaDelete:                "mgmt/authz/schema/delete",
+			authzSchemaLoad:                  "mgmt/authz/schema/load",
+			authzNSSave:                      "mgmt/authz/ns/save",
+			authzNSDelete:                    "mgmt/authz/ns/delete",
+			authzRDSave:                      "mgmt/authz/rd/save",
+			authzRDDelete:                    "mgmt/authz/rd/delete",
+			authzRECreate:                    "mgmt/authz/re/create",
+			authzREDelete:                    "mgmt/authz/re/delete",
+			authzREDeleteResources:           "mgmt/authz/re/deleteresources",
+			authzREHasRelations:              "mgmt/authz/re/has",
+			authzREWho:                       "mgmt/authz/re/who",
+			authzREResource:                  "mgmt/authz/re/resource",
+			authzRETargets:                   "mgmt/authz/re/targets",
+			authzRETargetAll:                 "mgmt/authz/re/targetall",
 		},
 		logout:    "auth/logout",
 		logoutAll: "auth/logoutall",
@@ -268,6 +283,22 @@ type mgmtEndpoints struct {
 	projectImport string
 
 	auditSearch string
+
+	authzSchemaSave        string
+	authzSchemaDelete      string
+	authzSchemaLoad        string
+	authzNSSave            string
+	authzNSDelete          string
+	authzRDSave            string
+	authzRDDelete          string
+	authzRECreate          string
+	authzREDelete          string
+	authzREDeleteResources string
+	authzREHasRelations    string
+	authzREWho             string
+	authzREResource        string
+	authzRETargets         string
+	authzRETargetAll       string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -651,6 +682,66 @@ func (e *endpoints) ManagementProjectImport() string {
 
 func (e *endpoints) ManagementAuditSearch() string {
 	return path.Join(e.version, e.mgmt.auditSearch)
+}
+
+func (e *endpoints) ManagementAuthzSchemaSave() string {
+	return path.Join(e.version, e.mgmt.authzSchemaSave)
+}
+
+func (e *endpoints) ManagementAuthzSchemaDelete() string {
+	return path.Join(e.version, e.mgmt.authzSchemaDelete)
+}
+
+func (e *endpoints) ManagementAuthzSchemaLoad() string {
+	return path.Join(e.version, e.mgmt.authzSchemaLoad)
+}
+
+func (e *endpoints) ManagementAuthzNSSave() string {
+	return path.Join(e.version, e.mgmt.authzNSSave)
+}
+
+func (e *endpoints) ManagementAuthzNSDelete() string {
+	return path.Join(e.version, e.mgmt.authzNSDelete)
+}
+
+func (e *endpoints) ManagementAuthzRDSave() string {
+	return path.Join(e.version, e.mgmt.authzRDSave)
+}
+
+func (e *endpoints) ManagementAuthzRDDelete() string {
+	return path.Join(e.version, e.mgmt.authzRDDelete)
+}
+
+func (e *endpoints) ManagementAuthzRECreate() string {
+	return path.Join(e.version, e.mgmt.authzRECreate)
+}
+
+func (e *endpoints) ManagementAuthzREDelete() string {
+	return path.Join(e.version, e.mgmt.authzREDelete)
+}
+
+func (e *endpoints) ManagementAuthzREDeleteResources() string {
+	return path.Join(e.version, e.mgmt.authzREDeleteResources)
+}
+
+func (e *endpoints) ManagementAuthzREHasRelations() string {
+	return path.Join(e.version, e.mgmt.authzREHasRelations)
+}
+
+func (e *endpoints) ManagementAuthzREWho() string {
+	return path.Join(e.version, e.mgmt.authzREWho)
+}
+
+func (e *endpoints) ManagementAuthzREResource() string {
+	return path.Join(e.version, e.mgmt.authzREResource)
+}
+
+func (e *endpoints) ManagementAuthzRETargets() string {
+	return path.Join(e.version, e.mgmt.authzRETargets)
+}
+
+func (e *endpoints) ManagementAuthzRETargetAll() string {
+	return path.Join(e.version, e.mgmt.authzRETargetAll)
 }
 
 type sdkInfo struct {

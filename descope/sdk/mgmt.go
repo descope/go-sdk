@@ -443,6 +443,63 @@ type Audit interface {
 	Search(*descope.AuditSearchOptions) ([]*descope.AuditRecord, error)
 }
 
+// Provides authorization ReBAC capabilities
+type Authz interface {
+	// SaveSchema creating or updating it.
+	// In case of update, will update only given namespaces and will not delete namespaces unless upgrade flag is true.
+	// Schema name can be used for projects to track versioning.
+	SaveSchema(schema *descope.AuthzSchema, upgrade bool) error
+
+	// DeleteSchema for the project which will also delete all relations.
+	DeleteSchema() error
+
+	// LoadSchema for the project.
+	LoadSchema() (*descope.AuthzSchema, error)
+
+	// SaveNamespace creating or updating the given namespace
+	// Will not delete relation definitions not mentioned in the namespace.
+	// oldName is used if we are changing the namespace name
+	// schemaName is optional and used to track the current schema version.
+	SaveNamespace(namespace *descope.AuthzNamespace, oldName, schemaName string) error
+
+	// DeleteNamespace will also delete the relevant relations.
+	// schemaName is optional and used to track the current schema version.
+	DeleteNamespace(name, schemaName string) error
+
+	// SaveRelationDefinition creating or updating the given relation definition.
+	// Provide oldName if we are changing the relation definition name, what was the old name we are updating.
+	// schemaName optional and used to track the current schema version.
+	SaveRelationDefinition(relationDefinition *descope.AuthzRelationDefinition, namespace, oldName, schemaName string) error
+
+	// DeleteRelationDefinition will also delete the relevant relations.
+	// schemaName is optional and used to track the current schema version.
+	DeleteRelationDefinition(name, namespace, schemaName string) error
+
+	// CreateRelations based on the existing schema
+	CreateRelations(relations []*descope.AuthzRelation) error
+
+	// DeleteRelations based on the existing schema
+	DeleteRelations(relations []*descope.AuthzRelation) error
+
+	// DeleteRelationsForResources will delete all relations to the given resources
+	DeleteRelationsForResources(resources []string) error
+
+	// HasRelations check queries given relations to see if they exist returning true if they do
+	HasRelations(relationQueries []*descope.AuthzRelationQuery) ([]*descope.AuthzRelationQuery, error)
+
+	// WhoCanAccess the given resource returns the list of targets with the given relation definition
+	WhoCanAccess(resource, relationDefinition, namespace string) ([]string, error)
+
+	// ResourceRelations returns the list of all defined relations (not recursive) on the given resource.
+	ResourceRelations(resource string) ([]*descope.AuthzRelation, error)
+
+	// TargetRelations returns the list of all defined relations (not recursive) for the given targets.
+	TargetsRelations(targets []string) ([]*descope.AuthzRelation, error)
+
+	// WhatCanTargetAccess returns the list of all relations for the given target including derived relations from the schema tree.
+	WhatCanTargetAccess(target string) ([]*descope.AuthzRelation, error)
+}
+
 // Provides various APIs for managing a Descope project programmatically. A management key must
 // be provided in the DecopeClient configuration or by setting the DESCOPE_MANAGEMENT_KEY
 // environment variable. Management keys can be generated in the Descope console.
@@ -479,4 +536,7 @@ type Management interface {
 
 	// Provide functions for managing projects
 	Project() Project
+
+	// Provides functions for ReBAC authz management
+	Authz() Authz
 }

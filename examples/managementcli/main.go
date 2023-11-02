@@ -425,6 +425,33 @@ func auditFullTextSearch(args []string) error {
 	return err
 }
 
+func authzLoadSchema(args []string) error {
+	res, err := descopeClient.Management.Authz().LoadSchema()
+	if err == nil {
+		var b []byte
+		b, err = json.MarshalIndent(res, "", "  ")
+		fmt.Println(string(b))
+	}
+	return err
+}
+
+func authzHasRelations(args []string) error {
+	res, err := descopeClient.Management.Authz().HasRelations([]*descope.AuthzRelationQuery{
+		{
+			Resource:           args[0],
+			RelationDefinition: args[1],
+			Namespace:          args[2],
+			Target:             args[3],
+		},
+	})
+	if err == nil {
+		var b []byte
+		b, err = json.MarshalIndent(res, "", "  ")
+		fmt.Println(string(b))
+	}
+	return err
+}
+
 // Command line setup
 
 var cli = &cobra.Command{
@@ -618,6 +645,13 @@ func main() {
 
 	addCommand(auditFullTextSearch, "audit-search <text> <from>", "Full text search up to last 30 days of audit. From can be specified in plain English (last 5 minutes, last day)", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
+	})
+
+	addCommand(authzLoadSchema, "authz-load-schema", "Load and display the current AuthZ ReBAC schema", func(cmd *cobra.Command) {
+	})
+
+	addCommand(authzHasRelations, "authz-has-relation <resource> <relationDefinition> <namespace> <target>", "Check if the given relation exists", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(4)
 	})
 
 	err := cli.Execute()
