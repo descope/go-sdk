@@ -1,7 +1,6 @@
 package mgmt
 
 import (
-	"fmt"
 	"net/http"
 	"testing"
 
@@ -137,7 +136,6 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 		assert.Nil(t, req["sendMail"])
 		assert.EqualValues(t, true, req["sendSMS"])
 		usersRes := req["users"].([]any)
-		fmt.Println(usersRes)
 		userRes1 := usersRes[0].(map[string]any)
 		userRes2 := usersRes[1].(map[string]any)
 		require.Equal(t, u1.LoginID, userRes1["loginId"])
