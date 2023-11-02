@@ -31,6 +31,13 @@ func (u *user) Invite(loginID string, user *descope.UserRequest, options *descop
 	return u.create(loginID, user.Email, user.Phone, user.Name, user.Picture, user.Roles, user.Tenants, true, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, options)
 }
 
+func (u *user) InviteBatch(users []*descope.BatchUser, options *descope.InviteOptions) (*descope.UsersBatchResponse, error) {
+	if users == nil {
+		users = []*descope.BatchUser{}
+	}
+	return u.createBatch(users, options)
+}
+
 func (u *user) create(loginID, email, phone, displayName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, options *descope.InviteOptions) (*descope.UserResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
@@ -41,6 +48,15 @@ func (u *user) create(loginID, email, phone, displayName, picture string, roles 
 		return nil, err
 	}
 	return unmarshalUserResponse(res)
+}
+
+func (u *user) createBatch(users []*descope.BatchUser, options *descope.InviteOptions) (*descope.UsersBatchResponse, error) {
+	req := makeCreateUsersBatchRequest(users, options)
+	res, err := u.client.DoPostRequest(api.Routes.ManagementUserCreateBatch(), req, nil, u.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalUserBatchResponse(res)
 }
 
 func (u *user) Update(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
@@ -416,8 +432,40 @@ func makeCreateUserRequest(loginID, email, phone, displayName, picture string, r
 		req["test"] = true
 	}
 	if options != nil {
-		req["inviteUrl"] = options.InviteURL
+		if len(options.InviteURL) > 0 {
+			req["inviteUrl"] = options.InviteURL
+		}
+		if options.SendMail != nil {
+			req["sendMail"] = *options.SendMail
+		}
+		if options.SendSMS != nil {
+			req["sendSMS"] = *options.SendSMS
+		}
 	}
+	return req
+}
+
+func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.InviteOptions) map[string]any {
+	var usersReq []map[string]any
+	for _, u := range users {
+		usersReq = append(usersReq, makeUpdateUserRequest(u.LoginID, u.Email, u.Phone, u.Name, u.Picture, u.Roles, u.Tenants, u.CustomAttributes, u.VerifiedEmail, u.VerifiedPhone))
+	}
+	req := map[string]any{
+		"users": usersReq,
+	}
+	if options != nil {
+		req["invite"] = true
+		if len(options.InviteURL) > 0 {
+			req["inviteUrl"] = options.InviteURL
+		}
+		if options.SendMail != nil {
+			req["sendMail"] = *options.SendMail
+		}
+		if options.SendSMS != nil {
+			req["sendSMS"] = *options.SendSMS
+		}
+	}
+
 	return req
 }
 
@@ -493,6 +541,15 @@ func unmarshalUserResponse(res *api.HTTPResponse) (*descope.UserResponse, error)
 		return nil, err
 	}
 	return ures.User, err
+}
+
+func unmarshalUserBatchResponse(res *api.HTTPResponse) (*descope.UsersBatchResponse, error) {
+	ures := &descope.UsersBatchResponse{}
+	err := utils.Unmarshal([]byte(res.BodyStr), ures)
+	if err != nil {
+		return nil, err
+	}
+	return ures, err
 }
 
 func unmarshalUserSearchAllResponse(res *api.HTTPResponse) ([]*descope.UserResponse, error) {

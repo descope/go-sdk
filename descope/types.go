@@ -262,6 +262,8 @@ func NewToken(JWT string, token jwt.Token) *Token {
 
 type InviteOptions struct {
 	InviteURL string `json:"inviteUrl,omitempty"`
+	SendMail  *bool  `json:"sendMail,omitempty"` // send invite via mail, default is according to project settings
+	SendSMS   *bool  `json:"sendSMS,omitempty"`  // send invite via text message, default is according to project settings
 }
 
 type User struct {
@@ -278,6 +280,11 @@ type UserRequest struct {
 	Picture          string              `json:"picture,omitempty"`
 	VerifiedEmail    *bool               `json:"verifiedEmail,omitempty"`
 	VerifiedPhone    *bool               `json:"verifiedPhone,omitempty"`
+}
+
+type BatchUser struct {
+	LoginID     string `json:"loginId,omitempty"`
+	UserRequest `json:",inline"`
 }
 
 type UserResponse struct {
@@ -298,6 +305,16 @@ type UserResponse struct {
 	Password         bool                `json:"password,omitempty"`
 	SAML             bool                `json:"saml,omitempty"`
 	OAuth            map[string]bool     `json:"oauth,omitempty"`
+}
+
+type UsersFailedResponse struct {
+	Failure string        `json:"failure,omitempty"`
+	User    *UserResponse `json:"user,omitempty"`
+}
+
+type UsersBatchResponse struct {
+	CreatedUsers []*UserResponse        `json:"createdUsers,omitempty"`
+	FailedUsers  []*UsersFailedResponse `json:"failedUsers,omitempty"`
 }
 
 func (ur *UserResponse) GetCreatedTime() time.Time {

@@ -591,6 +591,22 @@ userReqInvite.Tenants = []*descope.AssociatedTenant{
 options := &descope.InviteOptions{InviteURL: "https://sub.domain.com"} 
 err := descopeClient.Management.User().Invite("desmond@descope.com", userReqInvite, options)
 
+// batch invite
+options := &descope.InviteOptions{InviteURL: "https://sub.domain.com"} 
+batchUsers := []*descope.BatchUser{}
+u1 := &descope.BatchUser{}
+u1.LoginID = "one"
+u1.Email = "one@one.com"
+u1.Roles = []string{"one"}
+
+u2 := &descope.BatchUser{}
+u2.LoginID = "two"
+u2.Email = "two@two.com"
+u2.Roles = []string{"two"}
+
+batchUsers = append(batchUsers, u1, u2)
+err := descopeClient.Management.User().InviteBatch(batchUsers, options)
+
 // Update will override all fields as is. Use carefully.
 userReqUpdate := &descope.UserRequest{}
 userReqUpdate.Email = "desmond@descope.com"
