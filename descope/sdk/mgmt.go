@@ -470,7 +470,7 @@ type Authz interface {
 	// SaveNamespace creating or updating the given namespace
 	// Will not delete relation definitions not mentioned in the namespace.
 	// oldName is used if we are changing the namespace name
-	// schemaName is optional and used to track the current schema version.
+	// schemaName is optional and can be used to track the current schema version.
 	SaveNamespace(namespace *descope.AuthzNamespace, oldName, schemaName string) error
 
 	// DeleteNamespace will also delete the relevant relations.
@@ -479,11 +479,11 @@ type Authz interface {
 
 	// SaveRelationDefinition creating or updating the given relation definition.
 	// Provide oldName if we are changing the relation definition name, what was the old name we are updating.
-	// schemaName optional and used to track the current schema version.
+	// schemaName is optional and can be used to track the current schema version.
 	SaveRelationDefinition(relationDefinition *descope.AuthzRelationDefinition, namespace, oldName, schemaName string) error
 
 	// DeleteRelationDefinition will also delete the relevant relations.
-	// schemaName is optional and used to track the current schema version.
+	// schemaName is optional and can be used to track the current schema version.
 	DeleteRelationDefinition(name, namespace, schemaName string) error
 
 	// CreateRelations based on the existing schema

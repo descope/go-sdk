@@ -62,7 +62,7 @@ These sections show how to use the SDK to perform API management functions. Befo
 9. [Manage JWTs](#manage-jwts)
 10. [Search Audit](#search-audit)
 11. [Embedded Links](#embedded-links)
-12. [Manage Authz](#manage-authz)
+12. [Manage ReBAC Authz](#manage-rebac-authz)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -921,7 +921,7 @@ if err == nil {
 }
 ```
 
-### Manage Authz
+### Manage ReBAC Authz
 
 Descope supports full relation based access control (ReBAC) using a zanzibar like schema and operations.
 A schema is comprized of namespaces (entities like documents, folders, orgs, etc.) and each namespace has relation definitions to define relations.
