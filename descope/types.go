@@ -439,6 +439,16 @@ const (
 	UserStatusInvited  UserStatus = "invited"
 )
 
+type UserImportResponse struct {
+	Users    []*UserResponse      `json:"users,omitempty"`
+	Failures []*UserImportFailure `json:"failures,omitempty"`
+}
+
+type UserImportFailure struct {
+	User   string `json:"user"`
+	Reason string `json:"reason"`
+}
+
 type GroupMember struct {
 	LoginID string `json:"loginID,omitempty"`
 	UserID  string `json:"userId,omitempty"`

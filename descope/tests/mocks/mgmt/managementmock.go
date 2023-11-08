@@ -167,6 +167,10 @@ type MockUser struct {
 	DeleteAllTestUsersAssert func()
 	DeleteAllTestUsersError  error
 
+	ImportAssert   func(source string, users, hashes []byte, dryrun bool)
+	ImportResponse *descope.UserImportResponse
+	ImportError    error
+
 	LoadAssert   func(loginID string)
 	LoadResponse *descope.UserResponse
 	LoadError    error
@@ -309,6 +313,13 @@ func (m *MockUser) DeleteAllTestUsers() error {
 		m.DeleteAllTestUsersAssert()
 	}
 	return m.DeleteAllTestUsersError
+}
+
+func (m *MockUser) Import(source string, users, hashes []byte, dryrun bool) (*descope.UserImportResponse, error) {
+	if m.ImportAssert != nil {
+		m.ImportAssert(source, users, hashes, dryrun)
+	}
+	return m.ImportResponse, m.ImportError
 }
 
 func (m *MockUser) Load(loginID string) (*descope.UserResponse, error) {

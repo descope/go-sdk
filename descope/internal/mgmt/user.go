@@ -88,6 +88,27 @@ func (u *user) DeleteAllTestUsers() error {
 	return err
 }
 
+func (u *user) Import(source string, users, hashes []byte, dryrun bool) (*descope.UserImportResponse, error) {
+	if source == "" {
+		return nil, utils.NewInvalidArgumentError("source")
+	}
+	req := map[string]any{
+		"source": source,
+		"dryrun": dryrun,
+	}
+	if len(users) > 0 {
+		req["users"] = users
+	}
+	if len(hashes) > 0 {
+		req["hashes"] = hashes
+	}
+	res, err := u.client.DoPostRequest(api.Routes.ManagementUserImport(), req, nil, u.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalUserImportResponse(res)
+}
+
 func (u *user) Load(loginID string) (*descope.UserResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
@@ -540,7 +561,16 @@ func unmarshalUserResponse(res *api.HTTPResponse) (*descope.UserResponse, error)
 	if err != nil {
 		return nil, err
 	}
-	return ures.User, err
+	return ures.User, nil
+}
+
+func unmarshalUserImportResponse(res *api.HTTPResponse) (*descope.UserImportResponse, error) {
+	resBody := &descope.UserImportResponse{}
+	err := utils.Unmarshal([]byte(res.BodyStr), &resBody)
+	if err != nil {
+		return nil, err
+	}
+	return resBody, nil
 }
 
 func unmarshalUserBatchResponse(res *api.HTTPResponse) (*descope.UsersBatchResponse, error) {
@@ -560,7 +590,7 @@ func unmarshalUserSearchAllResponse(res *api.HTTPResponse) ([]*descope.UserRespo
 	if err != nil {
 		return nil, err
 	}
-	return ures.Users, err
+	return ures.Users, nil
 }
 
 func unmarshalProviderTokenResponse(res *api.HTTPResponse) (*descope.ProviderTokenResponse, error) {
@@ -569,7 +599,7 @@ func unmarshalProviderTokenResponse(res *api.HTTPResponse) (*descope.ProviderTok
 	if err != nil {
 		return nil, err
 	}
-	return resBody, err
+	return resBody, nil
 }
 
 type generateForTestUserRequestBody struct {
@@ -637,7 +667,7 @@ func unmarshalGenerateOTPForTestResponse(res *api.HTTPResponse) (string, error) 
 	if err != nil {
 		return "", err
 	}
-	return resBody.Code, err
+	return resBody.Code, nil
 }
 
 func unmarshalGenerateLinkForTestResponse(res *api.HTTPResponse) (string, string, error) {
@@ -646,5 +676,5 @@ func unmarshalGenerateLinkForTestResponse(res *api.HTTPResponse) (string, string
 	if err != nil {
 		return "", "", err
 	}
-	return resBody.Link, resBody.PendingRef, err
+	return resBody.Link, resBody.PendingRef, nil
 }

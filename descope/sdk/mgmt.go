@@ -110,6 +110,15 @@ type User interface {
 	// IMPORTANT: This action is irreversible. Use carefully.
 	DeleteAllTestUsers() error
 
+	// Imports a batch of users and/or password hashes.
+	//
+	// This API is intentionally loosely specified to support multiple types of sources,
+	// and the exact format of the data and the supported features differ depending on
+	// which source the data is from.
+	//
+	// Note that there's a limit on the number of users that can be imported in each batch.
+	Import(source string, users, hashes []byte, dryrun bool) (*descope.UserImportResponse, error)
+
 	// Load an existing user.
 	//
 	// The loginID is required and the user will be fetched according to it.
