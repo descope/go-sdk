@@ -16,6 +16,7 @@ func TestUserCreateSuccess(t *testing.T) {
 			"email": "a@b.c",
 		}}
 	ca := map[string]any{"ak": "av"}
+	i := 0
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
@@ -27,6 +28,15 @@ func TestUserCreateSuccess(t *testing.T) {
 		require.Equal(t, "foo", roleNames[0])
 		require.Nil(t, req["test"])
 		assert.EqualValues(t, ca, req["customAttributes"])
+
+		if i == 2 {
+			assert.True(t, true, req["sendSMS"])
+			assert.EqualValues(t, false, req["sendMail"])
+		} else {
+			assert.Nil(t, req["sendSMS"])
+			assert.Nil(t, req["sendMail"])
+		}
+		i++
 	}, response))
 	user := &descope.UserRequest{}
 	user.Email = "foo@bar.com"
@@ -42,7 +52,9 @@ func TestUserCreateSuccess(t *testing.T) {
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
 
-	res, err = m.User().Invite("abc", user, &descope.InviteOptions{InviteURL: "https://some.domain.com"})
+	sendSMS := true
+	sendMail := false
+	res, err = m.User().Invite("abc", user, &descope.InviteOptions{InviteURL: "https://some.domain.com", SendSMS: &sendSMS, SendMail: &sendMail})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
@@ -66,6 +78,8 @@ func TestUserCreateSuccessWithOptions(t *testing.T) {
 		require.Nil(t, req["test"])
 		assert.EqualValues(t, ca, req["customAttributes"])
 		assert.EqualValues(t, "https://some.domain.com", req["inviteUrl"])
+		assert.Nil(t, req["sendMail"])
+		assert.Nil(t, req["sendSMS"])
 	}, response))
 	user := &descope.UserRequest{}
 	user.Email = "foo@bar.com"
@@ -76,6 +90,81 @@ func TestUserCreateSuccessWithOptions(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
+}
+
+func TestUsersInviteBatchSuccess(t *testing.T) {
+	response := map[string]any{
+		"createdUsers": []map[string]any{
+			{"email": "one@one.com"},
+		},
+		"failedUsers": []map[string]any{
+			{
+				"user": map[string]any{
+					"email": "two@two.com",
+				},
+				"failure": "some failure",
+			},
+		},
+	}
+	ca := map[string]any{"ak": "av"}
+
+	users := []*descope.BatchUser{}
+
+	u1 := &descope.BatchUser{}
+	u1.LoginID = "one"
+	u1.Email = "one@one.com"
+	u1.Roles = []string{"one"}
+	u1.CustomAttributes = ca
+
+	u2 := &descope.BatchUser{}
+	u2.LoginID = "two"
+	u2.Email = "two@two.com"
+	u2.Roles = []string{"two"}
+
+	users = append(users, u1, u2)
+
+	sendSMS := true
+
+	called := false
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		called = true
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, true, req["invite"])
+		assert.EqualValues(t, "https://some.domain.com", req["inviteUrl"])
+		assert.Nil(t, req["sendMail"])
+		assert.EqualValues(t, true, req["sendSMS"])
+		usersRes := req["users"].([]any)
+		userRes1 := usersRes[0].(map[string]any)
+		userRes2 := usersRes[1].(map[string]any)
+		require.Equal(t, u1.LoginID, userRes1["loginId"])
+		require.Equal(t, u1.Email, userRes1["email"])
+		assert.EqualValues(t, ca, userRes1["customAttributes"])
+		roleNames := userRes1["roleNames"].([]any)
+		require.Len(t, roleNames, 1)
+		require.Equal(t, u1.Roles[0], roleNames[0])
+
+		require.Equal(t, u2.LoginID, userRes2["loginId"])
+		require.Equal(t, u2.Email, userRes2["email"])
+		assert.Nil(t, userRes2["customAttributes"])
+		roleNames = userRes2["roleNames"].([]any)
+		require.Len(t, roleNames, 1)
+		require.Equal(t, u2.Roles[0], roleNames[0])
+	}, response))
+
+	res, err := m.User().InviteBatch(users, &descope.InviteOptions{
+		InviteURL: "https://some.domain.com",
+		SendSMS:   &sendSMS,
+	})
+	require.True(t, called)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Len(t, res.CreatedUsers, 1)
+	require.Len(t, res.FailedUsers, 1)
+	assert.EqualValues(t, u1.Email, res.CreatedUsers[0].Email)
+	assert.EqualValues(t, u2.Email, res.FailedUsers[0].User.Email)
+	assert.EqualValues(t, "some failure", res.FailedUsers[0].Failure)
 }
 
 func TestUserCreateTestUserSuccess(t *testing.T) {
@@ -225,6 +314,53 @@ func TestUserDeleteError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestUserImportSuccess(t *testing.T) {
+	response := map[string]any{
+		"users": []any{
+			map[string]any{
+				"email": "a@b.c",
+			},
+		},
+		"failures": []any{
+			map[string]any{
+				"user":   "foo",
+				"reason": "bar",
+			},
+		},
+	}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		body := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &body))
+		require.Equal(t, "src", body["source"])
+		require.Equal(t, "ZGVm", body["hashes"])
+		require.Equal(t, "YWJj", body["users"])
+		require.Equal(t, true, body["dryrun"])
+	}, response))
+	res, err := m.User().Import("src", []byte("abc"), []byte("def"), true)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.NotEmpty(t, res.Users)
+	require.NotEmpty(t, res.Failures)
+	require.Equal(t, "a@b.c", res.Users[0].Email)
+	require.Equal(t, "foo", res.Failures[0].User)
+	require.Equal(t, "bar", res.Failures[0].Reason)
+}
+
+func TestUserImportBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := m.User().Import("", []byte("abc"), []byte("def"), true)
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserImportError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := m.User().Import("src", []byte("abc"), []byte("def"), true)
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
 func TestUserLoadSuccess(t *testing.T) {
 	response := map[string]any{
 		"user": map[string]any{
@@ -283,6 +419,46 @@ func TestUserLoadByUserIDError(t *testing.T) {
 	res, err := m.User().LoadByUserID("abc")
 	require.Error(t, err)
 	require.Nil(t, res)
+}
+
+func TestUserLogoutUserByUserIDSuccess(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, "abc", req["userId"])
+		assert.EqualValues(t, "", req["loginId"])
+	}, nil))
+	err := m.User().LogoutUserByUserID("abc")
+	require.NoError(t, err)
+}
+
+func TestUserLogoutUserByLoginIDSuccess(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, "", req["userId"])
+		assert.EqualValues(t, "abc", req["loginId"])
+	}, nil))
+	err := m.User().LogoutUser("abc")
+	require.NoError(t, err)
+}
+
+func TestUserLogoutUserByUserIdErr(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		assert.Fail(t, "shouldn't get here")
+	}, nil))
+	err := m.User().LogoutUserByUserID("")
+	require.Error(t, err)
+}
+
+func TestUserLogoutUserByLoginIdErr(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		assert.Fail(t, "shouldn't get here")
+	}, nil))
+	err := m.User().LogoutUser("")
+	require.Error(t, err)
 }
 
 func TestSearchAllUsersSuccess(t *testing.T) {
