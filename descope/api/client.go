@@ -83,6 +83,7 @@ var (
 			userUpdate:                       "mgmt/user/update",
 			userDelete:                       "mgmt/user/delete",
 			userDeleteAllTestUsers:           "mgmt/user/test/delete/all",
+			userImport:                       "mgmt/user/import",
 			userLoad:                         "mgmt/user",
 			userSearchAll:                    "mgmt/user/search",
 			userUpdateStatus:                 "mgmt/user/update/status",
@@ -225,6 +226,7 @@ type mgmtEndpoints struct {
 	userUpdate                string
 	userDelete                string
 	userDeleteAllTestUsers    string
+	userImport                string
 	userLoad                  string
 	userSearchAll             string
 	userUpdateStatus          string
@@ -484,6 +486,10 @@ func (e *endpoints) ManagementUserDelete() string {
 
 func (e *endpoints) ManagementUserDeleteAllTestUsers() string {
 	return path.Join(e.version, e.mgmt.userDeleteAllTestUsers)
+}
+
+func (e *endpoints) ManagementUserImport() string {
+	return path.Join(e.version, e.mgmt.userImport)
 }
 
 func (e *endpoints) ManagementUserLoad() string {

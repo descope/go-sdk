@@ -314,6 +314,53 @@ func TestUserDeleteError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestUserImportSuccess(t *testing.T) {
+	response := map[string]any{
+		"users": []any{
+			map[string]any{
+				"email": "a@b.c",
+			},
+		},
+		"failures": []any{
+			map[string]any{
+				"user":   "foo",
+				"reason": "bar",
+			},
+		},
+	}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		body := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &body))
+		require.Equal(t, "src", body["source"])
+		require.Equal(t, "ZGVm", body["hashes"])
+		require.Equal(t, "YWJj", body["users"])
+		require.Equal(t, true, body["dryrun"])
+	}, response))
+	res, err := m.User().Import("src", []byte("abc"), []byte("def"), true)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.NotEmpty(t, res.Users)
+	require.NotEmpty(t, res.Failures)
+	require.Equal(t, "a@b.c", res.Users[0].Email)
+	require.Equal(t, "foo", res.Failures[0].User)
+	require.Equal(t, "bar", res.Failures[0].Reason)
+}
+
+func TestUserImportBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := m.User().Import("", []byte("abc"), []byte("def"), true)
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserImportError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := m.User().Import("src", []byte("abc"), []byte("def"), true)
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
 func TestUserLoadSuccess(t *testing.T) {
 	response := map[string]any{
 		"user": map[string]any{
