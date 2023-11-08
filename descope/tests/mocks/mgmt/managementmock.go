@@ -17,6 +17,7 @@ type MockManagement struct {
 	*MockFlow
 	*MockProject
 	*MockAudit
+	*MockAuthz
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -61,6 +62,10 @@ func (m *MockManagement) Project() sdk.Project {
 
 func (m *MockManagement) Audit() sdk.Audit {
 	return m.MockAudit
+}
+
+func (m *MockManagement) Authz() sdk.Authz {
+	return m.MockAuthz
 }
 
 // Mock JWT
@@ -148,6 +153,10 @@ type MockUser struct {
 	InviteResponse *descope.UserResponse
 	InviteError    error
 
+	InviteBatchAssert   func(users []*descope.BatchUser, options *descope.InviteOptions)
+	InviteBatchResponse *descope.UsersBatchResponse
+	InviteBatchError    error
+
 	UpdateAssert   func(loginID string, user *descope.UserRequest)
 	UpdateResponse *descope.UserResponse
 	UpdateError    error
@@ -157,6 +166,10 @@ type MockUser struct {
 
 	DeleteAllTestUsersAssert func()
 	DeleteAllTestUsersError  error
+
+	ImportAssert   func(source string, users, hashes []byte, dryrun bool)
+	ImportResponse *descope.UserImportResponse
+	ImportError    error
 
 	LoadAssert   func(loginID string)
 	LoadResponse *descope.UserResponse
@@ -248,6 +261,9 @@ type MockUser struct {
 	GenerateEmbeddedLinkAssert   func(loginID string, customClaims map[string]any)
 	GenerateEmbeddedLinkResponse string
 	GenerateEmbeddedLinkError    error
+
+	LogoutAssert func(id string)
+	LogoutError  error
 }
 
 func (m *MockUser) Create(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
@@ -271,6 +287,13 @@ func (m *MockUser) Invite(loginID string, user *descope.UserRequest, options *de
 	return m.InviteResponse, m.InviteError
 }
 
+func (m *MockUser) InviteBatch(users []*descope.BatchUser, options *descope.InviteOptions) (*descope.UsersBatchResponse, error) {
+	if m.InviteBatchAssert != nil {
+		m.InviteBatchAssert(users, options)
+	}
+	return m.InviteBatchResponse, m.InviteBatchError
+}
+
 func (m *MockUser) Update(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
 	if m.UpdateAssert != nil {
 		m.UpdateAssert(loginID, user)
@@ -292,6 +315,13 @@ func (m *MockUser) DeleteAllTestUsers() error {
 	return m.DeleteAllTestUsersError
 }
 
+func (m *MockUser) Import(source string, users, hashes []byte, dryrun bool) (*descope.UserImportResponse, error) {
+	if m.ImportAssert != nil {
+		m.ImportAssert(source, users, hashes, dryrun)
+	}
+	return m.ImportResponse, m.ImportError
+}
+
 func (m *MockUser) Load(loginID string) (*descope.UserResponse, error) {
 	if m.LoadAssert != nil {
 		m.LoadAssert(loginID)
@@ -304,6 +334,20 @@ func (m *MockUser) LoadByUserID(userID string) (*descope.UserResponse, error) {
 		m.LoadAssert(userID)
 	}
 	return m.LoadResponse, m.LoadError
+}
+
+func (m *MockUser) LogoutUser(loginID string) error {
+	if m.LogoutAssert != nil {
+		m.LogoutAssert(loginID)
+	}
+	return m.LogoutError
+}
+
+func (m *MockUser) LogoutUserByUserID(userID string) error {
+	if m.LogoutAssert != nil {
+		m.LogoutAssert(userID)
+	}
+	return m.LogoutError
 }
 
 func (m *MockUser) SearchAll(options *descope.UserSearchOptions) ([]*descope.UserResponse, error) {
@@ -824,4 +868,154 @@ func (m *MockAudit) Search(options *descope.AuditSearchOptions) ([]*descope.Audi
 		m.SearchAssert(options)
 	}
 	return m.SearchResponse, m.SearchError
+}
+
+type MockAuthz struct {
+	SaveSchemaAssert func(schema *descope.AuthzSchema, upgrade bool)
+	SaveSchemaError  error
+
+	DeleteSchemaError error
+
+	LoadSchemaResponse *descope.AuthzSchema
+	LoadSchemaError    error
+
+	SaveNamespaceAssert func(namespace *descope.AuthzNamespace, oldName, schemaName string)
+	SaveNamespaceError  error
+
+	DeleteNamespaceAssert func(name, schemaName string)
+	DeleteNamespaceError  error
+
+	SaveRelationDefinitionAssert func(relationDefinition *descope.AuthzRelationDefinition, namespace, oldName, schemaName string)
+	SaveRelationDefinitionError  error
+
+	DeleteRelationDefinitionAssert func(name, namespace, schemaName string)
+	DeleteRelationDefinitionError  error
+
+	CreateRelationsAssert func(relations []*descope.AuthzRelation)
+	CreateRelationsError  error
+
+	DeleteRelationsAssert func(relations []*descope.AuthzRelation)
+	DeleteRelationsError  error
+
+	DeleteRelationsForResourcesAssert func(resources []string)
+	DeleteRelationsForResourcesError  error
+
+	HasRelationsAssert   func(relationQueries []*descope.AuthzRelationQuery)
+	HasRelationsResponse []*descope.AuthzRelationQuery
+	HasRelationsError    error
+
+	WhoCanAccessAssert   func(resource, relationDefinition, namespace string)
+	WhoCanAccessResponse []string
+	WhoCanAccessError    error
+
+	ResourceRelationsAssert   func(resource string)
+	ResourceRelationsResponse []*descope.AuthzRelation
+	ResourceRelationsError    error
+
+	TargetsRelationsAssert   func(targets []string)
+	TargetsRelationsResponse []*descope.AuthzRelation
+	TargetsRelationsError    error
+
+	WhatCanTargetAccessAssert   func(target string)
+	WhatCanTargetAccessResponse []*descope.AuthzRelation
+	WhatCanTargetAccessError    error
+}
+
+func (m *MockAuthz) SaveSchema(schema *descope.AuthzSchema, upgrade bool) error {
+	if m.SaveSchemaAssert != nil {
+		m.SaveSchemaAssert(schema, upgrade)
+	}
+	return m.SaveSchemaError
+}
+
+func (m *MockAuthz) DeleteSchema() error {
+	return m.DeleteSchemaError
+}
+
+func (m *MockAuthz) LoadSchema() (*descope.AuthzSchema, error) {
+	return m.LoadSchemaResponse, m.LoadSchemaError
+}
+
+func (m *MockAuthz) SaveNamespace(namespace *descope.AuthzNamespace, oldName, schemaName string) error {
+	if m.SaveNamespaceAssert != nil {
+		m.SaveNamespaceAssert(namespace, oldName, schemaName)
+	}
+	return m.SaveNamespaceError
+}
+
+func (m *MockAuthz) DeleteNamespace(name, schemaName string) error {
+	if m.DeleteNamespaceAssert != nil {
+		m.DeleteNamespaceAssert(name, schemaName)
+	}
+	return m.DeleteNamespaceError
+}
+
+func (m *MockAuthz) SaveRelationDefinition(relationDefinition *descope.AuthzRelationDefinition, namespace, oldName, schemaName string) error {
+	if m.SaveRelationDefinitionAssert != nil {
+		m.SaveRelationDefinitionAssert(relationDefinition, namespace, oldName, schemaName)
+	}
+	return m.SaveRelationDefinitionError
+}
+
+func (m *MockAuthz) DeleteRelationDefinition(name, namespace, schemaName string) error {
+	if m.DeleteRelationDefinitionAssert != nil {
+		m.DeleteRelationDefinitionAssert(name, namespace, schemaName)
+	}
+	return m.DeleteRelationDefinitionError
+}
+
+func (m *MockAuthz) CreateRelations(relations []*descope.AuthzRelation) error {
+	if m.CreateRelationsAssert != nil {
+		m.CreateRelationsAssert(relations)
+	}
+	return m.CreateRelationsError
+}
+
+func (m *MockAuthz) DeleteRelations(relations []*descope.AuthzRelation) error {
+	if m.DeleteRelationsAssert != nil {
+		m.DeleteRelationsAssert(relations)
+	}
+	return m.DeleteRelationsError
+}
+
+func (m *MockAuthz) DeleteRelationsForResources(resources []string) error {
+	if m.DeleteRelationsForResourcesAssert != nil {
+		m.DeleteRelationsForResourcesAssert(resources)
+	}
+	return m.DeleteRelationsForResourcesError
+}
+
+func (m *MockAuthz) HasRelations(relationQueries []*descope.AuthzRelationQuery) ([]*descope.AuthzRelationQuery, error) {
+	if m.HasRelationsAssert != nil {
+		m.HasRelationsAssert(relationQueries)
+	}
+	return m.HasRelationsResponse, m.HasRelationsError
+}
+
+func (m *MockAuthz) WhoCanAccess(resource, relationDefinition, namespace string) ([]string, error) {
+	if m.WhoCanAccessAssert != nil {
+		m.WhoCanAccessAssert(resource, relationDefinition, namespace)
+	}
+	return m.WhoCanAccessResponse, m.WhoCanAccessError
+}
+
+func (m *MockAuthz) ResourceRelations(resource string) ([]*descope.AuthzRelation, error) {
+	if m.ResourceRelationsAssert != nil {
+		m.ResourceRelationsAssert(resource)
+	}
+	return m.ResourceRelationsResponse, m.ResourceRelationsError
+}
+
+func (m *MockAuthz) TargetsRelations(targets []string) ([]*descope.AuthzRelation, error) {
+	if m.TargetsRelationsAssert != nil {
+		m.TargetsRelationsAssert(targets)
+	}
+	return m.TargetsRelationsResponse, m.TargetsRelationsError
+}
+
+func (m *MockAuthz) WhatCanTargetAccess(target string) ([]*descope.AuthzRelation, error) {
+	if m.WhatCanTargetAccessAssert != nil {
+		m.WhatCanTargetAccessAssert(target)
+	}
+	return m.WhatCanTargetAccessResponse, m.WhatCanTargetAccessError
 }

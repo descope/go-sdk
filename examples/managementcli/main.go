@@ -425,6 +425,94 @@ func auditFullTextSearch(args []string) error {
 	return err
 }
 
+func authzLoadSchema(args []string) error {
+	res, err := descopeClient.Management.Authz().LoadSchema()
+	if err == nil {
+		var b []byte
+		b, err = json.MarshalIndent(res, "", "  ")
+		fmt.Println(string(b))
+	}
+	return err
+}
+
+func authzSaveSchema(args []string) error {
+	schemaFile, err := os.ReadFile(args[0])
+	if err != nil {
+		return err
+	}
+	var schema *descope.AuthzSchema
+	err = json.Unmarshal(schemaFile, &schema)
+	if err != nil {
+		return err
+	}
+	oldSchema, err := descopeClient.Management.Authz().LoadSchema()
+	if err != nil {
+		return err
+	}
+	upgrade, err := strconv.ParseBool(args[1])
+	if err != nil {
+		return err
+	}
+	err = descopeClient.Management.Authz().SaveSchema(schema, upgrade)
+	if err == nil {
+		if oldSchema.Name != schema.Name {
+			fmt.Printf("Schema %s upgraded to %s.\n", oldSchema.Name, schema.Name)
+		} else {
+			fmt.Printf("Schema %s saved.\n", schema.Name)
+		}
+	}
+	return err
+}
+
+func authzHasRelation(args []string) error {
+	res, err := descopeClient.Management.Authz().HasRelations([]*descope.AuthzRelationQuery{
+		{
+			Resource:           args[0],
+			RelationDefinition: args[1],
+			Namespace:          args[2],
+			Target:             args[3],
+		},
+	})
+	if err == nil {
+		var b []byte
+		b, err = json.MarshalIndent(res, "", "  ")
+		fmt.Println(string(b))
+	}
+	return err
+}
+
+func authzAddRelation(args []string) error {
+	err := descopeClient.Management.Authz().CreateRelations([]*descope.AuthzRelation{
+		{
+			Resource:           args[0],
+			RelationDefinition: args[1],
+			Namespace:          args[2],
+			Target:             args[3],
+		},
+	})
+	if err == nil {
+		fmt.Println("Relation added.")
+	}
+	return err
+}
+
+func authzAddRelationTargetSet(args []string) error {
+	err := descopeClient.Management.Authz().CreateRelations([]*descope.AuthzRelation{
+		{
+			Resource:                             args[0],
+			RelationDefinition:                   args[1],
+			Namespace:                            args[2],
+			TargetSetResource:                    args[3],
+			TargetSetRelationDefinition:          args[4],
+			TargetSetRelationDefinitionNamespace: args[5],
+		},
+	})
+	if err == nil {
+		fmt.Println("Relation to target set added.")
+	}
+	return err
+}
+
 // Command line setup
 
 var cli = &cobra.Command{
@@ -618,6 +706,25 @@ func main() {
 
 	addCommand(auditFullTextSearch, "audit-search <text> <from>", "Full text search up to last 30 days of audit. From can be specified in plain English (last 5 minutes, last day)", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
+	})
+
+	addCommand(authzLoadSchema, "authz-load-schema", "Load and display the current AuthZ ReBAC schema", func(cmd *cobra.Command) {
+	})
+
+	addCommand(authzSaveSchema, "authz-save-schema <filename> <upgrade>", "Save (and potentially upgrade) the AuthZ ReBAC schema from the given file", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(2)
+	})
+
+	addCommand(authzHasRelation, "authz-has-relation <resource> <relationDefinition> <namespace> <target>", "Check if the given relation exists", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(4)
+	})
+
+	addCommand(authzAddRelation, "authz-add-relation <resource> <relationDefinition> <namespace> <target>", "Add a relation from a resource to a given target", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(4)
+	})
+
+	addCommand(authzAddRelationTargetSet, "authz-add-relation-targetset <resource> <relationDefinition> <namespace> <targetset-resource> <targetset-rd> <targetset-ns>", "Add a relation from a resource to a given target set", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(6)
 	})
 
 	err := cli.Execute()
