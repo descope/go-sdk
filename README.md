@@ -605,7 +605,7 @@ u2.Email = "two@two.com"
 u2.Roles = []string{"two"}
 
 batchUsers = append(batchUsers, u1, u2)
-err := descopeClient.Management.User().InviteBatch(batchUsers, options)
+users, err := descopeClient.Management.User().InviteBatch(batchUsers, options)
 
 // Update will override all fields as is. Use carefully.
 userReqUpdate := &descope.UserRequest{}
