@@ -63,6 +63,7 @@ These sections show how to use the SDK to perform API management functions. Befo
 10. [Search Audit](#search-audit)
 11. [Embedded Links](#embedded-links)
 12. [Manage ReBAC Authz](#manage-rebac-authz)
+13. [Manage Project](#manage-project)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -1094,6 +1095,22 @@ relations, err := descopeClient.Management.Authz().HasRelations([]*descope.Authz
         target: "u1",
     }
 })
+```
+
+### Manage Project
+
+You can update project name, as well as to clone the current project to a new one:
+
+```go
+
+// Update project name
+descopeClient.Management.Project().UpdateName("new-project-name")
+
+// Clone the current project to a new one
+res, err := descopeClient.Management.Project().Clone("new-project-name", "")
+if err == nil {
+		fmt.Println(cloneRes)
+}
 ```
 
 ## Code Examples

@@ -456,6 +456,14 @@ type Project interface {
 	// This API is meant to be used via the 'environment' command line tool that can be
 	// found in the '/tools' directory.
 	ImportRaw(files map[string]any) error
+
+	// Update the current project name.
+	UpdateName(name string) error
+
+	// Clone the current project, including its settings and configurations.
+	// Users, tenants and access keys are not cloned.
+	// Returns The new project details (name, id, tag, and settings).
+	Clone(name string, tag descope.ProjectTag) (*descope.NewProjectResponse, error)
 }
 
 // Provides search project audit trail
