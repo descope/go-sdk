@@ -461,7 +461,8 @@ type Project interface {
 	UpdateName(name string) error
 
 	// Clone the current project, including its settings and configurations.
-	// Users, tenants and access keys are not cloned.
+	// - This action is supported only with a pro license or above.
+	// - Users, tenants and access keys are not cloned.
 	// Returns The new project details (name, id, tag, and settings).
 	Clone(name string, tag descope.ProjectTag) (*descope.NewProjectResponse, error)
 }
