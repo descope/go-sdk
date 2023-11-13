@@ -1107,6 +1107,7 @@ You can update project name, as well as to clone the current project to a new on
 descopeClient.Management.Project().UpdateName("new-project-name")
 
 // Clone the current project to a new one
+// Note that this action is supported only with a pro license or above.
 res, err := descopeClient.Management.Project().Clone("new-project-name", "")
 if err == nil {
 		fmt.Println(cloneRes)
