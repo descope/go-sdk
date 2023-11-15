@@ -313,10 +313,10 @@ type Authentication interface {
 	// the specified roles for a specific tenant.
 	ValidateTenantRoles(token *descope.Token, tenant string, roles []string) bool
 
-	// SelectTenantWithRequest - Use to add to the jwt a dedicated claim to mark on which tenant this user authenticated now
+	// SelectTenantWithRequest - Adds a dedicated claim to the JWTs to indicate the tenant on which the user is currently authenticated
 	SelectTenantWithRequest(tenantID string, request *http.Request, w http.ResponseWriter) (*descope.AuthenticationInfo, error)
 
-	// SelectTenantWithToken - Use to add to the jwt a dedicated claim to mark on which tenant this user authenticated now
+	// SelectTenantWithToken - Adds a dedicated claim to the JWTs to indicate the tenant on which the user is currently authenticated
 	SelectTenantWithToken(tenantID string, refreshToken string) (*descope.AuthenticationInfo, error)
 
 	// Logout - Logs out from the current session and deletes the session and refresh cookies in the http response.
