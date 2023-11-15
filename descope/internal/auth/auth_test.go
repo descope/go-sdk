@@ -318,6 +318,53 @@ func TestRefreshSessionWithTokenExpired(t *testing.T) {
 	require.False(t, ok)
 }
 
+// Tenant Selection
+
+func TestSelectTenantWithRequest(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		b, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, "tid", b["tenant"])
+	}))
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
+	authInfo, err := a.SelectTenantWithRequest("tid", request, nil)
+	require.NoError(t, err)
+	require.NotNil(t, authInfo)
+}
+
+func TestSelectTenantWithRequestInvalidInput(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	info, err := a.SelectTenantWithRequest("tid", nil, nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Nil(t, info)
+	info, err = a.SelectTenantWithRequest("tid", &http.Request{Header: http.Header{}}, nil)
+	require.ErrorIs(t, err, descope.ErrMissingArguments)
+	require.Nil(t, info)
+}
+
+func TestSelectTenantWithToken(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		b, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, "tid", b["tenant"])
+	}))
+	require.NoError(t, err)
+	info, err := a.SelectTenantWithToken("tid", jwtRTokenValid)
+	require.NoError(t, err)
+	require.NotNil(t, info)
+}
+
+func TestSelectTenantWithTokenInvalidInput(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	info, err := a.SelectTenantWithToken("tid", "")
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Nil(t, info)
+}
+
 // Validate and Refresh Session
 func strictCookies(t *testing.T, response *httptest.ResponseRecorder) {
 	for _, cookie := range response.Result().Cookies() {

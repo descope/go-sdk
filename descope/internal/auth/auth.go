@@ -375,6 +375,45 @@ func (auth *authenticationService) ValidateTenantRoles(token *descope.Token, ten
 	return true
 }
 
+// Select Tenant
+
+func (auth *authenticationService) SelectTenantWithRequest(tenantID string, request *http.Request, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+	if request == nil {
+		return nil, utils.NewInvalidArgumentError("request")
+	}
+	_, refreshToken := provideTokens(request)
+	if refreshToken == "" {
+		return nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain refresh token")
+	}
+	return auth.selectTenant(tenantID, refreshToken, w)
+}
+
+func (auth *authenticationService) SelectTenantWithToken(tenantID string, refreshToken string) (*descope.AuthenticationInfo, error) {
+	if refreshToken == "" {
+		return nil, utils.NewInvalidArgumentError("refreshToken")
+	}
+	return auth.selectTenant(tenantID, refreshToken, nil)
+}
+
+func (auth *authenticationService) selectTenant(tenantID string, refreshToken string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+	token, err := auth.validateJWT(refreshToken)
+	if err != nil {
+		return nil, err
+	}
+
+	httpResponse, err := auth.client.DoPostRequest(api.Routes.SelectTenant(), map[string]any{"tenant": tenantID}, &api.HTTPRequest{}, refreshToken)
+	if err != nil {
+		return nil, err
+	}
+	info, err := auth.generateAuthenticationInfoWithRefreshToken(httpResponse, token, w)
+	if err != nil {
+		return nil, err
+	}
+	// No need to check for error again because validateTokenError will return false for any non-nil error
+	info.SessionToken.RefreshExpiration = token.Expiration
+	return info, nil
+}
+
 func (auth *authenticationsBase) extractJWTResponse(bodyStr string) (*descope.JWTResponse, error) {
 	if bodyStr == "" {
 		return nil, nil

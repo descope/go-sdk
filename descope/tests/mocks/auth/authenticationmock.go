@@ -531,6 +531,14 @@ type MockSession struct {
 	ValidateTenantRolesAssert   func(token *descope.Token, tenant string, roles []string)
 	ValidateTenantRolesResponse bool
 
+	SelectTenantWithRequestAssert   func(tenantID string, r *http.Request, w http.ResponseWriter)
+	SelectTenantWithRequestResponse *descope.AuthenticationInfo
+	SelectTenantWithRequestError    error
+
+	SelectTenantWithTokenAssert   func(tenantID string, refreshToken string)
+	SelectTenantWithTokenResponse *descope.AuthenticationInfo
+	SelectTenantWithTokenError    error
+
 	LogoutAssert func(r *http.Request, w http.ResponseWriter)
 	LogoutError  error
 
@@ -646,6 +654,20 @@ func (m *MockSession) ValidateTenantRoles(token *descope.Token, tenant string, r
 		m.ValidateTenantRolesAssert(token, tenant, roles)
 	}
 	return m.ValidateTenantRolesResponse
+}
+
+func (m *MockSession) SelectTenantWithRequest(tenantID string, request *http.Request, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+	if m.SelectTenantWithRequestAssert != nil {
+		m.SelectTenantWithRequestAssert(tenantID, request, w)
+	}
+	return m.SelectTenantWithRequestResponse, m.SelectTenantWithRequestError
+}
+
+func (m *MockSession) SelectTenantWithToken(tenantID string, refreshToken string) (*descope.AuthenticationInfo, error) {
+	if m.SelectTenantWithTokenAssert != nil {
+		m.SelectTenantWithTokenAssert(tenantID, refreshToken)
+	}
+	return m.SelectTenantWithTokenResponse, m.SelectTenantWithTokenError
 }
 
 func (m *MockSession) Logout(r *http.Request, w http.ResponseWriter) error {
