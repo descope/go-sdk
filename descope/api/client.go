@@ -153,24 +153,26 @@ var (
 			authzRETargets:                   "mgmt/authz/re/targets",
 			authzRETargetAll:                 "mgmt/authz/re/targetall",
 		},
-		logout:    "auth/logout",
-		logoutAll: "auth/logoutall",
-		keys:      "/keys/",
-		refresh:   "auth/refresh",
-		me:        "auth/me",
+		logout:       "auth/logout",
+		logoutAll:    "auth/logoutall",
+		keys:         "/keys/",
+		refresh:      "auth/refresh",
+		selectTenant: "auth/tenant/select",
+		me:           "auth/me",
 	}
 )
 
 type endpoints struct {
-	version   string
-	versionV2 string
-	auth      authEndpoints
-	mgmt      mgmtEndpoints
-	logout    string
-	logoutAll string
-	keys      string
-	refresh   string
-	me        string
+	version      string
+	versionV2    string
+	auth         authEndpoints
+	mgmt         mgmtEndpoints
+	logout       string
+	logoutAll    string
+	keys         string
+	refresh      string
+	selectTenant string
+	me           string
 }
 
 type authEndpoints struct {
@@ -426,6 +428,9 @@ func (e *endpoints) GetKeys() string {
 }
 func (e *endpoints) RefreshToken() string {
 	return path.Join(e.version, e.refresh)
+}
+func (e *endpoints) SelectTenant() string {
+	return path.Join(e.version, e.selectTenant)
 }
 
 func (e *endpoints) UpdateUserEmailMagiclink() string {

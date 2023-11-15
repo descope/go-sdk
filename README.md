@@ -45,7 +45,8 @@ These sections show how to use the SDK to perform various authentication/authori
 7. [Passwords](#passwords)
 8. [Session Validation](#session-validation)
 9. [Roles & Permission Validation](#roles--permission-validation)
-10. [Logging Out](#logging-out)
+10. [Tenant selection](#tenant-selection)
+11. [Logging Out](#logging-out)
 
 ## Management Functions
 
@@ -485,6 +486,29 @@ if !descopeClient.Auth.ValidateRoles(sessionToken, []string{"Role to validate"})
     // Deny access
 }
 ```
+
+### Tenant selection
+For a user that has permissions to multiple tenants, you can set a specific tenant as the current selected one
+This will add an extra attribute to the refresh JWT and the session JWT with the selected tenant ID
+
+```go
+tenantID := "t1"
+info, err := descopeClient.Auth.SelectTenantWithRequest(tenantID, r, w) 
+if err != nil {
+    // failed to select a tenant
+}
+```
+
+Or alternatively, work directly with refresh token
+```go
+tenantID := "t1"
+refreshToken := "<a valid refresh token>"
+info, err := descopeClient.Auth.SelectTenantWithToken(tenantID, refreshToken)
+if err != nil {
+    // failed to select a tenant
+}
+```
+
 
 ### Logging Out
 
