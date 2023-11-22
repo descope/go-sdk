@@ -13,7 +13,10 @@ type user struct {
 }
 
 func (u *user) Create(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
-	return u.Invite(loginID, user, nil)
+	if user == nil {
+		user = &descope.UserRequest{}
+	}
+	return u.create(loginID, user.Email, user.Phone, user.Name, user.Picture, user.Roles, user.Tenants, false, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, nil)
 }
 
 func (u *user) CreateTestUser(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
@@ -24,7 +27,10 @@ func (u *user) CreateTestUser(loginID string, user *descope.UserRequest) (*desco
 }
 
 func (u *user) CreateBatch(users []*descope.BatchUser) (*descope.UsersBatchResponse, error) {
-	return u.InviteBatch(users, nil)
+	if users == nil {
+		users = []*descope.BatchUser{}
+	}
+	return u.createBatch(users, nil)
 }
 
 func (u *user) Invite(loginID string, user *descope.UserRequest, options *descope.InviteOptions) (*descope.UserResponse, error) {
