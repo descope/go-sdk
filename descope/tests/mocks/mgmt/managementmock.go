@@ -149,6 +149,10 @@ type MockUser struct {
 	CreateTestUserResponse *descope.UserResponse
 	CreateTestUserError    error
 
+	CreateBatchAssert   func(users []*descope.BatchUser)
+	CreateBatchResponse *descope.UsersBatchResponse
+	CreateBatchError    error
+
 	InviteAssert   func(loginID string, user *descope.UserRequest, options *descope.InviteOptions)
 	InviteResponse *descope.UserResponse
 	InviteError    error
@@ -278,6 +282,13 @@ func (m *MockUser) CreateTestUser(loginID string, user *descope.UserRequest) (*d
 		m.CreateTestUserAssert(loginID, user)
 	}
 	return m.CreateTestUserResponse, m.CreateTestUserError
+}
+
+func (m *MockUser) CreateBatch(users []*descope.BatchUser) (*descope.UsersBatchResponse, error) {
+	if m.CreateBatchAssert != nil {
+		m.CreateBatchAssert(users)
+	}
+	return m.CreateBatchResponse, m.CreateBatchError
 }
 
 func (m *MockUser) Invite(loginID string, user *descope.UserRequest, options *descope.InviteOptions) (*descope.UserResponse, error) {

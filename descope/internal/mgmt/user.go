@@ -1,6 +1,8 @@
 package mgmt
 
 import (
+	"encoding/base64"
+
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
@@ -11,10 +13,7 @@ type user struct {
 }
 
 func (u *user) Create(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
-	if user == nil {
-		user = &descope.UserRequest{}
-	}
-	return u.create(loginID, user.Email, user.Phone, user.Name, user.Picture, user.Roles, user.Tenants, false, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, nil)
+	return u.Invite(loginID, user, nil)
 }
 
 func (u *user) CreateTestUser(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
@@ -22,6 +21,10 @@ func (u *user) CreateTestUser(loginID string, user *descope.UserRequest) (*desco
 		user = &descope.UserRequest{}
 	}
 	return u.create(loginID, user.Email, user.Phone, user.Name, user.Picture, user.Roles, user.Tenants, false, true, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, nil)
+}
+
+func (u *user) CreateBatch(users []*descope.BatchUser) (*descope.UsersBatchResponse, error) {
+	return u.InviteBatch(users, nil)
 }
 
 func (u *user) Invite(loginID string, user *descope.UserRequest, options *descope.InviteOptions) (*descope.UserResponse, error) {
@@ -469,7 +472,26 @@ func makeCreateUserRequest(loginID, email, phone, displayName, picture string, r
 func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.InviteOptions) map[string]any {
 	var usersReq []map[string]any
 	for _, u := range users {
-		usersReq = append(usersReq, makeUpdateUserRequest(u.LoginID, u.Email, u.Phone, u.Name, u.Picture, u.Roles, u.Tenants, u.CustomAttributes, u.VerifiedEmail, u.VerifiedPhone))
+		user := makeUpdateUserRequest(u.LoginID, u.Email, u.Phone, u.Name, u.Picture, u.Roles, u.Tenants, u.CustomAttributes, u.VerifiedEmail, u.VerifiedPhone)
+		if u.Password != nil {
+			if cleartext := u.Password.Cleartext; cleartext != "" {
+				user["password"] = u.Password.Cleartext
+			}
+			if hashed := u.Password.Hashed; hashed != nil {
+				m := map[string]any{
+					"algorithm": hashed.Algorithm,
+					"hash":      base64.RawStdEncoding.EncodeToString(hashed.Hash),
+				}
+				if len(hashed.Salt) > 0 {
+					m["salt"] = base64.RawStdEncoding.EncodeToString(hashed.Salt)
+				}
+				if hashed.Iterations != 0 {
+					m["iterations"] = hashed.Iterations
+				}
+				user["hashedPassword"] = m
+			}
+		}
+		usersReq = append(usersReq, user)
 	}
 	req := map[string]any{
 		"users": usersReq,
