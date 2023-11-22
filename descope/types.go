@@ -283,9 +283,31 @@ type UserRequest struct {
 }
 
 type BatchUser struct {
-	LoginID     string `json:"loginId,omitempty"`
+	LoginID     string             `json:"loginId,omitempty"`
+	Password    *BatchUserPassword `json:"password,omitempty"`
 	UserRequest `json:",inline"`
 }
+
+type BatchUserPassword struct {
+	Cleartext string
+	Hashed    *BatchUserPasswordHashed
+}
+
+type BatchUserPasswordHashed struct {
+	Algorithm  BatchUserPasswordAlgorithm
+	Hash       []byte
+	Salt       []byte
+	Iterations int
+}
+
+type BatchUserPasswordAlgorithm string
+
+const (
+	BatchUserPasswordAlgorithmBcrypt       BatchUserPasswordAlgorithm = "bcrypt"
+	BatchUserPasswordAlgorithmPBKDF2SHA1   BatchUserPasswordAlgorithm = "pbkdf2sha1"
+	BatchUserPasswordAlgorithmPBKDF2SHA256 BatchUserPasswordAlgorithm = "pbkdf2sha256"
+	BatchUserPasswordAlgorithmPBKDF2SHA512 BatchUserPasswordAlgorithm = "pbkdf2sha512"
+)
 
 type UserResponse struct {
 	User             `json:",inline"`

@@ -115,32 +115,45 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 	u1.Email = "one@one.com"
 	u1.Roles = []string{"one"}
 	u1.CustomAttributes = ca
+	u1.Password = &descope.BatchUserPassword{Cleartext: "foo"}
 
 	u2 := &descope.BatchUser{}
 	u2.LoginID = "two"
 	u2.Email = "two@two.com"
 	u2.Roles = []string{"two"}
+	u2.Password = &descope.BatchUserPassword{Hashed: &descope.BatchUserPasswordHashed{
+		Algorithm:  descope.BatchUserPasswordAlgorithmPBKDF2SHA256,
+		Hash:       []byte("1"),
+		Salt:       []byte("2"),
+		Iterations: 100,
+	}}
 
 	users = append(users, u1, u2)
 
 	sendSMS := true
 
 	called := false
+	invite := true
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		called = true
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		assert.EqualValues(t, true, req["invite"])
-		assert.EqualValues(t, "https://some.domain.com", req["inviteUrl"])
-		assert.Nil(t, req["sendMail"])
-		assert.EqualValues(t, true, req["sendSMS"])
+		if invite {
+			assert.EqualValues(t, true, req["invite"])
+			assert.EqualValues(t, "https://some.domain.com", req["inviteUrl"])
+			assert.Nil(t, req["sendMail"])
+			assert.EqualValues(t, true, req["sendSMS"])
+		} else {
+			assert.Nil(t, req["invite"])
+		}
 		usersRes := req["users"].([]any)
 		userRes1 := usersRes[0].(map[string]any)
 		userRes2 := usersRes[1].(map[string]any)
 		require.Equal(t, u1.LoginID, userRes1["loginId"])
 		require.Equal(t, u1.Email, userRes1["email"])
 		assert.EqualValues(t, ca, userRes1["customAttributes"])
+		require.Equal(t, "foo", userRes1["password"])
 		roleNames := userRes1["roleNames"].([]any)
 		require.Len(t, roleNames, 1)
 		require.Equal(t, u1.Roles[0], roleNames[0])
@@ -148,6 +161,12 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 		require.Equal(t, u2.LoginID, userRes2["loginId"])
 		require.Equal(t, u2.Email, userRes2["email"])
 		assert.Nil(t, userRes2["customAttributes"])
+		pass2, _ := userRes2["hashedPassword"].(map[string]any)
+		require.NotNil(t, pass2)
+		require.Equal(t, "pbkdf2sha256", pass2["algorithm"])
+		require.Equal(t, "MQ", pass2["hash"])
+		require.Equal(t, "Mg", pass2["salt"])
+		require.EqualValues(t, 100, pass2["iterations"])
 		roleNames = userRes2["roleNames"].([]any)
 		require.Len(t, roleNames, 1)
 		require.Equal(t, u2.Roles[0], roleNames[0])
@@ -157,6 +176,17 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 		InviteURL: "https://some.domain.com",
 		SendSMS:   &sendSMS,
 	})
+	require.True(t, called)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Len(t, res.CreatedUsers, 1)
+	require.Len(t, res.FailedUsers, 1)
+	assert.EqualValues(t, u1.Email, res.CreatedUsers[0].Email)
+	assert.EqualValues(t, u2.Email, res.FailedUsers[0].User.Email)
+	assert.EqualValues(t, "some failure", res.FailedUsers[0].Failure)
+
+	invite = false
+	res, err = m.User().CreateBatch(users)
 	require.True(t, called)
 	require.NoError(t, err)
 	require.NotNil(t, res)

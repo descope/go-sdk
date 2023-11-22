@@ -70,6 +70,12 @@ type User interface {
 	// Those users are not counted as part of the monthly active users
 	CreateTestUser(loginID string, user *descope.UserRequest) (*descope.UserResponse, error)
 
+	// Create users in batch.
+	//
+	// Functions exactly the same as the Create function with the additional behavior that
+	// users can be created with a cleartext or hashed password.
+	CreateBatch(users []*descope.BatchUser) (*descope.UsersBatchResponse, error)
+
 	// Create a new user and invite via an email / text message.
 	//
 	// Functions exactly the same as the Create function with the additional invitation
