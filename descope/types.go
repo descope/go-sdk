@@ -365,6 +365,7 @@ type AccessKeyResponse struct {
 	CreatedTime int32               `json:"createdTime,omitempty"`
 	ExpireTime  int32               `json:"expireTime,omitempty"`
 	CreatedBy   string              `json:"createdBy,omitempty"`
+	ClientID    string              `json:"clientId,omitempty"`
 }
 
 // Represents a tenant association for a User or an Access Key. The tenant ID is required
