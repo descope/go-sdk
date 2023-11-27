@@ -282,6 +282,11 @@ type UserRequest struct {
 	VerifiedPhone    *bool               `json:"verifiedPhone,omitempty"`
 }
 
+type CreateUserRequest struct {
+	UserRequest        `json:",inline"`
+	AdditionalLoginIDs []string `json:"additionalLoginIds,omitempty"`
+}
+
 type BatchUser struct {
 	LoginID     string             `json:"loginId,omitempty"`
 	Password    *BatchUserPassword `json:"password,omitempty"`
