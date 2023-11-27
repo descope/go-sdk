@@ -76,7 +76,7 @@ func main() {
 			tenants = append(tenants, &descope.AssociatedTenant{TenantID: curr.TenantID, Roles: curr.Roles})
 		}
 
-		userReq := &descope.UserRequest{}
+		userReq := &descope.CreateUserRequest{}
 		userReq.Email, userReq.Phone, userReq.Name, userReq.Roles, userReq.Tenants = user.Email, user.Phone, user.DisplayName, user.Roles, tenants
 		res, err := descopeClient.Management.User().Create(user.LoginID, userReq)
 		if err != nil {
