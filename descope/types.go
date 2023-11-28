@@ -273,18 +273,14 @@ type User struct {
 }
 
 type UserRequest struct {
-	User             `json:",inline"`
-	Roles            []string            `json:"roles,omitempty"`
-	Tenants          []*AssociatedTenant `json:"tenants,omitempty"`
-	CustomAttributes map[string]any      `json:"customAttributes,omitempty"`
-	Picture          string              `json:"picture,omitempty"`
-	VerifiedEmail    *bool               `json:"verifiedEmail,omitempty"`
-	VerifiedPhone    *bool               `json:"verifiedPhone,omitempty"`
-}
-
-type CreateUserRequest struct {
-	UserRequest        `json:",inline"`
-	AdditionalLoginIDs []string `json:"additionalLoginIds,omitempty"`
+	User               `json:",inline"`
+	Roles              []string            `json:"roles,omitempty"`
+	Tenants            []*AssociatedTenant `json:"tenants,omitempty"`
+	CustomAttributes   map[string]any      `json:"customAttributes,omitempty"`
+	Picture            string              `json:"picture,omitempty"`
+	VerifiedEmail      *bool               `json:"verifiedEmail,omitempty"`
+	VerifiedPhone      *bool               `json:"verifiedPhone,omitempty"`
+	AdditionalLoginIDs []string            `json:"additionalLoginIds,omitempty"`
 }
 
 type BatchUser struct {

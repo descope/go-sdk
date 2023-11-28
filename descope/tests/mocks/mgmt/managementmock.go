@@ -141,11 +141,11 @@ func (m *MockSSO) ConfigureMapping(tenantID string, roleMappings []*descope.Role
 // Mock User
 
 type MockUser struct {
-	CreateAssert   func(loginID string, user *descope.CreateUserRequest)
+	CreateAssert   func(loginID string, user *descope.UserRequest)
 	CreateResponse *descope.UserResponse
 	CreateError    error
 
-	CreateTestUserAssert   func(loginID string, user *descope.CreateUserRequest)
+	CreateTestUserAssert   func(loginID string, user *descope.UserRequest)
 	CreateTestUserResponse *descope.UserResponse
 	CreateTestUserError    error
 
@@ -153,7 +153,7 @@ type MockUser struct {
 	CreateBatchResponse *descope.UsersBatchResponse
 	CreateBatchError    error
 
-	InviteAssert   func(loginID string, user *descope.CreateUserRequest, options *descope.InviteOptions)
+	InviteAssert   func(loginID string, user *descope.UserRequest, options *descope.InviteOptions)
 	InviteResponse *descope.UserResponse
 	InviteError    error
 
@@ -270,14 +270,14 @@ type MockUser struct {
 	LogoutError  error
 }
 
-func (m *MockUser) Create(loginID string, user *descope.CreateUserRequest) (*descope.UserResponse, error) {
+func (m *MockUser) Create(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
 	if m.CreateAssert != nil {
 		m.CreateAssert(loginID, user)
 	}
 	return m.CreateResponse, m.CreateError
 }
 
-func (m *MockUser) CreateTestUser(loginID string, user *descope.CreateUserRequest) (*descope.UserResponse, error) {
+func (m *MockUser) CreateTestUser(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
 	if m.CreateTestUserAssert != nil {
 		m.CreateTestUserAssert(loginID, user)
 	}
@@ -291,7 +291,7 @@ func (m *MockUser) CreateBatch(users []*descope.BatchUser) (*descope.UsersBatchR
 	return m.CreateBatchResponse, m.CreateBatchError
 }
 
-func (m *MockUser) Invite(loginID string, user *descope.CreateUserRequest, options *descope.InviteOptions) (*descope.UserResponse, error) {
+func (m *MockUser) Invite(loginID string, user *descope.UserRequest, options *descope.InviteOptions) (*descope.UserResponse, error) {
 	if m.InviteAssert != nil {
 		m.InviteAssert(loginID, user, options)
 	}

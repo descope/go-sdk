@@ -2,6 +2,7 @@ package mgmt
 
 import (
 	"encoding/base64"
+	"fmt"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
@@ -12,16 +13,16 @@ type user struct {
 	managementBase
 }
 
-func (u *user) Create(loginID string, user *descope.CreateUserRequest) (*descope.UserResponse, error) {
+func (u *user) Create(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
 	if user == nil {
-		user = &descope.CreateUserRequest{}
+		user = &descope.UserRequest{}
 	}
 	return u.create(loginID, user.Email, user.Phone, user.Name, user.Picture, user.Roles, user.Tenants, false, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, nil)
 }
 
-func (u *user) CreateTestUser(loginID string, user *descope.CreateUserRequest) (*descope.UserResponse, error) {
+func (u *user) CreateTestUser(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
 	if user == nil {
-		user = &descope.CreateUserRequest{}
+		user = &descope.UserRequest{}
 	}
 	return u.create(loginID, user.Email, user.Phone, user.Name, user.Picture, user.Roles, user.Tenants, false, true, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, nil)
 }
@@ -33,9 +34,9 @@ func (u *user) CreateBatch(users []*descope.BatchUser) (*descope.UsersBatchRespo
 	return u.createBatch(users, nil)
 }
 
-func (u *user) Invite(loginID string, user *descope.CreateUserRequest, options *descope.InviteOptions) (*descope.UserResponse, error) {
+func (u *user) Invite(loginID string, user *descope.UserRequest, options *descope.InviteOptions) (*descope.UserResponse, error) {
 	if user == nil {
-		user = &descope.CreateUserRequest{}
+		user = &descope.UserRequest{}
 	}
 	return u.create(loginID, user.Email, user.Phone, user.Name, user.Picture, user.Roles, user.Tenants, true, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, options)
 }
@@ -75,7 +76,7 @@ func (u *user) Update(loginID string, user *descope.UserRequest) (*descope.UserR
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
-	req := makeUpdateUserRequest(loginID, user.Email, user.Phone, user.Name, user.Picture, user.Roles, user.Tenants, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone)
+	req := makeUpdateUserRequest(loginID, user.Email, user.Phone, user.Name, user.Picture, user.Roles, user.Tenants, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserUpdate(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -456,7 +457,7 @@ func (u *user) GenerateEmbeddedLink(loginID string, customClaims map[string]any)
 }
 
 func makeCreateUserRequest(loginID, email, phone, displayName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, options *descope.InviteOptions) map[string]any {
-	req := makeUpdateUserRequest(loginID, email, phone, displayName, picture, roles, tenants, customAttributes, verifiedEmail, verifiedPhone)
+	req := makeUpdateUserRequest(loginID, email, phone, displayName, picture, roles, tenants, customAttributes, verifiedEmail, verifiedPhone, additionalLoginIDs)
 	req["invite"] = invite
 	req["additionalLoginIds"] = additionalLoginIDs
 	if test {
@@ -479,7 +480,7 @@ func makeCreateUserRequest(loginID, email, phone, displayName, picture string, r
 func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.InviteOptions) map[string]any {
 	var usersReq []map[string]any
 	for _, u := range users {
-		user := makeUpdateUserRequest(u.LoginID, u.Email, u.Phone, u.Name, u.Picture, u.Roles, u.Tenants, u.CustomAttributes, u.VerifiedEmail, u.VerifiedPhone)
+		user := makeUpdateUserRequest(u.LoginID, u.Email, u.Phone, u.Name, u.Picture, u.Roles, u.Tenants, u.CustomAttributes, u.VerifiedEmail, u.VerifiedPhone, u.AdditionalLoginIDs)
 		if u.Password != nil {
 			if cleartext := u.Password.Cleartext; cleartext != "" {
 				user["password"] = u.Password.Cleartext
@@ -519,16 +520,18 @@ func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.In
 	return req
 }
 
-func makeUpdateUserRequest(loginID, email, phone, displayName, picture string, roles []string, tenants []*descope.AssociatedTenant, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool) map[string]any {
+func makeUpdateUserRequest(loginID, email, phone, displayName, picture string, roles []string, tenants []*descope.AssociatedTenant, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string) map[string]any {
+	fmt.Println("### adding additionalLoginIds", additionalLoginIDs)
 	res := map[string]any{
-		"loginId":          loginID,
-		"email":            email,
-		"phone":            phone,
-		"displayName":      displayName,
-		"roleNames":        roles,
-		"userTenants":      makeAssociatedTenantList(tenants),
-		"customAttributes": customAttributes,
-		"picture":          picture,
+		"loginId":            loginID,
+		"email":              email,
+		"phone":              phone,
+		"displayName":        displayName,
+		"roleNames":          roles,
+		"userTenants":        makeAssociatedTenantList(tenants),
+		"customAttributes":   customAttributes,
+		"picture":            picture,
+		"additionalLoginIds": additionalLoginIDs,
 	}
 	if verifiedEmail != nil {
 		res["verifiedEmail"] = *verifiedEmail

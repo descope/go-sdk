@@ -38,7 +38,7 @@ func TestUserCreateSuccess(t *testing.T) {
 		}
 		i++
 	}, response))
-	user := &descope.CreateUserRequest{}
+	user := &descope.UserRequest{}
 	user.Email = "foo@bar.com"
 	user.Roles = []string{"foo"}
 	user.CustomAttributes = ca
@@ -81,7 +81,7 @@ func TestUserCreateSuccessWithOptions(t *testing.T) {
 		assert.Nil(t, req["sendMail"])
 		assert.Nil(t, req["sendSMS"])
 	}, response))
-	user := &descope.CreateUserRequest{}
+	user := &descope.UserRequest{}
 	user.Email = "foo@bar.com"
 	user.Roles = []string{"foo"}
 	user.CustomAttributes = ca
@@ -213,7 +213,7 @@ func TestUserCreateTestUserSuccess(t *testing.T) {
 		require.Equal(t, "foo", roleNames[0])
 		require.EqualValues(t, true, req["test"])
 	}, response))
-	user := &descope.CreateUserRequest{}
+	user := &descope.UserRequest{}
 	user.Email = "foo@bar.com"
 	user.Roles = []string{"foo"}
 	res, err := m.User().CreateTestUser("abc", user)
@@ -224,7 +224,7 @@ func TestUserCreateTestUserSuccess(t *testing.T) {
 
 func TestUserCreateError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	user := &descope.CreateUserRequest{}
+	user := &descope.UserRequest{}
 	user.Email = "foo@bar.com"
 	_, err := m.User().Create("", user)
 	require.Error(t, err)
@@ -1318,7 +1318,7 @@ func TestUserCreateWithVerifiedEmailUserSuccess(t *testing.T) {
 		require.EqualValues(t, true, req["test"])
 		require.EqualValues(t, true, req["verifiedEmail"])
 	}, response))
-	user := &descope.CreateUserRequest{}
+	user := &descope.UserRequest{}
 	user.Email = "foo@bar.com"
 	tr := true
 	user.VerifiedEmail = &tr
@@ -1346,7 +1346,7 @@ func TestUserCreateWithVerifiedPhoneUserSuccess(t *testing.T) {
 		require.EqualValues(t, true, req["test"])
 		require.EqualValues(t, false, req["verifiedPhone"])
 	}, response))
-	user := &descope.CreateUserRequest{}
+	user := &descope.UserRequest{}
 	user.Email = "foo@bar.com"
 	tr := false
 	user.VerifiedPhone = &tr

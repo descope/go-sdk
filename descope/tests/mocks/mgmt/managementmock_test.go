@@ -16,7 +16,7 @@ func TestMockManagement(t *testing.T) {
 	descopeClient := client.DescopeClient{
 		Management: &MockManagement{
 			MockUser: &MockUser{
-				CreateAssert: func(loginID string, user *descope.CreateUserRequest) {
+				CreateAssert: func(loginID string, user *descope.UserRequest) {
 					called = true
 					assert.EqualValues(t, expectedLoginID, loginID)
 				},
@@ -26,7 +26,7 @@ func TestMockManagement(t *testing.T) {
 		},
 	}
 	assert.NotNil(t, descopeClient.Management)
-	r, err := descopeClient.Management.User().Create(expectedLoginID, &descope.CreateUserRequest{})
+	r, err := descopeClient.Management.User().Create(expectedLoginID, &descope.UserRequest{})
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedLoginID, r.UserID)
 	assert.True(t, called)

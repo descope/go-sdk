@@ -55,7 +55,7 @@ func userCreate(args []string) error {
 	for _, tenantID := range flags.Tenants {
 		tenants = append(tenants, &descope.AssociatedTenant{TenantID: tenantID})
 	}
-	user := &descope.CreateUserRequest{}
+	user := &descope.UserRequest{}
 	user.Email = "foo@bar.com"
 	user.Phone = flags.Phone
 	user.Name = flags.Name

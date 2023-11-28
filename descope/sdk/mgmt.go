@@ -57,7 +57,7 @@ type User interface {
 	// aren't associated with a tenant, while the tenants parameter can be used
 	// to specify which tenants to associate the user with and what roles the
 	// user has in each one.
-	Create(loginID string, user *descope.CreateUserRequest) (*descope.UserResponse, error)
+	Create(loginID string, user *descope.UserRequest) (*descope.UserResponse, error)
 
 	// Create a new test user.
 	//
@@ -68,7 +68,7 @@ type User interface {
 	// You can later generate OTP, Magic link and enchanted link to use in the test without the need
 	// of 3rd party messaging services
 	// Those users are not counted as part of the monthly active users
-	CreateTestUser(loginID string, user *descope.CreateUserRequest) (*descope.UserResponse, error)
+	CreateTestUser(loginID string, user *descope.UserRequest) (*descope.UserResponse, error)
 
 	// Create users in batch.
 	//
@@ -85,7 +85,7 @@ type User interface {
 	// the email / phone is explicitly set, or the loginID itself is an email address / phone number.
 	// You must configure the invitation URL in the Descope console prior to
 	// calling the method.
-	Invite(loginID string, user *descope.CreateUserRequest, options *descope.InviteOptions) (*descope.UserResponse, error)
+	Invite(loginID string, user *descope.UserRequest, options *descope.InviteOptions) (*descope.UserResponse, error)
 
 	// Create users in batch and invite them via an email / text message.
 	//
