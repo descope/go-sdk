@@ -2,7 +2,6 @@ package mgmt
 
 import (
 	"encoding/base64"
-	"fmt"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
@@ -521,7 +520,6 @@ func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.In
 }
 
 func makeUpdateUserRequest(loginID, email, phone, displayName, picture string, roles []string, tenants []*descope.AssociatedTenant, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string) map[string]any {
-	fmt.Println("### adding additionalLoginIds", additionalLoginIDs)
 	res := map[string]any{
 		"loginId":            loginID,
 		"email":              email,
