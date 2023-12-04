@@ -87,6 +87,8 @@ The user can either `sign up`, `sign in` or `sign up or in`
 loginID := "desmond@descope.com"
 user := &descope.User{
     Name: "Desmond Copeland",
+    GivenName: "Desmond",
+    FamilyName: "Copeland",
     Phone: "212-555-1234",
     Email: loginID,
 }
@@ -286,6 +288,8 @@ Existing users can add TOTP using the `update` function.
 loginID := "desmond@descope.com"
 user := &descope.User{
     Name: "Desmond Copeland",
+    GivenName: "Desmond",
+    FamilyName: "Copeland",
     Phone: "212-555-1234",
     Email: loginID,
 }
@@ -328,6 +332,8 @@ loginID := "desmond@descope.com"
 password := "qYlvi65KaX"
 user := &descope.User{
     Name: "Desmond Copeland",
+    GivenName: "Desmond",
+    FamilyName: "Copeland",
     Email: loginID,
 }
 authInfo, err := descopeClient.Auth.Password().SignUp(loginID, user, password, nil)
@@ -596,6 +602,8 @@ You can create, update, delete or load users, as well as search according to fil
 userReq := &descope.UserRequest{}
 userReq.Email = "desmond@descope.com"
 userReq.Name = "Desmond Copeland"
+userReq.GivenName = "Desmond"
+userReq.FamilyName = "Copeland"
 userReq.Tenants = []*descope.AssociatedTenant{
     {TenantID: "tenant-ID1", Roles: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},

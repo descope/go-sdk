@@ -16,14 +16,14 @@ func (u *user) Create(loginID string, user *descope.UserRequest) (*descope.UserR
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
-	return u.create(loginID, user.Email, user.Phone, user.Name, user.FirstName, user.MiddleName, user.LastName, user.Picture, user.Roles, user.Tenants, false, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, nil)
+	return u.create(loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, false, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, nil)
 }
 
 func (u *user) CreateTestUser(loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
-	return u.create(loginID, user.Email, user.Phone, user.Name, user.FirstName, user.MiddleName, user.LastName, user.Picture, user.Roles, user.Tenants, false, true, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, nil)
+	return u.create(loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, false, true, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, nil)
 }
 
 func (u *user) CreateBatch(users []*descope.BatchUser) (*descope.UsersBatchResponse, error) {
@@ -37,7 +37,7 @@ func (u *user) Invite(loginID string, user *descope.UserRequest, options *descop
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
-	return u.create(loginID, user.Email, user.Phone, user.Name, user.FirstName, user.MiddleName, user.LastName, user.Picture, user.Roles, user.Tenants, true, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, options)
+	return u.create(loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, true, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, options)
 }
 
 func (u *user) InviteBatch(users []*descope.BatchUser, options *descope.InviteOptions) (*descope.UsersBatchResponse, error) {
@@ -47,11 +47,11 @@ func (u *user) InviteBatch(users []*descope.BatchUser, options *descope.InviteOp
 	return u.createBatch(users, options)
 }
 
-func (u *user) create(loginID, email, phone, displayName, firstName, middleName, lastName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, options *descope.InviteOptions) (*descope.UserResponse, error) {
+func (u *user) create(loginID, email, phone, displayName, givenName, middleName, familyName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, options *descope.InviteOptions) (*descope.UserResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
-	req := makeCreateUserRequest(loginID, email, phone, displayName, firstName, middleName, lastName, picture, roles, tenants, invite, test, customAttributes, verifiedEmail, verifiedPhone, additionalLoginIDs, options)
+	req := makeCreateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture, roles, tenants, invite, test, customAttributes, verifiedEmail, verifiedPhone, additionalLoginIDs, options)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserCreate(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -75,7 +75,7 @@ func (u *user) Update(loginID string, user *descope.UserRequest) (*descope.UserR
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
-	req := makeUpdateUserRequest(loginID, user.Email, user.Phone, user.Name, user.FirstName, user.MiddleName, user.LastName, user.Picture, user.Roles, user.Tenants, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs)
+	req := makeUpdateUserRequest(loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserUpdate(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -235,11 +235,11 @@ func (u *user) UpdateDisplayName(loginID, displayName string) (*descope.UserResp
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) UpdateUserNames(loginID, firstName, middleName, lastName string) (*descope.UserResponse, error) {
+func (u *user) UpdateUserNames(loginID, givenName, middleName, familyName string) (*descope.UserResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
-	req := map[string]any{"loginId": loginID, "firstName": firstName, "middleName": middleName, "lastName": lastName}
+	req := map[string]any{"loginId": loginID, "givenName": givenName, "middleName": middleName, "familyName": familyName}
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserUpdateDisplayName(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -467,8 +467,8 @@ func (u *user) GenerateEmbeddedLink(loginID string, customClaims map[string]any)
 	return tRes.Token, nil
 }
 
-func makeCreateUserRequest(loginID, email, phone, displayName, firstName, middleName, lastName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, options *descope.InviteOptions) map[string]any {
-	req := makeUpdateUserRequest(loginID, email, phone, displayName, firstName, middleName, lastName, picture, roles, tenants, customAttributes, verifiedEmail, verifiedPhone, additionalLoginIDs)
+func makeCreateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, options *descope.InviteOptions) map[string]any {
+	req := makeUpdateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture, roles, tenants, customAttributes, verifiedEmail, verifiedPhone, additionalLoginIDs)
 	req["invite"] = invite
 	req["additionalLoginIds"] = additionalLoginIDs
 	if test {
@@ -491,7 +491,7 @@ func makeCreateUserRequest(loginID, email, phone, displayName, firstName, middle
 func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.InviteOptions) map[string]any {
 	var usersReq []map[string]any
 	for _, u := range users {
-		user := makeUpdateUserRequest(u.LoginID, u.Email, u.Phone, u.Name, u.FirstName, u.MiddleName, u.LastName, u.Picture, u.Roles, u.Tenants, u.CustomAttributes, u.VerifiedEmail, u.VerifiedPhone, u.AdditionalLoginIDs)
+		user := makeUpdateUserRequest(u.LoginID, u.Email, u.Phone, u.Name, u.GivenName, u.MiddleName, u.FamilyName, u.Picture, u.Roles, u.Tenants, u.CustomAttributes, u.VerifiedEmail, u.VerifiedPhone, u.AdditionalLoginIDs)
 		if u.Password != nil {
 			if cleartext := u.Password.Cleartext; cleartext != "" {
 				user["password"] = u.Password.Cleartext
@@ -531,15 +531,15 @@ func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.In
 	return req
 }
 
-func makeUpdateUserRequest(loginID, email, phone, displayName, firstName, middleName, lastName, picture string, roles []string, tenants []*descope.AssociatedTenant, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string) map[string]any {
+func makeUpdateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture string, roles []string, tenants []*descope.AssociatedTenant, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string) map[string]any {
 	res := map[string]any{
 		"loginId":            loginID,
 		"email":              email,
 		"phone":              phone,
 		"displayName":        displayName,
-		"firstName":          firstName,
+		"givenName":          givenName,
 		"middleName":         middleName,
-		"lastName":           lastName,
+		"familyName":         familyName,
 		"roleNames":          roles,
 		"userTenants":        makeAssociatedTenantList(tenants),
 		"customAttributes":   customAttributes,

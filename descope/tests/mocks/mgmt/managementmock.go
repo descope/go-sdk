@@ -207,7 +207,7 @@ type MockUser struct {
 	UpdateDisplayNameResponse *descope.UserResponse
 	UpdateDisplayNameError    error
 
-	UpdateUserNamesAssert   func(loginID, firstName, middleName, lastName string)
+	UpdateUserNamesAssert   func(loginID, givenName, middleName, familyName string)
 	UpdateUserNamesResponse *descope.UserResponse
 	UpdateUserNamesError    error
 
@@ -414,9 +414,9 @@ func (m *MockUser) UpdateDisplayName(loginID, displayName string) (*descope.User
 	return m.UpdateDisplayNameResponse, m.UpdateDisplayNameError
 }
 
-func (m *MockUser) UpdateUserNames(loginID, firstName, middleName, lastName string) (*descope.UserResponse, error) {
+func (m *MockUser) UpdateUserNames(loginID, givenName, middleName, familyName string) (*descope.UserResponse, error) {
 	if m.UpdateUserNamesAssert != nil {
-		m.UpdateUserNamesAssert(loginID, firstName, middleName, lastName)
+		m.UpdateUserNamesAssert(loginID, givenName, middleName, familyName)
 	}
 	return m.UpdateUserNamesResponse, m.UpdateUserNamesError
 }

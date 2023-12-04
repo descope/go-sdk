@@ -268,9 +268,9 @@ type InviteOptions struct {
 
 type User struct {
 	Name       string `json:"name,omitempty"`
-	FirstName  string `json:"firstName,omitempty"`
+	GivenName  string `json:"givenName,omitempty"`
 	MiddleName string `json:"middleName,omitempty"`
-	LastName   string `json:"lastName,omitempty"`
+	FamilyName string `json:"familyName,omitempty"`
 	Phone      string `json:"phone,omitempty"`
 	Email      string `json:"email,omitempty"`
 }
@@ -390,9 +390,9 @@ type RoleMapping struct {
 // Represents a mapping between Descope and IDP user attributes
 type AttributeMapping struct {
 	Name        string `json:"name,omitempty"`
-	FirstName   string `json:"firstName,omitempty"`
+	GivenName   string `json:"givenName,omitempty"`
 	MiddleName  string `json:"middleName,omitempty"`
-	LastName    string `json:"lastName,omitempty"`
+	FamilyName  string `json:"familyName,omitempty"`
 	Picture     string `json:"picture,omitempty"`
 	Email       string `json:"email,omitempty"`
 	PhoneNumber string `json:"phoneNumber,omitempty"`
