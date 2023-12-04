@@ -181,6 +181,11 @@ type User interface {
 	// The displayName parameter can be empty in which case the name will be removed.
 	UpdateDisplayName(loginID, displayName string) (*descope.UserResponse, error)
 
+	// Update an existing user's first/last/middle name.
+	//
+	// An empty parameter, means that this value will be removed.
+	UpdateUserNames(loginID, givenName, middleName, familyName string) (*descope.UserResponse, error)
+
 	// Update an existing user's picture (i.e., url to the avatar).
 	//
 	// The picture parameter can be empty in which case the picture will be removed.
