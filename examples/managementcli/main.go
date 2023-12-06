@@ -18,14 +18,15 @@ import (
 // Command line flags
 
 var flags struct {
-	LoginID     string
-	Email       string
-	Phone       string
-	Name        string
-	Tenants     []string
-	Domains     []string
-	Description string
-	Permissions []string
+	LoginID            string
+	Email              string
+	Phone              string
+	Name               string
+	Tenants            []string
+	Domains            []string
+	Description        string
+	Permissions        []string
+	AdditionalLoginIDs []string
 }
 
 // Descope SDK
@@ -56,24 +57,33 @@ func userCreate(args []string) error {
 		tenants = append(tenants, &descope.AssociatedTenant{TenantID: tenantID})
 	}
 	user := &descope.UserRequest{}
-	user.Email = "foo@bar.com"
+	user.Email = flags.Email
 	user.Phone = flags.Phone
+	if flags.Email == "" && flags.Phone == "" {
+		user.Email = "foo@bar.com" // email or phone are required
+	}
 	user.Name = flags.Name
 	user.Tenants = tenants
+	user.AdditionalLoginIDs = flags.AdditionalLoginIDs
 	_, err := descopeClient.Management.User().Create(args[0], user)
 	return err
 }
 
 func userUpdate(args []string) error {
 	tenants := []*descope.AssociatedTenant{}
+	fmt.Println("### flags tenants", flags.Tenants)
 	for _, tenantID := range flags.Tenants {
 		tenants = append(tenants, &descope.AssociatedTenant{TenantID: tenantID})
 	}
 	user := &descope.UserRequest{}
-	user.Email = "foo@bar.com"
+	user.Email = flags.Email
 	user.Phone = flags.Phone
+	if flags.Email == "" && flags.Phone == "" {
+		user.Email = "foo@bar.com" // email or phone are required
+	}
 	user.Name = flags.Name
 	user.Tenants = tenants
+	user.AdditionalLoginIDs = flags.AdditionalLoginIDs
 
 	_, err := descopeClient.Management.User().Update(args[0], user)
 	return err
@@ -546,6 +556,7 @@ func main() {
 		cmd.Flags().StringVarP(&flags.Phone, "phone", "P", "", "the user's phone number")
 		cmd.Flags().StringVarP(&flags.Name, "name", "N", "", "the user's display name")
 		cmd.Flags().StringSliceVarP(&flags.Tenants, "tenants", "T", nil, "the ids of the user's tenants")
+		cmd.Flags().StringSliceVar(&flags.AdditionalLoginIDs, "additional-login-ids", nil, "the user's additional login id")
 	})
 
 	addCommand(userUpdate, "user-update <loginID>", "Update an existing user", func(cmd *cobra.Command) {
@@ -554,6 +565,7 @@ func main() {
 		cmd.Flags().StringVarP(&flags.Phone, "phone", "P", "", "the user's phone number")
 		cmd.Flags().StringVarP(&flags.Name, "name", "N", "", "the user's display name")
 		cmd.Flags().StringSliceVarP(&flags.Tenants, "tenants", "T", nil, "the ids of the user's tenants")
+		cmd.Flags().StringSliceVar(&flags.AdditionalLoginIDs, "additional-login-ids", nil, "the user's additional login id")
 	})
 
 	addCommand(userDelete, "user-delete <loginID>", "Delete an existing user", func(cmd *cobra.Command) {
