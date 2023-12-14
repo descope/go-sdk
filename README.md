@@ -1147,7 +1147,7 @@ if err == nil {
 		fmt.Println(cloneRes)
 }
 
-// Delete the current project
+// Delete the current project. Kindly note that following calls on the `descopeClient` are most likely to fail because the current project has been deleted 
 err := descopeClient.Management.Project().Delete()
 ```
 
