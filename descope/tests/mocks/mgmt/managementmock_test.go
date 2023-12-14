@@ -23,6 +23,7 @@ func TestMockManagement(t *testing.T) {
 				CreateResponse: &descope.UserResponse{UserID: expectedLoginID},
 				LoadResponse:   &descope.UserResponse{UserID: expectedLoginID},
 			},
+			MockProject: &MockProject{},
 		},
 	}
 	assert.NotNil(t, descopeClient.Management)
@@ -37,4 +38,14 @@ func TestMockManagement(t *testing.T) {
 
 	err = descopeClient.Management.Project().Delete()
 	require.NoError(t, err)
+
+	descopeProjectDeleteError := client.DescopeClient{
+		Management: &MockManagement{
+			MockProject: &MockProject{
+				DeleteError: assert.AnError,
+			},
+		},
+	}
+	err = descopeProjectDeleteError.Management.Project().Delete()
+	require.Error(t, err)
 }

@@ -872,6 +872,9 @@ type MockProject struct {
 	CloneAssert   func(name string, tag descope.ProjectTag)
 	CloneResponse *descope.NewProjectResponse
 	CloneError    error
+
+	DeleteAssert func()
+	DeleteError  error
 }
 
 func (m *MockProject) ExportRaw() (map[string]any, error) {
@@ -901,7 +904,10 @@ func (m *MockProject) Clone(name string, tag descope.ProjectTag) (*descope.NewPr
 }
 
 func (m *MockProject) Delete() error {
-	return nil
+	if m.DeleteAssert != nil {
+		m.DeleteAssert()
+	}
+	return m.DeleteError
 }
 
 // Mock Audit
