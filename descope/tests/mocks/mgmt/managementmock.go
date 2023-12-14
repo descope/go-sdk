@@ -900,6 +900,10 @@ func (m *MockProject) Clone(name string, tag descope.ProjectTag) (*descope.NewPr
 	return m.CloneResponse, m.CloneError
 }
 
+func (m *MockProject) Delete() error {
+	return nil
+}
+
 // Mock Audit
 type MockAudit struct {
 	SearchAssert   func(*descope.AuditSearchOptions)

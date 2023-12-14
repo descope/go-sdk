@@ -57,6 +57,10 @@ func (p *project) Clone(name string, tag descope.ProjectTag) (*descope.NewProjec
 	return unmarshalNewProjectResponseResponse(res)
 }
 
+func (u *project) Delete() error {
+	_, err := u.client.DoPostRequest(api.Routes.ManagementProjectDelete(), nil, nil, u.conf.ManagementKey)
+	return err
+}
 func unmarshalNewProjectResponseResponse(res *api.HTTPResponse) (*descope.NewProjectResponse, error) {
 	var newProjectRes *descope.NewProjectResponse
 	err := utils.Unmarshal([]byte(res.BodyStr), &newProjectRes)

@@ -34,4 +34,7 @@ func TestMockManagement(t *testing.T) {
 	u, err := descopeClient.Management.User().Load(expectedLoginID)
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedLoginID, u.UserID)
+
+	err = descopeClient.Management.Project().Delete()
+	require.NoError(t, err)
 }
