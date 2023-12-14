@@ -61,6 +61,7 @@ func (p *project) Delete() error {
 	_, err := p.client.DoPostRequest(api.Routes.ManagementProjectDelete(), nil, nil, p.conf.ManagementKey)
 	return err
 }
+
 func unmarshalNewProjectResponseResponse(res *api.HTTPResponse) (*descope.NewProjectResponse, error) {
 	var newProjectRes *descope.NewProjectResponse
 	err := utils.Unmarshal([]byte(res.BodyStr), &newProjectRes)
