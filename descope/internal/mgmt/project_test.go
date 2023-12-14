@@ -77,3 +77,17 @@ func TestProjectCloneError(t *testing.T) {
 	_, err := mgmt.Project().Clone("foo", "")
 	require.Error(t, err)
 }
+
+func TestProjectDeleteSuccess(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+	}))
+	err := m.Project().Delete()
+	require.NoError(t, err)
+}
+
+func TestProjectDeleteError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	err := mgmt.Project().Delete()
+	require.Error(t, err)
+}

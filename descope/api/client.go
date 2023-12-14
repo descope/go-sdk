@@ -136,6 +136,7 @@ var (
 			projectImport:                    "mgmt/project/import",
 			projectUpdateName:                "mgmt/project/update/name",
 			projectClone:                     "mgmt/project/clone",
+			projectDelete:                    "mgmt/project/delete",
 			auditSearch:                      "mgmt/audit/search",
 			authzSchemaSave:                  "mgmt/authz/schema/save",
 			authzSchemaDelete:                "mgmt/authz/schema/delete",
@@ -291,6 +292,7 @@ type mgmtEndpoints struct {
 	projectImport     string
 	projectUpdateName string
 	projectClone      string
+	projectDelete     string
 
 	auditSearch string
 
@@ -707,6 +709,10 @@ func (e *endpoints) ManagementProjectUpdateName() string {
 
 func (e *endpoints) ManagementProjectClone() string {
 	return path.Join(e.version, e.mgmt.projectClone)
+}
+
+func (e *endpoints) ManagementProjectDelete() string {
+	return path.Join(e.version, e.mgmt.projectDelete)
 }
 
 func (e *endpoints) ManagementAuditSearch() string {

@@ -476,6 +476,9 @@ type Project interface {
 	// - Users, tenants and access keys are not cloned.
 	// Returns The new project details (name, id, tag, and settings).
 	Clone(name string, tag descope.ProjectTag) (*descope.NewProjectResponse, error)
+
+	// Delete the current project.
+	Delete() error
 }
 
 // Provides search project audit trail
