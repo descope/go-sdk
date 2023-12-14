@@ -494,18 +494,20 @@ if !descopeClient.Auth.ValidateRoles(sessionToken, []string{"Role to validate"})
 ```
 
 ### Tenant selection
+
 For a user that has permissions to multiple tenants, you can set a specific tenant as the current selected one
 This will add an extra attribute to the refresh JWT and the session JWT with the selected tenant ID
 
 ```go
 tenantID := "t1"
-info, err := descopeClient.Auth.SelectTenantWithRequest(tenantID, r, w) 
+info, err := descopeClient.Auth.SelectTenantWithRequest(tenantID, r, w)
 if err != nil {
     // failed to select a tenant
 }
 ```
 
 Or alternatively, work directly with refresh token
+
 ```go
 tenantID := "t1"
 refreshToken := "<a valid refresh token>"
@@ -514,7 +516,6 @@ if err != nil {
     // failed to select a tenant
 }
 ```
-
 
 ### Logging Out
 
@@ -621,11 +622,11 @@ userReqInvite.Tenants = []*descope.AssociatedTenant{
     {TenantID: "tenant-ID2"},
 }
 // options can be nil, and in this case, value will be taken from project settings page
-options := &descope.InviteOptions{InviteURL: "https://sub.domain.com"} 
+options := &descope.InviteOptions{InviteURL: "https://sub.domain.com"}
 err := descopeClient.Management.User().Invite("desmond@descope.com", userReqInvite, options)
 
 // batch invite
-options := &descope.InviteOptions{InviteURL: "https://sub.domain.com"} 
+options := &descope.InviteOptions{InviteURL: "https://sub.domain.com"}
 batchUsers := []*descope.BatchUser{}
 u1 := &descope.BatchUser{}
 u1.LoginID = "one"
@@ -930,6 +931,7 @@ if err != nil {
 ```
 
 ### Embedded links
+
 ```go
 // Embedded links can be created to directly receive a verifiable token without sending it.
 // This token can then be verified using the magic link 'verify' function, either directly or through a flow.
@@ -1144,6 +1146,9 @@ res, err := descopeClient.Management.Project().Clone("new-project-name", "")
 if err == nil {
 		fmt.Println(cloneRes)
 }
+
+// Delete the current project
+err := descopeClient.Management.Project().Delete()
 ```
 
 ## Code Examples
