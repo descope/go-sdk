@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	urlpkg "net/url"
 	"path"
@@ -793,12 +794,27 @@ type sdkInfo struct {
 	sha       string
 }
 
+type CertificateVerifyMode int
+
+const (
+	// Default: Always verify server certificate, unless the BaseURL is overridden to a value
+	// that uses an ip address, localhost, or a custom port
+	CertificateVerifyAutomatic CertificateVerifyMode = iota
+
+	// Secure: Always verify server certificate, this is only needed if you override
+	// the default BaseURL and the automatic behavior isn't suitable
+	CertificateVerifyAlways
+
+	// Insecure: Never verify server certificate
+	CertificateVerifyNever
+)
+
 type ClientParams struct {
-	BaseURL                 string
-	DefaultClient           IHttpClient
-	CustomDefaultHeaders    map[string]string
-	VerifyServerCertificate bool
-	ProjectID               string
+	ProjectID            string
+	BaseURL              string
+	DefaultClient        IHttpClient
+	CustomDefaultHeaders map[string]string
+	CertificateVerify    CertificateVerifyMode
 }
 
 type IHttpClient interface {
@@ -833,7 +849,7 @@ func NewClient(conf ClientParams) *Client {
 		t.MaxIdleConns = 100
 		t.MaxConnsPerHost = 100
 		t.MaxIdleConnsPerHost = 100
-		t.TLSClientConfig.InsecureSkipVerify = !conf.VerifyServerCertificate
+		t.TLSClientConfig.InsecureSkipVerify = conf.CertificateVerify.SkipVerifyValue(conf.BaseURL)
 		httpClient = &http.Client{
 			Timeout:   time.Second * 10,
 			Transport: t,
@@ -1053,4 +1069,24 @@ func getSDKInfo() *sdkInfo {
 		}
 	}
 	return sdkInfo
+}
+
+func (mode CertificateVerifyMode) SkipVerifyValue(baseURL string) bool {
+	if mode == CertificateVerifyAlways {
+		return false
+	}
+	if mode == CertificateVerifyNever {
+		return true
+	}
+	url, err := urlpkg.Parse(baseURL)
+	if err != nil {
+		return false
+	}
+	if url.Hostname() == "localhost" || url.Port() != "" {
+		return true
+	}
+	if ip := net.ParseIP(url.Hostname()); ip != nil {
+		return true
+	}
+	return false
 }
