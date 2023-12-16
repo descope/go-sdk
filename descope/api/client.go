@@ -787,11 +787,11 @@ type sdkInfo struct {
 }
 
 type ClientParams struct {
-	BaseURL              string
-	DefaultClient        IHttpClient
-	CustomDefaultHeaders map[string]string
-
-	ProjectID string
+	BaseURL                 string
+	DefaultClient           IHttpClient
+	CustomDefaultHeaders    map[string]string
+	VerifyServerCertificate bool
+	ProjectID               string
 }
 
 type IHttpClient interface {
@@ -826,7 +826,7 @@ func NewClient(conf ClientParams) *Client {
 		t.MaxIdleConns = 100
 		t.MaxConnsPerHost = 100
 		t.MaxIdleConnsPerHost = 100
-		t.TLSClientConfig.InsecureSkipVerify = true
+		t.TLSClientConfig.InsecureSkipVerify = !conf.VerifyServerCertificate
 		httpClient = &http.Client{
 			Timeout:   time.Second * 10,
 			Transport: t,
