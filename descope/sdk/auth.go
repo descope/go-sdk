@@ -300,18 +300,33 @@ type Authentication interface {
 	// This is a shortcut for ValidateTenantPermissions(token, "", permissions)
 	ValidatePermissions(token *descope.Token, permissions []string) bool
 
+	// GetMatchedPermissions - Use toeRetrieves the permissions from top level token's claims
+	// that match the specified permissions list
+	GetMatchedPermissions(token *descope.Token, permissions []string) []string
+
 	// ValidateTenantPermissions - Use to ensure that a validated session token has been
 	// granted the specified permissions for a specific tenant.
 	ValidateTenantPermissions(token *descope.Token, tenant string, permissions []string) bool
+
+	// GetMatchedTenantPermissions - Use to retrieve the permissions token's claims of a specific tenant
+	// that match the specified permissions list
+	GetMatchedTenantPermissions(token *descope.Token, tenant string, permissions []string) []string
 
 	// ValidateRoles - Use to ensure that a validated session token has been granted the
 	// specified roles.
 	// This is a shortcut for ValidateTenantRoles(token, "", roles)
 	ValidateRoles(token *descope.Token, roles []string) bool
 
+	// GetMatchedRoles - Use to retrieve the roles token's claims that match the specified roles list
+	GetMatchedRoles(token *descope.Token, roles []string) []string
+
 	// ValidateTenantRoles - Use to ensure that a validated session token has been granted
 	// the specified roles for a specific tenant.
 	ValidateTenantRoles(token *descope.Token, tenant string, roles []string) bool
+
+	// GetMatchedTenantRoles - Use to retrieve the roles token's claims of a specific tenant
+	// that match the specified roles list
+	GetMatchedTenantRoles(token *descope.Token, tenant string, roles []string) []string
 
 	// SelectTenantWithRequest - Adds a dedicated claim to the JWTs to indicate the tenant on which the user is currently authenticated
 	SelectTenantWithRequest(tenantID string, request *http.Request, w http.ResponseWriter) (*descope.AuthenticationInfo, error)

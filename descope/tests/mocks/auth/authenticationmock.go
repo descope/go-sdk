@@ -522,14 +522,26 @@ type MockSession struct {
 	ValidatePermissionsAssert   func(token *descope.Token, permissions []string)
 	ValidatePermissionsResponse bool
 
+	GetMatchedPermissionsAssert   func(token *descope.Token, permissions []string)
+	GetMatchedPermissionsResponse []string
+
 	ValidateTenantPermissionsAssert   func(token *descope.Token, tenant string, permissions []string)
 	ValidateTenantPermissionsResponse bool
+
+	GetMatchedTenantPermissionsAssert   func(token *descope.Token, tenant string, permissions []string)
+	GetMatchedTenantPermissionsResponse []string
 
 	ValidateRolesAssert   func(token *descope.Token, roles []string)
 	ValidateRolesResponse bool
 
+	GetMatchedRolesAssert   func(token *descope.Token, roles []string)
+	GetMatchedRolesResponse []string
+
 	ValidateTenantRolesAssert   func(token *descope.Token, tenant string, roles []string)
 	ValidateTenantRolesResponse bool
+
+	GetMatchedTenantRolesAssert   func(token *descope.Token, tenant string, roles []string)
+	GetMatchedTenantRolesResponse []string
 
 	SelectTenantWithRequestAssert   func(tenantID string, r *http.Request, w http.ResponseWriter)
 	SelectTenantWithRequestResponse *descope.AuthenticationInfo
@@ -635,11 +647,27 @@ func (m *MockSession) ValidatePermissions(token *descope.Token, permissions []st
 	return m.ValidatePermissionsResponse
 }
 
+func (m *MockSession) GetMatchedPermissions(token *descope.Token, permissions []string) []string {
+	if m.GetMatchedPermissionsAssert != nil {
+		m.GetMatchedPermissionsAssert(token, permissions)
+	}
+
+	return m.GetMatchedPermissionsResponse
+}
+
 func (m *MockSession) ValidateTenantPermissions(token *descope.Token, tenant string, permissions []string) bool {
 	if m.ValidateTenantPermissionsAssert != nil {
 		m.ValidateTenantPermissionsAssert(token, tenant, permissions)
 	}
 	return m.ValidateTenantPermissionsResponse
+}
+
+func (m *MockSession) GetMatchedTenantPermissions(token *descope.Token, tenant string, permissions []string) []string {
+	if m.GetMatchedTenantPermissionsAssert != nil {
+		m.GetMatchedTenantPermissionsAssert(token, tenant, permissions)
+	}
+
+	return m.GetMatchedTenantPermissionsResponse
 }
 
 func (m *MockSession) ValidateRoles(token *descope.Token, roles []string) bool {
@@ -649,11 +677,27 @@ func (m *MockSession) ValidateRoles(token *descope.Token, roles []string) bool {
 	return m.ValidateRolesResponse
 }
 
+func (m *MockSession) GetMatchedRoles(token *descope.Token, roles []string) []string {
+	if m.GetMatchedRolesAssert != nil {
+		m.GetMatchedRolesAssert(token, roles)
+	}
+
+	return m.GetMatchedRolesResponse
+}
+
 func (m *MockSession) ValidateTenantRoles(token *descope.Token, tenant string, roles []string) bool {
 	if m.ValidateTenantRolesAssert != nil {
 		m.ValidateTenantRolesAssert(token, tenant, roles)
 	}
 	return m.ValidateTenantRolesResponse
+}
+
+func (m *MockSession) GetMatchedTenantRoles(token *descope.Token, tenant string, roles []string) []string {
+	if m.GetMatchedTenantRolesAssert != nil {
+		m.GetMatchedTenantRolesAssert(token, tenant, roles)
+	}
+
+	return m.GetMatchedTenantRolesResponse
 }
 
 func (m *MockSession) SelectTenantWithRequest(tenantID string, request *http.Request, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {

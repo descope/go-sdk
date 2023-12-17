@@ -345,6 +345,10 @@ func (auth *authenticationService) ValidatePermissions(token *descope.Token, per
 	return auth.ValidateTenantPermissions(token, "", permissions)
 }
 
+func (auth *authenticationService) GetMatchedPermissions(token *descope.Token, permissions []string) []string {
+	return auth.GetMatchedTenantPermissions(token, "", permissions)
+}
+
 func (auth *authenticationService) ValidateTenantPermissions(token *descope.Token, tenant string, permissions []string) bool {
 	if tenant != "" && !isAssociatedWithTenant(token, tenant) {
 		return false
@@ -358,8 +362,26 @@ func (auth *authenticationService) ValidateTenantPermissions(token *descope.Toke
 	return true
 }
 
+func (auth *authenticationService) GetMatchedTenantPermissions(token *descope.Token, tenant string, permissions []string) []string {
+	if tenant != "" && !isAssociatedWithTenant(token, tenant) {
+		return []string{}
+	}
+	granted := getAuthorizationClaimItems(token, tenant, claimPermissions)
+	matched := []string{}
+	for i := range permissions {
+		if slices.Contains(granted, permissions[i]) {
+			matched = append(matched, permissions[i])
+		}
+	}
+	return matched
+}
+
 func (auth *authenticationService) ValidateRoles(token *descope.Token, roles []string) bool {
 	return auth.ValidateTenantRoles(token, "", roles)
+}
+
+func (auth *authenticationService) GetMatchedRoles(token *descope.Token, roles []string) []string {
+	return auth.GetMatchedTenantRoles(token, "", roles)
 }
 
 func (auth *authenticationService) ValidateTenantRoles(token *descope.Token, tenant string, roles []string) bool {
@@ -373,6 +395,20 @@ func (auth *authenticationService) ValidateTenantRoles(token *descope.Token, ten
 		}
 	}
 	return true
+}
+
+func (auth *authenticationService) GetMatchedTenantRoles(token *descope.Token, tenant string, roles []string) []string {
+	if tenant != "" && !isAssociatedWithTenant(token, tenant) {
+		return []string{}
+	}
+	membership := getAuthorizationClaimItems(token, tenant, claimRoles)
+	matched := []string{}
+	for i := range roles {
+		if slices.Contains(membership, roles[i]) {
+			matched = append(matched, roles[i])
+		}
+	}
+	return matched
 }
 
 // Select Tenant

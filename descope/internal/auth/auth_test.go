@@ -924,7 +924,24 @@ func TestValidatePermissions(t *testing.T) {
 		"t1",
 		[]string{"foo"},
 	))
+}
 
+func TestGetMatchedPermissions(t *testing.T) {
+	a, err := newTestAuth(nil, DoOkWithBody(nil, ""))
+	require.NoError(t, err)
+
+	require.Equal(t, []string{}, a.GetMatchedPermissions(nil, []string{}))
+	require.Equal(t, []string{}, a.GetMatchedPermissions(nil, []string{"abc"}))
+
+	require.Equal(t, []string{}, a.GetMatchedPermissions(mockAuthorizationToken, []string{}))
+	require.Equal(t, []string{"foo"}, a.GetMatchedPermissions(mockAuthorizationToken, []string{"foo"}))
+	require.Equal(t, []string{"foo", "bar"}, a.GetMatchedPermissions(mockAuthorizationToken, []string{"foo", "bar"}))
+	require.Equal(t, []string{"foo", "bar"}, a.GetMatchedPermissions(mockAuthorizationToken, []string{"foo", "bar", "qux"}))
+
+	require.Equal(t, []string{}, a.GetMatchedTenantPermissions(mockAuthorizationTenantToken, "kuku", []string{}))
+	require.Equal(t, []string{"foo"}, a.GetMatchedTenantPermissions(mockAuthorizationTenantToken, "kuku", []string{"foo"}))
+	require.Equal(t, []string{"foo", "bar"}, a.GetMatchedTenantPermissions(mockAuthorizationTenantToken, "kuku", []string{"foo", "bar"}))
+	require.Equal(t, []string{"foo", "bar"}, a.GetMatchedTenantPermissions(mockAuthorizationTenantToken, "kuku", []string{"foo", "bar", "qux"}))
 }
 
 func TestValidateRoles(t *testing.T) {
@@ -956,6 +973,24 @@ func TestValidateRoles(t *testing.T) {
 
 	require.True(t, a.ValidateTenantRoles(mockAuthorizationTenantToken, "t1", []string{}))
 	require.False(t, a.ValidateTenantRoles(mockAuthorizationTenantToken, "t2", []string{}))
+}
+
+func TestGetMatchedRoles(t *testing.T) {
+	a, err := newTestAuth(nil, DoOkWithBody(nil, ""))
+	require.NoError(t, err)
+
+	require.Equal(t, []string{}, a.GetMatchedRoles(nil, []string{}))
+	require.Equal(t, []string{}, a.GetMatchedRoles(nil, []string{"foo"}))
+
+	require.Equal(t, []string{}, a.GetMatchedRoles(mockAuthorizationToken, []string{}))
+	require.Equal(t, []string{"abc"}, a.GetMatchedRoles(mockAuthorizationToken, []string{"abc"}))
+	require.Equal(t, []string{"abc", "xyz"}, a.GetMatchedRoles(mockAuthorizationToken, []string{"abc", "xyz"}))
+	require.Equal(t, []string{"abc", "xyz"}, a.GetMatchedRoles(mockAuthorizationToken, []string{"abc", "xyz", "tuv"}))
+
+	require.Equal(t, []string{}, a.GetMatchedTenantRoles(mockAuthorizationTenantToken, "kuku", []string{}))
+	require.Equal(t, []string{"abc"}, a.GetMatchedTenantRoles(mockAuthorizationTenantToken, "kuku", []string{"abc"}))
+	require.Equal(t, []string{"abc", "xyz"}, a.GetMatchedTenantRoles(mockAuthorizationTenantToken, "kuku", []string{"abc", "xyz"}))
+	require.Equal(t, []string{"abc", "xyz"}, a.GetMatchedTenantRoles(mockAuthorizationTenantToken, "kuku", []string{"abc", "xyz", "tuv"}))
 }
 
 func TestMe(t *testing.T) {
