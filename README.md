@@ -478,10 +478,9 @@ if !descopeClient.Auth.ValidateTenantRoles(sessionToken, "my-tenant-ID", []strin
     // Deny access
 }
 
-// Or get the matched roles/permissions
-matchedRoles := descopeClient.Auth.GetMatchedRoles(sessionToken, []string{"role-name1", "role-name2"})
+matchedTenantRoles := descopeClient.Auth.GetTenantRoles(sessionToken, "my-tenant-ID", []string{"role-name1", "role-name2"})
 
-matchedPermissions := descopeClient.Auth.GetMatchedPermissions(sessionToken, []string{"permission-name1", "permission-name2"})
+matchedTenantPermissions := descopeClient.Auth.GetTenantPermissions(sessionToken, "my-tenant-ID", []string{"permission-name1", "permission-name2"})
 ```
 
 When not using tenants use:
@@ -497,9 +496,10 @@ if !descopeClient.Auth.ValidateRoles(sessionToken, []string{"Role to validate"})
     // Deny access
 }
 
-matchedTenantRoles := descopeClient.Auth.GetTenantRoles(sessionToken, "my-tenant-ID", []string{"role-name1", "role-name2"})
+// Or get the matched roles/permissions
+matchedRoles := descopeClient.Auth.GetMatchedRoles(sessionToken, []string{"role-name1", "role-name2"})
 
-matchedTenantPermissions := descopeClient.Auth.GetTenantPermissions(sessionToken, "my-tenant-ID", []string{"permission-name1", "permission-name2"})
+matchedPermissions := descopeClient.Auth.GetMatchedPermissions(sessionToken, []string{"permission-name1", "permission-name2"})
 ```
 
 ### Tenant selection
