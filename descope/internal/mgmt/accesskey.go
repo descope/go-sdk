@@ -1,6 +1,8 @@
 package mgmt
 
 import (
+	"context"
+
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
@@ -10,42 +12,42 @@ type accessKey struct {
 	managementBase
 }
 
-func (a *accessKey) Create(name string, expireTime int64, roleNames []string, keyTenants []*descope.AssociatedTenant) (string, *descope.AccessKeyResponse, error) {
+func (a *accessKey) Create(ctx context.Context, name string, expireTime int64, roleNames []string, keyTenants []*descope.AssociatedTenant) (string, *descope.AccessKeyResponse, error) {
 	if name == "" {
 		return "", nil, utils.NewInvalidArgumentError("name")
 	}
 	body := makeCreateAccessKeyBody(name, expireTime, roleNames, keyTenants)
-	res, err := a.client.DoPostRequest(api.Routes.ManagementAccessKeyCreate(), body, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyCreate(), body, nil, a.conf.ManagementKey)
 	if err != nil {
 		return "", nil, err
 	}
 	return unmarshalCreatedAccessKeyResponse(res)
 }
 
-func (a *accessKey) Load(id string) (*descope.AccessKeyResponse, error) {
+func (a *accessKey) Load(ctx context.Context, id string) (*descope.AccessKeyResponse, error) {
 	if id == "" {
 		return nil, utils.NewInvalidArgumentError("id")
 	}
 	req := &api.HTTPRequest{
 		QueryParams: map[string]string{"id": id},
 	}
-	res, err := a.client.DoGetRequest(api.Routes.ManagementAccessKeyLoad(), req, a.conf.ManagementKey)
+	res, err := a.client.DoGetRequest(ctx, api.Routes.ManagementAccessKeyLoad(), req, a.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}
 	return unmarshalAccessKeyResponse(res)
 }
 
-func (a *accessKey) SearchAll(tenantIDs []string) ([]*descope.AccessKeyResponse, error) {
+func (a *accessKey) SearchAll(ctx context.Context, tenantIDs []string) ([]*descope.AccessKeyResponse, error) {
 	body := map[string]any{"tenantIds": tenantIDs}
-	res, err := a.client.DoPostRequest(api.Routes.ManagementAccessKeySearchAll(), body, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeySearchAll(), body, nil, a.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}
 	return unmarshalAccessKeySearchAllResponse(res)
 }
 
-func (a *accessKey) Update(id, name string) (*descope.AccessKeyResponse, error) {
+func (a *accessKey) Update(ctx context.Context, id, name string) (*descope.AccessKeyResponse, error) {
 	if id == "" {
 		return nil, utils.NewInvalidArgumentError("id")
 	}
@@ -53,37 +55,37 @@ func (a *accessKey) Update(id, name string) (*descope.AccessKeyResponse, error) 
 		return nil, utils.NewInvalidArgumentError("name")
 	}
 	body := map[string]any{"id": id, "name": name}
-	res, err := a.client.DoPostRequest(api.Routes.ManagementAccessKeyUpdate(), body, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyUpdate(), body, nil, a.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}
 	return unmarshalAccessKeyResponse(res)
 }
 
-func (a *accessKey) Deactivate(id string) error {
+func (a *accessKey) Deactivate(ctx context.Context, id string) error {
 	if id == "" {
 		return utils.NewInvalidArgumentError("id")
 	}
 	body := map[string]any{"id": id}
-	_, err := a.client.DoPostRequest(api.Routes.ManagementAccessKeyDeactivate(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyDeactivate(), body, nil, a.conf.ManagementKey)
 	return err
 }
 
-func (a *accessKey) Activate(id string) error {
+func (a *accessKey) Activate(ctx context.Context, id string) error {
 	if id == "" {
 		return utils.NewInvalidArgumentError("id")
 	}
 	body := map[string]any{"id": id}
-	_, err := a.client.DoPostRequest(api.Routes.ManagementAccessKeyActivate(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyActivate(), body, nil, a.conf.ManagementKey)
 	return err
 }
 
-func (a *accessKey) Delete(id string) error {
+func (a *accessKey) Delete(ctx context.Context, id string) error {
 	if id == "" {
 		return utils.NewInvalidArgumentError("id")
 	}
 	body := map[string]any{"id": id}
-	_, err := a.client.DoPostRequest(api.Routes.ManagementAccessKeyDelete(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyDelete(), body, nil, a.conf.ManagementKey)
 	return err
 }
 

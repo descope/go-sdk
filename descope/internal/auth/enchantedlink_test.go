@@ -2,6 +2,7 @@ package auth
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -19,7 +20,7 @@ func TestSignInEnchantedLinkEmptyLoginID(t *testing.T) {
 	email := ""
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.EnchantedLink().SignIn(email, "", nil, nil)
+	_, err = a.EnchantedLink().SignIn(context.Background(), email, "", nil, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
@@ -28,7 +29,7 @@ func TestSignInEnchantedLinkStepupNoJwt(t *testing.T) {
 	email := "test@test.com"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.EnchantedLink().SignIn(email, "", nil, &descope.LoginOptions{Stepup: true})
+	_, err = a.EnchantedLink().SignIn(context.Background(), email, "", nil, &descope.LoginOptions{Stepup: true})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidStepUpJWT)
 }
@@ -52,7 +53,7 @@ func TestSignInEnchantedLink(t *testing.T) {
 		}, nil
 	})
 	require.NoError(t, err)
-	response, err := a.EnchantedLink().SignIn(email, uri, nil, nil)
+	response, err := a.EnchantedLink().SignIn(context.Background(), email, uri, nil, nil)
 	require.NoError(t, err)
 	require.EqualValues(t, pendingRefResponse, response.PendingRef)
 	require.EqualValues(t, loginID, response.LinkID)
@@ -85,7 +86,7 @@ func TestSignInEnchantedLinkStepup(t *testing.T) {
 		}, nil
 	})
 	require.NoError(t, err)
-	response, err := a.EnchantedLink().SignIn(email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
+	response, err := a.EnchantedLink().SignIn(context.Background(), email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
 	require.NoError(t, err)
 	require.EqualValues(t, pendingRefResponse, response.PendingRef)
 	require.EqualValues(t, loginID, response.LinkID)
@@ -101,7 +102,7 @@ func TestSignInEnchantedLinkInvalidResponse(t *testing.T) {
 		}, nil
 	})
 	require.NoError(t, err)
-	res, err := a.EnchantedLink().SignIn(email, uri, nil, nil)
+	res, err := a.EnchantedLink().SignIn(context.Background(), email, uri, nil, nil)
 	require.Error(t, err)
 	require.Empty(t, res)
 }
@@ -126,7 +127,7 @@ func TestSignUpEnchantedLink(t *testing.T) {
 		}, nil
 	})
 	require.NoError(t, err)
-	response, err := a.EnchantedLink().SignUp(email, uri, &descope.User{Name: "test"})
+	response, err := a.EnchantedLink().SignUp(context.Background(), email, uri, &descope.User{Name: "test"})
 	require.NoError(t, err)
 	require.EqualValues(t, pendingRefResponse, response.PendingRef)
 	require.EqualValues(t, loginID, response.LinkID)
@@ -150,7 +151,7 @@ func TestSignUpOrInEnchantedLink(t *testing.T) {
 		}, nil
 	})
 	require.NoError(t, err)
-	response, err := a.EnchantedLink().SignUpOrIn(email, uri)
+	response, err := a.EnchantedLink().SignUpOrIn(context.Background(), email, uri)
 	require.NoError(t, err)
 	require.EqualValues(t, pendingRefResponse, response.PendingRef)
 	require.EqualValues(t, loginID, response.LinkID)
@@ -160,7 +161,7 @@ func TestSignUpEnchantedLinkEmptyLoginID(t *testing.T) {
 	uri := "http://test.me"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	response, err := a.EnchantedLink().SignUp("", uri, &descope.User{Name: "test"})
+	response, err := a.EnchantedLink().SignUp(context.Background(), "", uri, &descope.User{Name: "test"})
 	require.Error(t, err)
 	require.Empty(t, response)
 }
@@ -176,7 +177,7 @@ func TestGetSession(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	info, err := a.EnchantedLink().GetSession(pendingRef, w)
+	info, err := a.EnchantedLink().GetSession(context.Background(), pendingRef, w)
 	require.NoError(t, err)
 	assert.NotEmpty(t, info.SessionToken.JWT)
 	require.Len(t, w.Result().Cookies(), 1) // Just the refresh token
@@ -195,7 +196,7 @@ func TestGetSessionGenerateAuthenticationInfoValidDSRCookie(t *testing.T) {
 	require.NoError(t, err)
 
 	w := httptest.NewRecorder()
-	info, err := a.EnchantedLink().GetSession(pendingRef, w)
+	info, err := a.EnchantedLink().GetSession(context.Background(), pendingRef, w)
 	require.NoError(t, err)
 	assert.NotEmpty(t, info.SessionToken.JWT)
 	assert.NotEmpty(t, info.RefreshToken.JWT) // make sure refresh token exist
@@ -214,7 +215,7 @@ func TestGetSessionGenerateAuthenticationInfoInValidDSRCookie(t *testing.T) {
 	require.NoError(t, err)
 
 	w := httptest.NewRecorder()
-	_, err = a.EnchantedLink().GetSession(pendingRef, w)
+	_, err = a.EnchantedLink().GetSession(context.Background(), pendingRef, w)
 	require.Error(t, err) // should get error as Refresh cookie is invalid
 }
 
@@ -229,7 +230,7 @@ func TestGetSessionGenerateAuthenticationInfoNoDSRCookie(t *testing.T) {
 	require.NoError(t, err)
 
 	w := httptest.NewRecorder()
-	info, err := a.EnchantedLink().GetSession(pendingRef, w)
+	info, err := a.EnchantedLink().GetSession(context.Background(), pendingRef, w)
 	require.NoError(t, err)
 	assert.NotEmpty(t, info.SessionToken.JWT)
 	assert.Nil(t, info.RefreshToken) // there is no DSR cookie so refresh token is not exist (not on body and not on cookie)
@@ -242,7 +243,7 @@ func TestGetEnchantedLinkSessionError(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	_, err = a.EnchantedLink().GetSession(pendingRef, w)
+	_, err = a.EnchantedLink().GetSession(context.Background(), pendingRef, w)
 	require.Error(t, err)
 }
 
@@ -252,7 +253,7 @@ func TestGetEnchantedLinkSessionStillPending(t *testing.T) {
 	a, err := newTestAuth(nil, DoWithBody(http.StatusUnauthorized, nil, expectedResponse))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	_, err = a.EnchantedLink().GetSession(pendingRef, w)
+	_, err = a.EnchantedLink().GetSession(context.Background(), pendingRef, w)
 	require.Error(t, err)
 	require.ErrorIs(t, err, descope.ErrEnchantedLinkUnauthorized)
 }
@@ -285,10 +286,10 @@ func TestUpdateUserEmailEnchantedLink(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	_, err = a.EnchantedLink().UpdateUserEmail(loginID, email, uri, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true}, r)
+	_, err = a.EnchantedLink().UpdateUserEmail(context.Background(), loginID, email, uri, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true}, r)
 	require.NoError(t, err)
 	checkOptions = false
-	_, err = a.EnchantedLink().UpdateUserEmail(loginID, email, uri, nil, r)
+	_, err = a.EnchantedLink().UpdateUserEmail(context.Background(), loginID, email, uri, nil, r)
 	require.NoError(t, err)
 }
 
@@ -300,11 +301,11 @@ func TestUpdateUserEmailEnchantedLinkMissingArgs(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	_, err = a.EnchantedLink().UpdateUserEmail("", email, uri, nil, r)
+	_, err = a.EnchantedLink().UpdateUserEmail(context.Background(), "", email, uri, nil, r)
 	require.Error(t, err)
-	_, err = a.EnchantedLink().UpdateUserEmail(loginID, "", uri, nil, r)
+	_, err = a.EnchantedLink().UpdateUserEmail(context.Background(), loginID, "", uri, nil, r)
 	require.Error(t, err)
-	_, err = a.EnchantedLink().UpdateUserEmail(loginID, "not_a_valid_email", uri, nil, r)
+	_, err = a.EnchantedLink().UpdateUserEmail(context.Background(), loginID, "not_a_valid_email", uri, nil, r)
 	require.Error(t, err)
 }
 
@@ -322,14 +323,14 @@ func TestSignUpEnchantedLinkEmailNoUser(t *testing.T) {
 		assert.EqualValues(t, email, m["user"].(map[string]interface{})["email"])
 	}))
 	require.NoError(t, err)
-	_, err = a.EnchantedLink().SignUp(email, uri, nil)
+	_, err = a.EnchantedLink().SignUp(context.Background(), email, uri, nil)
 	require.NoError(t, err)
 }
 func TestSignUpOrInEnchantedLinkNoLoginID(t *testing.T) {
 	uri := "http://test.me"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.EnchantedLink().SignUpOrIn("", uri)
+	_, err = a.EnchantedLink().SignUpOrIn(context.Background(), "", uri)
 	require.Error(t, err)
 }
 
@@ -344,7 +345,7 @@ func TestVerifyEnchantedLink(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK}, nil
 	})
 	require.NoError(t, err)
-	err = a.EnchantedLink().Verify(token)
+	err = a.EnchantedLink().Verify(context.Background(), token)
 	require.NoError(t, err)
 }
 
@@ -359,6 +360,6 @@ func TestVerifyEnchantedLinkError(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusBadRequest}, nil
 	})
 	require.NoError(t, err)
-	err = a.EnchantedLink().Verify(token)
+	err = a.EnchantedLink().Verify(context.Background(), token)
 	require.Error(t, err)
 }

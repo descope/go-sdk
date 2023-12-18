@@ -1,6 +1,7 @@
 package mgmt
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -24,7 +25,7 @@ func TestAccessKeyCreateSuccess(t *testing.T) {
 		require.Len(t, roleNames, 1)
 		require.Equal(t, "foo", roleNames[0])
 	}, response))
-	cleartext, key, err := mgmt.AccessKey().Create("abc", 0, []string{"foo"}, nil)
+	cleartext, key, err := mgmt.AccessKey().Create(context.Background(), "abc", 0, []string{"foo"}, nil)
 	require.NoError(t, err)
 	require.Equal(t, "cleartext", cleartext)
 	require.Equal(t, "abc", key.Name)
@@ -32,7 +33,7 @@ func TestAccessKeyCreateSuccess(t *testing.T) {
 
 func TestAccessKeyCreateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	_, _, err := mgmt.AccessKey().Create("", 0, nil, nil)
+	_, _, err := mgmt.AccessKey().Create(context.Background(), "", 0, nil, nil)
 	require.Error(t, err)
 }
 
@@ -47,7 +48,7 @@ func TestAccessKeyLoadSuccess(t *testing.T) {
 		params := helpers.ReadParams(r)
 		require.Equal(t, "ak1", params["id"])
 	}, response))
-	res, err := mgmt.AccessKey().Load("ak1")
+	res, err := mgmt.AccessKey().Load(context.Background(), "ak1")
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "abc", res.Name)
@@ -55,14 +56,14 @@ func TestAccessKeyLoadSuccess(t *testing.T) {
 
 func TestAccessKeyLoadBadInput(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := mgmt.AccessKey().Load("")
+	res, err := mgmt.AccessKey().Load(context.Background(), "")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestAccessKeyLoadError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := mgmt.AccessKey().Load("ak1")
+	res, err := mgmt.AccessKey().Load(context.Background(), "ak1")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -80,7 +81,7 @@ func TestSearchAllAccessKeysSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.EqualValues(t, tenantIDs[0], req["tenantIds"].([]any)[0])
 	}, response))
-	res, err := mgmt.AccessKey().SearchAll(tenantIDs)
+	res, err := mgmt.AccessKey().SearchAll(context.Background(), tenantIDs)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res, 1)
@@ -89,7 +90,7 @@ func TestSearchAllAccessKeysSuccess(t *testing.T) {
 
 func TestSearchAllAccessKeysError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := mgmt.AccessKey().SearchAll(nil)
+	res, err := mgmt.AccessKey().SearchAll(context.Background(), nil)
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -111,7 +112,7 @@ func TestAccessKeyUpdateSuccess(t *testing.T) {
 		require.Equal(t, "ak1", req["id"])
 		require.Equal(t, "abc", req["name"])
 	}, response))
-	res, err := mgmt.AccessKey().Update("ak1", "abc")
+	res, err := mgmt.AccessKey().Update(context.Background(), "ak1", "abc")
 	require.NoError(t, err)
 	require.Equal(t, "ak1", res.ID)
 	require.Equal(t, "abc", res.Name)
@@ -122,9 +123,9 @@ func TestAccessKeyUpdateSuccess(t *testing.T) {
 
 func TestAccessKeyUpdateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	_, err := mgmt.AccessKey().Update("", "abc")
+	_, err := mgmt.AccessKey().Update(context.Background(), "", "abc")
 	require.Error(t, err)
-	_, err = mgmt.AccessKey().Update("ak1", "")
+	_, err = mgmt.AccessKey().Update(context.Background(), "ak1", "")
 	require.Error(t, err)
 }
 
@@ -135,13 +136,13 @@ func TestAccessKeyDeactivateSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "ak1", req["id"])
 	}))
-	err := mgmt.AccessKey().Deactivate("ak1")
+	err := mgmt.AccessKey().Deactivate(context.Background(), "ak1")
 	require.NoError(t, err)
 }
 
 func TestAccessKeyDeactivateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.AccessKey().Deactivate("")
+	err := mgmt.AccessKey().Deactivate(context.Background(), "")
 	require.Error(t, err)
 }
 
@@ -152,13 +153,13 @@ func TestAccessKeyActivateSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "ak1", req["id"])
 	}))
-	err := mgmt.AccessKey().Activate("ak1")
+	err := mgmt.AccessKey().Activate(context.Background(), "ak1")
 	require.NoError(t, err)
 }
 
 func TestAccessKeyActivateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.AccessKey().Activate("")
+	err := mgmt.AccessKey().Activate(context.Background(), "")
 	require.Error(t, err)
 }
 
@@ -169,12 +170,12 @@ func TestAccessKeyDeleteSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "ak1", req["id"])
 	}))
-	err := mgmt.AccessKey().Delete("ak1")
+	err := mgmt.AccessKey().Delete(context.Background(), "ak1")
 	require.NoError(t, err)
 }
 
 func TestAccessKeyDeleteError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.AccessKey().Delete("")
+	err := mgmt.AccessKey().Delete(context.Background(), "")
 	require.Error(t, err)
 }

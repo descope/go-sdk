@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/descope/go-sdk/descope"
@@ -12,11 +13,11 @@ type webAuthn struct {
 	authenticationsBase
 }
 
-func (auth *webAuthn) SignUpStart(loginID string, user *descope.User, origin string) (*descope.WebAuthnTransactionResponse, error) {
+func (auth *webAuthn) SignUpStart(ctx context.Context, loginID string, user *descope.User, origin string) (*descope.WebAuthnTransactionResponse, error) {
 	if user == nil {
 		user = &descope.User{}
 	}
-	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignUpStart(), authenticationWebAuthnSignUpRequestBody{LoginID: loginID, User: user, Origin: origin}, nil, "")
+	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnSignUpStart(), authenticationWebAuthnSignUpRequestBody{LoginID: loginID, User: user, Origin: origin}, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -26,15 +27,15 @@ func (auth *webAuthn) SignUpStart(loginID string, user *descope.User, origin str
 	return webAuthnResponse, err
 }
 
-func (auth *webAuthn) SignUpFinish(request *descope.WebAuthnFinishRequest, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
-	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignUpFinish(), request, nil, "")
+func (auth *webAuthn) SignUpFinish(ctx context.Context, request *descope.WebAuthnFinishRequest, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnSignUpFinish(), request, nil, "")
 	if err != nil {
 		return nil, err
 	}
 	return auth.generateAuthenticationInfo(res, w)
 }
 
-func (auth *webAuthn) SignInStart(loginID string, origin string, r *http.Request, loginOptions *descope.LoginOptions) (*descope.WebAuthnTransactionResponse, error) {
+func (auth *webAuthn) SignInStart(ctx context.Context, loginID string, origin string, r *http.Request, loginOptions *descope.LoginOptions) (*descope.WebAuthnTransactionResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
@@ -47,7 +48,7 @@ func (auth *webAuthn) SignInStart(loginID string, origin string, r *http.Request
 		}
 	}
 
-	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignInStart(), authenticationWebAuthnSignInRequestBody{LoginID: loginID, Origin: origin, LoginOptions: loginOptions}, nil, pswd)
+	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnSignInStart(), authenticationWebAuthnSignInRequestBody{LoginID: loginID, Origin: origin, LoginOptions: loginOptions}, nil, pswd)
 	if err != nil {
 		return nil, err
 	}
@@ -58,20 +59,20 @@ func (auth *webAuthn) SignInStart(loginID string, origin string, r *http.Request
 
 }
 
-func (auth *webAuthn) SignInFinish(request *descope.WebAuthnFinishRequest, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
-	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignInFinish(), request, nil, "")
+func (auth *webAuthn) SignInFinish(ctx context.Context, request *descope.WebAuthnFinishRequest, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnSignInFinish(), request, nil, "")
 	if err != nil {
 		return nil, err
 	}
 	return auth.generateAuthenticationInfo(res, w)
 }
 
-func (auth *webAuthn) SignUpOrInStart(loginID string, origin string) (*descope.WebAuthnTransactionResponse, error) {
+func (auth *webAuthn) SignUpOrInStart(ctx context.Context, loginID string, origin string) (*descope.WebAuthnTransactionResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 
-	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnSignUpOrInStart(), authenticationWebAuthnSignInRequestBody{LoginID: loginID, Origin: origin}, nil, "")
+	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnSignUpOrInStart(), authenticationWebAuthnSignInRequestBody{LoginID: loginID, Origin: origin}, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +82,7 @@ func (auth *webAuthn) SignUpOrInStart(loginID string, origin string) (*descope.W
 	return webAuthnResponse, err
 }
 
-func (auth *webAuthn) UpdateUserDeviceStart(loginID string, origin string, r *http.Request) (*descope.WebAuthnTransactionResponse, error) {
+func (auth *webAuthn) UpdateUserDeviceStart(ctx context.Context, loginID string, origin string, r *http.Request) (*descope.WebAuthnTransactionResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
@@ -91,7 +92,7 @@ func (auth *webAuthn) UpdateUserDeviceStart(loginID string, origin string, r *ht
 		return nil, err
 	}
 
-	res, err := auth.client.DoPostRequest(api.Routes.WebAuthnUpdateUserDeviceStart(), authenticationWebAuthnAddDeviceRequestBody{LoginID: loginID, Origin: origin}, nil, pswd)
+	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnUpdateUserDeviceStart(), authenticationWebAuthnAddDeviceRequestBody{LoginID: loginID, Origin: origin}, nil, pswd)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +102,7 @@ func (auth *webAuthn) UpdateUserDeviceStart(loginID string, origin string, r *ht
 	return webAuthnResponse, err
 }
 
-func (auth *webAuthn) UpdateUserDeviceFinish(request *descope.WebAuthnFinishRequest) error {
-	_, err := auth.client.DoPostRequest(api.Routes.WebAuthnUpdateUserDeviceFinish(), request, nil, "")
+func (auth *webAuthn) UpdateUserDeviceFinish(ctx context.Context, request *descope.WebAuthnFinishRequest) error {
+	_, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnUpdateUserDeviceFinish(), request, nil, "")
 	return err
 }

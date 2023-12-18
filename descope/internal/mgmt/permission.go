@@ -1,6 +1,8 @@
 package mgmt
 
 import (
+	"context"
+
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
@@ -10,7 +12,7 @@ type permission struct {
 	managementBase
 }
 
-func (p *permission) Create(name, description string) error {
+func (p *permission) Create(ctx context.Context, name, description string) error {
 	if name == "" {
 		return utils.NewInvalidArgumentError("name")
 	}
@@ -18,11 +20,11 @@ func (p *permission) Create(name, description string) error {
 		"name":        name,
 		"description": description,
 	}
-	_, err := p.client.DoPostRequest(api.Routes.ManagementPermissionCreate(), body, nil, p.conf.ManagementKey)
+	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementPermissionCreate(), body, nil, p.conf.ManagementKey)
 	return err
 }
 
-func (p *permission) Update(name, newName, description string) error {
+func (p *permission) Update(ctx context.Context, name, newName, description string) error {
 	if name == "" {
 		return utils.NewInvalidArgumentError("name")
 	}
@@ -34,21 +36,21 @@ func (p *permission) Update(name, newName, description string) error {
 		"newName":     newName,
 		"description": description,
 	}
-	_, err := p.client.DoPostRequest(api.Routes.ManagementPermissionUpdate(), body, nil, p.conf.ManagementKey)
+	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementPermissionUpdate(), body, nil, p.conf.ManagementKey)
 	return err
 }
 
-func (p *permission) Delete(name string) error {
+func (p *permission) Delete(ctx context.Context, name string) error {
 	if name == "" {
 		return utils.NewInvalidArgumentError("name")
 	}
 	body := map[string]any{"name": name}
-	_, err := p.client.DoPostRequest(api.Routes.ManagementPermissionDelete(), body, nil, p.conf.ManagementKey)
+	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementPermissionDelete(), body, nil, p.conf.ManagementKey)
 	return err
 }
 
-func (p *permission) LoadAll() ([]*descope.Permission, error) {
-	res, err := p.client.DoGetRequest(api.Routes.ManagementPermissionLoadAll(), nil, p.conf.ManagementKey)
+func (p *permission) LoadAll(ctx context.Context) ([]*descope.Permission, error) {
+	res, err := p.client.DoGetRequest(ctx, api.Routes.ManagementPermissionLoadAll(), nil, p.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}

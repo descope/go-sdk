@@ -1,6 +1,8 @@
 package mgmt
 
 import (
+	"context"
+
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
@@ -10,29 +12,29 @@ type flow struct {
 	managementBase
 }
 
-func (r *flow) ListFlows() (*descope.FlowsResponse, error) {
-	res, err := r.client.DoPostRequest(api.Routes.ManagementListFlows(), nil, nil, r.conf.ManagementKey)
+func (r *flow) ListFlows(ctx context.Context) (*descope.FlowsResponse, error) {
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementListFlows(), nil, nil, r.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}
 	return unmarshalFlowsResponse(res)
 }
 
-func (r *flow) ExportFlow(flowID string) (*descope.FlowResponse, error) {
+func (r *flow) ExportFlow(ctx context.Context, flowID string) (*descope.FlowResponse, error) {
 	if flowID == "" {
 		return nil, utils.NewInvalidArgumentError("flowID")
 	}
 	body := map[string]any{
 		"flowId": flowID,
 	}
-	res, err := r.client.DoPostRequest(api.Routes.ManagementFlowExport(), body, nil, r.conf.ManagementKey)
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementFlowExport(), body, nil, r.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}
 	return unmarshalFlowResponse(res)
 }
 
-func (r *flow) ImportFlow(flowID string, flow *descope.Flow, screens []*descope.Screen) (*descope.FlowResponse, error) {
+func (r *flow) ImportFlow(ctx context.Context, flowID string, flow *descope.Flow, screens []*descope.Screen) (*descope.FlowResponse, error) {
 	if flowID == "" {
 		return nil, utils.NewInvalidArgumentError("flowID")
 	}
@@ -41,29 +43,29 @@ func (r *flow) ImportFlow(flowID string, flow *descope.Flow, screens []*descope.
 		"flow":    flow,
 		"screens": screens,
 	}
-	res, err := r.client.DoPostRequest(api.Routes.ManagementFlowImport(), body, nil, r.conf.ManagementKey)
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementFlowImport(), body, nil, r.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}
 	return unmarshalFlowResponse(res)
 }
 
-func (r *flow) ExportTheme() (*descope.Theme, error) {
-	res, err := r.client.DoPostRequest(api.Routes.ManagementThemeExport(), nil, nil, r.conf.ManagementKey)
+func (r *flow) ExportTheme(ctx context.Context) (*descope.Theme, error) {
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementThemeExport(), nil, nil, r.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}
 	return unmarshalTheme(res)
 }
 
-func (r *flow) ImportTheme(theme *descope.Theme) (*descope.Theme, error) {
+func (r *flow) ImportTheme(ctx context.Context, theme *descope.Theme) (*descope.Theme, error) {
 	if theme == nil {
 		return nil, utils.NewInvalidArgumentError("theme")
 	}
 	body := map[string]any{
 		"theme": theme,
 	}
-	res, err := r.client.DoPostRequest(api.Routes.ManagementThemeImport(), body, nil, r.conf.ManagementKey)
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementThemeImport(), body, nil, r.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}

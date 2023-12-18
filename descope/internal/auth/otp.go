@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/descope/go-sdk/descope"
@@ -12,7 +13,7 @@ type otp struct {
 	authenticationsBase
 }
 
-func (auth *otp) SignIn(method descope.DeliveryMethod, loginID string, r *http.Request, loginOptions *descope.LoginOptions) (string, error) {
+func (auth *otp) SignIn(ctx context.Context, method descope.DeliveryMethod, loginID string, r *http.Request, loginOptions *descope.LoginOptions) (string, error) {
 	var pswd string
 	var err error
 	if loginID == "" {
@@ -26,11 +27,11 @@ func (auth *otp) SignIn(method descope.DeliveryMethod, loginID string, r *http.R
 	}
 	masked := getMaskedValue(method)
 	options := &api.HTTPRequest{ResBodyObj: masked}
-	_, err = auth.client.DoPostRequest(composeSignInURL(method), newSignInRequestBody(loginID, loginOptions), options, pswd)
+	_, err = auth.client.DoPostRequest(ctx, composeSignInURL(method), newSignInRequestBody(loginID, loginOptions), options, pswd)
 	return masked.GetMasked(), err
 }
 
-func (auth *otp) SignUp(method descope.DeliveryMethod, loginID string, user *descope.User) (string, error) {
+func (auth *otp) SignUp(ctx context.Context, method descope.DeliveryMethod, loginID string, user *descope.User) (string, error) {
 	if user == nil {
 		user = &descope.User{}
 	}
@@ -39,22 +40,22 @@ func (auth *otp) SignUp(method descope.DeliveryMethod, loginID string, user *des
 	}
 	masked := getMaskedValue(method)
 	options := &api.HTTPRequest{ResBodyObj: masked}
-	_, err := auth.client.DoPostRequest(composeSignUpURL(method), newAuthenticationSignUpRequestBody(method, loginID, user), options, "")
+	_, err := auth.client.DoPostRequest(ctx, composeSignUpURL(method), newAuthenticationSignUpRequestBody(method, loginID, user), options, "")
 	return masked.GetMasked(), err
 }
 
-func (auth *otp) SignUpOrIn(method descope.DeliveryMethod, loginID string) (string, error) {
+func (auth *otp) SignUpOrIn(ctx context.Context, method descope.DeliveryMethod, loginID string) (string, error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
 
 	masked := getMaskedValue(method)
 	options := &api.HTTPRequest{ResBodyObj: masked}
-	_, err := auth.client.DoPostRequest(composeSignUpOrInURL(method), newSignInRequestBody(loginID, nil), options, "")
+	_, err := auth.client.DoPostRequest(ctx, composeSignUpOrInURL(method), newSignInRequestBody(loginID, nil), options, "")
 	return masked.GetMasked(), err
 }
 
-func (auth *otp) VerifyCode(method descope.DeliveryMethod, loginID string, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (auth *otp) VerifyCode(ctx context.Context, method descope.DeliveryMethod, loginID string, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
@@ -71,14 +72,14 @@ func (auth *otp) VerifyCode(method descope.DeliveryMethod, loginID string, code 
 			return nil, utils.NewInvalidArgumentError("method")
 		}
 	}
-	httpResponse, err := auth.client.DoPostRequest(composeVerifyCodeURL(method), newAuthenticationVerifyRequestBody(loginID, code), nil, "")
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeVerifyCodeURL(method), newAuthenticationVerifyRequestBody(loginID, code), nil, "")
 	if err != nil {
 		return nil, err
 	}
 	return auth.generateAuthenticationInfo(httpResponse, w)
 }
 
-func (auth *otp) UpdateUserEmail(loginID, email string, updateOptions *descope.UpdateOptions, r *http.Request) (string, error) {
+func (auth *otp) UpdateUserEmail(ctx context.Context, loginID, email string, updateOptions *descope.UpdateOptions, r *http.Request) (string, error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
@@ -97,11 +98,11 @@ func (auth *otp) UpdateUserEmail(loginID, email string, updateOptions *descope.U
 	}
 	masked := getMaskedValue(descope.MethodEmail)
 	options := &api.HTTPRequest{ResBodyObj: masked}
-	_, err = auth.client.DoPostRequest(composeUpdateUserEmailOTP(), newOTPUpdateEmailRequestBody(loginID, email, updateOptions), options, pswd)
+	_, err = auth.client.DoPostRequest(ctx, composeUpdateUserEmailOTP(), newOTPUpdateEmailRequestBody(loginID, email, updateOptions), options, pswd)
 	return masked.GetMasked(), err
 }
 
-func (auth *otp) UpdateUserPhone(method descope.DeliveryMethod, loginID, phone string, updateOptions *descope.UpdateOptions, r *http.Request) (string, error) {
+func (auth *otp) UpdateUserPhone(ctx context.Context, method descope.DeliveryMethod, loginID, phone string, updateOptions *descope.UpdateOptions, r *http.Request) (string, error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
@@ -123,6 +124,6 @@ func (auth *otp) UpdateUserPhone(method descope.DeliveryMethod, loginID, phone s
 	}
 	masked := getMaskedValue(descope.MethodSMS)
 	options := &api.HTTPRequest{ResBodyObj: masked}
-	_, err = auth.client.DoPostRequest(composeUpdateUserPhoneOTP(method), newOTPUpdatePhoneRequestBody(loginID, phone, updateOptions), options, pswd)
+	_, err = auth.client.DoPostRequest(ctx, composeUpdateUserPhoneOTP(method), newOTPUpdatePhoneRequestBody(loginID, phone, updateOptions), options, pswd)
 	return masked.GetMasked(), err
 }

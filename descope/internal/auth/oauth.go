@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/descope/go-sdk/descope"
@@ -17,7 +18,7 @@ type oauthStartResponse struct {
 	URL string `json:"url"`
 }
 
-func (auth *oauth) Start(provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (url string, err error) {
+func (auth *oauth) Start(ctx context.Context, provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (url string, err error) {
 	m := map[string]string{
 		"provider": string(provider),
 	}
@@ -32,7 +33,7 @@ func (auth *oauth) Start(provider descope.OAuthProvider, redirectURL string, r *
 		}
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(composeOAuthURL(), loginOptions, &api.HTTPRequest{QueryParams: m}, pswd)
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeOAuthURL(), loginOptions, &api.HTTPRequest{QueryParams: m}, pswd)
 	if err != nil {
 		return
 	}
@@ -51,6 +52,6 @@ func (auth *oauth) Start(provider descope.OAuthProvider, redirectURL string, r *
 	return
 }
 
-func (auth *oauth) ExchangeToken(code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
-	return auth.exchangeToken(code, composeOAuthExchangeTokenURL(), w)
+func (auth *oauth) ExchangeToken(ctx context.Context, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+	return auth.exchangeToken(ctx, code, composeOAuthExchangeTokenURL(), w)
 }

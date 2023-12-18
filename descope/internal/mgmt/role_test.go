@@ -1,6 +1,7 @@
 package mgmt
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -19,13 +20,13 @@ func TestRoleCreateSuccess(t *testing.T) {
 		require.Len(t, roleNames, 1)
 		require.Equal(t, "foo", roleNames[0])
 	}))
-	err := mgmt.Role().Create("abc", "description", []string{"foo"})
+	err := mgmt.Role().Create(context.Background(), "abc", "description", []string{"foo"})
 	require.NoError(t, err)
 }
 
 func TestRoleCreateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.Role().Create("", "description", []string{"foo"})
+	err := mgmt.Role().Create(context.Background(), "", "description", []string{"foo"})
 	require.Error(t, err)
 }
 
@@ -41,15 +42,15 @@ func TestRoleUpdateSuccess(t *testing.T) {
 		require.Len(t, roleNames, 1)
 		require.Equal(t, "foo", roleNames[0])
 	}))
-	err := mgmt.Role().Update("abc", "def", "description", []string{"foo"})
+	err := mgmt.Role().Update(context.Background(), "abc", "def", "description", []string{"foo"})
 	require.NoError(t, err)
 }
 
 func TestRoleUpdateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.Role().Update("", "def", "description", []string{"foo"})
+	err := mgmt.Role().Update(context.Background(), "", "def", "description", []string{"foo"})
 	require.Error(t, err)
-	err = mgmt.Role().Update("abc", "", "description", []string{"foo"})
+	err = mgmt.Role().Update(context.Background(), "abc", "", "description", []string{"foo"})
 	require.Error(t, err)
 }
 
@@ -60,13 +61,13 @@ func TestRoleDeleteSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["name"])
 	}))
-	err := mgmt.Role().Delete("abc")
+	err := mgmt.Role().Delete(context.Background(), "abc")
 	require.NoError(t, err)
 }
 
 func TestRoleDeleteError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.Role().Delete("")
+	err := mgmt.Role().Delete(context.Background(), "")
 	require.Error(t, err)
 }
 
@@ -78,7 +79,7 @@ func TestRoleLoadSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 	}, response))
-	res, err := mgmt.Role().LoadAll()
+	res, err := mgmt.Role().LoadAll(context.Background())
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res, 1)
@@ -87,7 +88,7 @@ func TestRoleLoadSuccess(t *testing.T) {
 
 func TestRoleLoadError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := mgmt.Role().LoadAll()
+	res, err := mgmt.Role().LoadAll(context.Background())
 	require.Error(t, err)
 	require.Nil(t, res)
 }

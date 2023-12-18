@@ -2,6 +2,7 @@ package auth
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -180,7 +181,7 @@ func TestAuthDefaultURL(t *testing.T) {
 		assert.Contains(t, r.URL.String(), url)
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCode(descope.MethodWhatsApp, "4444", "444", nil)
+	_, err = a.OTP().VerifyCode(context.Background(), descope.MethodWhatsApp, "4444", "444", nil)
 	require.NoError(t, err)
 }
 
@@ -189,7 +190,7 @@ func TestEmptyPublicKey(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("[]"))}, nil
 	}))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateSessionWithToken(jwtTokenExpired)
+	ok, _, err := a.ValidateSessionWithToken(context.Background(), jwtTokenExpired)
 	require.False(t, ok)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrPublicKey)
@@ -201,7 +202,7 @@ func TestErrorFetchPublicKey(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusInternalServerError, Body: io.NopCloser(strings.NewReader("what"))}, nil
 	}))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateSessionWithToken(jwtTokenExpired)
+	ok, _, err := a.ValidateSessionWithToken(context.Background(), jwtTokenExpired)
 	require.False(t, ok)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrPublicKey)
@@ -215,7 +216,7 @@ func TestValidateSessionWithRequest(t *testing.T) {
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: descope.SessionCookieName, Value: jwtTokenValid})
-	ok, _, err := a.ValidateSessionWithRequest(request)
+	ok, _, err := a.ValidateSessionWithRequest(context.Background(), request)
 	require.NoError(t, err)
 	require.True(t, ok)
 }
@@ -223,10 +224,10 @@ func TestValidateSessionWithRequest(t *testing.T) {
 func TestValidateSessionWithRequestInvalidInput(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateSessionWithRequest(nil)
+	ok, _, err := a.ValidateSessionWithRequest(context.Background(), nil)
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.False(t, ok)
-	ok, _, err = a.ValidateSessionWithRequest(&http.Request{Header: http.Header{}})
+	ok, _, err = a.ValidateSessionWithRequest(context.Background(), &http.Request{Header: http.Header{}})
 	require.ErrorIs(t, err, descope.ErrMissingArguments)
 	require.False(t, ok)
 }
@@ -234,7 +235,7 @@ func TestValidateSessionWithRequestInvalidInput(t *testing.T) {
 func TestValidateSessionWithToken(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateSessionWithToken(jwtTokenValid)
+	ok, _, err := a.ValidateSessionWithToken(context.Background(), jwtTokenValid)
 	require.NoError(t, err)
 	require.True(t, ok)
 }
@@ -242,7 +243,7 @@ func TestValidateSessionWithToken(t *testing.T) {
 func TestValidateSessionWithTokenInvalidInput(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateSessionWithToken("")
+	ok, _, err := a.ValidateSessionWithToken(context.Background(), "")
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.False(t, ok)
 }
@@ -250,7 +251,7 @@ func TestValidateSessionWithTokenInvalidInput(t *testing.T) {
 func TestValidateSessionWithTokenNoPublicKey(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateSessionWithToken(jwtTokenValid)
+	ok, _, err := a.ValidateSessionWithToken(context.Background(), jwtTokenValid)
 	assert.ErrorIs(t, err, descope.ErrPublicKey)
 	require.False(t, ok)
 }
@@ -258,7 +259,7 @@ func TestValidateSessionWithTokenNoPublicKey(t *testing.T) {
 func TestValidateSessionWithTokenExpired(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateSessionWithToken(jwtTokenExpired)
+	ok, _, err := a.ValidateSessionWithToken(context.Background(), jwtTokenExpired)
 	require.Error(t, err)
 	require.False(t, ok)
 }
@@ -270,7 +271,7 @@ func TestRefreshSessionWithRequest(t *testing.T) {
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
-	ok, _, err := a.RefreshSessionWithRequest(request, nil)
+	ok, _, err := a.RefreshSessionWithRequest(context.Background(), request, nil)
 	require.NoError(t, err)
 	require.True(t, ok)
 }
@@ -278,10 +279,10 @@ func TestRefreshSessionWithRequest(t *testing.T) {
 func TestRefreshSessionWithRequestInvalidInput(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.RefreshSessionWithRequest(nil, nil)
+	ok, _, err := a.RefreshSessionWithRequest(context.Background(), nil, nil)
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.False(t, ok)
-	ok, _, err = a.RefreshSessionWithRequest(&http.Request{Header: http.Header{}}, nil)
+	ok, _, err = a.RefreshSessionWithRequest(context.Background(), &http.Request{Header: http.Header{}}, nil)
 	require.ErrorIs(t, err, descope.ErrMissingArguments)
 	require.False(t, ok)
 }
@@ -289,7 +290,7 @@ func TestRefreshSessionWithRequestInvalidInput(t *testing.T) {
 func TestRefreshSessionWithToken(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.RefreshSessionWithToken(jwtRTokenValid)
+	ok, _, err := a.RefreshSessionWithToken(context.Background(), jwtRTokenValid)
 	require.NoError(t, err)
 	require.True(t, ok)
 }
@@ -297,7 +298,7 @@ func TestRefreshSessionWithToken(t *testing.T) {
 func TestRefreshSessionWithTokenInvalidInput(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.RefreshSessionWithToken("")
+	ok, _, err := a.RefreshSessionWithToken(context.Background(), "")
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.False(t, ok)
 }
@@ -305,7 +306,7 @@ func TestRefreshSessionWithTokenInvalidInput(t *testing.T) {
 func TestRefreshSessionWithTokenNoPublicKey(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.RefreshSessionWithToken(jwtRTokenValid)
+	ok, _, err := a.RefreshSessionWithToken(context.Background(), jwtRTokenValid)
 	assert.ErrorIs(t, err, descope.ErrPublicKey)
 	require.False(t, ok)
 }
@@ -313,7 +314,7 @@ func TestRefreshSessionWithTokenNoPublicKey(t *testing.T) {
 func TestRefreshSessionWithTokenExpired(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.RefreshSessionWithToken(jwtTokenExpired)
+	ok, _, err := a.RefreshSessionWithToken(context.Background(), jwtTokenExpired)
 	require.Error(t, err)
 	require.False(t, ok)
 }
@@ -329,7 +330,7 @@ func TestSelectTenantWithRequest(t *testing.T) {
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
-	authInfo, err := a.SelectTenantWithRequest("tid", request, nil)
+	authInfo, err := a.SelectTenantWithRequest(context.Background(), "tid", request, nil)
 	require.NoError(t, err)
 	require.NotNil(t, authInfo)
 }
@@ -337,10 +338,10 @@ func TestSelectTenantWithRequest(t *testing.T) {
 func TestSelectTenantWithRequestInvalidInput(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	info, err := a.SelectTenantWithRequest("tid", nil, nil)
+	info, err := a.SelectTenantWithRequest(context.Background(), "tid", nil, nil)
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.Nil(t, info)
-	info, err = a.SelectTenantWithRequest("tid", &http.Request{Header: http.Header{}}, nil)
+	info, err = a.SelectTenantWithRequest(context.Background(), "tid", &http.Request{Header: http.Header{}}, nil)
 	require.ErrorIs(t, err, descope.ErrMissingArguments)
 	require.Nil(t, info)
 }
@@ -352,7 +353,7 @@ func TestSelectTenantWithToken(t *testing.T) {
 		assert.EqualValues(t, "tid", b["tenant"])
 	}))
 	require.NoError(t, err)
-	info, err := a.SelectTenantWithToken("tid", jwtRTokenValid)
+	info, err := a.SelectTenantWithToken(context.Background(), "tid", jwtRTokenValid)
 	require.NoError(t, err)
 	require.NotNil(t, info)
 }
@@ -360,7 +361,7 @@ func TestSelectTenantWithToken(t *testing.T) {
 func TestSelectTenantWithTokenInvalidInput(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	info, err := a.SelectTenantWithToken("tid", "")
+	info, err := a.SelectTenantWithToken(context.Background(), "tid", "")
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.Nil(t, info)
 }
@@ -386,7 +387,7 @@ func TestValidateAndRefreshSessionWithRequest(t *testing.T) {
 	request.AddCookie(&http.Cookie{Name: descope.SessionCookieName, Value: jwtTokenValid})
 	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
 	response := httptest.NewRecorder()
-	ok, _, err := a.ValidateAndRefreshSessionWithRequest(request, response)
+	ok, _, err := a.ValidateAndRefreshSessionWithRequest(context.Background(), request, response)
 	strictCookies(t, response)
 	require.NoError(t, err)
 	require.True(t, ok)
@@ -396,7 +397,7 @@ func TestValidateAndRefreshSessionWithRequest(t *testing.T) {
 	request.AddCookie(&http.Cookie{Name: descope.SessionCookieName, Value: jwtTokenExpired})
 	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
 	response = httptest.NewRecorder()
-	ok, _, err = a.ValidateAndRefreshSessionWithRequest(request, response)
+	ok, _, err = a.ValidateAndRefreshSessionWithRequest(context.Background(), request, response)
 	strictCookies(t, response)
 	require.NoError(t, err)
 	require.True(t, ok)
@@ -405,7 +406,7 @@ func TestValidateAndRefreshSessionWithRequest(t *testing.T) {
 	request = &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
 	response = httptest.NewRecorder()
-	ok, _, err = a.ValidateAndRefreshSessionWithRequest(request, response)
+	ok, _, err = a.ValidateAndRefreshSessionWithRequest(context.Background(), request, response)
 	strictCookies(t, response)
 	require.NoError(t, err)
 	require.True(t, ok)
@@ -414,7 +415,7 @@ func TestValidateAndRefreshSessionWithRequest(t *testing.T) {
 	request = &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: descope.SessionCookieName, Value: jwtTokenValid})
 	response = httptest.NewRecorder()
-	ok, _, err = a.ValidateAndRefreshSessionWithRequest(request, response)
+	ok, _, err = a.ValidateAndRefreshSessionWithRequest(context.Background(), request, response)
 	strictCookies(t, response)
 	require.NoError(t, err)
 	require.True(t, ok)
@@ -425,7 +426,7 @@ func TestValidateAndRefreshSessionWithRequest(t *testing.T) {
 	request.AddCookie(&http.Cookie{Name: descope.SessionCookieName, Value: jwtTokenExpired})
 	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
 	response = httptest.NewRecorder()
-	ok, _, err = a.ValidateAndRefreshSessionWithRequest(request, response)
+	ok, _, err = a.ValidateAndRefreshSessionWithRequest(context.Background(), request, response)
 	laxCookies(t, response)
 	require.NoError(t, err)
 	require.True(t, ok)
@@ -434,10 +435,10 @@ func TestValidateAndRefreshSessionWithRequest(t *testing.T) {
 func TestValidateAndRefreshSessionWithRequestInvalidInput(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateAndRefreshSessionWithRequest(nil, nil)
+	ok, _, err := a.ValidateAndRefreshSessionWithRequest(context.Background(), nil, nil)
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.False(t, ok)
-	ok, _, err = a.ValidateAndRefreshSessionWithRequest(&http.Request{Header: http.Header{}}, nil)
+	ok, _, err = a.ValidateAndRefreshSessionWithRequest(context.Background(), &http.Request{Header: http.Header{}}, nil)
 	require.ErrorIs(t, err, descope.ErrMissingArguments)
 	require.False(t, ok)
 }
@@ -445,16 +446,16 @@ func TestValidateAndRefreshSessionWithRequestInvalidInput(t *testing.T) {
 func TestValidateAndRefreshSessionWithToken(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateAndRefreshSessionWithTokens(jwtTokenValid, jwtRTokenValid)
+	ok, _, err := a.ValidateAndRefreshSessionWithTokens(context.Background(), jwtTokenValid, jwtRTokenValid)
 	require.NoError(t, err)
 	require.True(t, ok)
-	ok, _, err = a.ValidateAndRefreshSessionWithTokens(jwtTokenExpired, jwtRTokenValid)
+	ok, _, err = a.ValidateAndRefreshSessionWithTokens(context.Background(), jwtTokenExpired, jwtRTokenValid)
 	require.NoError(t, err)
 	require.True(t, ok)
-	ok, _, err = a.ValidateAndRefreshSessionWithTokens("", jwtRTokenValid)
+	ok, _, err = a.ValidateAndRefreshSessionWithTokens(context.Background(), "", jwtRTokenValid)
 	require.NoError(t, err)
 	require.True(t, ok)
-	ok, _, err = a.ValidateAndRefreshSessionWithTokens(jwtTokenValid, "")
+	ok, _, err = a.ValidateAndRefreshSessionWithTokens(context.Background(), jwtTokenValid, "")
 	require.NoError(t, err)
 	require.True(t, ok)
 }
@@ -462,7 +463,7 @@ func TestValidateAndRefreshSessionWithToken(t *testing.T) {
 func TestValidateAndRefreshSessionWithTokenInvalidInput(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateAndRefreshSessionWithTokens("", "")
+	ok, _, err := a.ValidateAndRefreshSessionWithTokens(context.Background(), "", "")
 	require.ErrorIs(t, err, descope.ErrMissingArguments)
 	require.False(t, ok)
 }
@@ -470,7 +471,7 @@ func TestValidateAndRefreshSessionWithTokenInvalidInput(t *testing.T) {
 func TestValidateAndRefreshSessionWithTokenNoPublicKey(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateAndRefreshSessionWithTokens(jwtTokenValid, jwtRTokenValid)
+	ok, _, err := a.ValidateAndRefreshSessionWithTokens(context.Background(), jwtTokenValid, jwtRTokenValid)
 	assert.ErrorIs(t, err, descope.ErrPublicKey)
 	require.False(t, ok)
 }
@@ -478,7 +479,7 @@ func TestValidateAndRefreshSessionWithTokenNoPublicKey(t *testing.T) {
 func TestValidateAndRefreshSessionWithTokenExpired(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateAndRefreshSessionWithTokens(jwtTokenExpired, jwtTokenExpired)
+	ok, _, err := a.ValidateAndRefreshSessionWithTokens(context.Background(), jwtTokenExpired, jwtTokenExpired)
 	require.Error(t, err)
 	require.False(t, ok)
 }
@@ -490,11 +491,11 @@ func TestValidateSessionFetchKeyCalledOnce(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf(`{"keys":[%s]}`, publicKey)))}, nil
 	}))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateSessionWithToken(jwtTokenValid)
+	ok, _, err := a.ValidateSessionWithToken(context.Background(), jwtTokenValid)
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.EqualValues(t, 1, count)
-	ok, _, err = a.ValidateSessionWithToken(jwtTokenValid)
+	ok, _, err = a.ValidateSessionWithToken(context.Background(), jwtTokenValid)
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.EqualValues(t, 1, count)
@@ -505,7 +506,7 @@ func TestValidateSessionFetchKeyMalformed(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf(`{"keys":[%s]}`, unknownPublicKey)))}, nil
 	}))
 	require.NoError(t, err)
-	ok, _, err := a.validateAndRefreshSessionWithTokens(jwtTokenValid, jwtTokenValid, nil)
+	ok, _, err := a.validateAndRefreshSessionWithTokens(context.Background(), jwtTokenValid, jwtTokenValid, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrPublicKey)
 	assert.Contains(t, err.Error(), "does not exist")
@@ -519,7 +520,7 @@ func TestValidateSessionFailWithInvalidKey(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", publicKey)))}, nil
 	}))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateSessionWithToken(jwtTokenValid)
+	ok, _, err := a.ValidateSessionWithToken(context.Background(), jwtTokenValid)
 	require.Error(t, err)
 	require.False(t, ok)
 	require.Zero(t, count)
@@ -531,7 +532,7 @@ func TestValidateSessionFailWithInvalidAlgorithm(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf(`{"keys":[%s]}`, badKey)))}, nil
 	}))
 	require.NoError(t, err)
-	ok, _, err := a.validateAndRefreshSessionWithTokens(jwtTokenValid, jwtTokenValid, nil)
+	ok, _, err := a.validateAndRefreshSessionWithTokens(context.Background(), jwtTokenValid, jwtTokenValid, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrPublicKey)
 	assert.Contains(t, err.Error(), "Invalid signature algorithm")
@@ -543,7 +544,7 @@ func TestValidateSessionRequest(t *testing.T) {
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: descope.SessionCookieName, Value: jwtTokenValid})
-	ok, token, err := a.ValidateSessionWithRequest(request)
+	ok, token, err := a.ValidateSessionWithRequest(context.Background(), request)
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.EqualValues(t, jwtTokenValid, token.JWT)
@@ -554,7 +555,7 @@ func TestValidateSessionRequestHeader(t *testing.T) {
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
 	request.Header.Add(api.AuthorizationHeaderName, api.BearerAuthorizationPrefix+jwtTokenValid)
-	ok, token, err := a.ValidateSessionWithRequest(request)
+	ok, token, err := a.ValidateSessionWithRequest(context.Background(), request)
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.EqualValues(t, jwtTokenValid, token.JWT)
@@ -571,7 +572,7 @@ func TestValidateSessionRequestRefreshSession(t *testing.T) {
 	request.AddCookie(&http.Cookie{Name: descope.SessionCookieName, Value: jwtTokenExpired})
 
 	b := httptest.NewRecorder()
-	ok, userToken, err := a.ValidateAndRefreshSessionWithRequest(request, b)
+	ok, userToken, err := a.ValidateAndRefreshSessionWithRequest(context.Background(), request, b)
 	strictCookies(t, b)
 	require.NoError(t, err)
 	require.True(t, ok)
@@ -588,7 +589,7 @@ func TestValidateSessionRequestRefreshSession(t *testing.T) {
 func TestValidateSessionNotYet(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, _, err := a.ValidateAndRefreshSessionWithTokens(jwtTokenNotYet, jwtTokenNotYet)
+	ok, _, err := a.ValidateAndRefreshSessionWithTokens(context.Background(), jwtTokenNotYet, jwtTokenNotYet)
 	require.Error(t, err)
 	require.False(t, ok)
 }
@@ -616,7 +617,7 @@ func TestLogout(t *testing.T) {
 	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
 
 	w := httptest.NewRecorder()
-	err = a.Logout(request, w)
+	err = a.Logout(context.Background(), request, w)
 	strictCookies(t, w)
 	require.NoError(t, err)
 	require.Len(t, w.Result().Cookies(), 2)
@@ -631,7 +632,7 @@ func TestLogout(t *testing.T) {
 	assert.EqualValues(t, "/my-path", c2.Path)
 	assert.EqualValues(t, "my-domain", c2.Domain)
 
-	err = a.Logout(request, nil)
+	err = a.Logout(context.Background(), request, nil)
 	require.NoError(t, err)
 }
 
@@ -644,7 +645,7 @@ func TestLogoutAll(t *testing.T) {
 	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
 
 	w := httptest.NewRecorder()
-	err = a.LogoutAll(request, w)
+	err = a.LogoutAll(context.Background(), request, w)
 	strictCookies(t, w)
 	require.NoError(t, err)
 	require.Len(t, w.Result().Cookies(), 2)
@@ -659,7 +660,7 @@ func TestLogoutAll(t *testing.T) {
 	assert.EqualValues(t, "/my-path", c2.Path)
 	assert.EqualValues(t, "my-domain", c2.Domain)
 
-	err = a.LogoutAll(request, nil)
+	err = a.LogoutAll(context.Background(), request, nil)
 	require.NoError(t, err)
 }
 
@@ -672,7 +673,7 @@ func TestLogoutNoClaims(t *testing.T) {
 	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
 
 	w := httptest.NewRecorder()
-	err = a.Logout(request, w)
+	err = a.Logout(context.Background(), request, w)
 	strictCookies(t, w)
 	require.NoError(t, err)
 	require.Len(t, w.Result().Cookies(), 2)
@@ -697,7 +698,7 @@ func TestLogoutAllNoClaims(t *testing.T) {
 	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
 
 	w := httptest.NewRecorder()
-	err = a.LogoutAll(request, w)
+	err = a.LogoutAll(context.Background(), request, w)
 	strictCookies(t, w)
 	require.NoError(t, err)
 	require.Len(t, w.Result().Cookies(), 2)
@@ -721,7 +722,7 @@ func TestLogoutFailure(t *testing.T) {
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
 
-	err = a.Logout(request, nil)
+	err = a.Logout(context.Background(), request, nil)
 	require.Error(t, err)
 }
 
@@ -733,7 +734,7 @@ func TestLogoutAllFailure(t *testing.T) {
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
 
-	err = a.LogoutAll(request, nil)
+	err = a.LogoutAll(context.Background(), request, nil)
 	require.Error(t, err)
 }
 
@@ -743,7 +744,7 @@ func TestLogoutInvalidRefreshToken(t *testing.T) {
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenExpired})
 
-	err = a.Logout(request, nil)
+	err = a.Logout(context.Background(), request, nil)
 	require.Error(t, err)
 }
 
@@ -753,7 +754,7 @@ func TestLogoutAllInvalidRefreshToken(t *testing.T) {
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenExpired})
 
-	err = a.LogoutAll(request, nil)
+	err = a.LogoutAll(context.Background(), request, nil)
 	require.Error(t, err)
 }
 
@@ -763,7 +764,7 @@ func TestLogoutEmptyRequest(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	err = a.Logout(nil, nil)
+	err = a.Logout(context.Background(), nil, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
@@ -774,7 +775,7 @@ func TestLogoutAllEmptyRequest(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	err = a.LogoutAll(nil, nil)
+	err = a.LogoutAll(context.Background(), nil, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
@@ -786,7 +787,7 @@ func TestLogoutMissingToken(t *testing.T) {
 	require.NoError(t, err)
 
 	request := &http.Request{Header: http.Header{}}
-	err = a.Logout(request, nil)
+	err = a.Logout(context.Background(), request, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }
@@ -798,7 +799,7 @@ func TestLogoutAllMissingToken(t *testing.T) {
 	require.NoError(t, err)
 
 	request := &http.Request{Header: http.Header{}}
-	err = a.LogoutAll(request, nil)
+	err = a.LogoutAll(context.Background(), request, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }
@@ -842,7 +843,7 @@ func BenchmarkValidateSession(b *testing.B) {
 	require.NoError(b, err)
 
 	for n := 0; n < b.N; n++ {
-		_, _, _ = a.ValidateSessionWithToken(jwtTokenValid)
+		_, _, _ = a.ValidateSessionWithToken(context.Background(), jwtTokenValid)
 	}
 }
 
@@ -850,7 +851,7 @@ func TestExchangeAccessKey(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 
-	ok, token, err := a.ExchangeAccessKey("foo")
+	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo")
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.NotNil(t, token)
@@ -860,7 +861,7 @@ func TestExchangeAccessKeyBadRequest(t *testing.T) {
 	a, err := newTestAuth(nil, DoBadRequest(nil))
 	require.NoError(t, err)
 
-	ok, token, err := a.ExchangeAccessKey("foo")
+	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo")
 	require.ErrorIs(t, err, descope.ErrBadRequest)
 	require.False(t, ok)
 	require.Nil(t, token)
@@ -870,7 +871,7 @@ func TestExchangeAccessKeyEmptyResponse(t *testing.T) {
 	a, err := newTestAuth(nil, DoOkWithBody(nil, ""))
 	require.NoError(t, err)
 
-	ok, token, err := a.ExchangeAccessKey("foo")
+	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo")
 	require.ErrorIs(t, err, descope.ErrUnexpectedResponse)
 	require.False(t, ok)
 	require.Nil(t, token)
@@ -881,7 +882,7 @@ func TestExchangeAccessKeyInvalidResponse(t *testing.T) {
 	a, err := newTestAuth(nil, DoOkWithBody(nil, expectedResponse))
 	require.NoError(t, err)
 
-	ok, token, err := a.ExchangeAccessKey("foo")
+	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo")
 	require.ErrorIs(t, err, descope.ErrUnexpectedResponse)
 	require.False(t, ok)
 	require.Nil(t, token)
@@ -891,33 +892,34 @@ func TestValidatePermissions(t *testing.T) {
 	a, err := newTestAuth(nil, DoOkWithBody(nil, ""))
 	require.NoError(t, err)
 
-	require.True(t, a.ValidatePermissions(nil, []string{}))
-	require.False(t, a.ValidatePermissions(nil, []string{"foo"}))
+	require.True(t, a.ValidatePermissions(context.Background(), nil, []string{}))
+	require.False(t, a.ValidatePermissions(context.Background(), nil, []string{"foo"}))
 
-	require.True(t, a.ValidatePermissions(mockAuthorizationToken, []string{}))
-	require.True(t, a.ValidatePermissions(mockAuthorizationToken, []string{"foo"}))
-	require.True(t, a.ValidatePermissions(mockAuthorizationToken, []string{"foo", "bar"}))
-	require.False(t, a.ValidatePermissions(mockAuthorizationToken, []string{"foo", "bar", "qux"}))
+	require.True(t, a.ValidatePermissions(context.Background(), mockAuthorizationToken, []string{}))
+	require.True(t, a.ValidatePermissions(context.Background(), mockAuthorizationToken, []string{"foo"}))
+	require.True(t, a.ValidatePermissions(context.Background(), mockAuthorizationToken, []string{"foo", "bar"}))
+	require.False(t, a.ValidatePermissions(context.Background(), mockAuthorizationToken, []string{"foo", "bar", "qux"}))
 
-	require.True(t, a.ValidatePermissions(mockAuthorizationTenantToken, []string{}))
-	require.False(t, a.ValidatePermissions(mockAuthorizationTenantToken, []string{"foo"}))
-	require.False(t, a.ValidatePermissions(mockAuthorizationTenantToken, []string{"foo", "bar"}))
-	require.False(t, a.ValidatePermissions(mockAuthorizationTenantToken, []string{"foo", "bar", "qux"}))
+	require.True(t, a.ValidatePermissions(context.Background(), mockAuthorizationTenantToken, []string{}))
+	require.False(t, a.ValidatePermissions(context.Background(), mockAuthorizationTenantToken, []string{"foo"}))
+	require.False(t, a.ValidatePermissions(context.Background(), mockAuthorizationTenantToken, []string{"foo", "bar"}))
+	require.False(t, a.ValidatePermissions(context.Background(), mockAuthorizationTenantToken, []string{"foo", "bar", "qux"}))
 
-	require.False(t, a.ValidateTenantPermissions(mockAuthorizationToken, "kuku", []string{}))
-	require.False(t, a.ValidateTenantPermissions(mockAuthorizationToken, "kuku", []string{"foo"}))
-	require.False(t, a.ValidateTenantPermissions(mockAuthorizationToken, "kuku", []string{"foo", "bar"}))
-	require.False(t, a.ValidateTenantPermissions(mockAuthorizationToken, "kuku", []string{"foo", "bar", "qux"}))
+	require.False(t, a.ValidateTenantPermissions(context.Background(), mockAuthorizationToken, "kuku", []string{}))
+	require.False(t, a.ValidateTenantPermissions(context.Background(), mockAuthorizationToken, "kuku", []string{"foo"}))
+	require.False(t, a.ValidateTenantPermissions(context.Background(), mockAuthorizationToken, "kuku", []string{"foo", "bar"}))
+	require.False(t, a.ValidateTenantPermissions(context.Background(), mockAuthorizationToken, "kuku", []string{"foo", "bar", "qux"}))
 
-	require.True(t, a.ValidateTenantPermissions(mockAuthorizationTenantToken, "kuku", []string{}))
-	require.True(t, a.ValidateTenantPermissions(mockAuthorizationTenantToken, "kuku", []string{"foo"}))
-	require.True(t, a.ValidateTenantPermissions(mockAuthorizationTenantToken, "kuku", []string{"foo", "bar"}))
-	require.False(t, a.ValidateTenantPermissions(mockAuthorizationTenantToken, "kuku", []string{"foo", "bar", "qux"}))
+	require.True(t, a.ValidateTenantPermissions(context.Background(), mockAuthorizationTenantToken, "kuku", []string{}))
+	require.True(t, a.ValidateTenantPermissions(context.Background(), mockAuthorizationTenantToken, "kuku", []string{"foo"}))
+	require.True(t, a.ValidateTenantPermissions(context.Background(), mockAuthorizationTenantToken, "kuku", []string{"foo", "bar"}))
+	require.False(t, a.ValidateTenantPermissions(context.Background(), mockAuthorizationTenantToken, "kuku", []string{"foo", "bar", "qux"}))
 
-	require.True(t, a.ValidateTenantPermissions(mockAuthorizationTenantToken, "t1", []string{}))
-	require.False(t, a.ValidateTenantPermissions(mockAuthorizationTenantToken, "t2", []string{}))
+	require.True(t, a.ValidateTenantPermissions(context.Background(), mockAuthorizationTenantToken, "t1", []string{}))
+	require.False(t, a.ValidateTenantPermissions(context.Background(), mockAuthorizationTenantToken, "t2", []string{}))
 	// check when the value of the claim is not a map
 	require.False(t, a.ValidateTenantPermissions(
+		context.Background(),
 		&descope.Token{Claims: map[string]any{
 			descope.ClaimAuthorizedTenants: map[string]interface{}{"t1": true},
 		}},
@@ -930,67 +932,67 @@ func TestGetMatchedPermissions(t *testing.T) {
 	a, err := newTestAuth(nil, DoOkWithBody(nil, ""))
 	require.NoError(t, err)
 
-	require.Equal(t, []string{}, a.GetMatchedPermissions(nil, []string{}))
-	require.Equal(t, []string{}, a.GetMatchedPermissions(nil, []string{"abc"}))
+	require.Equal(t, []string{}, a.GetMatchedPermissions(context.Background(), nil, []string{}))
+	require.Equal(t, []string{}, a.GetMatchedPermissions(context.Background(), nil, []string{"abc"}))
 
-	require.Equal(t, []string{}, a.GetMatchedPermissions(mockAuthorizationToken, []string{}))
-	require.Equal(t, []string{"foo"}, a.GetMatchedPermissions(mockAuthorizationToken, []string{"foo"}))
-	require.Equal(t, []string{"foo", "bar"}, a.GetMatchedPermissions(mockAuthorizationToken, []string{"foo", "bar"}))
-	require.Equal(t, []string{"foo", "bar"}, a.GetMatchedPermissions(mockAuthorizationToken, []string{"foo", "bar", "qux"}))
+	require.Equal(t, []string{}, a.GetMatchedPermissions(context.Background(), mockAuthorizationToken, []string{}))
+	require.Equal(t, []string{"foo"}, a.GetMatchedPermissions(context.Background(), mockAuthorizationToken, []string{"foo"}))
+	require.Equal(t, []string{"foo", "bar"}, a.GetMatchedPermissions(context.Background(), mockAuthorizationToken, []string{"foo", "bar"}))
+	require.Equal(t, []string{"foo", "bar"}, a.GetMatchedPermissions(context.Background(), mockAuthorizationToken, []string{"foo", "bar", "qux"}))
 
-	require.Equal(t, []string{}, a.GetMatchedTenantPermissions(mockAuthorizationTenantToken, "kuku", []string{}))
-	require.Equal(t, []string{"foo"}, a.GetMatchedTenantPermissions(mockAuthorizationTenantToken, "kuku", []string{"foo"}))
-	require.Equal(t, []string{"foo", "bar"}, a.GetMatchedTenantPermissions(mockAuthorizationTenantToken, "kuku", []string{"foo", "bar"}))
-	require.Equal(t, []string{"foo", "bar"}, a.GetMatchedTenantPermissions(mockAuthorizationTenantToken, "kuku", []string{"foo", "bar", "qux"}))
+	require.Equal(t, []string{}, a.GetMatchedTenantPermissions(context.Background(), mockAuthorizationTenantToken, "kuku", []string{}))
+	require.Equal(t, []string{"foo"}, a.GetMatchedTenantPermissions(context.Background(), mockAuthorizationTenantToken, "kuku", []string{"foo"}))
+	require.Equal(t, []string{"foo", "bar"}, a.GetMatchedTenantPermissions(context.Background(), mockAuthorizationTenantToken, "kuku", []string{"foo", "bar"}))
+	require.Equal(t, []string{"foo", "bar"}, a.GetMatchedTenantPermissions(context.Background(), mockAuthorizationTenantToken, "kuku", []string{"foo", "bar", "qux"}))
 }
 
 func TestValidateRoles(t *testing.T) {
 	a, err := newTestAuth(nil, DoOkWithBody(nil, ""))
 	require.NoError(t, err)
 
-	require.True(t, a.ValidateRoles(nil, []string{}))
-	require.False(t, a.ValidateRoles(nil, []string{"foo"}))
+	require.True(t, a.ValidateRoles(context.Background(), nil, []string{}))
+	require.False(t, a.ValidateRoles(context.Background(), nil, []string{"foo"}))
 
-	require.True(t, a.ValidateRoles(mockAuthorizationToken, []string{}))
-	require.True(t, a.ValidateRoles(mockAuthorizationToken, []string{"abc"}))
-	require.True(t, a.ValidateRoles(mockAuthorizationToken, []string{"abc", "xyz"}))
-	require.False(t, a.ValidateRoles(mockAuthorizationToken, []string{"abc", "xyz", "tuv"}))
+	require.True(t, a.ValidateRoles(context.Background(), mockAuthorizationToken, []string{}))
+	require.True(t, a.ValidateRoles(context.Background(), mockAuthorizationToken, []string{"abc"}))
+	require.True(t, a.ValidateRoles(context.Background(), mockAuthorizationToken, []string{"abc", "xyz"}))
+	require.False(t, a.ValidateRoles(context.Background(), mockAuthorizationToken, []string{"abc", "xyz", "tuv"}))
 
-	require.True(t, a.ValidateRoles(mockAuthorizationTenantToken, []string{}))
-	require.False(t, a.ValidateRoles(mockAuthorizationTenantToken, []string{"abc"}))
-	require.False(t, a.ValidateRoles(mockAuthorizationTenantToken, []string{"abc", "xyz"}))
-	require.False(t, a.ValidateRoles(mockAuthorizationTenantToken, []string{"abc", "xyz", "tuv"}))
+	require.True(t, a.ValidateRoles(context.Background(), mockAuthorizationTenantToken, []string{}))
+	require.False(t, a.ValidateRoles(context.Background(), mockAuthorizationTenantToken, []string{"abc"}))
+	require.False(t, a.ValidateRoles(context.Background(), mockAuthorizationTenantToken, []string{"abc", "xyz"}))
+	require.False(t, a.ValidateRoles(context.Background(), mockAuthorizationTenantToken, []string{"abc", "xyz", "tuv"}))
 
-	require.False(t, a.ValidateTenantRoles(mockAuthorizationToken, "kuku", []string{}))
-	require.False(t, a.ValidateTenantRoles(mockAuthorizationToken, "kuku", []string{"abc"}))
-	require.False(t, a.ValidateTenantRoles(mockAuthorizationToken, "kuku", []string{"abc", "xyz"}))
-	require.False(t, a.ValidateTenantRoles(mockAuthorizationToken, "kuku", []string{"abc", "xyz", "tuv"}))
+	require.False(t, a.ValidateTenantRoles(context.Background(), mockAuthorizationToken, "kuku", []string{}))
+	require.False(t, a.ValidateTenantRoles(context.Background(), mockAuthorizationToken, "kuku", []string{"abc"}))
+	require.False(t, a.ValidateTenantRoles(context.Background(), mockAuthorizationToken, "kuku", []string{"abc", "xyz"}))
+	require.False(t, a.ValidateTenantRoles(context.Background(), mockAuthorizationToken, "kuku", []string{"abc", "xyz", "tuv"}))
 
-	require.True(t, a.ValidateTenantRoles(mockAuthorizationTenantToken, "kuku", []string{}))
-	require.True(t, a.ValidateTenantRoles(mockAuthorizationTenantToken, "kuku", []string{"abc"}))
-	require.True(t, a.ValidateTenantRoles(mockAuthorizationTenantToken, "kuku", []string{"abc", "xyz"}))
-	require.False(t, a.ValidateTenantRoles(mockAuthorizationTenantToken, "kuku", []string{"abc", "xyz", "tuv"}))
+	require.True(t, a.ValidateTenantRoles(context.Background(), mockAuthorizationTenantToken, "kuku", []string{}))
+	require.True(t, a.ValidateTenantRoles(context.Background(), mockAuthorizationTenantToken, "kuku", []string{"abc"}))
+	require.True(t, a.ValidateTenantRoles(context.Background(), mockAuthorizationTenantToken, "kuku", []string{"abc", "xyz"}))
+	require.False(t, a.ValidateTenantRoles(context.Background(), mockAuthorizationTenantToken, "kuku", []string{"abc", "xyz", "tuv"}))
 
-	require.True(t, a.ValidateTenantRoles(mockAuthorizationTenantToken, "t1", []string{}))
-	require.False(t, a.ValidateTenantRoles(mockAuthorizationTenantToken, "t2", []string{}))
+	require.True(t, a.ValidateTenantRoles(context.Background(), mockAuthorizationTenantToken, "t1", []string{}))
+	require.False(t, a.ValidateTenantRoles(context.Background(), mockAuthorizationTenantToken, "t2", []string{}))
 }
 
 func TestGetMatchedRoles(t *testing.T) {
 	a, err := newTestAuth(nil, DoOkWithBody(nil, ""))
 	require.NoError(t, err)
 
-	require.Equal(t, []string{}, a.GetMatchedRoles(nil, []string{}))
-	require.Equal(t, []string{}, a.GetMatchedRoles(nil, []string{"foo"}))
+	require.Equal(t, []string{}, a.GetMatchedRoles(context.Background(), nil, []string{}))
+	require.Equal(t, []string{}, a.GetMatchedRoles(context.Background(), nil, []string{"foo"}))
 
-	require.Equal(t, []string{}, a.GetMatchedRoles(mockAuthorizationToken, []string{}))
-	require.Equal(t, []string{"abc"}, a.GetMatchedRoles(mockAuthorizationToken, []string{"abc"}))
-	require.Equal(t, []string{"abc", "xyz"}, a.GetMatchedRoles(mockAuthorizationToken, []string{"abc", "xyz"}))
-	require.Equal(t, []string{"abc", "xyz"}, a.GetMatchedRoles(mockAuthorizationToken, []string{"abc", "xyz", "tuv"}))
+	require.Equal(t, []string{}, a.GetMatchedRoles(context.Background(), mockAuthorizationToken, []string{}))
+	require.Equal(t, []string{"abc"}, a.GetMatchedRoles(context.Background(), mockAuthorizationToken, []string{"abc"}))
+	require.Equal(t, []string{"abc", "xyz"}, a.GetMatchedRoles(context.Background(), mockAuthorizationToken, []string{"abc", "xyz"}))
+	require.Equal(t, []string{"abc", "xyz"}, a.GetMatchedRoles(context.Background(), mockAuthorizationToken, []string{"abc", "xyz", "tuv"}))
 
-	require.Equal(t, []string{}, a.GetMatchedTenantRoles(mockAuthorizationTenantToken, "kuku", []string{}))
-	require.Equal(t, []string{"abc"}, a.GetMatchedTenantRoles(mockAuthorizationTenantToken, "kuku", []string{"abc"}))
-	require.Equal(t, []string{"abc", "xyz"}, a.GetMatchedTenantRoles(mockAuthorizationTenantToken, "kuku", []string{"abc", "xyz"}))
-	require.Equal(t, []string{"abc", "xyz"}, a.GetMatchedTenantRoles(mockAuthorizationTenantToken, "kuku", []string{"abc", "xyz", "tuv"}))
+	require.Equal(t, []string{}, a.GetMatchedTenantRoles(context.Background(), mockAuthorizationTenantToken, "kuku", []string{}))
+	require.Equal(t, []string{"abc"}, a.GetMatchedTenantRoles(context.Background(), mockAuthorizationTenantToken, "kuku", []string{"abc"}))
+	require.Equal(t, []string{"abc", "xyz"}, a.GetMatchedTenantRoles(context.Background(), mockAuthorizationTenantToken, "kuku", []string{"abc", "xyz"}))
+	require.Equal(t, []string{"abc", "xyz"}, a.GetMatchedTenantRoles(context.Background(), mockAuthorizationTenantToken, "kuku", []string{"abc", "xyz", "tuv"}))
 }
 
 func TestMe(t *testing.T) {
@@ -1001,7 +1003,7 @@ func TestMe(t *testing.T) {
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
 
-	user, err := a.Me(request)
+	user, err := a.Me(context.Background(), request)
 	require.NoError(t, err)
 	assert.Equal(t, "kuku", user.UserID)
 	assert.Equal(t, "kuku@test.com", user.Email)
@@ -1012,7 +1014,7 @@ func TestMe(t *testing.T) {
 func TestMeNoRequest(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	user, err := a.Me(nil)
+	user, err := a.Me(context.Background(), nil)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 	assert.Nil(t, user)
 }
@@ -1021,7 +1023,7 @@ func TestMeNoToken(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 	request := &http.Request{Header: http.Header{}}
-	user, err := a.Me(request)
+	user, err := a.Me(context.Background(), request)
 	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 	assert.ErrorContains(t, err, "Unable to find tokens")
 	assert.Nil(t, user)
@@ -1033,7 +1035,7 @@ func TestMeInvalidToken(t *testing.T) {
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenExpired})
 
-	user, err := a.Me(request)
+	user, err := a.Me(context.Background(), request)
 	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 	assert.ErrorContains(t, err, "Invalid refresh token")
 	assert.Nil(t, user)
@@ -1047,7 +1049,7 @@ func TestMeEmptyResponse(t *testing.T) {
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
 
-	user, err := a.Me(request)
+	user, err := a.Me(context.Background(), request)
 	assert.ErrorContains(t, err, "JSON input")
 	assert.Nil(t, user)
 }
