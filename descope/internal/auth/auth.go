@@ -93,7 +93,7 @@ func (auth *authenticationService) WebAuthn() sdk.WebAuthn {
 	return auth.webAuthn
 }
 
-func (auth *authenticationService) Logout(ctx context.Context, request *http.Request, w http.ResponseWriter) error {
+func (auth *authenticationService) Logout(request *http.Request, w http.ResponseWriter) error {
 	if request == nil {
 		return utils.NewInvalidArgumentError("request")
 	}
@@ -110,7 +110,7 @@ func (auth *authenticationService) Logout(ctx context.Context, request *http.Req
 		return descope.ErrRefreshToken.WithMessage("Invalid refresh token")
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(ctx, api.Routes.Logout(), nil, &api.HTTPRequest{}, refreshToken)
+	httpResponse, err := auth.client.DoPostRequest(request.Context(), api.Routes.Logout(), nil, &api.HTTPRequest{}, refreshToken)
 	if err != nil {
 		return err
 	}
@@ -146,7 +146,7 @@ func (auth *authenticationService) Logout(ctx context.Context, request *http.Req
 	return nil
 }
 
-func (auth *authenticationService) LogoutAll(ctx context.Context, request *http.Request, w http.ResponseWriter) error {
+func (auth *authenticationService) LogoutAll(request *http.Request, w http.ResponseWriter) error {
 	if request == nil {
 		return utils.NewInvalidArgumentError("request")
 	}
@@ -163,7 +163,7 @@ func (auth *authenticationService) LogoutAll(ctx context.Context, request *http.
 		return descope.ErrRefreshToken.WithMessage("Invalid refresh token")
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(ctx, api.Routes.LogoutAll(), nil, &api.HTTPRequest{}, refreshToken)
+	httpResponse, err := auth.client.DoPostRequest(request.Context(), api.Routes.LogoutAll(), nil, &api.HTTPRequest{}, refreshToken)
 	if err != nil {
 		return err
 	}
@@ -199,7 +199,7 @@ func (auth *authenticationService) LogoutAll(ctx context.Context, request *http.
 	return nil
 }
 
-func (auth *authenticationService) Me(ctx context.Context, request *http.Request) (*descope.UserResponse, error) {
+func (auth *authenticationService) Me(request *http.Request) (*descope.UserResponse, error) {
 	if request == nil {
 		return nil, utils.NewInvalidArgumentError("request")
 	}
@@ -216,7 +216,7 @@ func (auth *authenticationService) Me(ctx context.Context, request *http.Request
 		return nil, descope.ErrRefreshToken.WithMessage("Invalid refresh token")
 	}
 
-	httpResponse, err := auth.client.DoGetRequest(ctx, api.Routes.Me(), &api.HTTPRequest{}, refreshToken)
+	httpResponse, err := auth.client.DoGetRequest(request.Context(), api.Routes.Me(), &api.HTTPRequest{}, refreshToken)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +225,7 @@ func (auth *authenticationService) Me(ctx context.Context, request *http.Request
 
 // Validate Session
 
-func (auth *authenticationService) ValidateSessionWithRequest(ctx context.Context, request *http.Request) (bool, *descope.Token, error) {
+func (auth *authenticationService) ValidateSessionWithRequest(request *http.Request) (bool, *descope.Token, error) {
 	if request == nil {
 		return false, nil, utils.NewInvalidArgumentError("request")
 	}
@@ -233,7 +233,7 @@ func (auth *authenticationService) ValidateSessionWithRequest(ctx context.Contex
 	if sessionToken == "" {
 		return false, nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain session token")
 	}
-	return auth.validateSession(ctx, sessionToken)
+	return auth.validateSession(request.Context(), sessionToken)
 }
 
 func (auth *authenticationService) ValidateSessionWithToken(ctx context.Context, sessionToken string) (bool, *descope.Token, error) {
@@ -253,7 +253,7 @@ func (auth *authenticationService) validateSession(_ context.Context, sessionTok
 
 // Refresh Session
 
-func (auth *authenticationService) RefreshSessionWithRequest(ctx context.Context, request *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
+func (auth *authenticationService) RefreshSessionWithRequest(request *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
 	if request == nil {
 		return false, nil, utils.NewInvalidArgumentError("request")
 	}
@@ -261,7 +261,7 @@ func (auth *authenticationService) RefreshSessionWithRequest(ctx context.Context
 	if refreshToken == "" {
 		return false, nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain refresh token")
 	}
-	return auth.refreshSession(ctx, refreshToken, w)
+	return auth.refreshSession(request.Context(), refreshToken, w)
 }
 
 func (auth *authenticationService) RefreshSessionWithToken(ctx context.Context, refreshToken string) (bool, *descope.Token, error) {
@@ -293,12 +293,12 @@ func (auth *authenticationService) refreshSession(ctx context.Context, refreshTo
 
 // Validate & Refresh Session
 
-func (auth *authenticationService) ValidateAndRefreshSessionWithRequest(ctx context.Context, request *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
+func (auth *authenticationService) ValidateAndRefreshSessionWithRequest(request *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
 	if request == nil {
 		return false, nil, utils.NewInvalidArgumentError("request")
 	}
 	sessionToken, refreshToken := provideTokens(request)
-	return auth.validateAndRefreshSessionWithTokens(ctx, sessionToken, refreshToken, w)
+	return auth.validateAndRefreshSessionWithTokens(request.Context(), sessionToken, refreshToken, w)
 }
 
 func (auth *authenticationService) ValidateAndRefreshSessionWithTokens(ctx context.Context, sessionToken, refreshToken string) (bool, *descope.Token, error) {

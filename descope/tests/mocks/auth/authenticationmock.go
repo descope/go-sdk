@@ -563,7 +563,7 @@ type MockSession struct {
 	MeResponse *descope.UserResponse
 }
 
-func (m *MockSession) ValidateSessionWithRequest(_ context.Context, r *http.Request) (bool, *descope.Token, error) {
+func (m *MockSession) ValidateSessionWithRequest(r *http.Request) (bool, *descope.Token, error) {
 	if m.ValidateSessionAssert != nil {
 		m.ValidateSessionAssert(r)
 	}
@@ -577,7 +577,7 @@ func (m *MockSession) ValidateSessionWithToken(_ context.Context, sessionToken s
 	return !m.ValidateSessionTokenResponseFailure, m.ValidateSessionTokenResponse, m.ValidateSessionTokenError
 }
 
-func (m *MockSession) RefreshSessionWithRequest(_ context.Context, r *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
+func (m *MockSession) RefreshSessionWithRequest(r *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
 	if m.RefreshSessionResponseFailure {
 		return false, nil, m.RefreshSessionError
 	}
@@ -621,7 +621,7 @@ func (m *MockSession) RefreshSessionWithToken(_ context.Context, refreshToken st
 	return !m.RefreshSessionResponseFailure, m.RefreshSessionResponse, m.RefreshSessionError
 }
 
-func (m *MockSession) ValidateAndRefreshSessionWithRequest(_ context.Context, r *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
+func (m *MockSession) ValidateAndRefreshSessionWithRequest(r *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
 	if m.ValidateAndRefreshSessionAssert != nil {
 		m.ValidateAndRefreshSessionAssert(r, w)
 	}
@@ -715,21 +715,21 @@ func (m *MockSession) SelectTenantWithToken(_ context.Context, tenantID string, 
 	return m.SelectTenantWithTokenResponse, m.SelectTenantWithTokenError
 }
 
-func (m *MockSession) Logout(_ context.Context, r *http.Request, w http.ResponseWriter) error {
+func (m *MockSession) Logout(r *http.Request, w http.ResponseWriter) error {
 	if m.LogoutAssert != nil {
 		m.LogoutAssert(r, w)
 	}
 	return m.LogoutError
 }
 
-func (m *MockSession) LogoutAll(_ context.Context, r *http.Request, w http.ResponseWriter) error {
+func (m *MockSession) LogoutAll(r *http.Request, w http.ResponseWriter) error {
 	if m.LogoutAllAssert != nil {
 		m.LogoutAllAssert(r, w)
 	}
 	return m.LogoutAllError
 }
 
-func (m *MockSession) Me(_ context.Context, r *http.Request) (*descope.UserResponse, error) {
+func (m *MockSession) Me(r *http.Request) (*descope.UserResponse, error) {
 	if m.MeAssert != nil {
 		m.MeAssert(r)
 	}

@@ -109,7 +109,7 @@ func TestDescopeSDKMock(t *testing.T) {
 		},
 	}
 	ctx := context.Background()
-	ok, info, err := api.Auth.ValidateAndRefreshSessionWithRequest(ctx, nil, nil)
+	ok, info, err := api.Auth.ValidateAndRefreshSessionWithRequest(nil, nil)
 	assert.False(t, ok)
 	assert.NotEmpty(t, info)
 	assert.EqualValues(t, validateSessionResponse, info.JWT)

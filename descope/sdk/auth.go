@@ -257,7 +257,7 @@ type Authentication interface {
 	// Should be called before any private API call that requires authorization.
 	// Alternatively use ValidateSessionWithToken with the token directly.
 	// returns true upon success or false, the session token and an error upon failure.
-	ValidateSessionWithRequest(ctx context.Context, request *http.Request) (bool, *descope.Token, error)
+	ValidateSessionWithRequest(request *http.Request) (bool, *descope.Token, error)
 
 	// ValidateSessionWithToken - Use to validate a session token directly.
 	// Should be called before any private API call that requires authorization.
@@ -270,7 +270,7 @@ type Authentication interface {
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	// Alternatively use RefreshSessionWithToken with the refresh token directly.
 	// returns true upon success or false, the updated session token and an error upon failure.
-	RefreshSessionWithRequest(ctx context.Context, request *http.Request, w http.ResponseWriter) (bool, *descope.Token, error)
+	RefreshSessionWithRequest(request *http.Request, w http.ResponseWriter) (bool, *descope.Token, error)
 
 	// RefreshSessionWithToken - Use to refresh an expired session with a given refresh token.
 	// Should be called when a session has expired (failed validation) to renew it.
@@ -284,7 +284,7 @@ type Authentication interface {
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	// Alternatively use ValidateAndRefreshSessionWithTokens with the tokens directly.
 	// returns true upon success or false, the potentially updated session token and an error upon failure.
-	ValidateAndRefreshSessionWithRequest(ctx context.Context, request *http.Request, w http.ResponseWriter) (bool, *descope.Token, error)
+	ValidateAndRefreshSessionWithRequest(request *http.Request, w http.ResponseWriter) (bool, *descope.Token, error)
 
 	// ValidateAndRefreshSessionWithTokens - Use to validate a session with the session and refresh tokens.
 	// Should be called before any private API call that requires authorization.
@@ -337,14 +337,14 @@ type Authentication interface {
 
 	// Logout - Logs out from the current session and deletes the session and refresh cookies in the http response.
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
-	Logout(ctx context.Context, request *http.Request, w http.ResponseWriter) error
+	Logout(request *http.Request, w http.ResponseWriter) error
 
 	// LogoutAll - Use to perform logout from all active sessions for the request user. This will revoke the given tokens
 	// and if given options will also remove existing session on the given response sent to the client.
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
-	LogoutAll(ctx context.Context, request *http.Request, w http.ResponseWriter) error
+	LogoutAll(request *http.Request, w http.ResponseWriter) error
 
 	// Me - Use to retrieve current session user details. The request requires a valid refresh token.
 	// returns the user details or error if the refresh token is not valid.
-	Me(ctx context.Context, request *http.Request) (*descope.UserResponse, error)
+	Me(request *http.Request) (*descope.UserResponse, error)
 }

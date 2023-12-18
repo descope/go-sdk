@@ -15,7 +15,7 @@ import (
 func AuthenticationMiddleware(auth Authentication, onFailure func(http.ResponseWriter, *http.Request, error), onSuccess func(http.ResponseWriter, *http.Request, http.Handler, *descope.Token)) func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			if ok, token, err := auth.ValidateAndRefreshSessionWithRequest(r.Context(), r, w); ok {
+			if ok, token, err := auth.ValidateAndRefreshSessionWithRequest(r, w); ok {
 				if onSuccess != nil {
 					onSuccess(w, r, next, token)
 				} else {
