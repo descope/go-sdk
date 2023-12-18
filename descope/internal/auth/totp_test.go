@@ -2,6 +2,7 @@ package auth
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
 	"strings"
@@ -34,7 +35,7 @@ func TestTOTPSignUp(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	token, err := a.TOTP().SignUp(loginID, &descope.User{Name: "test"})
+	token, err := a.TOTP().SignUp(context.Background(), loginID, &descope.User{Name: "test"})
 	require.NoError(t, err)
 	assert.NotNil(t, token)
 }
@@ -42,7 +43,7 @@ func TestTOTPSignUp(t *testing.T) {
 func TestTOTPSignUpFailure(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.TOTP().SignUp("", &descope.User{Name: "test"})
+	_, err = a.TOTP().SignUp(context.Background(), "", &descope.User{Name: "test"})
 	assert.Error(t, err)
 }
 
@@ -72,7 +73,7 @@ func TestTOTPUpdate(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	token, err := a.TOTP().UpdateUser(loginID, r)
+	token, err := a.TOTP().UpdateUser(context.Background(), loginID, r)
 	require.NoError(t, err)
 	assert.NotNil(t, token)
 }
@@ -81,7 +82,7 @@ func TestTOTPUpdateFailure(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
-	_, err = a.TOTP().UpdateUser("", r)
+	_, err = a.TOTP().UpdateUser(context.Background(), "", r)
 	assert.Error(t, err)
 }
 
@@ -117,7 +118,7 @@ func TestTOTPVerify(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	authInfo, err := a.TOTP().SignInCode(loginID, code, nil, nil, nil)
+	authInfo, err := a.TOTP().SignInCode(context.Background(), loginID, code, nil, nil, nil)
 	require.NoError(t, err)
 	assert.NotNil(t, authInfo)
 	assert.True(t, authInfo.FirstSeen)
@@ -159,7 +160,7 @@ func TestTOTPVerifyLoginOptions(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	authInfo, err := a.TOTP().SignInCode(loginID, code, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, nil)
+	authInfo, err := a.TOTP().SignInCode(context.Background(), loginID, code, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, nil)
 	require.NoError(t, err)
 	assert.NotNil(t, authInfo)
 	assert.True(t, authInfo.FirstSeen)
@@ -169,7 +170,7 @@ func TestTOTPVerifyLoginOptions(t *testing.T) {
 func TestTOTPVerifyFailure(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.TOTP().SignInCode("", "code", nil, nil, nil)
+	_, err = a.TOTP().SignInCode(context.Background(), "", "code", nil, nil, nil)
 	assert.Error(t, err)
 
 }

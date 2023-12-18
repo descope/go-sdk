@@ -1,6 +1,7 @@
 package mgmt
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -19,7 +20,7 @@ func TestListFlowsSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 	}, response))
-	res, err := mgmt.Flow().ListFlows()
+	res, err := mgmt.Flow().ListFlows(context.Background())
 	require.NoError(t, err)
 	assert.EqualValues(t, response, res)
 }
@@ -36,7 +37,7 @@ func TestExportFlowSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, flowID, req["flowId"])
 	}, response))
-	res, err := mgmt.Flow().ExportFlow(flowID)
+	res, err := mgmt.Flow().ExportFlow(context.Background(), flowID)
 	require.NoError(t, err)
 	assert.EqualValues(t, response, res)
 }
@@ -44,7 +45,7 @@ func TestExportFlowSuccess(t *testing.T) {
 func TestExportFlowMissingArgument(t *testing.T) {
 	flowID := ""
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := mgmt.Flow().ExportFlow(flowID)
+	res, err := mgmt.Flow().ExportFlow(context.Background(), flowID)
 	require.ErrorContains(t, err, utils.NewInvalidArgumentError("flowID").Message)
 	assert.Nil(t, res)
 }
@@ -63,7 +64,7 @@ func TestImportFlowSuccess(t *testing.T) {
 		require.NotEmpty(t, req["flow"])
 		require.Len(t, req["screens"], 1)
 	}, response))
-	res, err := mgmt.Flow().ImportFlow(flowID, response.Flow, response.Screens)
+	res, err := mgmt.Flow().ImportFlow(context.Background(), flowID, response.Flow, response.Screens)
 	require.NoError(t, err)
 	assert.EqualValues(t, response, res)
 }
@@ -71,7 +72,7 @@ func TestImportFlowSuccess(t *testing.T) {
 func TestImportFlowMissingArgument(t *testing.T) {
 	flowID := ""
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := mgmt.Flow().ImportFlow(flowID, &descope.Flow{}, nil)
+	res, err := mgmt.Flow().ImportFlow(context.Background(), flowID, &descope.Flow{}, nil)
 	require.ErrorContains(t, err, utils.NewInvalidArgumentError("flowID").Message)
 	assert.Nil(t, res)
 }
@@ -83,7 +84,7 @@ func TestExportThemeSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 	}, theme))
-	res, err := mgmt.Flow().ExportTheme()
+	res, err := mgmt.Flow().ExportTheme(context.Background())
 	require.NoError(t, err)
 	assert.EqualValues(t, theme, res)
 }
@@ -98,14 +99,14 @@ func TestImportThemeSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.NotEmpty(t, req["theme"])
 	}, theme))
-	res, err := mgmt.Flow().ImportTheme(theme)
+	res, err := mgmt.Flow().ImportTheme(context.Background(), theme)
 	require.NoError(t, err)
 	assert.EqualValues(t, theme, res)
 }
 
 func TestImportThemeMissingArgument(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := mgmt.Flow().ImportTheme(nil)
+	res, err := mgmt.Flow().ImportTheme(context.Background(), nil)
 	require.ErrorContains(t, err, utils.NewInvalidArgumentError("theme").Message)
 	assert.Nil(t, res)
 }

@@ -1,6 +1,7 @@
 package mgmt
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -26,14 +27,14 @@ func TestTenantCreateSuccess(t *testing.T) {
 		assert.EqualValues(t, map[string]any{"k1": "v1"}, customAttributes)
 	}, response))
 
-	id, err := mgmt.Tenant().Create(&descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}})
+	id, err := mgmt.Tenant().Create(context.Background(), &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)
 }
 
 func TestTenantCreateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	id, err := mgmt.Tenant().Create(&descope.TenantRequest{})
+	id, err := mgmt.Tenant().Create(context.Background(), &descope.TenantRequest{})
 	require.Error(t, err)
 	require.Empty(t, id)
 }
@@ -53,15 +54,15 @@ func TestTenantCreateWithIDSuccess(t *testing.T) {
 		customAttributes := req["customAttributes"].(map[string]any)
 		assert.EqualValues(t, map[string]any{"k1": "v1"}, customAttributes)
 	}, response))
-	err := mgmt.Tenant().CreateWithID("123", &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}})
+	err := mgmt.Tenant().CreateWithID(context.Background(), "123", &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}})
 	require.NoError(t, err)
 }
 
 func TestTenantCreateWithIDError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.Tenant().CreateWithID("", &descope.TenantRequest{Name: "abc"})
+	err := mgmt.Tenant().CreateWithID(context.Background(), "", &descope.TenantRequest{Name: "abc"})
 	require.Error(t, err)
-	err = mgmt.Tenant().CreateWithID("123", &descope.TenantRequest{})
+	err = mgmt.Tenant().CreateWithID(context.Background(), "123", &descope.TenantRequest{})
 	require.Error(t, err)
 }
 
@@ -79,15 +80,15 @@ func TestTenantUpdateSuccess(t *testing.T) {
 		customAttributes := req["customAttributes"].(map[string]any)
 		assert.EqualValues(t, map[string]any{"k1": "v1"}, customAttributes)
 	}))
-	err := mgmt.Tenant().Update("123", &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}})
+	err := mgmt.Tenant().Update(context.Background(), "123", &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}})
 	require.NoError(t, err)
 }
 
 func TestTenantUpdateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.Tenant().Update("", &descope.TenantRequest{Name: "abc"})
+	err := mgmt.Tenant().Update(context.Background(), "", &descope.TenantRequest{Name: "abc"})
 	require.Error(t, err)
-	err = mgmt.Tenant().Update("123", &descope.TenantRequest{})
+	err = mgmt.Tenant().Update(context.Background(), "123", &descope.TenantRequest{})
 	require.Error(t, err)
 }
 
@@ -98,13 +99,13 @@ func TestTenantDeleteSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["id"])
 	}))
-	err := mgmt.Tenant().Delete("abc")
+	err := mgmt.Tenant().Delete(context.Background(), "abc")
 	require.NoError(t, err)
 }
 
 func TestTenantDeleteError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.Tenant().Delete("")
+	err := mgmt.Tenant().Delete(context.Background(), "")
 	require.Error(t, err)
 }
 
@@ -118,7 +119,7 @@ func TestAllTenantsLoadSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 	}, response))
-	res, err := mgmt.Tenant().LoadAll()
+	res, err := mgmt.Tenant().LoadAll(context.Background())
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res, 1)
@@ -130,7 +131,7 @@ func TestAllTenantsLoadSuccess(t *testing.T) {
 
 func TestAllTenantsLoadError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := mgmt.Tenant().LoadAll()
+	res, err := mgmt.Tenant().LoadAll(context.Background())
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -153,7 +154,7 @@ func TestSearchTenantsSuccess(t *testing.T) {
 		customAttributes := req["customAttributes"].(map[string]any)
 		assert.EqualValues(t, map[string]any{"k1": "v1"}, customAttributes)
 	}, response))
-	res, err := mgmt.Tenant().SearchAll(&descope.TenantSearchOptions{IDs: []string{"id1"}, Names: []string{"nm1"}, SelfProvisioningDomains: []string{"spdn1"}, CustomAttributes: m})
+	res, err := mgmt.Tenant().SearchAll(context.Background(), &descope.TenantSearchOptions{IDs: []string{"id1"}, Names: []string{"nm1"}, SelfProvisioningDomains: []string{"spdn1"}, CustomAttributes: m})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res, 1)
@@ -165,7 +166,7 @@ func TestSearchTenantsSuccess(t *testing.T) {
 
 func TestSearchTenantsLoadError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := mgmt.Tenant().SearchAll(&descope.TenantSearchOptions{})
+	res, err := mgmt.Tenant().SearchAll(context.Background(), &descope.TenantSearchOptions{})
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -179,7 +180,7 @@ func TestTenantLoadSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 	}, response))
-	res, err := mgmt.Tenant().Load("t1")
+	res, err := mgmt.Tenant().Load(context.Background(), "t1")
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "t1", res.ID)
@@ -190,7 +191,7 @@ func TestTenantLoadSuccess(t *testing.T) {
 
 func TestTenantLoadError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := mgmt.Tenant().Load("t1")
+	res, err := mgmt.Tenant().Load(context.Background(), "t1")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -204,7 +205,7 @@ func TestTenantLoadNoIDError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 	}, response))
-	res, err := mgmt.Tenant().Load("")
+	res, err := mgmt.Tenant().Load(context.Background(), "")
 	require.Error(t, err)
 	require.Nil(t, res)
 }

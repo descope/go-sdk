@@ -1,6 +1,7 @@
 package mgmt
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -20,7 +21,7 @@ func TestUpdateJwt(t *testing.T) {
 		require.EqualValues(t, customClaims, req["customClaims"])
 
 	}, map[string]interface{}{"jwt": expectedJWT}))
-	jwtRes, err := mgmt.JWT().UpdateJWTWithCustomClaims(orgJwt, customClaims)
+	jwtRes, err := mgmt.JWT().UpdateJWTWithCustomClaims(context.Background(), orgJwt, customClaims)
 	require.NoError(t, err)
 	require.EqualValues(t, expectedJWT, jwtRes)
 }
@@ -31,7 +32,7 @@ func TestUpdateJwtMissingJWT(t *testing.T) {
 		called = true
 
 	}))
-	jwtRes, err := mgmt.JWT().UpdateJWTWithCustomClaims("", nil)
+	jwtRes, err := mgmt.JWT().UpdateJWTWithCustomClaims(context.Background(), "", nil)
 	require.Error(t, err)
 	require.False(t, called)
 	require.Empty(t, jwtRes)
@@ -42,7 +43,7 @@ func TestUpdateJwtHTTPError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
 		called = true
 	}))
-	jwtRes, err := mgmt.JWT().UpdateJWTWithCustomClaims("test", nil)
+	jwtRes, err := mgmt.JWT().UpdateJWTWithCustomClaims(context.Background(), "test", nil)
 	require.Error(t, err)
 	require.True(t, called)
 	require.Empty(t, jwtRes)

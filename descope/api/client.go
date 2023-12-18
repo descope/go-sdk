@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -860,15 +861,15 @@ func NewClient(conf ClientParams) *Client {
 	}
 }
 
-func (c *Client) DoGetRequest(uri string, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
-	return c.DoRequest(http.MethodGet, uri, nil, options, pswd)
+func (c *Client) DoGetRequest(ctx context.Context, uri string, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
+	return c.DoRequest(ctx, http.MethodGet, uri, nil, options, pswd)
 }
 
-func (c *Client) DoDeleteRequest(uri string, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
-	return c.DoRequest(http.MethodDelete, uri, nil, options, pswd)
+func (c *Client) DoDeleteRequest(ctx context.Context, uri string, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
+	return c.DoRequest(ctx, http.MethodDelete, uri, nil, options, pswd)
 }
 
-func (c *Client) DoPostRequest(uri string, body interface{}, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
+func (c *Client) DoPostRequest(ctx context.Context, uri string, body interface{}, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
 	if options == nil {
 		options = &HTTPRequest{}
 	}
@@ -893,10 +894,10 @@ func (c *Client) DoPostRequest(uri string, body interface{}, options *HTTPReques
 		}
 	}
 
-	return c.DoRequest(http.MethodPost, uri, payload, options, pswd)
+	return c.DoRequest(ctx, http.MethodPost, uri, payload, options, pswd)
 }
 
-func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
+func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.Reader, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
 	if options == nil {
 		options = &HTTPRequest{}
 	}
@@ -951,6 +952,10 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 	c.addDescopeHeaders(req)
 
 	logger.LogDebug("Sending request to [%s]", url)
+
+	if ctx != nil {
+		req = req.WithContext(ctx)
+	}
 	response, err := c.httpClient.Do(req)
 	if err != nil {
 		logger.LogError("Failed sending request to [%s]", err, url)

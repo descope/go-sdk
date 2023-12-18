@@ -2,6 +2,7 @@ package auth
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -33,11 +34,11 @@ func TestSignInMagicLinkEmptyLoginID(t *testing.T) {
 	email := ""
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.MagicLink().SignIn(descope.MethodEmail, email, "", nil, nil)
+	_, err = a.MagicLink().SignIn(context.Background(), descope.MethodEmail, email, "", nil, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 
-	_, err = a.MagicLink().SignIn(descope.MethodEmail, email, "http://test.me", nil, nil)
+	_, err = a.MagicLink().SignIn(context.Background(), descope.MethodEmail, email, "http://test.me", nil, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
@@ -46,7 +47,7 @@ func TestSignInMagicLinkStepupNoJWT(t *testing.T) {
 	email := "e@e.com"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.MagicLink().SignIn(descope.MethodEmail, email, "", nil, &descope.LoginOptions{Stepup: true})
+	_, err = a.MagicLink().SignIn(context.Background(), descope.MethodEmail, email, "", nil, &descope.LoginOptions{Stepup: true})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidStepUpJWT)
 }
@@ -67,7 +68,7 @@ func TestSignInMagicLinkEmail(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	me, err := a.MagicLink().SignIn(descope.MethodEmail, email, uri, nil, nil)
+	me, err := a.MagicLink().SignIn(context.Background(), descope.MethodEmail, email, uri, nil, nil)
 	require.NoError(t, err)
 	require.EqualValues(t, maskedEmail, me)
 }
@@ -96,7 +97,7 @@ func TestSignInMagicLinkEmailLoginOptions(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	me, err := a.MagicLink().SignIn(descope.MethodEmail, email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
+	me, err := a.MagicLink().SignIn(context.Background(), descope.MethodEmail, email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
 	require.NoError(t, err)
 	require.EqualValues(t, maskedEmail, me)
 }
@@ -125,7 +126,7 @@ func TestSignInMagicLinkEmailLoginOptionsMFA(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	_, err = a.MagicLink().SignIn(descope.MethodEmail, email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{MFA: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
+	_, err = a.MagicLink().SignIn(context.Background(), descope.MethodEmail, email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{MFA: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
 	require.NoError(t, err)
 }
 
@@ -133,11 +134,11 @@ func TestInvalidPhoneSignUpSMS(t *testing.T) {
 	phone := "thisisemail@af.com"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.MagicLink().SignUp(descope.MethodSMS, phone, "", &descope.User{Name: "test"})
+	_, err = a.MagicLink().SignUp(context.Background(), descope.MethodSMS, phone, "", &descope.User{Name: "test"})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 
-	_, err = a.MagicLink().SignUp(descope.MethodSMS, phone, "http://test.me", &descope.User{Name: "test"})
+	_, err = a.MagicLink().SignUp(context.Background(), descope.MethodSMS, phone, "http://test.me", &descope.User{Name: "test"})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
@@ -146,11 +147,11 @@ func TestInvalidPhoneSignUpWhatsApp(t *testing.T) {
 	phone := "thisisemail@af.com"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.MagicLink().SignUp(descope.MethodSMS, phone, "", &descope.User{Name: "test"})
+	_, err = a.MagicLink().SignUp(context.Background(), descope.MethodSMS, phone, "", &descope.User{Name: "test"})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 
-	_, err = a.MagicLink().SignUp(descope.MethodSMS, phone, "http://test.me", &descope.User{Name: "test"})
+	_, err = a.MagicLink().SignUp(context.Background(), descope.MethodSMS, phone, "http://test.me", &descope.User{Name: "test"})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
@@ -159,11 +160,11 @@ func TestInvalidEmailSignUpEmail(t *testing.T) {
 	email := "943248329844"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.MagicLink().SignUp(descope.MethodEmail, email, "", &descope.User{Name: "test"})
+	_, err = a.MagicLink().SignUp(context.Background(), descope.MethodEmail, email, "", &descope.User{Name: "test"})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 
-	_, err = a.MagicLink().SignUp(descope.MethodEmail, email, "http://test.me", &descope.User{Name: "test"})
+	_, err = a.MagicLink().SignUp(context.Background(), descope.MethodEmail, email, "http://test.me", &descope.User{Name: "test"})
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
@@ -187,7 +188,7 @@ func TestSignUpMagicLinkEmail(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	me, err := a.MagicLink().SignUp(descope.MethodEmail, email, uri, &descope.User{Name: "test"})
+	me, err := a.MagicLink().SignUp(context.Background(), descope.MethodEmail, email, uri, &descope.User{Name: "test"})
 	require.NoError(t, err)
 	require.EqualValues(t, maskedEmail, me)
 }
@@ -210,7 +211,7 @@ func TestSignUpMagicLinkEmailNoUser(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	_, err = a.MagicLink().SignUp(descope.MethodEmail, email, uri, nil)
+	_, err = a.MagicLink().SignUp(context.Background(), descope.MethodEmail, email, uri, nil)
 	require.NoError(t, err)
 }
 
@@ -232,7 +233,7 @@ func TestSignUpOrInMagicLinkEmail(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	me, err := a.MagicLink().SignUpOrIn(descope.MethodEmail, email, uri)
+	me, err := a.MagicLink().SignUpOrIn(context.Background(), descope.MethodEmail, email, uri)
 	require.NoError(t, err)
 	require.EqualValues(t, maskedEmail, me)
 }
@@ -241,7 +242,7 @@ func TestSignUpOrInMagicLinkNoLoginID(t *testing.T) {
 	uri := "http://test.me"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.MagicLink().SignUpOrIn(descope.MethodSMS, "", uri)
+	_, err = a.MagicLink().SignUpOrIn(context.Background(), descope.MethodSMS, "", uri)
 	require.Error(t, err)
 }
 
@@ -263,7 +264,7 @@ func TestSignUpOrInMagicLinkSMS(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	mp, err := a.MagicLink().SignUpOrIn(descope.MethodSMS, email, uri)
+	mp, err := a.MagicLink().SignUpOrIn(context.Background(), descope.MethodSMS, email, uri)
 	require.NoError(t, err)
 	require.EqualValues(t, phone, mp)
 }
@@ -286,7 +287,7 @@ func TestSignUpOrInMagicLinkWhatsapp(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	mp, err := a.MagicLink().SignUpOrIn(descope.MethodWhatsApp, email, uri)
+	mp, err := a.MagicLink().SignUpOrIn(context.Background(), descope.MethodWhatsApp, email, uri)
 	require.NoError(t, err)
 	require.EqualValues(t, phone, mp)
 }
@@ -305,7 +306,7 @@ func TestSignUpMagicLinkSMS(t *testing.T) {
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
-	_, err = a.MagicLink().SignUp(descope.MethodSMS, phone, uri, &descope.User{Name: "test"})
+	_, err = a.MagicLink().SignUp(context.Background(), descope.MethodSMS, phone, uri, &descope.User{Name: "test"})
 	require.NoError(t, err)
 }
 
@@ -323,7 +324,7 @@ func TestSignUpMagicLinkWhatsApp(t *testing.T) {
 		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
 	}))
 	require.NoError(t, err)
-	_, err = a.MagicLink().SignUp(descope.MethodWhatsApp, phone, uri, &descope.User{Name: "test"})
+	_, err = a.MagicLink().SignUp(context.Background(), descope.MethodWhatsApp, phone, uri, &descope.User{Name: "test"})
 	require.NoError(t, err)
 }
 
@@ -356,7 +357,7 @@ func TestVerifyMagicLinkCodeWithSession(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	info, err := a.MagicLink().Verify(token, w)
+	info, err := a.MagicLink().Verify(context.Background(), token, w)
 	require.NoError(t, err)
 	assert.NotEmpty(t, info.SessionToken.JWT)
 	assert.Equal(t, firstSeen, info.FirstSeen)
@@ -378,7 +379,7 @@ func TestVerifyMagicLinkCodeNoSession(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	info, err := a.MagicLink().Verify(token, w)
+	info, err := a.MagicLink().Verify(context.Background(), token, w)
 	require.NoError(t, err)
 	assert.Empty(t, info)
 }
@@ -418,11 +419,11 @@ func TestUpdateUserEmail(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	me, err := a.MagicLink().UpdateUserEmail(loginID, email, uri, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true}, r)
+	me, err := a.MagicLink().UpdateUserEmail(context.Background(), loginID, email, uri, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true}, r)
 	require.NoError(t, err)
 	require.EqualValues(t, maskedEmail, me)
 	checkOptions = false
-	me, err = a.MagicLink().UpdateUserEmail(loginID, email, uri, nil, r)
+	me, err = a.MagicLink().UpdateUserEmail(context.Background(), loginID, email, uri, nil, r)
 	require.NoError(t, err)
 	require.EqualValues(t, maskedEmail, me)
 }
@@ -432,13 +433,13 @@ func TestUpdateEmailMagicLinkFailures(t *testing.T) {
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.MagicLink().UpdateUserEmail("", "email@email.com", "", nil, r)
+	_, err = a.MagicLink().UpdateUserEmail(context.Background(), "", "email@email.com", "", nil, r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "loginID"))
-	_, err = a.MagicLink().UpdateUserEmail("id", "", "", nil, r)
+	_, err = a.MagicLink().UpdateUserEmail(context.Background(), "id", "", "", nil, r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "email"))
-	_, err = a.MagicLink().UpdateUserEmail("id", "email", "", nil, r)
+	_, err = a.MagicLink().UpdateUserEmail(context.Background(), "id", "email", "", nil, r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "email"))
 }
@@ -476,11 +477,11 @@ func TestUpdateUserPhone(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	mp, err := a.MagicLink().UpdateUserPhone(descope.MethodSMS, loginID, phone, uri, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true}, r)
+	mp, err := a.MagicLink().UpdateUserPhone(context.Background(), descope.MethodSMS, loginID, phone, uri, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true}, r)
 	require.NoError(t, err)
 	require.EqualValues(t, maskedPhone, mp)
 	checkOptions = false
-	mp, err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, loginID, phone, uri, nil, r)
+	mp, err = a.MagicLink().UpdateUserPhone(context.Background(), descope.MethodSMS, loginID, phone, uri, nil, r)
 	require.NoError(t, err)
 	require.EqualValues(t, maskedPhone, mp)
 }
@@ -490,21 +491,21 @@ func TestUpdatePhoneMagicLinkFailures(t *testing.T) {
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "", "+1111111111", "", nil, r)
+	_, err = a.MagicLink().UpdateUserPhone(context.Background(), descope.MethodSMS, "", "+1111111111", "", nil, r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "loginID"))
-	_, err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "id", "", "", nil, r)
+	_, err = a.MagicLink().UpdateUserPhone(context.Background(), descope.MethodSMS, "id", "", "", nil, r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "phone"))
-	_, err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "id", "phone", "", nil, r)
+	_, err = a.MagicLink().UpdateUserPhone(context.Background(), descope.MethodSMS, "id", "phone", "", nil, r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "phone"))
-	_, err = a.MagicLink().UpdateUserPhone(descope.MethodEmail, "id", "+1111111111", "", nil, r)
+	_, err = a.MagicLink().UpdateUserPhone(context.Background(), descope.MethodEmail, "id", "+1111111111", "", nil, r)
 	assert.Error(t, err)
 	assert.True(t, strings.Contains(err.Error(), "method"))
 	r = &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: "somename", Value: jwtTokenValid})
-	_, err = a.MagicLink().UpdateUserPhone(descope.MethodSMS, "id", "+111111111111", "", nil, r)
+	_, err = a.MagicLink().UpdateUserPhone(context.Background(), descope.MethodSMS, "id", "+111111111111", "", nil, r)
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }

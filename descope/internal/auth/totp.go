@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/descope/go-sdk/descope"
@@ -11,12 +12,12 @@ type totp struct {
 	authenticationsBase
 }
 
-func (auth *totp) SignUp(loginID string, user *descope.User) (*descope.TOTPResponse, error) {
+func (auth *totp) SignUp(ctx context.Context, loginID string, user *descope.User) (*descope.TOTPResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(composeSignUpTOTPURL(), newSignUPTOTPRequestBody(loginID, user), nil, "")
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeSignUpTOTPURL(), newSignUPTOTPRequestBody(loginID, user), nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -28,7 +29,7 @@ func (auth *totp) SignUp(loginID string, user *descope.User) (*descope.TOTPRespo
 	return totpResponse, nil
 }
 
-func (auth *totp) UpdateUser(loginID string, r *http.Request) (*descope.TOTPResponse, error) {
+func (auth *totp) UpdateUser(ctx context.Context, loginID string, r *http.Request) (*descope.TOTPResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
@@ -36,7 +37,7 @@ func (auth *totp) UpdateUser(loginID string, r *http.Request) (*descope.TOTPResp
 	if err != nil {
 		return nil, err
 	}
-	httpResponse, err := auth.client.DoPostRequest(composeUpdateTOTPURL(), newSignUPTOTPRequestBody(loginID, nil), nil, pswd)
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeUpdateTOTPURL(), newSignUPTOTPRequestBody(loginID, nil), nil, pswd)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +49,7 @@ func (auth *totp) UpdateUser(loginID string, r *http.Request) (*descope.TOTPResp
 	return totpResponse, nil
 }
 
-func (auth *totp) SignInCode(loginID string, code string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (auth *totp) SignInCode(ctx context.Context, loginID string, code string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
@@ -61,7 +62,7 @@ func (auth *totp) SignInCode(loginID string, code string, r *http.Request, login
 		}
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(composeVerifyTOTPCodeURL(), newAuthenticationVerifyTOTPRequestBody(loginID, code, loginOptions), nil, pswd)
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeVerifyTOTPCodeURL(), newAuthenticationVerifyTOTPRequestBody(loginID, code, loginOptions), nil, pswd)
 	if err != nil {
 		return nil, err
 	}
