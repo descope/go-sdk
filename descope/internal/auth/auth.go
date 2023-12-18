@@ -243,7 +243,7 @@ func (auth *authenticationService) ValidateSessionWithToken(ctx context.Context,
 	return auth.validateSession(ctx, sessionToken)
 }
 
-func (auth *authenticationService) validateSession(ctx context.Context, sessionToken string) (valid bool, token *descope.Token, err error) {
+func (auth *authenticationService) validateSession(_ context.Context, sessionToken string) (valid bool, token *descope.Token, err error) {
 	token, err = auth.validateJWT(sessionToken)
 	if err != nil {
 		return false, nil, err
@@ -385,7 +385,7 @@ func (auth *authenticationService) GetMatchedRoles(ctx context.Context, token *d
 	return auth.GetMatchedTenantRoles(ctx, token, "", roles)
 }
 
-func (auth *authenticationService) ValidateTenantRoles(ctx context.Context, token *descope.Token, tenant string, roles []string) bool {
+func (auth *authenticationService) ValidateTenantRoles(_ context.Context, token *descope.Token, tenant string, roles []string) bool {
 	if tenant != "" && !isAssociatedWithTenant(token, tenant) {
 		return false
 	}
@@ -398,7 +398,7 @@ func (auth *authenticationService) ValidateTenantRoles(ctx context.Context, toke
 	return true
 }
 
-func (auth *authenticationService) GetMatchedTenantRoles(ctx context.Context, token *descope.Token, tenant string, roles []string) []string {
+func (auth *authenticationService) GetMatchedTenantRoles(_ context.Context, token *descope.Token, tenant string, roles []string) []string {
 	if tenant != "" && !isAssociatedWithTenant(token, tenant) {
 		return []string{}
 	}

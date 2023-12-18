@@ -63,7 +63,7 @@ lint_go_build() {
 # Run golangci-lint
 lint_run_golangci() {
 	echo "- Running golangci-lint"
-	GOLANG_CI_SUPPORTED_VERSION="1.45.0"
+	GOLANG_CI_SUPPORTED_VERSION="1.51.2"
 	INSTALLED_GOLANG_CLI_VERSION="$(golangci-lint --version)"
 	if [[ $INSTALLED_GOLANG_CLI_VERSION != *"$GOLANG_CI_SUPPORTED_VERSION"* ]]; then
 		echo "Installing golangci-lint for the first time..."
