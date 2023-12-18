@@ -838,6 +838,38 @@ func TestUserAddRoleError(t *testing.T) {
 	require.Nil(t, res)
 }
 
+func TestUserSetRoleSuccess(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"roleNames": []string{"foo"},
+		}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, []any{"foo"}, req["roleNames"])
+	}, response))
+	res, err := m.User().SetRoles("abc", []string{"foo"})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, []string{"foo"}, res.RoleNames)
+}
+
+func TestUserSetRoleBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := m.User().SetRoles("", []string{"foo"})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserSetRoleError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := m.User().SetRoles("abc", []string{"foo"})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
 func TestUserRemoveRoleSuccess(t *testing.T) {
 	response := map[string]any{
 		"user": map[string]any{

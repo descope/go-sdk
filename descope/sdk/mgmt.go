@@ -197,6 +197,10 @@ type User interface {
 	// value should match the type of the declared attribute
 	UpdateCustomAttribute(loginID, key string, value any) (*descope.UserResponse, error)
 
+	// Set roles for a user without tenant association. Use SetTenantRoles for users
+	// that are part of a multi-tenant project.
+	SetRoles(loginID string, roles []string) (*descope.UserResponse, error)
+
 	// Add roles for a user without tenant association. Use AddTenantRoles for users
 	// that are part of a multi-tenant project.
 	AddRoles(loginID string, roles []string) (*descope.UserResponse, error)
@@ -210,6 +214,9 @@ type User interface {
 
 	// Remove a tenant association from an existing user.
 	RemoveTenant(loginID string, tenantID string) (*descope.UserResponse, error)
+
+	// Set roles for a user in a specific tenant.
+	SetTenantRoles(loginID string, tenantID string, roles []string) (*descope.UserResponse, error)
 
 	// Add roles for a user in a specific tenant.
 	AddTenantRoles(loginID string, tenantID string, roles []string) (*descope.UserResponse, error)

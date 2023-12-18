@@ -274,6 +274,18 @@ func (u *user) UpdateCustomAttribute(loginID, key string, value any) (*descope.U
 	return unmarshalUserResponse(res)
 }
 
+func (u *user) SetRoles(loginID string, roles []string) (*descope.UserResponse, error) {
+	if loginID == "" {
+		return nil, utils.NewInvalidArgumentError("loginID")
+	}
+	req := makeUpdateUserRolesRequest(loginID, "", roles)
+	res, err := u.client.DoPostRequest(api.Routes.ManagementUserSetRole(), req, nil, u.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalUserResponse(res)
+}
+
 func (u *user) AddRoles(loginID string, roles []string) (*descope.UserResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
@@ -316,6 +328,18 @@ func (u *user) RemoveTenant(loginID string, tenantID string) (*descope.UserRespo
 	}
 	req := makeUpdateUserTenantRequest(loginID, tenantID)
 	res, err := u.client.DoPostRequest(api.Routes.ManagementUserRemoveTenant(), req, nil, u.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalUserResponse(res)
+}
+
+func (u *user) SetTenantRoles(loginID string, tenantID string, roles []string) (*descope.UserResponse, error) {
+	if loginID == "" {
+		return nil, utils.NewInvalidArgumentError("loginID")
+	}
+	req := makeUpdateUserRolesRequest(loginID, tenantID, roles)
+	res, err := u.client.DoPostRequest(api.Routes.ManagementUserSetRole(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}
