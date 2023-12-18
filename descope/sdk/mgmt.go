@@ -115,6 +115,12 @@ type User interface {
 	// IMPORTANT: This action is irreversible. Use carefully.
 	Delete(ctx context.Context, loginID string) error
 
+	// Delete an existing user by User ID. The user ID can be found
+	// on the user's JWT.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteByUserID(ctx context.Context, userID string) error
+
 	// Delete all test users in the project.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.

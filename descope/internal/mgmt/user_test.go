@@ -328,6 +328,17 @@ func TestUserDeleteSuccess(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestUserDeleteByUserIDSuccess(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["userId"])
+	}))
+	err := m.User().DeleteByUserID(context.Background(), "abc")
+	require.NoError(t, err)
+}
+
 func TestDeleteAllTestUsersSuccess(t *testing.T) {
 	visited := false
 	m := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
@@ -342,6 +353,12 @@ func TestDeleteAllTestUsersSuccess(t *testing.T) {
 func TestUserDeleteError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
 	err := m.User().Delete(context.Background(), "")
+	require.Error(t, err)
+}
+
+func TestUserDeleteByUserIDError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	err := m.User().DeleteByUserID(context.Background(), "")
 	require.Error(t, err)
 }
 

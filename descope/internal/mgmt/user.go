@@ -88,7 +88,18 @@ func (u *user) Delete(ctx context.Context, loginID string) error {
 	if loginID == "" {
 		return utils.NewInvalidArgumentError("loginID")
 	}
-	req := map[string]any{"loginId": loginID}
+	return u.delete(ctx, loginID, "")
+}
+
+func (u *user) DeleteByUserID(ctx context.Context, userID string) error {
+	if userID == "" {
+		return utils.NewInvalidArgumentError("userID")
+	}
+	return u.delete(ctx, "", userID)
+}
+
+func (u *user) delete(ctx context.Context, loginID, userID string) error {
+	req := map[string]any{"loginId": loginID, "userId": userID}
 	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserDelete(), req, nil, u.conf.ManagementKey)
 	return err
 }
