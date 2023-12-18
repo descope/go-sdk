@@ -75,42 +75,42 @@ type MockMagicLink struct {
 	UpdateUserPhoneError  error
 }
 
-func (m *MockMagicLink) SignIn(ctx context.Context, method descope.DeliveryMethod, loginID, URI string, r *http.Request, loginOptions *descope.LoginOptions) (string, error) {
+func (m *MockMagicLink) SignIn(_ context.Context, method descope.DeliveryMethod, loginID, URI string, r *http.Request, loginOptions *descope.LoginOptions) (string, error) {
 	if m.SignInAssert != nil {
 		m.SignInAssert(method, loginID, URI, r, loginOptions)
 	}
 	return "", m.SignInError
 }
 
-func (m *MockMagicLink) SignUp(ctx context.Context, method descope.DeliveryMethod, loginID, URI string, user *descope.User) (string, error) {
+func (m *MockMagicLink) SignUp(_ context.Context, method descope.DeliveryMethod, loginID, URI string, user *descope.User) (string, error) {
 	if m.SignUpAssert != nil {
 		m.SignUpAssert(method, loginID, URI, user)
 	}
 	return "", m.SignUpError
 }
 
-func (m *MockMagicLink) SignUpOrIn(ctx context.Context, method descope.DeliveryMethod, loginID string, URI string) (string, error) {
+func (m *MockMagicLink) SignUpOrIn(_ context.Context, method descope.DeliveryMethod, loginID string, URI string) (string, error) {
 	if m.SignUpOrInAssert != nil {
 		m.SignUpOrInAssert(method, loginID, URI)
 	}
 	return "", m.SignUpOrInError
 }
 
-func (m *MockMagicLink) Verify(ctx context.Context, token string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (m *MockMagicLink) Verify(_ context.Context, token string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.VerifyAssert != nil {
 		m.VerifyAssert(token, w)
 	}
 	return m.VerifyResponse, m.VerifyError
 }
 
-func (m *MockMagicLink) UpdateUserEmail(ctx context.Context, loginID, email, URI string, updateOptions *descope.UpdateOptions, r *http.Request) (string, error) {
+func (m *MockMagicLink) UpdateUserEmail(_ context.Context, loginID, email, URI string, updateOptions *descope.UpdateOptions, r *http.Request) (string, error) {
 	if m.UpdateUserEmailAssert != nil {
 		m.UpdateUserEmailAssert(loginID, email, URI, updateOptions, r)
 	}
 	return "", m.UpdateUserEmailError
 }
 
-func (m *MockMagicLink) UpdateUserPhone(ctx context.Context, method descope.DeliveryMethod, loginID, phone, URI string, updateOptions *descope.UpdateOptions, r *http.Request) (string, error) {
+func (m *MockMagicLink) UpdateUserPhone(_ context.Context, method descope.DeliveryMethod, loginID, phone, URI string, updateOptions *descope.UpdateOptions, r *http.Request) (string, error) {
 	if m.UpdateUserPhoneAssert != nil {
 		m.UpdateUserPhoneAssert(method, loginID, phone, URI, updateOptions, r)
 	}
@@ -144,42 +144,42 @@ type MockEnchantedLink struct {
 	UpdateUserEmailResponse *descope.EnchantedLinkResponse
 }
 
-func (m *MockEnchantedLink) SignIn(ctx context.Context, loginID, URI string, r *http.Request, loginOptions *descope.LoginOptions) (*descope.EnchantedLinkResponse, error) {
+func (m *MockEnchantedLink) SignIn(_ context.Context, loginID, URI string, r *http.Request, loginOptions *descope.LoginOptions) (*descope.EnchantedLinkResponse, error) {
 	if m.SignInAssert != nil {
 		m.SignInAssert(loginID, URI, r, loginOptions)
 	}
 	return m.SignInResponse, m.SignInError
 }
 
-func (m *MockEnchantedLink) SignUp(ctx context.Context, loginID, URI string, user *descope.User) (*descope.EnchantedLinkResponse, error) {
+func (m *MockEnchantedLink) SignUp(_ context.Context, loginID, URI string, user *descope.User) (*descope.EnchantedLinkResponse, error) {
 	if m.SignUpAssert != nil {
 		m.SignUpAssert(loginID, URI, user)
 	}
 	return m.SignUpResponse, m.SignUpError
 }
 
-func (m *MockEnchantedLink) SignUpOrIn(ctx context.Context, loginID string, URI string) (*descope.EnchantedLinkResponse, error) {
+func (m *MockEnchantedLink) SignUpOrIn(_ context.Context, loginID string, URI string) (*descope.EnchantedLinkResponse, error) {
 	if m.SignUpOrInAssert != nil {
 		m.SignUpOrInAssert(loginID, URI)
 	}
 	return m.SignUpOrInResponse, m.SignUpOrInError
 }
 
-func (m *MockEnchantedLink) GetSession(ctx context.Context, pendingRef string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (m *MockEnchantedLink) GetSession(_ context.Context, pendingRef string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.GetSessionAssert != nil {
 		m.GetSessionAssert(pendingRef, w)
 	}
 	return m.GetSessionResponse, m.GetSessionError
 }
 
-func (m *MockEnchantedLink) Verify(ctx context.Context, token string) error {
+func (m *MockEnchantedLink) Verify(_ context.Context, token string) error {
 	if m.VerifyAssert != nil {
 		m.VerifyAssert(token)
 	}
 	return m.VerifyError
 }
 
-func (m *MockEnchantedLink) UpdateUserEmail(ctx context.Context, loginID, email, URI string, updateOptions *descope.UpdateOptions, r *http.Request) (*descope.EnchantedLinkResponse, error) {
+func (m *MockEnchantedLink) UpdateUserEmail(_ context.Context, loginID, email, URI string, updateOptions *descope.UpdateOptions, r *http.Request) (*descope.EnchantedLinkResponse, error) {
 	if m.UpdateUserEmailAssert != nil {
 		m.UpdateUserEmailAssert(loginID, email, URI, updateOptions, r)
 	}
@@ -209,42 +209,42 @@ type MockOTP struct {
 	UpdateUserPhoneError  error
 }
 
-func (m *MockOTP) SignIn(ctx context.Context, method descope.DeliveryMethod, loginID string, r *http.Request, loginOptions *descope.LoginOptions) (string, error) {
+func (m *MockOTP) SignIn(_ context.Context, method descope.DeliveryMethod, loginID string, r *http.Request, loginOptions *descope.LoginOptions) (string, error) {
 	if m.SignInAssert != nil {
 		m.SignInAssert(method, loginID, r, loginOptions)
 	}
 	return "", m.SignInError
 }
 
-func (m *MockOTP) SignUp(ctx context.Context, method descope.DeliveryMethod, loginID string, user *descope.User) (string, error) {
+func (m *MockOTP) SignUp(_ context.Context, method descope.DeliveryMethod, loginID string, user *descope.User) (string, error) {
 	if m.SignUpAssert != nil {
 		m.SignUpAssert(method, loginID, user)
 	}
 	return "", m.SignUpError
 }
 
-func (m *MockOTP) SignUpOrIn(ctx context.Context, method descope.DeliveryMethod, loginID string) (string, error) {
+func (m *MockOTP) SignUpOrIn(_ context.Context, method descope.DeliveryMethod, loginID string) (string, error) {
 	if m.SignUpOrInAssert != nil {
 		m.SignUpOrInAssert(method, loginID)
 	}
 	return "", m.SignUpOrInError
 }
 
-func (m *MockOTP) VerifyCode(ctx context.Context, method descope.DeliveryMethod, loginID string, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (m *MockOTP) VerifyCode(_ context.Context, method descope.DeliveryMethod, loginID string, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.VerifyCodeAssert != nil {
 		m.VerifyCodeAssert(method, loginID, code, w)
 	}
 	return m.VerifyCodeResponse, m.VerifyCodeError
 }
 
-func (m *MockOTP) UpdateUserEmail(ctx context.Context, loginID, email string, updateOptions *descope.UpdateOptions, r *http.Request) (string, error) {
+func (m *MockOTP) UpdateUserEmail(_ context.Context, loginID, email string, updateOptions *descope.UpdateOptions, r *http.Request) (string, error) {
 	if m.UpdateUserEmailAssert != nil {
 		m.UpdateUserEmailAssert(loginID, email, updateOptions, r)
 	}
 	return "", m.UpdateUserEmailError
 }
 
-func (m *MockOTP) UpdateUserPhone(ctx context.Context, method descope.DeliveryMethod, loginID, phone string, updateOptions *descope.UpdateOptions, r *http.Request) (string, error) {
+func (m *MockOTP) UpdateUserPhone(_ context.Context, method descope.DeliveryMethod, loginID, phone string, updateOptions *descope.UpdateOptions, r *http.Request) (string, error) {
 	if m.UpdateUserPhoneAssert != nil {
 		m.UpdateUserPhoneAssert(method, loginID, phone, updateOptions, r)
 	}
@@ -267,21 +267,21 @@ type MockTOTP struct {
 	UpdateUserResponse *descope.TOTPResponse
 }
 
-func (m *MockTOTP) SignUp(ctx context.Context, loginID string, user *descope.User) (*descope.TOTPResponse, error) {
+func (m *MockTOTP) SignUp(_ context.Context, loginID string, user *descope.User) (*descope.TOTPResponse, error) {
 	if m.SignUpAssert != nil {
 		m.SignUpAssert(loginID, user)
 	}
 	return m.SignUpResponse, m.SignUpError
 }
 
-func (m *MockTOTP) SignInCode(ctx context.Context, loginID string, code string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (m *MockTOTP) SignInCode(_ context.Context, loginID string, code string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.SignInCodeAssert != nil {
 		m.SignInCodeAssert(loginID, code, r, loginOptions, w)
 	}
 	return m.SignInCodeResponse, m.SignInCodeError
 }
 
-func (m *MockTOTP) UpdateUser(ctx context.Context, loginID string, r *http.Request) (*descope.TOTPResponse, error) {
+func (m *MockTOTP) UpdateUser(_ context.Context, loginID string, r *http.Request) (*descope.TOTPResponse, error) {
 	if m.UpdateUserAssert != nil {
 		m.UpdateUserAssert(loginID, r)
 	}
@@ -313,42 +313,42 @@ type MockPassword struct {
 	PolicyError    error
 }
 
-func (m *MockPassword) SignUp(ctx context.Context, loginID string, user *descope.User, password string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (m *MockPassword) SignUp(_ context.Context, loginID string, user *descope.User, password string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.SignUpAssert != nil {
 		m.SignUpAssert(loginID, user, password, w)
 	}
 	return m.SignUpResponse, m.SignUpError
 }
 
-func (m *MockPassword) SignIn(ctx context.Context, loginID string, password string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (m *MockPassword) SignIn(_ context.Context, loginID string, password string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.SignInAssert != nil {
 		m.SignInAssert(loginID, password, w)
 	}
 	return m.SignInResponse, m.SignInError
 }
 
-func (m *MockPassword) SendPasswordReset(ctx context.Context, loginID, redirectURL string) error {
+func (m *MockPassword) SendPasswordReset(_ context.Context, loginID, redirectURL string) error {
 	if m.ResetAssert != nil {
 		m.ResetAssert(loginID, redirectURL)
 	}
 	return m.ResetError
 }
 
-func (m *MockPassword) UpdateUserPassword(ctx context.Context, loginID, newPassword string, r *http.Request) error {
+func (m *MockPassword) UpdateUserPassword(_ context.Context, loginID, newPassword string, r *http.Request) error {
 	if m.UpdateAssert != nil {
 		m.UpdateAssert(loginID, newPassword, r)
 	}
 	return m.ResetError
 }
 
-func (m *MockPassword) ReplaceUserPassword(ctx context.Context, loginID, oldPassword, newPassword string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (m *MockPassword) ReplaceUserPassword(_ context.Context, loginID, oldPassword, newPassword string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.ReplaceAssert != nil {
 		m.ReplaceAssert(loginID, oldPassword, newPassword, w)
 	}
 	return m.ReplaceResponse, m.ReplaceError
 }
 
-func (m *MockPassword) GetPasswordPolicy(ctx context.Context) (*descope.PasswordPolicy, error) {
+func (m *MockPassword) GetPasswordPolicy(_ context.Context) (*descope.PasswordPolicy, error) {
 	return m.PolicyResponse, m.PolicyError
 }
 
@@ -364,14 +364,14 @@ type MockOAuth struct {
 	ExchangeTokenResponse *descope.AuthenticationInfo
 }
 
-func (m *MockOAuth) Start(ctx context.Context, provider descope.OAuthProvider, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
+func (m *MockOAuth) Start(_ context.Context, provider descope.OAuthProvider, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
 	if m.StartAssert != nil {
 		m.StartAssert(provider, returnURL, r, loginOptions, w)
 	}
 	return m.StartResponse, m.StartError
 }
 
-func (m *MockOAuth) ExchangeToken(ctx context.Context, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (m *MockOAuth) ExchangeToken(_ context.Context, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.ExchangeTokenAssert != nil {
 		m.ExchangeTokenAssert(code, w)
 	}
@@ -390,14 +390,14 @@ type MockSAML struct {
 	ExchangeTokenResponse *descope.AuthenticationInfo
 }
 
-func (m *MockSAML) Start(ctx context.Context, tenant string, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (redirectURL string, err error) {
+func (m *MockSAML) Start(_ context.Context, tenant string, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (redirectURL string, err error) {
 	if m.StartAssert != nil {
 		m.StartAssert(tenant, returnURL, r, loginOptions, w)
 	}
 	return m.StartResponse, m.StartError
 }
 
-func (m *MockSAML) ExchangeToken(ctx context.Context, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (m *MockSAML) ExchangeToken(_ context.Context, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.ExchangeTokenAssert != nil {
 		m.ExchangeTokenAssert(code, w)
 	}
@@ -435,49 +435,49 @@ type MockWebAuthn struct {
 	UpdateUserDeviceFinishError  error
 }
 
-func (m *MockWebAuthn) SignUpStart(ctx context.Context, loginID string, user *descope.User, origin string) (*descope.WebAuthnTransactionResponse, error) {
+func (m *MockWebAuthn) SignUpStart(_ context.Context, loginID string, user *descope.User, origin string) (*descope.WebAuthnTransactionResponse, error) {
 	if m.SignUpStartAssert != nil {
 		m.SignUpStartAssert(loginID, user, origin)
 	}
 	return m.SignUpStartResponse, m.SignUpStartError
 }
 
-func (m *MockWebAuthn) SignUpFinish(ctx context.Context, finishRequest *descope.WebAuthnFinishRequest, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (m *MockWebAuthn) SignUpFinish(_ context.Context, finishRequest *descope.WebAuthnFinishRequest, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.SignUpFinishAssert != nil {
 		m.SignUpFinishAssert(finishRequest, w)
 	}
 	return m.SignUpFinishResponse, m.SignUpFinishError
 }
 
-func (m *MockWebAuthn) SignInStart(ctx context.Context, loginID string, origin string, r *http.Request, loginOptions *descope.LoginOptions) (*descope.WebAuthnTransactionResponse, error) {
+func (m *MockWebAuthn) SignInStart(_ context.Context, loginID string, origin string, r *http.Request, loginOptions *descope.LoginOptions) (*descope.WebAuthnTransactionResponse, error) {
 	if m.SignInStartAssert != nil {
 		m.SignInStartAssert(loginID, origin, r, loginOptions)
 	}
 	return m.SignInStartResponse, m.SignInStartError
 }
 
-func (m *MockWebAuthn) SignInFinish(ctx context.Context, finishRequest *descope.WebAuthnFinishRequest, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (m *MockWebAuthn) SignInFinish(_ context.Context, finishRequest *descope.WebAuthnFinishRequest, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.SignInFinishAssert != nil {
 		m.SignInFinishAssert(finishRequest, w)
 	}
 	return m.SignInFinishResponse, m.SignInFinishError
 }
 
-func (m *MockWebAuthn) SignUpOrInStart(ctx context.Context, loginID string, origin string) (*descope.WebAuthnTransactionResponse, error) {
+func (m *MockWebAuthn) SignUpOrInStart(_ context.Context, loginID string, origin string) (*descope.WebAuthnTransactionResponse, error) {
 	if m.SignUpOrInStartAssert != nil {
 		m.SignUpOrInStartAssert(loginID, origin)
 	}
 	return m.SignUpOrInStartResponse, m.SignUpOrInStartError
 }
 
-func (m *MockWebAuthn) UpdateUserDeviceStart(ctx context.Context, loginID string, origin string, r *http.Request) (*descope.WebAuthnTransactionResponse, error) {
+func (m *MockWebAuthn) UpdateUserDeviceStart(_ context.Context, loginID string, origin string, r *http.Request) (*descope.WebAuthnTransactionResponse, error) {
 	if m.UpdateUserDeviceStartAssert != nil {
 		m.UpdateUserDeviceStartAssert(loginID, origin, r)
 	}
 	return m.UpdateUserDeviceStartResponse, m.UpdateUserDeviceStartError
 }
 
-func (m *MockWebAuthn) UpdateUserDeviceFinish(ctx context.Context, finishRequest *descope.WebAuthnFinishRequest) error {
+func (m *MockWebAuthn) UpdateUserDeviceFinish(_ context.Context, finishRequest *descope.WebAuthnFinishRequest) error {
 	if m.UpdateUserDeviceFinishAssert != nil {
 		m.UpdateUserDeviceFinishAssert(finishRequest)
 	}
@@ -563,21 +563,21 @@ type MockSession struct {
 	MeResponse *descope.UserResponse
 }
 
-func (m *MockSession) ValidateSessionWithRequest(ctx context.Context, r *http.Request) (bool, *descope.Token, error) {
+func (m *MockSession) ValidateSessionWithRequest(_ context.Context, r *http.Request) (bool, *descope.Token, error) {
 	if m.ValidateSessionAssert != nil {
 		m.ValidateSessionAssert(r)
 	}
 	return !m.ValidateSessionResponseFailure, m.ValidateSessionResponse, m.ValidateSessionError
 }
 
-func (m *MockSession) ValidateSessionWithToken(ctx context.Context, sessionToken string) (bool, *descope.Token, error) {
+func (m *MockSession) ValidateSessionWithToken(_ context.Context, sessionToken string) (bool, *descope.Token, error) {
 	if m.ValidateSessionTokenAssert != nil {
 		m.ValidateSessionTokenAssert(sessionToken)
 	}
 	return !m.ValidateSessionTokenResponseFailure, m.ValidateSessionTokenResponse, m.ValidateSessionTokenError
 }
 
-func (m *MockSession) RefreshSessionWithRequest(ctx context.Context, r *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
+func (m *MockSession) RefreshSessionWithRequest(_ context.Context, r *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
 	if m.RefreshSessionResponseFailure {
 		return false, nil, m.RefreshSessionError
 	}
@@ -599,7 +599,7 @@ func (m *MockSession) RefreshSessionWithRequest(ctx context.Context, r *http.Req
 	return !m.RefreshSessionResponseFailure, m.RefreshSessionResponse, m.RefreshSessionError
 }
 
-func (m *MockSession) RefreshSessionWithToken(ctx context.Context, refreshToken string) (bool, *descope.Token, error) {
+func (m *MockSession) RefreshSessionWithToken(_ context.Context, refreshToken string) (bool, *descope.Token, error) {
 	if m.RefreshSessionResponseFailure {
 		return false, nil, m.RefreshSessionError
 	}
@@ -621,34 +621,34 @@ func (m *MockSession) RefreshSessionWithToken(ctx context.Context, refreshToken 
 	return !m.RefreshSessionResponseFailure, m.RefreshSessionResponse, m.RefreshSessionError
 }
 
-func (m *MockSession) ValidateAndRefreshSessionWithRequest(ctx context.Context, r *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
+func (m *MockSession) ValidateAndRefreshSessionWithRequest(_ context.Context, r *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {
 	if m.ValidateAndRefreshSessionAssert != nil {
 		m.ValidateAndRefreshSessionAssert(r, w)
 	}
 	return !m.ValidateAndRefreshSessionResponseFailure, m.ValidateAndRefreshSessionResponse, m.ValidateAndRefreshSessionError
 }
-func (m *MockSession) ValidateAndRefreshSessionWithTokens(ctx context.Context, sessionToken, refreshToken string) (bool, *descope.Token, error) {
+func (m *MockSession) ValidateAndRefreshSessionWithTokens(_ context.Context, sessionToken, refreshToken string) (bool, *descope.Token, error) {
 	if m.ValidateAndRefreshSessionTokensAssert != nil {
 		m.ValidateAndRefreshSessionTokensAssert(sessionToken, refreshToken)
 	}
 	return !m.ValidateAndRefreshSessionTokensResponseFailure, m.ValidateAndRefreshSessionTokensResponse, m.ValidateAndRefreshSessionTokensError
 }
 
-func (m *MockSession) ExchangeAccessKey(ctx context.Context, accessKey string) (bool, *descope.Token, error) {
+func (m *MockSession) ExchangeAccessKey(_ context.Context, accessKey string) (bool, *descope.Token, error) {
 	if m.ExchangeAccessKeyAssert != nil {
 		m.ExchangeAccessKeyAssert(accessKey)
 	}
 	return !m.ExchangeAccessKeyResponseFailure, m.ExchangeAccessKeyResponse, m.ExchangeAccessKeyError
 }
 
-func (m *MockSession) ValidatePermissions(ctx context.Context, token *descope.Token, permissions []string) bool {
+func (m *MockSession) ValidatePermissions(_ context.Context, token *descope.Token, permissions []string) bool {
 	if m.ValidatePermissionsAssert != nil {
 		m.ValidatePermissionsAssert(token, permissions)
 	}
 	return m.ValidatePermissionsResponse
 }
 
-func (m *MockSession) GetMatchedPermissions(ctx context.Context, token *descope.Token, permissions []string) []string {
+func (m *MockSession) GetMatchedPermissions(_ context.Context, token *descope.Token, permissions []string) []string {
 	if m.GetMatchedPermissionsAssert != nil {
 		m.GetMatchedPermissionsAssert(token, permissions)
 	}
@@ -656,14 +656,14 @@ func (m *MockSession) GetMatchedPermissions(ctx context.Context, token *descope.
 	return m.GetMatchedPermissionsResponse
 }
 
-func (m *MockSession) ValidateTenantPermissions(ctx context.Context, token *descope.Token, tenant string, permissions []string) bool {
+func (m *MockSession) ValidateTenantPermissions(_ context.Context, token *descope.Token, tenant string, permissions []string) bool {
 	if m.ValidateTenantPermissionsAssert != nil {
 		m.ValidateTenantPermissionsAssert(token, tenant, permissions)
 	}
 	return m.ValidateTenantPermissionsResponse
 }
 
-func (m *MockSession) GetMatchedTenantPermissions(ctx context.Context, token *descope.Token, tenant string, permissions []string) []string {
+func (m *MockSession) GetMatchedTenantPermissions(_ context.Context, token *descope.Token, tenant string, permissions []string) []string {
 	if m.GetMatchedTenantPermissionsAssert != nil {
 		m.GetMatchedTenantPermissionsAssert(token, tenant, permissions)
 	}
@@ -671,14 +671,14 @@ func (m *MockSession) GetMatchedTenantPermissions(ctx context.Context, token *de
 	return m.GetMatchedTenantPermissionsResponse
 }
 
-func (m *MockSession) ValidateRoles(ctx context.Context, token *descope.Token, roles []string) bool {
+func (m *MockSession) ValidateRoles(_ context.Context, token *descope.Token, roles []string) bool {
 	if m.ValidateRolesAssert != nil {
 		m.ValidateRolesAssert(token, roles)
 	}
 	return m.ValidateRolesResponse
 }
 
-func (m *MockSession) GetMatchedRoles(ctx context.Context, token *descope.Token, roles []string) []string {
+func (m *MockSession) GetMatchedRoles(_ context.Context, token *descope.Token, roles []string) []string {
 	if m.GetMatchedRolesAssert != nil {
 		m.GetMatchedRolesAssert(token, roles)
 	}
@@ -686,14 +686,14 @@ func (m *MockSession) GetMatchedRoles(ctx context.Context, token *descope.Token,
 	return m.GetMatchedRolesResponse
 }
 
-func (m *MockSession) ValidateTenantRoles(ctx context.Context, token *descope.Token, tenant string, roles []string) bool {
+func (m *MockSession) ValidateTenantRoles(_ context.Context, token *descope.Token, tenant string, roles []string) bool {
 	if m.ValidateTenantRolesAssert != nil {
 		m.ValidateTenantRolesAssert(token, tenant, roles)
 	}
 	return m.ValidateTenantRolesResponse
 }
 
-func (m *MockSession) GetMatchedTenantRoles(ctx context.Context, token *descope.Token, tenant string, roles []string) []string {
+func (m *MockSession) GetMatchedTenantRoles(_ context.Context, token *descope.Token, tenant string, roles []string) []string {
 	if m.GetMatchedTenantRolesAssert != nil {
 		m.GetMatchedTenantRolesAssert(token, tenant, roles)
 	}
@@ -701,35 +701,35 @@ func (m *MockSession) GetMatchedTenantRoles(ctx context.Context, token *descope.
 	return m.GetMatchedTenantRolesResponse
 }
 
-func (m *MockSession) SelectTenantWithRequest(ctx context.Context, tenantID string, request *http.Request, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (m *MockSession) SelectTenantWithRequest(_ context.Context, tenantID string, request *http.Request, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.SelectTenantWithRequestAssert != nil {
 		m.SelectTenantWithRequestAssert(tenantID, request, w)
 	}
 	return m.SelectTenantWithRequestResponse, m.SelectTenantWithRequestError
 }
 
-func (m *MockSession) SelectTenantWithToken(ctx context.Context, tenantID string, refreshToken string) (*descope.AuthenticationInfo, error) {
+func (m *MockSession) SelectTenantWithToken(_ context.Context, tenantID string, refreshToken string) (*descope.AuthenticationInfo, error) {
 	if m.SelectTenantWithTokenAssert != nil {
 		m.SelectTenantWithTokenAssert(tenantID, refreshToken)
 	}
 	return m.SelectTenantWithTokenResponse, m.SelectTenantWithTokenError
 }
 
-func (m *MockSession) Logout(ctx context.Context, r *http.Request, w http.ResponseWriter) error {
+func (m *MockSession) Logout(_ context.Context, r *http.Request, w http.ResponseWriter) error {
 	if m.LogoutAssert != nil {
 		m.LogoutAssert(r, w)
 	}
 	return m.LogoutError
 }
 
-func (m *MockSession) LogoutAll(ctx context.Context, r *http.Request, w http.ResponseWriter) error {
+func (m *MockSession) LogoutAll(_ context.Context, r *http.Request, w http.ResponseWriter) error {
 	if m.LogoutAllAssert != nil {
 		m.LogoutAllAssert(r, w)
 	}
 	return m.LogoutAllError
 }
 
-func (m *MockSession) Me(ctx context.Context, r *http.Request) (*descope.UserResponse, error) {
+func (m *MockSession) Me(_ context.Context, r *http.Request) (*descope.UserResponse, error) {
 	if m.MeAssert != nil {
 		m.MeAssert(r)
 	}
