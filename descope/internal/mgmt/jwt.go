@@ -1,6 +1,8 @@
 package mgmt
 
 import (
+	"context"
+
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
 )
@@ -13,7 +15,7 @@ type jwtRes struct {
 	JWT string `json:"jwt,omitempty"`
 }
 
-func (j *jwt) UpdateJWTWithCustomClaims(jwt string, customClaims map[string]any) (string, error) {
+func (j *jwt) UpdateJWTWithCustomClaims(ctx context.Context, jwt string, customClaims map[string]any) (string, error) {
 	if jwt == "" {
 		return "", utils.NewInvalidArgumentError("jwt")
 	}
@@ -22,7 +24,7 @@ func (j *jwt) UpdateJWTWithCustomClaims(jwt string, customClaims map[string]any)
 		"jwt":          jwt,
 		"customClaims": customClaims,
 	}
-	res, err := j.client.DoPostRequest(api.Routes.ManagementUpdateJWT(), req, nil, j.conf.ManagementKey)
+	res, err := j.client.DoPostRequest(ctx, api.Routes.ManagementUpdateJWT(), req, nil, j.conf.ManagementKey)
 	if err != nil {
 		return "", err
 	}

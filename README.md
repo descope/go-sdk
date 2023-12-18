@@ -92,7 +92,7 @@ user := &descope.User{
     Phone: "212-555-1234",
     Email: loginID,
 }
-maskedAddress, err := descopeClient.Auth.OTP().SignUp(descope.MethodEmail, loginID, user)
+maskedAddress, err := descopeClient.Auth.OTP().SignUp(context.Background(), descope.MethodEmail, loginID, user)
 if err != nil {
     if errors.Is(err, descope.ErrUserAlreadyExists) {
         // user already exists with this loginID
@@ -106,7 +106,7 @@ The user will receive a code using the selected delivery method. Verify that cod
 ```go
 // The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
 // Otherwise they're available via authInfo
-authInfo, err := descopeClient.Auth.OTP().VerifyCode(descope.MethodEmail, loginID, code, w)
+authInfo, err := descopeClient.Auth.OTP().VerifyCode(context.Background(), descope.MethodEmail, loginID, code, w)
 if err != nil {
     if errors.Is(err, descope.ErrInvalidOneTimeCode) {
         // the code was invalid
@@ -131,7 +131,7 @@ The user can either `sign up`, `sign in` or `sign up or in`
 ```go
 // If configured globally, the redirect URI is optional. If provided however, it will be used
 // instead of any global configuration
-maskedAddress, err := descopeClient.Auth.MagicLink().SignUpOrIn(descope.MethodEmail, "desmond@descope.com", "http://myapp.com/verify-magic-link")
+maskedAddress, err := descopeClient.Auth.MagicLink().SignUpOrIn(context.Background(), descope.MethodEmail, "desmond@descope.com", "http://myapp.com/verify-magic-link")
 if err {
     // handle error
 }
@@ -142,7 +142,7 @@ To verify a magic link, your redirect page must call the validation function on 
 ```go
 // The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
 // Otherwise they're available via authInfo
-authInfo, err := descopeClient.Auth.MagicLink().Verify(token, w)
+authInfo, err := descopeClient.Auth.MagicLink().Verify(context.Background(), token, w)
 if err != nil {
     // handle error
 }
@@ -172,7 +172,7 @@ The user can either `sign up`, `sign in` or `sign up or in`
 ```go
 // If configured globally, the redirect URI is optional. If provided however, it will be used
 // instead of any global configuration.
-res, err := descopeClient.Auth.EnchantedLink().SignIn(loginID, "http://myapp.com/verify-enchanted-link", nil, nil)
+res, err := descopeClient.Auth.EnchantedLink().SignIn(context.Background(), loginID, "http://myapp.com/verify-enchanted-link", nil, nil)
 if err != nil {
     // handle error
 }
@@ -186,7 +186,7 @@ the previous step. A valid session will be returned only after the user clicks t
 ```go
 // Poll for a certain number of tries / time frame
 for i := retriesCount; i > 0; i-- {
-    authInfo, err := descopeClient.Auth.EnchantedLink().GetSession(res.PendingRef, w)
+    authInfo, err := descopeClient.Auth.EnchantedLink().GetSession(context.Background(), res.PendingRef, w)
     if err == nil {
         // The user successfully authenticated using the correct link
         // The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
@@ -208,7 +208,7 @@ for i := retriesCount; i > 0; i-- {
 To verify an enchanted link, your redirect page must call the validation function on the token (`t`) parameter (`https://your-redirect-address.com/verify?t=<token>`). Once the token is verified, the session polling will receive a valid response.
 
 ```go
-if err := descopeClient.Auth.EnchantedLink().Verify(token); err != nil {
+if err := descopeClient.Auth.EnchantedLink().Verify(context.Background(), token); err != nil {
     // token is invalid
 } else {
     // token is valid
@@ -226,7 +226,7 @@ Users can authenticate using their social logins, using the OAuth protocol. Conf
 // If configured globally, the return URL is optional. If provided however, it will be used
 // instead of any global configuration.
 // Redirect the user to the returned URL to start the OAuth redirect chain
-url, err := descopeClient.Auth.OAuth().Start("google", "https://my-app.com/handle-oauth", nil, nil, w)
+url, err := descopeClient.Auth.OAuth().Start(context.Background(), "google", "https://my-app.com/handle-oauth", nil, nil, w)
 if err != nil {
     // handle error
 }
@@ -237,7 +237,7 @@ The user will authenticate with the authentication provider, and will be redirec
 ```go
 // The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
 // Otherwise they're available via authInfo
-authInfo, err := descopeClient.Auth.OAuth().ExchangeToken(code, w)
+authInfo, err := descopeClient.Auth.OAuth().ExchangeToken(context.Background(), code, w)
 if err != nil {
     // handle error
 }
@@ -254,7 +254,7 @@ Users can authenticate to a specific tenant using SAML or Single Sign On. Config
 // If configured globally, the return URL is optional. If provided however, it will be used
 // instead of any global configuration.
 // Redirect the user to the returned URL to start the SSO/SAML redirect chain
-url, err := descopeClient.Auth.SAML().Start("my-tenant-ID", "https://my-app.com/handle-saml", nil, nil, w)
+url, err := descopeClient.Auth.SAML().Start(context.Background(), "my-tenant-ID", "https://my-app.com/handle-saml", nil, nil, w)
 if err != nil {
     // handle error
 }
@@ -265,7 +265,7 @@ The user will authenticate with the authentication provider configured for that 
 ```go
 // The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
 // Otherwise they're available via authInfo
-authInfo, err := descopeClient.Auth.SAML().ExchangeToken(code, w)
+authInfo, err := descopeClient.Auth.SAML().ExchangeToken(context.Background(), code, w)
 if err != nil {
     // handle error
 }
@@ -293,7 +293,7 @@ user := &descope.User{
     Phone: "212-555-1234",
     Email: loginID,
 }
-totpResponse, err := descopeClient.Auth.TOTP().SignUp(loginID, user)
+totpResponse, err := descopeClient.Auth.TOTP().SignUp(context.Background(), loginID, user)
 if err != nil {
     // handle error
 }
@@ -311,7 +311,7 @@ the app produces.
 ```go
 // The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
 // Otherwise they're available via authInfo
-authInfo, err := descopeClient.Auth.TOTP().SignInCode(loginID, code, nil, nil, w)
+authInfo, err := descopeClient.Auth.TOTP().SignInCode(context.Background(), loginID, code, nil, nil, w)
 if err != nil {
     // handle error
 }
@@ -336,7 +336,7 @@ user := &descope.User{
     FamilyName: "Copeland",
     Email: loginID,
 }
-authInfo, err := descopeClient.Auth.Password().SignUp(loginID, user, password, nil)
+authInfo, err := descopeClient.Auth.Password().SignUp(context.Background(), loginID, user, password, nil)
 if err != nil {
     // handle error
 }
@@ -347,7 +347,7 @@ The user can later sign in using the same loginID and password.
 ```go
 // The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
 // Otherwise they're available via authInfo
-authInfo, err := descopeClient.Auth.Password().SignIn(loginID, password, w)
+authInfo, err := descopeClient.Auth.Password().SignIn(context.Background(), loginID, password, w)
 if err != nil {
     // handle error
 }
@@ -369,7 +369,7 @@ In the [password authentication method](https://app.descope.com/settings/authent
 // same way as in regular magic link authentication.
 loginID := "desmond@descope.com"
 redirectURL := "https://myapp.com/password-reset"
-err := descopeClient.Auth.Password().SendPasswordReset(loginID, redirectURL)
+err := descopeClient.Auth.Password().SendPasswordReset(context.Background(), loginID, redirectURL)
 ```
 
 The magic link, in this case, must then be verified like any other magic link (see the [magic link section](#magic-link) for more details). However, after verifying the user, it is expected
@@ -377,7 +377,7 @@ to allow them to provide a new password instead of the old one. Since the user i
 
 ```go
 // The request (r) is required to make sure the user is authenticated.
-err := descopeClient.Auth.Password().UpdateUserPassword(loginID, newPassword, r)
+err := descopeClient.Auth.Password().UpdateUserPassword(context.Background(), loginID, newPassword, r)
 ```
 
 `UpdateUserPassword` can always be called when the user is authenticated and has a valid session.
@@ -386,7 +386,7 @@ Alternatively, it is also possible to replace an existing active password with a
 
 ```go
 // Replaces the user's current password with a new one
-authInfo, err := descopeClient.Auth.Password().ReplaceUserPassword(loginID, oldPassword, newPassword, w)
+authInfo, err := descopeClient.Auth.Password().ReplaceUserPassword(context.Background(), loginID, oldPassword, newPassword, w)
 ```
 
 ### Session Validation
@@ -418,18 +418,18 @@ Alternatively, tokens can be validated directly:
 
 ```go
 // Validate the session. Will return an error if expired
-if authorized, sessionToken, err := descopeClient.Auth.ValidateSessionWithToken(sessionToken); !authorized {
+if authorized, sessionToken, err := descopeClient.Auth.ValidateSessionWithToken(context.Background(), sessionToken); !authorized {
     // unauthorized error
 }
 
 // If ValidateSessionWithRequest raises an exception, you will need to refresh the session using
-if authorized, sessionToken, err := descopeClient.Auth.RefreshSessionWithToken(refreshToken); !authorized {
+if authorized, sessionToken, err := descopeClient.Auth.RefreshSessionWithToken(context.Background(), refreshToken); !authorized {
     // unauthorized error
 }
 
 // Alternatively, you could combine the two and
 // have the session validated and automatically refreshed when expired
-if authorized, sessionToken, err := descopeClient.Auth.ValidateAndRefreshSessionWithTokens(sessionToken, refreshToken); !authorized {
+if authorized, sessionToken, err := descopeClient.Auth.ValidateAndRefreshSessionWithTokens(context.Background(), sessionToken, refreshToken); !authorized {
     // unauthorized error
 }
 ```
@@ -469,52 +469,62 @@ For multi-tenant uses:
 
 ```go
 // You can validate specific permissions
-if !descopeClient.Auth.ValidateTenantPermissions(sessionToken, "my-tenant-ID", []string{"Permission to validate"}) {
+if !descopeClient.Auth.ValidateTenantPermissions(context.Background(), sessionToken, "my-tenant-ID", []string{"Permission to validate"}) {
     // Deny access
 }
 
 // Or validate roles directly
-if !descopeClient.Auth.ValidateTenantRoles(sessionToken, "my-tenant-ID", []string{"Role to validate"}) {
+if !descopeClient.Auth.ValidateTenantRoles(context.Background(), sessionToken, "my-tenant-ID", []string{"Role to validate"}) {
     // Deny access
 }
+
+matchedTenantRoles := descopeClient.Auth.GetTenantRoles(context.Background(), sessionToken, "my-tenant-ID", []string{"role-name1", "role-name2"})
+
+matchedTenantPermissions := descopeClient.Auth.GetTenantPermissions(context.Background(), sessionToken, "my-tenant-ID", []string{"permission-name1", "permission-name2"})
 ```
 
 When not using tenants use:
 
 ```go
 // You can validate specific permissions
-if !descopeClient.Auth.ValidatePermissions(sessionToken, []string{"Permission to validate"}) {
+if !descopeClient.Auth.ValidatePermissions(context.Background(), sessionToken, []string{"Permission to validate"}) {
     // Deny access
 }
 
 // Or validate roles directly
-if !descopeClient.Auth.ValidateRoles(sessionToken, []string{"Role to validate"}) {
+if !descopeClient.Auth.ValidateRoles(context.Background(), sessionToken, []string{"Role to validate"}) {
     // Deny access
 }
+
+// Or get the matched roles/permissions
+matchedRoles := descopeClient.Auth.GetMatchedRoles(context.Background(), sessionToken, []string{"role-name1", "role-name2"})
+
+matchedPermissions := descopeClient.Auth.GetMatchedPermissions(context.Background(), sessionToken, []string{"permission-name1", "permission-name2"})
 ```
 
 ### Tenant selection
+
 For a user that has permissions to multiple tenants, you can set a specific tenant as the current selected one
 This will add an extra attribute to the refresh JWT and the session JWT with the selected tenant ID
 
 ```go
 tenantID := "t1"
-info, err := descopeClient.Auth.SelectTenantWithRequest(tenantID, r, w) 
+info, err := descopeClient.Auth.SelectTenantWithRequest(context.Background(), tenantID, r, w)
 if err != nil {
     // failed to select a tenant
 }
 ```
 
 Or alternatively, work directly with refresh token
+
 ```go
 tenantID := "t1"
 refreshToken := "<a valid refresh token>"
-info, err := descopeClient.Auth.SelectTenantWithToken(tenantID, refreshToken)
+info, err := descopeClient.Auth.SelectTenantWithToken(context.Background(), tenantID, refreshToken)
 if err != nil {
     // failed to select a tenant
 }
 ```
-
 
 ### Logging Out
 
@@ -568,22 +578,22 @@ You can create, update, delete or load tenants:
 ```go
 // The self provisioning domains or optional. If given they'll be used to associate
 // Users logging in to this tenant
-err := descopeClient.Management.Tenant().Create("My Tenant", []string{"domain.com"})
+err := descopeClient.Management.Tenant().Create(context.Background(), "My Tenant", []string{"domain.com"})
 
 // You can optionally set your own ID when creating a tenant
-err := descopeClient.Management.Tenant().CreateWithID("my-custom-id", "My Tenant", []string{"domain.com"})
+err := descopeClient.Management.Tenant().CreateWithID(context.Background(), "my-custom-id", "My Tenant", []string{"domain.com"})
 
 // Update will override all fields as is. Use carefully.
-err := descopeClient.Management.Tenant().Update("my-custom-id", "My Tenant", []string{"domain.com", "another-domain.com"})
+err := descopeClient.Management.Tenant().Update(context.Background(), "my-custom-id", "My Tenant", []string{"domain.com", "another-domain.com"})
 
 // Tenant deletion cannot be undone. Use carefully.
-err := descopeClient.Management.Tenant().Delete("my-custom-id")
+err := descopeClient.Management.Tenant().Delete(context.Background(), "my-custom-id")
 
 // Load tenant by id
-tenant, err := descopeClient.Management.Tenant().Load("my-custom-id")
+tenant, err := descopeClient.Management.Tenant().Load(context.Background(), "my-custom-id")
 
 // Load all tenants
-res, err := descopeClient.Management.Tenant().LoadAll()
+res, err := descopeClient.Management.Tenant().LoadAll(context.Background())
 if err == nil {
     for _, tenant := range res {
         // Do something
@@ -608,7 +618,7 @@ userReq.Tenants = []*descope.AssociatedTenant{
     {TenantID: "tenant-ID1", Roles: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},
 }
-user, err := descopeClient.Management.User().Create("desmond@descope.com", userReq)
+user, err := descopeClient.Management.User().Create(context.Background(), "desmond@descope.com", userReq)
 
 // Alternatively, a user can be created and invited via an email message.
 // Make sure to configure the invite URL in the Descope console prior to using this function,
@@ -621,11 +631,11 @@ userReqInvite.Tenants = []*descope.AssociatedTenant{
     {TenantID: "tenant-ID2"},
 }
 // options can be nil, and in this case, value will be taken from project settings page
-options := &descope.InviteOptions{InviteURL: "https://sub.domain.com"} 
-err := descopeClient.Management.User().Invite("desmond@descope.com", userReqInvite, options)
+options := &descope.InviteOptions{InviteURL: "https://sub.domain.com"}
+err := descopeClient.Management.User().Invite(context.Background(), "desmond@descope.com", userReqInvite, options)
 
 // batch invite
-options := &descope.InviteOptions{InviteURL: "https://sub.domain.com"} 
+options := &descope.InviteOptions{InviteURL: "https://sub.domain.com"}
 batchUsers := []*descope.BatchUser{}
 u1 := &descope.BatchUser{}
 u1.LoginID = "one"
@@ -638,7 +648,7 @@ u2.Email = "two@two.com"
 u2.Roles = []string{"two"}
 
 batchUsers = append(batchUsers, u1, u2)
-users, err := descopeClient.Management.User().InviteBatch(batchUsers, options)
+users, err := descopeClient.Management.User().InviteBatch(context.Background(), batchUsers, options)
 
 // Update will override all fields as is. Use carefully.
 userReqUpdate := &descope.UserRequest{}
@@ -648,23 +658,23 @@ userReqUpdate.Tenants = []*descope.AssociatedTenant{
     {TenantID: "tenant-ID1", Roles: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},
 }
-err := descopeClient.Management.User().Update("desmond@descope.com", userReqUpdate)
+err := descopeClient.Management.User().Update(context.Background(), "desmond@descope.com", userReqUpdate)
 
 // Update loginID of a user, or remove a login ID (last login ID cannot be removed)
-err := descopeClient.Management.User().UpdateLoginID("desmond@descope.com", "bane@descope.com")
+err := descopeClient.Management.User().UpdateLoginID(context.Background(), "desmond@descope.com", "bane@descope.com")
 
 // User deletion cannot be undone. Use carefully.
-err := descopeClient.Management.User().Delete("desmond@descope.com")
+err := descopeClient.Management.User().Delete(context.Background(), "desmond@descope.com")
 
 // Load specific user
-userRes, err := descopeClient.Management.User().Load("desmond@descope.com")
+userRes, err := descopeClient.Management.User().Load(context.Background(), "desmond@descope.com")
 
 // If needed, users can be loaded using their ID as well
-userRes, err := descopeClient.Management.User().LoadByUserID("<user-id>")
+userRes, err := descopeClient.Management.User().LoadByUserID(context.Background(), "<user-id>")
 
 // Search all users, optionally according to tenant and/or role filter
 // Results can be paginated using the limit and page parameters
-usersResp, err := descopeClient.Management.User().SearchAll(&descope.UserSearchOptions{TenantIDs: []string{"my-tenant-id"}})
+usersResp, err := descopeClient.Management.User().SearchAll(context.Background(), &descope.UserSearchOptions{TenantIDs: []string{"my-tenant-id"}})
 if err == nil {
     for _, user := range usersResp {
         // Do something
@@ -672,10 +682,10 @@ if err == nil {
 }
 
 // Logout given user from all its devices, by login ID
-err := descopeClient.Management.User().LogoutUser("<login id>")
+err := descopeClient.Management.User().LogoutUser(context.Background(), "<login id>")
 
 // Logout given user from all its devices, by user ID
-err := descopeClient.Management.User()LogoutUserByUserID("<user id>")
+err := descopeClient.Management.User()LogoutUserByUserID(context.Background(), "<user id>")
 
 ```
 
@@ -687,17 +697,17 @@ The user will not be able log-in using an expired password, and will be required
 
 ```go
 // Set a user's password
-err := descopeClient.Management.User().SetPassword("<login-id>", "<some-password>")
+err := descopeClient.Management.User().SetPassword(context.Background(), "<login-id>", "<some-password>")
 
 // Or alternatively, expire a user password
-err := descopeClient.Management.User().ExpirePassword("<login-id>")
+err := descopeClient.Management.User().ExpirePassword(context.Background(), "<login-id>")
 
 // Later, if the user is signing in with an expired password, the returned error will be ErrPasswordExpired
-authInfo, err := descopeClient.Auth.Password().SignIn("<login-id>", "<some-password>", w)
+authInfo, err := descopeClient.Auth.Password().SignIn(context.Background(), "<login-id>", "<some-password>", w)
 if err != nil {
      if errors.Is(err, descope.ErrPasswordExpired) {
         // Handle a case when the error is expired, the user should replace/reset the password
-        // Use descopeClient.Auth.Password().ReplaceUserPassword("<login-id>", "<some-password>", "<new-password>", w)
+        // Use descopeClient.Auth.Password().ReplaceUserPassword(context.Background(), "<login-id>", "<some-password>", "<new-password>", w)
      }
      // Handle other errors
 }
@@ -711,16 +721,16 @@ You can create, update, delete or load access keys, as well as search according 
 // An access key must have a name and expireTime, other fields are optional.
 // Roles should be set directly if no tenants exist, otherwise set
 // on a per-tenant basis.
-res, err := descopeClient.Management.AccessKey().Create("access-key-1", 0, nil, []*descope.AssociatedTenant{
+res, err := descopeClient.Management.AccessKey().Create(context.Background(), "access-key-1", 0, nil, []*descope.AssociatedTenant{
     {TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},
 })
 
 // Load specific user
-res, err := descopeClient.Management.AccessKey().Load("access-key-id")
+res, err := descopeClient.Management.AccessKey().Load(context.Background(), "access-key-id")
 
 // Search all users, optionally according to tenant and/or role filter
-accessKeysResp = err := descopeClient.Management.AccessKey().SearchAll([]string{"my-tenant-id"})
+accessKeysResp = err := descopeClient.Management.AccessKey().SearchAll(context.Background(), []string{"my-tenant-id"})
 if err == nil {
     for _, accessKey := range accessKeysResp {
         // Do something
@@ -728,16 +738,16 @@ if err == nil {
 }
 
 // Update will override all fields as is. Use carefully.
-res, err := descopeClient.Management.AccessKey().Update("access-key-id", "updated-name")
+res, err := descopeClient.Management.AccessKey().Update(context.Background(), "access-key-id", "updated-name")
 
 // Access keys can be deactivated to prevent usage. This can be undone using "activate".
-err := descopeClient.Management.AccessKey().Deactivate("access-key-id")
+err := descopeClient.Management.AccessKey().Deactivate(context.Background(), "access-key-id")
 
 // Disabled access keys can be activated once again.
-err := descopeClient.Management.AccessKey().Activate("access-key-id")
+err := descopeClient.Management.AccessKey().Activate(context.Background(), "access-key-id")
 
 // Access key deletion cannot be undone. Use carefully.
-err := descopeClient.Management.AccessKey().Delete("access-key-id")
+err := descopeClient.Management.AccessKey().Delete(context.Background(), "access-key-id")
 ```
 
 ### Manage SSO Setting
@@ -746,7 +756,7 @@ You can manage SSO settings and map SSO group roles and user attributes.
 
 ```go
 // You can get SSO settings for a specific tenant ID
-ssoSettings, err := descopeClient.Management.SSO().GetSettings("tenant-id")
+ssoSettings, err := descopeClient.Management.SSO().GetSettings(context.Background(), "tenant-id")
 
 // You can configure SSO settings manually by setting the required fields directly
 tenantID := "tenant-id" // Which tenant this configuration is for
@@ -755,10 +765,10 @@ entityID := "my-idp-entity-id"
 idpCert := "<your-cert-here>"
 redirectURL := "https://my-app.com/handle-saml" // Global redirect URL for SSO/SAML
 domain := "domain.com" // Users logging in from this domain will be logged in to this tenant
-err := descopeClient.Management.SSO().ConfigureSettings(tenantID, idpURL, entityID, idpCert, redirectURL, domain)
+err := descopeClient.Management.SSO().ConfigureSettings(context.Background(), tenantID, idpURL, entityID, idpCert, redirectURL, domain)
 
 // Alternatively, configure using an SSO metadata URL
-err := descopeClient.Management.SSO().ConfigureMetadata(tenantID, "https://idp.com/my-idp-metadata", redirectURL, domain)
+err := descopeClient.Management.SSO().ConfigureMetadata(context.Background(), tenantID, "https://idp.com/my-idp-metadata", redirectURL, domain)
 
 // Map IDP groups to Descope roles, or map user attributes.
 // This function overrides any previous mapping (even when empty). Use carefully.
@@ -769,7 +779,7 @@ attributeMapping := &descope.AttributeMapping {
     Name: "IDP_NAME",
     PhoneNumber: "IDP_PHONE",
 }
-err := descopeClient.Management.SSO().ConfigureMapping(tenantID, roleMapping, attributeMapping)
+err := descopeClient.Management.SSO().ConfigureMapping(context.Background(), tenantID, roleMapping, attributeMapping)
 ```
 
 Note: Certificates should have a similar structure to:
@@ -781,7 +791,7 @@ Certifcate contents
 ```
 
 // To delete SSO settings, call the following method
-err := descopeClient.Management.SSO().DeleteSettings("tenant-id")
+err := descopeClient.Management.SSO().DeleteSettings(context.Background(), "tenant-id")
 
 ### Manage Permissions
 
@@ -791,18 +801,18 @@ You can create, update, delete or load permissions:
 // You can optionally set a description for a permission.
 name := "My Permission"
 description := "Optional description to briefly explain what this permission allows."
-err := descopeClient.Management.Permission().create(name, description)
+err := descopeClient.Management.Permission().Create(context.Background(), name, description)
 
 // Update will override all fields as is. Use carefully.
 newName := "My Updated Permission"
 description = "A revised description",
-err := descopeClient.Management.Permission().Update(name, newName, description)
+err := descopeClient.Management.Permission().Update(context.Background(), name, newName, description)
 
 // Permission deletion cannot be undone. Use carefully.
-descopeClient.Management.Permission().Delete(newName)
+descopeClient.Management.Permission().Delete(context.Background(), newName)
 
 // Load all permissions
-res, err := descopeClient.Management.Permission().LoadAll()
+res, err := descopeClient.Management.Permission().LoadAll(context.Background())
 if err == nil {
     for _, permission := range res {
         // Do something
@@ -819,19 +829,19 @@ You can create, update, delete or load roles:
 name := "My Role"
 description := "Optional description to briefly explain what this role allows."
 permissionNames := []string{"My Updated Permission"},
-descopeClient.Management.Role().Create(name, description, permissionNames)
+descopeClient.Management.Role().Create(context.Background(), name, description, permissionNames)
 
 // Update will override all fields as is. Use carefully.
 newName := "My Updated Role"
 description = "A revised description",
 permissionNames = append(permissionNames, "Another Permission")
-descopeClient.Management.Role().Update(name, newName, description, permissionNames)
+descopeClient.Management.Role().Update(context.Background(), name, newName, description, permissionNames)
 
 // Role deletion cannot be undone. Use carefully.
-descopeClient.Management.Role().Delete(newName)
+descopeClient.Management.Role().Delete(context.Background(), newName)
 
 // Load all roles
-res, err := descopeClient.Management.Role().LoadAll()
+res, err := descopeClient.Management.Role().LoadAll(context.Background())
 if err == nil {
     for _, permission := range res {
         // Do something
@@ -845,7 +855,7 @@ You can query SSO groups:
 
 ```go
 // Load all groups for a given tenant id
-res, err := descopeClient.Management.Group().LoadAllGroups("tenant-id")
+res, err := descopeClient.Management.Group().LoadAllGroups(context.Background(), "tenant-id")
 if err == nil {
     for _, group := range res {
         // Do something
@@ -853,7 +863,7 @@ if err == nil {
 }
 
 // Load all groups for the given user IDs (can be found in the user's JWT)
-res, err := descopeClient.Management.Group().LoadAllGroupsForMembers("tenant-id", []string{"user-id-1", "user-id-2"}, nil)
+res, err := descopeClient.Management.Group().LoadAllGroupsForMembers(context.Background(), "tenant-id", []string{"user-id-1", "user-id-2"}, nil)
 if err == nil {
     for _, group := range res {
         // Do something
@@ -861,7 +871,7 @@ if err == nil {
 }
 
 // Load all groups for the given user's loginIDs (used for sign-in)
-res, err := descopeClient.Management.Group().LoadAllGroupsForMembers("tenant-id", nil, []string{"login-id-1", "login-id-2"})
+res, err := descopeClient.Management.Group().LoadAllGroupsForMembers(context.Background(), "tenant-id", nil, []string{"login-id-1", "login-id-2"})
 if err == nil {
     for _, group := range res {
         // Do something
@@ -869,7 +879,7 @@ if err == nil {
 }
 
 // Load all group's members by the given group id
-res, err := descopeClient.Management.Group().LoadAllGroupMembers("tenant-id", "group-id")
+res, err := descopeClient.Management.Group().LoadAllGroupMembers(context.Background(), "tenant-id", "group-id")
 if err == nil {
     for _, group := range res {
         // Do something with group.members
@@ -883,33 +893,33 @@ You can list, import and export flows and screens, or the project theme:
 
 ```go
 // List all your flows
-res, err := descopeClient.Management.Flow().ListFlows()
+res, err := descopeClient.Management.Flow().ListFlows(context.Background())
 if err == nil {
     fmt.Println(res.Total)
     fmt.Println(res.Flows[0].ID)
 }
 // Export the flow and it's matching screens based on the given id
-res, err := descopeClient.Management.Flow().ExportFlow("sign-up")
+res, err := descopeClient.Management.Flow().ExportFlow(context.Background(), "sign-up")
 if err == nil {
     fmt.Println(res.Flow)
     fmt.Println(res.Screens)
 }
 
 // Import the given flow and screens as the given id
-res, err := descopeClient.Management.Group().ImportFlow("sign-up", flow, screens)
+res, err := descopeClient.Management.Group().ImportFlow(context.Background(), "sign-up", flow, screens)
 if err == nil {
     fmt.Println(res.Flow)
     fmt.Println(res.Screens)
 }
 
 // Export the current theme of the project
-res, err := descopeClient.Management.Group().ExportTheme()
+res, err := descopeClient.Management.Group().ExportTheme(context.Background())
 if err == nil {
     fmt.Println(res)
 }
 
 // Import the given theme to the project
-res, err := descopeClient.Management.Group().ImportTheme(theme)
+res, err := descopeClient.Management.Group().ImportTheme(context.Background(), theme)
 if err == nil {
     fmt.Println(res)
 }
@@ -920,7 +930,7 @@ if err == nil {
 You can add custom claims to a valid JWT.
 
 ```go
-updatedJWT, err := descopeClient.Management.JWT().UpdateJWTWithCustomClaims("original-jwt", map[string]any{
+updatedJWT, err := descopeClient.Management.JWT().UpdateJWTWithCustomClaims(context.Background(), "original-jwt", map[string]any{
     "custom-key1": "custom-value1",
     "custom-key2": "custom-value2",
 })
@@ -930,10 +940,11 @@ if err != nil {
 ```
 
 ### Embedded links
+
 ```go
 // Embedded links can be created to directly receive a verifiable token without sending it.
 // This token can then be verified using the magic link 'verify' function, either directly or through a flow.
-token, err := descopeClient.Management.User().GenerateEmbeddedLink("desmond@descope.com", map[string]any{"key1":"value1"})
+token, err := descopeClient.Management.User().GenerateEmbeddedLink(context.Background(), "desmond@descope.com", map[string]any{"key1":"value1"})
 ```
 
 ### Search Audit
@@ -942,13 +953,13 @@ You can perform an audit search for either specific values or full-text across t
 
 ```go
 // Full text search on the last 10 days
-res, err := descopeClient.Management.Audit().Search(&descope.AuditSearchOptions{From: time.Now().AddDate(0, 0, -10), Text: "some-text"})
+res, err := descopeClient.Management.Audit().Search(context.Background(), &descope.AuditSearchOptions{From: time.Now().AddDate(0, 0, -10), Text: "some-text"})
 if err == nil {
     fmt.Println(res)
 }
 
 // Search successful logins in the last 30 days
-res, err := descopeClient.Management.Audit().Search(&descope.AuditSearchOptions{Actions: []string{"LoginSucceed"}})
+res, err := descopeClient.Management.Audit().Search(context.Background(), &descope.AuditSearchOptions{Actions: []string{"LoginSucceed"}})
 if err == nil {
     fmt.Println(res)
 }
@@ -1099,16 +1110,16 @@ Descope SDK allows you to fully manage the schema and relations as well as perfo
 
 ```go
 // Load the existing schema
-schema, err := descopeClient.Management.Authz().LoadSchema()
+schema, err := descopeClient.Management.Authz().LoadSchema(context.Background())
 if err != nil {
     // handle error
 }
 
 // Save schema and make sure to remove all namespaces not listed
-err := descopeClient.Management.Authz().SaveSchema(schema, true)
+err := descopeClient.Management.Authz().SaveSchema(context.Background(), schema, true)
 
 // Create a relation between a resource and user
-err := descopeClient.Management.Authz().CreateRelations([]*descope.AuthzRelation {
+err := descopeClient.Management.Authz().CreateRelations(context.Background(), []*descope.AuthzRelation {
     {
         resource: "some-doc",
         relationDefinition: "owner",
@@ -1119,7 +1130,7 @@ err := descopeClient.Management.Authz().CreateRelations([]*descope.AuthzRelation
 
 // Check if target has the relevant relation
 // The answer should be true because an owner is also a viewer
-relations, err := descopeClient.Management.Authz().HasRelations([]*descope.AuthzRelationQuery{
+relations, err := descopeClient.Management.Authz().HasRelations(context.Background(), []*descope.AuthzRelationQuery{
     {
         resource: "some-doc",
         relationDefinition: "viewer",
@@ -1136,14 +1147,17 @@ You can update project name, as well as to clone the current project to a new on
 ```go
 
 // Update project name
-descopeClient.Management.Project().UpdateName("new-project-name")
+descopeClient.Management.Project().UpdateName(context.Background(), "new-project-name")
 
 // Clone the current project to a new one
 // Note that this action is supported only with a pro license or above.
-res, err := descopeClient.Management.Project().Clone("new-project-name", "")
+res, err := descopeClient.Management.Project().Clone(context.Background(), "new-project-name", "")
 if err == nil {
 		fmt.Println(cloneRes)
 }
+
+// Delete the current project. Kindly note that following calls on the `descopeClient` are most likely to fail because the current project has been deleted 
+err := descopeClient.Management.Project().Delete(context.Background())
 ```
 
 ## Code Examples
@@ -1240,7 +1254,7 @@ that way, you don't need to use 3rd party messaging services in order to receive
 // Test user must have a loginID, other fields are optional.
 // Roles should be set directly if no tenants exist, otherwise set
 // on a per-tenant basis.
-user, err := descopeClient.Management.User().CreateTestUser("desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*descope.AssociatedTenant{
+user, err := descopeClient.Management.User().CreateTestUser(context.Background(), "desmond@descope.com", "desmond@descope.com", "", "Desmond Copeland", nil, []*descope.AssociatedTenant{
     {TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},
 })
@@ -1248,18 +1262,18 @@ user, err := descopeClient.Management.User().CreateTestUser("desmond@descope.com
 // Now test user got created, and this user will be available until you delete it,
 // you can use any management operation for test user CRUD.
 // You can also delete all test users.
-err = descopeClient.Management.User().DeleteAllTestUsers()
+err = descopeClient.Management.User().DeleteAllTestUsers(context.Background())
 
 // OTP code can be generated for test user, for example:
-code, err := descopeClient.Management.User().GenerateOTPForTestUser(descope.MethodEmail, "desmond@descope.com")
+code, err := descopeClient.Management.User().GenerateOTPForTestUser(context.Background(), descope.MethodEmail, "desmond@descope.com")
 // Now you can verify the code is valid (using descopeClient.Auth.OTP().VerifyCode for example)
 
 // Same as OTP, magic link can be generated for test user, for example:
-link, err := descopeClient.Management.User().GenerateMagicLinkForTestUser(descope.MethodEmail, "desmond@descope.com", "")
+link, err := descopeClient.Management.User().GenerateMagicLinkForTestUser(context.Background(), descope.MethodEmail, "desmond@descope.com", "")
 // Now you can verify the link is valid (using descopeClient.Auth.MagicLink().Verify for example)
 
 // Enchanted link can be generated for test user, for example:
-link, pendingRef, err := descopeClient.Management.User().GenerateEnchantedLinkForTestUser("desmond@descope.com", "")
+link, pendingRef, err := descopeClient.Management.User().GenerateEnchantedLinkForTestUser(context.Background(), "desmond@descope.com", "")
 // Now you can verify the link is valid (using descopeClient.Auth.EnchantedLink().Verify for example)
 
 // Note 1: The generate code/link methods, work only for test users, will not work for regular users.
@@ -1272,7 +1286,7 @@ link, pendingRef, err := descopeClient.Management.User().GenerateEnchantedLinkFo
 Handle API rate limits by comparing the error to the ErrRateLimitExceeded error, which includes the Info map with the key "RateLimitExceededRetryAfter." This key indicates how many seconds until the next valid API call can take place.
 
 ```go
-err := descopeClient.Auth.MagicLink().SignUpOrIn(descope.MethodEmail, "desmond@descope.com", "http://myapp.com/verify-magic-link")
+err := descopeClient.Auth.MagicLink().SignUpOrIn(context.Background(), descope.MethodEmail, "desmond@descope.com", "http://myapp.com/verify-magic-link")
 if err != nil {
     if errors.Is(err, descope.ErrRateLimitExceeded) {
         if rateLimitErr, ok := err.(*descope.Error); ok {

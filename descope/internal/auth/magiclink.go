@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/descope/go-sdk/descope"
@@ -12,7 +13,7 @@ type magicLink struct {
 	authenticationsBase
 }
 
-func (auth *magicLink) SignIn(method descope.DeliveryMethod, loginID, URI string, r *http.Request, loginOptions *descope.LoginOptions) (string, error) {
+func (auth *magicLink) SignIn(ctx context.Context, method descope.DeliveryMethod, loginID, URI string, r *http.Request, loginOptions *descope.LoginOptions) (string, error) {
 	var pswd string
 	var err error
 	if loginID == "" {
@@ -26,11 +27,11 @@ func (auth *magicLink) SignIn(method descope.DeliveryMethod, loginID, URI string
 	}
 	masked := getMaskedValue(method)
 	options := &api.HTTPRequest{ResBodyObj: masked}
-	_, err = auth.client.DoPostRequest(composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(loginID, URI, false, loginOptions), options, pswd)
+	_, err = auth.client.DoPostRequest(ctx, composeMagicLinkSignInURL(method), newMagicLinkAuthenticationRequestBody(loginID, URI, false, loginOptions), options, pswd)
 	return masked.GetMasked(), err
 }
 
-func (auth *magicLink) SignUp(method descope.DeliveryMethod, loginID, URI string, user *descope.User) (string, error) {
+func (auth *magicLink) SignUp(ctx context.Context, method descope.DeliveryMethod, loginID, URI string, user *descope.User) (string, error) {
 	if user == nil {
 		user = &descope.User{}
 	}
@@ -39,31 +40,31 @@ func (auth *magicLink) SignUp(method descope.DeliveryMethod, loginID, URI string
 	}
 	masked := getMaskedValue(method)
 	options := &api.HTTPRequest{ResBodyObj: masked}
-	_, err := auth.client.DoPostRequest(composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, loginID, URI, user, false), options, "")
+	_, err := auth.client.DoPostRequest(ctx, composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, loginID, URI, user, false), options, "")
 	return masked.GetMasked(), err
 }
 
-func (auth *magicLink) SignUpOrIn(method descope.DeliveryMethod, loginID, URI string) (string, error) {
+func (auth *magicLink) SignUpOrIn(ctx context.Context, method descope.DeliveryMethod, loginID, URI string) (string, error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
 	masked := getMaskedValue(method)
 	options := &api.HTTPRequest{ResBodyObj: masked}
-	_, err := auth.client.DoPostRequest(composeMagicLinkSignUpOrInURL(method), newMagicLinkAuthenticationRequestBody(loginID, URI, false, nil), options, "")
+	_, err := auth.client.DoPostRequest(ctx, composeMagicLinkSignUpOrInURL(method), newMagicLinkAuthenticationRequestBody(loginID, URI, false, nil), options, "")
 	return masked.GetMasked(), err
 }
 
-func (auth *magicLink) Verify(token string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (auth *magicLink) Verify(ctx context.Context, token string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	var err error
 
-	httpResponse, err := auth.client.DoPostRequest(composeVerifyMagicLinkURL(), newMagicLinkAuthenticationVerifyRequestBody(token), nil, "")
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeVerifyMagicLinkURL(), newMagicLinkAuthenticationVerifyRequestBody(token), nil, "")
 	if err != nil {
 		return nil, err
 	}
 	return auth.generateAuthenticationInfo(httpResponse, w)
 }
 
-func (auth *magicLink) UpdateUserEmail(loginID, email, URI string, updateOptions *descope.UpdateOptions, r *http.Request) (string, error) {
+func (auth *magicLink) UpdateUserEmail(ctx context.Context, loginID, email, URI string, updateOptions *descope.UpdateOptions, r *http.Request) (string, error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
@@ -82,11 +83,11 @@ func (auth *magicLink) UpdateUserEmail(loginID, email, URI string, updateOptions
 	}
 	masked := getMaskedValue(descope.MethodEmail)
 	options := &api.HTTPRequest{ResBodyObj: masked}
-	_, err = auth.client.DoPostRequest(composeUpdateUserEmailMagicLink(), newMagicLinkUpdateEmailRequestBody(loginID, email, URI, false, updateOptions), options, pswd)
+	_, err = auth.client.DoPostRequest(ctx, composeUpdateUserEmailMagicLink(), newMagicLinkUpdateEmailRequestBody(loginID, email, URI, false, updateOptions), options, pswd)
 	return masked.GetMasked(), err
 }
 
-func (auth *magicLink) UpdateUserPhone(method descope.DeliveryMethod, loginID, phone, URI string, updateOptions *descope.UpdateOptions, r *http.Request) (string, error) {
+func (auth *magicLink) UpdateUserPhone(ctx context.Context, method descope.DeliveryMethod, loginID, phone, URI string, updateOptions *descope.UpdateOptions, r *http.Request) (string, error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
@@ -108,6 +109,6 @@ func (auth *magicLink) UpdateUserPhone(method descope.DeliveryMethod, loginID, p
 	}
 	masked := getMaskedValue(descope.MethodSMS)
 	options := &api.HTTPRequest{ResBodyObj: masked}
-	_, err = auth.client.DoPostRequest(composeUpdateUserPhoneMagiclink(method), newMagicLinkUpdatePhoneRequestBody(loginID, phone, URI, false, updateOptions), options, pswd)
+	_, err = auth.client.DoPostRequest(ctx, composeUpdateUserPhoneMagiclink(method), newMagicLinkUpdatePhoneRequestBody(loginID, phone, URI, false, updateOptions), options, pswd)
 	return masked.GetMasked(), err
 }

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
 	"testing"
@@ -42,7 +43,7 @@ func TestPasswordSignUp(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	authInfo, err := a.Password().SignUp(loginID, nil, password, nil)
+	authInfo, err := a.Password().SignUp(context.Background(), loginID, nil, password, nil)
 	require.NoError(t, err)
 	assert.NotNil(t, authInfo)
 	assert.EqualValues(t, loginID, authInfo.User.LoginIDs[0])
@@ -53,7 +54,7 @@ func TestPasswordSignUp(t *testing.T) {
 func TestPasswordSignUpFailure(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.Password().SignUp("", &descope.User{Name: "test"}, "foo", nil)
+	_, err = a.Password().SignUp(context.Background(), "", &descope.User{Name: "test"}, "foo", nil)
 	assert.Error(t, err)
 }
 
@@ -84,7 +85,7 @@ func TestPasswordSignIn(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	authInfo, err := a.Password().SignIn(loginID, password, nil)
+	authInfo, err := a.Password().SignIn(context.Background(), loginID, password, nil)
 	require.NoError(t, err)
 	assert.NotNil(t, authInfo)
 	assert.EqualValues(t, loginID, authInfo.User.LoginIDs[0])
@@ -95,7 +96,7 @@ func TestPasswordSignIn(t *testing.T) {
 func TestPasswordSignInFailure(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.Password().SignIn("", "foo", nil)
+	_, err = a.Password().SignIn(context.Background(), "", "foo", nil)
 	assert.Error(t, err)
 }
 
@@ -115,14 +116,14 @@ func TestPasswordSendReset(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	err = a.Password().SendPasswordReset(loginID, url)
+	err = a.Password().SendPasswordReset(context.Background(), loginID, url)
 	require.NoError(t, err)
 }
 
 func TestPasswordSendResetFailure(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.Password().SendPasswordReset("", "")
+	err = a.Password().SendPasswordReset(context.Background(), "", "")
 	assert.Error(t, err)
 }
 
@@ -144,16 +145,16 @@ func TestPasswordUpdate(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	err = a.Password().UpdateUserPassword(loginID, newPassword, r)
+	err = a.Password().UpdateUserPassword(context.Background(), loginID, newPassword, r)
 	require.NoError(t, err)
 }
 
 func TestPasswordUpdateFailure(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.Password().UpdateUserPassword("", "", nil)
+	err = a.Password().UpdateUserPassword(context.Background(), "", "", nil)
 	assert.Error(t, err)
-	err = a.Password().UpdateUserPassword("a@b.c", "", nil)
+	err = a.Password().UpdateUserPassword(context.Background(), "a@b.c", "", nil)
 	assert.Error(t, err)
 }
 
@@ -187,7 +188,7 @@ func TestPasswordReplace(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	authInfo, err := a.Password().ReplaceUserPassword(loginID, oldPassword, newPassword, nil)
+	authInfo, err := a.Password().ReplaceUserPassword(context.Background(), loginID, oldPassword, newPassword, nil)
 	require.NoError(t, err)
 	assert.NotNil(t, authInfo)
 	assert.EqualValues(t, loginID, authInfo.User.LoginIDs[0])
@@ -198,7 +199,7 @@ func TestPasswordReplace(t *testing.T) {
 func TestPasswordReplaceFailure(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.Password().ReplaceUserPassword("", "", "", nil)
+	_, err = a.Password().ReplaceUserPassword(context.Background(), "", "", "", nil)
 	assert.Error(t, err)
 }
 
@@ -207,7 +208,7 @@ func TestPasswordPolicy(t *testing.T) {
 	a, err := newTestAuth(nil, helpers.DoOkWithBody(nil, response))
 	require.NoError(t, err)
 	require.NotNil(t, a)
-	res, err := a.Password().GetPasswordPolicy()
+	res, err := a.Password().GetPasswordPolicy(context.Background())
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.EqualValues(t, 8, res.MinLength)
@@ -217,13 +218,13 @@ func TestPasswordPolicyFailure(t *testing.T) {
 	a, err := newTestAuth(nil, helpers.DoOkWithBody(nil, ""))
 	require.NoError(t, err)
 	require.NotNil(t, a)
-	res, err := a.Password().GetPasswordPolicy()
+	res, err := a.Password().GetPasswordPolicy(context.Background())
 	require.Error(t, err)
 	require.Nil(t, res)
 	a, err = newTestAuth(nil, helpers.DoOkWithBody(nil, map[string]any{"minLength": "unexpected-string"}))
 	require.NoError(t, err)
 	require.NotNil(t, a)
-	res, err = a.Password().GetPasswordPolicy()
+	res, err = a.Password().GetPasswordPolicy(context.Background())
 	require.Error(t, err)
 	require.Nil(t, res)
 }

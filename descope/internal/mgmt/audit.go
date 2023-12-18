@@ -1,6 +1,7 @@
 package mgmt
 
 import (
+	"context"
 	"strconv"
 	"time"
 
@@ -13,7 +14,7 @@ type audit struct {
 	managementBase
 }
 
-func (a *audit) Search(options *descope.AuditSearchOptions) ([]*descope.AuditRecord, error) {
+func (a *audit) Search(ctx context.Context, options *descope.AuditSearchOptions) ([]*descope.AuditRecord, error) {
 	body := map[string]any{
 		"userIds":         options.UserIDs,
 		"actions":         options.Actions,
@@ -29,7 +30,7 @@ func (a *audit) Search(options *descope.AuditSearchOptions) ([]*descope.AuditRec
 		"noTenants":       options.NoTenants,
 		"text":            options.Text,
 	}
-	res, err := a.client.DoPostRequest(api.Routes.ManagementAuditSearch(), body, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuditSearch(), body, nil, a.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}

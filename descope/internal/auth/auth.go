@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	goErrors "errors"
 	"net/http"
 	"path"
@@ -109,7 +110,7 @@ func (auth *authenticationService) Logout(request *http.Request, w http.Response
 		return descope.ErrRefreshToken.WithMessage("Invalid refresh token")
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(api.Routes.Logout(), nil, &api.HTTPRequest{}, refreshToken)
+	httpResponse, err := auth.client.DoPostRequest(request.Context(), api.Routes.Logout(), nil, &api.HTTPRequest{}, refreshToken)
 	if err != nil {
 		return err
 	}
@@ -162,7 +163,7 @@ func (auth *authenticationService) LogoutAll(request *http.Request, w http.Respo
 		return descope.ErrRefreshToken.WithMessage("Invalid refresh token")
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(api.Routes.LogoutAll(), nil, &api.HTTPRequest{}, refreshToken)
+	httpResponse, err := auth.client.DoPostRequest(request.Context(), api.Routes.LogoutAll(), nil, &api.HTTPRequest{}, refreshToken)
 	if err != nil {
 		return err
 	}
@@ -215,7 +216,7 @@ func (auth *authenticationService) Me(request *http.Request) (*descope.UserRespo
 		return nil, descope.ErrRefreshToken.WithMessage("Invalid refresh token")
 	}
 
-	httpResponse, err := auth.client.DoGetRequest(api.Routes.Me(), &api.HTTPRequest{}, refreshToken)
+	httpResponse, err := auth.client.DoGetRequest(request.Context(), api.Routes.Me(), &api.HTTPRequest{}, refreshToken)
 	if err != nil {
 		return nil, err
 	}
@@ -232,17 +233,17 @@ func (auth *authenticationService) ValidateSessionWithRequest(request *http.Requ
 	if sessionToken == "" {
 		return false, nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain session token")
 	}
-	return auth.validateSession(sessionToken)
+	return auth.validateSession(request.Context(), sessionToken)
 }
 
-func (auth *authenticationService) ValidateSessionWithToken(sessionToken string) (bool, *descope.Token, error) {
+func (auth *authenticationService) ValidateSessionWithToken(ctx context.Context, sessionToken string) (bool, *descope.Token, error) {
 	if sessionToken == "" {
 		return false, nil, utils.NewInvalidArgumentError("sessionToken")
 	}
-	return auth.validateSession(sessionToken)
+	return auth.validateSession(ctx, sessionToken)
 }
 
-func (auth *authenticationService) validateSession(sessionToken string) (valid bool, token *descope.Token, err error) {
+func (auth *authenticationService) validateSession(_ context.Context, sessionToken string) (valid bool, token *descope.Token, err error) {
 	token, err = auth.validateJWT(sessionToken)
 	if err != nil {
 		return false, nil, err
@@ -260,24 +261,24 @@ func (auth *authenticationService) RefreshSessionWithRequest(request *http.Reque
 	if refreshToken == "" {
 		return false, nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain refresh token")
 	}
-	return auth.refreshSession(refreshToken, w)
+	return auth.refreshSession(request.Context(), refreshToken, w)
 }
 
-func (auth *authenticationService) RefreshSessionWithToken(refreshToken string) (bool, *descope.Token, error) {
+func (auth *authenticationService) RefreshSessionWithToken(ctx context.Context, refreshToken string) (bool, *descope.Token, error) {
 	if refreshToken == "" {
 		return false, nil, utils.NewInvalidArgumentError("refreshToken")
 	}
-	return auth.refreshSession(refreshToken, nil)
+	return auth.refreshSession(ctx, refreshToken, nil)
 }
 
-func (auth *authenticationService) refreshSession(refreshToken string, w http.ResponseWriter) (bool, *descope.Token, error) {
+func (auth *authenticationService) refreshSession(ctx context.Context, refreshToken string, w http.ResponseWriter) (bool, *descope.Token, error) {
 	token, err := auth.validateJWT(refreshToken)
 	if err != nil {
 		return false, nil, err
 	}
 
 	// refresh session token
-	httpResponse, err := auth.client.DoPostRequest(api.Routes.RefreshToken(), nil, &api.HTTPRequest{}, refreshToken)
+	httpResponse, err := auth.client.DoPostRequest(ctx, api.Routes.RefreshToken(), nil, &api.HTTPRequest{}, refreshToken)
 	if err != nil {
 		return false, nil, err
 	}
@@ -297,32 +298,32 @@ func (auth *authenticationService) ValidateAndRefreshSessionWithRequest(request 
 		return false, nil, utils.NewInvalidArgumentError("request")
 	}
 	sessionToken, refreshToken := provideTokens(request)
-	return auth.validateAndRefreshSessionWithTokens(sessionToken, refreshToken, w)
+	return auth.validateAndRefreshSessionWithTokens(request.Context(), sessionToken, refreshToken, w)
 }
 
-func (auth *authenticationService) ValidateAndRefreshSessionWithTokens(sessionToken, refreshToken string) (bool, *descope.Token, error) {
-	return auth.validateAndRefreshSessionWithTokens(sessionToken, refreshToken, nil)
+func (auth *authenticationService) ValidateAndRefreshSessionWithTokens(ctx context.Context, sessionToken, refreshToken string) (bool, *descope.Token, error) {
+	return auth.validateAndRefreshSessionWithTokens(ctx, sessionToken, refreshToken, nil)
 }
 
-func (auth *authenticationService) validateAndRefreshSessionWithTokens(sessionToken, refreshToken string, w http.ResponseWriter) (valid bool, token *descope.Token, err error) {
+func (auth *authenticationService) validateAndRefreshSessionWithTokens(ctx context.Context, sessionToken, refreshToken string, w http.ResponseWriter) (valid bool, token *descope.Token, err error) {
 	if sessionToken == "" && refreshToken == "" {
 		return false, nil, descope.ErrMissingArguments.WithMessage("Both sessionToken and refreshToken are empty")
 	}
 	if sessionToken != "" {
-		if valid, token, err = auth.validateSession(sessionToken); valid {
+		if valid, token, err = auth.validateSession(ctx, sessionToken); valid {
 			return
 		}
 	}
 	if refreshToken != "" {
-		if valid, token, err = auth.refreshSession(refreshToken, w); valid {
+		if valid, token, err = auth.refreshSession(ctx, refreshToken, w); valid {
 			return
 		}
 	}
 	return false, nil, err
 }
 
-func (auth *authenticationService) ExchangeAccessKey(accessKey string) (success bool, SessionToken *descope.Token, err error) {
-	httpResponse, err := auth.client.DoPostRequest(api.Routes.ExchangeAccessKey(), nil, &api.HTTPRequest{}, accessKey)
+func (auth *authenticationService) ExchangeAccessKey(ctx context.Context, accessKey string) (success bool, SessionToken *descope.Token, err error) {
+	httpResponse, err := auth.client.DoPostRequest(ctx, api.Routes.ExchangeAccessKey(), nil, &api.HTTPRequest{}, accessKey)
 	if err != nil {
 		logger.LogError("Failed to exchange access key", err)
 		return false, nil, err
@@ -341,11 +342,15 @@ func (auth *authenticationService) ExchangeAccessKey(accessKey string) (success 
 	return true, tokens[0], nil
 }
 
-func (auth *authenticationService) ValidatePermissions(token *descope.Token, permissions []string) bool {
-	return auth.ValidateTenantPermissions(token, "", permissions)
+func (auth *authenticationService) ValidatePermissions(ctx context.Context, token *descope.Token, permissions []string) bool {
+	return auth.ValidateTenantPermissions(ctx, token, "", permissions)
 }
 
-func (auth *authenticationService) ValidateTenantPermissions(token *descope.Token, tenant string, permissions []string) bool {
+func (auth *authenticationService) GetMatchedPermissions(ctx context.Context, token *descope.Token, permissions []string) []string {
+	return auth.GetMatchedTenantPermissions(ctx, token, "", permissions)
+}
+
+func (auth *authenticationService) ValidateTenantPermissions(_ context.Context, token *descope.Token, tenant string, permissions []string) bool {
 	if tenant != "" && !isAssociatedWithTenant(token, tenant) {
 		return false
 	}
@@ -358,11 +363,29 @@ func (auth *authenticationService) ValidateTenantPermissions(token *descope.Toke
 	return true
 }
 
-func (auth *authenticationService) ValidateRoles(token *descope.Token, roles []string) bool {
-	return auth.ValidateTenantRoles(token, "", roles)
+func (auth *authenticationService) GetMatchedTenantPermissions(_ context.Context, token *descope.Token, tenant string, permissions []string) []string {
+	if tenant != "" && !isAssociatedWithTenant(token, tenant) {
+		return []string{}
+	}
+	granted := getAuthorizationClaimItems(token, tenant, claimPermissions)
+	matched := []string{}
+	for i := range permissions {
+		if slices.Contains(granted, permissions[i]) {
+			matched = append(matched, permissions[i])
+		}
+	}
+	return matched
 }
 
-func (auth *authenticationService) ValidateTenantRoles(token *descope.Token, tenant string, roles []string) bool {
+func (auth *authenticationService) ValidateRoles(ctx context.Context, token *descope.Token, roles []string) bool {
+	return auth.ValidateTenantRoles(ctx, token, "", roles)
+}
+
+func (auth *authenticationService) GetMatchedRoles(ctx context.Context, token *descope.Token, roles []string) []string {
+	return auth.GetMatchedTenantRoles(ctx, token, "", roles)
+}
+
+func (auth *authenticationService) ValidateTenantRoles(_ context.Context, token *descope.Token, tenant string, roles []string) bool {
 	if tenant != "" && !isAssociatedWithTenant(token, tenant) {
 		return false
 	}
@@ -375,9 +398,23 @@ func (auth *authenticationService) ValidateTenantRoles(token *descope.Token, ten
 	return true
 }
 
+func (auth *authenticationService) GetMatchedTenantRoles(_ context.Context, token *descope.Token, tenant string, roles []string) []string {
+	if tenant != "" && !isAssociatedWithTenant(token, tenant) {
+		return []string{}
+	}
+	membership := getAuthorizationClaimItems(token, tenant, claimRoles)
+	matched := []string{}
+	for i := range roles {
+		if slices.Contains(membership, roles[i]) {
+			matched = append(matched, roles[i])
+		}
+	}
+	return matched
+}
+
 // Select Tenant
 
-func (auth *authenticationService) SelectTenantWithRequest(tenantID string, request *http.Request, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (auth *authenticationService) SelectTenantWithRequest(ctx context.Context, tenantID string, request *http.Request, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if request == nil {
 		return nil, utils.NewInvalidArgumentError("request")
 	}
@@ -385,23 +422,23 @@ func (auth *authenticationService) SelectTenantWithRequest(tenantID string, requ
 	if refreshToken == "" {
 		return nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain refresh token")
 	}
-	return auth.selectTenant(tenantID, refreshToken, w)
+	return auth.selectTenant(ctx, tenantID, refreshToken, w)
 }
 
-func (auth *authenticationService) SelectTenantWithToken(tenantID string, refreshToken string) (*descope.AuthenticationInfo, error) {
+func (auth *authenticationService) SelectTenantWithToken(ctx context.Context, tenantID string, refreshToken string) (*descope.AuthenticationInfo, error) {
 	if refreshToken == "" {
 		return nil, utils.NewInvalidArgumentError("refreshToken")
 	}
-	return auth.selectTenant(tenantID, refreshToken, nil)
+	return auth.selectTenant(ctx, tenantID, refreshToken, nil)
 }
 
-func (auth *authenticationService) selectTenant(tenantID string, refreshToken string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (auth *authenticationService) selectTenant(ctx context.Context, tenantID string, refreshToken string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	token, err := auth.validateJWT(refreshToken)
 	if err != nil {
 		return nil, err
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(api.Routes.SelectTenant(), map[string]any{"tenant": tenantID}, &api.HTTPRequest{}, refreshToken)
+	httpResponse, err := auth.client.DoPostRequest(ctx, api.Routes.SelectTenant(), map[string]any{"tenant": tenantID}, &api.HTTPRequest{}, refreshToken)
 	if err != nil {
 		return nil, err
 	}
@@ -543,12 +580,12 @@ func (*authenticationsBase) verifyDeliveryMethod(method descope.DeliveryMethod, 
 	return nil
 }
 
-func (auth *authenticationsBase) exchangeToken(code string, url string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (auth *authenticationsBase) exchangeToken(ctx context.Context, code string, url string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if code == "" {
 		return nil, utils.NewInvalidArgumentError("code")
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(url, newExchangeTokenBody(code), nil, "")
+	httpResponse, err := auth.client.DoPostRequest(ctx, url, newExchangeTokenBody(code), nil, "")
 	if err != nil {
 		return nil, err
 	}

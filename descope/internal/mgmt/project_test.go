@@ -1,6 +1,7 @@
 package mgmt
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -14,7 +15,7 @@ func TestProjectExportRaw(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 	}, map[string]any{"files": map[string]any{"foo": "bar"}}))
-	m, err := mgmt.Project().ExportRaw()
+	m, err := mgmt.Project().ExportRaw(context.Background())
 	require.NoError(t, err)
 	require.NotNil(t, m)
 	require.Equal(t, "bar", m["foo"])
@@ -29,7 +30,7 @@ func TestProjectImportRaw(t *testing.T) {
 		require.True(t, ok)
 		require.Equal(t, "bar", files["foo"])
 	}))
-	err := mgmt.Project().ImportRaw(map[string]any{"foo": "bar"})
+	err := mgmt.Project().ImportRaw(context.Background(), map[string]any{"foo": "bar"})
 	require.NoError(t, err)
 }
 
@@ -42,13 +43,13 @@ func TestProjectUpdateNameSuccess(t *testing.T) {
 		require.True(t, ok)
 		require.Equal(t, "foo", name)
 	}))
-	err := mgmt.Project().UpdateName("foo")
+	err := mgmt.Project().UpdateName(context.Background(), "foo")
 	require.NoError(t, err)
 }
 
 func TestProjectUpdateNameError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	err := mgmt.Project().UpdateName("foo")
+	err := mgmt.Project().UpdateName(context.Background(), "foo")
 	require.Error(t, err)
 }
 
@@ -64,7 +65,7 @@ func TestProjectCloneSuccess(t *testing.T) {
 		require.True(t, ok)
 		require.Equal(t, "production", tag)
 	}, map[string]any{"projectId": "id1", "projectName": "foo"}))
-	res, err := mgmt.Project().Clone("foo", "production")
+	res, err := mgmt.Project().Clone(context.Background(), "foo", "production")
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "foo", res.ProjectName)
@@ -74,6 +75,20 @@ func TestProjectCloneSuccess(t *testing.T) {
 
 func TestProjectCloneError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	_, err := mgmt.Project().Clone("foo", "")
+	_, err := mgmt.Project().Clone(context.Background(), "foo", "")
+	require.Error(t, err)
+}
+
+func TestProjectDeleteSuccess(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+	}))
+	err := m.Project().Delete(context.Background())
+	require.NoError(t, err)
+}
+
+func TestProjectDeleteError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	err := mgmt.Project().Delete(context.Background())
 	require.Error(t, err)
 }

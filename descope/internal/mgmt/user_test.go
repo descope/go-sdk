@@ -1,6 +1,7 @@
 package mgmt
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -42,19 +43,19 @@ func TestUserCreateSuccess(t *testing.T) {
 	user.Email = "foo@bar.com"
 	user.Roles = []string{"foo"}
 	user.CustomAttributes = ca
-	res, err := m.User().Create("abc", user)
+	res, err := m.User().Create(context.Background(), "abc", user)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
 
-	res, err = m.User().Invite("abc", user, nil)
+	res, err = m.User().Invite(context.Background(), "abc", user, nil)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
 
 	sendSMS := true
 	sendMail := false
-	res, err = m.User().Invite("abc", user, &descope.InviteOptions{InviteURL: "https://some.domain.com", SendSMS: &sendSMS, SendMail: &sendMail})
+	res, err = m.User().Invite(context.Background(), "abc", user, &descope.InviteOptions{InviteURL: "https://some.domain.com", SendSMS: &sendSMS, SendMail: &sendMail})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
@@ -86,7 +87,7 @@ func TestUserCreateSuccessWithOptions(t *testing.T) {
 	user.Roles = []string{"foo"}
 	user.CustomAttributes = ca
 
-	res, err := m.User().Invite("abc", user, &descope.InviteOptions{InviteURL: "https://some.domain.com"})
+	res, err := m.User().Invite(context.Background(), "abc", user, &descope.InviteOptions{InviteURL: "https://some.domain.com"})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
@@ -172,7 +173,7 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 		require.Equal(t, u2.Roles[0], roleNames[0])
 	}, response))
 
-	res, err := m.User().InviteBatch(users, &descope.InviteOptions{
+	res, err := m.User().InviteBatch(context.Background(), users, &descope.InviteOptions{
 		InviteURL: "https://some.domain.com",
 		SendSMS:   &sendSMS,
 	})
@@ -186,7 +187,7 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 	assert.EqualValues(t, "some failure", res.FailedUsers[0].Failure)
 
 	invite = false
-	res, err = m.User().CreateBatch(users)
+	res, err = m.User().CreateBatch(context.Background(), users)
 	require.True(t, called)
 	require.NoError(t, err)
 	require.NotNil(t, res)
@@ -216,7 +217,7 @@ func TestUserCreateTestUserSuccess(t *testing.T) {
 	user := &descope.UserRequest{}
 	user.Email = "foo@bar.com"
 	user.Roles = []string{"foo"}
-	res, err := m.User().CreateTestUser("abc", user)
+	res, err := m.User().CreateTestUser(context.Background(), "abc", user)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
@@ -226,19 +227,19 @@ func TestUserCreateError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
 	user := &descope.UserRequest{}
 	user.Email = "foo@bar.com"
-	_, err := m.User().Create("", user)
+	_, err := m.User().Create(context.Background(), "", user)
 	require.Error(t, err)
 }
 
 func TestUserCreateUpdateOrInviteWithNoUser(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	_, err := m.User().Create("abc", nil)
+	_, err := m.User().Create(context.Background(), "abc", nil)
 	require.NoError(t, err)
-	_, err = m.User().CreateTestUser("abc", nil)
+	_, err = m.User().CreateTestUser(context.Background(), "abc", nil)
 	require.NoError(t, err)
-	_, err = m.User().Invite("abc", nil, nil)
+	_, err = m.User().Invite(context.Background(), "abc", nil, nil)
 	require.NoError(t, err)
-	_, err = m.User().Update("abc", nil)
+	_, err = m.User().Update(context.Background(), "abc", nil)
 	require.NoError(t, err)
 }
 
@@ -275,7 +276,7 @@ func TestUserUpdateSuccess(t *testing.T) {
 	user := &descope.UserRequest{}
 	user.Email = "foo@bar.com"
 	user.Tenants = []*descope.AssociatedTenant{{TenantID: "x", Roles: []string{"foo"}}, {TenantID: "y", Roles: []string{"bar"}}}
-	res, err := m.User().Update("abc", user)
+	res, err := m.User().Update(context.Background(), "abc", user)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
@@ -302,7 +303,7 @@ func TestUserUpdateVerifiedAttributes(t *testing.T) {
 	tr := true
 	user.VerifiedEmail = &tr
 	user.VerifiedPhone = &tr
-	res, err := m.User().Update("abc", user)
+	res, err := m.User().Update(context.Background(), "abc", user)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
@@ -312,7 +313,7 @@ func TestUserUpdateError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
 	user := &descope.UserRequest{}
 	user.Email = "foo@bar.com"
-	_, err := m.User().Update("", user)
+	_, err := m.User().Update(context.Background(), "", user)
 	require.Error(t, err)
 }
 
@@ -323,7 +324,7 @@ func TestUserDeleteSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["loginId"])
 	}))
-	err := m.User().Delete("abc")
+	err := m.User().Delete(context.Background(), "abc")
 	require.NoError(t, err)
 }
 
@@ -333,14 +334,14 @@ func TestDeleteAllTestUsersSuccess(t *testing.T) {
 		visited = true
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 	}))
-	err := m.User().DeleteAllTestUsers()
+	err := m.User().DeleteAllTestUsers(context.Background())
 	require.NoError(t, err)
 	assert.True(t, visited)
 }
 
 func TestUserDeleteError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	err := m.User().Delete("")
+	err := m.User().Delete(context.Background(), "")
 	require.Error(t, err)
 }
 
@@ -367,7 +368,7 @@ func TestUserImportSuccess(t *testing.T) {
 		require.Equal(t, "YWJj", body["users"])
 		require.Equal(t, true, body["dryrun"])
 	}, response))
-	res, err := m.User().Import("src", []byte("abc"), []byte("def"), true)
+	res, err := m.User().Import(context.Background(), "src", []byte("abc"), []byte("def"), true)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.NotEmpty(t, res.Users)
@@ -379,14 +380,14 @@ func TestUserImportSuccess(t *testing.T) {
 
 func TestUserImportBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().Import("", []byte("abc"), []byte("def"), true)
+	res, err := m.User().Import(context.Background(), "", []byte("abc"), []byte("def"), true)
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestUserImportError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().Import("src", []byte("abc"), []byte("def"), true)
+	res, err := m.User().Import(context.Background(), "src", []byte("abc"), []byte("def"), true)
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -401,7 +402,7 @@ func TestUserLoadSuccess(t *testing.T) {
 		params := helpers.ReadParams(r)
 		require.Equal(t, "abc", params["loginId"])
 	}, response))
-	res, err := m.User().Load("abc")
+	res, err := m.User().Load(context.Background(), "abc")
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
@@ -409,14 +410,14 @@ func TestUserLoadSuccess(t *testing.T) {
 
 func TestUserLoadBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().Load("")
+	res, err := m.User().Load(context.Background(), "")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestUserLoadError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().Load("abc")
+	res, err := m.User().Load(context.Background(), "abc")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -431,7 +432,7 @@ func TestUserLoadByUserIDSuccess(t *testing.T) {
 		params := helpers.ReadParams(r)
 		require.Equal(t, "abc", params["userId"])
 	}, response))
-	res, err := m.User().LoadByUserID("abc")
+	res, err := m.User().LoadByUserID(context.Background(), "abc")
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
@@ -439,14 +440,14 @@ func TestUserLoadByUserIDSuccess(t *testing.T) {
 
 func TestUserLoadByUserIDBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().LoadByUserID("")
+	res, err := m.User().LoadByUserID(context.Background(), "")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestUserLoadByUserIDError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().LoadByUserID("abc")
+	res, err := m.User().LoadByUserID(context.Background(), "abc")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -459,7 +460,7 @@ func TestUserLogoutUserByUserIDSuccess(t *testing.T) {
 		assert.EqualValues(t, "abc", req["userId"])
 		assert.EqualValues(t, "", req["loginId"])
 	}, nil))
-	err := m.User().LogoutUserByUserID("abc")
+	err := m.User().LogoutUserByUserID(context.Background(), "abc")
 	require.NoError(t, err)
 }
 
@@ -471,7 +472,7 @@ func TestUserLogoutUserByLoginIDSuccess(t *testing.T) {
 		assert.EqualValues(t, "", req["userId"])
 		assert.EqualValues(t, "abc", req["loginId"])
 	}, nil))
-	err := m.User().LogoutUser("abc")
+	err := m.User().LogoutUser(context.Background(), "abc")
 	require.NoError(t, err)
 }
 
@@ -479,7 +480,7 @@ func TestUserLogoutUserByUserIdErr(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		assert.Fail(t, "shouldn't get here")
 	}, nil))
-	err := m.User().LogoutUserByUserID("")
+	err := m.User().LogoutUserByUserID(context.Background(), "")
 	require.Error(t, err)
 }
 
@@ -487,7 +488,7 @@ func TestUserLogoutUserByLoginIdErr(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		assert.Fail(t, "shouldn't get here")
 	}, nil))
-	err := m.User().LogoutUser("")
+	err := m.User().LogoutUser(context.Background(), "")
 	require.Error(t, err)
 }
 
@@ -512,7 +513,7 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 		require.EqualValues(t, []any{"a@b.com"}, req["emails"])
 		require.EqualValues(t, []any{"+11111111"}, req["phones"])
 	}, response))
-	res, err := m.User().SearchAll(&descope.UserSearchOptions{
+	res, err := m.User().SearchAll(context.Background(), &descope.UserSearchOptions{
 		Statuses:         []descope.UserStatus{descope.UserStatusDisabled},
 		TenantIDs:        tenantIDs,
 		Roles:            roleNames,
@@ -529,19 +530,19 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 
 func TestSearchAllUsersError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().SearchAll(nil)
+	res, err := m.User().SearchAll(context.Background(), nil)
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestSearchAllUsersBadRequest(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().SearchAll(&descope.UserSearchOptions{Limit: -1})
+	res, err := m.User().SearchAll(context.Background(), &descope.UserSearchOptions{Limit: -1})
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.Contains(t, err.Error(), "limit")
 	require.Nil(t, res)
 
-	res, err = m.User().SearchAll(&descope.UserSearchOptions{Page: -1})
+	res, err = m.User().SearchAll(context.Background(), &descope.UserSearchOptions{Page: -1})
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.Contains(t, err.Error(), "page")
 	require.Nil(t, res)
@@ -559,7 +560,7 @@ func TestUserActivateSuccess(t *testing.T) {
 		require.Equal(t, "abc", req["loginId"])
 		require.Equal(t, "enabled", req["status"])
 	}, response))
-	res, err := m.User().Activate("abc")
+	res, err := m.User().Activate(context.Background(), "abc")
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "enabled", res.Status)
@@ -567,14 +568,14 @@ func TestUserActivateSuccess(t *testing.T) {
 
 func TestUserActivateBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().Activate("")
+	res, err := m.User().Activate(context.Background(), "")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestUserActivateError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().Activate("abc")
+	res, err := m.User().Activate(context.Background(), "abc")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -591,7 +592,7 @@ func TestUserDeactivateSuccess(t *testing.T) {
 		require.Equal(t, "abc", req["loginId"])
 		require.Equal(t, "disabled", req["status"])
 	}, response))
-	res, err := m.User().Deactivate("abc")
+	res, err := m.User().Deactivate(context.Background(), "abc")
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "disabled", res.Status)
@@ -599,14 +600,14 @@ func TestUserDeactivateSuccess(t *testing.T) {
 
 func TestUserDeactivateBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().Deactivate("")
+	res, err := m.User().Deactivate(context.Background(), "")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestUserDeactivateError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().Deactivate("abc")
+	res, err := m.User().Deactivate(context.Background(), "abc")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -624,14 +625,14 @@ func TestUserUpdateLoginIDSuccess(t *testing.T) {
 		require.Equal(t, "abc", req["loginId"])
 		require.Equal(t, "a@b.c", req["newLoginId"])
 	}, response))
-	res, err := m.User().UpdateLoginID("abc", "a@b.c")
+	res, err := m.User().UpdateLoginID(context.Background(), "abc", "a@b.c")
 	require.NoError(t, err)
 	require.NotNil(t, res)
 }
 
 func TestUserUpdateLoginIDBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().UpdateLoginID("", "a@b.c")
+	res, err := m.User().UpdateLoginID(context.Background(), "", "a@b.c")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -650,7 +651,7 @@ func TestUserUpdateEmailSuccess(t *testing.T) {
 		require.Equal(t, "a@b.c", req["email"])
 		require.Equal(t, true, req["verified"])
 	}, response))
-	res, err := m.User().UpdateEmail("abc", "a@b.c", true)
+	res, err := m.User().UpdateEmail(context.Background(), "abc", "a@b.c", true)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
@@ -659,14 +660,14 @@ func TestUserUpdateEmailSuccess(t *testing.T) {
 
 func TestUserUpdateEmailBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().UpdateEmail("", "a@b.c", true)
+	res, err := m.User().UpdateEmail(context.Background(), "", "a@b.c", true)
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestUserUpdateEmailError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().UpdateEmail("abc", "a@b.c", true)
+	res, err := m.User().UpdateEmail(context.Background(), "abc", "a@b.c", true)
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -685,7 +686,7 @@ func TestUserUpdatePhoneSuccess(t *testing.T) {
 		require.Equal(t, "+18005551234", req["phone"])
 		require.Equal(t, false, req["verified"])
 	}, response))
-	res, err := m.User().UpdatePhone("abc", "+18005551234", false)
+	res, err := m.User().UpdatePhone(context.Background(), "abc", "+18005551234", false)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "+18005551234", res.Phone)
@@ -694,14 +695,14 @@ func TestUserUpdatePhoneSuccess(t *testing.T) {
 
 func TestUserUpdatePhoneBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().UpdatePhone("", "+18005551234", true)
+	res, err := m.User().UpdatePhone(context.Background(), "", "+18005551234", true)
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestUserUpdatePhoneError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().UpdatePhone("abc", "+18005551234", true)
+	res, err := m.User().UpdatePhone(context.Background(), "abc", "+18005551234", true)
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -718,7 +719,7 @@ func TestUserUpdateNameSuccess(t *testing.T) {
 		require.Equal(t, "abc", req["loginId"])
 		require.Equal(t, "foo", req["displayName"])
 	}, response))
-	res, err := m.User().UpdateDisplayName("abc", "foo")
+	res, err := m.User().UpdateDisplayName(context.Background(), "abc", "foo")
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "foo", res.Name)
@@ -726,14 +727,14 @@ func TestUserUpdateNameSuccess(t *testing.T) {
 
 func TestUserUpdateNameBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().UpdateDisplayName("", "foo")
+	res, err := m.User().UpdateDisplayName(context.Background(), "", "foo")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestUserUpdateNameError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().UpdateDisplayName("abc", "foo")
+	res, err := m.User().UpdateDisplayName(context.Background(), "abc", "foo")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -750,7 +751,7 @@ func TestUserUpdatePictureSuccess(t *testing.T) {
 		require.Equal(t, "abc", req["loginId"])
 		require.Equal(t, "foo", req["picture"])
 	}, response))
-	res, err := m.User().UpdatePicture("abc", "foo")
+	res, err := m.User().UpdatePicture(context.Background(), "abc", "foo")
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "foo", res.Name)
@@ -758,14 +759,14 @@ func TestUserUpdatePictureSuccess(t *testing.T) {
 
 func TestUserUpdatePictureBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().UpdatePicture("", "foo")
+	res, err := m.User().UpdatePicture(context.Background(), "", "foo")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestUserUpdatePictureError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().UpdatePicture("abc", "foo")
+	res, err := m.User().UpdatePicture(context.Background(), "abc", "foo")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -783,7 +784,7 @@ func TestUserUpdateCustomAttributeSuccess(t *testing.T) {
 		require.Equal(t, "foo", req["attributeKey"])
 		require.Equal(t, "bar", req["attributeValue"])
 	}, response))
-	res, err := m.User().UpdateCustomAttribute("abc", "foo", "bar")
+	res, err := m.User().UpdateCustomAttribute(context.Background(), "abc", "foo", "bar")
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "foo", res.Name)
@@ -791,17 +792,17 @@ func TestUserUpdateCustomAttributeSuccess(t *testing.T) {
 
 func TestUserUpdateCustomAttributeBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().UpdateCustomAttribute("", "foo", "bar")
+	res, err := m.User().UpdateCustomAttribute(context.Background(), "", "foo", "bar")
 	require.Error(t, err)
 	require.Nil(t, res)
-	res, err = m.User().UpdateCustomAttribute("id", "", "bar")
+	res, err = m.User().UpdateCustomAttribute(context.Background(), "id", "", "bar")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestUserUpdateCustomAttributeError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().UpdateCustomAttribute("abc", "foo", "bar")
+	res, err := m.User().UpdateCustomAttribute(context.Background(), "abc", "foo", "bar")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -818,7 +819,7 @@ func TestUserAddRoleSuccess(t *testing.T) {
 		require.Equal(t, "abc", req["loginId"])
 		require.Equal(t, []any{"foo"}, req["roleNames"])
 	}, response))
-	res, err := m.User().AddRoles("abc", []string{"foo"})
+	res, err := m.User().AddRoles(context.Background(), "abc", []string{"foo"})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, []string{"foo"}, res.RoleNames)
@@ -826,14 +827,46 @@ func TestUserAddRoleSuccess(t *testing.T) {
 
 func TestUserAddRoleBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().AddRoles("", []string{"foo"})
+	res, err := m.User().AddRoles(context.Background(), "", []string{"foo"})
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestUserAddRoleError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().AddRoles("abc", []string{"foo"})
+	res, err := m.User().AddRoles(context.Background(), "abc", []string{"foo"})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserSetRoleSuccess(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"roleNames": []string{"foo"},
+		}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, []any{"foo"}, req["roleNames"])
+	}, response))
+	res, err := m.User().SetRoles(context.Background(), "abc", []string{"foo"})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, []string{"foo"}, res.RoleNames)
+}
+
+func TestUserSetRoleBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := m.User().SetRoles(context.Background(), "", []string{"foo"})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserSetRoleError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := m.User().SetRoles(context.Background(), "abc", []string{"foo"})
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -850,7 +883,7 @@ func TestUserRemoveRoleSuccess(t *testing.T) {
 		require.Equal(t, "abc", req["loginId"])
 		require.Equal(t, []any{"foo", "bar"}, req["roleNames"])
 	}, response))
-	res, err := m.User().RemoveRoles("abc", []string{"foo", "bar"})
+	res, err := m.User().RemoveRoles(context.Background(), "abc", []string{"foo", "bar"})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, []string{"qux", "zut"}, res.RoleNames)
@@ -858,14 +891,14 @@ func TestUserRemoveRoleSuccess(t *testing.T) {
 
 func TestUserRemoveRoleBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().RemoveRoles("", []string{"foo", "bar"})
+	res, err := m.User().RemoveRoles(context.Background(), "", []string{"foo", "bar"})
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestUserRemoveRoleError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().RemoveRoles("abc", []string{"foo", "bar"})
+	res, err := m.User().RemoveRoles(context.Background(), "abc", []string{"foo", "bar"})
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -885,7 +918,7 @@ func TestUserAddTenantSuccess(t *testing.T) {
 		require.Equal(t, "abc", req["loginId"])
 		require.Equal(t, "456", req["tenantId"])
 	}, response))
-	res, err := m.User().AddTenant("abc", "456")
+	res, err := m.User().AddTenant(context.Background(), "abc", "456")
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res.UserTenants, 2)
@@ -895,14 +928,14 @@ func TestUserAddTenantSuccess(t *testing.T) {
 
 func TestUserAddTenantBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().AddTenant("", "123")
+	res, err := m.User().AddTenant(context.Background(), "", "123")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestUserAddTenantError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().AddTenant("abc", "123")
+	res, err := m.User().AddTenant(context.Background(), "abc", "123")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -921,7 +954,7 @@ func TestUserRemoveTenantSuccess(t *testing.T) {
 		require.Equal(t, "abc", req["loginId"])
 		require.Equal(t, "456", req["tenantId"])
 	}, response))
-	res, err := m.User().RemoveTenant("abc", "456")
+	res, err := m.User().RemoveTenant(context.Background(), "abc", "456")
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res.UserTenants, 1)
@@ -930,14 +963,14 @@ func TestUserRemoveTenantSuccess(t *testing.T) {
 
 func TestUserRemoveTenantBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().RemoveTenant("", "123")
+	res, err := m.User().RemoveTenant(context.Background(), "", "123")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestUserRemoveTenantError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().RemoveTenant("abc", "123")
+	res, err := m.User().RemoveTenant(context.Background(), "abc", "123")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -960,7 +993,7 @@ func TestUserAddTenantRoleSuccess(t *testing.T) {
 		require.Equal(t, "123", req["tenantId"])
 		require.Equal(t, []any{"foo"}, req["roleNames"])
 	}, response))
-	res, err := m.User().AddTenantRoles("abc", "123", []string{"foo"})
+	res, err := m.User().AddTenantRoles(context.Background(), "abc", "123", []string{"foo"})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res.UserTenants, 1)
@@ -970,14 +1003,14 @@ func TestUserAddTenantRoleSuccess(t *testing.T) {
 
 func TestUserAddTenantRoleBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().AddTenantRoles("", "123", []string{"foo"})
+	res, err := m.User().AddTenantRoles(context.Background(), "", "123", []string{"foo"})
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestUserAddTenantRoleError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().AddTenantRoles("abc", "123", []string{"foo"})
+	res, err := m.User().AddTenantRoles(context.Background(), "abc", "123", []string{"foo"})
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -1000,7 +1033,7 @@ func TestUserRemoveTenantRoleSuccess(t *testing.T) {
 		require.Equal(t, "123", req["tenantId"])
 		require.Equal(t, []any{"foo", "bar"}, req["roleNames"])
 	}, response))
-	res, err := m.User().RemoveTenantRoles("abc", "123", []string{"foo", "bar"})
+	res, err := m.User().RemoveTenantRoles(context.Background(), "abc", "123", []string{"foo", "bar"})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res.UserTenants, 1)
@@ -1010,14 +1043,14 @@ func TestUserRemoveTenantRoleSuccess(t *testing.T) {
 
 func TestUserRemoveTenantRoleBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().RemoveTenantRoles("", "123", []string{"foo", "bar"})
+	res, err := m.User().RemoveTenantRoles(context.Background(), "", "123", []string{"foo", "bar"})
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestUserRemoveTenantRoleError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().RemoveTenantRoles("abc", "123", []string{"foo", "bar"})
+	res, err := m.User().RemoveTenantRoles(context.Background(), "abc", "123", []string{"foo", "bar"})
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -1031,21 +1064,21 @@ func TestUserSetPasswordSuccess(t *testing.T) {
 		require.Equal(t, "abc", req["loginId"])
 		require.Equal(t, "123", req["password"])
 	}, response))
-	err := m.User().SetPassword("abc", "123")
+	err := m.User().SetPassword(context.Background(), "abc", "123")
 	require.NoError(t, err)
 }
 
 func TestUserSetPasswordBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	err := m.User().SetPassword("", "123")
+	err := m.User().SetPassword(context.Background(), "", "123")
 	require.Error(t, err)
-	err = m.User().SetPassword("abc", "")
+	err = m.User().SetPassword(context.Background(), "abc", "")
 	require.Error(t, err)
 }
 
 func TestSetUserPasswordError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	err := m.User().SetPassword("abc", "123")
+	err := m.User().SetPassword(context.Background(), "abc", "123")
 	require.Error(t, err)
 }
 
@@ -1057,19 +1090,19 @@ func TestUserExpirePasswordSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["loginId"])
 	}, response))
-	err := m.User().ExpirePassword("abc")
+	err := m.User().ExpirePassword(context.Background(), "abc")
 	require.NoError(t, err)
 }
 
 func TestUserExpirePasswordBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	err := m.User().ExpirePassword("")
+	err := m.User().ExpirePassword(context.Background(), "")
 	require.Error(t, err)
 }
 
 func TestExpireUserPasswordError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	err := m.User().ExpirePassword("abc")
+	err := m.User().ExpirePassword(context.Background(), "abc")
 	require.Error(t, err)
 }
 
@@ -1083,7 +1116,7 @@ func TestUserProviderTokenSuccess(t *testing.T) {
 		require.Equal(t, "abc", params["loginId"])
 		require.Equal(t, "pro", params["provider"])
 	}, response))
-	res, err := m.User().GetProviderToken("abc", "pro")
+	res, err := m.User().GetProviderToken(context.Background(), "abc", "pro")
 	require.NoError(t, err)
 	require.NotEmpty(t, res)
 	assert.EqualValues(t, "pro", res.Provider)
@@ -1091,18 +1124,18 @@ func TestUserProviderTokenSuccess(t *testing.T) {
 
 func TestUserProviderTokenBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().GetProviderToken("", "pro")
+	res, err := m.User().GetProviderToken(context.Background(), "", "pro")
 	require.Error(t, err)
 	require.Empty(t, res)
 
-	res, err = m.User().GetProviderToken("abc", "")
+	res, err = m.User().GetProviderToken(context.Background(), "abc", "")
 	require.Error(t, err)
 	require.Empty(t, res)
 }
 
 func TestUserProviderTokenError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().GetProviderToken("abc", "pro")
+	res, err := m.User().GetProviderToken(context.Background(), "abc", "pro")
 	require.Error(t, err)
 	require.Empty(t, res)
 }
@@ -1123,7 +1156,7 @@ func TestGenerateOTPForTestUserSuccess(t *testing.T) {
 		require.Equal(t, loginID, req["loginId"])
 		require.Equal(t, string(descope.MethodSMS), req["deliveryMethod"])
 	}, response))
-	resCode, err := m.User().GenerateOTPForTestUser(descope.MethodSMS, loginID)
+	resCode, err := m.User().GenerateOTPForTestUser(context.Background(), descope.MethodSMS, loginID)
 	require.NoError(t, err)
 	require.NotEmpty(t, resCode)
 	require.True(t, visited)
@@ -1146,7 +1179,7 @@ func TestGenerateOTPForTestUserNoLoginID(t *testing.T) {
 		require.Equal(t, loginID, req["loginId"])
 		require.Equal(t, string(descope.MethodSMS), req["deliveryMethod"])
 	}, response))
-	resCode, err := m.User().GenerateOTPForTestUser(descope.MethodSMS, "")
+	resCode, err := m.User().GenerateOTPForTestUser(context.Background(), descope.MethodSMS, "")
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.Contains(t, err.Error(), "loginID")
 	require.Empty(t, resCode)
@@ -1173,7 +1206,7 @@ func TestGenerateMagicLinkForTestUserSuccess(t *testing.T) {
 		require.Equal(t, string(descope.MethodSMS), req["deliveryMethod"])
 		require.Equal(t, URI, req["URI"])
 	}, response))
-	resLink, err := m.User().GenerateMagicLinkForTestUser(descope.MethodSMS, loginID, URI)
+	resLink, err := m.User().GenerateMagicLinkForTestUser(context.Background(), descope.MethodSMS, loginID, URI)
 	require.NoError(t, err)
 	require.NotEmpty(t, resLink)
 	require.True(t, visited)
@@ -1201,7 +1234,7 @@ func TestGenerateMagicLinkForTestUserNoLoginID(t *testing.T) {
 		require.Equal(t, URI, req["URI"])
 		require.Equal(t, true, req["crossDevice"])
 	}, response))
-	resLink, err := m.User().GenerateMagicLinkForTestUser(descope.MethodSMS, "", URI)
+	resLink, err := m.User().GenerateMagicLinkForTestUser(context.Background(), descope.MethodSMS, "", URI)
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.Contains(t, err.Error(), "loginID")
 	require.Empty(t, resLink)
@@ -1227,7 +1260,7 @@ func TestGenerateEnchantedLinkForTestUserSuccess(t *testing.T) {
 		require.Equal(t, loginID, req["loginId"])
 		require.Equal(t, URI, req["URI"])
 	}, response))
-	resLink, resPendingRef, err := m.User().GenerateEnchantedLinkForTestUser(loginID, URI)
+	resLink, resPendingRef, err := m.User().GenerateEnchantedLinkForTestUser(context.Background(), loginID, URI)
 	require.NoError(t, err)
 	require.NotEmpty(t, resLink)
 	require.NotEmpty(t, resPendingRef)
@@ -1255,7 +1288,7 @@ func TestGenerateEnchantedLinkForTestUserNoLoginID(t *testing.T) {
 		require.Equal(t, loginID, req["loginId"])
 		require.Equal(t, URI, req["URI"])
 	}, response))
-	resLink, resPendingRef, err := m.User().GenerateEnchantedLinkForTestUser("", URI)
+	resLink, resPendingRef, err := m.User().GenerateEnchantedLinkForTestUser(context.Background(), "", URI)
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.Contains(t, err.Error(), "loginID")
 	require.Empty(t, resLink)
@@ -1273,7 +1306,7 @@ func TestGenerateEmbeddedLink(t *testing.T) {
 		require.NotEmpty(t, req["customClaims"])
 
 	}, map[string]interface{}{"token": readyToken}))
-	token, err := mgmt.User().GenerateEmbeddedLink(loginID, map[string]any{"ak": "av"})
+	token, err := mgmt.User().GenerateEmbeddedLink(context.Background(), loginID, map[string]any{"ak": "av"})
 	require.NoError(t, err)
 	require.EqualValues(t, readyToken, token)
 }
@@ -1284,7 +1317,7 @@ func TestGenerateEmbeddedLinkMissingLoginID(t *testing.T) {
 		called = true
 
 	}))
-	token, err := mgmt.User().GenerateEmbeddedLink("", map[string]any{"ak": "av"})
+	token, err := mgmt.User().GenerateEmbeddedLink(context.Background(), "", map[string]any{"ak": "av"})
 	require.Error(t, err)
 	require.False(t, called)
 	require.Empty(t, token)
@@ -1295,7 +1328,7 @@ func TestGenerateEmbeddedLinkHTTPError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
 		called = true
 	}))
-	token, err := mgmt.User().GenerateEmbeddedLink("test", map[string]any{"ak": "av"})
+	token, err := mgmt.User().GenerateEmbeddedLink(context.Background(), "test", map[string]any{"ak": "av"})
 	require.Error(t, err)
 	require.True(t, called)
 	require.Empty(t, token)
@@ -1323,7 +1356,7 @@ func TestUserCreateWithVerifiedEmailUserSuccess(t *testing.T) {
 	tr := true
 	user.VerifiedEmail = &tr
 	user.Roles = []string{"foo"}
-	res, err := m.User().CreateTestUser("abc", user)
+	res, err := m.User().CreateTestUser(context.Background(), "abc", user)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
@@ -1351,7 +1384,7 @@ func TestUserCreateWithVerifiedPhoneUserSuccess(t *testing.T) {
 	tr := false
 	user.VerifiedPhone = &tr
 	user.Roles = []string{"foo"}
-	res, err := m.User().CreateTestUser("abc", user)
+	res, err := m.User().CreateTestUser(context.Background(), "abc", user)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)

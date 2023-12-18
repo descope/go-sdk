@@ -1,6 +1,8 @@
 package mgmt
 
 import (
+	"context"
+
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
@@ -10,7 +12,7 @@ type role struct {
 	managementBase
 }
 
-func (r *role) Create(name, description string, permissionNames []string) error {
+func (r *role) Create(ctx context.Context, name, description string, permissionNames []string) error {
 	if name == "" {
 		return utils.NewInvalidArgumentError("name")
 	}
@@ -19,11 +21,11 @@ func (r *role) Create(name, description string, permissionNames []string) error 
 		"description":     description,
 		"permissionNames": permissionNames,
 	}
-	_, err := r.client.DoPostRequest(api.Routes.ManagementRoleCreate(), body, nil, r.conf.ManagementKey)
+	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleCreate(), body, nil, r.conf.ManagementKey)
 	return err
 }
 
-func (r *role) Update(name, newName, description string, permissionNames []string) error {
+func (r *role) Update(ctx context.Context, name, newName, description string, permissionNames []string) error {
 	if name == "" {
 		return utils.NewInvalidArgumentError("name")
 	}
@@ -36,21 +38,21 @@ func (r *role) Update(name, newName, description string, permissionNames []strin
 		"description":     description,
 		"permissionNames": permissionNames,
 	}
-	_, err := r.client.DoPostRequest(api.Routes.ManagementRoleUpdate(), body, nil, r.conf.ManagementKey)
+	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleUpdate(), body, nil, r.conf.ManagementKey)
 	return err
 }
 
-func (r *role) Delete(name string) error {
+func (r *role) Delete(ctx context.Context, name string) error {
 	if name == "" {
 		return utils.NewInvalidArgumentError("name")
 	}
 	body := map[string]any{"name": name}
-	_, err := r.client.DoPostRequest(api.Routes.ManagementRoleDelete(), body, nil, r.conf.ManagementKey)
+	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleDelete(), body, nil, r.conf.ManagementKey)
 	return err
 }
 
-func (r *role) LoadAll() ([]*descope.Role, error) {
-	res, err := r.client.DoGetRequest(api.Routes.ManagementRoleLoadAll(), nil, r.conf.ManagementKey)
+func (r *role) LoadAll(ctx context.Context) ([]*descope.Role, error) {
+	res, err := r.client.DoGetRequest(ctx, api.Routes.ManagementRoleLoadAll(), nil, r.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/descope/go-sdk/descope"
@@ -11,7 +12,7 @@ type enchantedLink struct {
 	authenticationsBase
 }
 
-func (auth *enchantedLink) SignIn(loginID, URI string, r *http.Request, loginOptions *descope.LoginOptions) (*descope.EnchantedLinkResponse, error) {
+func (auth *enchantedLink) SignIn(ctx context.Context, loginID, URI string, r *http.Request, loginOptions *descope.LoginOptions) (*descope.EnchantedLinkResponse, error) {
 	var pswd string
 	var err error
 	if loginID == "" {
@@ -23,14 +24,14 @@ func (auth *enchantedLink) SignIn(loginID, URI string, r *http.Request, loginOpt
 			return nil, descope.ErrInvalidStepUpJWT
 		}
 	}
-	httpResponse, err := auth.client.DoPostRequest(composeEnchantedLinkSignInURL(), newMagicLinkAuthenticationRequestBody(loginID, URI, true, loginOptions), nil, pswd)
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignInURL(), newMagicLinkAuthenticationRequestBody(loginID, URI, true, loginOptions), nil, pswd)
 	if err != nil {
 		return nil, err
 	}
 	return getPendingRefFromResponse(httpResponse)
 }
 
-func (auth *enchantedLink) SignUp(loginID, URI string, user *descope.User) (*descope.EnchantedLinkResponse, error) {
+func (auth *enchantedLink) SignUp(ctx context.Context, loginID, URI string, user *descope.User) (*descope.EnchantedLinkResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
@@ -41,42 +42,42 @@ func (auth *enchantedLink) SignUp(loginID, URI string, user *descope.User) (*des
 		user.Email = loginID
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(composeEnchantedLinkSignUpURL(), newMagicLinkAuthenticationSignUpRequestBody(descope.MethodEmail, loginID, URI, user, true), nil, "")
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignUpURL(), newMagicLinkAuthenticationSignUpRequestBody(descope.MethodEmail, loginID, URI, user, true), nil, "")
 	if err != nil {
 		return nil, err
 	}
 	return getPendingRefFromResponse(httpResponse)
 }
 
-func (auth *enchantedLink) SignUpOrIn(loginID, URI string) (*descope.EnchantedLinkResponse, error) {
+func (auth *enchantedLink) SignUpOrIn(ctx context.Context, loginID, URI string) (*descope.EnchantedLinkResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
-	httpResponse, err := auth.client.DoPostRequest(composeEnchantedLinkSignUpOrInURL(), newMagicLinkAuthenticationRequestBody(loginID, URI, true, nil), nil, "")
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignUpOrInURL(), newMagicLinkAuthenticationRequestBody(loginID, URI, true, nil), nil, "")
 	if err != nil {
 		return nil, err
 	}
 	return getPendingRefFromResponse(httpResponse)
 }
 
-func (auth *enchantedLink) GetSession(pendingRef string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (auth *enchantedLink) GetSession(ctx context.Context, pendingRef string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	var err error
-	httpResponse, err := auth.client.DoPostRequest(composeGetSession(), newAuthenticationGetMagicLinkSessionBody(pendingRef), nil, "")
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeGetSession(), newAuthenticationGetMagicLinkSessionBody(pendingRef), nil, "")
 	if err != nil {
 		return nil, err
 	}
 	return auth.generateAuthenticationInfo(httpResponse, w)
 }
 
-func (auth *enchantedLink) Verify(token string) error {
-	_, err := auth.client.DoPostRequest(composeVerifyEnchantedLinkURL(), newMagicLinkAuthenticationVerifyRequestBody(token), nil, "")
+func (auth *enchantedLink) Verify(ctx context.Context, token string) error {
+	_, err := auth.client.DoPostRequest(ctx, composeVerifyEnchantedLinkURL(), newMagicLinkAuthenticationVerifyRequestBody(token), nil, "")
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (auth *enchantedLink) UpdateUserEmail(loginID, email, URI string, updateOptions *descope.UpdateOptions, r *http.Request) (*descope.EnchantedLinkResponse, error) {
+func (auth *enchantedLink) UpdateUserEmail(ctx context.Context, loginID, email, URI string, updateOptions *descope.UpdateOptions, r *http.Request) (*descope.EnchantedLinkResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
@@ -93,7 +94,7 @@ func (auth *enchantedLink) UpdateUserEmail(loginID, email, URI string, updateOpt
 	if updateOptions == nil {
 		updateOptions = &descope.UpdateOptions{}
 	}
-	httpResponse, err := auth.client.DoPostRequest(composeUpdateUserEmailEnchantedLink(), newMagicLinkUpdateEmailRequestBody(loginID, email, URI, true, updateOptions), nil, pswd)
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeUpdateUserEmailEnchantedLink(), newMagicLinkUpdateEmailRequestBody(loginID, email, URI, true, updateOptions), nil, pswd)
 	if err != nil {
 		return nil, err
 	}
