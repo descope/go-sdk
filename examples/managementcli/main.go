@@ -72,7 +72,6 @@ func userCreate(args []string) error {
 
 func userUpdate(args []string) error {
 	tenants := []*descope.AssociatedTenant{}
-	fmt.Println("### flags tenants", flags.Tenants)
 	for _, tenantID := range flags.Tenants {
 		tenants = append(tenants, &descope.AssociatedTenant{TenantID: tenantID})
 	}
