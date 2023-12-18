@@ -550,7 +550,7 @@ func addCommand(action func([]string) error, use string, help string, setup func
 }
 
 func main() {
-	addCommand(userCreate, "user-create <loginID>", "Create a new user", func(cmd *cobra.Command) {
+	addCommand(userCreate, "user-create <loginId>", "Create a new user", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 		cmd.Flags().StringVarP(&flags.Email, "email", "E", "", "the user's email address")
 		cmd.Flags().StringVarP(&flags.Phone, "phone", "P", "", "the user's phone number")
@@ -559,7 +559,7 @@ func main() {
 		cmd.Flags().StringSliceVar(&flags.AdditionalLoginIDs, "additional-login-ids", nil, "the user's additional login id")
 	})
 
-	addCommand(userUpdate, "user-update <loginID>", "Update an existing user", func(cmd *cobra.Command) {
+	addCommand(userUpdate, "user-update <loginId>", "Update an existing user", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 		cmd.Flags().StringVarP(&flags.Email, "email", "E", "", "the user's email address")
 		cmd.Flags().StringVarP(&flags.Phone, "phone", "P", "", "the user's phone number")
@@ -568,7 +568,7 @@ func main() {
 		cmd.Flags().StringSliceVar(&flags.AdditionalLoginIDs, "additional-login-ids", nil, "the user's additional login id")
 	})
 
-	addCommand(userDelete, "user-delete <loginID>", "Delete an existing user", func(cmd *cobra.Command) {
+	addCommand(userDelete, "user-delete <loginId>", "Delete an existing user", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 	})
 
@@ -577,26 +577,26 @@ func main() {
 		cmd.Flags().StringSliceVarP(&flags.Tenants, "tenants", "T", nil, "the ids of the user's tenants")
 	})
 
-	addCommand(accessKeyLoad, "access-key-load", "Load an access key <id>", func(cmd *cobra.Command) {
+	addCommand(accessKeyLoad, "access-key-loa <id>", "Load an access key", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 	})
 
 	addCommand(accessKeySearchAll, "access-key-search-all", "Search all access keys", func(cmd *cobra.Command) {
 	})
 
-	addCommand(accessKeyUpdate, "access-key-update", "Update an access key <id> <name>", func(cmd *cobra.Command) {
+	addCommand(accessKeyUpdate, "access-key-update <id> <name>", "Update an access key", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
 	})
 
-	addCommand(accessKeyDeactivate, "access-key-deactivate", "Deactivate an access key <id>", func(cmd *cobra.Command) {
+	addCommand(accessKeyDeactivate, "access-key-deactivate <id>", "Deactivate an access key", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 	})
 
-	addCommand(accessKeyActivate, "access-key-activate", "Activate an access key <id>", func(cmd *cobra.Command) {
+	addCommand(accessKeyActivate, "access-key-activate <id>", "Activate an access key", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 	})
 
-	addCommand(accessKeyDelete, "access-key-delete", "Delete an access key <id>", func(cmd *cobra.Command) {
+	addCommand(accessKeyDelete, "access-key-delete <id>", "Delete an access key", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 	})
 
@@ -621,11 +621,11 @@ func main() {
 	addCommand(tenantLoadAll, "tenant-all", "Load all tenants", func(cmd *cobra.Command) {
 	})
 
-	addCommand(userLoad, "user-load <id>", "Load an existing user", func(cmd *cobra.Command) {
+	addCommand(userLoad, "user-load <loginId>", "Load an existing user", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 	})
 
-	addCommand(userUpdateLoginID, "user-update-loginid <id> <new-id>", "Update loginid of user", func(cmd *cobra.Command) {
+	addCommand(userUpdateLoginID, "user-update-loginid <loginId> <new-id>", "Update loginId of user", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
 	})
 
@@ -704,11 +704,11 @@ func main() {
 		cmd.Args = cobra.ExactArgs(1)
 	})
 
-	addCommand(groupAllForMembersUserIDs, "group-all-for-members-user-ids <tenantId> <userIDs>", "Load all groups for the given user's ID (can be found in the user's JWT)", func(cmd *cobra.Command) {
+	addCommand(groupAllForMembersUserIDs, "group-all-for-members-user-ids <tenantId> <userIds>", "Load all groups for the given user's ID (can be found in the user's JWT)", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
 	})
 
-	addCommand(groupAllForMembersLoginIDs, "group-all-for-members-loginIDs <tenantId> <loginIDs>", "Load all groups for the given user's loginIDs (used for sign-in)", func(cmd *cobra.Command) {
+	addCommand(groupAllForMembersLoginIDs, "group-all-for-members-loginIds <tenantId> <loginIds>", "Load all groups for the given user's loginIds (used for sign-in)", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
 	})
 
