@@ -95,6 +95,7 @@ var (
 			userUpdateCustomAttribute:        "mgmt/user/update/customAttribute",
 			userAddTenant:                    "mgmt/user/update/tenant/add",
 			userRemoveTenant:                 "mgmt/user/update/tenant/remove",
+			userSetRole:                      "mgmt/user/update/role/set",
 			userAddRole:                      "mgmt/user/update/role/add",
 			userRemoveRole:                   "mgmt/user/update/role/remove",
 			userSetPassword:                  "mgmt/user/password/set",
@@ -244,6 +245,7 @@ type mgmtEndpoints struct {
 	userAddTenant             string
 	userRemoveTenant          string
 	userAddRole               string
+	userSetRole               string
 	userRemoveRole            string
 	userSetPassword           string
 	userExpirePassword        string
@@ -545,6 +547,10 @@ func (e *endpoints) ManagementUserAddTenant() string {
 
 func (e *endpoints) ManagementUserRemoveTenant() string {
 	return path.Join(e.version, e.mgmt.userRemoveTenant)
+}
+
+func (e *endpoints) ManagementUserSetRole() string {
+	return path.Join(e.version, e.mgmt.userSetRole)
 }
 
 func (e *endpoints) ManagementUserAddRole() string {

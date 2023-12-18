@@ -219,6 +219,10 @@ type MockUser struct {
 	UpdateCustomAttributeResponse *descope.UserResponse
 	UpdateCustomAttributeError    error
 
+	SetRoleAssert   func(loginID string, roles []string)
+	SetRoleResponse *descope.UserResponse
+	SetRoleError    error
+
 	AddRoleAssert   func(loginID string, roles []string)
 	AddRoleResponse *descope.UserResponse
 	AddRoleError    error
@@ -234,6 +238,10 @@ type MockUser struct {
 	RemoveTenantAssert   func(loginID, tenantID string)
 	RemoveTenantResponse *descope.UserResponse
 	RemoveTenantError    error
+
+	SetTenantRoleAssert   func(loginID, tenantID string, roles []string)
+	SetTenantRoleResponse *descope.UserResponse
+	SetTenantRoleError    error
 
 	AddTenantRoleAssert   func(loginID, tenantID string, roles []string)
 	AddTenantRoleResponse *descope.UserResponse
@@ -435,6 +443,13 @@ func (m *MockUser) UpdateCustomAttribute(loginID, key string, value any) (*desco
 	return m.UpdateCustomAttributeResponse, m.UpdateCustomAttributeError
 }
 
+func (m *MockUser) SetRoles(loginID string, roles []string) (*descope.UserResponse, error) {
+	if m.SetRoleAssert != nil {
+		m.SetRoleAssert(loginID, roles)
+	}
+	return m.SetRoleResponse, m.SetRoleError
+}
+
 func (m *MockUser) AddRoles(loginID string, roles []string) (*descope.UserResponse, error) {
 	if m.AddRoleAssert != nil {
 		m.AddRoleAssert(loginID, roles)
@@ -461,6 +476,13 @@ func (m *MockUser) RemoveTenant(loginID string, tenantID string) (*descope.UserR
 		m.RemoveTenantAssert(loginID, tenantID)
 	}
 	return m.RemoveTenantResponse, m.RemoveTenantError
+}
+
+func (m *MockUser) SetTenantRoles(loginID string, tenantID string, roles []string) (*descope.UserResponse, error) {
+	if m.SetTenantRoleAssert != nil {
+		m.SetTenantRoleAssert(loginID, tenantID, roles)
+	}
+	return m.SetTenantRoleResponse, m.SetTenantRoleError
 }
 
 func (m *MockUser) AddTenantRoles(loginID string, tenantID string, roles []string) (*descope.UserResponse, error) {
