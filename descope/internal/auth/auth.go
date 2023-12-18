@@ -350,7 +350,7 @@ func (auth *authenticationService) GetMatchedPermissions(ctx context.Context, to
 	return auth.GetMatchedTenantPermissions(ctx, token, "", permissions)
 }
 
-func (auth *authenticationService) ValidateTenantPermissions(ctx context.Context, token *descope.Token, tenant string, permissions []string) bool {
+func (auth *authenticationService) ValidateTenantPermissions(_ context.Context, token *descope.Token, tenant string, permissions []string) bool {
 	if tenant != "" && !isAssociatedWithTenant(token, tenant) {
 		return false
 	}
@@ -363,7 +363,7 @@ func (auth *authenticationService) ValidateTenantPermissions(ctx context.Context
 	return true
 }
 
-func (auth *authenticationService) GetMatchedTenantPermissions(ctx context.Context, token *descope.Token, tenant string, permissions []string) []string {
+func (auth *authenticationService) GetMatchedTenantPermissions(_ context.Context, token *descope.Token, tenant string, permissions []string) []string {
 	if tenant != "" && !isAssociatedWithTenant(token, tenant) {
 		return []string{}
 	}
