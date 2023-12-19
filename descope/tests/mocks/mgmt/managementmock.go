@@ -333,6 +333,13 @@ func (m *MockUser) Delete(_ context.Context, loginID string) error {
 	return m.DeleteError
 }
 
+func (m *MockUser) DeleteByUserID(_ context.Context, userID string) error {
+	if m.DeleteAssert != nil {
+		m.DeleteAssert(userID)
+	}
+	return m.DeleteError
+}
+
 func (m *MockUser) DeleteAllTestUsers(_ context.Context) error {
 	if m.DeleteAllTestUsersAssert != nil {
 		m.DeleteAllTestUsersAssert()
