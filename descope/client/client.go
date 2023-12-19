@@ -49,7 +49,13 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 	}
 	config.setManagementKey()
 
-	c := api.NewClient(api.ClientParams{BaseURL: config.DescopeBaseURL, CustomDefaultHeaders: config.CustomDefaultHeaders, DefaultClient: config.DefaultClient, ProjectID: config.ProjectID, VerifyServerCertificate: config.VerifyServerCertificate})
+	c := api.NewClient(api.ClientParams{
+		ProjectID:            config.ProjectID,
+		BaseURL:              config.DescopeBaseURL,
+		DefaultClient:        config.DefaultClient,
+		CustomDefaultHeaders: config.CustomDefaultHeaders,
+		CertificateVerify:    config.CertificateVerify,
+	})
 
 	authService, err := auth.NewAuth(auth.AuthParams{
 		ProjectID:           config.ProjectID,
