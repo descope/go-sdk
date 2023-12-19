@@ -245,6 +245,11 @@ type User interface {
 	// Use the `SendPasswordReset` or `ReplaceUserPassword` methods to reset/replace the password.
 	ExpirePassword(ctx context.Context, loginID string) error
 
+	// Removes all registered passkeys (WebAuthn devices) for the user with the given login ID.
+	// Note: The user might not be able to login anymore if they have no other authentication
+	// methods or a verified email/phone.
+	RemoveAllPasskeys(ctx context.Context, loginID string) error
+
 	// Get the provider token for the given login ID.
 	// Only users that sign-in using social providers will have token.
 	// Note: The 'Manage tokens from provider' setting must be enabled.

@@ -400,8 +400,18 @@ func (u *user) ExpirePassword(ctx context.Context, loginID string) error {
 		return utils.NewInvalidArgumentError("loginID")
 	}
 
-	req := makeExpirePasswordRequest(loginID)
+	req := map[string]any{"loginId": loginID}
 	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserExpirePassword(), req, nil, u.conf.ManagementKey)
+	return err
+}
+
+func (u *user) RemoveAllPasskeys(ctx context.Context, loginID string) error {
+	if loginID == "" {
+		return utils.NewInvalidArgumentError("loginID")
+	}
+
+	req := map[string]any{"loginId": loginID}
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveAllPasskeys(), req, nil, u.conf.ManagementKey)
 	return err
 }
 
@@ -610,12 +620,6 @@ func makeSetPasswordRequest(loginID string, password string) map[string]any {
 	return map[string]any{
 		"loginId":  loginID,
 		"password": password,
-	}
-}
-
-func makeExpirePasswordRequest(loginID string) map[string]any {
-	return map[string]any{
-		"loginId": loginID,
 	}
 }
 

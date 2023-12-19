@@ -259,6 +259,9 @@ type MockUser struct {
 	ExpirePasswordAssert func(loginID string)
 	ExpirePasswordError  error
 
+	RemoveAllPasskeysAssert func(loginID string)
+	RemoveAllPasskeysError  error
+
 	GetProviderTokenAssert   func(loginID, provider string)
 	GetProviderTokenResponse *descope.ProviderTokenResponse
 	GetProviderTokenError    error
@@ -520,6 +523,13 @@ func (m *MockUser) ExpirePassword(_ context.Context, loginID string) error {
 		m.ExpirePasswordAssert(loginID)
 	}
 	return m.ExpirePasswordError
+}
+
+func (m *MockUser) RemoveAllPasskeys(_ context.Context, loginID string) error {
+	if m.RemoveAllPasskeysAssert != nil {
+		m.RemoveAllPasskeysAssert(loginID)
+	}
+	return m.RemoveAllPasskeysError
 }
 
 func (m *MockUser) GetProviderToken(_ context.Context, loginID, provider string) (*descope.ProviderTokenResponse, error) {
