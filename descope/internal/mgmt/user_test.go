@@ -1093,7 +1093,7 @@ func TestUserSetPasswordBadInput(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestSetUserPasswordError(t *testing.T) {
+func TestUserSetPasswordError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
 	err := m.User().SetPassword(context.Background(), "abc", "123")
 	require.Error(t, err)
@@ -1117,9 +1117,33 @@ func TestUserExpirePasswordBadInput(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestExpireUserPasswordError(t *testing.T) {
+func TestUserExpirePasswordError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
 	err := m.User().ExpirePassword(context.Background(), "abc")
+	require.Error(t, err)
+}
+
+func TestUserRemoveAllPasskeysSuccess(t *testing.T) {
+	response := map[string]any{}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+	}, response))
+	err := m.User().RemoveAllPasskeys(context.Background(), "abc")
+	require.NoError(t, err)
+}
+
+func TestUserRemoveAllPasskeysBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	err := m.User().RemoveAllPasskeys(context.Background(), "")
+	require.Error(t, err)
+}
+
+func TestUserRemoveAllPasskeysError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	err := m.User().RemoveAllPasskeys(context.Background(), "abc")
 	require.Error(t, err)
 }
 

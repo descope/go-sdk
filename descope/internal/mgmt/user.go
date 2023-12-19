@@ -405,6 +405,16 @@ func (u *user) ExpirePassword(ctx context.Context, loginID string) error {
 	return err
 }
 
+func (u *user) RemoveAllPasskeys(ctx context.Context, loginID string) error {
+	if loginID == "" {
+		return utils.NewInvalidArgumentError("loginID")
+	}
+
+	req := makeExpirePasswordRequest(loginID)
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveAllPasskeys(), req, nil, u.conf.ManagementKey)
+	return err
+}
+
 func (u *user) GetProviderToken(ctx context.Context, loginID, provider string) (*descope.ProviderTokenResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
