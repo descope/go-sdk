@@ -68,6 +68,71 @@ type SSOSettingsResponse struct {
 	Domain         string           `json:"domain,omitempty"`
 }
 
+type SSOSAMLSettingsResponse struct {
+	IdpEntityID      string            `json:"idpEntityId,omitempty"`
+	IdpSSOURL        string            `json:"idpSSOUrl,omitempty"`
+	IdpCertificate   string            `json:"idpCertificate,omitempty"`
+	IdpMetadataURL   string            `json:"idpMetadataUrl,omitempty"`
+	SpEntityID       string            `json:"spEntityId,omitempty"`
+	SpACSUrl         string            `json:"spACSUrl,omitempty"`
+	SpCertificate    string            `json:"spCertificate,omitempty"`
+	AttributeMapping *AttributeMapping `json:"attributeMapping,omitempty"`
+	GroupsMapping    []*GroupsMapping  `json:"groupsMapping,omitempty"`
+	RedirectURL      string            `json:"redirectUrl,omitempty"`
+}
+
+type SSOSAMLSettings struct {
+	IdpURL           string            `json:"idpURL,omitempty"`
+	IdpEntityID      string            `json:"entityId,omitempty"`
+	IdpCert          string            `json:"idpCert,omitempty"`
+	AttributeMapping *AttributeMapping `json:"attributeMapping,omitempty"`
+	RoleMappings     []*RoleMapping    `json:"roleMappings,omitempty"`
+}
+
+type SSOSAMLSettingsByMetadata struct {
+	IdpMetadataURL   string            `json:"idpMetadataUrl,omitempty"`
+	AttributeMapping *AttributeMapping `json:"attributeMapping,omitempty"`
+	RoleMappings     []*RoleMapping    `json:"roleMappings,omitempty"`
+}
+
+type OIDCAttributeMapping struct {
+	ExternalID    string `json:"externalID,omitempty"`
+	Name          string `json:"name,omitempty"`
+	GivenName     string `json:"givenName,omitempty"`
+	MiddleName    string `json:"middleName,omitempty"`
+	FamilyName    string `json:"familyName,omitempty"`
+	Email         string `json:"email,omitempty"`
+	VerifiedEmail string `json:"verifiedEmail,omitempty"`
+	Username      string `json:"username,omitempty"`
+	PhoneNumber   string `json:"phoneNumber,omitempty"`
+	VerifiedPhone string `json:"verifiedPhone,omitempty"`
+	Picture       string `json:"picture,omitempty"`
+}
+
+type SSOOIDCSettings struct {
+	Name                 string                `json:"name,omitempty"`
+	ClientID             string                `json:"clientId,omitempty"`
+	ClientSecret         string                `json:"clientSecret,omitempty"` // will be empty on response
+	RedirectUrl          string                `json:"redirectUrl,omitempty"`
+	AuthURL              string                `json:"authUrl,omitempty"`
+	TokenURL             string                `json:"tokenUrl,omitempty"`
+	UserDataURL          string                `json:"userDataUrl,omitempty"`
+	Scope                []string              `json:"scope,omitempty"`
+	JWKsURL              string                `json:"JWKsUrl,omitempty"`
+	AttributeMapping     *OIDCAttributeMapping `json:"userAttrMapping,omitempty"`
+	ManageProviderTokens bool                  `json:"manageProviderTokens,omitempty"`
+	CallbackDomain       string                `json:"callbackDomain,omitempty"`
+	Prompt               []string              `json:"prompt,omitempty"`
+	GrantType            string                `json:"grantType,omitempty"`
+	Issuer               string                `json:"issuer,omitempty"`
+}
+
+type SSOTenantSettingsResponse struct {
+	Tenant *Tenant                  `json:"tenant,omitempty"`
+	Saml   *SSOSAMLSettingsResponse `json:"saml,omitempty"`
+	Oidc   *SSOOIDCSettings         `json:"oidc,omitempty"`
+}
+
 // PasswordPolicy - represents the rules for valid passwords configured in the policy
 // in the Descope console. This can be used to implement client-side validation of new
 // user passwords for a better user experience. Either way, the comprehensive
@@ -387,16 +452,17 @@ type RoleMapping struct {
 	Role   string
 }
 
-// Represents a mapping between Descope and IDP user attributes
+// Represents a SAML mapping between Descope and IDP user attributes
 type AttributeMapping struct {
-	Name        string `json:"name,omitempty"`
-	GivenName   string `json:"givenName,omitempty"`
-	MiddleName  string `json:"middleName,omitempty"`
-	FamilyName  string `json:"familyName,omitempty"`
-	Picture     string `json:"picture,omitempty"`
-	Email       string `json:"email,omitempty"`
-	PhoneNumber string `json:"phoneNumber,omitempty"`
-	Group       string `json:"group,omitempty"`
+	Name             string            `json:"name,omitempty"`
+	GivenName        string            `json:"givenName,omitempty"`
+	MiddleName       string            `json:"middleName,omitempty"`
+	FamilyName       string            `json:"familyName,omitempty"`
+	Picture          string            `json:"picture,omitempty"`
+	Email            string            `json:"email,omitempty"`
+	PhoneNumber      string            `json:"phoneNumber,omitempty"`
+	Group            string            `json:"group,omitempty"`
+	CustomAttributes map[string]string `json:"customAttributes,omitempty"`
 }
 
 type Tenant struct {
@@ -404,6 +470,8 @@ type Tenant struct {
 	Name                    string         `json:"name"`
 	SelfProvisioningDomains []string       `json:"selfProvisioningDomains"`
 	CustomAttributes        map[string]any `json:"customAttributes,omitempty"`
+	AuthType                string         `json:"authType,omitempty"`
+	Domain                  string         `json:"domain,omitempty"`
 }
 
 type TenantRequest struct {
@@ -417,6 +485,7 @@ type TenantSearchOptions struct {
 	Names                   []string
 	SelfProvisioningDomains []string
 	CustomAttributes        map[string]any
+	AuthType                string
 }
 
 type Permission struct {

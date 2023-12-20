@@ -314,14 +314,53 @@ type AccessKey interface {
 
 // Provides functions for configuring SSO for a project.
 type SSO interface {
-	// Get SSO setting for a tenant.
+	// Load all tenant SSO setting.
 	//
 	// tenantID is required.
-	GetSettings(tenantID string) (*descope.SSOSettingsResponse, error)
+	LoadSettings(tenantID string) (*descope.SSOTenantSettingsResponse, error)
+
+	// Configure SSO SAML settings for a tenant manually.
+	//
+	// tenantID, settings are required (all settings parameters are required).
+	//
+	// redirectURL is optional, however if not given it has to be set when starting an SSO authentication via the request.
+	// domain is optional, it is used to map users to this tenant when authenticating via SSO.
+	//
+	// Both optional values will override whatever is currently set even if left empty.
+	ConfigureSAMLSettings(tenantID string, settings *descope.SSOSAMLSettings, redirectURL string, domain string) error
+
+	// Configure SSO SAML settings for a tenant by fetching them from an IDP metadata URL.
+	//
+	// tenantID, settings are required (all settings parameters are required).
+	//
+	// redirectURL is optional, however if not given it has to be set when starting an SSO authentication via the request.
+	// domain is optional, it is used to map users to this tenant when authenticating via SSO.
+	//
+	// Both optional values will override whatever is currently set even if left empty.
+	ConfigureSAMLSettingsByMetadata(tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domain string) error
+
+	// Configure SSO OIDC settings for a tenant manually.
+	//
+	// tenantID, settings are required.
+	//
+	// redirectURL is optional, however if not given it has to be set when starting an SSO authentication via the request.
+	// domain is optional, it is used to map users to this tenant when authenticating via SSO.
+	//
+	// Both optional values will override whatever is currently set even if left empty.
+	ConfigureOIDCSettings(tenantID string, settings *descope.SSOOIDCSettings, redirectURL string, domain string) error
 
 	// tenantID is required.
 	DeleteSettings(tenantID string) error
 
+	// *** Deprecated ***
+
+	// Deprecated (use LoadSettings() instead)
+	// Get SAML SSO setting for a tenant.
+	//
+	// tenantID is required.
+	GetSettings(tenantID string) (*descope.SSOSettingsResponse, error)
+
+	// Deprecated (use ConfigureSAMLSettings() instead)
 	// Configure SSO settings for a tenant manually.
 	//
 	// tenantID, idpURL, idpCert, entityID, are required. The idpURL is the URL for the identity provider and idpCert
@@ -333,6 +372,7 @@ type SSO interface {
 	// Both optional values will override whatever is currently set even if left empty.
 	ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL, domain string) error
 
+	// Deprecated (use ConfigureSAMLSettingsByMetadata() instead)
 	// Configure SSO settings for a tenant by fetching them from an IDP metadata URL.
 	//
 	// redirectURL is optional, however if not given it has to be set when starting an SSO authentication via the request.
@@ -341,6 +381,7 @@ type SSO interface {
 	// Both optional values will override whatever is currently set even if left empty.
 	ConfigureMetadata(tenantID, idpMetadataURL, redirectURL, domain string) error
 
+	// Deprecated (use ConfigureSAMLSettings() or ConfigureSAMLSettingsByMetadata() instead)
 	// Configure SSO IDP mapping including groups to the Descope roles and user attributes.
 	ConfigureMapping(tenantID string, roleMappings []*descope.RoleMapping, attributeMapping *descope.AttributeMapping) error
 }

@@ -86,12 +86,25 @@ func (m *MockJWT) UpdateJWTWithCustomClaims(jwt string, customClaims map[string]
 // Mock SSO
 
 type MockSSO struct {
-	GetSettingsAssert   func(tenantID string)
-	GetSettingsResponse *descope.SSOSettingsResponse
-	GetSettingsError    error
+	LoadSettingsAssert   func(tenantID string)
+	LoadSettingsResponse *descope.SSOTenantSettingsResponse
+	LoadSettingsError    error
+
+	ConfigureSAMLSettingsAssert func(tenantID string, settings *descope.SSOSAMLSettings, redirectURL string, domain string)
+	ConfigureSAMLSettingsError  error
+
+	ConfigureSAMLSettingsByMetadataAssert func(tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domain string)
+	ConfigureSAMLSettingsByMetadataError  error
+
+	ConfigureOIDCSettingsAssert func(tenantID string, settings *descope.SSOOIDCSettings, redirectURL, domain string) error
+	ConfigureOIDCSettingsError  error
 
 	DeleteSettingsAssert func(tenantID string)
 	DeleteSettingsError  error
+
+	GetSettingsAssert   func(tenantID string)
+	GetSettingsResponse *descope.SSOSettingsResponse
+	GetSettingsError    error
 
 	ConfigureSettingsAssert func(tenantID, idpURL, idpCert, entityID, redirectURL, domain string)
 	ConfigureSettingsError  error
@@ -103,11 +116,32 @@ type MockSSO struct {
 	ConfigureMappingError  error
 }
 
-func (m *MockSSO) GetSettings(tenantID string) (*descope.SSOSettingsResponse, error) {
-	if m.GetSettingsAssert != nil {
-		m.GetSettingsAssert(tenantID)
+func (m *MockSSO) LoadSettings(tenantID string) (*descope.SSOTenantSettingsResponse, error) {
+	if m.LoadSettingsAssert != nil {
+		m.LoadSettingsAssert(tenantID)
 	}
-	return m.GetSettingsResponse, m.GetSettingsError
+	return m.LoadSettingsResponse, m.LoadSettingsError
+}
+
+func (m *MockSSO) ConfigureSAMLSettings(tenantID string, settings *descope.SSOSAMLSettings, redirectURL string, domain string) error {
+	if m.ConfigureSAMLSettingsAssert != nil {
+		m.ConfigureSAMLSettingsAssert(tenantID, settings, redirectURL, domain)
+	}
+	return m.ConfigureSAMLSettingsError
+}
+
+func (m *MockSSO) ConfigureSAMLSettingsByMetadata(tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL, domain string) error {
+	if m.ConfigureSAMLSettingsByMetadataAssert != nil {
+		m.ConfigureSAMLSettingsByMetadataAssert(tenantID, settings, redirectURL, domain)
+	}
+	return m.ConfigureSAMLSettingsByMetadataError
+}
+
+func (m *MockSSO) ConfigureOIDCSettings(tenantID string, settings *descope.SSOOIDCSettings, redirectURL, domain string) error {
+	if m.ConfigureOIDCSettingsAssert != nil {
+		m.ConfigureOIDCSettingsAssert(tenantID, settings, redirectURL, domain)
+	}
+	return m.ConfigureOIDCSettingsError
 }
 
 func (m *MockSSO) DeleteSettings(tenantID string) error {
@@ -115,6 +149,13 @@ func (m *MockSSO) DeleteSettings(tenantID string) error {
 		m.DeleteSettingsAssert(tenantID)
 	}
 	return m.DeleteSettingsError
+}
+
+func (m *MockSSO) GetSettings(tenantID string) (*descope.SSOSettingsResponse, error) {
+	if m.GetSettingsAssert != nil {
+		m.GetSettingsAssert(tenantID)
+	}
+	return m.GetSettingsResponse, m.GetSettingsError
 }
 
 func (m *MockSSO) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL, domain string) error {

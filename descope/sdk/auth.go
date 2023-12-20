@@ -187,6 +187,7 @@ type OAuth interface {
 	ExchangeToken(code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error)
 }
 
+/* Deprecated */
 type SAML interface {
 	// Start will initiate a SAML login flow
 	// return will be the redirect URL that needs to return to client
@@ -195,6 +196,18 @@ type SAML interface {
 
 	// ExchangeToken - Finalize SAML authentication
 	// code should be extracted from the redirect URL of OAth/SAML authentication flow
+	ExchangeToken(code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error)
+}
+
+type SSOSP interface {
+	// Start will initiate a login flow based on tenant configuration (saml/oidc)
+	// return will be the redirect URL that needs to return to client
+	// and finalize with the ExchangeToken call
+	// prompt argument relevant only in case tenant configured with AuthType OIDC
+	Start(tenant string, returnURL string, prompt string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (redirectURL string, err error)
+
+	// ExchangeToken - Finalize tenant login authentication
+	// code should be extracted from the redirect URL of SAML/OIDC authentication flow
 	ExchangeToken(code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error)
 }
 
@@ -250,6 +263,7 @@ type Authentication interface {
 	Password() Password
 	OAuth() OAuth
 	SAML() SAML
+	SSO() SSOSP
 	WebAuthn() WebAuthn
 
 	// ValidateSessionWithRequest - Use to validate a session of a given request.

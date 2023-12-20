@@ -133,5 +133,6 @@ func makeSearchTenantRequest(options *descope.TenantSearchOptions) map[string]an
 		"tenantNames":                   options.Names,
 		"tenantSelfProvisioningDomains": options.SelfProvisioningDomains,
 		"customAttributes":              options.CustomAttributes,
+		"authType":                      options.AuthType,
 	}
 }

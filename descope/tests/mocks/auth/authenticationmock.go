@@ -15,6 +15,7 @@ type MockAuthentication struct {
 	*MockPassword
 	*MockOAuth
 	*MockSAML
+	*MockSSO
 	*MockWebAuthn
 	MockSession
 }
@@ -45,6 +46,10 @@ func (m *MockAuthentication) OAuth() sdk.OAuth {
 
 func (m *MockAuthentication) SAML() sdk.SAML {
 	return m.MockSAML
+}
+
+func (m *MockAuthentication) SSO() sdk.SSOSP {
+	return m.MockSSO
 }
 
 func (m *MockAuthentication) WebAuthn() sdk.WebAuthn {
@@ -397,6 +402,32 @@ func (m *MockSAML) Start(tenant string, returnURL string, r *http.Request, login
 }
 
 func (m *MockSAML) ExchangeToken(code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+	if m.ExchangeTokenAssert != nil {
+		m.ExchangeTokenAssert(code, w)
+	}
+	return m.ExchangeTokenResponse, m.ExchangeTokenError
+}
+
+// Mock SSO
+
+type MockSSO struct {
+	StartAssert   func(tenant string, returnURL string, prompt string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
+	StartError    error
+	StartResponse string
+
+	ExchangeTokenAssert   func(code string, w http.ResponseWriter)
+	ExchangeTokenError    error
+	ExchangeTokenResponse *descope.AuthenticationInfo
+}
+
+func (m *MockSSO) Start(tenant string, returnURL string, prompt string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (redirectURL string, err error) {
+	if m.StartAssert != nil {
+		m.StartAssert(tenant, returnURL, prompt, r, loginOptions, w)
+	}
+	return m.StartResponse, m.StartError
+}
+
+func (m *MockSSO) ExchangeToken(code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.ExchangeTokenAssert != nil {
 		m.ExchangeTokenAssert(code, w)
 	}

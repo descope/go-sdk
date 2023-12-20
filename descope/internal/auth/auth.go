@@ -43,6 +43,7 @@ type authenticationService struct {
 	webAuthn      sdk.WebAuthn
 	oauth         sdk.OAuth
 	saml          sdk.SAML
+	sso           sdk.SSOSP
 }
 
 func NewAuth(conf AuthParams, c *api.Client) (*authenticationService, error) {
@@ -54,6 +55,7 @@ func NewAuth(conf AuthParams, c *api.Client) (*authenticationService, error) {
 	authenticationService.enchantedLink = &enchantedLink{authenticationsBase: base}
 	authenticationService.oauth = &oauth{authenticationsBase: base}
 	authenticationService.saml = &saml{authenticationsBase: base}
+	authenticationService.sso = &sso{authenticationsBase: base}
 	authenticationService.webAuthn = &webAuthn{authenticationsBase: base}
 	authenticationService.totp = &totp{authenticationsBase: base}
 	authenticationService.password = &password{authenticationsBase: base}
@@ -86,6 +88,10 @@ func (auth *authenticationService) OAuth() sdk.OAuth {
 
 func (auth *authenticationService) SAML() sdk.SAML {
 	return auth.saml
+}
+
+func (auth *authenticationService) SSO() sdk.SSOSP {
+	return auth.sso
 }
 
 func (auth *authenticationService) WebAuthn() sdk.WebAuthn {
@@ -830,6 +836,13 @@ func composeSAMLStartURL() string {
 
 func composeSAMLExchangeTokenURL() string {
 	return api.Routes.ExchangeTokenSAML()
+}
+
+func composeSSOStartURL() string {
+	return api.Routes.SSOStart()
+}
+func composeSSOExchangeTokenURL() string {
+	return api.Routes.ExchangeTokenSSO()
 }
 
 func composeUpdateUserEmailOTP() string {
