@@ -783,7 +783,7 @@ You can manage SSO SAML or OIDC settings for a specific tenant.
 
 // Load all tenant SSO settings
 ssoSettings, err := cc.HC.DescopeClient().Management.SSO().LoadSettings(context.Background(), "tenant-id")
-//* Deprecated *//
+//* Deprecated (use LoadSettings(..) instead) *//
 ssoSettings, err := descopeClient.Management.SSO().GetSettings(context.Background(), "tenant-id")
 
 // Configure tenant SSO by OIDC settings
@@ -815,7 +815,7 @@ samlSettings := &descope.SSOSAMLSettings{
 }
 err = cc.HC.DescopeClient().Management.SSO().ConfigureSAMLSettings(context.Background(), tenantID, samlSettings, redirectURL, domain)
 
-//* Deprecated *//
+//* Deprecated (use ConfigureSAMLSettings(..) instead) *//
 err := descopeClient.Management.SSO().ConfigureSettings(context.Background(), tenantID, idpURL, entityID, idpCert, redirectURL, domain)
 
 // Alternatively, configure using an SSO SAML metadata URL
@@ -826,9 +826,10 @@ samlSettings := &descope.SSOSAMLSettingsByMetadata{
 }
 err = cc.HC.DescopeClient().Management.SSO().ConfigureSAMLSettingsByMetadata(context.Background(), tenantID, samlSettings, redirectURL, domain)
 
-//* Deprecated *//
+//* Deprecated (use ConfigureSAMLSettingsByMetadata(..) instead) *//
 err := descopeClient.Management.SSO().ConfigureMetadata(tenantID, "https://idp.com/my-idp-metadata", redirectURL, domain)
 
+//* Deprecated *//
 // Map IDP groups to Descope roles, or map user attributes.
 // This function overrides any previous mapping (even when empty). Use carefully.
 roleMapping := []*descope.RoleMapping{

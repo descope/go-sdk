@@ -277,11 +277,12 @@ type mgmtEndpoints struct {
 	accessKeyActivate   string
 	accessKeyDelete     string
 
-	// // Deprecated
+	//* Deprecated  *//
 	ssoSettings string
 	ssoMetadata string
 	ssoMapping  string
-	////////////////////////////////
+	///////////////////
+
 	ssoLoadSettings           string
 	ssoSAMLSettings           string
 	ssoSAMLSettingsByMetadata string
@@ -676,8 +677,6 @@ func (e *endpoints) ManagementSSOMetadata() string {
 func (e *endpoints) ManagementSSOMapping() string {
 	return path.Join(e.version, e.mgmt.ssoMapping)
 }
-
-////////////////////////////////////
 
 func (e *endpoints) ManagementUpdateJWT() string {
 	return path.Join(e.version, e.mgmt.updateJWT)
