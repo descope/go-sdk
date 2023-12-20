@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"os"
 	"testing"
 
@@ -70,7 +71,7 @@ func TestConcurrentClients(t *testing.T) {
 
 	// SignUpOrIn is called to trigger logging, to ensure it is safe
 	// during a concurrent creation of another client
-	_, _ = c.Auth.OTP().SignUpOrIn(descope.MethodEmail, "test@test.com")
+	_, _ = c.Auth.OTP().SignUpOrIn(context.Background(), descope.MethodEmail, "test@test.com")
 }
 
 func TestEmptyProjectID(t *testing.T) {
@@ -107,13 +108,14 @@ func TestDescopeSDKMock(t *testing.T) {
 			},
 		},
 	}
+	ctx := context.Background()
 	ok, info, err := api.Auth.ValidateAndRefreshSessionWithRequest(nil, nil)
 	assert.False(t, ok)
 	assert.NotEmpty(t, info)
 	assert.EqualValues(t, validateSessionResponse, info.JWT)
 	assert.ErrorIs(t, err, descope.ErrPublicKey)
 
-	res, err := api.Management.JWT().UpdateJWTWithCustomClaims("some jwt", nil)
+	res, err := api.Management.JWT().UpdateJWTWithCustomClaims(ctx, "some jwt", nil)
 	require.NoError(t, err)
 	assert.True(t, updateJWTWithCustomClaimsCalled)
 	assert.EqualValues(t, updateJWTWithCustomClaimsResponse, res)

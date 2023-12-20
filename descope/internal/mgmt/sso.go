@@ -1,6 +1,8 @@
 package mgmt
 
 import (
+	"context"
+
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
@@ -10,35 +12,35 @@ type sso struct {
 	managementBase
 }
 
-func (s *sso) GetSettings(tenantID string) (*descope.SSOSettingsResponse, error) {
+func (s *sso) GetSettings(ctx context.Context, tenantID string) (*descope.SSOSettingsResponse, error) {
 	if tenantID == "" {
 		return nil, utils.NewInvalidArgumentError("tenantID")
 	}
 	req := &api.HTTPRequest{
 		QueryParams: map[string]string{"tenantId": tenantID},
 	}
-	res, err := s.client.DoGetRequest(api.Routes.ManagementSSOSettings(), req, s.conf.ManagementKey)
+	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementSSOSettings(), req, s.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}
 	return unmarshalSSOSettingsResponse(res)
 }
 
-func (s *sso) DeleteSettings(tenantID string) error {
+func (s *sso) DeleteSettings(ctx context.Context, tenantID string) error {
 	if tenantID == "" {
 		return utils.NewInvalidArgumentError("tenantID")
 	}
 	req := &api.HTTPRequest{
 		QueryParams: map[string]string{"tenantId": tenantID},
 	}
-	_, err := s.client.DoDeleteRequest(api.Routes.ManagementSSOSettings(), req, s.conf.ManagementKey)
+	_, err := s.client.DoDeleteRequest(ctx, api.Routes.ManagementSSOSettings(), req, s.conf.ManagementKey)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (s *sso) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL string, domains []string) error {
+func (s *sso) ConfigureSettings(ctx context.Context, tenantID, idpURL, idpCert, entityID, redirectURL string, domains []string) error {
 	if tenantID == "" {
 		return utils.NewInvalidArgumentError("tenantID")
 	}
@@ -59,11 +61,11 @@ func (s *sso) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL
 		"redirectURL": redirectURL,
 		"domains":     domains,
 	}
-	_, err := s.client.DoPostRequest(api.Routes.ManagementSSOSettings(), req, nil, s.conf.ManagementKey)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSettings(), req, nil, s.conf.ManagementKey)
 	return err
 }
 
-func (s *sso) ConfigureMetadata(tenantID, idpMetadataURL, redirectURL string, domains []string) error {
+func (s *sso) ConfigureMetadata(ctx context.Context, tenantID, idpMetadataURL, redirectURL string, domains []string) error {
 	if tenantID == "" {
 		return utils.NewInvalidArgumentError("tenantID")
 	}
@@ -76,11 +78,11 @@ func (s *sso) ConfigureMetadata(tenantID, idpMetadataURL, redirectURL string, do
 		"redirectURL":    redirectURL,
 		"domains":        domains,
 	}
-	_, err := s.client.DoPostRequest(api.Routes.ManagementSSOMetadata(), req, nil, s.conf.ManagementKey)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOMetadata(), req, nil, s.conf.ManagementKey)
 	return err
 }
 
-func (s *sso) ConfigureMapping(tenantID string, roleMappings []*descope.RoleMapping, attributeMapping *descope.AttributeMapping) error {
+func (s *sso) ConfigureMapping(ctx context.Context, tenantID string, roleMappings []*descope.RoleMapping, attributeMapping *descope.AttributeMapping) error {
 	if tenantID == "" {
 		return utils.NewInvalidArgumentError("tenantID")
 	}
@@ -96,7 +98,7 @@ func (s *sso) ConfigureMapping(tenantID string, roleMappings []*descope.RoleMapp
 		"roleMappings":     mappings,
 		"attributeMapping": attributeMapping,
 	}
-	_, err := s.client.DoPostRequest(api.Routes.ManagementSSOMapping(), req, nil, s.conf.ManagementKey)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOMapping(), req, nil, s.conf.ManagementKey)
 	return err
 }
 

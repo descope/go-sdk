@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/descope/go-sdk/descope"
@@ -17,7 +18,7 @@ type samlStartResponse struct {
 	URL string `json:"url"`
 }
 
-func (auth *saml) Start(tenant string, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (url string, err error) {
+func (auth *saml) Start(ctx context.Context, tenant string, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (url string, err error) {
 	if tenant == "" {
 		return "", utils.NewInvalidArgumentError("tenant")
 	}
@@ -34,7 +35,7 @@ func (auth *saml) Start(tenant string, redirectURL string, r *http.Request, logi
 			return "", descope.ErrInvalidStepUpJWT
 		}
 	}
-	httpResponse, err := auth.client.DoPostRequest(composeSAMLStartURL(), loginOptions, &api.HTTPRequest{QueryParams: m}, pswd)
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeSAMLStartURL(), loginOptions, &api.HTTPRequest{QueryParams: m}, pswd)
 	if err != nil {
 		return
 	}
@@ -53,6 +54,6 @@ func (auth *saml) Start(tenant string, redirectURL string, r *http.Request, logi
 	return
 }
 
-func (auth *saml) ExchangeToken(code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
-	return auth.exchangeToken(code, composeSAMLExchangeTokenURL(), w)
+func (auth *saml) ExchangeToken(ctx context.Context, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+	return auth.exchangeToken(ctx, code, composeSAMLExchangeTokenURL(), w)
 }

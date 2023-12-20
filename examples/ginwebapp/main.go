@@ -73,7 +73,7 @@ func handleIsHealthy(c *gin.Context) {
 
 func handleSignUpOrIn(c *gin.Context) {
 	method, loginID := getMethodAndLoginID(c)
-	masked, err := descopeClient.Auth.OTP().SignUpOrIn(method, loginID)
+	masked, err := descopeClient.Auth.OTP().SignUpOrIn(c.Request.Context(), method, loginID)
 	if err != nil {
 		setErrorWithSignUpIn(c, err.Error(), method, loginID)
 	} else {
@@ -89,7 +89,7 @@ func handleOTPVerify(c *gin.Context) {
 		setError(c, "code is empty")
 		return
 	}
-	authInfo, err := descopeClient.Auth.OTP().VerifyCode(method, loginID, code, c.Writer)
+	authInfo, err := descopeClient.Auth.OTP().VerifyCode(c.Request.Context(), method, loginID, code, c.Writer)
 	if err != nil {
 		setError(c, err.Error())
 		return
