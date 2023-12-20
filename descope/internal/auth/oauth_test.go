@@ -2,6 +2,7 @@ package auth
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -26,7 +27,7 @@ func TestOAuthStartForwardResponse(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	urlStr, err := a.OAuth().Start(provider, landingURL, nil, nil, w)
+	urlStr, err := a.OAuth().Start(context.Background(), provider, landingURL, nil, nil, w)
 	require.NoError(t, err)
 	assert.EqualValues(t, uri, urlStr)
 	assert.EqualValues(t, urlStr, w.Result().Header.Get(descope.RedirectLocationCookieName))
@@ -52,7 +53,7 @@ func TestOAuthStartForwardResponseStepup(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	urlStr, err := a.OAuth().Start(provider, landingURL, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, w)
+	urlStr, err := a.OAuth().Start(context.Background(), provider, landingURL, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, w)
 	require.NoError(t, err)
 	assert.EqualValues(t, uri, urlStr)
 	assert.EqualValues(t, urlStr, w.Result().Header.Get(descope.RedirectLocationCookieName))
@@ -66,7 +67,7 @@ func TestOAuthStartForwardResponseStepupNoJWT(t *testing.T) {
 	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	_, err = a.OAuth().Start(provider, landingURL, nil, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, w)
+	_, err = a.OAuth().Start(context.Background(), provider, landingURL, nil, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, w)
 	assert.ErrorIs(t, err, descope.ErrInvalidStepUpJWT)
 }
 
@@ -77,7 +78,7 @@ func TestOAuthStartInvalidForwardResponse(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	urlStr, err := a.OAuth().Start(provider, "", nil, nil, w)
+	urlStr, err := a.OAuth().Start(context.Background(), provider, "", nil, nil, w)
 	require.Error(t, err)
 	assert.Empty(t, urlStr)
 }
@@ -111,7 +112,7 @@ func TestExchangeTokenOAuth(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	authInfo, err := a.OAuth().ExchangeToken(code, w)
+	authInfo, err := a.OAuth().ExchangeToken(context.Background(), code, w)
 	require.NoError(t, err)
 	require.NotNil(t, authInfo)
 	assert.Equal(t, firstSeen, authInfo.FirstSeen)
@@ -142,7 +143,7 @@ func TestExchangeTokenSAML(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	authInfo, err := a.SAML().ExchangeToken(code, w)
+	authInfo, err := a.SAML().ExchangeToken(context.Background(), code, w)
 	require.NoError(t, err)
 	require.NotNil(t, authInfo)
 	assert.EqualValues(t, "name", authInfo.User.Name)
@@ -154,6 +155,6 @@ func TestExchangeTokenError(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	_, err = a.OAuth().ExchangeToken(code, w)
+	_, err = a.OAuth().ExchangeToken(context.Background(), code, w)
 	require.Error(t, err)
 }

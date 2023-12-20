@@ -1,6 +1,7 @@
 package mgmt
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"testing"
@@ -73,7 +74,7 @@ func TestAuditSearch(t *testing.T) {
 		require.EqualValues(t, searchOptions.NoTenants, req["noTenants"])
 		require.EqualValues(t, searchOptions.Text, req["text"])
 	}, response))
-	res, err := mgmt.Audit().Search(searchOptions)
+	res, err := mgmt.Audit().Search(context.Background(), searchOptions)
 	require.NoError(t, err)
 	require.Len(t, res, 2)
 	assert.Equal(t, response.Audits[0].ProjectID, res[0].ProjectID)

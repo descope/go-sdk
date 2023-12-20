@@ -1,6 +1,8 @@
 package mgmt
 
 import (
+	"context"
+
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
@@ -10,7 +12,7 @@ type authz struct {
 	managementBase
 }
 
-func (a *authz) SaveSchema(schema *descope.AuthzSchema, upgrade bool) error {
+func (a *authz) SaveSchema(ctx context.Context, schema *descope.AuthzSchema, upgrade bool) error {
 	if schema == nil {
 		return utils.NewInvalidArgumentError("schema")
 	}
@@ -18,12 +20,12 @@ func (a *authz) SaveSchema(schema *descope.AuthzSchema, upgrade bool) error {
 		"schema":  schema,
 		"upgrade": upgrade,
 	}
-	_, err := a.client.DoPostRequest(api.Routes.ManagementAuthzSchemaSave(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzSchemaSave(), body, nil, a.conf.ManagementKey)
 	return err
 }
 
-func (a *authz) DeleteSchema() error {
-	_, err := a.client.DoPostRequest(api.Routes.ManagementAuthzSchemaDelete(), nil, nil, a.conf.ManagementKey)
+func (a *authz) DeleteSchema(ctx context.Context) error {
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzSchemaDelete(), nil, nil, a.conf.ManagementKey)
 	return err
 }
 
@@ -31,8 +33,8 @@ type loadSchemaResponse struct {
 	Schema *descope.AuthzSchema `json:"schema"`
 }
 
-func (a *authz) LoadSchema() (*descope.AuthzSchema, error) {
-	res, err := a.client.DoPostRequest(api.Routes.ManagementAuthzSchemaLoad(), nil, nil, a.conf.ManagementKey)
+func (a *authz) LoadSchema(ctx context.Context) (*descope.AuthzSchema, error) {
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzSchemaLoad(), nil, nil, a.conf.ManagementKey)
 	if err != nil {
 		// notest
 		return nil, err
@@ -46,7 +48,7 @@ func (a *authz) LoadSchema() (*descope.AuthzSchema, error) {
 	return schema.Schema, nil
 }
 
-func (a *authz) SaveNamespace(namespace *descope.AuthzNamespace, oldName, schemaName string) error {
+func (a *authz) SaveNamespace(ctx context.Context, namespace *descope.AuthzNamespace, oldName, schemaName string) error {
 	if namespace == nil {
 		return utils.NewInvalidArgumentError("namespace")
 	}
@@ -59,11 +61,11 @@ func (a *authz) SaveNamespace(namespace *descope.AuthzNamespace, oldName, schema
 	if schemaName != "" {
 		body["schemaName"] = schemaName
 	}
-	_, err := a.client.DoPostRequest(api.Routes.ManagementAuthzNSSave(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzNSSave(), body, nil, a.conf.ManagementKey)
 	return err
 }
 
-func (a *authz) DeleteNamespace(name, schemaName string) error {
+func (a *authz) DeleteNamespace(ctx context.Context, name, schemaName string) error {
 	if name == "" {
 		return utils.NewInvalidArgumentError("name")
 	}
@@ -73,11 +75,11 @@ func (a *authz) DeleteNamespace(name, schemaName string) error {
 	if schemaName != "" {
 		body["schemaName"] = schemaName
 	}
-	_, err := a.client.DoPostRequest(api.Routes.ManagementAuthzNSDelete(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzNSDelete(), body, nil, a.conf.ManagementKey)
 	return err
 }
 
-func (a *authz) SaveRelationDefinition(relationDefinition *descope.AuthzRelationDefinition, namespace, oldName, schemaName string) error {
+func (a *authz) SaveRelationDefinition(ctx context.Context, relationDefinition *descope.AuthzRelationDefinition, namespace, oldName, schemaName string) error {
 	if relationDefinition == nil {
 		return utils.NewInvalidArgumentError("relationDefinition")
 	}
@@ -94,11 +96,11 @@ func (a *authz) SaveRelationDefinition(relationDefinition *descope.AuthzRelation
 	if schemaName != "" {
 		body["schemaName"] = schemaName
 	}
-	_, err := a.client.DoPostRequest(api.Routes.ManagementAuthzRDSave(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRDSave(), body, nil, a.conf.ManagementKey)
 	return err
 }
 
-func (a *authz) DeleteRelationDefinition(name, namespace, schemaName string) error {
+func (a *authz) DeleteRelationDefinition(ctx context.Context, name, namespace, schemaName string) error {
 	if name == "" {
 		return utils.NewInvalidArgumentError("name")
 	}
@@ -112,40 +114,40 @@ func (a *authz) DeleteRelationDefinition(name, namespace, schemaName string) err
 	if schemaName != "" {
 		body["schemaName"] = schemaName
 	}
-	_, err := a.client.DoPostRequest(api.Routes.ManagementAuthzRDDelete(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRDDelete(), body, nil, a.conf.ManagementKey)
 	return err
 }
 
-func (a *authz) CreateRelations(relations []*descope.AuthzRelation) error {
+func (a *authz) CreateRelations(ctx context.Context, relations []*descope.AuthzRelation) error {
 	if len(relations) == 0 {
 		return utils.NewInvalidArgumentError("relations")
 	}
 	body := map[string]any{
 		"relations": relations,
 	}
-	_, err := a.client.DoPostRequest(api.Routes.ManagementAuthzRECreate(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRECreate(), body, nil, a.conf.ManagementKey)
 	return err
 }
 
-func (a *authz) DeleteRelations(relations []*descope.AuthzRelation) error {
+func (a *authz) DeleteRelations(ctx context.Context, relations []*descope.AuthzRelation) error {
 	if len(relations) == 0 {
 		return utils.NewInvalidArgumentError("relations")
 	}
 	body := map[string]any{
 		"relations": relations,
 	}
-	_, err := a.client.DoPostRequest(api.Routes.ManagementAuthzREDelete(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzREDelete(), body, nil, a.conf.ManagementKey)
 	return err
 }
 
-func (a *authz) DeleteRelationsForResources(resources []string) error {
+func (a *authz) DeleteRelationsForResources(ctx context.Context, resources []string) error {
 	if len(resources) == 0 {
 		return utils.NewInvalidArgumentError("resources")
 	}
 	body := map[string]any{
 		"resources": resources,
 	}
-	_, err := a.client.DoPostRequest(api.Routes.ManagementAuthzREDeleteResources(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzREDeleteResources(), body, nil, a.conf.ManagementKey)
 	return err
 }
 
@@ -153,14 +155,14 @@ type relationQueriesResponse struct {
 	RelationQueries []*descope.AuthzRelationQuery `json:"relationQueries"`
 }
 
-func (a *authz) HasRelations(relationQueries []*descope.AuthzRelationQuery) ([]*descope.AuthzRelationQuery, error) {
+func (a *authz) HasRelations(ctx context.Context, relationQueries []*descope.AuthzRelationQuery) ([]*descope.AuthzRelationQuery, error) {
 	if len(relationQueries) == 0 {
 		return nil, utils.NewInvalidArgumentError("relationQueries")
 	}
 	body := map[string]any{
 		"relationQueries": relationQueries,
 	}
-	res, err := a.client.DoPostRequest(api.Routes.ManagementAuthzREHasRelations(), body, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzREHasRelations(), body, nil, a.conf.ManagementKey)
 	if err != nil {
 		// notest
 		return nil, err
@@ -178,7 +180,7 @@ type whoResponse struct {
 	Targets []string `json:"targets"`
 }
 
-func (a *authz) WhoCanAccess(resource, relationDefinition, namespace string) ([]string, error) {
+func (a *authz) WhoCanAccess(ctx context.Context, resource, relationDefinition, namespace string) ([]string, error) {
 	if resource == "" {
 		return nil, utils.NewInvalidArgumentError("resource")
 	}
@@ -193,7 +195,7 @@ func (a *authz) WhoCanAccess(resource, relationDefinition, namespace string) ([]
 		"relationDefinition": relationDefinition,
 		"namespace":          namespace,
 	}
-	res, err := a.client.DoPostRequest(api.Routes.ManagementAuthzREWho(), body, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzREWho(), body, nil, a.conf.ManagementKey)
 	if err != nil {
 		// notest
 		return nil, err
@@ -211,14 +213,14 @@ type relationsResponse struct {
 	Relations []*descope.AuthzRelation `json:"relations"`
 }
 
-func (a *authz) ResourceRelations(resource string) ([]*descope.AuthzRelation, error) {
+func (a *authz) ResourceRelations(ctx context.Context, resource string) ([]*descope.AuthzRelation, error) {
 	if resource == "" {
 		return nil, utils.NewInvalidArgumentError("resource")
 	}
 	body := map[string]any{
 		"resource": resource,
 	}
-	res, err := a.client.DoPostRequest(api.Routes.ManagementAuthzREResource(), body, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzREResource(), body, nil, a.conf.ManagementKey)
 	if err != nil {
 		// notest
 		return nil, err
@@ -232,14 +234,14 @@ func (a *authz) ResourceRelations(resource string) ([]*descope.AuthzRelation, er
 	return response.Relations, nil
 }
 
-func (a *authz) TargetsRelations(targets []string) ([]*descope.AuthzRelation, error) {
+func (a *authz) TargetsRelations(ctx context.Context, targets []string) ([]*descope.AuthzRelation, error) {
 	if len(targets) == 0 {
 		return nil, utils.NewInvalidArgumentError("targets")
 	}
 	body := map[string]any{
 		"targets": targets,
 	}
-	res, err := a.client.DoPostRequest(api.Routes.ManagementAuthzRETargets(), body, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRETargets(), body, nil, a.conf.ManagementKey)
 	if err != nil {
 		// notest
 		return nil, err
@@ -253,14 +255,14 @@ func (a *authz) TargetsRelations(targets []string) ([]*descope.AuthzRelation, er
 	return response.Relations, nil
 }
 
-func (a *authz) WhatCanTargetAccess(target string) ([]*descope.AuthzRelation, error) {
+func (a *authz) WhatCanTargetAccess(ctx context.Context, target string) ([]*descope.AuthzRelation, error) {
 	if target == "" {
 		return nil, utils.NewInvalidArgumentError("target")
 	}
 	body := map[string]any{
 		"target": target,
 	}
-	res, err := a.client.DoPostRequest(api.Routes.ManagementAuthzRETargetAll(), body, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRETargetAll(), body, nil, a.conf.ManagementKey)
 	if err != nil {
 		// notest
 		return nil, err

@@ -1,6 +1,8 @@
 package mgmt
 
 import (
+	"context"
+
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
@@ -10,30 +12,30 @@ type tenant struct {
 	managementBase
 }
 
-func (t *tenant) Create(tenantRequest *descope.TenantRequest) (id string, err error) {
+func (t *tenant) Create(ctx context.Context, tenantRequest *descope.TenantRequest) (id string, err error) {
 	if tenantRequest == nil {
 		tenantRequest = &descope.TenantRequest{}
 	}
-	return t.createWithID("", tenantRequest)
+	return t.createWithID(ctx, "", tenantRequest)
 }
 
-func (t *tenant) CreateWithID(id string, tenantRequest *descope.TenantRequest) error {
+func (t *tenant) CreateWithID(ctx context.Context, id string, tenantRequest *descope.TenantRequest) error {
 	if id == "" {
 		return utils.NewInvalidArgumentError("id")
 	}
 	if tenantRequest == nil {
 		tenantRequest = &descope.TenantRequest{}
 	}
-	_, err := t.createWithID(id, tenantRequest)
+	_, err := t.createWithID(ctx, id, tenantRequest)
 	return err
 }
 
-func (t *tenant) createWithID(id string, tenantRequest *descope.TenantRequest) (string, error) {
+func (t *tenant) createWithID(ctx context.Context, id string, tenantRequest *descope.TenantRequest) (string, error) {
 	if tenantRequest.Name == "" {
 		return "", utils.NewInvalidArgumentError("name")
 	}
 	req := makeCreateUpdateTenantRequest(id, tenantRequest)
-	httpRes, err := t.client.DoPostRequest(api.Routes.ManagementTenantCreate(), req, nil, t.conf.ManagementKey)
+	httpRes, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantCreate(), req, nil, t.conf.ManagementKey)
 	if err != nil {
 		return "", err
 	}
@@ -46,7 +48,7 @@ func (t *tenant) createWithID(id string, tenantRequest *descope.TenantRequest) (
 	return res.ID, nil
 }
 
-func (t *tenant) Update(id string, tenantRequest *descope.TenantRequest) error {
+func (t *tenant) Update(ctx context.Context, id string, tenantRequest *descope.TenantRequest) error {
 	if id == "" {
 		return utils.NewInvalidArgumentError("id")
 	}
@@ -54,49 +56,49 @@ func (t *tenant) Update(id string, tenantRequest *descope.TenantRequest) error {
 		return utils.NewInvalidArgumentError("name")
 	}
 	req := makeCreateUpdateTenantRequest(id, tenantRequest)
-	_, err := t.client.DoPostRequest(api.Routes.ManagementTenantUpdate(), req, nil, t.conf.ManagementKey)
+	_, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantUpdate(), req, nil, t.conf.ManagementKey)
 	return err
 }
 
-func (t *tenant) Delete(id string) error {
+func (t *tenant) Delete(ctx context.Context, id string) error {
 	if id == "" {
 		return utils.NewInvalidArgumentError("id")
 	}
 	req := map[string]any{"id": id}
-	_, err := t.client.DoPostRequest(api.Routes.ManagementTenantDelete(), req, nil, t.conf.ManagementKey)
+	_, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantDelete(), req, nil, t.conf.ManagementKey)
 	return err
 }
 
-func (t *tenant) Load(id string) (*descope.Tenant, error) {
+func (t *tenant) Load(ctx context.Context, id string) (*descope.Tenant, error) {
 	if id == "" {
 		return nil, utils.NewInvalidArgumentError("id")
 	}
 	req := &api.HTTPRequest{
 		QueryParams: map[string]string{"id": id},
 	}
-	res, err := t.client.DoGetRequest(api.Routes.ManagementTenantLoad(), req, t.conf.ManagementKey)
+	res, err := t.client.DoGetRequest(ctx, api.Routes.ManagementTenantLoad(), req, t.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}
 	return unmarshalLoadTenantResponse(res)
 }
 
-func (t *tenant) LoadAll() ([]*descope.Tenant, error) {
-	res, err := t.client.DoGetRequest(api.Routes.ManagementTenantLoadAll(), nil, t.conf.ManagementKey)
+func (t *tenant) LoadAll(ctx context.Context) ([]*descope.Tenant, error) {
+	res, err := t.client.DoGetRequest(ctx, api.Routes.ManagementTenantLoadAll(), nil, t.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}
 	return unmarshalLoadAllTenantsResponse(res)
 }
 
-func (t *tenant) SearchAll(options *descope.TenantSearchOptions) ([]*descope.Tenant, error) {
+func (t *tenant) SearchAll(ctx context.Context, options *descope.TenantSearchOptions) ([]*descope.Tenant, error) {
 	// Init empty options if non given
 	if options == nil {
 		options = &descope.TenantSearchOptions{}
 	}
 
 	req := makeSearchTenantRequest(options)
-	res, err := t.client.DoPostRequest(api.Routes.ManagementTenantSearchAll(), req, nil, t.conf.ManagementKey)
+	res, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantSearchAll(), req, nil, t.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}

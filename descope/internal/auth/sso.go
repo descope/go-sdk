@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/descope/go-sdk/descope"
@@ -17,7 +18,7 @@ type ssoStartResponse struct {
 	URL string `json:"url"`
 }
 
-func (auth *sso) Start(tenant string, redirectURL string, prompt string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (url string, err error) {
+func (auth *sso) Start(ctx context.Context, tenant string, redirectURL string, prompt string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (url string, err error) {
 	if tenant == "" {
 		return "", utils.NewInvalidArgumentError("tenant")
 	}
@@ -37,7 +38,7 @@ func (auth *sso) Start(tenant string, redirectURL string, prompt string, r *http
 			return "", descope.ErrInvalidStepUpJWT
 		}
 	}
-	httpResponse, err := auth.client.DoPostRequest(composeSSOStartURL(), loginOptions, &api.HTTPRequest{QueryParams: m}, pswd)
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeSSOStartURL(), loginOptions, &api.HTTPRequest{QueryParams: m}, pswd)
 	if err != nil {
 		return
 	}
@@ -56,6 +57,6 @@ func (auth *sso) Start(tenant string, redirectURL string, prompt string, r *http
 	return
 }
 
-func (auth *sso) ExchangeToken(code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
-	return auth.exchangeToken(code, composeSSOExchangeTokenURL(), w)
+func (auth *sso) ExchangeToken(ctx context.Context, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+	return auth.exchangeToken(ctx, code, composeSSOExchangeTokenURL(), w)
 }

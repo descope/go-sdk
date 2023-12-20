@@ -24,6 +24,8 @@ type Config struct {
 	DescopeBaseURL string
 	// DefaultClient (optional, http.DefaultClient) - override the default client used to Do the actual http request.
 	DefaultClient api.IHttpClient
+	// CertificateVerifyMode (optional, CertificateVerifyAutomatic) - override the default server certificate verification behavior
+	CertificateVerify api.CertificateVerifyMode
 	// CustomDefaultHeaders (optional, nil) - add custom headers to all requests used to communicate with descope services.
 	CustomDefaultHeaders map[string]string
 	// LogLevel (optional, LogNone) - set a log level (Debug/Info/None) for the sdk to use when logging.

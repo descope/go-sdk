@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -18,14 +19,15 @@ import (
 // Command line flags
 
 var flags struct {
-	LoginID     string
-	Email       string
-	Phone       string
-	Name        string
-	Tenants     []string
-	Domains     []string
-	Description string
-	Permissions []string
+	LoginID            string
+	Email              string
+	Phone              string
+	Name               string
+	Tenants            []string
+	Domains            []string
+	Description        string
+	Permissions        []string
+	AdditionalLoginIDs []string
 }
 
 // Descope SDK
@@ -56,11 +58,15 @@ func userCreate(args []string) error {
 		tenants = append(tenants, &descope.AssociatedTenant{TenantID: tenantID})
 	}
 	user := &descope.UserRequest{}
-	user.Email = "foo@bar.com"
+	user.Email = flags.Email
 	user.Phone = flags.Phone
+	if flags.Email == "" && flags.Phone == "" {
+		user.Email = "foo@bar.com" // email or phone are required
+	}
 	user.Name = flags.Name
 	user.Tenants = tenants
-	_, err := descopeClient.Management.User().Create(args[0], user)
+	user.AdditionalLoginIDs = flags.AdditionalLoginIDs
+	_, err := descopeClient.Management.User().Create(context.Background(), args[0], user)
 	return err
 }
 
@@ -70,21 +76,25 @@ func userUpdate(args []string) error {
 		tenants = append(tenants, &descope.AssociatedTenant{TenantID: tenantID})
 	}
 	user := &descope.UserRequest{}
-	user.Email = "foo@bar.com"
+	user.Email = flags.Email
 	user.Phone = flags.Phone
+	if flags.Email == "" && flags.Phone == "" {
+		user.Email = "foo@bar.com" // email or phone are required
+	}
 	user.Name = flags.Name
 	user.Tenants = tenants
+	user.AdditionalLoginIDs = flags.AdditionalLoginIDs
 
-	_, err := descopeClient.Management.User().Update(args[0], user)
+	_, err := descopeClient.Management.User().Update(context.Background(), args[0], user)
 	return err
 }
 
 func userDelete(args []string) error {
-	return descopeClient.Management.User().Delete(args[0])
+	return descopeClient.Management.User().Delete(context.Background(), args[0])
 }
 
 func userLoad(args []string) error {
-	res, err := descopeClient.Management.User().Load(args[0])
+	res, err := descopeClient.Management.User().Load(context.Background(), args[0])
 	if err == nil {
 		fmt.Println("Found:", res)
 	}
@@ -92,7 +102,7 @@ func userLoad(args []string) error {
 }
 
 func userUpdateLoginID(args []string) error {
-	res, err := descopeClient.Management.User().UpdateLoginID(args[0], args[1])
+	res, err := descopeClient.Management.User().UpdateLoginID(context.Background(), args[0], args[1])
 	if err == nil {
 		fmt.Println("Updated user:", res)
 	}
@@ -110,7 +120,7 @@ func userSearchAll(args []string) error {
 		return err
 	}
 
-	res, err := descopeClient.Management.User().SearchAll(&descope.UserSearchOptions{Limit: int32(limit), Page: int32(page)})
+	res, err := descopeClient.Management.User().SearchAll(context.Background(), &descope.UserSearchOptions{Limit: int32(limit), Page: int32(page)})
 	if err == nil {
 		for _, u := range res {
 			fmt.Println("Found:", u)
@@ -122,18 +132,18 @@ func userSearchAll(args []string) error {
 func setUserPassword(args []string) error {
 	loginID := args[0]
 	password := args[1]
-	return descopeClient.Management.User().SetPassword(loginID, password)
+	return descopeClient.Management.User().SetPassword(context.Background(), loginID, password)
 }
 
 func expireUserPassword(args []string) error {
 	loginID := args[0]
-	return descopeClient.Management.User().ExpirePassword(loginID)
+	return descopeClient.Management.User().ExpirePassword(context.Background(), loginID)
 }
 
 func getUserProviderToken(args []string) error {
 	loginID := args[0]
 	provider := args[1]
-	res, err := descopeClient.Management.User().GetProviderToken(loginID, provider)
+	res, err := descopeClient.Management.User().GetProviderToken(context.Background(), loginID, provider)
 	if err == nil {
 		fmt.Println("Found:", res)
 	}
@@ -149,7 +159,7 @@ func accessKeyCreate(args []string) error {
 	if err != nil {
 		return err
 	}
-	cleartext, res, err := descopeClient.Management.AccessKey().Create(args[0], expireTime, nil, tenants)
+	cleartext, res, err := descopeClient.Management.AccessKey().Create(context.Background(), args[0], expireTime, nil, tenants)
 	if err != nil {
 		return err
 	}
@@ -159,7 +169,7 @@ func accessKeyCreate(args []string) error {
 }
 
 func accessKeyLoad(args []string) error {
-	res, err := descopeClient.Management.AccessKey().Load(args[0])
+	res, err := descopeClient.Management.AccessKey().Load(context.Background(), args[0])
 	if err == nil {
 		fmt.Println("Found:", res)
 	}
@@ -167,7 +177,7 @@ func accessKeyLoad(args []string) error {
 }
 
 func accessKeySearchAll(args []string) error {
-	res, err := descopeClient.Management.AccessKey().SearchAll(nil)
+	res, err := descopeClient.Management.AccessKey().SearchAll(context.Background(), nil)
 	if err == nil {
 		for _, u := range res {
 			fmt.Println("Found:", u)
@@ -177,28 +187,28 @@ func accessKeySearchAll(args []string) error {
 }
 
 func accessKeyUpdate(args []string) error {
-	_, err := descopeClient.Management.AccessKey().Update(args[0], args[1])
+	_, err := descopeClient.Management.AccessKey().Update(context.Background(), args[0], args[1])
 	return err
 }
 
 func accessKeyDeactivate(args []string) error {
-	return descopeClient.Management.AccessKey().Deactivate(args[0])
+	return descopeClient.Management.AccessKey().Deactivate(context.Background(), args[0])
 }
 
 func accessKeyActivate(args []string) error {
-	return descopeClient.Management.AccessKey().Activate(args[0])
+	return descopeClient.Management.AccessKey().Activate(context.Background(), args[0])
 }
 
 func accessKeyDelete(args []string) error {
-	return descopeClient.Management.AccessKey().Delete(args[0])
+	return descopeClient.Management.AccessKey().Delete(context.Background(), args[0])
 }
 
 func tenantCreate(args []string) error {
 	tr := &descope.TenantRequest{Name: args[0], SelfProvisioningDomains: flags.Domains}
 	if flags.LoginID != "" {
-		return descopeClient.Management.Tenant().CreateWithID(flags.LoginID, tr)
+		return descopeClient.Management.Tenant().CreateWithID(context.Background(), flags.LoginID, tr)
 	}
-	tenantID, err := descopeClient.Management.Tenant().Create(tr)
+	tenantID, err := descopeClient.Management.Tenant().Create(context.Background(), tr)
 	if err == nil {
 		fmt.Println("Created new tenant with id:", tenantID)
 	}
@@ -209,18 +219,18 @@ func tenantUpdate(args []string) error {
 
 	if flags.LoginID != "" {
 		tr := &descope.TenantRequest{Name: args[0], SelfProvisioningDomains: flags.Domains}
-		return descopeClient.Management.Tenant().CreateWithID(flags.LoginID, tr)
+		return descopeClient.Management.Tenant().CreateWithID(context.Background(), flags.LoginID, tr)
 	}
 	tr := &descope.TenantRequest{Name: args[1], SelfProvisioningDomains: flags.Domains}
-	return descopeClient.Management.Tenant().Update(args[0], tr)
+	return descopeClient.Management.Tenant().Update(context.Background(), args[0], tr)
 }
 
 func tenantDelete(args []string) error {
-	return descopeClient.Management.Tenant().Delete(args[0])
+	return descopeClient.Management.Tenant().Delete(context.Background(), args[0])
 }
 
 func tenantLoad(args []string) error {
-	tenant, err := descopeClient.Management.Tenant().Load(args[0])
+	tenant, err := descopeClient.Management.Tenant().Load(context.Background(), args[0])
 	if err == nil {
 		fmt.Println("Found:", tenant)
 	}
@@ -228,7 +238,7 @@ func tenantLoad(args []string) error {
 }
 
 func tenantLoadAll(args []string) error {
-	res, err := descopeClient.Management.Tenant().LoadAll()
+	res, err := descopeClient.Management.Tenant().LoadAll(context.Background())
 	if err == nil {
 		for _, t := range res {
 			fmt.Println("Found:", t)
@@ -238,19 +248,19 @@ func tenantLoadAll(args []string) error {
 }
 
 func permissionCreate(args []string) error {
-	return descopeClient.Management.Permission().Create(args[0], flags.Description)
+	return descopeClient.Management.Permission().Create(context.Background(), args[0], flags.Description)
 }
 
 func permissionUpdate(args []string) error {
-	return descopeClient.Management.Permission().Update(args[0], args[1], flags.Description)
+	return descopeClient.Management.Permission().Update(context.Background(), args[0], args[1], flags.Description)
 }
 
 func permissionDelete(args []string) error {
-	return descopeClient.Management.Permission().Delete(args[0])
+	return descopeClient.Management.Permission().Delete(context.Background(), args[0])
 }
 
 func permissionAll(args []string) error {
-	res, err := descopeClient.Management.Permission().LoadAll()
+	res, err := descopeClient.Management.Permission().LoadAll(context.Background())
 	if err == nil {
 		for _, p := range res {
 			fmt.Println("Found:", p)
@@ -260,19 +270,19 @@ func permissionAll(args []string) error {
 }
 
 func roleCreate(args []string) error {
-	return descopeClient.Management.Role().Create(args[0], flags.Description, flags.Permissions)
+	return descopeClient.Management.Role().Create(context.Background(), args[0], flags.Description, flags.Permissions)
 }
 
 func roleUpdate(args []string) error {
-	return descopeClient.Management.Role().Update(args[0], args[1], flags.Description, flags.Permissions)
+	return descopeClient.Management.Role().Update(context.Background(), args[0], args[1], flags.Description, flags.Permissions)
 }
 
 func roleDelete(args []string) error {
-	return descopeClient.Management.Role().Delete(args[0])
+	return descopeClient.Management.Role().Delete(context.Background(), args[0])
 }
 
 func roleAll(args []string) error {
-	res, err := descopeClient.Management.Role().LoadAll()
+	res, err := descopeClient.Management.Role().LoadAll(context.Background())
 	if err == nil {
 		for _, p := range res {
 			fmt.Println("Found:", p)
@@ -283,7 +293,7 @@ func roleAll(args []string) error {
 
 func groupAllForTenant(args []string) error {
 	tenantID := args[0]
-	res, err := descopeClient.Management.Group().LoadAllGroups(tenantID)
+	res, err := descopeClient.Management.Group().LoadAllGroups(context.Background(), tenantID)
 	if err == nil {
 		for _, p := range res {
 			fmt.Printf("Found group: %s, %s. Members: %v\n", p.ID, p.Display, p.Members)
@@ -301,7 +311,7 @@ func writeToFile(fileName string, data any) error {
 }
 
 func listFlows(args []string) error {
-	res, err := descopeClient.Management.Flow().ListFlows()
+	res, err := descopeClient.Management.Flow().ListFlows(context.Background())
 	if err == nil {
 		for _, f := range res.Flows {
 			fmt.Printf("ID: %s, Name: %s, Description: %s, Disabled: %t\n", f.ID, f.Name, f.Description, f.Disabled)
@@ -312,7 +322,7 @@ func listFlows(args []string) error {
 
 func exportFlow(args []string) error {
 	flowID := args[0]
-	res, err := descopeClient.Management.Flow().ExportFlow(flowID)
+	res, err := descopeClient.Management.Flow().ExportFlow(context.Background(), flowID)
 	if err != nil {
 		return err
 	}
@@ -336,7 +346,7 @@ func importFlow(args []string) error {
 		return err
 	}
 
-	res, err := descopeClient.Management.Flow().ImportFlow(flowID, data.Flow, data.Screens)
+	res, err := descopeClient.Management.Flow().ImportFlow(context.Background(), flowID, data.Flow, data.Screens)
 	if err == nil {
 		fmt.Printf("Imported flow [%s] named %s with %d screens\n", res.Flow.ID, res.Flow.Name, len(res.Screens))
 	}
@@ -355,7 +365,7 @@ func importTheme(args []string) error {
 		return err
 	}
 
-	_, err = descopeClient.Management.Flow().ImportTheme(data)
+	_, err = descopeClient.Management.Flow().ImportTheme(context.Background(), data)
 	if err == nil {
 		fmt.Println("Imported theme")
 	}
@@ -363,7 +373,7 @@ func importTheme(args []string) error {
 }
 
 func exportTheme(args []string) error {
-	res, err := descopeClient.Management.Flow().ExportTheme()
+	res, err := descopeClient.Management.Flow().ExportTheme(context.Background())
 	if err != nil {
 		return err
 	}
@@ -377,7 +387,7 @@ func exportTheme(args []string) error {
 func groupAllForMembersUserIDs(args []string) error {
 	tenantID := args[0]
 	userIDs := strings.Split(args[1], ",")
-	res, err := descopeClient.Management.Group().LoadAllGroupsForMembers(tenantID, userIDs, nil)
+	res, err := descopeClient.Management.Group().LoadAllGroupsForMembers(context.Background(), tenantID, userIDs, nil)
 	if err == nil {
 		for _, p := range res {
 			fmt.Printf("Found group: %s, %s. Members: %v\n", p.ID, p.Display, p.Members)
@@ -389,7 +399,7 @@ func groupAllForMembersUserIDs(args []string) error {
 func groupAllForMembersLoginIDs(args []string) error {
 	tenantID := args[0]
 	loginIDs := strings.Split(args[1], ",")
-	res, err := descopeClient.Management.Group().LoadAllGroupsForMembers(tenantID, nil, loginIDs)
+	res, err := descopeClient.Management.Group().LoadAllGroupsForMembers(context.Background(), tenantID, nil, loginIDs)
 	if err == nil {
 		for _, p := range res {
 			fmt.Printf("Found group: %s, %s. Members: %v\n", p.ID, p.Display, p.Members)
@@ -401,7 +411,7 @@ func groupAllForMembersLoginIDs(args []string) error {
 func groupAllGroupMembers(args []string) error {
 	tenantID := args[0]
 	groupID := args[1]
-	res, err := descopeClient.Management.Group().LoadAllGroupMembers(tenantID, groupID)
+	res, err := descopeClient.Management.Group().LoadAllGroupMembers(context.Background(), tenantID, groupID)
 	if err == nil {
 		for _, p := range res {
 			fmt.Printf("Found group: %s, %s. Members: %v\n", p.ID, p.Display, p.Members)
@@ -416,7 +426,7 @@ func auditFullTextSearch(args []string) error {
 		return err
 	}
 	fmt.Println(from)
-	res, err := descopeClient.Management.Audit().Search(&descope.AuditSearchOptions{Text: args[0], From: from})
+	res, err := descopeClient.Management.Audit().Search(context.Background(), &descope.AuditSearchOptions{Text: args[0], From: from})
 	if err == nil {
 		var b []byte
 		b, err = json.MarshalIndent(res, "", "  ")
@@ -426,7 +436,7 @@ func auditFullTextSearch(args []string) error {
 }
 
 func authzLoadSchema(args []string) error {
-	res, err := descopeClient.Management.Authz().LoadSchema()
+	res, err := descopeClient.Management.Authz().LoadSchema(context.Background())
 	if err == nil {
 		var b []byte
 		b, err = json.MarshalIndent(res, "", "  ")
@@ -445,7 +455,7 @@ func authzSaveSchema(args []string) error {
 	if err != nil {
 		return err
 	}
-	oldSchema, err := descopeClient.Management.Authz().LoadSchema()
+	oldSchema, err := descopeClient.Management.Authz().LoadSchema(context.Background())
 	if err != nil {
 		return err
 	}
@@ -453,7 +463,7 @@ func authzSaveSchema(args []string) error {
 	if err != nil {
 		return err
 	}
-	err = descopeClient.Management.Authz().SaveSchema(schema, upgrade)
+	err = descopeClient.Management.Authz().SaveSchema(context.Background(), schema, upgrade)
 	if err == nil {
 		if oldSchema.Name != schema.Name {
 			fmt.Printf("Schema %s upgraded to %s.\n", oldSchema.Name, schema.Name)
@@ -465,7 +475,7 @@ func authzSaveSchema(args []string) error {
 }
 
 func authzHasRelation(args []string) error {
-	res, err := descopeClient.Management.Authz().HasRelations([]*descope.AuthzRelationQuery{
+	res, err := descopeClient.Management.Authz().HasRelations(context.Background(), []*descope.AuthzRelationQuery{
 		{
 			Resource:           args[0],
 			RelationDefinition: args[1],
@@ -482,7 +492,7 @@ func authzHasRelation(args []string) error {
 }
 
 func authzAddRelation(args []string) error {
-	err := descopeClient.Management.Authz().CreateRelations([]*descope.AuthzRelation{
+	err := descopeClient.Management.Authz().CreateRelations(context.Background(), []*descope.AuthzRelation{
 		{
 			Resource:           args[0],
 			RelationDefinition: args[1],
@@ -497,7 +507,7 @@ func authzAddRelation(args []string) error {
 }
 
 func authzAddRelationTargetSet(args []string) error {
-	err := descopeClient.Management.Authz().CreateRelations([]*descope.AuthzRelation{
+	err := descopeClient.Management.Authz().CreateRelations(context.Background(), []*descope.AuthzRelation{
 		{
 			Resource:                             args[0],
 			RelationDefinition:                   args[1],
@@ -540,23 +550,25 @@ func addCommand(action func([]string) error, use string, help string, setup func
 }
 
 func main() {
-	addCommand(userCreate, "user-create <loginID>", "Create a new user", func(cmd *cobra.Command) {
+	addCommand(userCreate, "user-create <loginId>", "Create a new user", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 		cmd.Flags().StringVarP(&flags.Email, "email", "E", "", "the user's email address")
 		cmd.Flags().StringVarP(&flags.Phone, "phone", "P", "", "the user's phone number")
 		cmd.Flags().StringVarP(&flags.Name, "name", "N", "", "the user's display name")
 		cmd.Flags().StringSliceVarP(&flags.Tenants, "tenants", "T", nil, "the ids of the user's tenants")
+		cmd.Flags().StringSliceVar(&flags.AdditionalLoginIDs, "additional-login-ids", nil, "the user's additional login id")
 	})
 
-	addCommand(userUpdate, "user-update <loginID>", "Update an existing user", func(cmd *cobra.Command) {
+	addCommand(userUpdate, "user-update <loginId>", "Update an existing user", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 		cmd.Flags().StringVarP(&flags.Email, "email", "E", "", "the user's email address")
 		cmd.Flags().StringVarP(&flags.Phone, "phone", "P", "", "the user's phone number")
 		cmd.Flags().StringVarP(&flags.Name, "name", "N", "", "the user's display name")
 		cmd.Flags().StringSliceVarP(&flags.Tenants, "tenants", "T", nil, "the ids of the user's tenants")
+		cmd.Flags().StringSliceVar(&flags.AdditionalLoginIDs, "additional-login-ids", nil, "the user's additional login id")
 	})
 
-	addCommand(userDelete, "user-delete <loginID>", "Delete an existing user", func(cmd *cobra.Command) {
+	addCommand(userDelete, "user-delete <loginId>", "Delete an existing user", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 	})
 
@@ -565,26 +577,26 @@ func main() {
 		cmd.Flags().StringSliceVarP(&flags.Tenants, "tenants", "T", nil, "the ids of the user's tenants")
 	})
 
-	addCommand(accessKeyLoad, "access-key-load", "Load an access key <id>", func(cmd *cobra.Command) {
+	addCommand(accessKeyLoad, "access-key-loa <id>", "Load an access key", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 	})
 
 	addCommand(accessKeySearchAll, "access-key-search-all", "Search all access keys", func(cmd *cobra.Command) {
 	})
 
-	addCommand(accessKeyUpdate, "access-key-update", "Update an access key <id> <name>", func(cmd *cobra.Command) {
+	addCommand(accessKeyUpdate, "access-key-update <id> <name>", "Update an access key", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
 	})
 
-	addCommand(accessKeyDeactivate, "access-key-deactivate", "Deactivate an access key <id>", func(cmd *cobra.Command) {
+	addCommand(accessKeyDeactivate, "access-key-deactivate <id>", "Deactivate an access key", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 	})
 
-	addCommand(accessKeyActivate, "access-key-activate", "Activate an access key <id>", func(cmd *cobra.Command) {
+	addCommand(accessKeyActivate, "access-key-activate <id>", "Activate an access key", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 	})
 
-	addCommand(accessKeyDelete, "access-key-delete", "Delete an access key <id>", func(cmd *cobra.Command) {
+	addCommand(accessKeyDelete, "access-key-delete <id>", "Delete an access key", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 	})
 
@@ -609,11 +621,11 @@ func main() {
 	addCommand(tenantLoadAll, "tenant-all", "Load all tenants", func(cmd *cobra.Command) {
 	})
 
-	addCommand(userLoad, "user-load <id>", "Load an existing user", func(cmd *cobra.Command) {
+	addCommand(userLoad, "user-load <loginId>", "Load an existing user", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(1)
 	})
 
-	addCommand(userUpdateLoginID, "user-update-loginid <id> <new-id>", "Update loginid of user", func(cmd *cobra.Command) {
+	addCommand(userUpdateLoginID, "user-update-loginid <loginId> <new-id>", "Update loginId of user", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
 	})
 
@@ -692,11 +704,11 @@ func main() {
 		cmd.Args = cobra.ExactArgs(1)
 	})
 
-	addCommand(groupAllForMembersUserIDs, "group-all-for-members-user-ids <tenantId> <userIDs>", "Load all groups for the given user's ID (can be found in the user's JWT)", func(cmd *cobra.Command) {
+	addCommand(groupAllForMembersUserIDs, "group-all-for-members-user-ids <tenantId> <userIds>", "Load all groups for the given user's ID (can be found in the user's JWT)", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
 	})
 
-	addCommand(groupAllForMembersLoginIDs, "group-all-for-members-loginIDs <tenantId> <loginIDs>", "Load all groups for the given user's loginIDs (used for sign-in)", func(cmd *cobra.Command) {
+	addCommand(groupAllForMembersLoginIDs, "group-all-for-members-loginIds <tenantId> <loginIds>", "Load all groups for the given user's loginIds (used for sign-in)", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
 	})
 

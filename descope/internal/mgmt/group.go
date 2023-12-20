@@ -1,6 +1,8 @@
 package mgmt
 
 import (
+	"context"
+
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
@@ -10,21 +12,21 @@ type group struct {
 	managementBase
 }
 
-func (r *group) LoadAllGroups(tenantID string) ([]*descope.Group, error) {
+func (r *group) LoadAllGroups(ctx context.Context, tenantID string) ([]*descope.Group, error) {
 	if tenantID == "" {
 		return nil, utils.NewInvalidArgumentError("tenantID")
 	}
 	body := map[string]any{
 		"tenantId": tenantID,
 	}
-	res, err := r.client.DoPostRequest(api.Routes.ManagementGroupLoadAllGroups(), body, nil, r.conf.ManagementKey)
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementGroupLoadAllGroups(), body, nil, r.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}
 	return unmarshalGroupsResponse(res)
 }
 
-func (r *group) LoadAllGroupsForMembers(tenantID string, userIDs, loginIDs []string) ([]*descope.Group, error) {
+func (r *group) LoadAllGroupsForMembers(ctx context.Context, tenantID string, userIDs, loginIDs []string) ([]*descope.Group, error) {
 	if tenantID == "" {
 		return nil, utils.NewInvalidArgumentError("tenantID")
 	}
@@ -36,14 +38,14 @@ func (r *group) LoadAllGroupsForMembers(tenantID string, userIDs, loginIDs []str
 		"loginIds": loginIDs,
 		"userIds":  userIDs,
 	}
-	res, err := r.client.DoPostRequest(api.Routes.ManagementGroupLoadAllGroupsForMember(), body, nil, r.conf.ManagementKey)
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementGroupLoadAllGroupsForMember(), body, nil, r.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}
 	return unmarshalGroupsResponse(res)
 }
 
-func (r *group) LoadAllGroupMembers(tenantID, groupID string) ([]*descope.Group, error) {
+func (r *group) LoadAllGroupMembers(ctx context.Context, tenantID, groupID string) ([]*descope.Group, error) {
 	if tenantID == "" {
 		return nil, utils.NewInvalidArgumentError("tenantID")
 	}
@@ -54,7 +56,7 @@ func (r *group) LoadAllGroupMembers(tenantID, groupID string) ([]*descope.Group,
 		"tenantId": tenantID,
 		"groupId":  groupID,
 	}
-	res, err := r.client.DoPostRequest(api.Routes.ManagementGroupLoadAllGroupMembers(), body, nil, r.conf.ManagementKey)
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementGroupLoadAllGroupMembers(), body, nil, r.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}

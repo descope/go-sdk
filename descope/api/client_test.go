@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -45,7 +46,7 @@ func TestRequestWithDescopeHeaders(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK}, nil
 	})})
 
-	_, err := c.DoPostRequest("path", nil, nil, "")
+	_, err := c.DoPostRequest(context.Background(), "path", nil, nil, "")
 	require.NoError(t, err)
 }
 
@@ -60,7 +61,7 @@ func TestGetRequest(t *testing.T) {
 		assert.EqualValues(t, projectID, actualProject)
 		return &http.Response{Body: io.NopCloser(strings.NewReader(expectedResponse)), StatusCode: http.StatusOK}, nil
 	})})
-	res, err := c.DoGetRequest("path", &HTTPRequest{QueryParams: map[string]string{"test": "1"}}, "")
+	res, err := c.DoGetRequest(context.Background(), "path", &HTTPRequest{QueryParams: map[string]string{"test": "1"}}, "")
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedResponse, res.BodyStr)
 }
@@ -84,7 +85,7 @@ func TestPostRequest(t *testing.T) {
 	})})
 
 	actualOutput := &dummy{}
-	res, err := c.DoPostRequest("path", strings.NewReader("test"), &HTTPRequest{ResBodyObj: actualOutput, Headers: expectedHeaders}, "")
+	res, err := c.DoPostRequest(context.Background(), "path", strings.NewReader("test"), &HTTPRequest{ResBodyObj: actualOutput, Headers: expectedHeaders}, "")
 	require.NoError(t, err)
 	assert.EqualValues(t, string(outputBytes), res.BodyStr)
 	assert.EqualValues(t, expectedOutput, actualOutput)
@@ -101,7 +102,7 @@ func TestPostCustomHeaders(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK}, nil
 	})})
 
-	_, err := c.DoPostRequest("path", nil, nil, "")
+	_, err := c.DoPostRequest(context.Background(), "path", nil, nil, "")
 	require.NoError(t, err)
 }
 
@@ -115,7 +116,7 @@ func TestPostCustomCookies(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK}, nil
 	})})
 
-	_, err := c.DoPostRequest("path", nil, &HTTPRequest{Cookies: []*http.Cookie{expectedCookie}}, "")
+	_, err := c.DoPostRequest(context.Background(), "path", nil, &HTTPRequest{Cookies: []*http.Cookie{expectedCookie}}, "")
 	require.NoError(t, err)
 }
 
@@ -134,7 +135,7 @@ func TestPostCustomURL(t *testing.T) {
 
 	req, err := http.NewRequest(http.MethodPost, "hello.com/path?test=1", bytes.NewBufferString(body))
 	require.NoError(t, err)
-	res, err := c.DoPostRequest("path", nil, &HTTPRequest{Request: req, BaseURL: "https://overriden.com"}, "")
+	res, err := c.DoPostRequest(context.Background(), "path", nil, &HTTPRequest{Request: req, BaseURL: "https://overriden.com"}, "")
 	require.NoError(t, err)
 	assert.EqualValues(t, http.StatusOK, res.Res.StatusCode)
 }
@@ -147,7 +148,7 @@ func TestPostCustomBaseURL(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK}, nil
 	})})
 
-	res, err := c.DoPostRequest("path", nil, &HTTPRequest{BaseURL: url}, "")
+	res, err := c.DoPostRequest(context.Background(), "path", nil, &HTTPRequest{BaseURL: url}, "")
 	require.NoError(t, err)
 	assert.EqualValues(t, http.StatusOK, res.Res.StatusCode)
 }
@@ -159,7 +160,7 @@ func TestPostUnauthorized(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusUnauthorized}, nil
 	})})
 
-	_, err := c.DoPostRequest("path", nil, nil, "")
+	_, err := c.DoPostRequest(context.Background(), "path", nil, nil, "")
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidResponse)
 	assert.True(t, descope.IsUnauthorizedError(err))
@@ -170,7 +171,7 @@ func TestPostRateLimitExceeded(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusTooManyRequests, Body: io.NopCloser(strings.NewReader(`{"errorCode":"E130429"}`))}, nil
 	})})
 
-	_, err := c.DoPostRequest("path", nil, nil, "")
+	_, err := c.DoPostRequest(context.Background(), "path", nil, nil, "")
 	require.ErrorIs(t, err, descope.ErrRateLimitExceeded)
 	require.Nil(t, err.(*descope.Error).Info[descope.ErrorInfoKeys.RateLimitExceededRetryAfter])
 
@@ -178,7 +179,7 @@ func TestPostRateLimitExceeded(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusTooManyRequests, Header: http.Header{"Retry-After": []string{"10"}}, Body: io.NopCloser(strings.NewReader(`{"errorCode":"E130429"}`))}, nil
 	})})
 
-	_, err = c.DoPostRequest("path", nil, nil, "")
+	_, err = c.DoPostRequest(context.Background(), "path", nil, nil, "")
 	require.ErrorIs(t, err, descope.ErrRateLimitExceeded)
 	require.Equal(t, 10, err.(*descope.Error).Info[descope.ErrorInfoKeys.RateLimitExceededRetryAfter])
 }
@@ -191,7 +192,7 @@ func TestPostDescopeError(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusBadRequest, Body: io.NopCloser(strings.NewReader(fmt.Sprintf(`{ "errorCode": "%s" }`, code)))}, nil
 	})})
 
-	_, err := c.DoPostRequest("path", nil, nil, "")
+	_, err := c.DoPostRequest(context.Background(), "path", nil, nil, "")
 	require.Error(t, err)
 	assert.EqualValues(t, code, err.(*descope.Error).Code)
 }
@@ -204,7 +205,7 @@ func TestPostError(t *testing.T) {
 		return nil, fmt.Errorf(expectedErr)
 	})})
 
-	_, err := c.DoPostRequest("path", nil, nil, "")
+	_, err := c.DoPostRequest(context.Background(), "path", nil, nil, "")
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), expectedErr)
 }
@@ -217,7 +218,7 @@ func TestPostUnknownError(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusBadRequest, Body: io.NopCloser(strings.NewReader(code))}, nil
 	})})
 
-	_, err := c.DoPostRequest("path", nil, nil, "")
+	_, err := c.DoPostRequest(context.Background(), "path", nil, nil, "")
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidResponse)
 }
@@ -229,7 +230,7 @@ func TestPostNotFoundError(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusNotFound, Request: r}, nil
 	})})
 
-	_, err := c.DoPostRequest("path", nil, nil, "")
+	_, err := c.DoPostRequest(context.Background(), "path", nil, nil, "")
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidResponse)
 	assert.True(t, descope.IsNotFoundError(err))
@@ -242,11 +243,22 @@ func TestDoRequestDefault(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK}, nil
 	})})
 
-	_, err := c.DoRequest(http.MethodGet, "path", nil, nil, "")
+	_, err := c.DoRequest(context.Background(), http.MethodGet, "path", nil, nil, "")
 	require.NoError(t, err)
 }
 
 func TestRoutesSignInOTP(t *testing.T) {
 	r := Routes.SignInOTP()
 	assert.EqualValues(t, "/v1/auth/otp/signin", r)
+}
+
+func TestSkipVerifyValue(t *testing.T) {
+	require.True(t, CertificateVerifyNever.SkipVerifyValue("foo"))
+	require.False(t, CertificateVerifyAlways.SkipVerifyValue("foo"))
+	require.False(t, CertificateVerifyAutomatic.SkipVerifyValue(defaultURL))
+	require.False(t, CertificateVerifyAutomatic.SkipVerifyValue(defaultURL+"/v1/auth"))
+	require.False(t, CertificateVerifyAutomatic.SkipVerifyValue(" http"))
+	require.True(t, CertificateVerifyAutomatic.SkipVerifyValue("https://localhost"))
+	require.True(t, CertificateVerifyAutomatic.SkipVerifyValue("https://127.0.0.1"))
+	require.True(t, CertificateVerifyAutomatic.SkipVerifyValue("https://example.com:8443"))
 }

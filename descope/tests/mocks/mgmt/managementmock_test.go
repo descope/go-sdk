@@ -1,6 +1,7 @@
 package mocksmgmt
 
 import (
+	"context"
 	"testing"
 
 	"github.com/descope/go-sdk/descope"
@@ -23,15 +24,30 @@ func TestMockManagement(t *testing.T) {
 				CreateResponse: &descope.UserResponse{UserID: expectedLoginID},
 				LoadResponse:   &descope.UserResponse{UserID: expectedLoginID},
 			},
+			MockProject: &MockProject{},
 		},
 	}
+	ctx := context.Background()
 	assert.NotNil(t, descopeClient.Management)
-	r, err := descopeClient.Management.User().Create(expectedLoginID, &descope.UserRequest{})
+	r, err := descopeClient.Management.User().Create(ctx, expectedLoginID, &descope.UserRequest{})
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedLoginID, r.UserID)
 	assert.True(t, called)
 
-	u, err := descopeClient.Management.User().Load(expectedLoginID)
+	u, err := descopeClient.Management.User().Load(ctx, expectedLoginID)
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedLoginID, u.UserID)
+
+	err = descopeClient.Management.Project().Delete(ctx)
+	require.NoError(t, err)
+
+	descopeProjectDeleteError := client.DescopeClient{
+		Management: &MockManagement{
+			MockProject: &MockProject{
+				DeleteError: assert.AnError,
+			},
+		},
+	}
+	err = descopeProjectDeleteError.Management.Project().Delete(ctx)
+	require.Error(t, err)
 }

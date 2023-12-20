@@ -1,6 +1,7 @@
 package mgmt
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -16,13 +17,13 @@ func TestPermissionCreateSuccess(t *testing.T) {
 		require.Equal(t, "abc", req["name"])
 		require.Equal(t, "description", req["description"])
 	}))
-	err := mgmt.Permission().Create("abc", "description")
+	err := mgmt.Permission().Create(context.Background(), "abc", "description")
 	require.NoError(t, err)
 }
 
 func TestPermissionCreateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.Permission().Create("", "description")
+	err := mgmt.Permission().Create(context.Background(), "", "description")
 	require.Error(t, err)
 }
 
@@ -35,15 +36,15 @@ func TestPermissionUpdateSuccess(t *testing.T) {
 		require.Equal(t, "def", req["newName"])
 		require.Equal(t, "description", req["description"])
 	}))
-	err := mgmt.Permission().Update("abc", "def", "description")
+	err := mgmt.Permission().Update(context.Background(), "abc", "def", "description")
 	require.NoError(t, err)
 }
 
 func TestPermissionUpdateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.Permission().Update("", "def", "description")
+	err := mgmt.Permission().Update(context.Background(), "", "def", "description")
 	require.Error(t, err)
-	err = mgmt.Permission().Update("abc", "", "description")
+	err = mgmt.Permission().Update(context.Background(), "abc", "", "description")
 	require.Error(t, err)
 }
 
@@ -54,13 +55,13 @@ func TestPermissionDeleteSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["name"])
 	}))
-	err := mgmt.Permission().Delete("abc")
+	err := mgmt.Permission().Delete(context.Background(), "abc")
 	require.NoError(t, err)
 }
 
 func TestPermissionDeleteError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.Permission().Delete("")
+	err := mgmt.Permission().Delete(context.Background(), "")
 	require.Error(t, err)
 }
 
@@ -72,7 +73,7 @@ func TestPermissionLoadSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 	}, response))
-	res, err := mgmt.Permission().LoadAll()
+	res, err := mgmt.Permission().LoadAll(context.Background())
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res, 1)
@@ -81,7 +82,7 @@ func TestPermissionLoadSuccess(t *testing.T) {
 
 func TestPermissionLoadError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := mgmt.Permission().LoadAll()
+	res, err := mgmt.Permission().LoadAll(context.Background())
 	require.Error(t, err)
 	require.Nil(t, res)
 }

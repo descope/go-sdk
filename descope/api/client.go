@@ -2,9 +2,11 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	urlpkg "net/url"
 	"path"
@@ -97,10 +99,12 @@ var (
 			userUpdateCustomAttribute:        "mgmt/user/update/customAttribute",
 			userAddTenant:                    "mgmt/user/update/tenant/add",
 			userRemoveTenant:                 "mgmt/user/update/tenant/remove",
+			userSetRole:                      "mgmt/user/update/role/set",
 			userAddRole:                      "mgmt/user/update/role/add",
 			userRemoveRole:                   "mgmt/user/update/role/remove",
 			userSetPassword:                  "mgmt/user/password/set",
 			userExpirePassword:               "mgmt/user/password/expire",
+			userRemoveAllPasskeys:            "mgmt/user/passkeys/delete",
 			userGetProviderToken:             "mgmt/user/provider/token",
 			userLogoutAllDevices:             "mgmt/user/logout",
 			userGenerateOTPForTest:           "mgmt/tests/generate/otp",
@@ -142,6 +146,7 @@ var (
 			projectImport:                    "mgmt/project/import",
 			projectUpdateName:                "mgmt/project/update/name",
 			projectClone:                     "mgmt/project/clone",
+			projectDelete:                    "mgmt/project/delete",
 			auditSearch:                      "mgmt/audit/search",
 			authzSchemaSave:                  "mgmt/authz/schema/save",
 			authzSchemaDelete:                "mgmt/authz/schema/delete",
@@ -251,9 +256,11 @@ type mgmtEndpoints struct {
 	userAddTenant             string
 	userRemoveTenant          string
 	userAddRole               string
+	userSetRole               string
 	userRemoveRole            string
 	userSetPassword           string
 	userExpirePassword        string
+	userRemoveAllPasskeys     string
 	userGetProviderToken      string
 	userLogoutAllDevices      string
 
@@ -305,6 +312,7 @@ type mgmtEndpoints struct {
 	projectImport     string
 	projectUpdateName string
 	projectClone      string
+	projectDelete     string
 
 	auditSearch string
 
@@ -570,6 +578,10 @@ func (e *endpoints) ManagementUserRemoveTenant() string {
 	return path.Join(e.version, e.mgmt.userRemoveTenant)
 }
 
+func (e *endpoints) ManagementUserSetRole() string {
+	return path.Join(e.version, e.mgmt.userSetRole)
+}
+
 func (e *endpoints) ManagementUserAddRole() string {
 	return path.Join(e.version, e.mgmt.userAddRole)
 }
@@ -584,6 +596,10 @@ func (e *endpoints) ManagementUserSetPassword() string {
 
 func (e *endpoints) ManagementUserExpirePassword() string {
 	return path.Join(e.version, e.mgmt.userExpirePassword)
+}
+
+func (e *endpoints) ManagementUserRemoveAllPasskeys() string {
+	return path.Join(e.version, e.mgmt.userRemoveAllPasskeys)
 }
 
 func (e *endpoints) ManagementUserGetProviderToken() string {
@@ -751,6 +767,10 @@ func (e *endpoints) ManagementProjectClone() string {
 	return path.Join(e.version, e.mgmt.projectClone)
 }
 
+func (e *endpoints) ManagementProjectDelete() string {
+	return path.Join(e.version, e.mgmt.projectDelete)
+}
+
 func (e *endpoints) ManagementAuditSearch() string {
 	return path.Join(e.version, e.mgmt.auditSearch)
 }
@@ -822,12 +842,27 @@ type sdkInfo struct {
 	sha       string
 }
 
+type CertificateVerifyMode int
+
+const (
+	// Default: Always verify server certificate, unless the BaseURL is overridden to a value
+	// that uses an ip address, localhost, or a custom port
+	CertificateVerifyAutomatic CertificateVerifyMode = iota
+
+	// Secure: Always verify server certificate, this is only needed if you override
+	// the default BaseURL and the automatic behavior isn't suitable
+	CertificateVerifyAlways
+
+	// Insecure: Never verify server certificate
+	CertificateVerifyNever
+)
+
 type ClientParams struct {
+	ProjectID            string
 	BaseURL              string
 	DefaultClient        IHttpClient
 	CustomDefaultHeaders map[string]string
-
-	ProjectID string
+	CertificateVerify    CertificateVerifyMode
 }
 
 type IHttpClient interface {
@@ -862,7 +897,7 @@ func NewClient(conf ClientParams) *Client {
 		t.MaxIdleConns = 100
 		t.MaxConnsPerHost = 100
 		t.MaxIdleConnsPerHost = 100
-		t.TLSClientConfig.InsecureSkipVerify = true
+		t.TLSClientConfig.InsecureSkipVerify = conf.CertificateVerify.SkipVerifyValue(conf.BaseURL)
 		httpClient = &http.Client{
 			Timeout:   time.Second * 10,
 			Transport: t,
@@ -890,15 +925,15 @@ func NewClient(conf ClientParams) *Client {
 	}
 }
 
-func (c *Client) DoGetRequest(uri string, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
-	return c.DoRequest(http.MethodGet, uri, nil, options, pswd)
+func (c *Client) DoGetRequest(ctx context.Context, uri string, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
+	return c.DoRequest(ctx, http.MethodGet, uri, nil, options, pswd)
 }
 
-func (c *Client) DoDeleteRequest(uri string, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
-	return c.DoRequest(http.MethodDelete, uri, nil, options, pswd)
+func (c *Client) DoDeleteRequest(ctx context.Context, uri string, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
+	return c.DoRequest(ctx, http.MethodDelete, uri, nil, options, pswd)
 }
 
-func (c *Client) DoPostRequest(uri string, body interface{}, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
+func (c *Client) DoPostRequest(ctx context.Context, uri string, body interface{}, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
 	if options == nil {
 		options = &HTTPRequest{}
 	}
@@ -923,10 +958,10 @@ func (c *Client) DoPostRequest(uri string, body interface{}, options *HTTPReques
 		}
 	}
 
-	return c.DoRequest(http.MethodPost, uri, payload, options, pswd)
+	return c.DoRequest(ctx, http.MethodPost, uri, payload, options, pswd)
 }
 
-func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
+func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.Reader, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
 	if options == nil {
 		options = &HTTPRequest{}
 	}
@@ -981,6 +1016,10 @@ func (c *Client) DoRequest(method, uriPath string, body io.Reader, options *HTTP
 	c.addDescopeHeaders(req)
 
 	logger.LogDebug("Sending request to [%s]", url)
+
+	if ctx != nil {
+		req = req.WithContext(ctx)
+	}
 	response, err := c.httpClient.Do(req)
 	if err != nil {
 		logger.LogError("Failed sending request to [%s]", err, url)
@@ -1078,4 +1117,22 @@ func getSDKInfo() *sdkInfo {
 		}
 	}
 	return sdkInfo
+}
+
+func (mode CertificateVerifyMode) SkipVerifyValue(baseURL string) bool {
+	if mode == CertificateVerifyAlways {
+		return false
+	}
+	if mode == CertificateVerifyNever {
+		return true
+	}
+	if url, err := urlpkg.Parse(baseURL); err == nil {
+		if url.Hostname() == "localhost" || url.Port() != "" {
+			return true
+		}
+		if ip := net.ParseIP(url.Hostname()); ip != nil {
+			return true
+		}
+	}
+	return false
 }

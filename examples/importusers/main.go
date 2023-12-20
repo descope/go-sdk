@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -78,7 +79,7 @@ func main() {
 
 		userReq := &descope.UserRequest{}
 		userReq.Email, userReq.Phone, userReq.Name, userReq.Roles, userReq.Tenants = user.Email, user.Phone, user.DisplayName, user.Roles, tenants
-		res, err := descopeClient.Management.User().Create(user.LoginID, userReq)
+		res, err := descopeClient.Management.User().Create(context.Background(), user.LoginID, userReq)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Error adding user:", err)
 		} else {

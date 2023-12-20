@@ -1,6 +1,7 @@
 package mocksauth
 
 import (
+	"context"
 	"net/http"
 	"testing"
 
@@ -26,7 +27,7 @@ func TestMockAuthentication(t *testing.T) {
 		},
 	}
 	assert.NotNil(t, descopeClient.Auth)
-	startResponse, err := descopeClient.Auth.OAuth().Start(descope.OAuthApple, "", nil, nil, nil)
+	startResponse, err := descopeClient.Auth.OAuth().Start(context.Background(), descope.OAuthApple, "", nil, nil, nil)
 	require.NoError(t, err)
 	assert.True(t, called)
 	assert.EqualValues(t, startResponse, expectedStartResponse)
