@@ -236,7 +236,7 @@ func TestLoadSettingsSuccess(t *testing.T) {
 			"authUrl":     "http://dummy.com",
 			"tokenUrl":    "http://dummy.com",
 			"userDataUrl": "http://dummy.com",
-			"attributeMapping": map[string]any{
+			"userAttrMapping": map[string]any{
 				"givenName": "myGivenName",
 			},
 		},
@@ -465,7 +465,7 @@ func TestSSOConfigureOIDCSettingsSuccess(t *testing.T) {
 		require.Equal(t, "http://dummy.com", sett["tokenUrl"])
 		require.Equal(t, "http://dummy.com", sett["userDataUrl"])
 
-		userAttrMappingInt, found := sett["attributeMapping"]
+		userAttrMappingInt, found := sett["userAttrMapping"]
 		require.True(t, found)
 		userAttrMapping, ok := userAttrMappingInt.(map[string]any)
 		require.Equal(t, "myGivenName", userAttrMapping["givenName"])
