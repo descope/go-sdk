@@ -113,7 +113,7 @@ type SSOOIDCSettings struct {
 	Name                 string                `json:"name,omitempty"`
 	ClientID             string                `json:"clientId,omitempty"`
 	ClientSecret         string                `json:"clientSecret,omitempty"` // will be empty on response
-	RedirectUrl          string                `json:"redirectUrl,omitempty"`
+	RedirectURL          string                `json:"redirectUrl,omitempty"`
 	AuthURL              string                `json:"authUrl,omitempty"`
 	TokenURL             string                `json:"tokenUrl,omitempty"`
 	UserDataURL          string                `json:"userDataUrl,omitempty"`

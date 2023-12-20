@@ -262,7 +262,7 @@ if err != nil {
 
 
 ```go
-// Deprecated
+//* Deprecated *//
 //
 // Choose which tenant to log into
 // If configured globally, the return URL is optional. If provided however, it will be used
@@ -286,7 +286,7 @@ if err != nil {
 ```
 
 ```go
-// Deprecated
+//* Deprecated *//
 //
 // The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
 // Otherwise they're available via authInfo
@@ -783,7 +783,7 @@ You can manage SSO SAML or OIDC settings for a specific tenant.
 
 // Load all tenant SSO settings
 ssoSettings, err := cc.HC.DescopeClient().Management.SSO().LoadSettings(context.Background(), "tenant-id")
-// Deprecated
+//* Deprecated *//
 ssoSettings, err := descopeClient.Management.SSO().GetSettings(context.Background(), "tenant-id")
 
 // Configure tenant SSO by OIDC settings
@@ -815,7 +815,7 @@ samlSettings := &descope.SSOSAMLSettings{
 }
 err = cc.HC.DescopeClient().Management.SSO().ConfigureSAMLSettings(context.Background(), tenantID, samlSettings, redirectURL, domain)
 
-// Deprecated
+//* Deprecated *//
 err := descopeClient.Management.SSO().ConfigureSettings(context.Background(), tenantID, idpURL, entityID, idpCert, redirectURL, domain)
 
 // Alternatively, configure using an SSO SAML metadata URL
@@ -826,7 +826,7 @@ samlSettings := &descope.SSOSAMLSettingsByMetadata{
 }
 err = cc.HC.DescopeClient().Management.SSO().ConfigureSAMLSettingsByMetadata(context.Background(), tenantID, samlSettings, redirectURL, domain)
 
-// Deprecated
+//* Deprecated *//
 err := descopeClient.Management.SSO().ConfigureMetadata(tenantID, "https://idp.com/my-idp-metadata", redirectURL, domain)
 
 // Map IDP groups to Descope roles, or map user attributes.

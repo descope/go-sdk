@@ -421,14 +421,14 @@ type MockSSO struct {
 	ExchangeTokenResponse *descope.AuthenticationInfo
 }
 
-func (m *MockSSO) Start(tenant string, returnURL string, prompt string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (redirectURL string, err error) {
+func (m *MockSSO) Start(_ context.Context, tenant string, returnURL string, prompt string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (redirectURL string, err error) {
 	if m.StartAssert != nil {
 		m.StartAssert(tenant, returnURL, prompt, r, loginOptions, w)
 	}
 	return m.StartResponse, m.StartError
 }
 
-func (m *MockSSO) ExchangeToken(code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (m *MockSSO) ExchangeToken(_ context.Context, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.ExchangeTokenAssert != nil {
 		m.ExchangeTokenAssert(code, w)
 	}

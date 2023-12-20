@@ -376,13 +376,13 @@ type SSO interface {
 
 	// *** Deprecated ***
 
-	// Deprecated (use LoadSettings() instead)
+	//* Deprecated (use LoadSettings() instead) *//
 	// Get SAML SSO setting for a tenant.
 	//
 	// tenantID is required.
 	GetSettings(_ context.Context, tenantID string) (*descope.SSOSettingsResponse, error)
 
-	// Deprecated (use ConfigureSAMLSettings() instead)
+	//* Deprecated (use ConfigureSAMLSettings() instead) *//
 	// Configure SSO settings for a tenant manually.
 	//
 	// tenantID, idpURL, idpCert, entityID, are required. The idpURL is the URL for the identity provider and idpCert
@@ -394,7 +394,7 @@ type SSO interface {
 	// Both optional values will override whatever is currently set even if left empty.
 	ConfigureSettings(ctx context.Context, tenantID, idpURL, idpCert, entityID, redirectURL, domain string) error
 
-	// Deprecated (use ConfigureSAMLSettingsByMetadata() instead)
+	//* Deprecated (use ConfigureSAMLSettingsByMetadata() instead) *//
 	// Configure SSO settings for a tenant by fetching them from an IDP metadata URL.
 	//
 	// redirectURL is optional, however if not given it has to be set when starting an SSO authentication via the request.
@@ -403,7 +403,7 @@ type SSO interface {
 	// Both optional values will override whatever is currently set even if left empty.
 	ConfigureMetadata(ctx context.Context, tenantID, idpMetadataURL, redirectURL, domain string) error
 
-	// Deprecated (use ConfigureSAMLSettings() or ConfigureSAMLSettingsByMetadata() instead)
+	//* Deprecated (use ConfigureSAMLSettings() or ConfigureSAMLSettingsByMetadata() instead) *//
 	// Configure SSO IDP mapping including groups to the Descope roles and user attributes.
 	ConfigureMapping(ctx context.Context, tenantID string, roleMappings []*descope.RoleMapping, attributeMapping *descope.AttributeMapping) error
 }
