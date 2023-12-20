@@ -335,18 +335,18 @@ type SSO interface {
 	// is the certificated provided by the identity provider.
 	//
 	// redirectURL is optional, however if not given it has to be set when starting an SSO authentication via the request.
-	// domain is optional, it is used to map users to this tenant when authenticating via SSO.
+	// domains is optional, it is used to map users to this tenant when authenticating via SSO.
 	//
 	// Both optional values will override whatever is currently set even if left empty.
-	ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL, domain string) error
+	ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL string, domains []string) error
 
 	// Configure SSO settings for a tenant by fetching them from an IDP metadata URL.
 	//
 	// redirectURL is optional, however if not given it has to be set when starting an SSO authentication via the request.
-	// domain is optional, it is used to map users to this tenant when authenticating via SSO.
+	// domains is optional, it is used to map users to this tenant when authenticating via SSO.
 	//
 	// Both optional values will override whatever is currently set even if left empty.
-	ConfigureMetadata(tenantID, idpMetadataURL, redirectURL, domain string) error
+	ConfigureMetadata(tenantID, idpMetadataURL, redirectURL string, domains []string) error
 
 	// Configure SSO IDP mapping including groups to the Descope roles and user attributes.
 	ConfigureMapping(tenantID string, roleMappings []*descope.RoleMapping, attributeMapping *descope.AttributeMapping) error

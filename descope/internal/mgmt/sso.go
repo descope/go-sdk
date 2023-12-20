@@ -38,7 +38,7 @@ func (s *sso) DeleteSettings(tenantID string) error {
 	return nil
 }
 
-func (s *sso) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL, domain string) error {
+func (s *sso) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL string, domains []string) error {
 	if tenantID == "" {
 		return utils.NewInvalidArgumentError("tenantID")
 	}
@@ -57,13 +57,13 @@ func (s *sso) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL
 		"idpCert":     idpCert,
 		"entityId":    entityID,
 		"redirectURL": redirectURL,
-		"domain":      domain,
+		"domains":     domains,
 	}
 	_, err := s.client.DoPostRequest(api.Routes.ManagementSSOSettings(), req, nil, s.conf.ManagementKey)
 	return err
 }
 
-func (s *sso) ConfigureMetadata(tenantID, idpMetadataURL, redirectURL, domain string) error {
+func (s *sso) ConfigureMetadata(tenantID, idpMetadataURL, redirectURL string, domains []string) error {
 	if tenantID == "" {
 		return utils.NewInvalidArgumentError("tenantID")
 	}
@@ -74,7 +74,7 @@ func (s *sso) ConfigureMetadata(tenantID, idpMetadataURL, redirectURL, domain st
 		"tenantId":       tenantID,
 		"idpMetadataURL": idpMetadataURL,
 		"redirectURL":    redirectURL,
-		"domain":         domain,
+		"domains":        domains,
 	}
 	_, err := s.client.DoPostRequest(api.Routes.ManagementSSOMetadata(), req, nil, s.conf.ManagementKey)
 	return err

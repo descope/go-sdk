@@ -93,10 +93,10 @@ type MockSSO struct {
 	DeleteSettingsAssert func(tenantID string)
 	DeleteSettingsError  error
 
-	ConfigureSettingsAssert func(tenantID, idpURL, idpCert, entityID, redirectURL, domain string)
+	ConfigureSettingsAssert func(tenantID, idpURL, idpCert, entityID, redirectURL string, domains []string)
 	ConfigureSettingsError  error
 
-	ConfigureMetadataAssert func(tenantID, idpMetadataURL, redirectURL, domain string)
+	ConfigureMetadataAssert func(tenantID, idpMetadataURL, redirectURL string, domains []string)
 	ConfigureMetadataError  error
 
 	ConfigureMappingAssert func(tenantID string, roleMappings []*descope.RoleMapping, attributeMapping *descope.AttributeMapping)
@@ -117,16 +117,16 @@ func (m *MockSSO) DeleteSettings(tenantID string) error {
 	return m.DeleteSettingsError
 }
 
-func (m *MockSSO) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL, domain string) error {
+func (m *MockSSO) ConfigureSettings(tenantID, idpURL, idpCert, entityID, redirectURL string, domains []string) error {
 	if m.ConfigureSettingsAssert != nil {
-		m.ConfigureSettingsAssert(tenantID, idpURL, idpCert, entityID, redirectURL, domain)
+		m.ConfigureSettingsAssert(tenantID, idpURL, idpCert, entityID, redirectURL, domains)
 	}
 	return m.ConfigureSettingsError
 }
 
-func (m *MockSSO) ConfigureMetadata(tenantID, idpMetadataURL, redirectURL, domain string) error {
+func (m *MockSSO) ConfigureMetadata(tenantID, idpMetadataURL, redirectURL string, domains []string) error {
 	if m.ConfigureMetadataAssert != nil {
-		m.ConfigureMetadataAssert(tenantID, idpMetadataURL, redirectURL, domain)
+		m.ConfigureMetadataAssert(tenantID, idpMetadataURL, redirectURL, domains)
 	}
 	return m.ConfigureMetadataError
 }
