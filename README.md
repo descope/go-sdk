@@ -578,13 +578,21 @@ You can create, update, delete or load tenants:
 ```go
 // The self provisioning domains or optional. If given they'll be used to associate
 // Users logging in to this tenant
-err := descopeClient.Management.Tenant().Create(context.Background(), "My Tenant", []string{"domain.com"})
+
+// Creating and updating tenants takes the &descope.TenantRequest type. This is an example of a &descope.TenantRequest
+tenantRequest := &descope.TenantRequest{}
+tenantRequest.Name = []string{"My Tenant"}
+tenantRequest.SelfProvisioningDomains = []string{"domain.com"}
+tenantRequest.CustomAttributes = map[string]any{"mycustomattribute": "Test"}
+
+// Create tenant
+err := descopeClient.Management.Tenant().Create(context.Background(), "My Tenant", tenantRequest)
 
 // You can optionally set your own ID when creating a tenant
-err := descopeClient.Management.Tenant().CreateWithID(context.Background(), "my-custom-id", "My Tenant", []string{"domain.com"})
+err := descopeClient.Management.Tenant().CreateWithID(context.Background(), "my-custom-id", "My Tenant", tenantRequest)
 
 // Update will override all fields as is. Use carefully.
-err := descopeClient.Management.Tenant().Update(context.Background(), "my-custom-id", "My Tenant", []string{"domain.com", "another-domain.com"})
+err := descopeClient.Management.Tenant().Update(context.Background(), "my-custom-id", "My Tenant", tenantRequest)
 
 // Tenant deletion cannot be undone. Use carefully.
 err := descopeClient.Management.Tenant().Delete(context.Background(), "my-custom-id")
@@ -596,6 +604,19 @@ tenant, err := descopeClient.Management.Tenant().Load(context.Background(), "my-
 res, err := descopeClient.Management.Tenant().LoadAll(context.Background())
 if err == nil {
     for _, tenant := range res {
+        // Do something
+    }
+}
+
+// Search tenants - takes the &descope.TenantSearchOptions type. This is an example of a &descope.TenantSearchOptions
+searchOptions := &descope.TenantSearchOptions{}
+searchOptions.IDs = []string{"my-custom-id"}
+searchOptions.Names = []string{"My Tenant"}
+searchOptions.SelfProvisioningDomains = []string{"domain.com", "company.com"}
+searchOptions.CustomAttributes = map[string]any{"mycustomattribute": "Test"}
+res, err := descopeClient.Management.Tenant().SearchAll(context.Background(), searchOptions)
+if err == nil {
+  for _, tenant := range res {
         // Do something
     }
 }
