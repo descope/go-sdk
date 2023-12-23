@@ -40,6 +40,7 @@ func TestGetSSOSettingsSuccess(t *testing.T) {
 			},
 		},
 		"redirectURL": "redirectURL",
+		"domain":      "lulu",
 		"domains":     []string{"lulu", "kuku"},
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -68,6 +69,7 @@ func TestGetSSOSettingsSuccess(t *testing.T) {
 	assert.EqualValues(t, "role.name", res.GroupsMapping[0].Role.Name)
 	assert.EqualValues(t, "redirectURL", res.RedirectURL)
 	assert.EqualValues(t, []string{"lulu", "kuku"}, res.Domains)
+	assert.EqualValues(t, "lulu", res.Domain)
 }
 
 func TestDeleteSSOSettingsSuccess(t *testing.T) {
