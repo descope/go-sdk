@@ -200,7 +200,7 @@ type SAML interface {
 	ExchangeToken(ctx context.Context, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error)
 }
 
-type SSOSP interface {
+type SSOServiceProvider interface {
 	// Start will initiate a login flow based on tenant configuration (saml/oidc)
 	// return will be the redirect URL that needs to return to client
 	// and finalize with the ExchangeToken call
@@ -264,7 +264,7 @@ type Authentication interface {
 	Password() Password
 	OAuth() OAuth
 	SAML() SAML
-	SSO() SSOSP
+	SSO() SSOServiceProvider
 	WebAuthn() WebAuthn
 
 	// ValidateSessionWithRequest - Use to validate a session of a given request.

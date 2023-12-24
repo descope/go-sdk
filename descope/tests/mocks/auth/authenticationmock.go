@@ -49,7 +49,7 @@ func (m *MockAuthentication) SAML() sdk.SAML {
 	return m.MockSAML
 }
 
-func (m *MockAuthentication) SSO() sdk.SSOSP {
+func (m *MockAuthentication) SSO() sdk.SSOServiceProvider {
 	return m.MockSSO
 }
 

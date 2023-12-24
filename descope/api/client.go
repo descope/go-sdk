@@ -277,7 +277,7 @@ type mgmtEndpoints struct {
 	accessKeyActivate   string
 	accessKeyDelete     string
 
-	//* Deprecated  *//
+	//* Deprecated (use the below value instead) *//
 	ssoSettings string
 	ssoMetadata string
 	ssoMapping  string
@@ -411,12 +411,12 @@ func (e *endpoints) ExchangeTokenOAuth() string {
 	return path.Join(e.version, e.auth.exchangeTokenOAuth)
 }
 
-/* Deprecated */
+/* Deprecated (use SSOStart(..) instead) */
 func (e *endpoints) SAMLStart() string {
 	return path.Join(e.version, e.auth.samlStart)
 }
 
-/* Deprecated */
+/* Deprecated (use ExchangeTokenSSO(..) instead) */
 func (e *endpoints) ExchangeTokenSAML() string {
 	return path.Join(e.version, e.auth.exchangeTokenSAML)
 }

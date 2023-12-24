@@ -39,9 +39,11 @@ func (s *sso) ConfigureSAMLSettings(ctx context.Context, tenantID string, settin
 	if settings.IdpURL == "" {
 		return utils.NewInvalidArgumentError("idpURL")
 	}
+
 	if settings.IdpCert == "" {
 		return utils.NewInvalidArgumentError("idpCert")
 	}
+
 	if settings.IdpEntityID == "" {
 		return utils.NewInvalidArgumentError("idpEntityID")
 	}

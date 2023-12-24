@@ -44,7 +44,7 @@ type authenticationService struct {
 	webAuthn      sdk.WebAuthn
 	oauth         sdk.OAuth
 	saml          sdk.SAML
-	sso           sdk.SSOSP
+	sso           sdk.SSOServiceProvider
 }
 
 func NewAuth(conf AuthParams, c *api.Client) (*authenticationService, error) {
@@ -91,7 +91,7 @@ func (auth *authenticationService) SAML() sdk.SAML {
 	return auth.saml
 }
 
-func (auth *authenticationService) SSO() sdk.SSOSP {
+func (auth *authenticationService) SSO() sdk.SSOServiceProvider {
 	return auth.sso
 }
 
