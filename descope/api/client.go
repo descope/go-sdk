@@ -1085,7 +1085,7 @@ func (mode CertificateVerifyMode) SkipVerifyValue(baseURL string) bool {
 		return true
 	}
 	if url, err := urlpkg.Parse(baseURL); err == nil {
-		if url.Hostname() == "localhost" || url.Port() != "" {
+		if !strings.Contains(url.Hostname(), ".") || url.Port() != "" {
 			return true
 		}
 		if ip := net.ParseIP(url.Hostname()); ip != nil {

@@ -255,10 +255,14 @@ func TestRoutesSignInOTP(t *testing.T) {
 func TestSkipVerifyValue(t *testing.T) {
 	require.True(t, CertificateVerifyNever.SkipVerifyValue("foo"))
 	require.False(t, CertificateVerifyAlways.SkipVerifyValue("foo"))
+	require.False(t, CertificateVerifyAutomatic.SkipVerifyValue("https://.com"))
+	require.False(t, CertificateVerifyAutomatic.SkipVerifyValue("https://example.com"))
+	require.False(t, CertificateVerifyAutomatic.SkipVerifyValue("http://example.com"))
 	require.False(t, CertificateVerifyAutomatic.SkipVerifyValue(defaultURL))
 	require.False(t, CertificateVerifyAutomatic.SkipVerifyValue(defaultURL+"/v1/auth"))
-	require.False(t, CertificateVerifyAutomatic.SkipVerifyValue(" http"))
+	require.False(t, CertificateVerifyAutomatic.SkipVerifyValue(" http://example.com"))
 	require.True(t, CertificateVerifyAutomatic.SkipVerifyValue("https://localhost"))
+	require.True(t, CertificateVerifyAutomatic.SkipVerifyValue("https://apache/foo"))
 	require.True(t, CertificateVerifyAutomatic.SkipVerifyValue("https://127.0.0.1"))
 	require.True(t, CertificateVerifyAutomatic.SkipVerifyValue("https://example.com:8443"))
 }
