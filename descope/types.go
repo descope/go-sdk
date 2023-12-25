@@ -591,6 +591,7 @@ const (
 	MethodWhatsApp DeliveryMethod = "whatsapp"
 	MethodSMS      DeliveryMethod = "sms"
 	MethodEmail    DeliveryMethod = "email"
+	MethodEmbedded DeliveryMethod = "Embedded"
 
 	OAuthFacebook  OAuthProvider = "facebook"
 	OAuthGithub    OAuthProvider = "github"
