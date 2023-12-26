@@ -65,7 +65,9 @@ type SSOSettingsResponse struct {
 	UserMapping    *UserMapping     `json:"userMapping,omitempty"`
 	GroupsMapping  []*GroupsMapping `json:"groupsMapping,omitempty"`
 	RedirectURL    string           `json:"redirectUrl,omitempty"`
-	Domain         string           `json:"domain,omitempty"`
+	Domains        []string         `json:"domains,omitempty"`
+	// Deprecated - prefer using domains
+	Domain string `json:"domain,omitempty"`
 }
 
 // PasswordPolicy - represents the rules for valid passwords configured in the policy

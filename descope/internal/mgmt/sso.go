@@ -40,7 +40,7 @@ func (s *sso) DeleteSettings(ctx context.Context, tenantID string) error {
 	return nil
 }
 
-func (s *sso) ConfigureSettings(ctx context.Context, tenantID, idpURL, idpCert, entityID, redirectURL, domain string) error {
+func (s *sso) ConfigureSettings(ctx context.Context, tenantID, idpURL, idpCert, entityID, redirectURL string, domains []string) error {
 	if tenantID == "" {
 		return utils.NewInvalidArgumentError("tenantID")
 	}
@@ -59,13 +59,13 @@ func (s *sso) ConfigureSettings(ctx context.Context, tenantID, idpURL, idpCert, 
 		"idpCert":     idpCert,
 		"entityId":    entityID,
 		"redirectURL": redirectURL,
-		"domain":      domain,
+		"domains":     domains,
 	}
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSettings(), req, nil, s.conf.ManagementKey)
 	return err
 }
 
-func (s *sso) ConfigureMetadata(ctx context.Context, tenantID, idpMetadataURL, redirectURL, domain string) error {
+func (s *sso) ConfigureMetadata(ctx context.Context, tenantID, idpMetadataURL, redirectURL string, domains []string) error {
 	if tenantID == "" {
 		return utils.NewInvalidArgumentError("tenantID")
 	}
@@ -76,7 +76,7 @@ func (s *sso) ConfigureMetadata(ctx context.Context, tenantID, idpMetadataURL, r
 		"tenantId":       tenantID,
 		"idpMetadataURL": idpMetadataURL,
 		"redirectURL":    redirectURL,
-		"domain":         domain,
+		"domains":        domains,
 	}
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOMetadata(), req, nil, s.conf.ManagementKey)
 	return err
