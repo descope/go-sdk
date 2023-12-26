@@ -346,30 +346,30 @@ type SSO interface {
 	// tenantID, settings are required (all settings parameters are required).
 	//
 	// redirectURL is optional, however if not given it has to be set when starting an SSO authentication via the request.
-	// domain is optional, it is used to map users to this tenant when authenticating via SSO.
+	// domains is optional, it is used to map users to this tenant when authenticating via SSO.
 	//
 	// Both optional values will override whatever is currently set even if left empty.
-	ConfigureSAMLSettings(_ context.Context, tenantID string, settings *descope.SSOSAMLSettings, redirectURL string, domain string) error
+	ConfigureSAMLSettings(_ context.Context, tenantID string, settings *descope.SSOSAMLSettings, redirectURL string, domains []string) error
 
 	// Configure SSO SAML settings for a tenant by fetching them from an IDP metadata URL.
 	//
 	// tenantID, settings are required (all settings parameters are required).
 	//
 	// redirectURL is optional, however if not given it has to be set when starting an SSO authentication via the request.
-	// domain is optional, it is used to map users to this tenant when authenticating via SSO.
+	// domains is optional, it is used to map users to this tenant when authenticating via SSO.
 	//
 	// Both optional values will override whatever is currently set even if left empty.
-	ConfigureSAMLSettingsByMetadata(_ context.Context, tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domain string) error
+	ConfigureSAMLSettingsByMetadata(_ context.Context, tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domains []string) error
 
 	// Configure SSO OIDC settings for a tenant manually.
 	//
 	// tenantID, settings are required.
 	//
 	// redirectURL is optional, however if not given it has to be set when starting an SSO authentication via the request.
-	// domain is optional, it is used to map users to this tenant when authenticating via SSO.
+	// domains is optional, it is used to map users to this tenant when authenticating via SSO.
 	//
 	// Both optional values will override whatever is currently set even if left empty.
-	ConfigureOIDCSettings(_ context.Context, tenantID string, settings *descope.SSOOIDCSettings, redirectURL string, domain string) error
+	ConfigureOIDCSettings(_ context.Context, tenantID string, settings *descope.SSOOIDCSettings, redirectURL string, domains []string) error
 
 	// tenantID is required.
 	DeleteSettings(ctx context.Context, tenantID string) error
@@ -389,19 +389,19 @@ type SSO interface {
 	// is the certificated provided by the identity provider.
 	//
 	// redirectURL is optional, however if not given it has to be set when starting an SSO authentication via the request.
-	// domain is optional, it is used to map users to this tenant when authenticating via SSO.
+	// domains is optional, it is used to map users to this tenant when authenticating via SSO.
 	//
 	// Both optional values will override whatever is currently set even if left empty.
-	ConfigureSettings(ctx context.Context, tenantID, idpURL, idpCert, entityID, redirectURL, domain string) error
+	ConfigureSettings(ctx context.Context, tenantID, idpURL, idpCert, entityID, redirectURL string, domains []string) error
 
 	//* Deprecated (use ConfigureSAMLSettingsByMetadata() instead) *//
 	// Configure SSO settings for a tenant by fetching them from an IDP metadata URL.
 	//
 	// redirectURL is optional, however if not given it has to be set when starting an SSO authentication via the request.
-	// domain is optional, it is used to map users to this tenant when authenticating via SSO.
+	// domains is optional, it is used to map users to this tenant when authenticating via SSO.
 	//
 	// Both optional values will override whatever is currently set even if left empty.
-	ConfigureMetadata(ctx context.Context, tenantID, idpMetadataURL, redirectURL, domain string) error
+	ConfigureMetadata(ctx context.Context, tenantID, idpMetadataURL, redirectURL string, domains []string) error
 
 	//* Deprecated (use ConfigureSAMLSettings() or ConfigureSAMLSettingsByMetadata() instead) *//
 	// Configure SSO IDP mapping including groups to the Descope roles and user attributes.

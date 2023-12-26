@@ -65,7 +65,9 @@ type SSOSettingsResponse struct {
 	UserMapping    *UserMapping     `json:"userMapping,omitempty"`
 	GroupsMapping  []*GroupsMapping `json:"groupsMapping,omitempty"`
 	RedirectURL    string           `json:"redirectUrl,omitempty"`
-	Domain         string           `json:"domain,omitempty"`
+	Domains        []string         `json:"domains,omitempty"`
+	// Deprecated - prefer using domains
+	Domain string `json:"domain,omitempty"`
 }
 
 type SSOSAMLSettingsResponse struct {
@@ -471,7 +473,7 @@ type Tenant struct {
 	SelfProvisioningDomains []string       `json:"selfProvisioningDomains"`
 	CustomAttributes        map[string]any `json:"customAttributes,omitempty"`
 	AuthType                string         `json:"authType,omitempty"`
-	Domain                  string         `json:"domain,omitempty"`
+	Domains                 []string       `json:"domains,omitempty"`
 }
 
 type TenantRequest struct {
@@ -660,6 +662,7 @@ const (
 	MethodWhatsApp DeliveryMethod = "whatsapp"
 	MethodSMS      DeliveryMethod = "sms"
 	MethodEmail    DeliveryMethod = "email"
+	MethodEmbedded DeliveryMethod = "Embedded"
 
 	OAuthFacebook  OAuthProvider = "facebook"
 	OAuthGithub    OAuthProvider = "github"

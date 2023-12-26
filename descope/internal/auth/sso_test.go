@@ -1,8 +1,10 @@
 package auth
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -11,6 +13,7 @@ import (
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
+	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -31,6 +34,18 @@ func TestSSOStart(t *testing.T) {
 	assert.EqualValues(t, uri, urlStr)
 	assert.EqualValues(t, urlStr, w.Result().Header.Get(descope.RedirectLocationCookieName))
 	assert.EqualValues(t, http.StatusTemporaryRedirect, w.Result().StatusCode)
+}
+
+func TestSSOStartFailureNoTenant(t *testing.T) {
+	uri := "http://test.me"
+	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {}))
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	landingURL := "https://test.com"
+	prompt := "none"
+	tenant := ""
+	_, err = a.SSO().Start(context.Background(), tenant, landingURL, prompt, nil, nil, w)
+	require.ErrorIs(t, err, utils.NewInvalidArgumentError("tenant"))
 }
 
 func TestSSOStartStepup(t *testing.T) {
@@ -69,4 +84,33 @@ func TestSSOStartInvalidForwardResponse(t *testing.T) {
 
 	_, err = a.SSO().Start(context.Background(), "test", "", "", nil, &descope.LoginOptions{Stepup: true}, w)
 	assert.ErrorIs(t, err, descope.ErrInvalidStepUpJWT)
+}
+
+func TestExchangeTokenSSO(t *testing.T) {
+	code := "code"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		req := exchangeTokenBody{}
+		err := readBody(r, &req)
+		require.NoError(t, err)
+		assert.EqualValues(t, code, req.Code)
+		resp := &descope.JWTResponse{
+			RefreshJwt: jwtTokenValid,
+			User: &descope.UserResponse{
+				User: descope.User{
+					Name: "name",
+				},
+			},
+			FirstSeen: true,
+		}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	authInfo, err := a.SSO().ExchangeToken(context.Background(), code, w)
+	require.NoError(t, err)
+	require.NotNil(t, authInfo)
+	assert.EqualValues(t, "name", authInfo.User.Name)
+	assert.True(t, authInfo.FirstSeen)
 }

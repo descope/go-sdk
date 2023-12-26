@@ -92,13 +92,13 @@ type MockSSO struct {
 	LoadSettingsResponse *descope.SSOTenantSettingsResponse
 	LoadSettingsError    error
 
-	ConfigureSAMLSettingsAssert func(tenantID string, settings *descope.SSOSAMLSettings, redirectURL string, domain string)
+	ConfigureSAMLSettingsAssert func(tenantID string, settings *descope.SSOSAMLSettings, redirectURL string, domains []string)
 	ConfigureSAMLSettingsError  error
 
-	ConfigureSAMLSettingsByMetadataAssert func(tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domain string)
+	ConfigureSAMLSettingsByMetadataAssert func(tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domains []string)
 	ConfigureSAMLSettingsByMetadataError  error
 
-	ConfigureOIDCSettingsAssert func(tenantID string, settings *descope.SSOOIDCSettings, redirectURL, domain string) error
+	ConfigureOIDCSettingsAssert func(tenantID string, settings *descope.SSOOIDCSettings, redirectURL string, domains []string) error
 	ConfigureOIDCSettingsError  error
 
 	DeleteSettingsAssert func(tenantID string)
@@ -108,10 +108,10 @@ type MockSSO struct {
 	GetSettingsResponse *descope.SSOSettingsResponse
 	GetSettingsError    error
 
-	ConfigureSettingsAssert func(tenantID, idpURL, idpCert, entityID, redirectURL, domain string)
+	ConfigureSettingsAssert func(tenantID, idpURL, idpCert, entityID, redirectURL string, domains []string)
 	ConfigureSettingsError  error
 
-	ConfigureMetadataAssert func(tenantID, idpMetadataURL, redirectURL, domain string)
+	ConfigureMetadataAssert func(tenantID, idpMetadataURL, redirectURL string, domains []string)
 	ConfigureMetadataError  error
 
 	ConfigureMappingAssert func(tenantID string, roleMappings []*descope.RoleMapping, attributeMapping *descope.AttributeMapping)
@@ -125,23 +125,23 @@ func (m *MockSSO) LoadSettings(_ context.Context, tenantID string) (*descope.SSO
 	return m.LoadSettingsResponse, m.LoadSettingsError
 }
 
-func (m *MockSSO) ConfigureSAMLSettings(_ context.Context, tenantID string, settings *descope.SSOSAMLSettings, redirectURL string, domain string) error {
+func (m *MockSSO) ConfigureSAMLSettings(_ context.Context, tenantID string, settings *descope.SSOSAMLSettings, redirectURL string, domains []string) error {
 	if m.ConfigureSAMLSettingsAssert != nil {
-		m.ConfigureSAMLSettingsAssert(tenantID, settings, redirectURL, domain)
+		m.ConfigureSAMLSettingsAssert(tenantID, settings, redirectURL, domains)
 	}
 	return m.ConfigureSAMLSettingsError
 }
 
-func (m *MockSSO) ConfigureSAMLSettingsByMetadata(_ context.Context, tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL, domain string) error {
+func (m *MockSSO) ConfigureSAMLSettingsByMetadata(_ context.Context, tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domains []string) error {
 	if m.ConfigureSAMLSettingsByMetadataAssert != nil {
-		m.ConfigureSAMLSettingsByMetadataAssert(tenantID, settings, redirectURL, domain)
+		m.ConfigureSAMLSettingsByMetadataAssert(tenantID, settings, redirectURL, domains)
 	}
 	return m.ConfigureSAMLSettingsByMetadataError
 }
 
-func (m *MockSSO) ConfigureOIDCSettings(_ context.Context, tenantID string, settings *descope.SSOOIDCSettings, redirectURL, domain string) error {
+func (m *MockSSO) ConfigureOIDCSettings(_ context.Context, tenantID string, settings *descope.SSOOIDCSettings, redirectURL string, domains []string) error {
 	if m.ConfigureOIDCSettingsAssert != nil {
-		m.ConfigureOIDCSettingsAssert(tenantID, settings, redirectURL, domain)
+		m.ConfigureOIDCSettingsAssert(tenantID, settings, redirectURL, domains)
 	}
 	return m.ConfigureOIDCSettingsError
 }
@@ -160,16 +160,16 @@ func (m *MockSSO) GetSettings(_ context.Context, tenantID string) (*descope.SSOS
 	return m.GetSettingsResponse, m.GetSettingsError
 }
 
-func (m *MockSSO) ConfigureSettings(_ context.Context, tenantID, idpURL, idpCert, entityID, redirectURL, domain string) error {
+func (m *MockSSO) ConfigureSettings(_ context.Context, tenantID, idpURL, idpCert, entityID, redirectURL string, domains []string) error {
 	if m.ConfigureSettingsAssert != nil {
-		m.ConfigureSettingsAssert(tenantID, idpURL, idpCert, entityID, redirectURL, domain)
+		m.ConfigureSettingsAssert(tenantID, idpURL, idpCert, entityID, redirectURL, domains)
 	}
 	return m.ConfigureSettingsError
 }
 
-func (m *MockSSO) ConfigureMetadata(_ context.Context, tenantID, idpMetadataURL, redirectURL, domain string) error {
+func (m *MockSSO) ConfigureMetadata(_ context.Context, tenantID, idpMetadataURL, redirectURL string, domains []string) error {
 	if m.ConfigureMetadataAssert != nil {
-		m.ConfigureMetadataAssert(tenantID, idpMetadataURL, redirectURL, domain)
+		m.ConfigureMetadataAssert(tenantID, idpMetadataURL, redirectURL, domains)
 	}
 	return m.ConfigureMetadataError
 }
