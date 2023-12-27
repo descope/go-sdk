@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/descope/common/pkg/common/utils"
 	"github.com/descope/go-sdk/descope"
+	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/tests/helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
