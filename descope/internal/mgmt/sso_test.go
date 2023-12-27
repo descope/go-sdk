@@ -329,7 +329,7 @@ func TestSSOConfigureSAMLSettingsSuccess(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["tenantId"])
-		require.Equal(t, "https://redirect", req["redirectURL"])
+		require.Equal(t, "https://redirect", req["redirectUrl"])
 
 		domains := req["domains"].([]any)
 		require.Len(t, domains, 1)
@@ -339,7 +339,7 @@ func TestSSOConfigureSAMLSettingsSuccess(t *testing.T) {
 		require.True(t, found)
 		sett, ok := settings.(map[string]any)
 		require.True(t, ok)
-		require.Equal(t, "http://idpURL", sett["idpURL"])
+		require.Equal(t, "http://idpURL", sett["idpUrl"])
 		require.Equal(t, "mycert", sett["idpCert"])
 		require.Equal(t, "entity", sett["entityId"])
 
@@ -404,7 +404,7 @@ func TestSSOConfigureSAMLSettingsByMetadataSuccess(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["tenantId"])
-		require.Equal(t, "https://redirect", req["redirectURL"])
+		require.Equal(t, "https://redirect", req["redirectUrl"])
 
 		domains := req["domains"].([]any)
 		require.Len(t, domains, 1)
@@ -414,7 +414,7 @@ func TestSSOConfigureSAMLSettingsByMetadataSuccess(t *testing.T) {
 		require.True(t, found)
 		sett, ok := settings.(map[string]any)
 		require.True(t, ok)
-		require.Equal(t, "http://idpURL", sett["idpMetadataURL"])
+		require.Equal(t, "http://idpURL", sett["idpMetadataUrl"])
 
 		userAttrMappingMap, found := sett["attributeMapping"]
 		require.True(t, found)
@@ -465,7 +465,7 @@ func TestSSOConfigureOIDCSettingsSuccess(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["tenantId"])
-		require.Equal(t, "https://redirect", req["redirectURL"])
+		require.Equal(t, "https://redirect", req["redirectUrl"])
 
 		domains := req["domains"].([]any)
 		require.Len(t, domains, 1)
