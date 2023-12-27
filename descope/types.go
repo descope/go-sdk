@@ -98,7 +98,7 @@ type SSOSAMLSettingsByMetadata struct {
 }
 
 type OIDCAttributeMapping struct {
-	ExternalID    string `json:"externalID,omitempty"`
+	LoginID       string `json:"loginId,omitempty"`
 	Name          string `json:"name,omitempty"`
 	GivenName     string `json:"givenName,omitempty"`
 	MiddleName    string `json:"middleName,omitempty"`

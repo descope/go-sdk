@@ -119,7 +119,7 @@ var (
 			accessKeyActivate:                "mgmt/accesskey/activate",
 			accessKeyDelete:                  "mgmt/accesskey/delete",
 			ssoSettings:                      "mgmt/sso/settings",
-			ssoLoadSettings:                  "mgmt/sso/loadsettings",
+			ssoLoadSettings:                  "mgmt/sso/settings", // v2 only
 			ssoSAMLSettings:                  "mgmt/sso/samlsettings",
 			ssoSAMLSettingsByMetadata:        "mgmt/sso/samlsettingsbymetadata",
 			ssoOIDCSettings:                  "mgmt/sso/oidcsettings",
@@ -652,7 +652,7 @@ func (e *endpoints) ManagementAccessKeyDelete() string {
 }
 
 func (e *endpoints) ManagementSSOLoadSettings() string {
-	return path.Join(e.version, e.mgmt.ssoLoadSettings)
+	return path.Join(e.versionV2, e.mgmt.ssoLoadSettings)
 }
 
 func (e *endpoints) ManagementSSOSAMLSettings() string {
