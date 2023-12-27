@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/descope/go-sdk/descope"
+	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/tests/helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -1188,6 +1189,9 @@ func TestGenerateOTPForTestUserSuccess(t *testing.T) {
 		"loginId": loginID,
 		"code":    code,
 	}
+	loginOptions := descope.LoginOptions{
+		MFA: true,
+	}
 	visited := false
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		visited = true
@@ -1196,8 +1200,15 @@ func TestGenerateOTPForTestUserSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, loginID, req["loginId"])
 		require.Equal(t, string(descope.MethodSMS), req["deliveryMethod"])
+		b, err := utils.Marshal(req["loginOptions"])
+		require.NoError(t, err)
+		var loginOptionsReq descope.LoginOptions
+		err = utils.Unmarshal(b, &loginOptionsReq)
+		require.NoError(t, err)
+		require.Equal(t, loginOptions, loginOptionsReq)
 	}, response))
-	resCode, err := m.User().GenerateOTPForTestUser(context.Background(), descope.MethodSMS, loginID)
+
+	resCode, err := m.User().GenerateOTPForTestUser(context.Background(), descope.MethodSMS, loginID, &loginOptions)
 	require.NoError(t, err)
 	require.NotEmpty(t, resCode)
 	require.True(t, visited)
@@ -1220,7 +1231,7 @@ func TestGenerateOTPForTestUserNoLoginID(t *testing.T) {
 		require.Equal(t, loginID, req["loginId"])
 		require.Equal(t, string(descope.MethodSMS), req["deliveryMethod"])
 	}, response))
-	resCode, err := m.User().GenerateOTPForTestUser(context.Background(), descope.MethodSMS, "")
+	resCode, err := m.User().GenerateOTPForTestUser(context.Background(), descope.MethodSMS, "", nil)
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.Contains(t, err.Error(), "loginID")
 	require.Empty(t, resCode)
@@ -1237,6 +1248,9 @@ func TestGenerateMagicLinkForTestUserSuccess(t *testing.T) {
 		"link":       link,
 		"pendingRef": pendingRef,
 	}
+	loginOptions := descope.LoginOptions{
+		MFA: true,
+	}
 	visited := false
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		visited = true
@@ -1246,8 +1260,14 @@ func TestGenerateMagicLinkForTestUserSuccess(t *testing.T) {
 		require.Equal(t, loginID, req["loginId"])
 		require.Equal(t, string(descope.MethodSMS), req["deliveryMethod"])
 		require.Equal(t, URI, req["URI"])
+		b, err := utils.Marshal(req["loginOptions"])
+		require.NoError(t, err)
+		var loginOptionsReq descope.LoginOptions
+		err = utils.Unmarshal(b, &loginOptionsReq)
+		require.NoError(t, err)
+		require.Equal(t, loginOptions, loginOptionsReq)
 	}, response))
-	resLink, err := m.User().GenerateMagicLinkForTestUser(context.Background(), descope.MethodSMS, loginID, URI)
+	resLink, err := m.User().GenerateMagicLinkForTestUser(context.Background(), descope.MethodSMS, loginID, URI, &loginOptions)
 	require.NoError(t, err)
 	require.NotEmpty(t, resLink)
 	require.True(t, visited)
@@ -1275,7 +1295,7 @@ func TestGenerateMagicLinkForTestUserNoLoginID(t *testing.T) {
 		require.Equal(t, URI, req["URI"])
 		require.Equal(t, true, req["crossDevice"])
 	}, response))
-	resLink, err := m.User().GenerateMagicLinkForTestUser(context.Background(), descope.MethodSMS, "", URI)
+	resLink, err := m.User().GenerateMagicLinkForTestUser(context.Background(), descope.MethodSMS, "", URI, nil)
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.Contains(t, err.Error(), "loginID")
 	require.Empty(t, resLink)
@@ -1292,6 +1312,9 @@ func TestGenerateEnchantedLinkForTestUserSuccess(t *testing.T) {
 		"link":       link,
 		"pendingRef": pendingRef,
 	}
+	loginOptions := descope.LoginOptions{
+		MFA: true,
+	}
 	visited := false
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		visited = true
@@ -1300,8 +1323,14 @@ func TestGenerateEnchantedLinkForTestUserSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, loginID, req["loginId"])
 		require.Equal(t, URI, req["URI"])
+		b, err := utils.Marshal(req["loginOptions"])
+		require.NoError(t, err)
+		var loginOptionsReq descope.LoginOptions
+		err = utils.Unmarshal(b, &loginOptionsReq)
+		require.NoError(t, err)
+		require.Equal(t, loginOptions, loginOptionsReq)
 	}, response))
-	resLink, resPendingRef, err := m.User().GenerateEnchantedLinkForTestUser(context.Background(), loginID, URI)
+	resLink, resPendingRef, err := m.User().GenerateEnchantedLinkForTestUser(context.Background(), loginID, URI, &loginOptions)
 	require.NoError(t, err)
 	require.NotEmpty(t, resLink)
 	require.NotEmpty(t, resPendingRef)
@@ -1329,7 +1358,7 @@ func TestGenerateEnchantedLinkForTestUserNoLoginID(t *testing.T) {
 		require.Equal(t, loginID, req["loginId"])
 		require.Equal(t, URI, req["URI"])
 	}, response))
-	resLink, resPendingRef, err := m.User().GenerateEnchantedLinkForTestUser(context.Background(), "", URI)
+	resLink, resPendingRef, err := m.User().GenerateEnchantedLinkForTestUser(context.Background(), "", URI, nil)
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.Contains(t, err.Error(), "loginID")
 	require.Empty(t, resLink)
