@@ -13,13 +13,13 @@ import (
 func TestGetPasswordSettingsSuccess(t *testing.T) {
 	tenantID := "abc"
 	response := map[string]any{
-		"tenantID": tenantID,
-		"enabled":  true,
-		"lock": true,
+		"tenantID":  tenantID,
+		"enabled":   true,
+		"lock":      true,
 		"uppercase": true,
 		"lowercase": true,
 		"minLength": 8,
-		"number": true,
+		"number":    true,
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
