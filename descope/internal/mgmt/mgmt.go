@@ -24,6 +24,7 @@ type managementService struct {
 	user       sdk.User
 	accessKey  sdk.AccessKey
 	sso        sdk.SSO
+	password   sdk.PasswordManagement
 	jwt        sdk.JWT
 	permission sdk.Permission
 	role       sdk.Role
@@ -49,6 +50,7 @@ func NewManagement(conf ManagementParams, c *api.Client) *managementService {
 	service.project = &project{managementBase: base}
 	service.audit = &audit{managementBase: base}
 	service.authz = &authz{managementBase: base}
+	service.password = &password{managementBase: base}
 	return service
 }
 

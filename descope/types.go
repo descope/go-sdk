@@ -70,6 +70,27 @@ type SSOSettingsResponse struct {
 	Domain string `json:"domain,omitempty"`
 }
 
+type PasswordSettingsResponse struct {
+	Enabled               bool   `protobuf:"varint,1,opt,name=enabled,proto3" json:"enabled,omitempty"`
+	MinLength             int32  `protobuf:"varint,4,opt,name=minLength,proto3" json:"minLength,omitempty"`
+	Lowercase             bool   `protobuf:"varint,5,opt,name=lowercase,proto3" json:"lowercase,omitempty"`
+	Uppercase             bool   `protobuf:"varint,6,opt,name=uppercase,proto3" json:"uppercase,omitempty"`
+	Number                bool   `protobuf:"varint,7,opt,name=number,proto3" json:"number,omitempty"`
+	NonAlphanumeric       bool   `protobuf:"varint,8,opt,name=nonAlphanumeric,proto3" json:"nonAlphanumeric,omitempty"`
+	Expiration            bool   `protobuf:"varint,9,opt,name=expiration,proto3" json:"expiration,omitempty"`
+	ExpirationWeeks       int32  `protobuf:"varint,10,opt,name=expirationWeeks,proto3" json:"expirationWeeks,omitempty"`
+	Reuse                 bool   `protobuf:"varint,11,opt,name=reuse,proto3" json:"reuse,omitempty"`
+	ReuseAmount           int32  `protobuf:"varint,12,opt,name=reuseAmount,proto3" json:"reuseAmount,omitempty"`
+	Lock                  bool   `protobuf:"varint,13,opt,name=lock,proto3" json:"lock,omitempty"`
+	LockAttempts          int32  `protobuf:"varint,14,opt,name=lockAttempts,proto3" json:"lockAttempts,omitempty"`
+	EmailServiceProvider  string `protobuf:"bytes,15,opt,name=emailServiceProvider,proto3" json:"emailServiceProvider,omitempty"` // must be type:providerID or Descope
+	EmailSubject          string `protobuf:"bytes,16,opt,name=emailSubject,proto3" json:"emailSubject,omitempty"`                 // (optional as for Descope provider it will be set our defaults)
+	EmailBody             string `protobuf:"bytes,17,opt,name=emailBody,proto3" json:"emailBody,omitempty"`                       // 1 * 1024 * 1024 = 1048576 = 1MB (optional as for Descope provider it will be set our defaults)
+	ResetAuthMethod       string `protobuf:"bytes,18,opt,name=resetAuthMethod,proto3" json:"resetAuthMethod,omitempty"`
+	EmailBodyPlainText    string `protobuf:"bytes,19,opt,name=emailBodyPlainText,proto3" json:"emailBodyPlainText,omitempty"` // 1 * 1024 * 1024 = 1048576 = 1MB (optional as for Descope provider it will be set our defaults)
+	UseEmailBodyPlainText bool   `protobuf:"varint,20,opt,name=useEmailBodyPlainText,proto3" json:"useEmailBodyPlainText,omitempty"`
+}
+
 // PasswordPolicy - represents the rules for valid passwords configured in the policy
 // in the Descope console. This can be used to implement client-side validation of new
 // user passwords for a better user experience. Either way, the comprehensive

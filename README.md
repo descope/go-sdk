@@ -814,6 +814,48 @@ Certifcate contents
 // To delete SSO settings, call the following method
 err := descopeClient.Management.SSO().DeleteSettings(context.Background(), "tenant-id")
 
+### Manage Password Setting
+
+You can manage password settings for tenants and projects.
+
+```go
+// You can get password settings for a specific tenant ID
+settings, err := descopeClient.Management.Password().GetSettings(context.Background(), "tenant-id")
+
+// You can configure SSO settings manually by setting the required fields directly
+tenantID := "tenant-id" // Which tenant this configuration is for
+enabled := true
+minLength := 8
+lowercase := true
+uppercase := true
+number := true
+nonNumber := true
+expiration := true
+expirationWeeks := 2
+reuse := false
+reuseAmount := 10
+lock := true
+lockAttempts := 5
+emailServiceProvider := "Descope"
+emailSubject := "<your-reset-email-subject>"
+emailBody := "<your-reset-email-html>"
+emailBodyPlainText := "<your-reset-email-text>"
+useEmailBodyPlainText := true
+err := descopeClient.Management.Password().ConfigureSettings(context.Background(), tenantID, enabled, minLength, lowercase, uppercase, number, nonNumber, expiration, expirationWeeks, reuse, reuseAmount, lock, lockAttempts, emailServiceProvider, emailSubject, emailBody, emailBodyPlainText, useEmailBodyPlainText)
+
+```
+
+Note: Certificates should have a similar structure to:
+
+```
+-----BEGIN CERTIFICATE-----
+Certifcate contents
+-----END CERTIFICATE-----
+```
+
+// To delete SSO settings, call the following method
+err := descopeClient.Management.SSO().DeleteSettings(context.Background(), "tenant-id")
+
 ### Manage Permissions
 
 You can create, update, delete or load permissions:

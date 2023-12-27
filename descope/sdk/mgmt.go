@@ -367,6 +367,17 @@ type SSO interface {
 	ConfigureMapping(ctx context.Context, tenantID string, roleMappings []*descope.RoleMapping, attributeMapping *descope.AttributeMapping) error
 }
 
+// Provides functions for managing password policy for a project or a tenant.
+type PasswordManagement interface {
+	// Get password settings for a project or tenant.
+	GetSettings(ctx context.Context, tenantID string) (*descope.PasswordSettingsResponse, error)
+
+	// Configure Password settings for a project or a tenant manually.
+	// Tenant ID can be left empty to apply to project password policy.
+	// All other arguments are required and will override whatever is currently set even if left default.
+	ConfigureSettings(ctx context.Context, tenantID string, enabled bool, minLength int, lowercase, uppercase, number, nonNumber, expiration bool, expirationWeeks int, reuse bool, reuseAmount int, lock bool, lockAttempts int, emailServiceProvider, emailSubject, emailBody, emailBodyPlainText string, useEmailBodyPlainText bool) error
+}
+
 // Provide functions for manipulating valid JWT
 type JWT interface {
 	// Update a valid JWT with the custom claims provided
@@ -580,6 +591,9 @@ type Management interface {
 
 	// Provides functions for configuring SSO for a project.
 	SSO() SSO
+
+	// Provides functions for password settings for a project or tenant.
+	Password() PasswordManagement
 
 	// Provide functions for manipulating valid JWT
 	JWT() JWT

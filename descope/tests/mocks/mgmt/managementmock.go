@@ -10,6 +10,7 @@ import (
 type MockManagement struct {
 	*MockJWT
 	*MockSSO
+	*MockPasswordManagement
 	*MockUser
 	*MockAccessKey
 	*MockTenant
@@ -68,6 +69,10 @@ func (m *MockManagement) Audit() sdk.Audit {
 
 func (m *MockManagement) Authz() sdk.Authz {
 	return m.MockAuthz
+}
+
+func (m *MockManagement) Password() sdk.PasswordManagement {
+	return m.MockPasswordManagement
 }
 
 // Mock JWT
@@ -138,6 +143,31 @@ func (m *MockSSO) ConfigureMapping(_ context.Context, tenantID string, roleMappi
 		m.ConfigureMappingAssert(tenantID, roleMappings, attributeMapping)
 	}
 	return m.ConfigureMappingError
+}
+
+// Mock Password
+
+type MockPasswordManagement struct {
+	GetSettingsAssert   func(tenantID string)
+	GetSettingsResponse *descope.PasswordSettingsResponse
+	GetSettingsError    error
+
+	ConfigureSettingsAssert func(tenantID string, enabled bool, minLength int, lowercase, uppercase, number, nonNumber, expiration bool, expirationWeeks int, reuse bool, reuseAmount int, lock bool, lockAttempts int, emailServiceProvider, emailSubject, emailBody, emailBodyPlainText string, useEmailBodyPlainText bool)
+	ConfigureSettingsError  error
+}
+
+func (m *MockPasswordManagement) GetSettings(_ context.Context, tenantID string) (*descope.PasswordSettingsResponse, error) {
+	if m.GetSettingsAssert != nil {
+		m.GetSettingsAssert(tenantID)
+	}
+	return m.GetSettingsResponse, m.GetSettingsError
+}
+
+func (m *MockPasswordManagement) ConfigureSettings(_ context.Context, tenantID string, enabled bool, minLength int, lowercase, uppercase, number, nonNumber, expiration bool, expirationWeeks int, reuse bool, reuseAmount int, lock bool, lockAttempts int, emailServiceProvider, emailSubject, emailBody, emailBodyPlainText string, useEmailBodyPlainText bool) error {
+	if m.ConfigureSettingsAssert != nil {
+		m.ConfigureSettingsAssert(tenantID, enabled, minLength, lowercase, uppercase, number, nonNumber, expiration, expirationWeeks, reuse, reuseAmount, lock, lockAttempts, emailServiceProvider, emailSubject, emailBody, emailBodyPlainText, useEmailBodyPlainText)
+	}
+	return m.ConfigureSettingsError
 }
 
 // Mock User

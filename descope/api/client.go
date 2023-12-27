@@ -119,6 +119,7 @@ var (
 			ssoSettings:                      "mgmt/sso/settings",
 			ssoMetadata:                      "mgmt/sso/metadata",
 			ssoMapping:                       "mgmt/sso/mapping",
+			passwordSettings:                 "mgmt/password/settings",
 			updateJWT:                        "mgmt/jwt/update",
 			permissionCreate:                 "mgmt/permission/create",
 			permissionUpdate:                 "mgmt/permission/update",
@@ -273,6 +274,8 @@ type mgmtEndpoints struct {
 	ssoMetadata string
 	ssoMapping  string
 	updateJWT   string
+
+	passwordSettings string
 
 	permissionCreate  string
 	permissionUpdate  string
@@ -635,6 +638,10 @@ func (e *endpoints) ManagementSSOMetadata() string {
 
 func (e *endpoints) ManagementSSOMapping() string {
 	return path.Join(e.version, e.mgmt.ssoMapping)
+}
+
+func (e *endpoints) ManagementPasswordSettings() string {
+	return path.Join(e.version, e.mgmt.passwordSettings)
 }
 
 func (e *endpoints) ManagementUpdateJWT() string {
