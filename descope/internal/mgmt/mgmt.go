@@ -74,6 +74,11 @@ func (mgmt *managementService) SSO() sdk.SSO {
 	return mgmt.sso
 }
 
+func (mgmt *managementService) Password() sdk.PasswordManagement {
+	mgmt.ensureManagementKey()
+	return mgmt.password
+}
+
 func (mgmt *managementService) JWT() sdk.JWT {
 	mgmt.ensureManagementKey()
 	return mgmt.jwt

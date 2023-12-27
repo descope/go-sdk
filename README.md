@@ -842,19 +842,7 @@ emailBody := "<your-reset-email-html>"
 emailBodyPlainText := "<your-reset-email-text>"
 useEmailBodyPlainText := true
 err := descopeClient.Management.Password().ConfigureSettings(context.Background(), tenantID, enabled, minLength, lowercase, uppercase, number, nonNumber, expiration, expirationWeeks, reuse, reuseAmount, lock, lockAttempts, emailServiceProvider, emailSubject, emailBody, emailBodyPlainText, useEmailBodyPlainText)
-
 ```
-
-Note: Certificates should have a similar structure to:
-
-```
------BEGIN CERTIFICATE-----
-Certifcate contents
------END CERTIFICATE-----
-```
-
-// To delete SSO settings, call the following method
-err := descopeClient.Management.SSO().DeleteSettings(context.Background(), "tenant-id")
 
 ### Manage Permissions
 
