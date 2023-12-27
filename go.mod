@@ -3,6 +3,7 @@ module github.com/descope/go-sdk
 go 1.18
 
 require (
+	github.com/descope/common v0.0.8
 	github.com/lestrrat-go/jwx/v2 v2.0.18
 	github.com/stretchr/testify v1.8.4
 	golang.org/x/exp v0.0.0-20220921023135-46d9e7742f1e
@@ -17,8 +18,12 @@ require (
 	github.com/lestrrat-go/httprc v1.0.4 // indirect
 	github.com/lestrrat-go/iter v1.0.2 // indirect
 	github.com/lestrrat-go/option v1.0.1 // indirect
+	github.com/mattn/go-colorable v0.1.12 // indirect
+	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/rs/zerolog v1.28.0 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
+	github.com/segmentio/ksuid v1.0.4 // indirect
 	golang.org/x/crypto v0.17.0 // indirect
 	golang.org/x/sys v0.15.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
