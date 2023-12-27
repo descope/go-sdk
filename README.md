@@ -1347,16 +1347,17 @@ user, err := descopeClient.Management.User().CreateTestUser(context.Background()
 err = descopeClient.Management.User().DeleteAllTestUsers(context.Background())
 
 // OTP code can be generated for test user, for example:
-code, err := descopeClient.Management.User().GenerateOTPForTestUser(context.Background(), descope.MethodEmail, "desmond@descope.com")
+code, err := descopeClient.Management.User().GenerateOTPForTestUser(context.Background(), descope.MethodEmail, "desmond@descope.com", nil)
 // Now you can verify the code is valid (using descopeClient.Auth.OTP().VerifyCode for example)
 
 // Same as OTP, magic link can be generated for test user, for example:
-link, err := descopeClient.Management.User().GenerateMagicLinkForTestUser(context.Background(), descope.MethodEmail, "desmond@descope.com", "")
+link, err := descopeClient.Management.User().GenerateMagicLinkForTestUser(context.Background(), descope.MethodEmail, "desmond@descope.com", "", nil)
 // Now you can verify the link is valid (using descopeClient.Auth.MagicLink().Verify for example)
 
 // Enchanted link can be generated for test user, for example:
-link, pendingRef, err := descopeClient.Management.User().GenerateEnchantedLinkForTestUser(context.Background(), "desmond@descope.com", "")
+link, pendingRef, err := descopeClient.Management.User().GenerateEnchantedLinkForTestUser(context.Background(), "desmond@descope.com", "", nil)
 // Now you can verify the link is valid (using descopeClient.Auth.EnchantedLink().Verify for example)
+// *descope.LoginOptions can be provided to provide custom claims to the generated jwt.
 
 // Note 1: The generate code/link methods, work only for test users, will not work for regular users.
 // Note 2: In case of testing sign-in / sign-up methods with test users, need to make sure to generate the code prior calling the sign-in / sign-up methods (such as: descopeClient.Auth.MagicLink().SignUpOrIn)

@@ -260,20 +260,20 @@ type User interface {
 	// It returns the code for the login (exactly as it sent via Email or SMS)
 	// This is useful when running tests and don't want to use 3rd party messaging services
 	// The redirect URI is optional. If provided however, it will be used instead of any global configuration.
-	GenerateOTPForTestUser(ctx context.Context, method descope.DeliveryMethod, loginID string) (code string, err error)
+	GenerateOTPForTestUser(ctx context.Context, method descope.DeliveryMethod, loginID string, loginOptions *descope.LoginOptions) (code string, err error)
 
 	// Generate Magic Link for the given login ID of a test user.
 	// Choose the selected delivery method for verification. (see auth/DeliveryMethod)
 	// It returns the link for the login (exactly as it sent via Email)
 	// This is useful when running tests and don't want to use 3rd party messaging services
 	// The redirect URI is optional. If provided however, it will be used instead of any global configuration.
-	GenerateMagicLinkForTestUser(ctx context.Context, method descope.DeliveryMethod, loginID, URI string) (link string, err error)
+	GenerateMagicLinkForTestUser(ctx context.Context, method descope.DeliveryMethod, loginID, URI string, loginOptions *descope.LoginOptions) (link string, err error)
 
 	// Generate Enchanted Link for the given login ID of a test user.
 	// It returns the link for the login (exactly as it sent via Email) and pendingRef which is used to poll for a valid session
 	// This is useful when running tests and don't want to use 3rd party messaging services
 	// The redirect URI is optional. If provided however, it will be used instead of any global configuration.
-	GenerateEnchantedLinkForTestUser(ctx context.Context, loginID, URI string) (link, pendingRef string, err error)
+	GenerateEnchantedLinkForTestUser(ctx context.Context, loginID, URI string, loginOptions *descope.LoginOptions) (link, pendingRef string, err error)
 
 	// Generate an embedded link token, later can be used to authenticate via magiclink verify method
 	// or via flow verify step

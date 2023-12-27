@@ -307,15 +307,15 @@ type MockUser struct {
 	GetProviderTokenResponse *descope.ProviderTokenResponse
 	GetProviderTokenError    error
 
-	GenerateOTPForTestUserAssert   func(method descope.DeliveryMethod, loginID string)
+	GenerateOTPForTestUserAssert   func(method descope.DeliveryMethod, loginID string, loginOptions *descope.LoginOptions)
 	GenerateOTPForTestUserResponse string
 	GenerateOTPForTestUserError    error
 
-	GenerateMagicLinkForTestUserAssert   func(method descope.DeliveryMethod, loginID, URI string)
+	GenerateMagicLinkForTestUserAssert   func(method descope.DeliveryMethod, loginID, URI string, loginOptions *descope.LoginOptions)
 	GenerateMagicLinkForTestUserResponse string
 	GenerateMagicLinkForTestUserError    error
 
-	GenerateEnchantedLinkForTestUserAssert             func(loginID, URI string)
+	GenerateEnchantedLinkForTestUserAssert             func(loginID, URI string, loginOptions *descope.LoginOptions)
 	GenerateEnchantedLinkForTestUserResponseLink       string
 	GenerateEnchantedLinkForTestUserResponsePendingRef string
 	GenerateEnchantedLinkForTestUserError              error
@@ -580,23 +580,23 @@ func (m *MockUser) GetProviderToken(_ context.Context, loginID, provider string)
 	return m.GetProviderTokenResponse, m.GetProviderTokenError
 }
 
-func (m *MockUser) GenerateOTPForTestUser(_ context.Context, method descope.DeliveryMethod, loginID string) (code string, err error) {
+func (m *MockUser) GenerateOTPForTestUser(_ context.Context, method descope.DeliveryMethod, loginID string, loginOptions *descope.LoginOptions) (code string, err error) {
 	if m.GenerateOTPForTestUserAssert != nil {
-		m.GenerateOTPForTestUserAssert(method, loginID)
+		m.GenerateOTPForTestUserAssert(method, loginID, loginOptions)
 	}
 	return m.GenerateOTPForTestUserResponse, m.GenerateOTPForTestUserError
 }
 
-func (m *MockUser) GenerateMagicLinkForTestUser(_ context.Context, method descope.DeliveryMethod, loginID, URI string) (link string, err error) {
+func (m *MockUser) GenerateMagicLinkForTestUser(_ context.Context, method descope.DeliveryMethod, loginID, URI string, loginOptions *descope.LoginOptions) (link string, err error) {
 	if m.GenerateMagicLinkForTestUserAssert != nil {
-		m.GenerateMagicLinkForTestUserAssert(method, loginID, URI)
+		m.GenerateMagicLinkForTestUserAssert(method, loginID, URI, loginOptions)
 	}
 	return m.GenerateMagicLinkForTestUserResponse, m.GenerateMagicLinkForTestUserError
 }
 
-func (m *MockUser) GenerateEnchantedLinkForTestUser(_ context.Context, loginID, URI string) (link, pendingRef string, err error) {
+func (m *MockUser) GenerateEnchantedLinkForTestUser(_ context.Context, loginID, URI string, loginOptions *descope.LoginOptions) (link, pendingRef string, err error) {
 	if m.GenerateEnchantedLinkForTestUserAssert != nil {
-		m.GenerateEnchantedLinkForTestUserAssert(loginID, URI)
+		m.GenerateEnchantedLinkForTestUserAssert(loginID, URI, loginOptions)
 	}
 	return m.GenerateEnchantedLinkForTestUserResponseLink, m.GenerateEnchantedLinkForTestUserResponsePendingRef, m.GenerateEnchantedLinkForTestUserError
 }
