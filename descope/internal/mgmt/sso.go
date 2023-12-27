@@ -59,13 +59,13 @@ func (s *sso) ConfigureSAMLSettings(ctx context.Context, tenantID string, settin
 	req := map[string]any{
 		"tenantId": tenantID,
 		"settings": map[string]any{
-			"idpURL":           settings.IdpURL,
+			"idpUrl":           settings.IdpURL,
 			"entityId":         settings.IdpEntityID,
 			"idpCert":          settings.IdpCert,
 			"roleMappings":     mappings,
 			"attributeMapping": settings.AttributeMapping,
 		},
-		"redirectURL": redirectURL,
+		"redirectUrl": redirectURL,
 		"domains":     domains,
 	}
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSAMLSettings(), req, nil, s.conf.ManagementKey)
@@ -95,11 +95,11 @@ func (s *sso) ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID stri
 	req := map[string]any{
 		"tenantId": tenantID,
 		"settings": map[string]any{
-			"idpMetadataURL":   settings.IdpMetadataURL,
+			"idpMetadataUrl":   settings.IdpMetadataURL,
 			"roleMappings":     mappings,
 			"attributeMapping": settings.AttributeMapping,
 		},
-		"redirectURL": redirectURL,
+		"redirectUrl": redirectURL,
 		"domains":     domains,
 	}
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSAMLSettingsByMetadata(), req, nil, s.conf.ManagementKey)
@@ -118,7 +118,7 @@ func (s *sso) ConfigureOIDCSettings(ctx context.Context, tenantID string, settin
 	req := map[string]any{
 		"tenantId":    tenantID,
 		"settings":    settings,
-		"redirectURL": redirectURL,
+		"redirectUrl": redirectURL,
 		"domains":     domains,
 	}
 
