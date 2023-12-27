@@ -48,6 +48,13 @@ type Tenant interface {
 	// and results. Using nil will result in a filter-less query with a set amount of
 	// results.
 	SearchAll(ctx context.Context, options *descope.TenantSearchOptions) ([]*descope.Tenant, error)
+
+	// Get tenant settings for a tenant by id.  Tenant ID is required.
+	GetSettings(ctx context.Context, tenantID string) (*descope.TenantSettings, error)
+
+	// Configure tenant settings for a tenant. Tenant ID is required.
+	// All settings arguments are required and will override whatever is currently set even if left default.
+	ConfigureSettings(ctx context.Context, tenantID string, settings *descope.TenantSettings) error
 }
 
 // Provides functions for managing users in a project.

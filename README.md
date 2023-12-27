@@ -620,6 +620,23 @@ if err == nil {
         // Do something
     }
 }
+
+// Load tenant settings by a tenant id
+settings, err := descopeClient.Management.Tenant().GetSettings(context.Background())
+
+settingsRequest := &descope.TenantSettings{}
+settingsRequest.SelfProvisioningDomains = []string{"domain.com", "company.com"}
+settingsRequest.RefreshTokenExpiration = 30
+settingsRequest.RefreshTokenExpirationUnit = "days"
+settingsRequest.SessionTokenExpiration = 30
+settingsRequest.SessionTokenExpirationUnit = "minutes"
+settingsRequest.EnableInactivity = true
+settingsRequest.InactivityTime = 2
+settingsRequest.InactivityTimeUnit = "days"
+
+// update the tenant settings
+err := descopeClient.Management.Tenant().ConfigureSettings(context.Background(), "My Tenant", settingsRequest)
+
 ```
 
 ### Manage Users
