@@ -713,7 +713,6 @@ type MockTenant struct {
 	ConfigureSettingsAssert   func(string, *descope.TenantSettings)
 	ConfigureSettingsResponse *descope.TenantSettings
 	ConfigureSettingsError    error
-
 }
 
 func (m *MockTenant) Create(_ context.Context, tenantRequest *descope.TenantRequest) (id string, err error) {
