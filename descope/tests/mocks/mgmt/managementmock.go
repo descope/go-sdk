@@ -705,6 +705,15 @@ type MockTenant struct {
 
 	SearchAllResponse []*descope.Tenant
 	SearchAllError    error
+
+	GetSettingsAssert   func(id string)
+	GetSettingsResponse *descope.TenantSettings
+	GetSettingsError    error
+
+	ConfigureSettingsAssert   func(string, *descope.TenantSettings)
+	ConfigureSettingsResponse *descope.TenantSettings
+	ConfigureSettingsError    error
+
 }
 
 func (m *MockTenant) Create(_ context.Context, tenantRequest *descope.TenantRequest) (id string, err error) {
@@ -748,6 +757,20 @@ func (m *MockTenant) LoadAll(_ context.Context) ([]*descope.Tenant, error) {
 
 func (m *MockTenant) SearchAll(_ context.Context, _ *descope.TenantSearchOptions) ([]*descope.Tenant, error) {
 	return m.SearchAllResponse, m.SearchAllError
+}
+
+func (m *MockTenant) GetSettings(ctx context.Context, tenantID string) (*descope.TenantSettings, error) {
+	if m.GetSettingsAssert != nil {
+		m.GetSettingsAssert(tenantID)
+	}
+	return m.GetSettingsResponse, m.GetSettingsError
+}
+
+func (m *MockTenant) ConfigureSettings(ctx context.Context, tenantID string, settings *descope.TenantSettings) error {
+	if m.ConfigureSettingsAssert != nil {
+		m.ConfigureSettingsAssert(tenantID, settings)
+	}
+	return m.ConfigureSettingsError
 }
 
 // Mock Permission
