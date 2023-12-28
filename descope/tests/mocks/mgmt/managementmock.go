@@ -759,14 +759,14 @@ func (m *MockTenant) SearchAll(_ context.Context, _ *descope.TenantSearchOptions
 	return m.SearchAllResponse, m.SearchAllError
 }
 
-func (m *MockTenant) GetSettings(ctx context.Context, tenantID string) (*descope.TenantSettings, error) {
+func (m *MockTenant) GetSettings(_ context.Context, tenantID string) (*descope.TenantSettings, error) {
 	if m.GetSettingsAssert != nil {
 		m.GetSettingsAssert(tenantID)
 	}
 	return m.GetSettingsResponse, m.GetSettingsError
 }
 
-func (m *MockTenant) ConfigureSettings(ctx context.Context, tenantID string, settings *descope.TenantSettings) error {
+func (m *MockTenant) ConfigureSettings(_ context.Context, tenantID string, settings *descope.TenantSettings) error {
 	if m.ConfigureSettingsAssert != nil {
 		m.ConfigureSettingsAssert(tenantID, settings)
 	}
