@@ -537,8 +537,8 @@ type Project interface {
 	// Clone the current project, including its settings and configurations.
 	// - This action is supported only with a pro license or above.
 	// - Users, tenants and access keys are not cloned.
-	// Returns The new project details (name, id, tag, and settings).
-	Clone(ctx context.Context, name string, tag descope.ProjectTag) (*descope.NewProjectResponse, error)
+	// Returns The new project details (name, id, and tag).
+	Clone(ctx context.Context, name string, tag descope.ProjectTag) (*descope.CloneProjectResponse, error)
 
 	// Delete the current project.
 	Delete(ctx context.Context) error

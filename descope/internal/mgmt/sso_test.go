@@ -483,7 +483,7 @@ func TestSSOConfigureOIDCSettingsSuccess(t *testing.T) {
 
 		userAttrMappingInt, found := sett["userAttrMapping"]
 		require.True(t, found)
-		userAttrMapping, ok := userAttrMappingInt.(map[string]any)
+		userAttrMapping, _ := userAttrMappingInt.(map[string]any)
 		require.Equal(t, "myGivenName", userAttrMapping["givenName"])
 	}))
 	err := mgmt.SSO().ConfigureOIDCSettings(context.Background(), "abc", oidcSettings, "https://redirect", []string{"domain.com"})
