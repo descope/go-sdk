@@ -50,7 +50,7 @@ func (p *project) UpdateName(ctx context.Context, name string) error {
 	return err
 }
 
-func (p *project) Clone(ctx context.Context, name string, tag descope.ProjectTag) (*descope.NewProjectResponse, error) {
+func (p *project) Clone(ctx context.Context, name string, tag descope.ProjectTag) (*descope.CloneProjectResponse, error) {
 	body := cloneProjectBody{Name: name, Tag: string(tag)}
 	res, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectClone(), body, nil, p.conf.ManagementKey)
 	if err != nil {
@@ -64,8 +64,8 @@ func (p *project) Delete(ctx context.Context) error {
 	return err
 }
 
-func unmarshalNewProjectResponseResponse(res *api.HTTPResponse) (*descope.NewProjectResponse, error) {
-	var newProjectRes *descope.NewProjectResponse
+func unmarshalNewProjectResponseResponse(res *api.HTTPResponse) (*descope.CloneProjectResponse, error) {
+	var newProjectRes *descope.CloneProjectResponse
 	err := utils.Unmarshal([]byte(res.BodyStr), &newProjectRes)
 	if err != nil {
 		return nil, err
