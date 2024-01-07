@@ -120,9 +120,9 @@ var (
 			accessKeyDelete:                  "mgmt/accesskey/delete",
 			ssoSettings:                      "mgmt/sso/settings",
 			ssoLoadSettings:                  "mgmt/sso/settings", // v2 only
-			ssoSAMLSettings:                  "mgmt/sso/samlsettings",
-			ssoSAMLSettingsByMetadata:        "mgmt/sso/samlsettingsbymetadata",
-			ssoOIDCSettings:                  "mgmt/sso/oidcsettings",
+			ssoSAMLSettings:                  "mgmt/sso/saml",
+			ssoSAMLSettingsByMetadata:        "mgmt/sso/saml/metadata",
+			ssoOIDCSettings:                  "mgmt/sso/oidc",
 			ssoMetadata:                      "mgmt/sso/metadata",
 			ssoMapping:                       "mgmt/sso/mapping",
 			updateJWT:                        "mgmt/jwt/update",
