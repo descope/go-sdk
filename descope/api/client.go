@@ -60,6 +60,8 @@ var (
 			exchangeTokenOAuth:           "auth/oauth/exchange",
 			samlStart:                    "auth/saml/authorize",
 			exchangeTokenSAML:            "auth/saml/exchange",
+			ssoStart:                     "auth/sso/authorize",
+			exchangeTokenSSO:             "auth/sso/exchange",
 			webauthnSignUpStart:          "auth/webauthn/signup/start",
 			webauthnSignUpFinish:         "auth/webauthn/signup/finish",
 			webauthnSignInStart:          "auth/webauthn/signin/start",
@@ -118,6 +120,10 @@ var (
 			accessKeyActivate:                "mgmt/accesskey/activate",
 			accessKeyDelete:                  "mgmt/accesskey/delete",
 			ssoSettings:                      "mgmt/sso/settings",
+			ssoLoadSettings:                  "mgmt/sso/settings", // v2 only
+			ssoSAMLSettings:                  "mgmt/sso/saml",
+			ssoSAMLSettingsByMetadata:        "mgmt/sso/saml/metadata",
+			ssoOIDCSettings:                  "mgmt/sso/oidc",
 			ssoMetadata:                      "mgmt/sso/metadata",
 			ssoMapping:                       "mgmt/sso/mapping",
 			passwordSettings:                 "mgmt/password/settings",
@@ -209,7 +215,9 @@ type authEndpoints struct {
 	oauthStart                   string
 	exchangeTokenOAuth           string
 	samlStart                    string
+	ssoStart                     string
 	exchangeTokenSAML            string
+	exchangeTokenSSO             string
 	webauthnSignUpStart          string
 	webauthnSignUpFinish         string
 	webauthnSignInStart          string
@@ -272,10 +280,17 @@ type mgmtEndpoints struct {
 	accessKeyActivate   string
 	accessKeyDelete     string
 
+	//* Deprecated (use the below value instead) *//
 	ssoSettings string
 	ssoMetadata string
 	ssoMapping  string
-	updateJWT   string
+	///////////////////
+
+	ssoLoadSettings           string
+	ssoSAMLSettings           string
+	ssoSAMLSettingsByMetadata string
+	ssoOIDCSettings           string
+	updateJWT                 string
 
 	passwordSettings string
 
@@ -400,11 +415,22 @@ func (e *endpoints) OAuthStart() string {
 func (e *endpoints) ExchangeTokenOAuth() string {
 	return path.Join(e.version, e.auth.exchangeTokenOAuth)
 }
+
+/* Deprecated (use SSOStart(..) instead) */
 func (e *endpoints) SAMLStart() string {
 	return path.Join(e.version, e.auth.samlStart)
 }
+
+/* Deprecated (use ExchangeTokenSSO(..) instead) */
 func (e *endpoints) ExchangeTokenSAML() string {
 	return path.Join(e.version, e.auth.exchangeTokenSAML)
+}
+
+func (e *endpoints) SSOStart() string {
+	return path.Join(e.version, e.auth.ssoStart)
+}
+func (e *endpoints) ExchangeTokenSSO() string {
+	return path.Join(e.version, e.auth.exchangeTokenSSO)
 }
 func (e *endpoints) WebAuthnSignUpStart() string {
 	return path.Join(e.version, e.auth.webauthnSignUpStart)
@@ -634,6 +660,21 @@ func (e *endpoints) ManagementAccessKeyDelete() string {
 	return path.Join(e.version, e.mgmt.accessKeyDelete)
 }
 
+func (e *endpoints) ManagementSSOLoadSettings() string {
+	return path.Join(e.versionV2, e.mgmt.ssoLoadSettings)
+}
+
+func (e *endpoints) ManagementSSOSAMLSettings() string {
+	return path.Join(e.version, e.mgmt.ssoSAMLSettings)
+}
+func (e *endpoints) ManagementSSOSAMLSettingsByMetadata() string {
+	return path.Join(e.version, e.mgmt.ssoSAMLSettingsByMetadata)
+}
+func (e *endpoints) ManagementSSOOIDCSettings() string {
+	return path.Join(e.version, e.mgmt.ssoOIDCSettings)
+}
+
+// // Deprecated
 func (e *endpoints) ManagementSSOSettings() string {
 	return path.Join(e.version, e.mgmt.ssoSettings)
 }

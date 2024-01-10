@@ -93,12 +93,25 @@ func (m *MockJWT) UpdateJWTWithCustomClaims(_ context.Context, jwt string, custo
 // Mock SSO
 
 type MockSSO struct {
-	GetSettingsAssert   func(tenantID string)
-	GetSettingsResponse *descope.SSOSettingsResponse
-	GetSettingsError    error
+	LoadSettingsAssert   func(tenantID string)
+	LoadSettingsResponse *descope.SSOTenantSettingsResponse
+	LoadSettingsError    error
+
+	ConfigureSAMLSettingsAssert func(tenantID string, settings *descope.SSOSAMLSettings, redirectURL string, domains []string)
+	ConfigureSAMLSettingsError  error
+
+	ConfigureSAMLSettingsByMetadataAssert func(tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domains []string)
+	ConfigureSAMLSettingsByMetadataError  error
+
+	ConfigureOIDCSettingsAssert func(tenantID string, settings *descope.SSOOIDCSettings, redirectURL string, domains []string) error
+	ConfigureOIDCSettingsError  error
 
 	DeleteSettingsAssert func(tenantID string)
 	DeleteSettingsError  error
+
+	GetSettingsAssert   func(tenantID string)
+	GetSettingsResponse *descope.SSOSettingsResponse
+	GetSettingsError    error
 
 	ConfigureSettingsAssert func(tenantID, idpURL, idpCert, entityID, redirectURL string, domains []string)
 	ConfigureSettingsError  error
@@ -110,11 +123,32 @@ type MockSSO struct {
 	ConfigureMappingError  error
 }
 
-func (m *MockSSO) GetSettings(_ context.Context, tenantID string) (*descope.SSOSettingsResponse, error) {
-	if m.GetSettingsAssert != nil {
-		m.GetSettingsAssert(tenantID)
+func (m *MockSSO) LoadSettings(_ context.Context, tenantID string) (*descope.SSOTenantSettingsResponse, error) {
+	if m.LoadSettingsAssert != nil {
+		m.LoadSettingsAssert(tenantID)
 	}
-	return m.GetSettingsResponse, m.GetSettingsError
+	return m.LoadSettingsResponse, m.LoadSettingsError
+}
+
+func (m *MockSSO) ConfigureSAMLSettings(_ context.Context, tenantID string, settings *descope.SSOSAMLSettings, redirectURL string, domains []string) error {
+	if m.ConfigureSAMLSettingsAssert != nil {
+		m.ConfigureSAMLSettingsAssert(tenantID, settings, redirectURL, domains)
+	}
+	return m.ConfigureSAMLSettingsError
+}
+
+func (m *MockSSO) ConfigureSAMLSettingsByMetadata(_ context.Context, tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domains []string) error {
+	if m.ConfigureSAMLSettingsByMetadataAssert != nil {
+		m.ConfigureSAMLSettingsByMetadataAssert(tenantID, settings, redirectURL, domains)
+	}
+	return m.ConfigureSAMLSettingsByMetadataError
+}
+
+func (m *MockSSO) ConfigureOIDCSettings(_ context.Context, tenantID string, settings *descope.SSOOIDCSettings, redirectURL string, domains []string) error {
+	if m.ConfigureOIDCSettingsAssert != nil {
+		m.ConfigureOIDCSettingsAssert(tenantID, settings, redirectURL, domains)
+	}
+	return m.ConfigureOIDCSettingsError
 }
 
 func (m *MockSSO) DeleteSettings(_ context.Context, tenantID string) error {
@@ -122,6 +156,13 @@ func (m *MockSSO) DeleteSettings(_ context.Context, tenantID string) error {
 		m.DeleteSettingsAssert(tenantID)
 	}
 	return m.DeleteSettingsError
+}
+
+func (m *MockSSO) GetSettings(_ context.Context, tenantID string) (*descope.SSOSettingsResponse, error) {
+	if m.GetSettingsAssert != nil {
+		m.GetSettingsAssert(tenantID)
+	}
+	return m.GetSettingsResponse, m.GetSettingsError
 }
 
 func (m *MockSSO) ConfigureSettings(_ context.Context, tenantID, idpURL, idpCert, entityID, redirectURL string, domains []string) error {
@@ -963,7 +1004,7 @@ type MockProject struct {
 	UpdateNameError  error
 
 	CloneAssert   func(name string, tag descope.ProjectTag)
-	CloneResponse *descope.NewProjectResponse
+	CloneResponse *descope.CloneProjectResponse
 	CloneError    error
 
 	DeleteAssert func()
@@ -989,7 +1030,7 @@ func (m *MockProject) UpdateName(_ context.Context, name string) error {
 	return m.UpdateNameError
 }
 
-func (m *MockProject) Clone(_ context.Context, name string, tag descope.ProjectTag) (*descope.NewProjectResponse, error) {
+func (m *MockProject) Clone(_ context.Context, name string, tag descope.ProjectTag) (*descope.CloneProjectResponse, error) {
 	if m.CloneAssert != nil {
 		m.CloneAssert(name, tag)
 	}
