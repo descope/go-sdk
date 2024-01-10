@@ -336,14 +336,53 @@ type AccessKey interface {
 
 // Provides functions for configuring SSO for a project.
 type SSO interface {
-	// Get SSO setting for a tenant.
+	// Load all tenant SSO setting.
 	//
 	// tenantID is required.
-	GetSettings(ctx context.Context, tenantID string) (*descope.SSOSettingsResponse, error)
+	LoadSettings(_ context.Context, tenantID string) (*descope.SSOTenantSettingsResponse, error)
+
+	// Configure SSO SAML settings for a tenant manually.
+	//
+	// tenantID, settings are required (all settings parameters are required).
+	//
+	// redirectURL is optional, however if not given it has to be set when starting an SSO authentication via the request.
+	// domains is optional, it is used to map users to this tenant when authenticating via SSO.
+	//
+	// Both optional values will override whatever is currently set even if left empty.
+	ConfigureSAMLSettings(_ context.Context, tenantID string, settings *descope.SSOSAMLSettings, redirectURL string, domains []string) error
+
+	// Configure SSO SAML settings for a tenant by fetching them from an IDP metadata URL.
+	//
+	// tenantID, settings are required (all settings parameters are required).
+	//
+	// redirectURL is optional, however if not given it has to be set when starting an SSO authentication via the request.
+	// domains is optional, it is used to map users to this tenant when authenticating via SSO.
+	//
+	// Both optional values will override whatever is currently set even if left empty.
+	ConfigureSAMLSettingsByMetadata(_ context.Context, tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domains []string) error
+
+	// Configure SSO OIDC settings for a tenant manually.
+	//
+	// tenantID, settings are required.
+	//
+	// redirectURL is optional, however if not given it has to be set when starting an SSO authentication via the request.
+	// domains is optional, it is used to map users to this tenant when authenticating via SSO.
+	//
+	// Both optional values will override whatever is currently set even if left empty.
+	ConfigureOIDCSettings(_ context.Context, tenantID string, settings *descope.SSOOIDCSettings, redirectURL string, domains []string) error
 
 	// tenantID is required.
 	DeleteSettings(ctx context.Context, tenantID string) error
 
+	// *** Deprecated ***
+
+	//* Deprecated (use LoadSettings() instead) *//
+	// Get SAML SSO setting for a tenant.
+	//
+	// tenantID is required.
+	GetSettings(_ context.Context, tenantID string) (*descope.SSOSettingsResponse, error)
+
+	//* Deprecated (use ConfigureSAMLSettings() instead) *//
 	// Configure SSO settings for a tenant manually.
 	//
 	// tenantID, idpURL, idpCert, entityID, are required. The idpURL is the URL for the identity provider and idpCert
@@ -355,6 +394,7 @@ type SSO interface {
 	// Both optional values will override whatever is currently set even if left empty.
 	ConfigureSettings(ctx context.Context, tenantID, idpURL, idpCert, entityID, redirectURL string, domains []string) error
 
+	//* Deprecated (use ConfigureSAMLSettingsByMetadata() instead) *//
 	// Configure SSO settings for a tenant by fetching them from an IDP metadata URL.
 	//
 	// redirectURL is optional, however if not given it has to be set when starting an SSO authentication via the request.
@@ -363,6 +403,7 @@ type SSO interface {
 	// Both optional values will override whatever is currently set even if left empty.
 	ConfigureMetadata(ctx context.Context, tenantID, idpMetadataURL, redirectURL string, domains []string) error
 
+	//* Deprecated (use ConfigureSAMLSettings() or ConfigureSAMLSettingsByMetadata() instead) *//
 	// Configure SSO IDP mapping including groups to the Descope roles and user attributes.
 	ConfigureMapping(ctx context.Context, tenantID string, roleMappings []*descope.RoleMapping, attributeMapping *descope.AttributeMapping) error
 }
@@ -496,8 +537,8 @@ type Project interface {
 	// Clone the current project, including its settings and configurations.
 	// - This action is supported only with a pro license or above.
 	// - Users, tenants and access keys are not cloned.
-	// Returns The new project details (name, id, tag, and settings).
-	Clone(ctx context.Context, name string, tag descope.ProjectTag) (*descope.NewProjectResponse, error)
+	// Returns The new project details (name, id, and tag).
+	Clone(ctx context.Context, name string, tag descope.ProjectTag) (*descope.CloneProjectResponse, error)
 
 	// Delete the current project.
 	Delete(ctx context.Context) error

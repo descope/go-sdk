@@ -245,11 +245,25 @@ if err != nil {
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
 
-### SSO/SAML
+### SSO SAML/OIDC
 
-Users can authenticate to a specific tenant using SAML or Single Sign On. Configure your SSO/SAML settings on the [Descope console](https://app.descope.com/settings/authentication/sso). To start a flow call:
+Users can authenticate to a specific tenant using SAML or OIDC. Configure your SSO SAML/OIDC settings on the [Descope console](https://app.descope.com/settings/authentication/sso). To start a flow call:
 
 ```go
+// Choose which tenant to log into
+// If configured globally, the return URL is optional. If provided however, it will be used
+// instead of any global configuration.
+// Redirect the user to the returned URL to start the SSO SAML/OIDC redirect chain
+url, err := descopeClient.Auth.SSO().Start("my-tenant-ID", "https://my-app.com/handle-saml", nil, nil, w)
+if err != nil {
+    // handle error
+}
+```
+
+
+```go
+//* Deprecated (use Auth.SSO().Start(..) instead) *//
+//
 // Choose which tenant to log into
 // If configured globally, the return URL is optional. If provided however, it will be used
 // instead of any global configuration.
@@ -263,6 +277,17 @@ if err != nil {
 The user will authenticate with the authentication provider configured for that tenant, and will be redirected back to the redirect URL, with an appended `code` HTTP URL parameter. Exchange it to validate the user:
 
 ```go
+// The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
+// Otherwise they're available via authInfo
+authInfo, err := descopeClient.Auth.SSO().ExchangeToken(context.Background(), code, w)
+if err != nil {
+    // handle error
+}
+```
+
+```go
+//* Deprecated (use Auth.SSO().ExchangeToken(..) instead) *//
+//
 // The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
 // Otherwise they're available via authInfo
 authInfo, err := descopeClient.Auth.SAML().ExchangeToken(context.Background(), code, w)
@@ -773,24 +798,60 @@ err := descopeClient.Management.AccessKey().Delete(context.Background(), "access
 
 ### Manage SSO Setting
 
-You can manage SSO settings and map SSO group roles and user attributes.
+You can manage SSO (SAML or OIDC) settings for a specific tenant.
 
 ```go
-// You can get SSO settings for a specific tenant ID
+
+// Load all tenant SSO settings
+ssoSettings, err := cc.HC.DescopeClient().Management.SSO().LoadSettings(context.Background(), "tenant-id")
+
+//* Deprecated (use LoadSettings(..) instead) *//
 ssoSettings, err := descopeClient.Management.SSO().GetSettings(context.Background(), "tenant-id")
 
-// You can configure SSO settings manually by setting the required fields directly
+// Configure tenant SSO by OIDC settings
+
+oidcSettings := &descope.SSOOIDCSettings{..}
+err = cc.HC.DescopeClient().Management.SSO().ConfigureOIDCSettings("tenant-id", oidcSettings, "https://redirectlocation.com", "")
+// OR
+// Load all tenant SSO settings and use them for configure OIDC settings
+ssoSettings, err := cc.HC.DescopeClient().Management.SSO().LoadSettings("tenant-id")
+ssoSettings.Oidc.Name = "my prOvider"
+ssoSettings.Oidc.AuthURL = authorizeEndpoint
+...
+ssoSettings.Oidc.Scope = []string{"openid", "profile", "email"}
+err = cc.HC.DescopeClient().Management.SSO().ConfigureOIDCSettings("tenant-id", ssoSettings.Oidc, "https://redirectlocation.com", "")
+
+// Configure tenant SSO by SAML settings
 tenantID := "tenant-id" // Which tenant this configuration is for
 idpURL := "https://idp.com"
 entityID := "my-idp-entity-id"
 idpCert := "<your-cert-here>"
 redirectURL := "https://my-app.com/handle-saml" // Global redirect URL for SSO/SAML
 domain := "domain.com" // Users logging in from this domain will be logged in to this tenant
+samlSettings := &descope.SSOSAMLSettings{
+	IdpURL: idpURL,
+	IdpEntityID: entityID,
+	IdpCert: idpCert,
+	AttributeMapping: &descope.AttributeMapping{Email: "myEmail", ..},
+	RoleMappings: []*RoleMapping{{..}},
+}
+err = cc.HC.DescopeClient().Management.SSO().ConfigureSAMLSettings(context.Background(), tenantID, samlSettings, redirectURL, domain)
+
+//* Deprecated (use ConfigureSAMLSettings(..) instead) *//
 err := descopeClient.Management.SSO().ConfigureSettings(context.Background(), tenantID, idpURL, entityID, idpCert, redirectURL, domain)
 
-// Alternatively, configure using an SSO metadata URL
-err := descopeClient.Management.SSO().ConfigureMetadata(context.Background(), tenantID, "https://idp.com/my-idp-metadata", redirectURL, domain)
+// Alternatively, configure using an SSO SAML metadata URL
+samlSettings := &descope.SSOSAMLSettingsByMetadata{
+	IdpMetadataURL: "https://idp.com/my-idp-metadata",
+	AttributeMapping: &descope.AttributeMapping{Email: "myEmail", ..},
+	RoleMappings: []*RoleMapping{{..}},
+}
+err = cc.HC.DescopeClient().Management.SSO().ConfigureSAMLSettingsByMetadata(context.Background(), tenantID, samlSettings, redirectURL, domain)
 
+//* Deprecated (use ConfigureSAMLSettingsByMetadata(..) instead) *//
+err := descopeClient.Management.SSO().ConfigureMetadata(tenantID, "https://idp.com/my-idp-metadata", redirectURL, domain)
+
+//* Deprecated (use Management.SSO().ConfigureSAMLSettings(..) or Management.SSO().ConfigureSAMLSettingsByMetadata(..) instead) *//
 // Map IDP groups to Descope roles, or map user attributes.
 // This function overrides any previous mapping (even when empty). Use carefully.
 roleMapping := []*descope.RoleMapping{
