@@ -851,14 +851,23 @@ type HTTPRequest struct {
 func NewClient(conf ClientParams) *Client {
 	httpClient := conf.DefaultClient
 	if httpClient == nil {
-		t := http.DefaultTransport.(*http.Transport).Clone()
-		t.MaxIdleConns = 100
-		t.MaxConnsPerHost = 100
-		t.MaxIdleConnsPerHost = 100
-		t.TLSClientConfig.InsecureSkipVerify = conf.CertificateVerify.SkipVerifyValue(conf.BaseURL)
+		var rt http.RoundTripper
+		t, ok := http.DefaultTransport.(*http.Transport)
+		if ok {
+			t = t.Clone()
+			t.MaxIdleConns = 100
+			t.MaxConnsPerHost = 100
+			t.MaxIdleConnsPerHost = 100
+			t.TLSClientConfig.InsecureSkipVerify = conf.CertificateVerify.SkipVerifyValue(conf.BaseURL)
+			rt = t
+		} else {
+			// App has set a different transport layer, we will not change its attributes, and use it as is
+			// this will include the tls config
+			rt = http.DefaultTransport
+		}
 		httpClient = &http.Client{
 			Timeout:   time.Second * 10,
-			Transport: t,
+			Transport: rt,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse // notest
 			},
