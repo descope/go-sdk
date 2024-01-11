@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/tests/helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -71,12 +72,48 @@ func TestPasswordConfigureSettingsSuccess(t *testing.T) {
 		require.Equal(t, "body", req["emailBody"])
 		require.Equal(t, "text", req["emailBodyPlainText"])
 	}))
-	err := mgmt.Password().ConfigureSettings(context.Background(), "tenant", true, 8, true, true, true, true, true, 3, true, 3, true, 4, "Descope", "subject", "body", "text", true)
+	err := mgmt.Password().ConfigureSettings(context.Background(), "tenant", &descope.PasswordSettings{
+		Enabled:               true,
+		MinLength:             8,
+		Lowercase:             true,
+		Uppercase:             true,
+		Number:                true,
+		NonAlphanumeric:       true,
+		Expiration:            true,
+		ExpirationWeeks:       3,
+		Reuse:                 true,
+		ReuseAmount:           3,
+		Lock:                  true,
+		LockAttempts:          4,
+		EmailServiceProvider:  "Descope",
+		EmailSubject:          "subject",
+		EmailBody:             "body",
+		EmailBodyPlainText:    "text",
+		UseEmailBodyPlainText: true,
+	})
 	require.NoError(t, err)
 }
 
 func TestPasswordConfigureSettingsError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	err := mgmt.Password().ConfigureSettings(context.Background(), "", true, 8, true, true, true, true, true, 3, true, 3, true, 4, "Descope", "subject", "body", "text", true)
+	err := mgmt.Password().ConfigureSettings(context.Background(), "tenant", &descope.PasswordSettings{
+		Enabled:               true,
+		MinLength:             8,
+		Lowercase:             true,
+		Uppercase:             true,
+		Number:                true,
+		NonAlphanumeric:       true,
+		Expiration:            true,
+		ExpirationWeeks:       3,
+		Reuse:                 true,
+		ReuseAmount:           3,
+		Lock:                  true,
+		LockAttempts:          4,
+		EmailServiceProvider:  "Descope",
+		EmailSubject:          "subject",
+		EmailBody:             "body",
+		EmailBodyPlainText:    "text",
+		UseEmailBodyPlainText: true,
+	})
 	require.Error(t, err)
 }

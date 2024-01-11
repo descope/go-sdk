@@ -190,23 +190,23 @@ func (m *MockSSO) ConfigureMapping(_ context.Context, tenantID string, roleMappi
 
 type MockPasswordManagement struct {
 	GetSettingsAssert   func(tenantID string)
-	GetSettingsResponse *descope.PasswordSettingsResponse
+	GetSettingsResponse *descope.PasswordSettings
 	GetSettingsError    error
 
-	ConfigureSettingsAssert func(tenantID string, enabled bool, minLength int, lowercase, uppercase, number, nonNumber, expiration bool, expirationWeeks int, reuse bool, reuseAmount int, lock bool, lockAttempts int, emailServiceProvider, emailSubject, emailBody, emailBodyPlainText string, useEmailBodyPlainText bool)
+	ConfigureSettingsAssert func(tenantID string, settings *descope.PasswordSettings)
 	ConfigureSettingsError  error
 }
 
-func (m *MockPasswordManagement) GetSettings(_ context.Context, tenantID string) (*descope.PasswordSettingsResponse, error) {
+func (m *MockPasswordManagement) GetSettings(_ context.Context, tenantID string) (*descope.PasswordSettings, error) {
 	if m.GetSettingsAssert != nil {
 		m.GetSettingsAssert(tenantID)
 	}
 	return m.GetSettingsResponse, m.GetSettingsError
 }
 
-func (m *MockPasswordManagement) ConfigureSettings(_ context.Context, tenantID string, enabled bool, minLength int, lowercase, uppercase, number, nonNumber, expiration bool, expirationWeeks int, reuse bool, reuseAmount int, lock bool, lockAttempts int, emailServiceProvider, emailSubject, emailBody, emailBodyPlainText string, useEmailBodyPlainText bool) error {
+func (m *MockPasswordManagement) ConfigureSettings(_ context.Context, tenantID string, settings *descope.PasswordSettings) error {
 	if m.ConfigureSettingsAssert != nil {
-		m.ConfigureSettingsAssert(tenantID, enabled, minLength, lowercase, uppercase, number, nonNumber, expiration, expirationWeeks, reuse, reuseAmount, lock, lockAttempts, emailServiceProvider, emailSubject, emailBody, emailBodyPlainText, useEmailBodyPlainText)
+		m.ConfigureSettingsAssert(tenantID, settings)
 	}
 	return m.ConfigureSettingsError
 }

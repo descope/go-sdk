@@ -70,7 +70,7 @@ type SSOSettingsResponse struct {
 	Domain string `json:"domain,omitempty"`
 }
 
-type PasswordSettingsResponse struct {
+type PasswordSettings struct {
 	Enabled               bool   `json:"enabled,omitempty"`
 	MinLength             int32  `json:"minLength,omitempty"`
 	Lowercase             bool   `json:"lowercase,omitempty"`
@@ -517,7 +517,6 @@ type TenantSettings struct {
 	SessionSettingsEnabled     bool     `json:"sessionSettingsEnabled,omitempty"`
 	RefreshTokenExpiration     int32    `json:"refreshTokenExpiration,omitempty"`
 	RefreshTokenExpirationUnit string   `json:"refreshTokenExpirationUnit,omitempty"`
-	RotateJwt                  bool     `json:"rotateJwt,omitempty"`
 	SessionTokenExpiration     int32    `json:"sessionTokenExpiration,omitempty"`
 	SessionTokenExpirationUnit string   `json:"sessionTokenExpirationUnit,omitempty"`
 	EnableInactivity           bool     `json:"enableInactivity,omitempty"`

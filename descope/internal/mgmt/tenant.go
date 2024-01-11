@@ -134,7 +134,6 @@ func (t *tenant) ConfigureSettings(ctx context.Context, tenantID string, setting
 		"inactivityTime":             settings.InactivityTime,
 		"inactivityTimeUnit":         settings.InactivityTimeUnit,
 		"enableInactivity":           settings.EnableInactivity,
-		"rotateJwt":                  settings.RotateJwt,
 		"domains":                    settings.Domains,
 	}
 	_, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantSettings(), req, nil, t.conf.ManagementKey)

@@ -897,29 +897,31 @@ err := descopeClient.Management.SSO().DeleteSettings(context.Background(), "tena
 You can manage password settings for tenants and projects.
 
 ```go
-// You can get password settings for a specific tenant ID
+// You can get password settings for a specific tenant ID. Empty tenant ID will return the project password settings.
 settings, err := descopeClient.Management.Password().GetSettings(context.Background(), "tenant-id")
 
-// You can configure SSO settings manually by setting the required fields directly
+// You can configure password settings by setting the required fields directly and provide the tenant ID to update.
 tenantID := "tenant-id" // Which tenant this configuration is for
-enabled := true
-minLength := 8
-lowercase := true
-uppercase := true
-number := true
-nonNumber := true
-expiration := true
-expirationWeeks := 2
-reuse := false
-reuseAmount := 10
-lock := true
-lockAttempts := 5
-emailServiceProvider := "Descope"
-emailSubject := "<your-reset-email-subject>"
-emailBody := "<your-reset-email-html>"
-emailBodyPlainText := "<your-reset-email-text>"
-useEmailBodyPlainText := true
-err := descopeClient.Management.Password().ConfigureSettings(context.Background(), tenantID, enabled, minLength, lowercase, uppercase, number, nonNumber, expiration, expirationWeeks, reuse, reuseAmount, lock, lockAttempts, emailServiceProvider, emailSubject, emailBody, emailBodyPlainText, useEmailBodyPlainText)
+settingsToUpdate := &descope.PasswordSettings{
+    Enabled:               true,
+    MinLength:             8,
+    Lowercase:             true,
+    Uppercase:             true,
+    Number:                true,
+    NonAlphanumeric:       true,
+    Expiration:            true,
+    ExpirationWeeks:       3,
+    Reuse:                 true,
+    ReuseAmount:           3,
+    Lock:                  true,
+    LockAttempts:          5,
+    EmailServiceProvider:  "Descope",
+    EmailSubject:          "<your-reset-email-subject>",
+    EmailBody:             "<your-reset-email-html>",
+    EmailBodyPlainText:    "<your-reset-email-text>",
+    UseEmailBodyPlainText: true,
+}
+err := descopeClient.Management.Password().ConfigureSettings(context.Background(), tenantID, settingsToUpdate)
 ```
 
 ### Manage Permissions

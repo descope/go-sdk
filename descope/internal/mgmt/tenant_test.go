@@ -216,7 +216,6 @@ func TestGetTenantSettingsSuccess(t *testing.T) {
 		"inactivityTime":             10,
 		"enableInactivity":           true,
 		"inactivityTimeUnit":         "minutes",
-		"rotateJwt":                  true,
 		"enabled":                    true,
 		"refreshTokenExpiration":     10,
 		"refreshTokenExpirationUnit": "weeks",
@@ -231,7 +230,6 @@ func TestGetTenantSettingsSuccess(t *testing.T) {
 	res, err := mgmt.Tenant().GetSettings(context.Background(), tenantID)
 	require.NoError(t, err)
 	assert.True(t, res.EnableInactivity)
-	assert.True(t, res.RotateJwt)
 	assert.True(t, res.SessionSettingsEnabled)
 	assert.EqualValues(t, 10, res.InactivityTime)
 	assert.EqualValues(t, "minutes", res.InactivityTimeUnit)

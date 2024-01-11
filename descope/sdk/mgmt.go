@@ -418,12 +418,12 @@ type SSO interface {
 // Provides functions for managing password policy for a project or a tenant.
 type PasswordManagement interface {
 	// Get password settings for a project or tenant.
-	GetSettings(ctx context.Context, tenantID string) (*descope.PasswordSettingsResponse, error)
+	GetSettings(ctx context.Context, tenantID string) (*descope.PasswordSettings, error)
 
 	// Configure Password settings for a project or a tenant manually.
-	// Tenant ID can be left empty to apply to project password policy.
+	// Tenant ID can be left empty to apply changes to project password policy.
 	// All other arguments are required and will override whatever is currently set even if left default.
-	ConfigureSettings(ctx context.Context, tenantID string, enabled bool, minLength int, lowercase, uppercase, number, nonNumber, expiration bool, expirationWeeks int, reuse bool, reuseAmount int, lock bool, lockAttempts int, emailServiceProvider, emailSubject, emailBody, emailBodyPlainText string, useEmailBodyPlainText bool) error
+	ConfigureSettings(ctx context.Context, tenantID string, settings *descope.PasswordSettings) error
 }
 
 // Provide functions for manipulating valid JWT
