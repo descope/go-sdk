@@ -490,6 +490,90 @@ type TenantSearchOptions struct {
 	AuthType                string
 }
 
+type SAMLIDPAttributeMappingInfo struct {
+	Name  string `json:"name"`
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
+type SAMLIDPRoleGroupMappingInfo struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type SAMLIDPGroupsMappingInfo struct {
+	Name       string                        `json:"name"`
+	Type       string                        `json:"type"`
+	FilterType string                        `json:"filterType"`
+	Value      string                        `json:"value"`
+	Roles      []SAMLIDPRoleGroupMappingInfo `json:"roles"`
+}
+
+type SSOApplicationSAMLSettings struct {
+	LoginPageURL        string                        `json:"loginPageURL"`
+	IdpCert             string                        `json:"idpCert"`
+	UseMetaInfoToggle   bool                          `json:"useMetaInfoToggle"`
+	MetadataURL         string                        `json:"metadataURL"`
+	EntityID            string                        `json:"entityId"`
+	AcsURL              string                        `json:"acsURL"`
+	Certificate         string                        `json:"certificate"`
+	AttributeMapping    []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
+	GroupsMapping       []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
+	IdpMetadataURL      string                        `json:"idpMetadataURL"`
+	IdpEntityID         string                        `json:"idpEntityId"`
+	IdpSSOURL           string                        `json:"idpSSOURL"`
+	AcsAllowedCallbacks []string                      `json:"acsAllowedCallbacks"`
+}
+
+type SSOApplicationOIDCSettings struct {
+	RedirectURL  string `json:"redirectURL"`
+	Issuer       string `json:"issuer"`
+	DiscoveryURL string `json:"discoveryURL"`
+}
+
+type SSOApplication struct {
+	ID           string                      `json:"id"`
+	Name         string                      `json:"name"`
+	Description  string                      `json:"description"`
+	Enabled      bool                        `json:"enabled"`
+	Logo         string                      `json:"logo"`
+	AppType      string                      `json:"appType"`
+	SAMLSettings *SSOApplicationSAMLSettings `json:"samlSettings"`
+	OIDCSettings *SSOApplicationOIDCSettings `json:"oidcSettings"`
+}
+
+type OIDCApplicationRequest struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Enabled     bool   `json:"enabled"`
+	Logo        string `json:"logo"`
+	RedirectURL string `json:"redirectURL"`
+}
+
+type SAMLApplicationRequest struct {
+	ID                  string                        `json:"id"`
+	Name                string                        `json:"name"`
+	Description         string                        `json:"description"`
+	Enabled             bool                          `json:"enabled"`
+	Logo                string                        `json:"logo"`
+	LoginPageURL        string                        `json:"loginPageURL"`
+	UseMetadataInfo     bool                          `json:"useMetaInfoToggle"`
+	MetadataURL         string                        `json:"metadataURL"`
+	EntityID            string                        `json:"entityId"`
+	AcsURL              string                        `json:"acsURL"`
+	Certificate         string                        `json:"certificate"`
+	AttributeMapping    []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
+	GroupsMapping       []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
+	AcsAllowedCallbacks []string                      `json:"acsAllowedCallbacks"`
+}
+
+type SSOApplicationSearchOptions struct {
+	IDs     []string
+	Names   []string
+	AppType string
+}
+
 type Permission struct {
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`

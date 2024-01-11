@@ -82,6 +82,13 @@ var (
 			tenantLoad:                       "mgmt/tenant",
 			tenantLoadAll:                    "mgmt/tenant/all",
 			tenantSearchAll:                  "mgmt/tenant/search",
+			ssoApplicationOIDCCreate:         "mgmt/sso/idp/app/create/oidc",
+			ssoApplicationSAMLCreate:         "mgmt/sso/idp/app/create/saml",
+			ssoApplicationOIDCUpdate:         "mgmt/sso/idp/app/update/oidc",
+			ssoApplicationSAMLUpdate:         "mgmt/sso/idp/app/update/saml",
+			ssoApplicationDelete:             "mgmt/sso/idp/app/delete",
+			ssoApplicationLoad:               "mgmt/sso/idp/app/load",
+			ssoApplicationLoadAll:            "mgmt/sso/idp/app/loadall",
 			userCreate:                       "mgmt/user/create",
 			userCreateBatch:                  "mgmt/user/create/batch",
 			userUpdate:                       "mgmt/user/update",
@@ -237,6 +244,14 @@ type mgmtEndpoints struct {
 	tenantLoad      string
 	tenantLoadAll   string
 	tenantSearchAll string
+
+	ssoApplicationOIDCCreate string
+	ssoApplicationSAMLCreate string
+	ssoApplicationOIDCUpdate string
+	ssoApplicationSAMLUpdate string
+	ssoApplicationDelete     string
+	ssoApplicationLoad       string
+	ssoApplicationLoadAll    string
 
 	userCreate                string
 	userCreateBatch           string
@@ -509,6 +524,34 @@ func (e *endpoints) ManagementTenantLoadAll() string {
 
 func (e *endpoints) ManagementTenantSearchAll() string {
 	return path.Join(e.version, e.mgmt.tenantSearchAll)
+}
+
+func (e *endpoints) ManagementSSOApplicationOIDCCreate() string {
+	return path.Join(e.version, e.mgmt.ssoApplicationOIDCCreate)
+}
+
+func (e *endpoints) ManagementSSOApplicationSAMLCreate() string {
+	return path.Join(e.version, e.mgmt.ssoApplicationSAMLCreate)
+}
+
+func (e *endpoints) ManagementSSOApplicationOIDCUpdate() string {
+	return path.Join(e.version, e.mgmt.ssoApplicationOIDCUpdate)
+}
+
+func (e *endpoints) ManagementSSOApplicationSAMLUpdate() string {
+	return path.Join(e.version, e.mgmt.ssoApplicationSAMLUpdate)
+}
+
+func (e *endpoints) ManagementSSOApplicationDelete() string {
+	return path.Join(e.version, e.mgmt.ssoApplicationDelete)
+}
+
+func (e *endpoints) ManagementSSOApplicationLoad() string {
+	return path.Join(e.version, e.mgmt.ssoApplicationLoad)
+}
+
+func (e *endpoints) ManagementSSOApplicationLoadAll() string {
+	return path.Join(e.version, e.mgmt.ssoApplicationLoadAll)
 }
 
 func (e *endpoints) ManagementUserCreate() string {

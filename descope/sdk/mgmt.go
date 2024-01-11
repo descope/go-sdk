@@ -50,6 +50,44 @@ type Tenant interface {
 	SearchAll(ctx context.Context, options *descope.TenantSearchOptions) ([]*descope.Tenant, error)
 }
 
+// Provides functions for managing SSO applications in a project.
+type SSOApplication interface {
+	// Create a new OIDC SSO application with the given name.
+	//
+	// The sso application app.Id value is optional and will be auto generated if provided with empty value
+	// The sso application app.Id and app.Name must be unique per project.
+	CreateOIDCApplication(ctx context.Context, appRequest *descope.OIDCApplicationRequest) (id string, err error)
+
+	// Create a new SAML SSO application with the given name.
+	//
+	// The sso application app.Id value is optional and will be auto generated if provided with empty value
+	// The sso application app.Id and app.Name must be unique per project.
+	CreateSAMLApplication(ctx context.Context, appRequest *descope.SAMLApplicationRequest) (id string, err error)
+
+	// Update an existing OIDC sso application.
+	//
+	// IMPORTANT: All parameters are required and will override whatever value is currently
+	// set in the existing sso application. Use carefully.
+	UpdateOIDCApplication(ctx context.Context, appRequest *descope.OIDCApplicationRequest) error
+
+	// Update an existing SAML sso application.
+	//
+	// IMPORTANT: All parameters are required and will override whatever value is currently
+	// set in the existing sso application. Use carefully.
+	UpdateSAMLApplication(ctx context.Context, appRequest *descope.SAMLApplicationRequest) error
+
+	// Delete an existing sso application.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	Delete(ctx context.Context, id string) error
+
+	// Load project sso application by id
+	Load(ctx context.Context, id string) (*descope.SSOApplication, error)
+
+	// Load all project sso applications
+	LoadAll(ctx context.Context) ([]*descope.SSOApplication, error)
+}
+
 // Provides functions for managing users in a project.
 type User interface {
 	// Create a new user.
@@ -612,6 +650,9 @@ type Authz interface {
 type Management interface {
 	// Provides functions for managing tenants in a project.
 	Tenant() Tenant
+
+	// Provides functions for managing sso applications in a project.
+	SSOApplication() SSOApplication
 
 	// Provides functions for managing users in a project.
 	User() User
