@@ -897,7 +897,7 @@ err := descopeClient.Management.SSO().DeleteSettings(context.Background(), "tena
 You can manage password settings for tenants and projects.
 
 ```go
-// You can get password settings for a specific tenant ID. Empty tenant ID will return the project password settings.
+// You can get password settings for a specific tenant ID. Tenant ID is required.
 settings, err := descopeClient.Management.Password().GetSettings(context.Background(), "tenant-id")
 
 // You can configure password settings by setting the required fields directly and provide the tenant ID to update.
@@ -915,11 +915,6 @@ settingsToUpdate := &descope.PasswordSettings{
     ReuseAmount:           3,
     Lock:                  true,
     LockAttempts:          5,
-    EmailServiceProvider:  "Descope",
-    EmailSubject:          "<your-reset-email-subject>",
-    EmailBody:             "<your-reset-email-html>",
-    EmailBodyPlainText:    "<your-reset-email-text>",
-    UseEmailBodyPlainText: true,
 }
 err := descopeClient.Management.Password().ConfigureSettings(context.Background(), tenantID, settingsToUpdate)
 ```
