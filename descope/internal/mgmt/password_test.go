@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/descope/go-sdk/descope"
+	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/tests/helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -49,6 +50,14 @@ func TestGetPasswordSettingsError(t *testing.T) {
 	assert.Nil(t, res)
 }
 
+func TestGetPasswordSettingsErrorEmptyTenantID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {}))
+	res, err := mgmt.Password().GetSettings(context.Background(), "")
+	require.Error(t, err)
+	assert.ErrorIs(t, err, utils.NewInvalidArgumentError("tenantID"))
+	assert.Nil(t, res)
+}
+
 func TestPasswordConfigureSettingsSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -67,29 +76,20 @@ func TestPasswordConfigureSettingsSuccess(t *testing.T) {
 		require.Equal(t, float64(3), req["reuseAmount"])
 		require.Equal(t, true, req["lock"])
 		require.Equal(t, float64(4), req["lockAttempts"])
-		require.Equal(t, "Descope", req["emailServiceProvider"])
-		require.Equal(t, "subject", req["emailSubject"])
-		require.Equal(t, "body", req["emailBody"])
-		require.Equal(t, "text", req["emailBodyPlainText"])
 	}))
 	err := mgmt.Password().ConfigureSettings(context.Background(), "tenant", &descope.PasswordSettings{
-		Enabled:               true,
-		MinLength:             8,
-		Lowercase:             true,
-		Uppercase:             true,
-		Number:                true,
-		NonAlphanumeric:       true,
-		Expiration:            true,
-		ExpirationWeeks:       3,
-		Reuse:                 true,
-		ReuseAmount:           3,
-		Lock:                  true,
-		LockAttempts:          4,
-		EmailServiceProvider:  "Descope",
-		EmailSubject:          "subject",
-		EmailBody:             "body",
-		EmailBodyPlainText:    "text",
-		UseEmailBodyPlainText: true,
+		Enabled:         true,
+		MinLength:       8,
+		Lowercase:       true,
+		Uppercase:       true,
+		Number:          true,
+		NonAlphanumeric: true,
+		Expiration:      true,
+		ExpirationWeeks: 3,
+		Reuse:           true,
+		ReuseAmount:     3,
+		Lock:            true,
+		LockAttempts:    4,
 	})
 	require.NoError(t, err)
 }
@@ -97,23 +97,38 @@ func TestPasswordConfigureSettingsSuccess(t *testing.T) {
 func TestPasswordConfigureSettingsError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
 	err := mgmt.Password().ConfigureSettings(context.Background(), "tenant", &descope.PasswordSettings{
-		Enabled:               true,
-		MinLength:             8,
-		Lowercase:             true,
-		Uppercase:             true,
-		Number:                true,
-		NonAlphanumeric:       true,
-		Expiration:            true,
-		ExpirationWeeks:       3,
-		Reuse:                 true,
-		ReuseAmount:           3,
-		Lock:                  true,
-		LockAttempts:          4,
-		EmailServiceProvider:  "Descope",
-		EmailSubject:          "subject",
-		EmailBody:             "body",
-		EmailBodyPlainText:    "text",
-		UseEmailBodyPlainText: true,
+		Enabled:         true,
+		MinLength:       8,
+		Lowercase:       true,
+		Uppercase:       true,
+		Number:          true,
+		NonAlphanumeric: true,
+		Expiration:      true,
+		ExpirationWeeks: 3,
+		Reuse:           true,
+		ReuseAmount:     3,
+		Lock:            true,
+		LockAttempts:    4,
 	})
 	require.Error(t, err)
+}
+
+func TestPasswordConfigureSettingsErrorEmptyTenantID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {}))
+	err := mgmt.Password().ConfigureSettings(context.Background(), "", &descope.PasswordSettings{
+		Enabled:         true,
+		MinLength:       8,
+		Lowercase:       true,
+		Uppercase:       true,
+		Number:          true,
+		NonAlphanumeric: true,
+		Expiration:      true,
+		ExpirationWeeks: 3,
+		Reuse:           true,
+		ReuseAmount:     3,
+		Lock:            true,
+		LockAttempts:    4,
+	})
+	require.Error(t, err)
+	assert.ErrorIs(t, err, utils.NewInvalidArgumentError("tenantID"))
 }

@@ -71,24 +71,18 @@ type SSOSettingsResponse struct {
 }
 
 type PasswordSettings struct {
-	Enabled               bool   `json:"enabled,omitempty"`
-	MinLength             int32  `json:"minLength,omitempty"`
-	Lowercase             bool   `json:"lowercase,omitempty"`
-	Uppercase             bool   `json:"uppercase,omitempty"`
-	Number                bool   `json:"number,omitempty"`
-	NonAlphanumeric       bool   `json:"nonAlphanumeric,omitempty"`
-	Expiration            bool   `json:"expiration,omitempty"`
-	ExpirationWeeks       int32  `json:"expirationWeeks,omitempty"`
-	Reuse                 bool   `json:"reuse,omitempty"`
-	ReuseAmount           int32  `json:"reuseAmount,omitempty"`
-	Lock                  bool   `json:"lock,omitempty"`
-	LockAttempts          int32  `json:"lockAttempts,omitempty"`
-	EmailServiceProvider  string `json:"emailServiceProvider,omitempty"` // must be type:providerID or Descope
-	EmailSubject          string `json:"emailSubject,omitempty"`
-	EmailBody             string `json:"emailBody,omitempty"`
-	ResetAuthMethod       string `json:"resetAuthMethod,omitempty"`
-	EmailBodyPlainText    string `json:"emailBodyPlainText,omitempty"`
-	UseEmailBodyPlainText bool   `json:"useEmailBodyPlainText,omitempty"`
+	Enabled         bool  `json:"enabled,omitempty"`
+	MinLength       int32 `json:"minLength,omitempty"`
+	Lowercase       bool  `json:"lowercase,omitempty"`
+	Uppercase       bool  `json:"uppercase,omitempty"`
+	Number          bool  `json:"number,omitempty"`
+	NonAlphanumeric bool  `json:"nonAlphanumeric,omitempty"`
+	Expiration      bool  `json:"expiration,omitempty"`
+	ExpirationWeeks int32 `json:"expirationWeeks,omitempty"`
+	Reuse           bool  `json:"reuse,omitempty"`
+	ReuseAmount     int32 `json:"reuseAmount,omitempty"`
+	Lock            bool  `json:"lock,omitempty"`
+	LockAttempts    int32 `json:"lockAttempts,omitempty"`
 }
 
 type SSOSAMLSettingsResponse struct {

@@ -13,6 +13,10 @@ type password struct {
 }
 
 func (s *password) GetSettings(ctx context.Context, tenantID string) (*descope.PasswordSettings, error) {
+	if tenantID == "" {
+		return nil, utils.NewInvalidArgumentError("tenantID")
+	}
+
 	req := &api.HTTPRequest{
 		QueryParams: map[string]string{"tenantId": tenantID},
 	}
@@ -24,25 +28,24 @@ func (s *password) GetSettings(ctx context.Context, tenantID string) (*descope.P
 }
 
 func (s *password) ConfigureSettings(ctx context.Context, tenantID string, passwordSettings *descope.PasswordSettings) error {
+	if tenantID == "" {
+		return utils.NewInvalidArgumentError("tenantID")
+	}
+
 	req := map[string]any{
-		"tenantId":              tenantID,
-		"enabled":               passwordSettings.Enabled,
-		"minLength":             passwordSettings.MinLength,
-		"lowercase":             passwordSettings.Lowercase,
-		"uppercase":             passwordSettings.Uppercase,
-		"number":                passwordSettings.Number,
-		"nonAlphanumeric":       passwordSettings.NonAlphanumeric,
-		"expiration":            passwordSettings.Expiration,
-		"expirationWeeks":       passwordSettings.ExpirationWeeks,
-		"reuse":                 passwordSettings.Reuse,
-		"reuseAmount":           passwordSettings.ReuseAmount,
-		"lock":                  passwordSettings.Lock,
-		"lockAttempts":          passwordSettings.LockAttempts,
-		"emailServiceProvider":  passwordSettings.EmailServiceProvider,
-		"emailSubject":          passwordSettings.EmailSubject,
-		"emailBody":             passwordSettings.EmailBody,
-		"emailBodyPlainText":    passwordSettings.EmailBodyPlainText,
-		"useEmailBodyPlainText": passwordSettings.UseEmailBodyPlainText,
+		"tenantId":        tenantID,
+		"enabled":         passwordSettings.Enabled,
+		"minLength":       passwordSettings.MinLength,
+		"lowercase":       passwordSettings.Lowercase,
+		"uppercase":       passwordSettings.Uppercase,
+		"number":          passwordSettings.Number,
+		"nonAlphanumeric": passwordSettings.NonAlphanumeric,
+		"expiration":      passwordSettings.Expiration,
+		"expirationWeeks": passwordSettings.ExpirationWeeks,
+		"reuse":           passwordSettings.Reuse,
+		"reuseAmount":     passwordSettings.ReuseAmount,
+		"lock":            passwordSettings.Lock,
+		"lockAttempts":    passwordSettings.LockAttempts,
 	}
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementPasswordSettings(), req, nil, s.conf.ManagementKey)
 	return err
