@@ -121,12 +121,12 @@ func (s *SSOApplication) LoadAll(ctx context.Context) ([]*descope.SSOApplication
 
 func makeCreateUpdateOIDCApplicationRequest(appRequest *descope.OIDCApplicationRequest) map[string]any {
 	return map[string]any{
-		"id":          appRequest.ID,
-		"name":        appRequest.Name,
-		"description": appRequest.Description,
-		"enabled":     appRequest.Enabled,
-		"logo":        appRequest.Logo,
-		"redirectURL": appRequest.RedirectURL,
+		"id":           appRequest.ID,
+		"name":         appRequest.Name,
+		"description":  appRequest.Description,
+		"enabled":      appRequest.Enabled,
+		"logo":         appRequest.Logo,
+		"loginPageUrl": appRequest.LoginPageURL,
 	}
 }
 
@@ -137,15 +137,17 @@ func makeCreateUpdateSAMLApplicationRequest(appRequest *descope.SAMLApplicationR
 		"description":         appRequest.Description,
 		"enabled":             appRequest.Enabled,
 		"logo":                appRequest.Logo,
-		"loginPageURL":        appRequest.LoginPageURL,
-		"useMetaInfoToggle":   appRequest.UseMetadataInfo,
-		"metadataURL":         appRequest.MetadataURL,
+		"loginPageUrl":        appRequest.LoginPageURL,
+		"useMetadataInfo":     appRequest.UseMetadataInfo,
+		"metadataUrl":         appRequest.MetadataURL,
 		"entityId":            appRequest.EntityID,
-		"acsURL":              appRequest.AcsURL,
+		"acsUrl":              appRequest.AcsURL,
 		"certificate":         appRequest.Certificate,
 		"attributeMapping":    appRequest.AttributeMapping,
 		"groupsMapping":       appRequest.GroupsMapping,
 		"acsAllowedCallbacks": appRequest.AcsAllowedCallbacks,
+		"subjectNameIdType":   appRequest.SubjectNameIDType,
+		"subjectNameIdFormat": appRequest.SubjectNameIDFormat,
 	}
 }
 

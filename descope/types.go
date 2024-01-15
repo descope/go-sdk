@@ -510,25 +510,27 @@ type SAMLIDPGroupsMappingInfo struct {
 }
 
 type SSOApplicationSAMLSettings struct {
-	LoginPageURL        string                        `json:"loginPageURL"`
+	LoginPageURL        string                        `json:"loginPageUrl"`
 	IdpCert             string                        `json:"idpCert"`
-	UseMetaInfoToggle   bool                          `json:"useMetaInfoToggle"`
-	MetadataURL         string                        `json:"metadataURL"`
+	UseMetadataInfo     bool                          `json:"useMetadataInfo"`
+	MetadataURL         string                        `json:"metadataUrl"`
 	EntityID            string                        `json:"entityId"`
-	AcsURL              string                        `json:"acsURL"`
+	AcsURL              string                        `json:"acsUrl"`
 	Certificate         string                        `json:"certificate"`
 	AttributeMapping    []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
 	GroupsMapping       []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
-	IdpMetadataURL      string                        `json:"idpMetadataURL"`
+	IdpMetadataURL      string                        `json:"idpMetadataUrl"`
 	IdpEntityID         string                        `json:"idpEntityId"`
-	IdpSSOURL           string                        `json:"idpSSOURL"`
+	IdpSSOURL           string                        `json:"idpSsoUrl"`
 	AcsAllowedCallbacks []string                      `json:"acsAllowedCallbacks"`
+	SubjectNameIDType   string                        `json:"subjectNameIdType"`
+	SubjectNameIDFormat string                        `json:"subjectNameIdFormat"`
 }
 
 type SSOApplicationOIDCSettings struct {
-	RedirectURL  string `json:"redirectURL"`
+	LoginPageURL string `json:"loginPageUrl"`
 	Issuer       string `json:"issuer"`
-	DiscoveryURL string `json:"discoveryURL"`
+	DiscoveryURL string `json:"discoveryUrl"`
 }
 
 type SSOApplication struct {
@@ -543,12 +545,12 @@ type SSOApplication struct {
 }
 
 type OIDCApplicationRequest struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Enabled     bool   `json:"enabled"`
-	Logo        string `json:"logo"`
-	RedirectURL string `json:"redirectURL"`
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	Description  string `json:"description"`
+	Enabled      bool   `json:"enabled"`
+	Logo         string `json:"logo"`
+	LoginPageURL string `json:"loginPageUrl"`
 }
 
 type SAMLApplicationRequest struct {
@@ -557,15 +559,17 @@ type SAMLApplicationRequest struct {
 	Description         string                        `json:"description"`
 	Enabled             bool                          `json:"enabled"`
 	Logo                string                        `json:"logo"`
-	LoginPageURL        string                        `json:"loginPageURL"`
-	UseMetadataInfo     bool                          `json:"useMetaInfoToggle"`
-	MetadataURL         string                        `json:"metadataURL"`
+	LoginPageURL        string                        `json:"loginPageUrl"`
+	UseMetadataInfo     bool                          `json:"useMetadataInfo"`
+	MetadataURL         string                        `json:"metadataUrl"`
 	EntityID            string                        `json:"entityId"`
-	AcsURL              string                        `json:"acsURL"`
+	AcsURL              string                        `json:"acsUrl"`
 	Certificate         string                        `json:"certificate"`
 	AttributeMapping    []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
 	GroupsMapping       []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
 	AcsAllowedCallbacks []string                      `json:"acsAllowedCallbacks"`
+	SubjectNameIDType   string                        `json:"subjectNameIdType"`
+	SubjectNameIDFormat string                        `json:"subjectNameIdFormat"`
 }
 
 type SSOApplicationSearchOptions struct {

@@ -21,16 +21,16 @@ func TestSSOApplicationCreateOIDCApplicationSuccess(t *testing.T) {
 		require.Equal(t, "desc", req["description"])
 		require.Equal(t, true, req["enabled"])
 		require.Equal(t, "logo", req["logo"])
-		require.Equal(t, "http://dummy.com", req["redirectURL"])
+		require.Equal(t, "http://dummy.com", req["loginPageUrl"])
 	}, response))
 
 	id, err := mgmt.SSOApplication().CreateOIDCApplication(context.Background(), &descope.OIDCApplicationRequest{
-		ID:          "id1",
-		Name:        "abc",
-		Description: "desc",
-		Enabled:     true,
-		Logo:        "logo",
-		RedirectURL: "http://dummy.com",
+		ID:           "id1",
+		Name:         "abc",
+		Description:  "desc",
+		Enabled:      true,
+		Logo:         "logo",
+		LoginPageURL: "http://dummy.com",
 	})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)
@@ -62,15 +62,17 @@ func TestSSOApplicationCreateSAMLApplicationSuccess(t *testing.T) {
 		require.Equal(t, true, req["enabled"])
 		require.Equal(t, "logo", req["logo"])
 
-		require.Equal(t, "http://dummy.com/login", req["loginPageURL"])
-		require.Equal(t, true, req["useMetaInfoToggle"])
-		require.Equal(t, "http://dummy.com/md", req["metadataURL"])
+		require.Equal(t, "http://dummy.com/login", req["loginPageUrl"])
+		require.Equal(t, true, req["useMetadataInfo"])
+		require.Equal(t, "http://dummy.com/md", req["metadataUrl"])
 		require.Equal(t, "aaaa", req["entityId"])
-		require.Equal(t, "http://dummy.com/acs", req["acsURL"])
+		require.Equal(t, "http://dummy.com/acs", req["acsUrl"])
 		require.Equal(t, "cert", req["certificate"])
 		require.Equal(t, []any{map[string]any{"name": "n1", "type": "t1", "value": "v1"}}, req["attributeMapping"])
 		require.Equal(t, []any{map[string]any{"filterType": "ft1", "name": "n1", "roles": []any{map[string]any{"id": "r1", "name": "rn1"}}, "type": "t1", "value": "v1"}}, req["groupsMapping"])
 		require.Equal(t, []any{"http://dummy.com/acsallow"}, req["acsAllowedCallbacks"])
+		require.Equal(t, "email", req["subjectNameIdType"])
+		require.Equal(t, "", req["subjectNameIdFormat"])
 
 	}, response))
 
@@ -89,6 +91,8 @@ func TestSSOApplicationCreateSAMLApplicationSuccess(t *testing.T) {
 		AttributeMapping:    []descope.SAMLIDPAttributeMappingInfo{{Name: "n1", Type: "t1", Value: "v1"}},
 		GroupsMapping:       []descope.SAMLIDPGroupsMappingInfo{{Name: "n1", Type: "t1", FilterType: "ft1", Value: "v1", Roles: []descope.SAMLIDPRoleGroupMappingInfo{{ID: "r1", Name: "rn1"}}}},
 		AcsAllowedCallbacks: []string{"http://dummy.com/acsallow"},
+		SubjectNameIDType:   "email",
+		SubjectNameIDFormat: "",
 	})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)
@@ -119,16 +123,16 @@ func TestSSOApplicationUpdateOIDCApplicationSuccess(t *testing.T) {
 		require.Equal(t, "desc", req["description"])
 		require.Equal(t, true, req["enabled"])
 		require.Equal(t, "logo", req["logo"])
-		require.Equal(t, "http://dummy.com", req["redirectURL"])
+		require.Equal(t, "http://dummy.com", req["loginPageUrl"])
 	}, response))
 
 	err := mgmt.SSOApplication().UpdateOIDCApplication(context.Background(), &descope.OIDCApplicationRequest{
-		ID:          "id1",
-		Name:        "abc",
-		Description: "desc",
-		Enabled:     true,
-		Logo:        "logo",
-		RedirectURL: "http://dummy.com",
+		ID:           "id1",
+		Name:         "abc",
+		Description:  "desc",
+		Enabled:      true,
+		Logo:         "logo",
+		LoginPageURL: "http://dummy.com",
 	})
 	require.NoError(t, err)
 }
@@ -161,15 +165,17 @@ func TestSSOApplicationUpdateSAMLApplicationSuccess(t *testing.T) {
 		require.Equal(t, true, req["enabled"])
 		require.Equal(t, "logo", req["logo"])
 
-		require.Equal(t, "http://dummy.com/login", req["loginPageURL"])
-		require.Equal(t, true, req["useMetaInfoToggle"])
-		require.Equal(t, "http://dummy.com/md", req["metadataURL"])
+		require.Equal(t, "http://dummy.com/login", req["loginPageUrl"])
+		require.Equal(t, true, req["useMetadataInfo"])
+		require.Equal(t, "http://dummy.com/md", req["metadataUrl"])
 		require.Equal(t, "aaaa", req["entityId"])
-		require.Equal(t, "http://dummy.com/acs", req["acsURL"])
+		require.Equal(t, "http://dummy.com/acs", req["acsUrl"])
 		require.Equal(t, "cert", req["certificate"])
 		require.Equal(t, []any{map[string]any{"name": "n1", "type": "t1", "value": "v1"}}, req["attributeMapping"])
 		require.Equal(t, []any{map[string]any{"filterType": "ft1", "name": "n1", "roles": []any{map[string]any{"id": "r1", "name": "rn1"}}, "type": "t1", "value": "v1"}}, req["groupsMapping"])
 		require.Equal(t, []any{"http://dummy.com/acsallow"}, req["acsAllowedCallbacks"])
+		require.Equal(t, "email", req["subjectNameIdType"])
+		require.Equal(t, "", req["subjectNameIdFormat"])
 
 	}, response))
 
@@ -188,6 +194,8 @@ func TestSSOApplicationUpdateSAMLApplicationSuccess(t *testing.T) {
 		AttributeMapping:    []descope.SAMLIDPAttributeMappingInfo{{Name: "n1", Type: "t1", Value: "v1"}},
 		GroupsMapping:       []descope.SAMLIDPGroupsMappingInfo{{Name: "n1", Type: "t1", FilterType: "ft1", Value: "v1", Roles: []descope.SAMLIDPRoleGroupMappingInfo{{ID: "r1", Name: "rn1"}}}},
 		AcsAllowedCallbacks: []string{"http://dummy.com/acsallow"},
+		SubjectNameIDType:   "email",
+		SubjectNameIDFormat: "",
 	})
 	require.NoError(t, err)
 }
@@ -234,9 +242,9 @@ func TestSSOApplicationLoadOIDCSuccess(t *testing.T) {
 		"logo":        "logo",
 		"appType":     "oidc",
 		"oidcSettings": map[string]any{
-			"redirectURL":  "http://dummy.com",
+			"loginPageUrl": "http://dummy.com",
 			"issuer":       "http://dummy.com/P2AAAAA",
-			"discoveryURL": "http://dummy.com/P2AAAAA/.well-known/openid-configuration",
+			"discoveryUrl": "http://dummy.com/P2AAAAA/.well-known/openid-configuration",
 		},
 	}
 
@@ -253,7 +261,7 @@ func TestSSOApplicationLoadOIDCSuccess(t *testing.T) {
 	require.Equal(t, "logo", res.Logo)
 	require.Equal(t, "oidc", res.AppType)
 	require.NotNil(t, res.OIDCSettings)
-	require.Equal(t, "http://dummy.com", res.OIDCSettings.RedirectURL)
+	require.Equal(t, "http://dummy.com", res.OIDCSettings.LoginPageURL)
 	require.Equal(t, "http://dummy.com/P2AAAAA", res.OIDCSettings.Issuer)
 	require.Equal(t, "http://dummy.com/P2AAAAA/.well-known/openid-configuration", res.OIDCSettings.DiscoveryURL)
 	require.Nil(t, res.SAMLSettings)
@@ -268,19 +276,21 @@ func TestSSOApplicationLoadSAMLSuccess(t *testing.T) {
 		"logo":        "logo",
 		"appType":     "saml",
 		"samlSettings": map[string]any{
-			"loginPageURL":        "http://dummy.com/login",
+			"loginPageUrl":        "http://dummy.com/login",
 			"idpCert":             "cert",
-			"useMetaInfoToggle":   true,
-			"metadataURL":         "http://dummy.com/md",
+			"useMetadataInfo":     true,
+			"metadataUrl":         "http://dummy.com/md",
 			"entityId":            "aaaa",
-			"acsURL":              "http://dummy.com/acs",
+			"acsUrl":              "http://dummy.com/acs",
 			"certificate":         "cert",
 			"attributeMapping":    []any{map[string]any{"name": "n1", "type": "t1", "value": "v1"}},
 			"groupsMapping":       []any{map[string]any{"filterType": "ft1", "name": "n1", "roles": []any{map[string]any{"id": "r1", "name": "rn1"}}, "type": "t1", "value": "v1"}},
 			"acsAllowedCallbacks": []any{"http://dummy.com/acsallow"},
-			"idpMetadataURL":      "http://dummy.com/ssomd",
+			"idpMetadataUrl":      "http://dummy.com/ssomd",
 			"idpEntityId":         "eId1",
-			"idpSSOURL":           "http://dummy.com/sso",
+			"idpSsoUrl":           "http://dummy.com/sso",
+			"subjectNameIdType":   "email",
+			"subjectNameIdFormat": "",
 		},
 	}
 
@@ -299,7 +309,7 @@ func TestSSOApplicationLoadSAMLSuccess(t *testing.T) {
 	require.Nil(t, res.OIDCSettings)
 	require.NotNil(t, res.SAMLSettings)
 	require.Equal(t, "http://dummy.com/login", res.SAMLSettings.LoginPageURL)
-	require.Equal(t, true, res.SAMLSettings.UseMetaInfoToggle)
+	require.Equal(t, true, res.SAMLSettings.UseMetadataInfo)
 	require.Equal(t, "http://dummy.com/md", res.SAMLSettings.MetadataURL)
 	require.Equal(t, "aaaa", res.SAMLSettings.EntityID)
 	require.Equal(t, "http://dummy.com/acs", res.SAMLSettings.AcsURL)
@@ -311,6 +321,8 @@ func TestSSOApplicationLoadSAMLSuccess(t *testing.T) {
 	require.Equal(t, "http://dummy.com/ssomd", res.SAMLSettings.IdpMetadataURL)
 	require.Equal(t, "eId1", res.SAMLSettings.IdpEntityID)
 	require.Equal(t, "http://dummy.com/sso", res.SAMLSettings.IdpSSOURL)
+	require.Equal(t, "email", res.SAMLSettings.SubjectNameIDType)
+	require.Equal(t, "", res.SAMLSettings.SubjectNameIDFormat)
 }
 
 func TestSSOApplicationLoadError(t *testing.T) {
@@ -334,9 +346,9 @@ func TestAllSSOApplicationsLoadSuccess(t *testing.T) {
 				"name":    "abc",
 				"appType": "saml",
 				"samlSettings": map[string]any{
-					"loginPageURL":      "http://dummy.com/login",
-					"useMetaInfoToggle": true,
-					"metadataURL":       "http://dummy.com/md",
+					"loginPageUrl":    "http://dummy.com/login",
+					"useMetadataInfo": true,
+					"metadataUrl":     "http://dummy.com/md",
 				},
 			},
 			{
@@ -344,9 +356,9 @@ func TestAllSSOApplicationsLoadSuccess(t *testing.T) {
 				"name":    "efg",
 				"appType": "oidc",
 				"oidcSettings": map[string]any{
-					"redirectURL":  "http://dummy.com",
+					"loginPageUrl": "http://dummy.com",
 					"issuer":       "http://dummy.com/P2AAAAA",
-					"discoveryURL": "http://dummy.com/P2AAAAA/.well-known/openid-configuration",
+					"discoveryUrl": "http://dummy.com/P2AAAAA/.well-known/openid-configuration",
 				},
 			},
 		}}
@@ -363,13 +375,13 @@ func TestAllSSOApplicationsLoadSuccess(t *testing.T) {
 			require.Equal(t, "abc", res[i].Name)
 			require.NotNil(t, res[i].SAMLSettings)
 			require.Equal(t, "http://dummy.com/login", res[i].SAMLSettings.LoginPageURL)
-			require.Equal(t, true, res[i].SAMLSettings.UseMetaInfoToggle)
+			require.Equal(t, true, res[i].SAMLSettings.UseMetadataInfo)
 			require.Equal(t, "http://dummy.com/md", res[i].SAMLSettings.MetadataURL)
 		} else {
 			require.Equal(t, "id2", res[i].ID)
 			require.Equal(t, "efg", res[i].Name)
 			require.NotNil(t, res[i].OIDCSettings)
-			require.Equal(t, "http://dummy.com", res[i].OIDCSettings.RedirectURL)
+			require.Equal(t, "http://dummy.com", res[i].OIDCSettings.LoginPageURL)
 			require.Equal(t, "http://dummy.com/P2AAAAA", res[i].OIDCSettings.Issuer)
 			require.Equal(t, "http://dummy.com/P2AAAAA/.well-known/openid-configuration", res[i].OIDCSettings.DiscoveryURL)
 		}
