@@ -70,6 +70,21 @@ type SSOSettingsResponse struct {
 	Domain string `json:"domain,omitempty"`
 }
 
+type PasswordSettings struct {
+	Enabled         bool  `json:"enabled,omitempty"`
+	MinLength       int32 `json:"minLength,omitempty"`
+	Lowercase       bool  `json:"lowercase,omitempty"`
+	Uppercase       bool  `json:"uppercase,omitempty"`
+	Number          bool  `json:"number,omitempty"`
+	NonAlphanumeric bool  `json:"nonAlphanumeric,omitempty"`
+	Expiration      bool  `json:"expiration,omitempty"`
+	ExpirationWeeks int32 `json:"expirationWeeks,omitempty"`
+	Reuse           bool  `json:"reuse,omitempty"`
+	ReuseAmount     int32 `json:"reuseAmount,omitempty"`
+	Lock            bool  `json:"lock,omitempty"`
+	LockAttempts    int32 `json:"lockAttempts,omitempty"`
+}
+
 type SSOSAMLSettingsResponse struct {
 	IdpEntityID      string            `json:"idpEntityId,omitempty"`
 	IdpSSOURL        string            `json:"idpSSOUrl,omitempty"`
@@ -488,6 +503,19 @@ type TenantSearchOptions struct {
 	SelfProvisioningDomains []string
 	CustomAttributes        map[string]any
 	AuthType                string
+}
+
+type TenantSettings struct {
+	Domains                    []string `json:"domains,omitempty"`
+	SelfProvisioningDomains    []string `json:"selfProvisioningDomains,omitempty"`
+	SessionSettingsEnabled     bool     `json:"sessionSettingsEnabled,omitempty"`
+	RefreshTokenExpiration     int32    `json:"refreshTokenExpiration,omitempty"`
+	RefreshTokenExpirationUnit string   `json:"refreshTokenExpirationUnit,omitempty"`
+	SessionTokenExpiration     int32    `json:"sessionTokenExpiration,omitempty"`
+	SessionTokenExpirationUnit string   `json:"sessionTokenExpirationUnit,omitempty"`
+	EnableInactivity           bool     `json:"enableInactivity,omitempty"`
+	InactivityTime             int32    `json:"inactivityTime,omitempty"`
+	InactivityTimeUnit         string   `json:"inactivityTimeUnit,omitempty"`
 }
 
 type Permission struct {

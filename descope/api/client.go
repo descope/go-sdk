@@ -82,6 +82,7 @@ var (
 			tenantLoad:                       "mgmt/tenant",
 			tenantLoadAll:                    "mgmt/tenant/all",
 			tenantSearchAll:                  "mgmt/tenant/search",
+			tenantSettings:                   "mgmt/tenant/settings",
 			userCreate:                       "mgmt/user/create",
 			userCreateBatch:                  "mgmt/user/create/batch",
 			userUpdate:                       "mgmt/user/update",
@@ -125,6 +126,7 @@ var (
 			ssoOIDCSettings:                  "mgmt/sso/oidc",
 			ssoMetadata:                      "mgmt/sso/metadata",
 			ssoMapping:                       "mgmt/sso/mapping",
+			passwordSettings:                 "mgmt/password/settings",
 			updateJWT:                        "mgmt/jwt/update",
 			permissionCreate:                 "mgmt/permission/create",
 			permissionUpdate:                 "mgmt/permission/update",
@@ -237,6 +239,7 @@ type mgmtEndpoints struct {
 	tenantLoad      string
 	tenantLoadAll   string
 	tenantSearchAll string
+	tenantSettings  string
 
 	userCreate                string
 	userCreateBatch           string
@@ -288,6 +291,8 @@ type mgmtEndpoints struct {
 	ssoSAMLSettingsByMetadata string
 	ssoOIDCSettings           string
 	updateJWT                 string
+
+	passwordSettings string
 
 	permissionCreate  string
 	permissionUpdate  string
@@ -511,6 +516,10 @@ func (e *endpoints) ManagementTenantSearchAll() string {
 	return path.Join(e.version, e.mgmt.tenantSearchAll)
 }
 
+func (e *endpoints) ManagementTenantSettings() string {
+	return path.Join(e.version, e.mgmt.tenantSettings)
+}
+
 func (e *endpoints) ManagementUserCreate() string {
 	return path.Join(e.version, e.mgmt.userCreate)
 }
@@ -676,6 +685,10 @@ func (e *endpoints) ManagementSSOMetadata() string {
 
 func (e *endpoints) ManagementSSOMapping() string {
 	return path.Join(e.version, e.mgmt.ssoMapping)
+}
+
+func (e *endpoints) ManagementPasswordSettings() string {
+	return path.Join(e.version, e.mgmt.passwordSettings)
 }
 
 func (e *endpoints) ManagementUpdateJWT() string {

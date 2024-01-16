@@ -645,6 +645,23 @@ if err == nil {
         // Do something
     }
 }
+
+// Load tenant settings by a tenant id
+settings, err := descopeClient.Management.Tenant().GetSettings(context.Background())
+
+settingsRequest := &descope.TenantSettings{}
+settingsRequest.SelfProvisioningDomains = []string{"domain.com", "company.com"}
+settingsRequest.RefreshTokenExpiration = 30
+settingsRequest.RefreshTokenExpirationUnit = "days"
+settingsRequest.SessionTokenExpiration = 30
+settingsRequest.SessionTokenExpirationUnit = "minutes"
+settingsRequest.EnableInactivity = true
+settingsRequest.InactivityTime = 2
+settingsRequest.InactivityTimeUnit = "days"
+
+// update the tenant settings
+err := descopeClient.Management.Tenant().ConfigureSettings(context.Background(), "My Tenant", settingsRequest)
+
 ```
 
 ### Manage Users
@@ -874,6 +891,33 @@ Certifcate contents
 
 // To delete SSO settings, call the following method
 err := descopeClient.Management.SSO().DeleteSettings(context.Background(), "tenant-id")
+
+### Manage Password Setting
+
+You can manage password settings for tenants and projects.
+
+```go
+// You can get password settings for a specific tenant ID. Tenant ID is required.
+settings, err := descopeClient.Management.Password().GetSettings(context.Background(), "tenant-id")
+
+// You can configure password settings by setting the required fields directly and provide the tenant ID to update.
+tenantID := "tenant-id" // Which tenant this configuration is for
+settingsToUpdate := &descope.PasswordSettings{
+    Enabled:               true,
+    MinLength:             8,
+    Lowercase:             true,
+    Uppercase:             true,
+    Number:                true,
+    NonAlphanumeric:       true,
+    Expiration:            true,
+    ExpirationWeeks:       3,
+    Reuse:                 true,
+    ReuseAmount:           3,
+    Lock:                  true,
+    LockAttempts:          5,
+}
+err := descopeClient.Management.Password().ConfigureSettings(context.Background(), tenantID, settingsToUpdate)
+```
 
 ### Manage Permissions
 
