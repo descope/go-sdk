@@ -54,14 +54,40 @@ type Tenant interface {
 type SSOApplication interface {
 	// Create a new OIDC SSO application with the given name.
 	//
-	// The sso application app.Id value is optional and will be auto generated if provided with empty value
-	// The sso application app.Id and app.Name must be unique per project.
+	// OIDCApplicationRequest fields:
+	// ID: Optional sso application ID.
+	// Name: The sso application's name.
+	// Description: Optional sso application description.
+	// Enabled: Optional set the sso application as enabled or disabled.
+	// Logo: Optional sso application logo.
+	// LoginPageURL: The URL where login page is hosted.
+	//
+	// The argument appRequest.Id value is optional and will be auto generated if provided with empty value
+	// The argument appRequest.Id and appRequest.Name must be unique per project.
 	CreateOIDCApplication(ctx context.Context, appRequest *descope.OIDCApplicationRequest) (id string, err error)
 
 	// Create a new SAML SSO application with the given name.
 	//
-	// The sso application app.Id value is optional and will be auto generated if provided with empty value
-	// The sso application app.Id and app.Name must be unique per project.
+	// SAMLApplicationRequest fields:
+	// ID: Optional sso application ID.
+	// Name: The sso application's name.
+	// Description: Optional sso application description.
+	// Enabled: Optional set the sso application as enabled or disabled.
+	// Logo: Optional sso application logo.
+	// LoginPageURL: The URL where login page is hosted.
+	// UseMetadataInfo: Optional determine if SP info should be automatically fetched from metadata_url or by specified it by the entity_id, acs_url, certificate parameters.
+	// MetadataURL: Optional (must be set if UseMetadataInfo is True) SP metadata url which include all the SP SAML info.
+	// EntityID: Optional (must be set if UseMetadataInfo is False) SP entity id.
+	// AcsURL: Optional (must be set if UseMetadataInfo is False) SP ACS (saml callback) url.
+	// Certificate: Optional (must be set if UseMetadataInfo is False)SP certificate, relevant only when SAML request must be signed.
+	// AttributeMapping: Optional list of Descope (IdP) attributes to SP mapping.
+	// GroupsMapping: Optional list of Descope (IdP) roles that will be mapped to SP groups.
+	// AcsAllowedCallbacks: Optional list of urls wildcards strings represents the allowed ACS urls that will be accepted while arriving on the SAML request as SP callback urls.
+	// SubjectNameIDType: Optional define the SAML Assertion subject name type, leave empty for using Descope user-id or set to "email"/"phone".
+	// SubjectNameIDFormat: Optional define the SAML Assertion subject name format, leave empty for using "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified".
+	//
+	// The argument appRequest.Id value is optional and will be auto generated if provided with empty value
+	// The argument appRequest.Id and appRequest.Name must be unique per project.
 	CreateSAMLApplication(ctx context.Context, appRequest *descope.SAMLApplicationRequest) (id string, err error)
 
 	// Update an existing OIDC sso application.
