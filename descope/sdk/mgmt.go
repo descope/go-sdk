@@ -48,6 +48,13 @@ type Tenant interface {
 	// and results. Using nil will result in a filter-less query with a set amount of
 	// results.
 	SearchAll(ctx context.Context, options *descope.TenantSearchOptions) ([]*descope.Tenant, error)
+
+	// Get tenant settings for a tenant by id.  Tenant ID is required.
+	GetSettings(ctx context.Context, tenantID string) (*descope.TenantSettings, error)
+
+	// Configure tenant settings for a tenant. Tenant ID is required.
+	// All settings arguments are required and will override whatever is currently set even if left default.
+	ConfigureSettings(ctx context.Context, tenantID string, settings *descope.TenantSettings) error
 }
 
 // Provides functions for managing SSO applications in a project.
@@ -472,6 +479,17 @@ type SSO interface {
 	ConfigureMapping(ctx context.Context, tenantID string, roleMappings []*descope.RoleMapping, attributeMapping *descope.AttributeMapping) error
 }
 
+// Provides functions for managing password policy for a project or a tenant.
+type PasswordManagement interface {
+	// Get password settings for a project or tenant.
+	GetSettings(ctx context.Context, tenantID string) (*descope.PasswordSettings, error)
+
+	// Configure Password settings for a project or a tenant manually.
+	// Tenant ID can be left empty to apply changes to project password policy.
+	// All other arguments are required and will override whatever is currently set even if left default.
+	ConfigureSettings(ctx context.Context, tenantID string, settings *descope.PasswordSettings) error
+}
+
 // Provide functions for manipulating valid JWT
 type JWT interface {
 	// Update a valid JWT with the custom claims provided
@@ -688,6 +706,9 @@ type Management interface {
 
 	// Provides functions for configuring SSO for a project.
 	SSO() SSO
+
+	// Provides functions for password settings for a project or tenant.
+	Password() PasswordManagement
 
 	// Provide functions for manipulating valid JWT
 	JWT() JWT

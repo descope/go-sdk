@@ -209,3 +209,71 @@ func TestTenantLoadNoIDError(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, res)
 }
+
+func TestGetTenantSettingsSuccess(t *testing.T) {
+	tenantID := "abc"
+	response := map[string]any{
+		"inactivityTime":             10,
+		"enableInactivity":           true,
+		"inactivityTimeUnit":         "minutes",
+		"enabled":                    true,
+		"refreshTokenExpiration":     10,
+		"refreshTokenExpirationUnit": "weeks",
+		"sessionTokenExpiration":     11,
+		"sessionTokenExpirationUnit": "minutes",
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		params := helpers.ReadParams(r)
+		require.Equal(t, tenantID, params["tenantId"])
+	}, response))
+	res, err := mgmt.Tenant().GetSettings(context.Background(), tenantID)
+	require.NoError(t, err)
+	assert.True(t, res.EnableInactivity)
+	assert.True(t, res.SessionSettingsEnabled)
+	assert.EqualValues(t, 10, res.InactivityTime)
+	assert.EqualValues(t, "minutes", res.InactivityTimeUnit)
+	assert.EqualValues(t, 11, res.SessionTokenExpiration)
+	assert.EqualValues(t, "minutes", res.SessionTokenExpirationUnit)
+	assert.EqualValues(t, 10, res.RefreshTokenExpiration)
+	assert.EqualValues(t, "weeks", res.RefreshTokenExpirationUnit)
+}
+
+func TestGetTenantSettingsError(t *testing.T) {
+	tenantID := "abc"
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		params := helpers.ReadParams(r)
+		require.Equal(t, tenantID, params["tenantId"])
+	}))
+	res, err := mgmt.Tenant().GetSettings(context.Background(), tenantID)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}
+
+func TestTenantConfigureSettingsSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "tenant", req["tenantId"])
+		require.Equal(t, true, req["enabled"])
+		require.Equal(t, true, req["enableInactivity"])
+		require.Equal(t, float64(19), req["sessionTokenExpiration"])
+		require.EqualValues(t, []any{"test"}, req["selfProvisioningDomains"])
+	}))
+	err := mgmt.Tenant().ConfigureSettings(context.Background(), "tenant", &descope.TenantSettings{EnableInactivity: true, SessionSettingsEnabled: true, SessionTokenExpiration: 19, SelfProvisioningDomains: []string{"test"}})
+	require.NoError(t, err)
+}
+
+func TestTenantConfigureSettingsEmptyError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.Tenant().ConfigureSettings(context.Background(), "", &descope.TenantSettings{})
+	require.Error(t, err)
+}
+
+func TestTenantConfigureSettingsError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	err := mgmt.Tenant().ConfigureSettings(context.Background(), "test", &descope.TenantSettings{})
+	require.Error(t, err)
+}

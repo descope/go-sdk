@@ -105,6 +105,41 @@ func (t *tenant) SearchAll(ctx context.Context, options *descope.TenantSearchOpt
 	return unmarshalLoadAllTenantsResponse(res)
 }
 
+func (t *tenant) GetSettings(ctx context.Context, tenantID string) (*descope.TenantSettings, error) {
+	if tenantID == "" {
+		return nil, utils.NewInvalidArgumentError("tenantID")
+	}
+	req := &api.HTTPRequest{
+		QueryParams: map[string]string{"tenantId": tenantID},
+	}
+	res, err := t.client.DoGetRequest(ctx, api.Routes.ManagementTenantSettings(), req, t.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalTenantSettingsResponse(res)
+}
+
+func (t *tenant) ConfigureSettings(ctx context.Context, tenantID string, settings *descope.TenantSettings) error {
+	if tenantID == "" {
+		return utils.NewInvalidArgumentError("tenantID")
+	}
+	req := map[string]any{
+		"tenantId":                   tenantID,
+		"selfProvisioningDomains":    settings.SelfProvisioningDomains,
+		"enabled":                    settings.SessionSettingsEnabled,
+		"sessionTokenExpiration":     settings.SessionTokenExpiration,
+		"refreshTokenExpiration":     settings.RefreshTokenExpiration,
+		"sessionTokenExpirationUnit": settings.SessionTokenExpirationUnit,
+		"refreshTokenExpirationUnit": settings.RefreshTokenExpirationUnit,
+		"inactivityTime":             settings.InactivityTime,
+		"inactivityTimeUnit":         settings.InactivityTimeUnit,
+		"enableInactivity":           settings.EnableInactivity,
+		"domains":                    settings.Domains,
+	}
+	_, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantSettings(), req, nil, t.conf.ManagementKey)
+	return err
+}
+
 func makeCreateUpdateTenantRequest(id string, tenantRequest *descope.TenantRequest) map[string]any {
 	return map[string]any{"id": id, "name": tenantRequest.Name, "selfProvisioningDomains": tenantRequest.SelfProvisioningDomains, "customAttributes": tenantRequest.CustomAttributes}
 }
@@ -137,4 +172,17 @@ func makeSearchTenantRequest(options *descope.TenantSearchOptions) map[string]an
 		"customAttributes":              options.CustomAttributes,
 		"authType":                      options.AuthType,
 	}
+}
+
+func unmarshalTenantSettingsResponse(res *api.HTTPResponse) (*descope.TenantSettings, error) {
+	var tres *struct {
+		*descope.TenantSettings
+		Enabled bool `json:"enabled"`
+	}
+	err := utils.Unmarshal([]byte(res.BodyStr), &tres)
+	if err != nil {
+		return nil, err
+	}
+	tres.TenantSettings.SessionSettingsEnabled = tres.Enabled
+	return tres.TenantSettings, nil
 }

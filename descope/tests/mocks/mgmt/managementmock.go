@@ -10,6 +10,7 @@ import (
 type MockManagement struct {
 	*MockJWT
 	*MockSSO
+	*MockPasswordManagement
 	*MockUser
 	*MockAccessKey
 	*MockTenant
@@ -73,6 +74,10 @@ func (m *MockManagement) Audit() sdk.Audit {
 
 func (m *MockManagement) Authz() sdk.Authz {
 	return m.MockAuthz
+}
+
+func (m *MockManagement) Password() sdk.PasswordManagement {
+	return m.MockPasswordManagement
 }
 
 // Mock JWT
@@ -184,6 +189,31 @@ func (m *MockSSO) ConfigureMapping(_ context.Context, tenantID string, roleMappi
 		m.ConfigureMappingAssert(tenantID, roleMappings, attributeMapping)
 	}
 	return m.ConfigureMappingError
+}
+
+// Mock Password
+
+type MockPasswordManagement struct {
+	GetSettingsAssert   func(tenantID string)
+	GetSettingsResponse *descope.PasswordSettings
+	GetSettingsError    error
+
+	ConfigureSettingsAssert func(tenantID string, settings *descope.PasswordSettings)
+	ConfigureSettingsError  error
+}
+
+func (m *MockPasswordManagement) GetSettings(_ context.Context, tenantID string) (*descope.PasswordSettings, error) {
+	if m.GetSettingsAssert != nil {
+		m.GetSettingsAssert(tenantID)
+	}
+	return m.GetSettingsResponse, m.GetSettingsError
+}
+
+func (m *MockPasswordManagement) ConfigureSettings(_ context.Context, tenantID string, settings *descope.PasswordSettings) error {
+	if m.ConfigureSettingsAssert != nil {
+		m.ConfigureSettingsAssert(tenantID, settings)
+	}
+	return m.ConfigureSettingsError
 }
 
 // Mock User
@@ -721,6 +751,14 @@ type MockTenant struct {
 
 	SearchAllResponse []*descope.Tenant
 	SearchAllError    error
+
+	GetSettingsAssert   func(id string)
+	GetSettingsResponse *descope.TenantSettings
+	GetSettingsError    error
+
+	ConfigureSettingsAssert   func(string, *descope.TenantSettings)
+	ConfigureSettingsResponse *descope.TenantSettings
+	ConfigureSettingsError    error
 }
 
 func (m *MockTenant) Create(_ context.Context, tenantRequest *descope.TenantRequest) (id string, err error) {
@@ -764,6 +802,20 @@ func (m *MockTenant) LoadAll(_ context.Context) ([]*descope.Tenant, error) {
 
 func (m *MockTenant) SearchAll(_ context.Context, _ *descope.TenantSearchOptions) ([]*descope.Tenant, error) {
 	return m.SearchAllResponse, m.SearchAllError
+}
+
+func (m *MockTenant) GetSettings(_ context.Context, tenantID string) (*descope.TenantSettings, error) {
+	if m.GetSettingsAssert != nil {
+		m.GetSettingsAssert(tenantID)
+	}
+	return m.GetSettingsResponse, m.GetSettingsError
+}
+
+func (m *MockTenant) ConfigureSettings(_ context.Context, tenantID string, settings *descope.TenantSettings) error {
+	if m.ConfigureSettingsAssert != nil {
+		m.ConfigureSettingsAssert(tenantID, settings)
+	}
+	return m.ConfigureSettingsError
 }
 
 // Mock SSOApplication

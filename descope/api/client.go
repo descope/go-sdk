@@ -82,6 +82,7 @@ var (
 			tenantLoad:                       "mgmt/tenant",
 			tenantLoadAll:                    "mgmt/tenant/all",
 			tenantSearchAll:                  "mgmt/tenant/search",
+			tenantSettings:                   "mgmt/tenant/settings",
 			ssoApplicationOIDCCreate:         "mgmt/sso/idp/app/oidc/create",
 			ssoApplicationSAMLCreate:         "mgmt/sso/idp/app/saml/create",
 			ssoApplicationOIDCUpdate:         "mgmt/sso/idp/app/oidc/update",
@@ -132,6 +133,7 @@ var (
 			ssoOIDCSettings:                  "mgmt/sso/oidc",
 			ssoMetadata:                      "mgmt/sso/metadata",
 			ssoMapping:                       "mgmt/sso/mapping",
+			passwordSettings:                 "mgmt/password/settings",
 			updateJWT:                        "mgmt/jwt/update",
 			permissionCreate:                 "mgmt/permission/create",
 			permissionUpdate:                 "mgmt/permission/update",
@@ -244,6 +246,7 @@ type mgmtEndpoints struct {
 	tenantLoad      string
 	tenantLoadAll   string
 	tenantSearchAll string
+	tenantSettings  string
 
 	ssoApplicationOIDCCreate string
 	ssoApplicationSAMLCreate string
@@ -303,6 +306,8 @@ type mgmtEndpoints struct {
 	ssoSAMLSettingsByMetadata string
 	ssoOIDCSettings           string
 	updateJWT                 string
+
+	passwordSettings string
 
 	permissionCreate  string
 	permissionUpdate  string
@@ -526,6 +531,10 @@ func (e *endpoints) ManagementTenantSearchAll() string {
 	return path.Join(e.version, e.mgmt.tenantSearchAll)
 }
 
+func (e *endpoints) ManagementTenantSettings() string {
+	return path.Join(e.version, e.mgmt.tenantSettings)
+}
+
 func (e *endpoints) ManagementSSOApplicationOIDCCreate() string {
 	return path.Join(e.version, e.mgmt.ssoApplicationOIDCCreate)
 }
@@ -719,6 +728,10 @@ func (e *endpoints) ManagementSSOMetadata() string {
 
 func (e *endpoints) ManagementSSOMapping() string {
 	return path.Join(e.version, e.mgmt.ssoMapping)
+}
+
+func (e *endpoints) ManagementPasswordSettings() string {
+	return path.Join(e.version, e.mgmt.passwordSettings)
 }
 
 func (e *endpoints) ManagementUpdateJWT() string {
@@ -935,14 +948,23 @@ type HTTPRequest struct {
 func NewClient(conf ClientParams) *Client {
 	httpClient := conf.DefaultClient
 	if httpClient == nil {
-		t := http.DefaultTransport.(*http.Transport).Clone()
-		t.MaxIdleConns = 100
-		t.MaxConnsPerHost = 100
-		t.MaxIdleConnsPerHost = 100
-		t.TLSClientConfig.InsecureSkipVerify = conf.CertificateVerify.SkipVerifyValue(conf.BaseURL)
+		var rt http.RoundTripper
+		t, ok := http.DefaultTransport.(*http.Transport)
+		if ok {
+			t = t.Clone()
+			t.MaxIdleConns = 100
+			t.MaxConnsPerHost = 100
+			t.MaxIdleConnsPerHost = 100
+			t.TLSClientConfig.InsecureSkipVerify = conf.CertificateVerify.SkipVerifyValue(conf.BaseURL)
+			rt = t
+		} else {
+			// App has set a different transport layer, we will not change its attributes, and use it as is
+			// this will include the tls config
+			rt = http.DefaultTransport
+		}
 		httpClient = &http.Client{
 			Timeout:   time.Second * 10,
-			Transport: t,
+			Transport: rt,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse // notest
 			},
