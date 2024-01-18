@@ -17,14 +17,14 @@ func (u *user) Create(ctx context.Context, loginID string, user *descope.UserReq
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
-	return u.create(ctx, loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, false, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, nil)
+	return u.create(ctx, loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, false, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, nil, user.SSOAppIDs)
 }
 
 func (u *user) CreateTestUser(ctx context.Context, loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
-	return u.create(ctx, loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, false, true, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, nil)
+	return u.create(ctx, loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, false, true, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, nil, user.SSOAppIDs)
 }
 
 func (u *user) CreateBatch(ctx context.Context, users []*descope.BatchUser) (*descope.UsersBatchResponse, error) {
@@ -38,7 +38,7 @@ func (u *user) Invite(ctx context.Context, loginID string, user *descope.UserReq
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
-	return u.create(ctx, loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, true, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, options)
+	return u.create(ctx, loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, true, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, options, user.SSOAppIDs)
 }
 
 func (u *user) InviteBatch(ctx context.Context, users []*descope.BatchUser, options *descope.InviteOptions) (*descope.UsersBatchResponse, error) {
@@ -48,11 +48,11 @@ func (u *user) InviteBatch(ctx context.Context, users []*descope.BatchUser, opti
 	return u.createBatch(ctx, users, options)
 }
 
-func (u *user) create(ctx context.Context, loginID, email, phone, displayName, givenName, middleName, familyName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, options *descope.InviteOptions) (*descope.UserResponse, error) {
+func (u *user) create(ctx context.Context, loginID, email, phone, displayName, givenName, middleName, familyName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, options *descope.InviteOptions, ssoAppIDs []string) (*descope.UserResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
-	req := makeCreateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture, roles, tenants, invite, test, customAttributes, verifiedEmail, verifiedPhone, additionalLoginIDs, options)
+	req := makeCreateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture, roles, tenants, invite, test, customAttributes, verifiedEmail, verifiedPhone, additionalLoginIDs, options, ssoAppIDs)
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserCreate(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -76,7 +76,7 @@ func (u *user) Update(ctx context.Context, loginID string, user *descope.UserReq
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
-	req := makeUpdateUserRequest(loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs)
+	req := makeUpdateUserRequest(loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, user.SSOAppIDs)
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdate(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -322,6 +322,42 @@ func (u *user) RemoveRoles(ctx context.Context, loginID string, roles []string) 
 	return unmarshalUserResponse(res)
 }
 
+func (u *user) AddSSOApps(ctx context.Context, loginID string, ssoAppIDs []string) (*descope.UserResponse, error) {
+	if loginID == "" {
+		return nil, utils.NewInvalidArgumentError("loginID")
+	}
+	req := makeUpdateUserSSOAppsRequest(loginID, ssoAppIDs)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserAddSSOApps(), req, nil, u.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalUserResponse(res)
+}
+
+func (u *user) SetSSOApps(ctx context.Context, loginID string, ssoAppIDs []string) (*descope.UserResponse, error) {
+	if loginID == "" {
+		return nil, utils.NewInvalidArgumentError("loginID")
+	}
+	req := makeUpdateUserSSOAppsRequest(loginID, ssoAppIDs)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetSSOApps(), req, nil, u.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalUserResponse(res)
+}
+
+func (u *user) RemoveSSOApps(ctx context.Context, loginID string, ssoAppIDs []string) (*descope.UserResponse, error) {
+	if loginID == "" {
+		return nil, utils.NewInvalidArgumentError("loginID")
+	}
+	req := makeUpdateUserSSOAppsRequest(loginID, ssoAppIDs)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveSSOApps(), req, nil, u.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalUserResponse(res)
+}
+
 func (u *user) AddTenant(ctx context.Context, loginID string, tenantID string) (*descope.UserResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
@@ -513,8 +549,8 @@ func (u *user) GenerateEmbeddedLink(ctx context.Context, loginID string, customC
 	return tRes.Token, nil
 }
 
-func makeCreateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, options *descope.InviteOptions) map[string]any {
-	req := makeUpdateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture, roles, tenants, customAttributes, verifiedEmail, verifiedPhone, additionalLoginIDs)
+func makeCreateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, options *descope.InviteOptions, ssoAppIDs []string) map[string]any {
+	req := makeUpdateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture, roles, tenants, customAttributes, verifiedEmail, verifiedPhone, additionalLoginIDs, ssoAppIDs)
 	req["invite"] = invite
 	req["additionalLoginIds"] = additionalLoginIDs
 	if test {
@@ -537,7 +573,7 @@ func makeCreateUserRequest(loginID, email, phone, displayName, givenName, middle
 func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.InviteOptions) map[string]any {
 	var usersReq []map[string]any
 	for _, u := range users {
-		user := makeUpdateUserRequest(u.LoginID, u.Email, u.Phone, u.Name, u.GivenName, u.MiddleName, u.FamilyName, u.Picture, u.Roles, u.Tenants, u.CustomAttributes, u.VerifiedEmail, u.VerifiedPhone, u.AdditionalLoginIDs)
+		user := makeUpdateUserRequest(u.LoginID, u.Email, u.Phone, u.Name, u.GivenName, u.MiddleName, u.FamilyName, u.Picture, u.Roles, u.Tenants, u.CustomAttributes, u.VerifiedEmail, u.VerifiedPhone, u.AdditionalLoginIDs, u.SSOAppIDs)
 		if u.Password != nil {
 			if cleartext := u.Password.Cleartext; cleartext != "" {
 				user["password"] = u.Password.Cleartext
@@ -577,7 +613,7 @@ func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.In
 	return req
 }
 
-func makeUpdateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture string, roles []string, tenants []*descope.AssociatedTenant, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string) map[string]any {
+func makeUpdateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture string, roles []string, tenants []*descope.AssociatedTenant, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, ssoAppIDs []string) map[string]any {
 	res := map[string]any{
 		"loginId":            loginID,
 		"email":              email,
@@ -598,6 +634,7 @@ func makeUpdateUserRequest(loginID, email, phone, displayName, givenName, middle
 	if verifiedPhone != nil {
 		res["verifiedPhone"] = *verifiedPhone
 	}
+	res["ssoAppIDs"] = ssoAppIDs
 	return res
 }
 
@@ -613,6 +650,13 @@ func makeUpdateUserRolesRequest(loginID, tenantID string, roles []string) map[st
 		"loginId":   loginID,
 		"tenantId":  tenantID,
 		"roleNames": roles,
+	}
+}
+
+func makeUpdateUserSSOAppsRequest(loginID string, ssoAppIDs []string) map[string]any {
+	return map[string]any{
+		"loginId":   loginID,
+		"ssoAppIDs": ssoAppIDs,
 	}
 }
 
@@ -635,6 +679,7 @@ func makeSearchAllRequest(options *descope.UserSearchOptions) map[string]any {
 		"statuses":         options.Statuses,
 		"emails":           options.Emails,
 		"phones":           options.Phones,
+		"ssoAppIds":        options.SSOAppIDs,
 	}
 }
 

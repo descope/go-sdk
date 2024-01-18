@@ -226,6 +226,15 @@ type User interface {
 	// users that are part of a multi-tenant project.
 	RemoveRoles(ctx context.Context, loginID string, roles []string) (*descope.UserResponse, error)
 
+	// Associate SSO application for a user.
+	AddSSOApps(ctx context.Context, loginID string, ssoAppIDs []string) (*descope.UserResponse, error)
+
+	// Set (associate) SSO applications for a user.
+	SetSSOApps(ctx context.Context, loginID string, ssoAppIDs []string) (*descope.UserResponse, error)
+
+	// Remove SSO application association from a user.
+	RemoveSSOApps(ctx context.Context, loginID string, ssoAppIDs []string) (*descope.UserResponse, error)
+
 	// Add a tenant association for an existing user.
 	AddTenant(ctx context.Context, loginID string, tenantID string) (*descope.UserResponse, error)
 

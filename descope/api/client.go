@@ -103,6 +103,9 @@ var (
 			userSetRole:                      "mgmt/user/update/role/set",
 			userAddRole:                      "mgmt/user/update/role/add",
 			userRemoveRole:                   "mgmt/user/update/role/remove",
+			userAddSsoApps:                   "mgmt/user/update/ssoapp/add",
+			userSetSsoApps:                   "mgmt/user/update/ssoapp/set",
+			userRemoveSsoApps:                "mgmt/user/update/ssoapp/remove",
 			userSetPassword:                  "mgmt/user/password/set",
 			userExpirePassword:               "mgmt/user/password/expire",
 			userRemoveAllPasskeys:            "mgmt/user/passkeys/delete",
@@ -266,6 +269,9 @@ type mgmtEndpoints struct {
 	userRemoveAllPasskeys     string
 	userGetProviderToken      string
 	userLogoutAllDevices      string
+	userAddSsoApps            string
+	userSetSsoApps            string
+	userRemoveSsoApps         string
 
 	userGenerateOTPForTest           string
 	userGenerateMagicLinkForTest     string
@@ -598,6 +604,18 @@ func (e *endpoints) ManagementUserAddRole() string {
 
 func (e *endpoints) ManagementUserRemoveRole() string {
 	return path.Join(e.version, e.mgmt.userRemoveRole)
+}
+
+func (e *endpoints) ManagementUserAddSSOApps() string {
+	return path.Join(e.version, e.mgmt.userAddSsoApps)
+}
+
+func (e *endpoints) ManagementUserSetSSOApps() string {
+	return path.Join(e.version, e.mgmt.userSetSsoApps)
+}
+
+func (e *endpoints) ManagementUserRemoveSSOApps() string {
+	return path.Join(e.version, e.mgmt.userRemoveSsoApps)
 }
 
 func (e *endpoints) ManagementUserSetPassword() string {
