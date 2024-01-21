@@ -28,6 +28,11 @@ var flags struct {
 	Description        string
 	Permissions        []string
 	AdditionalLoginIDs []string
+	LoginPageURL       string
+	SPMetadataURL      string
+	EntityID           string
+	ACSURL             string
+	Certificate        string
 }
 
 // Descope SDK
@@ -245,6 +250,56 @@ func tenantLoadAll(args []string) error {
 		}
 	}
 	return err
+}
+
+func oidcSSOApplicationCreate(args []string) error {
+	req := &descope.OIDCApplicationRequest{Name: args[0], Enabled: true, LoginPageURL: args[1]}
+	appID, err := descopeClient.Management.SSOApplication().CreateOIDCApplication(context.Background(), req)
+	if err == nil {
+		fmt.Println("Created new OIDC sso application with id:", appID)
+	}
+	return err
+}
+
+func samlSSOApplicationCreate(args []string) error {
+	req := &descope.SAMLApplicationRequest{Name: args[0], Enabled: true, LoginPageURL: args[1], UseMetadataInfo: true, MetadataURL: args[2]}
+	appID, err := descopeClient.Management.SSOApplication().CreateSAMLApplication(context.Background(), req)
+	if err == nil {
+		fmt.Println("Created new SAML sso application with id:", appID)
+	}
+	return err
+}
+
+func oidcSSOApplicationUpdate(args []string) error {
+	req := &descope.OIDCApplicationRequest{Name: args[0], Enabled: true, LoginPageURL: args[1]}
+	return descopeClient.Management.SSOApplication().UpdateOIDCApplication(context.Background(), req)
+}
+
+func samlSSOApplicationUpdate(args []string) error {
+	req := &descope.SAMLApplicationRequest{Name: args[0], Enabled: true, LoginPageURL: args[1], UseMetadataInfo: false, EntityID: args[2], AcsURL: args[3], Certificate: args[4]}
+	return descopeClient.Management.SSOApplication().UpdateSAMLApplication(context.Background(), req)
+}
+
+func ssoApplicationLoad(args []string) error {
+	app, err := descopeClient.Management.SSOApplication().Load(context.Background(), args[0])
+	if err == nil {
+		fmt.Println("Found:", app)
+	}
+	return err
+}
+
+func ssoApplicationLoadAll(args []string) error {
+	res, err := descopeClient.Management.SSOApplication().LoadAll(context.Background())
+	if err == nil {
+		for _, app := range res {
+			fmt.Println("Found:", app)
+		}
+	}
+	return err
+}
+
+func ssoApplicationDelete(args []string) error {
+	return descopeClient.Management.SSOApplication().Delete(context.Background(), args[0])
 }
 
 func permissionCreate(args []string) error {
@@ -619,6 +674,45 @@ func main() {
 	})
 
 	addCommand(tenantLoadAll, "tenant-all", "Load all tenants", func(cmd *cobra.Command) {
+	})
+
+	addCommand(oidcSSOApplicationCreate, "oidc-sso-application-create <name> <login-page-url>", "Create a new OIDC SSO application", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(2)
+		cmd.Flags().StringVarP(&flags.Name, "name", "n", "", "the sso application's name")
+		cmd.Flags().StringVarP(&flags.LoginPageURL, "loginPageUrl", "lpu", "", "the URL where login page is hosted")
+	})
+
+	addCommand(samlSSOApplicationCreate, "saml-sso-application-create <name> <login-page-url> <idp-metadata-url>", "Create a new SAML SSO application", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(3)
+		cmd.Flags().StringVarP(&flags.Name, "name", "n", "", "the sso application's name")
+		cmd.Flags().StringVarP(&flags.LoginPageURL, "loginPageUrl", "lpu", "", "the URL where login page is hosted")
+		cmd.Flags().StringVarP(&flags.SPMetadataURL, "metadataUrl", "mu", "", "SP metadata url which include all the SP SAML info")
+	})
+
+	addCommand(oidcSSOApplicationUpdate, "oidc-sso-application-update <name> <login-page-url>", "Update an existing OIDC SSO application", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(2)
+		cmd.Flags().StringVarP(&flags.Name, "name", "n", "", "the sso application's name")
+		cmd.Flags().StringVarP(&flags.LoginPageURL, "loginPageUrl", "lpu", "", "the URL where login page is hosted")
+	})
+
+	addCommand(samlSSOApplicationUpdate, "saml-sso-application-update <name> <login-page-url> <idp-metadata-url>", "Update an existing SAML SSO application", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(5)
+		cmd.Flags().StringVarP(&flags.Name, "name", "n", "", "the sso application's name")
+		cmd.Flags().StringVarP(&flags.LoginPageURL, "loginPageUrl", "lpu", "", "the URL where login page is hosted")
+		cmd.Flags().StringVarP(&flags.EntityID, "entityId", "eid", "", "SP entity id")
+		cmd.Flags().StringVarP(&flags.ACSURL, "entityId", "eid", "", "SP ACS (saml callback) url")
+		cmd.Flags().StringVarP(&flags.Certificate, "certificate", "cert", "", "SP certificate")
+	})
+
+	addCommand(ssoApplicationLoad, "sso-application-load <id>", "Load SSO application by id", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(1)
+	})
+
+	addCommand(ssoApplicationLoadAll, "sso-application-load-all", "Load all SSO applications", func(cmd *cobra.Command) {
+	})
+
+	addCommand(ssoApplicationDelete, "sso-application-delete <id>", "Delete an existing SSO application", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(1)
 	})
 
 	addCommand(userLoad, "user-load <loginId>", "Load an existing user", func(cmd *cobra.Command) {

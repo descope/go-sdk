@@ -65,6 +65,7 @@ These sections show how to use the SDK to perform API management functions. Befo
 11. [Embedded Links](#embedded-links)
 12. [Manage ReBAC Authz](#manage-rebac-authz)
 13. [Manage Project](#manage-project)
+14. [Manage SSO Applications](#manage-sso-applications)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -1284,6 +1285,65 @@ if err == nil {
 
 // Delete the current project. Kindly note that following calls on the `descopeClient` are most likely to fail because the current project has been deleted 
 err := descopeClient.Management.Project().Delete(context.Background())
+```
+
+### Manage SSO Applications
+
+You can create, update, delete or load sso applications:
+
+```go
+// Create OIDC SSO application
+req := &descope.OIDCApplicationRequest{Name: "My OIDC App", Enabled: true, LoginPageURL: "http://dummy.com"}
+appID, err = descopeClient.Management.SSOApplication().CreateOIDCApplication(context.Background(), req)
+
+//Create SAML SSO application
+req := &descope.SAMLApplicationRequest{
+	ID:               samlAppID,
+	Name:             "samlApp",
+	Enabled:          true,
+	LoginPageURL:     "http://dummy.com",
+	EntityID:         "eId11",
+	AcsURL:           "http://dummy.com/acs",
+	Certificate:      "cert",
+	AttributeMapping: []descope.SAMLIDPAttributeMappingInfo{{Name: "attrName1", Type: "attrType1", Value: "attrValue1"}},
+	GroupsMapping: []descope.SAMLIDPGroupsMappingInfo{
+		{
+			Name:       "grpName1",
+			Type:       "grpType1",
+			FilterType: "grpFilterType1",
+			Value:      "grpValue1",
+			Roles:      []descope.SAMLIDPRoleGroupMappingInfo{{ID: "rl1", Name: "rlName1"}},
+		},
+	},
+}
+appID, err = descopeClient.Management.SSOApplication().CreateSAMLApplication(context.Background(), req)
+
+// Update OIDC SSO application
+// Update will override all fields as is. Use carefully.
+err = tc.DescopeClient().Management.SSOApplication().UpdateOIDCApplication(context.TODO(), 
+	&descope.OIDCApplicationRequest{ID: oidcAppID, Name: "oidcNewAppName"
+})
+
+// Update SAML SSO application
+// Update will override all fields as is. Use carefully.
+req = &descope.SAMLApplicationRequest{
+	ID: samlAppID, Name: "samlNewAppName",
+	Enabled:      false,
+	LoginPageURL: "http://dummyyyy.com",
+	EntityID:     "eId22",
+	AcsURL:       "http://dummy.com/acs",
+	Certificate:  "cert",
+}
+err = tc.DescopeClient().Management.SSOApplication().UpdateSAMLApplication(context.Background(), req)
+
+// Load SSO application by id
+app, err = tc.DescopeClient().Management.SSOApplication().Load(context.Background(), "appId")
+
+// Load all SSO applications
+apps, err = tc.DescopeClient().Management.SSOApplication().LoadAll(context.Background())
+
+// SSO application deletion cannot be undone. Use carefully.
+descopeClient.DescopeClient().Management.SSOApplication().Delete(context.Background(), "appId")
 ```
 
 ## Code Examples
