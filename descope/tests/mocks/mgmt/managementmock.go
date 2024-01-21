@@ -14,6 +14,7 @@ type MockManagement struct {
 	*MockUser
 	*MockAccessKey
 	*MockTenant
+	*MockSSOApplication
 	*MockPermission
 	*MockRole
 	*MockGroup
@@ -41,6 +42,10 @@ func (m *MockManagement) AccessKey() sdk.AccessKey {
 
 func (m *MockManagement) Tenant() sdk.Tenant {
 	return m.MockTenant
+}
+
+func (m *MockManagement) SSOApplication() sdk.SSOApplication {
+	return m.MockSSOApplication
 }
 
 func (m *MockManagement) Permission() sdk.Permission {
@@ -844,6 +849,75 @@ func (m *MockTenant) ConfigureSettings(_ context.Context, tenantID string, setti
 		m.ConfigureSettingsAssert(tenantID, settings)
 	}
 	return m.ConfigureSettingsError
+}
+
+// Mock SSOApplication
+
+type MockSSOApplication struct {
+	CreateOIDCApplicationAssert func(appRequest *descope.OIDCApplicationRequest)
+	CreateSAMLApplicationAssert func(appRequest *descope.SAMLApplicationRequest)
+	CreateResponse              string
+	CreateError                 error
+
+	UpdateOIDCApplicationAssert func(appRequest *descope.OIDCApplicationRequest)
+	UpdateSAMLApplicationAssert func(appRequest *descope.SAMLApplicationRequest)
+	UpdateError                 error
+
+	DeleteAssert func(id string)
+	DeleteError  error
+
+	LoadAssert   func(id string)
+	LoadResponse *descope.SSOApplication
+	LoadError    error
+
+	LoadAllResponse []*descope.SSOApplication
+	LoadAllError    error
+}
+
+func (m *MockSSOApplication) CreateOIDCApplication(_ context.Context, appRequest *descope.OIDCApplicationRequest) (id string, err error) {
+	if m.CreateOIDCApplicationAssert != nil {
+		m.CreateOIDCApplicationAssert(appRequest)
+	}
+	return m.CreateResponse, m.CreateError
+}
+
+func (m *MockSSOApplication) CreateSAMLApplication(_ context.Context, appRequest *descope.SAMLApplicationRequest) (id string, err error) {
+	if m.CreateSAMLApplicationAssert != nil {
+		m.CreateSAMLApplicationAssert(appRequest)
+	}
+	return m.CreateResponse, m.CreateError
+}
+
+func (m *MockSSOApplication) UpdateOIDCApplication(_ context.Context, appRequest *descope.OIDCApplicationRequest) error {
+	if m.UpdateOIDCApplicationAssert != nil {
+		m.UpdateOIDCApplicationAssert(appRequest)
+	}
+	return m.UpdateError
+}
+
+func (m *MockSSOApplication) UpdateSAMLApplication(_ context.Context, appRequest *descope.SAMLApplicationRequest) error {
+	if m.UpdateSAMLApplicationAssert != nil {
+		m.UpdateSAMLApplicationAssert(appRequest)
+	}
+	return m.UpdateError
+}
+
+func (m *MockSSOApplication) Delete(_ context.Context, id string) error {
+	if m.DeleteAssert != nil {
+		m.DeleteAssert(id)
+	}
+	return m.DeleteError
+}
+
+func (m *MockSSOApplication) Load(_ context.Context, id string) (*descope.SSOApplication, error) {
+	if m.LoadAssert != nil {
+		m.LoadAssert(id)
+	}
+	return m.LoadResponse, m.LoadError
+}
+
+func (m *MockSSOApplication) LoadAll(_ context.Context) ([]*descope.SSOApplication, error) {
+	return m.LoadAllResponse, m.LoadAllError
 }
 
 // Mock Permission
