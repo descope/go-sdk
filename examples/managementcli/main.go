@@ -8,12 +8,10 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/client"
 	"github.com/spf13/cobra"
-	"github.com/tj/go-naturaldate"
 )
 
 // Command line flags
@@ -33,6 +31,7 @@ var flags struct {
 	EntityID           string
 	ACSURL             string
 	Certificate        string
+	FlowIDs            []string
 }
 
 // Descope SDK
@@ -375,6 +374,14 @@ func listFlows(args []string) error {
 	return err
 }
 
+func deleteFlows(args []string) error {
+	err := descopeClient.Management.Flow().DeleteFlows(context.Background(), flags.FlowIDs)
+	if err == nil {
+		fmt.Print("Flows deleted successfully\n")
+	}
+	return err
+}
+
 func exportFlow(args []string) error {
 	flowID := args[0]
 	res, err := descopeClient.Management.Flow().ExportFlow(context.Background(), flowID)
@@ -476,12 +483,7 @@ func groupAllGroupMembers(args []string) error {
 }
 
 func auditFullTextSearch(args []string) error {
-	from, err := naturaldate.Parse(args[1], time.Now(), naturaldate.WithDirection(naturaldate.Past))
-	if err != nil {
-		return err
-	}
-	fmt.Println(from)
-	res, err := descopeClient.Management.Audit().Search(context.Background(), &descope.AuditSearchOptions{Text: args[0], From: from})
+	res, err := descopeClient.Management.Audit().Search(context.Background(), &descope.AuditSearchOptions{Text: args[0]})
 	if err == nil {
 		var b []byte
 		b, err = json.MarshalIndent(res, "", "  ")
@@ -679,29 +681,29 @@ func main() {
 	addCommand(oidcSSOApplicationCreate, "oidc-sso-application-create <name> <login-page-url>", "Create a new OIDC SSO application", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
 		cmd.Flags().StringVarP(&flags.Name, "name", "n", "", "the sso application's name")
-		cmd.Flags().StringVarP(&flags.LoginPageURL, "loginPageUrl", "lpu", "", "the URL where login page is hosted")
+		cmd.Flags().StringVarP(&flags.LoginPageURL, "loginPageUrl", "l", "", "the URL where login page is hosted")
 	})
 
 	addCommand(samlSSOApplicationCreate, "saml-sso-application-create <name> <login-page-url> <idp-metadata-url>", "Create a new SAML SSO application", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(3)
 		cmd.Flags().StringVarP(&flags.Name, "name", "n", "", "the sso application's name")
-		cmd.Flags().StringVarP(&flags.LoginPageURL, "loginPageUrl", "lpu", "", "the URL where login page is hosted")
-		cmd.Flags().StringVarP(&flags.SPMetadataURL, "metadataUrl", "mu", "", "SP metadata url which include all the SP SAML info")
+		cmd.Flags().StringVarP(&flags.LoginPageURL, "loginPageUrl", "l", "", "the URL where login page is hosted")
+		cmd.Flags().StringVarP(&flags.SPMetadataURL, "metadataUrl", "m", "", "SP metadata url which include all the SP SAML info")
 	})
 
 	addCommand(oidcSSOApplicationUpdate, "oidc-sso-application-update <name> <login-page-url>", "Update an existing OIDC SSO application", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
 		cmd.Flags().StringVarP(&flags.Name, "name", "n", "", "the sso application's name")
-		cmd.Flags().StringVarP(&flags.LoginPageURL, "loginPageUrl", "lpu", "", "the URL where login page is hosted")
+		cmd.Flags().StringVarP(&flags.LoginPageURL, "loginPageUrl", "l", "", "the URL where login page is hosted")
 	})
 
 	addCommand(samlSSOApplicationUpdate, "saml-sso-application-update <name> <login-page-url> <idp-metadata-url>", "Update an existing SAML SSO application", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(5)
 		cmd.Flags().StringVarP(&flags.Name, "name", "n", "", "the sso application's name")
-		cmd.Flags().StringVarP(&flags.LoginPageURL, "loginPageUrl", "lpu", "", "the URL where login page is hosted")
-		cmd.Flags().StringVarP(&flags.EntityID, "entityId", "eid", "", "SP entity id")
-		cmd.Flags().StringVarP(&flags.ACSURL, "entityId", "eid", "", "SP ACS (saml callback) url")
-		cmd.Flags().StringVarP(&flags.Certificate, "certificate", "cert", "", "SP certificate")
+		cmd.Flags().StringVarP(&flags.LoginPageURL, "loginPageUrl", "l", "", "the URL where login page is hosted")
+		cmd.Flags().StringVarP(&flags.EntityID, "entityId", "e", "", "SP entity id")
+		cmd.Flags().StringVarP(&flags.ACSURL, "acsURL", "a", "", "SP ACS (saml callback) url")
+		cmd.Flags().StringVarP(&flags.Certificate, "certificate", "c", "", "SP certificate")
 	})
 
 	addCommand(ssoApplicationLoad, "sso-application-load <id>", "Load SSO application by id", func(cmd *cobra.Command) {
@@ -781,6 +783,10 @@ func main() {
 	})
 
 	addCommand(listFlows, "list-flows", "List all flows in project", func(cmd *cobra.Command) {
+	})
+
+	addCommand(deleteFlows, "delete-flows", "Delete flows by the given flows' ids", func(cmd *cobra.Command) {
+		cmd.Flags().StringSliceVarP(&flags.FlowIDs, "flowIDs", "f", nil, "the flows' ids to delete")
 	})
 
 	addCommand(exportFlow, "export-flow <flowId>", "Export the flow and screens for a given flow id", func(cmd *cobra.Command) {

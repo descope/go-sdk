@@ -20,6 +20,14 @@ func (r *flow) ListFlows(ctx context.Context) (*descope.FlowsResponse, error) {
 	return unmarshalFlowsResponse(res)
 }
 
+func (r *flow) DeleteFlows(ctx context.Context, flowIDs []string) error {
+	body := map[string]any{
+		"ids": flowIDs,
+	}
+	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementDeleteFlows(), body, nil, r.conf.ManagementKey)
+	return err
+}
+
 func (r *flow) ExportFlow(ctx context.Context, flowID string) (*descope.FlowResponse, error) {
 	if flowID == "" {
 		return nil, utils.NewInvalidArgumentError("flowID")

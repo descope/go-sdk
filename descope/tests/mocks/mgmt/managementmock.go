@@ -1046,6 +1046,9 @@ type MockFlow struct {
 	ListFlowsResponse *descope.FlowsResponse
 	ListFlowsError    error
 
+	DeleteFlowsAssert func(flowIDs []string)
+	DeleteFlowsError  error
+
 	ExportFlowAssert   func(flowID string)
 	ExportFlowResponse *descope.FlowResponse
 	ExportFlowError    error
@@ -1068,6 +1071,13 @@ func (m *MockFlow) ListFlows(_ context.Context) (*descope.FlowsResponse, error) 
 		m.ListFlowsAssert()
 	}
 	return m.ListFlowsResponse, m.ListFlowsError
+}
+
+func (m *MockFlow) DeleteFlows(_ context.Context, flowIDs []string) error {
+	if m.DeleteFlowsAssert != nil {
+		m.DeleteFlowsAssert(flowIDs)
+	}
+	return m.DeleteFlowsError
 }
 
 func (m *MockFlow) ExportFlow(_ context.Context, flowID string) (*descope.FlowResponse, error) {
