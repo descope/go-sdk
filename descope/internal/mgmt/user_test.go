@@ -15,7 +15,8 @@ import (
 func TestUserCreateSuccess(t *testing.T) {
 	response := map[string]any{
 		"user": map[string]any{
-			"email": "a@b.c",
+			"email":     "a@b.c",
+			"ssoAppIds": []string{"app1"},
 		}}
 	ca := map[string]any{"ak": "av"}
 	i := 0
@@ -29,6 +30,7 @@ func TestUserCreateSuccess(t *testing.T) {
 		require.Len(t, roleNames, 1)
 		require.Equal(t, "foo", roleNames[0])
 		require.Nil(t, req["test"])
+		assert.EqualValues(t, []any{"app1"}, req["ssoAppIDs"])
 		assert.EqualValues(t, ca, req["customAttributes"])
 
 		if i == 2 {
@@ -44,15 +46,18 @@ func TestUserCreateSuccess(t *testing.T) {
 	user.Email = "foo@bar.com"
 	user.Roles = []string{"foo"}
 	user.CustomAttributes = ca
+	user.SSOAppIDs = append(user.SSOAppIDs, "app1")
 	res, err := m.User().Create(context.Background(), "abc", user)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
+	require.Equal(t, []string{"app1"}, res.SSOAppIDs)
 
 	res, err = m.User().Invite(context.Background(), "abc", user, nil)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
+	require.Equal(t, []string{"app1"}, res.SSOAppIDs)
 
 	sendSMS := true
 	sendMail := false
@@ -247,7 +252,8 @@ func TestUserCreateUpdateOrInviteWithNoUser(t *testing.T) {
 func TestUserUpdateSuccess(t *testing.T) {
 	response := map[string]any{
 		"user": map[string]any{
-			"email": "a@b.c",
+			"email":     "a@b.c",
+			"ssoAppIds": []string{"app1"},
 		}}
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -259,6 +265,7 @@ func TestUserUpdateSuccess(t *testing.T) {
 		assert.False(t, ok)
 		require.Equal(t, "abc", req["loginId"])
 		require.Equal(t, "foo@bar.com", req["email"])
+		require.Equal(t, []any{"app1"}, req["ssoAppIDs"])
 		userTenants := req["userTenants"].([]any)
 		require.Len(t, userTenants, 2)
 		for i := range userTenants {
@@ -276,11 +283,13 @@ func TestUserUpdateSuccess(t *testing.T) {
 	}, response))
 	user := &descope.UserRequest{}
 	user.Email = "foo@bar.com"
+	user.SSOAppIDs = append(user.SSOAppIDs, "app1")
 	user.Tenants = []*descope.AssociatedTenant{{TenantID: "x", Roles: []string{"foo"}}, {TenantID: "y", Roles: []string{"bar"}}}
 	res, err := m.User().Update(context.Background(), "abc", user)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
+	require.Equal(t, []string{"app1"}, res.SSOAppIDs)
 }
 
 func TestUserUpdateVerifiedAttributes(t *testing.T) {
@@ -917,6 +926,102 @@ func TestUserRemoveRoleBadInput(t *testing.T) {
 func TestUserRemoveRoleError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
 	res, err := m.User().RemoveRoles(context.Background(), "abc", []string{"foo", "bar"})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserAddSSOAppsSuccess(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"ssoAppIds": []string{"foo"},
+		}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, []any{"foo"}, req["ssoAppIds"])
+	}, response))
+	res, err := m.User().AddSSOApps(context.Background(), "abc", []string{"foo"})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, []string{"foo"}, res.SSOAppIDs)
+}
+
+func TestUserAddSSOAppsBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := m.User().AddSSOApps(context.Background(), "", []string{"foo"})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserAddSSOAppsError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := m.User().AddSSOApps(context.Background(), "abc", []string{"foo"})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserSetSSOAppsSuccess(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"ssoAppIds": []string{"foo"},
+		}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, []any{"foo"}, req["ssoAppIds"])
+	}, response))
+	res, err := m.User().SetSSOApps(context.Background(), "abc", []string{"foo"})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, []string{"foo"}, res.SSOAppIDs)
+}
+
+func TestUserSetSSOAppsBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := m.User().SetSSOApps(context.Background(), "", []string{"foo"})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserSetSSOAppsError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := m.User().SetSSOApps(context.Background(), "abc", []string{"foo"})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserRemoveSSOAppsSuccess(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"ssoAppIds": []string{"qux", "zut"},
+		}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, []any{"foo", "bar"}, req["ssoAppIds"])
+	}, response))
+	res, err := m.User().RemoveSSOApps(context.Background(), "abc", []string{"foo", "bar"})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, []string{"qux", "zut"}, res.SSOAppIDs)
+}
+
+func TestUserRemoveSSOAppsBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := m.User().RemoveSSOApps(context.Background(), "", []string{"foo", "bar"})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserRemoveSSOAppsError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := m.User().RemoveSSOApps(context.Background(), "abc", []string{"foo", "bar"})
 	require.Error(t, err)
 	require.Nil(t, res)
 }

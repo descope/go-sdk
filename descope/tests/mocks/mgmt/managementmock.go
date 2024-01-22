@@ -309,6 +309,18 @@ type MockUser struct {
 	RemoveRoleResponse *descope.UserResponse
 	RemoveRoleError    error
 
+	AddSSOAppsAssert   func(loginID string, ssoAppIDs []string)
+	AddSSOAppsResponse *descope.UserResponse
+	AddSSOAppsError    error
+
+	SetSSOAppsAssert   func(loginID string, ssoAppIDs []string)
+	SetSSOAppsResponse *descope.UserResponse
+	SetSSOAppsError    error
+
+	RemoveSSOAppsAssert   func(loginID string, ssoAppIDs []string)
+	RemoveSSOAppsResponse *descope.UserResponse
+	RemoveSSOAppsError    error
+
 	AddTenantAssert   func(loginID, tenantID string)
 	AddTenantResponse *descope.UserResponse
 	AddTenantError    error
@@ -550,6 +562,27 @@ func (m *MockUser) RemoveRoles(_ context.Context, loginID string, roles []string
 		m.RemoveRoleAssert(loginID, roles)
 	}
 	return m.RemoveRoleResponse, m.RemoveRoleError
+}
+
+func (m *MockUser) AddSSOApps(_ context.Context, loginID string, ssoAppIDs []string) (*descope.UserResponse, error) {
+	if m.AddSSOAppsAssert != nil {
+		m.AddSSOAppsAssert(loginID, ssoAppIDs)
+	}
+	return m.AddSSOAppsResponse, m.AddSSOAppsError
+}
+
+func (m *MockUser) SetSSOApps(_ context.Context, loginID string, ssoAppIDs []string) (*descope.UserResponse, error) {
+	if m.SetSSOAppsAssert != nil {
+		m.SetSSOAppsAssert(loginID, ssoAppIDs)
+	}
+	return m.SetSSOAppsResponse, m.SetSSOAppsError
+}
+
+func (m *MockUser) RemoveSSOApps(_ context.Context, loginID string, ssoAppIDs []string) (*descope.UserResponse, error) {
+	if m.RemoveSSOAppsAssert != nil {
+		m.RemoveSSOAppsAssert(loginID, ssoAppIDs)
+	}
+	return m.RemoveSSOAppsResponse, m.RemoveSSOAppsError
 }
 
 func (m *MockUser) AddTenant(_ context.Context, loginID string, tenantID string) (*descope.UserResponse, error) {

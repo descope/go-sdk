@@ -366,6 +366,7 @@ type UserRequest struct {
 	VerifiedEmail      *bool               `json:"verifiedEmail,omitempty"`
 	VerifiedPhone      *bool               `json:"verifiedPhone,omitempty"`
 	AdditionalLoginIDs []string            `json:"additionalLoginIds,omitempty"`
+	SSOAppIDs          []string            `json:"ssoAppIDs,omitempty"`
 }
 
 type BatchUser struct {
@@ -413,6 +414,7 @@ type UserResponse struct {
 	Password         bool                `json:"password,omitempty"`
 	SAML             bool                `json:"saml,omitempty"`
 	OAuth            map[string]bool     `json:"oauth,omitempty"`
+	SSOAppIDs        []string            `json:"ssoAppIds,omitempty"`
 }
 
 type UsersFailedResponse struct {
@@ -647,6 +649,7 @@ type UserSearchOptions struct {
 	CustomAttributes map[string]any
 	Emails           []string
 	Phones           []string
+	SSOAppIDs        []string
 }
 
 type UserStatus string
