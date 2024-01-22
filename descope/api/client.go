@@ -150,6 +150,7 @@ var (
 			groupLoadAllGroupsForMember:      "mgmt/group/member/all",
 			groupLoadAllGroupMembers:         "mgmt/group/members",
 			listFlows:                        "mgmt/flow/list",
+			deleteFlows:                      "mgmt/flow/delete",
 			flowExport:                       "mgmt/flow/export",
 			flowImport:                       "mgmt/flow/import",
 			themeExport:                      "mgmt/theme/export",
@@ -330,6 +331,7 @@ type mgmtEndpoints struct {
 	groupLoadAllGroupMembers    string
 
 	listFlows   string
+	deleteFlows string
 	flowExport  string
 	flowImport  string
 	themeExport string
@@ -806,6 +808,10 @@ func (e *endpoints) ManagementGroupLoadAllGroupMembers() string {
 
 func (e *endpoints) ManagementListFlows() string {
 	return path.Join(e.version, e.mgmt.listFlows)
+}
+
+func (e *endpoints) ManagementDeleteFlows() string {
+	return path.Join(e.version, e.mgmt.deleteFlows)
 }
 
 func (e *endpoints) ManagementFlowExport() string {

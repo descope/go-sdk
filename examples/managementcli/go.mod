@@ -7,7 +7,6 @@ replace github.com/descope/go-sdk => ../../
 require (
 	github.com/descope/go-sdk v1.5.7
 	github.com/spf13/cobra v1.8.0
-	github.com/tj/go-naturaldate v1.3.0
 )
 
 require (

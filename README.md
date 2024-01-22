@@ -1038,6 +1038,10 @@ if err == nil {
     fmt.Println(res.Total)
     fmt.Println(res.Flows[0].ID)
 }
+
+// Delete flows by ids
+err := descopeClient.Management.Flow().DeleteFlows(context.Background(), []string{"flow-1", "flow-2"})
+
 // Export the flow and it's matching screens based on the given id
 res, err := descopeClient.Management.Flow().ExportFlow(context.Background(), "sign-up")
 if err == nil {

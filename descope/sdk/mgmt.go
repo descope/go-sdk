@@ -584,6 +584,12 @@ type Group interface {
 type Flow interface {
 	// Returns metadata of all project flows
 	ListFlows(ctx context.Context) (*descope.FlowsResponse, error)
+
+	// Delete flows by flow ids.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteFlows(ctx context.Context, flowIDs []string) error
+
 	// Export a flow and its screens by the flow id.
 	ExportFlow(ctx context.Context, flowID string) (*descope.FlowResponse, error)
 

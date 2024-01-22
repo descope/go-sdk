@@ -25,6 +25,22 @@ func TestListFlowsSuccess(t *testing.T) {
 	assert.EqualValues(t, response, res)
 }
 
+func TestDeleteFlowsSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+	}, nil))
+	err := mgmt.Flow().DeleteFlows(context.Background(), []string{"flow-1", "flow-2"})
+	require.NoError(t, err)
+}
+
+func TestDeleteFlowsFailure(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+	}))
+	err := mgmt.Flow().DeleteFlows(context.Background(), []string{"flow-1", "flow-2"})
+	require.Error(t, err)
+}
+
 func TestExportFlowSuccess(t *testing.T) {
 	flowID := "abc"
 	response := &descope.FlowResponse{
