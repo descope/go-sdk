@@ -940,7 +940,7 @@ func TestUserAddSSOAppsSuccess(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["loginId"])
-		require.Equal(t, []any{"foo"}, req["ssoAppIDs"])
+		require.Equal(t, []any{"foo"}, req["ssoAppIds"])
 	}, response))
 	res, err := m.User().AddSSOApps(context.Background(), "abc", []string{"foo"})
 	require.NoError(t, err)
@@ -972,7 +972,7 @@ func TestUserSetSSOAppsSuccess(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["loginId"])
-		require.Equal(t, []any{"foo"}, req["ssoAppIDs"])
+		require.Equal(t, []any{"foo"}, req["ssoAppIds"])
 	}, response))
 	res, err := m.User().SetSSOApps(context.Background(), "abc", []string{"foo"})
 	require.NoError(t, err)
@@ -1004,7 +1004,7 @@ func TestUserRemoveSSOAppsSuccess(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["loginId"])
-		require.Equal(t, []any{"foo", "bar"}, req["ssoAppIDs"])
+		require.Equal(t, []any{"foo", "bar"}, req["ssoAppIds"])
 	}, response))
 	res, err := m.User().RemoveSSOApps(context.Background(), "abc", []string{"foo", "bar"})
 	require.NoError(t, err)
