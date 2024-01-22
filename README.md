@@ -682,6 +682,7 @@ userReq.Tenants = []*descope.AssociatedTenant{
     {TenantID: "tenant-ID1", Roles: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},
 }
+userReq.SSOAppIDs = []string{"appId1", "appId2"}
 user, err := descopeClient.Management.User().Create(context.Background(), "desmond@descope.com", userReq)
 
 // Alternatively, a user can be created and invited via an email message.
@@ -694,6 +695,7 @@ userReqInvite.Tenants = []*descope.AssociatedTenant{
     {TenantID: "tenant-ID1", Roles: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},
 }
+userReqInvite.SSOAppIDs = []string{"appId1", "appId2"}
 // options can be nil, and in this case, value will be taken from project settings page
 options := &descope.InviteOptions{InviteURL: "https://sub.domain.com"}
 err := descopeClient.Management.User().Invite(context.Background(), "desmond@descope.com", userReqInvite, options)
@@ -705,6 +707,7 @@ u1 := &descope.BatchUser{}
 u1.LoginID = "one"
 u1.Email = "one@one.com"
 u1.Roles = []string{"one"}
+u1.SSOAppIDs = []string{"appId1", "appId2"}
 
 u2 := &descope.BatchUser{}
 u2.LoginID = "two"
@@ -722,10 +725,20 @@ userReqUpdate.Tenants = []*descope.AssociatedTenant{
     {TenantID: "tenant-ID1", Roles: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},
 }
+userReqUpdate.SSOAppIDs = []string{"appId3"}
 err := descopeClient.Management.User().Update(context.Background(), "desmond@descope.com", userReqUpdate)
 
 // Update loginID of a user, or remove a login ID (last login ID cannot be removed)
 err := descopeClient.Management.User().UpdateLoginID(context.Background(), "desmond@descope.com", "bane@descope.com")
+
+// Associate SSO application for a user.
+user, err := descopeClient.Management.User().AddSSOApps(context.Background(), "desmond@descope.com",[]string{"appId1"})
+
+// Set (associate) SSO application for a user.
+user, err := descopeClient.Management.User().SetSSOApps(context.Background(), "desmond@descope.com",[]string{"appId1", "appId2"})
+
+// Remove SSO application association from a user.
+user, err := descopeClient.Management.User().RemoveSSOApps(context.Background(), "desmond@descope.com",[]string{"appId2"})
 
 // User deletion cannot be undone. Use carefully.
 err := descopeClient.Management.User().Delete(context.Background(), "desmond@descope.com")

@@ -656,7 +656,7 @@ func makeUpdateUserRolesRequest(loginID, tenantID string, roles []string) map[st
 func makeUpdateUserSSOAppsRequest(loginID string, ssoAppIDs []string) map[string]any {
 	return map[string]any{
 		"loginId":   loginID,
-		"ssoAppIDs": ssoAppIDs,
+		"ssoAppIds": ssoAppIDs,
 	}
 }
 
