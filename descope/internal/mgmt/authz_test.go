@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/internal/utils"
@@ -316,4 +317,12 @@ func TestWhatCanTargetAccessMissingArgument(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
 	_, err := mgmt.Authz().WhatCanTargetAccess(context.Background(), "")
 	require.ErrorContains(t, err, utils.NewInvalidArgumentError("target").Message)
+}
+
+func TestGetModifiedWrongArgument(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	_, err := mgmt.Authz().GetModified(context.Background(), time.Now().Add(10*time.Second))
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("since").Message)
+	_, err = mgmt.Authz().GetModified(context.Background(), time.Now().AddDate(0, 0, -2))
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("since").Message)
 }
