@@ -58,6 +58,70 @@ type Tenant interface {
 	ConfigureSettings(ctx context.Context, tenantID string, settings *descope.TenantSettings) error
 }
 
+// Provides functions for managing SSO applications in a project.
+type SSOApplication interface {
+	// Create a new OIDC SSO application with the given name.
+	//
+	// OIDCApplicationRequest fields:
+	// ID: Optional sso application ID.
+	// Name: The sso application's name.
+	// Description: Optional sso application description.
+	// Enabled: Optional set the sso application as enabled or disabled.
+	// Logo: Optional sso application logo.
+	// LoginPageURL: The URL where login page is hosted.
+	//
+	// The argument appRequest.Id value is optional and will be auto generated if provided with empty value
+	// The argument appRequest.Id and appRequest.Name must be unique per project.
+	CreateOIDCApplication(ctx context.Context, appRequest *descope.OIDCApplicationRequest) (id string, err error)
+
+	// Create a new SAML SSO application with the given name.
+	//
+	// SAMLApplicationRequest fields:
+	// ID: Optional sso application ID.
+	// Name: The sso application's name.
+	// Description: Optional sso application description.
+	// Enabled: Optional set the sso application as enabled or disabled.
+	// Logo: Optional sso application logo.
+	// LoginPageURL: The URL where login page is hosted.
+	// UseMetadataInfo: Optional determine if SP info should be automatically fetched from metadata_url or by specified it by the entity_id, acs_url, certificate parameters.
+	// MetadataURL: Optional (must be set if UseMetadataInfo is True) SP metadata url which include all the SP SAML info.
+	// EntityID: Optional (must be set if UseMetadataInfo is False) SP entity id.
+	// AcsURL: Optional (must be set if UseMetadataInfo is False) SP ACS (saml callback) url.
+	// Certificate: Optional (must be set if UseMetadataInfo is False)SP certificate, relevant only when SAML request must be signed.
+	// AttributeMapping: Optional list of Descope (IdP) attributes to SP mapping.
+	// GroupsMapping: Optional list of Descope (IdP) roles that will be mapped to SP groups.
+	// AcsAllowedCallbacks: Optional list of urls wildcards strings represents the allowed ACS urls that will be accepted while arriving on the SAML request as SP callback urls.
+	// SubjectNameIDType: Optional define the SAML Assertion subject name type, leave empty for using Descope user-id or set to "email"/"phone".
+	// SubjectNameIDFormat: Optional define the SAML Assertion subject name format, leave empty for using "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified".
+	//
+	// The argument appRequest.Id value is optional and will be auto generated if provided with empty value
+	// The argument appRequest.Id and appRequest.Name must be unique per project.
+	CreateSAMLApplication(ctx context.Context, appRequest *descope.SAMLApplicationRequest) (id string, err error)
+
+	// Update an existing OIDC sso application.
+	//
+	// IMPORTANT: All parameters are required and will override whatever value is currently
+	// set in the existing sso application. Use carefully.
+	UpdateOIDCApplication(ctx context.Context, appRequest *descope.OIDCApplicationRequest) error
+
+	// Update an existing SAML sso application.
+	//
+	// IMPORTANT: All parameters are required and will override whatever value is currently
+	// set in the existing sso application. Use carefully.
+	UpdateSAMLApplication(ctx context.Context, appRequest *descope.SAMLApplicationRequest) error
+
+	// Delete an existing sso application.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	Delete(ctx context.Context, id string) error
+
+	// Load project sso application by id
+	Load(ctx context.Context, id string) (*descope.SSOApplication, error)
+
+	// Load all project sso applications
+	LoadAll(ctx context.Context) ([]*descope.SSOApplication, error)
+}
+
 // Provides functions for managing users in a project.
 type User interface {
 	// Create a new user.
@@ -226,6 +290,15 @@ type User interface {
 	// Remove roles from a user without tenant association. Use RemoveTenantRoles for
 	// users that are part of a multi-tenant project.
 	RemoveRoles(ctx context.Context, loginID string, roles []string) (*descope.UserResponse, error)
+
+	// Associate SSO application for a user.
+	AddSSOApps(ctx context.Context, loginID string, ssoAppIDs []string) (*descope.UserResponse, error)
+
+	// Set (associate) SSO applications for a user.
+	SetSSOApps(ctx context.Context, loginID string, ssoAppIDs []string) (*descope.UserResponse, error)
+
+	// Remove SSO application association from a user.
+	RemoveSSOApps(ctx context.Context, loginID string, ssoAppIDs []string) (*descope.UserResponse, error)
 
 	// Add a tenant association for an existing user.
 	AddTenant(ctx context.Context, loginID string, tenantID string) (*descope.UserResponse, error)
@@ -512,6 +585,12 @@ type Group interface {
 type Flow interface {
 	// Returns metadata of all project flows
 	ListFlows(ctx context.Context) (*descope.FlowsResponse, error)
+
+	// Delete flows by flow ids.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteFlows(ctx context.Context, flowIDs []string) error
+
 	// Export a flow and its screens by the flow id.
 	ExportFlow(ctx context.Context, flowID string) (*descope.FlowResponse, error)
 
@@ -635,6 +714,9 @@ type Authz interface {
 type Management interface {
 	// Provides functions for managing tenants in a project.
 	Tenant() Tenant
+
+	// Provides functions for managing sso applications in a project.
+	SSOApplication() SSOApplication
 
 	// Provides functions for managing users in a project.
 	User() User

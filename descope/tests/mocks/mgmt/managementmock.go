@@ -15,6 +15,7 @@ type MockManagement struct {
 	*MockUser
 	*MockAccessKey
 	*MockTenant
+	*MockSSOApplication
 	*MockPermission
 	*MockRole
 	*MockGroup
@@ -42,6 +43,10 @@ func (m *MockManagement) AccessKey() sdk.AccessKey {
 
 func (m *MockManagement) Tenant() sdk.Tenant {
 	return m.MockTenant
+}
+
+func (m *MockManagement) SSOApplication() sdk.SSOApplication {
+	return m.MockSSOApplication
 }
 
 func (m *MockManagement) Permission() sdk.Permission {
@@ -305,6 +310,18 @@ type MockUser struct {
 	RemoveRoleResponse *descope.UserResponse
 	RemoveRoleError    error
 
+	AddSSOAppsAssert   func(loginID string, ssoAppIDs []string)
+	AddSSOAppsResponse *descope.UserResponse
+	AddSSOAppsError    error
+
+	SetSSOAppsAssert   func(loginID string, ssoAppIDs []string)
+	SetSSOAppsResponse *descope.UserResponse
+	SetSSOAppsError    error
+
+	RemoveSSOAppsAssert   func(loginID string, ssoAppIDs []string)
+	RemoveSSOAppsResponse *descope.UserResponse
+	RemoveSSOAppsError    error
+
 	AddTenantAssert   func(loginID, tenantID string)
 	AddTenantResponse *descope.UserResponse
 	AddTenantError    error
@@ -546,6 +563,27 @@ func (m *MockUser) RemoveRoles(_ context.Context, loginID string, roles []string
 		m.RemoveRoleAssert(loginID, roles)
 	}
 	return m.RemoveRoleResponse, m.RemoveRoleError
+}
+
+func (m *MockUser) AddSSOApps(_ context.Context, loginID string, ssoAppIDs []string) (*descope.UserResponse, error) {
+	if m.AddSSOAppsAssert != nil {
+		m.AddSSOAppsAssert(loginID, ssoAppIDs)
+	}
+	return m.AddSSOAppsResponse, m.AddSSOAppsError
+}
+
+func (m *MockUser) SetSSOApps(_ context.Context, loginID string, ssoAppIDs []string) (*descope.UserResponse, error) {
+	if m.SetSSOAppsAssert != nil {
+		m.SetSSOAppsAssert(loginID, ssoAppIDs)
+	}
+	return m.SetSSOAppsResponse, m.SetSSOAppsError
+}
+
+func (m *MockUser) RemoveSSOApps(_ context.Context, loginID string, ssoAppIDs []string) (*descope.UserResponse, error) {
+	if m.RemoveSSOAppsAssert != nil {
+		m.RemoveSSOAppsAssert(loginID, ssoAppIDs)
+	}
+	return m.RemoveSSOAppsResponse, m.RemoveSSOAppsError
 }
 
 func (m *MockUser) AddTenant(_ context.Context, loginID string, tenantID string) (*descope.UserResponse, error) {
@@ -814,6 +852,75 @@ func (m *MockTenant) ConfigureSettings(_ context.Context, tenantID string, setti
 	return m.ConfigureSettingsError
 }
 
+// Mock SSOApplication
+
+type MockSSOApplication struct {
+	CreateOIDCApplicationAssert func(appRequest *descope.OIDCApplicationRequest)
+	CreateSAMLApplicationAssert func(appRequest *descope.SAMLApplicationRequest)
+	CreateResponse              string
+	CreateError                 error
+
+	UpdateOIDCApplicationAssert func(appRequest *descope.OIDCApplicationRequest)
+	UpdateSAMLApplicationAssert func(appRequest *descope.SAMLApplicationRequest)
+	UpdateError                 error
+
+	DeleteAssert func(id string)
+	DeleteError  error
+
+	LoadAssert   func(id string)
+	LoadResponse *descope.SSOApplication
+	LoadError    error
+
+	LoadAllResponse []*descope.SSOApplication
+	LoadAllError    error
+}
+
+func (m *MockSSOApplication) CreateOIDCApplication(_ context.Context, appRequest *descope.OIDCApplicationRequest) (id string, err error) {
+	if m.CreateOIDCApplicationAssert != nil {
+		m.CreateOIDCApplicationAssert(appRequest)
+	}
+	return m.CreateResponse, m.CreateError
+}
+
+func (m *MockSSOApplication) CreateSAMLApplication(_ context.Context, appRequest *descope.SAMLApplicationRequest) (id string, err error) {
+	if m.CreateSAMLApplicationAssert != nil {
+		m.CreateSAMLApplicationAssert(appRequest)
+	}
+	return m.CreateResponse, m.CreateError
+}
+
+func (m *MockSSOApplication) UpdateOIDCApplication(_ context.Context, appRequest *descope.OIDCApplicationRequest) error {
+	if m.UpdateOIDCApplicationAssert != nil {
+		m.UpdateOIDCApplicationAssert(appRequest)
+	}
+	return m.UpdateError
+}
+
+func (m *MockSSOApplication) UpdateSAMLApplication(_ context.Context, appRequest *descope.SAMLApplicationRequest) error {
+	if m.UpdateSAMLApplicationAssert != nil {
+		m.UpdateSAMLApplicationAssert(appRequest)
+	}
+	return m.UpdateError
+}
+
+func (m *MockSSOApplication) Delete(_ context.Context, id string) error {
+	if m.DeleteAssert != nil {
+		m.DeleteAssert(id)
+	}
+	return m.DeleteError
+}
+
+func (m *MockSSOApplication) Load(_ context.Context, id string) (*descope.SSOApplication, error) {
+	if m.LoadAssert != nil {
+		m.LoadAssert(id)
+	}
+	return m.LoadResponse, m.LoadError
+}
+
+func (m *MockSSOApplication) LoadAll(_ context.Context) ([]*descope.SSOApplication, error) {
+	return m.LoadAllResponse, m.LoadAllError
+}
+
 // Mock Permission
 
 type MockPermission struct {
@@ -940,6 +1047,9 @@ type MockFlow struct {
 	ListFlowsResponse *descope.FlowsResponse
 	ListFlowsError    error
 
+	DeleteFlowsAssert func(flowIDs []string)
+	DeleteFlowsError  error
+
 	ExportFlowAssert   func(flowID string)
 	ExportFlowResponse *descope.FlowResponse
 	ExportFlowError    error
@@ -962,6 +1072,13 @@ func (m *MockFlow) ListFlows(_ context.Context) (*descope.FlowsResponse, error) 
 		m.ListFlowsAssert()
 	}
 	return m.ListFlowsResponse, m.ListFlowsError
+}
+
+func (m *MockFlow) DeleteFlows(_ context.Context, flowIDs []string) error {
+	if m.DeleteFlowsAssert != nil {
+		m.DeleteFlowsAssert(flowIDs)
+	}
+	return m.DeleteFlowsError
 }
 
 func (m *MockFlow) ExportFlow(_ context.Context, flowID string) (*descope.FlowResponse, error) {

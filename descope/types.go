@@ -366,6 +366,7 @@ type UserRequest struct {
 	VerifiedEmail      *bool               `json:"verifiedEmail,omitempty"`
 	VerifiedPhone      *bool               `json:"verifiedPhone,omitempty"`
 	AdditionalLoginIDs []string            `json:"additionalLoginIds,omitempty"`
+	SSOAppIDs          []string            `json:"ssoAppIDs,omitempty"`
 }
 
 type BatchUser struct {
@@ -413,6 +414,7 @@ type UserResponse struct {
 	Password         bool                `json:"password,omitempty"`
 	SAML             bool                `json:"saml,omitempty"`
 	OAuth            map[string]bool     `json:"oauth,omitempty"`
+	SSOAppIDs        []string            `json:"ssoAppIds,omitempty"`
 }
 
 type UsersFailedResponse struct {
@@ -518,6 +520,94 @@ type TenantSettings struct {
 	InactivityTimeUnit         string   `json:"inactivityTimeUnit,omitempty"`
 }
 
+type SAMLIDPAttributeMappingInfo struct {
+	Name  string `json:"name"`
+	Type  string `json:"type"`
+	Value string `json:"value"`
+}
+
+type SAMLIDPRoleGroupMappingInfo struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type SAMLIDPGroupsMappingInfo struct {
+	Name       string                        `json:"name"`
+	Type       string                        `json:"type"`
+	FilterType string                        `json:"filterType"`
+	Value      string                        `json:"value"`
+	Roles      []SAMLIDPRoleGroupMappingInfo `json:"roles"`
+}
+
+type SSOApplicationSAMLSettings struct {
+	LoginPageURL        string                        `json:"loginPageUrl"`
+	IdpCert             string                        `json:"idpCert"`
+	UseMetadataInfo     bool                          `json:"useMetadataInfo"`
+	MetadataURL         string                        `json:"metadataUrl"`
+	EntityID            string                        `json:"entityId"`
+	AcsURL              string                        `json:"acsUrl"`
+	Certificate         string                        `json:"certificate"`
+	AttributeMapping    []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
+	GroupsMapping       []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
+	IdpMetadataURL      string                        `json:"idpMetadataUrl"`
+	IdpEntityID         string                        `json:"idpEntityId"`
+	IdpSSOURL           string                        `json:"idpSsoUrl"`
+	AcsAllowedCallbacks []string                      `json:"acsAllowedCallbacks"`
+	SubjectNameIDType   string                        `json:"subjectNameIdType"`
+	SubjectNameIDFormat string                        `json:"subjectNameIdFormat"`
+}
+
+type SSOApplicationOIDCSettings struct {
+	LoginPageURL string `json:"loginPageUrl"`
+	Issuer       string `json:"issuer"`
+	DiscoveryURL string `json:"discoveryUrl"`
+}
+
+type SSOApplication struct {
+	ID           string                      `json:"id"`
+	Name         string                      `json:"name"`
+	Description  string                      `json:"description"`
+	Enabled      bool                        `json:"enabled"`
+	Logo         string                      `json:"logo"`
+	AppType      string                      `json:"appType"`
+	SAMLSettings *SSOApplicationSAMLSettings `json:"samlSettings"`
+	OIDCSettings *SSOApplicationOIDCSettings `json:"oidcSettings"`
+}
+
+type OIDCApplicationRequest struct {
+	ID           string `json:"id"`
+	Name         string `json:"name"`
+	Description  string `json:"description"`
+	Enabled      bool   `json:"enabled"`
+	Logo         string `json:"logo"`
+	LoginPageURL string `json:"loginPageUrl"`
+}
+
+type SAMLApplicationRequest struct {
+	ID                  string                        `json:"id"`
+	Name                string                        `json:"name"`
+	Description         string                        `json:"description"`
+	Enabled             bool                          `json:"enabled"`
+	Logo                string                        `json:"logo"`
+	LoginPageURL        string                        `json:"loginPageUrl"`
+	UseMetadataInfo     bool                          `json:"useMetadataInfo"`
+	MetadataURL         string                        `json:"metadataUrl"`
+	EntityID            string                        `json:"entityId"`
+	AcsURL              string                        `json:"acsUrl"`
+	Certificate         string                        `json:"certificate"`
+	AttributeMapping    []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
+	GroupsMapping       []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
+	AcsAllowedCallbacks []string                      `json:"acsAllowedCallbacks"`
+	SubjectNameIDType   string                        `json:"subjectNameIdType"`
+	SubjectNameIDFormat string                        `json:"subjectNameIdFormat"`
+}
+
+type SSOApplicationSearchOptions struct {
+	IDs     []string
+	Names   []string
+	AppType string
+}
+
 type Permission struct {
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
@@ -559,6 +649,7 @@ type UserSearchOptions struct {
 	CustomAttributes map[string]any
 	Emails           []string
 	Phones           []string
+	SSOAppIDs        []string
 }
 
 type UserStatus string

@@ -20,25 +20,27 @@ type managementBase struct {
 type managementService struct {
 	managementBase
 
-	tenant     sdk.Tenant
-	user       sdk.User
-	accessKey  sdk.AccessKey
-	sso        sdk.SSO
-	password   sdk.PasswordManagement
-	jwt        sdk.JWT
-	permission sdk.Permission
-	role       sdk.Role
-	group      sdk.Group
-	flow       sdk.Flow
-	project    sdk.Project
-	audit      sdk.Audit
-	authz      sdk.Authz
+	tenant         sdk.Tenant
+	ssoApplication sdk.SSOApplication
+	user           sdk.User
+	accessKey      sdk.AccessKey
+	sso            sdk.SSO
+	password       sdk.PasswordManagement
+	jwt            sdk.JWT
+	permission     sdk.Permission
+	role           sdk.Role
+	group          sdk.Group
+	flow           sdk.Flow
+	project        sdk.Project
+	audit          sdk.Audit
+	authz          sdk.Authz
 }
 
 func NewManagement(conf ManagementParams, c *api.Client) *managementService {
 	base := managementBase{conf: &conf, client: c}
 	service := &managementService{managementBase: base}
 	service.tenant = &tenant{managementBase: base}
+	service.ssoApplication = &SSOApplication{managementBase: base}
 	service.user = &user{managementBase: base}
 	service.accessKey = &accessKey{managementBase: base}
 	service.sso = &sso{managementBase: base}
@@ -57,6 +59,11 @@ func NewManagement(conf ManagementParams, c *api.Client) *managementService {
 func (mgmt *managementService) Tenant() sdk.Tenant {
 	mgmt.ensureManagementKey()
 	return mgmt.tenant
+}
+
+func (mgmt *managementService) SSOApplication() sdk.SSOApplication {
+	mgmt.ensureManagementKey()
+	return mgmt.ssoApplication
 }
 
 func (mgmt *managementService) User() sdk.User {

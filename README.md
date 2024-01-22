@@ -65,6 +65,7 @@ These sections show how to use the SDK to perform API management functions. Befo
 11. [Embedded Links](#embedded-links)
 12. [Manage ReBAC Authz](#manage-rebac-authz)
 13. [Manage Project](#manage-project)
+14. [Manage SSO Applications](#manage-sso-applications)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -681,6 +682,7 @@ userReq.Tenants = []*descope.AssociatedTenant{
     {TenantID: "tenant-ID1", Roles: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},
 }
+userReq.SSOAppIDs = []string{"appId1", "appId2"}
 user, err := descopeClient.Management.User().Create(context.Background(), "desmond@descope.com", userReq)
 
 // Alternatively, a user can be created and invited via an email message.
@@ -693,6 +695,7 @@ userReqInvite.Tenants = []*descope.AssociatedTenant{
     {TenantID: "tenant-ID1", Roles: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},
 }
+userReqInvite.SSOAppIDs = []string{"appId1", "appId2"}
 // options can be nil, and in this case, value will be taken from project settings page
 options := &descope.InviteOptions{InviteURL: "https://sub.domain.com"}
 err := descopeClient.Management.User().Invite(context.Background(), "desmond@descope.com", userReqInvite, options)
@@ -704,6 +707,7 @@ u1 := &descope.BatchUser{}
 u1.LoginID = "one"
 u1.Email = "one@one.com"
 u1.Roles = []string{"one"}
+u1.SSOAppIDs = []string{"appId1", "appId2"}
 
 u2 := &descope.BatchUser{}
 u2.LoginID = "two"
@@ -721,10 +725,20 @@ userReqUpdate.Tenants = []*descope.AssociatedTenant{
     {TenantID: "tenant-ID1", Roles: []string{"role-name1"}},
     {TenantID: "tenant-ID2"},
 }
+userReqUpdate.SSOAppIDs = []string{"appId3"}
 err := descopeClient.Management.User().Update(context.Background(), "desmond@descope.com", userReqUpdate)
 
 // Update loginID of a user, or remove a login ID (last login ID cannot be removed)
 err := descopeClient.Management.User().UpdateLoginID(context.Background(), "desmond@descope.com", "bane@descope.com")
+
+// Associate SSO application for a user.
+user, err := descopeClient.Management.User().AddSSOApps(context.Background(), "desmond@descope.com",[]string{"appId1"})
+
+// Set (associate) SSO application for a user.
+user, err := descopeClient.Management.User().SetSSOApps(context.Background(), "desmond@descope.com",[]string{"appId1", "appId2"})
+
+// Remove SSO application association from a user.
+user, err := descopeClient.Management.User().RemoveSSOApps(context.Background(), "desmond@descope.com",[]string{"appId2"})
 
 // User deletion cannot be undone. Use carefully.
 err := descopeClient.Management.User().Delete(context.Background(), "desmond@descope.com")
@@ -1024,6 +1038,10 @@ if err == nil {
     fmt.Println(res.Total)
     fmt.Println(res.Flows[0].ID)
 }
+
+// Delete flows by ids
+err := descopeClient.Management.Flow().DeleteFlows(context.Background(), []string{"flow-1", "flow-2"})
+
 // Export the flow and it's matching screens based on the given id
 res, err := descopeClient.Management.Flow().ExportFlow(context.Background(), "sign-up")
 if err == nil {
@@ -1284,6 +1302,65 @@ if err == nil {
 
 // Delete the current project. Kindly note that following calls on the `descopeClient` are most likely to fail because the current project has been deleted 
 err := descopeClient.Management.Project().Delete(context.Background())
+```
+
+### Manage SSO Applications
+
+You can create, update, delete or load sso applications:
+
+```go
+// Create OIDC SSO application
+req := &descope.OIDCApplicationRequest{Name: "My OIDC App", Enabled: true, LoginPageURL: "http://dummy.com"}
+appID, err = descopeClient.Management.SSOApplication().CreateOIDCApplication(context.Background(), req)
+
+//Create SAML SSO application
+req := &descope.SAMLApplicationRequest{
+	ID:               samlAppID,
+	Name:             "samlApp",
+	Enabled:          true,
+	LoginPageURL:     "http://dummy.com",
+	EntityID:         "eId11",
+	AcsURL:           "http://dummy.com/acs",
+	Certificate:      "cert",
+	AttributeMapping: []descope.SAMLIDPAttributeMappingInfo{{Name: "attrName1", Type: "attrType1", Value: "attrValue1"}},
+	GroupsMapping: []descope.SAMLIDPGroupsMappingInfo{
+		{
+			Name:       "grpName1",
+			Type:       "grpType1",
+			FilterType: "grpFilterType1",
+			Value:      "grpValue1",
+			Roles:      []descope.SAMLIDPRoleGroupMappingInfo{{ID: "rl1", Name: "rlName1"}},
+		},
+	},
+}
+appID, err = descopeClient.Management.SSOApplication().CreateSAMLApplication(context.Background(), req)
+
+// Update OIDC SSO application
+// Update will override all fields as is. Use carefully.
+err = tc.DescopeClient().Management.SSOApplication().UpdateOIDCApplication(context.TODO(), 
+	&descope.OIDCApplicationRequest{ID: oidcAppID, Name: "oidcNewAppName"
+})
+
+// Update SAML SSO application
+// Update will override all fields as is. Use carefully.
+req = &descope.SAMLApplicationRequest{
+	ID: samlAppID, Name: "samlNewAppName",
+	Enabled:      false,
+	LoginPageURL: "http://dummyyyy.com",
+	EntityID:     "eId22",
+	AcsURL:       "http://dummy.com/acs",
+	Certificate:  "cert",
+}
+err = tc.DescopeClient().Management.SSOApplication().UpdateSAMLApplication(context.Background(), req)
+
+// Load SSO application by id
+app, err = tc.DescopeClient().Management.SSOApplication().Load(context.Background(), "appId")
+
+// Load all SSO applications
+apps, err = tc.DescopeClient().Management.SSOApplication().LoadAll(context.Background())
+
+// SSO application deletion cannot be undone. Use carefully.
+descopeClient.DescopeClient().Management.SSOApplication().Delete(context.Background(), "appId")
 ```
 
 ## Code Examples

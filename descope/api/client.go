@@ -83,6 +83,13 @@ var (
 			tenantLoadAll:                    "mgmt/tenant/all",
 			tenantSearchAll:                  "mgmt/tenant/search",
 			tenantSettings:                   "mgmt/tenant/settings",
+			ssoApplicationOIDCCreate:         "mgmt/sso/idp/app/oidc/create",
+			ssoApplicationSAMLCreate:         "mgmt/sso/idp/app/saml/create",
+			ssoApplicationOIDCUpdate:         "mgmt/sso/idp/app/oidc/update",
+			ssoApplicationSAMLUpdate:         "mgmt/sso/idp/app/saml/update",
+			ssoApplicationDelete:             "mgmt/sso/idp/app/delete",
+			ssoApplicationLoad:               "mgmt/sso/idp/app/load",
+			ssoApplicationLoadAll:            "mgmt/sso/idp/apps/load",
 			userCreate:                       "mgmt/user/create",
 			userCreateBatch:                  "mgmt/user/create/batch",
 			userUpdate:                       "mgmt/user/update",
@@ -103,6 +110,9 @@ var (
 			userSetRole:                      "mgmt/user/update/role/set",
 			userAddRole:                      "mgmt/user/update/role/add",
 			userRemoveRole:                   "mgmt/user/update/role/remove",
+			userAddSsoApps:                   "mgmt/user/update/ssoapp/add",
+			userSetSsoApps:                   "mgmt/user/update/ssoapp/set",
+			userRemoveSsoApps:                "mgmt/user/update/ssoapp/remove",
 			userSetPassword:                  "mgmt/user/password/set",
 			userExpirePassword:               "mgmt/user/password/expire",
 			userRemoveAllPasskeys:            "mgmt/user/passkeys/delete",
@@ -140,6 +150,7 @@ var (
 			groupLoadAllGroupsForMember:      "mgmt/group/member/all",
 			groupLoadAllGroupMembers:         "mgmt/group/members",
 			listFlows:                        "mgmt/flow/list",
+			deleteFlows:                      "mgmt/flow/delete",
 			flowExport:                       "mgmt/flow/export",
 			flowImport:                       "mgmt/flow/import",
 			themeExport:                      "mgmt/theme/export",
@@ -242,6 +253,14 @@ type mgmtEndpoints struct {
 	tenantSearchAll string
 	tenantSettings  string
 
+	ssoApplicationOIDCCreate string
+	ssoApplicationSAMLCreate string
+	ssoApplicationOIDCUpdate string
+	ssoApplicationSAMLUpdate string
+	ssoApplicationDelete     string
+	ssoApplicationLoad       string
+	ssoApplicationLoadAll    string
+
 	userCreate                string
 	userCreateBatch           string
 	userUpdate                string
@@ -267,6 +286,9 @@ type mgmtEndpoints struct {
 	userRemoveAllPasskeys     string
 	userGetProviderToken      string
 	userLogoutAllDevices      string
+	userAddSsoApps            string
+	userSetSsoApps            string
+	userRemoveSsoApps         string
 
 	userGenerateOTPForTest           string
 	userGenerateMagicLinkForTest     string
@@ -310,6 +332,7 @@ type mgmtEndpoints struct {
 	groupLoadAllGroupMembers    string
 
 	listFlows   string
+	deleteFlows string
 	flowExport  string
 	flowImport  string
 	themeExport string
@@ -522,6 +545,34 @@ func (e *endpoints) ManagementTenantSettings() string {
 	return path.Join(e.version, e.mgmt.tenantSettings)
 }
 
+func (e *endpoints) ManagementSSOApplicationOIDCCreate() string {
+	return path.Join(e.version, e.mgmt.ssoApplicationOIDCCreate)
+}
+
+func (e *endpoints) ManagementSSOApplicationSAMLCreate() string {
+	return path.Join(e.version, e.mgmt.ssoApplicationSAMLCreate)
+}
+
+func (e *endpoints) ManagementSSOApplicationOIDCUpdate() string {
+	return path.Join(e.version, e.mgmt.ssoApplicationOIDCUpdate)
+}
+
+func (e *endpoints) ManagementSSOApplicationSAMLUpdate() string {
+	return path.Join(e.version, e.mgmt.ssoApplicationSAMLUpdate)
+}
+
+func (e *endpoints) ManagementSSOApplicationDelete() string {
+	return path.Join(e.version, e.mgmt.ssoApplicationDelete)
+}
+
+func (e *endpoints) ManagementSSOApplicationLoad() string {
+	return path.Join(e.version, e.mgmt.ssoApplicationLoad)
+}
+
+func (e *endpoints) ManagementSSOApplicationLoadAll() string {
+	return path.Join(e.version, e.mgmt.ssoApplicationLoadAll)
+}
+
 func (e *endpoints) ManagementUserCreate() string {
 	return path.Join(e.version, e.mgmt.userCreate)
 }
@@ -600,6 +651,18 @@ func (e *endpoints) ManagementUserAddRole() string {
 
 func (e *endpoints) ManagementUserRemoveRole() string {
 	return path.Join(e.version, e.mgmt.userRemoveRole)
+}
+
+func (e *endpoints) ManagementUserAddSSOApps() string {
+	return path.Join(e.version, e.mgmt.userAddSsoApps)
+}
+
+func (e *endpoints) ManagementUserSetSSOApps() string {
+	return path.Join(e.version, e.mgmt.userSetSsoApps)
+}
+
+func (e *endpoints) ManagementUserRemoveSSOApps() string {
+	return path.Join(e.version, e.mgmt.userRemoveSsoApps)
 }
 
 func (e *endpoints) ManagementUserSetPassword() string {
@@ -747,6 +810,10 @@ func (e *endpoints) ManagementGroupLoadAllGroupMembers() string {
 
 func (e *endpoints) ManagementListFlows() string {
 	return path.Join(e.version, e.mgmt.listFlows)
+}
+
+func (e *endpoints) ManagementDeleteFlows() string {
+	return path.Join(e.version, e.mgmt.deleteFlows)
 }
 
 func (e *endpoints) ManagementFlowExport() string {
