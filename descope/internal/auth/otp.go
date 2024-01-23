@@ -31,7 +31,7 @@ func (auth *otp) SignIn(ctx context.Context, method descope.DeliveryMethod, logi
 	return masked.GetMasked(), err
 }
 
-func (auth *otp) SignUp(ctx context.Context, method descope.DeliveryMethod, loginID string, user *descope.User) (string, error) {
+func (auth *otp) SignUp(ctx context.Context, method descope.DeliveryMethod, loginID string, user *descope.User, signUpOptions *descope.SignUpOptions) (string, error) {
 	if user == nil {
 		user = &descope.User{}
 	}
@@ -40,18 +40,21 @@ func (auth *otp) SignUp(ctx context.Context, method descope.DeliveryMethod, logi
 	}
 	masked := getMaskedValue(method)
 	options := &api.HTTPRequest{ResBodyObj: masked}
-	_, err := auth.client.DoPostRequest(ctx, composeSignUpURL(method), newAuthenticationSignUpRequestBody(method, loginID, user), options, "")
+	_, err := auth.client.DoPostRequest(ctx, composeSignUpURL(method), newAuthenticationSignUpRequestBody(method, loginID, user, signUpOptions), options, "")
 	return masked.GetMasked(), err
 }
 
-func (auth *otp) SignUpOrIn(ctx context.Context, method descope.DeliveryMethod, loginID string) (string, error) {
+func (auth *otp) SignUpOrIn(ctx context.Context, method descope.DeliveryMethod, loginID string, signUpOptions *descope.SignUpOptions) (string, error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
 
 	masked := getMaskedValue(method)
 	options := &api.HTTPRequest{ResBodyObj: masked}
-	_, err := auth.client.DoPostRequest(ctx, composeSignUpOrInURL(method), newSignInRequestBody(loginID, nil), options, "")
+	_, err := auth.client.DoPostRequest(ctx, composeSignUpOrInURL(method), newSignInRequestBody(loginID, &descope.LoginOptions{
+		CustomClaims:    signUpOptions.CustomClaims,
+		TemplateOptions: signUpOptions.TemplateOptions,
+	}), options, "")
 	return masked.GetMasked(), err
 }
 

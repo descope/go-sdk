@@ -12,11 +12,12 @@ type authenticationRequestBody struct {
 }
 
 type authenticationSignUpRequestBody struct {
-	WhatsApp string        `json:"whatsapp,omitempty"`
-	Phone    string        `json:"phone,omitempty"`
-	Email    string        `json:"email,omitempty"`
-	LoginID  string        `json:"loginId,omitempty"`
-	User     *descope.User `json:"user"`
+	WhatsApp     string                `json:"whatsapp,omitempty"`
+	Phone        string                `json:"phone,omitempty"`
+	Email        string                `json:"email,omitempty"`
+	LoginID      string                `json:"loginId,omitempty"`
+	User         *descope.User         `json:"user"`
+	LoginOptions *descope.LoginOptions `json:"loginOptions,omitempty"`
 }
 
 type authenticationWebAuthnSignUpRequestBody struct {
@@ -48,8 +49,9 @@ type authenticationPasswordSignInRequestBody struct {
 }
 
 type authenticationPasswordResetRequestBody struct {
-	LoginID     string `json:"loginId,omitempty"`
-	RedirectURL string `json:"redirectUrl,omitempty"`
+	LoginID         string                 `json:"loginId,omitempty"`
+	RedirectURL     string                 `json:"redirectUrl,omitempty"`
+	TemplateOptions map[string]interface{} `json:"templateOptions,omitempty"`
 }
 
 type authenticationPasswordUpdateRequestBody struct {
@@ -105,16 +107,16 @@ type magicLinkAuthenticationSignUpRequestBody struct {
 
 type magicLinkUpdateEmailRequestBody struct {
 	*descope.UpdateOptions `json:",inline"`
-	Email                  string `json:"email,inline"`
-	LoginID                string `json:"loginId,inline"`
+	Email                  string `json:"email,omitempty"`
+	LoginID                string `json:"loginId,omitempty"`
 	URI                    string `json:"URI,omitempty"`
 	CrossDevice            bool   `json:"crossDevice,omitempty"`
 }
 
 type magicLinkUpdatePhoneRequestBody struct {
 	*descope.UpdateOptions `json:",inline"`
-	Phone                  string `json:"phone,inline"`
-	LoginID                string `json:"loginId,inline"`
+	Phone                  string `json:"phone,omitempty"`
+	LoginID                string `json:"loginId,omitempty"`
 	URI                    string `json:"URI,omitempty"`
 	CrossDevice            bool   `json:"crossDevice,omitempty"`
 }
@@ -162,10 +164,14 @@ func newMagicLinkAuthenticationRequestBody(value, URI string, crossDevice bool, 
 	return &magicLinkAuthenticationRequestBody{authenticationRequestBody: newSignInRequestBody(value, loginOptions), URI: URI, CrossDevice: crossDevice, LoginOptions: loginOptions}
 }
 
-func newMagicLinkAuthenticationSignUpRequestBody(method descope.DeliveryMethod, loginID, URI string, user *descope.User, crossDevice bool) *magicLinkAuthenticationSignUpRequestBody {
+func newMagicLinkAuthenticationSignUpRequestBody(method descope.DeliveryMethod, loginID, URI string, user *descope.User, crossDevice bool, signUpOptions *descope.SignUpOptions) *magicLinkAuthenticationSignUpRequestBody {
 	b := newSignUpRequestBody(method, user)
 	b.User = user
 	b.LoginID = loginID
+	b.LoginOptions = &descope.LoginOptions{
+		CustomClaims:    signUpOptions.CustomClaims,
+		TemplateOptions: signUpOptions.TemplateOptions,
+	}
 	return &magicLinkAuthenticationSignUpRequestBody{authenticationSignUpRequestBody: b, CrossDevice: crossDevice, URI: URI}
 }
 
@@ -173,10 +179,14 @@ func newMagicLinkAuthenticationVerifyRequestBody(token string) *magicLinkAuthent
 	return &magicLinkAuthenticationVerifyRequestBody{Token: token}
 }
 
-func newAuthenticationSignUpRequestBody(method descope.DeliveryMethod, loginID string, user *descope.User) *authenticationSignUpRequestBody {
+func newAuthenticationSignUpRequestBody(method descope.DeliveryMethod, loginID string, user *descope.User, signUpOptions *descope.SignUpOptions) *authenticationSignUpRequestBody {
 	b := newSignUpRequestBody(method, user)
 	b.User = user
 	b.LoginID = loginID
+	b.LoginOptions = &descope.LoginOptions{
+		CustomClaims:    signUpOptions.CustomClaims,
+		TemplateOptions: signUpOptions.TemplateOptions,
+	}
 	return b
 }
 

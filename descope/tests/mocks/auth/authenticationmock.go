@@ -63,10 +63,10 @@ type MockMagicLink struct {
 	SignInAssert func(method descope.DeliveryMethod, loginID, URI string, r *http.Request, loginOptions *descope.LoginOptions)
 	SignInError  error
 
-	SignUpAssert func(method descope.DeliveryMethod, loginID, URI string, user *descope.User)
+	SignUpAssert func(method descope.DeliveryMethod, loginID, URI string, user *descope.User, signUpOptions *descope.SignUpOptions)
 	SignUpError  error
 
-	SignUpOrInAssert func(method descope.DeliveryMethod, loginID string, URI string)
+	SignUpOrInAssert func(method descope.DeliveryMethod, loginID string, URI string, signUpOptions *descope.SignUpOptions)
 	SignUpOrInError  error
 
 	VerifyAssert   func(token string, w http.ResponseWriter) (*descope.AuthenticationInfo, error)
@@ -87,16 +87,16 @@ func (m *MockMagicLink) SignIn(_ context.Context, method descope.DeliveryMethod,
 	return "", m.SignInError
 }
 
-func (m *MockMagicLink) SignUp(_ context.Context, method descope.DeliveryMethod, loginID, URI string, user *descope.User) (string, error) {
+func (m *MockMagicLink) SignUp(_ context.Context, method descope.DeliveryMethod, loginID, URI string, user *descope.User, signUpOptions *descope.SignUpOptions) (string, error) {
 	if m.SignUpAssert != nil {
-		m.SignUpAssert(method, loginID, URI, user)
+		m.SignUpAssert(method, loginID, URI, user, signUpOptions)
 	}
 	return "", m.SignUpError
 }
 
-func (m *MockMagicLink) SignUpOrIn(_ context.Context, method descope.DeliveryMethod, loginID string, URI string) (string, error) {
+func (m *MockMagicLink) SignUpOrIn(_ context.Context, method descope.DeliveryMethod, loginID string, URI string, signUpOptions *descope.SignUpOptions) (string, error) {
 	if m.SignUpOrInAssert != nil {
-		m.SignUpOrInAssert(method, loginID, URI)
+		m.SignUpOrInAssert(method, loginID, URI, signUpOptions)
 	}
 	return "", m.SignUpOrInError
 }
@@ -129,11 +129,11 @@ type MockEnchantedLink struct {
 	SignInError    error
 	SignInResponse *descope.EnchantedLinkResponse
 
-	SignUpAssert   func(loginID, URI string, user *descope.User)
+	SignUpAssert   func(loginID, URI string, user *descope.User, signUpOptions *descope.SignUpOptions)
 	SignUpError    error
 	SignUpResponse *descope.EnchantedLinkResponse
 
-	SignUpOrInAssert   func(loginID string, URI string)
+	SignUpOrInAssert   func(loginID string, URI string, signUpOptions *descope.SignUpOptions)
 	SignUpOrInError    error
 	SignUpOrInResponse *descope.EnchantedLinkResponse
 
@@ -156,16 +156,16 @@ func (m *MockEnchantedLink) SignIn(_ context.Context, loginID, URI string, r *ht
 	return m.SignInResponse, m.SignInError
 }
 
-func (m *MockEnchantedLink) SignUp(_ context.Context, loginID, URI string, user *descope.User) (*descope.EnchantedLinkResponse, error) {
+func (m *MockEnchantedLink) SignUp(_ context.Context, loginID, URI string, user *descope.User, signUpOptions *descope.SignUpOptions) (*descope.EnchantedLinkResponse, error) {
 	if m.SignUpAssert != nil {
-		m.SignUpAssert(loginID, URI, user)
+		m.SignUpAssert(loginID, URI, user, signUpOptions)
 	}
 	return m.SignUpResponse, m.SignUpError
 }
 
-func (m *MockEnchantedLink) SignUpOrIn(_ context.Context, loginID string, URI string) (*descope.EnchantedLinkResponse, error) {
+func (m *MockEnchantedLink) SignUpOrIn(_ context.Context, loginID string, URI string, signUpOptions *descope.SignUpOptions) (*descope.EnchantedLinkResponse, error) {
 	if m.SignUpOrInAssert != nil {
-		m.SignUpOrInAssert(loginID, URI)
+		m.SignUpOrInAssert(loginID, URI, signUpOptions)
 	}
 	return m.SignUpOrInResponse, m.SignUpOrInError
 }
@@ -197,10 +197,10 @@ type MockOTP struct {
 	SignInAssert func(method descope.DeliveryMethod, loginID string, r *http.Request, loginOptions *descope.LoginOptions)
 	SignInError  error
 
-	SignUpAssert func(method descope.DeliveryMethod, loginID string, user *descope.User)
+	SignUpAssert func(method descope.DeliveryMethod, loginID string, user *descope.User, signUpOptions *descope.SignUpOptions)
 	SignUpError  error
 
-	SignUpOrInAssert func(method descope.DeliveryMethod, loginID string)
+	SignUpOrInAssert func(method descope.DeliveryMethod, loginID string, signUpOptions *descope.SignUpOptions)
 	SignUpOrInError  error
 
 	VerifyCodeAssert   func(method descope.DeliveryMethod, loginID string, code string, w http.ResponseWriter)
@@ -221,16 +221,16 @@ func (m *MockOTP) SignIn(_ context.Context, method descope.DeliveryMethod, login
 	return "", m.SignInError
 }
 
-func (m *MockOTP) SignUp(_ context.Context, method descope.DeliveryMethod, loginID string, user *descope.User) (string, error) {
+func (m *MockOTP) SignUp(_ context.Context, method descope.DeliveryMethod, loginID string, user *descope.User, signUpOptions *descope.SignUpOptions) (string, error) {
 	if m.SignUpAssert != nil {
-		m.SignUpAssert(method, loginID, user)
+		m.SignUpAssert(method, loginID, user, signUpOptions)
 	}
 	return "", m.SignUpError
 }
 
-func (m *MockOTP) SignUpOrIn(_ context.Context, method descope.DeliveryMethod, loginID string) (string, error) {
+func (m *MockOTP) SignUpOrIn(_ context.Context, method descope.DeliveryMethod, loginID string, signUpOptions *descope.SignUpOptions) (string, error) {
 	if m.SignUpOrInAssert != nil {
-		m.SignUpOrInAssert(method, loginID)
+		m.SignUpOrInAssert(method, loginID, signUpOptions)
 	}
 	return "", m.SignUpOrInError
 }
@@ -304,7 +304,7 @@ type MockPassword struct {
 	SignInError    error
 	SignInResponse *descope.AuthenticationInfo
 
-	ResetAssert func(loginID, redirectURL string)
+	ResetAssert func(loginID, redirectURL string, templateOptions map[string]interface{})
 	ResetError  error
 
 	UpdateAssert func(loginID, newPassword string, r *http.Request)
@@ -332,9 +332,9 @@ func (m *MockPassword) SignIn(_ context.Context, loginID string, password string
 	return m.SignInResponse, m.SignInError
 }
 
-func (m *MockPassword) SendPasswordReset(_ context.Context, loginID, redirectURL string) error {
+func (m *MockPassword) SendPasswordReset(_ context.Context, loginID, redirectURL string, templateOptions map[string]interface{}) error {
 	if m.ResetAssert != nil {
-		m.ResetAssert(loginID, redirectURL)
+		m.ResetAssert(loginID, redirectURL, templateOptions)
 	}
 	return m.ResetError
 }

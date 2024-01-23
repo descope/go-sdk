@@ -282,9 +282,15 @@ func (to *Token) IsMFA() bool {
 }
 
 type LoginOptions struct {
-	Stepup       bool                   `json:"stepup,omitempty"`
-	MFA          bool                   `json:"mfa,omitempty"`
-	CustomClaims map[string]interface{} `json:"customClaims,omitempty"`
+	Stepup          bool                   `json:"stepup,omitempty"`
+	MFA             bool                   `json:"mfa,omitempty"`
+	CustomClaims    map[string]interface{} `json:"customClaims,omitempty"`
+	TemplateOptions map[string]interface{} `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
+}
+
+type SignUpOptions struct {
+	CustomClaims    map[string]interface{} `json:"customClaims,omitempty"`
+	TemplateOptions map[string]interface{} `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 }
 
 func (lo *LoginOptions) IsJWTRequired() bool {
@@ -440,8 +446,9 @@ type ProviderTokenResponse struct {
 }
 
 type UpdateOptions struct {
-	AddToLoginIDs      bool `json:"addToLoginIDs,omitempty"`
-	OnMergeUseExisting bool `json:"onMergeUseExisting,omitempty"`
+	AddToLoginIDs      bool                   `json:"addToLoginIDs,omitempty"`
+	OnMergeUseExisting bool                   `json:"onMergeUseExisting,omitempty"`
+	TemplateOptions    map[string]interface{} `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 }
 
 type AccessKeyResponse struct {

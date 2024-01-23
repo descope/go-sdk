@@ -116,14 +116,14 @@ func TestPasswordSendReset(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	err = a.Password().SendPasswordReset(context.Background(), loginID, url)
+	err = a.Password().SendPasswordReset(context.Background(), loginID, url, nil)
 	require.NoError(t, err)
 }
 
 func TestPasswordSendResetFailure(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	err = a.Password().SendPasswordReset(context.Background(), "", "")
+	err = a.Password().SendPasswordReset(context.Background(), "", "", nil)
 	assert.Error(t, err)
 }
 

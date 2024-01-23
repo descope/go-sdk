@@ -127,7 +127,37 @@ func TestSignUpEnchantedLink(t *testing.T) {
 		}, nil
 	})
 	require.NoError(t, err)
-	response, err := a.EnchantedLink().SignUp(context.Background(), email, uri, &descope.User{Name: "test"})
+	response, err := a.EnchantedLink().SignUp(context.Background(), email, uri, &descope.User{Name: "test"}, nil)
+	require.NoError(t, err)
+	require.EqualValues(t, pendingRefResponse, response.PendingRef)
+	require.EqualValues(t, loginID, response.LinkID)
+}
+
+func TestSignUpEnchantedLinkWithSignUpOptions(t *testing.T) {
+	email := "test@email.com"
+	uri := "http://test.me"
+	pendingRefResponse := "pending_ref"
+	loginID := "loginID"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeEnchantedLinkSignUpURL(), r.URL.RequestURI())
+
+		m, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, email, m["email"])
+		assert.EqualValues(t, uri, m["URI"])
+		assert.EqualValues(t, email, m["loginId"])
+		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
+		assert.EqualValues(t, map[string]interface{}{"customClaims": map[string]interface{}{"aa": "bb"}, "templateOptions": map[string]interface{}{"cc": "dd"}}, m["loginOptions"])
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","linkId": "%s"}`, pendingRefResponse, loginID))),
+		}, nil
+	})
+	require.NoError(t, err)
+	response, err := a.EnchantedLink().SignUp(context.Background(), email, uri, &descope.User{Name: "test"}, &descope.SignUpOptions{
+		CustomClaims:    map[string]interface{}{"aa": "bb"},
+		TemplateOptions: map[string]interface{}{"cc": "dd"},
+	})
 	require.NoError(t, err)
 	require.EqualValues(t, pendingRefResponse, response.PendingRef)
 	require.EqualValues(t, loginID, response.LinkID)
@@ -151,7 +181,35 @@ func TestSignUpOrInEnchantedLink(t *testing.T) {
 		}, nil
 	})
 	require.NoError(t, err)
-	response, err := a.EnchantedLink().SignUpOrIn(context.Background(), email, uri)
+	response, err := a.EnchantedLink().SignUpOrIn(context.Background(), email, uri, nil)
+	require.NoError(t, err)
+	require.EqualValues(t, pendingRefResponse, response.PendingRef)
+	require.EqualValues(t, loginID, response.LinkID)
+}
+
+func TestSignUpOrInEnchantedLinkWithLoginOptions(t *testing.T) {
+	email := "test@email.com"
+	uri := "http://test.me"
+	pendingRefResponse := "pending_ref"
+	loginID := "ident"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeEnchantedLinkSignUpOrInURL(), r.URL.RequestURI())
+
+		m, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, email, m["loginId"])
+		assert.EqualValues(t, uri, m["URI"])
+		assert.EqualValues(t, map[string]interface{}{"customClaims": map[string]interface{}{"aa": "bb"}, "templateOptions": map[string]interface{}{"cc": "dd"}}, m["loginOptions"])
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s", "linkId": "%s"}`, pendingRefResponse, loginID))),
+		}, nil
+	})
+	require.NoError(t, err)
+	response, err := a.EnchantedLink().SignUpOrIn(context.Background(), email, uri, &descope.SignUpOptions{
+		CustomClaims:    map[string]interface{}{"aa": "bb"},
+		TemplateOptions: map[string]interface{}{"cc": "dd"},
+	})
 	require.NoError(t, err)
 	require.EqualValues(t, pendingRefResponse, response.PendingRef)
 	require.EqualValues(t, loginID, response.LinkID)
@@ -161,7 +219,7 @@ func TestSignUpEnchantedLinkEmptyLoginID(t *testing.T) {
 	uri := "http://test.me"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	response, err := a.EnchantedLink().SignUp(context.Background(), "", uri, &descope.User{Name: "test"})
+	response, err := a.EnchantedLink().SignUp(context.Background(), "", uri, &descope.User{Name: "test"}, nil)
 	require.Error(t, err)
 	require.Empty(t, response)
 }
@@ -293,6 +351,43 @@ func TestUpdateUserEmailEnchantedLink(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestUpdateUserEmailEnchantedLinkWithTemplateOptions(t *testing.T) {
+	loginID := "943248329844"
+	email := "test@test.com"
+	uri := "https://some.url.com"
+	checkOptions := true
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeUpdateUserEmailEnchantedLink(), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, loginID, body["loginId"])
+		assert.EqualValues(t, email, body["email"])
+		assert.EqualValues(t, uri, body["URI"])
+		if checkOptions {
+			assert.EqualValues(t, true, body["addToLoginIDs"])
+			assert.EqualValues(t, true, body["onMergeUseExisting"])
+			assert.EqualValues(t, map[string]interface{}{"cc": "dd"}, body["templateOptions"])
+		} else {
+			assert.EqualValues(t, nil, body["addToLoginIDs"])
+			assert.EqualValues(t, nil, body["onMergeUseExisting"])
+			assert.EqualValues(t, nil, body["templateOptions"])
+		}
+		assert.True(t, body["crossDevice"].(bool))
+		u, p := getProjectAndJwt(r)
+		assert.NotEmpty(t, u)
+		assert.NotEmpty(t, p)
+	}))
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	_, err = a.EnchantedLink().UpdateUserEmail(context.Background(), loginID, email, uri, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true, TemplateOptions: map[string]interface{}{"cc": "dd"}}, r)
+	require.NoError(t, err)
+	checkOptions = false
+	_, err = a.EnchantedLink().UpdateUserEmail(context.Background(), loginID, email, uri, nil, r)
+	require.NoError(t, err)
+}
+
 func TestUpdateUserEmailEnchantedLinkMissingArgs(t *testing.T) {
 	loginID := "943248329844"
 	email := "test@test.com"
@@ -323,14 +418,14 @@ func TestSignUpEnchantedLinkEmailNoUser(t *testing.T) {
 		assert.EqualValues(t, email, m["user"].(map[string]interface{})["email"])
 	}))
 	require.NoError(t, err)
-	_, err = a.EnchantedLink().SignUp(context.Background(), email, uri, nil)
+	_, err = a.EnchantedLink().SignUp(context.Background(), email, uri, nil, nil)
 	require.NoError(t, err)
 }
 func TestSignUpOrInEnchantedLinkNoLoginID(t *testing.T) {
 	uri := "http://test.me"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.EnchantedLink().SignUpOrIn(context.Background(), "", uri)
+	_, err = a.EnchantedLink().SignUpOrIn(context.Background(), "", uri, nil)
 	require.Error(t, err)
 }
 

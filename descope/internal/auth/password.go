@@ -39,12 +39,12 @@ func (auth *password) SignIn(ctx context.Context, loginID string, cleartext stri
 	return auth.generateAuthenticationInfo(res, w)
 }
 
-func (auth *password) SendPasswordReset(ctx context.Context, loginID, redirectURL string) error {
+func (auth *password) SendPasswordReset(ctx context.Context, loginID, redirectURL string, templateOptions map[string]interface{}) error {
 	if loginID == "" {
 		return utils.NewInvalidArgumentError("loginID")
 	}
 
-	_, err := auth.client.DoPostRequest(ctx, api.Routes.SendResetPassword(), authenticationPasswordResetRequestBody{LoginID: loginID, RedirectURL: redirectURL}, nil, "")
+	_, err := auth.client.DoPostRequest(ctx, api.Routes.SendResetPassword(), authenticationPasswordResetRequestBody{LoginID: loginID, RedirectURL: redirectURL, TemplateOptions: templateOptions}, nil, "")
 	if err != nil {
 		return err
 	}

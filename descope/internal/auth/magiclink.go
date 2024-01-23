@@ -31,7 +31,7 @@ func (auth *magicLink) SignIn(ctx context.Context, method descope.DeliveryMethod
 	return masked.GetMasked(), err
 }
 
-func (auth *magicLink) SignUp(ctx context.Context, method descope.DeliveryMethod, loginID, URI string, user *descope.User) (string, error) {
+func (auth *magicLink) SignUp(ctx context.Context, method descope.DeliveryMethod, loginID, URI string, user *descope.User, signUpOptions *descope.SignUpOptions) (string, error) {
 	if user == nil {
 		user = &descope.User{}
 	}
@@ -40,17 +40,20 @@ func (auth *magicLink) SignUp(ctx context.Context, method descope.DeliveryMethod
 	}
 	masked := getMaskedValue(method)
 	options := &api.HTTPRequest{ResBodyObj: masked}
-	_, err := auth.client.DoPostRequest(ctx, composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, loginID, URI, user, false), options, "")
+	_, err := auth.client.DoPostRequest(ctx, composeMagicLinkSignUpURL(method), newMagicLinkAuthenticationSignUpRequestBody(method, loginID, URI, user, false, signUpOptions), options, "")
 	return masked.GetMasked(), err
 }
 
-func (auth *magicLink) SignUpOrIn(ctx context.Context, method descope.DeliveryMethod, loginID, URI string) (string, error) {
+func (auth *magicLink) SignUpOrIn(ctx context.Context, method descope.DeliveryMethod, loginID, URI string, signUpOptions *descope.SignUpOptions) (string, error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
 	masked := getMaskedValue(method)
 	options := &api.HTTPRequest{ResBodyObj: masked}
-	_, err := auth.client.DoPostRequest(ctx, composeMagicLinkSignUpOrInURL(method), newMagicLinkAuthenticationRequestBody(loginID, URI, false, nil), options, "")
+	_, err := auth.client.DoPostRequest(ctx, composeMagicLinkSignUpOrInURL(method), newMagicLinkAuthenticationRequestBody(loginID, URI, false, &descope.LoginOptions{
+		CustomClaims:    signUpOptions.CustomClaims,
+		TemplateOptions: signUpOptions.TemplateOptions,
+	}), options, "")
 	return masked.GetMasked(), err
 }
 

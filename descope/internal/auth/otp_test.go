@@ -67,7 +67,33 @@ func TestSignUpEmail(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	me, err := a.OTP().SignUp(context.Background(), descope.MethodEmail, email, &descope.User{Name: "test"})
+	me, err := a.OTP().SignUp(context.Background(), descope.MethodEmail, email, &descope.User{Name: "test"}, nil)
+	require.NoError(t, err)
+	assert.EqualValues(t, maskedEmail, me)
+}
+
+func TestSignUpEmailWithSignUpOptions(t *testing.T) {
+	email := "test@email.com"
+	maskedEmail := "t***@email.com"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeSignUpURL(descope.MethodEmail), r.URL.RequestURI())
+
+		m, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, email, m["email"])
+		assert.EqualValues(t, email, m["loginId"])
+		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
+		resp := MaskedEmailRes{MaskedEmail: maskedEmail}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		assert.EqualValues(t, map[string]interface{}{"customClaims": map[string]interface{}{"aa": "bb"}, "templateOptions": map[string]interface{}{"cc": "dd"}}, m["loginOptions"])
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	me, err := a.OTP().SignUp(context.Background(), descope.MethodEmail, email, &descope.User{Name: "test"}, &descope.SignUpOptions{
+		CustomClaims:    map[string]interface{}{"aa": "bb"},
+		TemplateOptions: map[string]interface{}{"cc": "dd"},
+	})
 	require.NoError(t, err)
 	assert.EqualValues(t, maskedEmail, me)
 }
@@ -89,7 +115,7 @@ func TestSignUpSMS(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	mp, err := a.OTP().SignUp(context.Background(), descope.MethodSMS, phone, &descope.User{Name: "test"})
+	mp, err := a.OTP().SignUp(context.Background(), descope.MethodSMS, phone, &descope.User{Name: "test"}, nil)
 	require.NoError(t, err)
 	require.EqualValues(t, maskedPhone, mp)
 }
@@ -111,7 +137,7 @@ func TestSignUpWhatsApp(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	mp, err := a.OTP().SignUp(context.Background(), descope.MethodWhatsApp, phone, &descope.User{Name: "test"})
+	mp, err := a.OTP().SignUp(context.Background(), descope.MethodWhatsApp, phone, &descope.User{Name: "test"}, nil)
 	require.NoError(t, err)
 	require.EqualValues(t, maskedPhone, mp)
 }
@@ -127,7 +153,7 @@ func TestSignUpOrInWhatsApp(t *testing.T) {
 		assert.Nil(t, body["user"])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().SignUpOrIn(context.Background(), descope.MethodWhatsApp, loginID)
+	_, err = a.OTP().SignUpOrIn(context.Background(), descope.MethodWhatsApp, loginID, nil)
 	require.NoError(t, err)
 }
 
@@ -142,7 +168,26 @@ func TestSignUpOrInSMS(t *testing.T) {
 		assert.Nil(t, body["user"])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().SignUpOrIn(context.Background(), descope.MethodSMS, loginID)
+	_, err = a.OTP().SignUpOrIn(context.Background(), descope.MethodSMS, loginID, nil)
+	require.NoError(t, err)
+}
+
+func TestSignUpOrInSMSWithSignUpOptions(t *testing.T) {
+	loginID := "943248329844"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeSignUpOrInURL(descope.MethodSMS), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, loginID, body["loginId"])
+		assert.Nil(t, body["user"])
+		assert.EqualValues(t, map[string]interface{}{"customClaims": map[string]interface{}{"aa": "bb"}, "templateOptions": map[string]interface{}{"cc": "dd"}}, body["loginOptions"])
+	}))
+	require.NoError(t, err)
+	_, err = a.OTP().SignUpOrIn(context.Background(), descope.MethodSMS, loginID, &descope.SignUpOptions{
+		CustomClaims:    map[string]interface{}{"aa": "bb"},
+		TemplateOptions: map[string]interface{}{"cc": "dd"},
+	})
 	require.NoError(t, err)
 }
 
@@ -157,7 +202,7 @@ func TestSignUpOrInEmail(t *testing.T) {
 		assert.Nil(t, body["user"])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().SignUpOrIn(context.Background(), descope.MethodEmail, loginID)
+	_, err = a.OTP().SignUpOrIn(context.Background(), descope.MethodEmail, loginID, nil)
 	require.NoError(t, err)
 }
 
@@ -174,7 +219,7 @@ func TestEmptyEmailSignUpOrIn(t *testing.T) {
 	email := ""
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.OTP().SignUpOrIn(context.Background(), descope.MethodEmail, email)
+	_, err = a.OTP().SignUpOrIn(context.Background(), descope.MethodEmail, email, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
@@ -183,7 +228,7 @@ func TestInvalidEmailSignUp(t *testing.T) {
 	email := "+8222941449"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.OTP().SignUp(context.Background(), descope.MethodEmail, email, nil)
+	_, err = a.OTP().SignUp(context.Background(), descope.MethodEmail, email, nil, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
@@ -406,7 +451,48 @@ func TestUpdateEmailOTP(t *testing.T) {
 	me, err = a.OTP().UpdateUserEmail(context.Background(), loginID, email, nil, r)
 	require.NoError(t, err)
 	require.EqualValues(t, maskedEmail, me)
+}
 
+func TestUpdateEmailOTPWithTemplateOptions(t *testing.T) {
+	loginID := "943248329844"
+	email := "test@test.com"
+	maskedEmail := "t***@test.com"
+	checkOptions := true
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeUpdateUserEmailOTP(), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, loginID, body["loginId"])
+		assert.EqualValues(t, email, body["email"])
+		if checkOptions {
+			assert.EqualValues(t, true, body["addToLoginIDs"])
+			assert.EqualValues(t, true, body["onMergeUseExisting"])
+			assert.EqualValues(t, map[string]interface{}{"cc": "dd"}, body["templateOptions"])
+		} else {
+			assert.EqualValues(t, nil, body["addToLoginIDs"])
+			assert.EqualValues(t, nil, body["onMergeUseExisting"])
+			assert.EqualValues(t, nil, body["templateOptions"])
+		}
+
+		u, p := getProjectAndJwt(r)
+		assert.NotEmpty(t, u)
+		assert.NotEmpty(t, p)
+		resp := MaskedEmailRes{MaskedEmail: maskedEmail}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	me, err := a.OTP().UpdateUserEmail(context.Background(), loginID, email, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true, TemplateOptions: map[string]interface{}{"cc": "dd"}}, r)
+	require.NoError(t, err)
+	require.EqualValues(t, maskedEmail, me)
+	checkOptions = false
+	me, err = a.OTP().UpdateUserEmail(context.Background(), loginID, email, nil, r)
+	require.NoError(t, err)
+	require.EqualValues(t, maskedEmail, me)
 }
 
 func TestUpdateEmailOTPFailures(t *testing.T) {
@@ -464,6 +550,48 @@ func TestUpdatePhoneOTP(t *testing.T) {
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
 	mp, err := a.OTP().UpdateUserPhone(context.Background(), descope.MethodSMS, loginID, phone, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true}, r)
+	require.NoError(t, err)
+	require.EqualValues(t, maskedPhone, mp)
+	checkOptions = false
+	mp, err = a.OTP().UpdateUserPhone(context.Background(), descope.MethodSMS, loginID, phone, nil, r)
+	require.NoError(t, err)
+	require.EqualValues(t, maskedPhone, mp)
+}
+
+func TestUpdatePhoneOTPWithTemplateOptions(t *testing.T) {
+	loginID := "943248329844"
+	phone := "+111111111111"
+	maskedPhone := "+*******111"
+	checkOptions := true
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeUpdateUserPhoneOTP(descope.MethodSMS), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, loginID, body["loginId"])
+		assert.EqualValues(t, phone, body["phone"])
+		if checkOptions {
+			assert.EqualValues(t, true, body["addToLoginIDs"])
+			assert.EqualValues(t, true, body["onMergeUseExisting"])
+			assert.EqualValues(t, map[string]interface{}{"cc": "dd"}, body["templateOptions"])
+		} else {
+			assert.EqualValues(t, nil, body["addToLoginIDs"])
+			assert.EqualValues(t, nil, body["onMergeUseExisting"])
+			assert.EqualValues(t, nil, body["templateOptions"])
+		}
+
+		u, p := getProjectAndJwt(r)
+		assert.NotEmpty(t, u)
+		assert.NotEmpty(t, p)
+		resp := MaskedPhoneRes{MaskedPhone: maskedPhone}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	mp, err := a.OTP().UpdateUserPhone(context.Background(), descope.MethodSMS, loginID, phone, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true, TemplateOptions: map[string]interface{}{"cc": "dd"}}, r)
 	require.NoError(t, err)
 	require.EqualValues(t, maskedPhone, mp)
 	checkOptions = false
