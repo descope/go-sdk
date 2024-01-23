@@ -40,7 +40,7 @@ These sections show how to use the SDK to perform various authentication/authori
 2. [Magic Link](#magic-link)
 3. [Enchanted Link](#enchanted-link)
 4. [OAuth](#oauth)
-5. [SSO (SAML / OIDC)](#sso-(saml-/-oidc))
+5. [SSO (SAML / OIDC)](#sso-saml--oidc)
 6. [TOTP Authentication](#totp-authentication)
 7. [Passwords](#passwords)
 8. [Session Validation](#session-validation)
