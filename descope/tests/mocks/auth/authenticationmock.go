@@ -304,7 +304,7 @@ type MockPassword struct {
 	SignInError    error
 	SignInResponse *descope.AuthenticationInfo
 
-	ResetAssert func(loginID, redirectURL string, templateOptions map[string]interface{})
+	ResetAssert func(loginID, redirectURL string, templateOptions map[string]string)
 	ResetError  error
 
 	UpdateAssert func(loginID, newPassword string, r *http.Request)
@@ -332,7 +332,7 @@ func (m *MockPassword) SignIn(_ context.Context, loginID string, password string
 	return m.SignInResponse, m.SignInError
 }
 
-func (m *MockPassword) SendPasswordReset(_ context.Context, loginID, redirectURL string, templateOptions map[string]interface{}) error {
+func (m *MockPassword) SendPasswordReset(_ context.Context, loginID, redirectURL string, templateOptions map[string]string) error {
 	if m.ResetAssert != nil {
 		m.ResetAssert(loginID, redirectURL, templateOptions)
 	}

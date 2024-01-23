@@ -49,9 +49,9 @@ type authenticationPasswordSignInRequestBody struct {
 }
 
 type authenticationPasswordResetRequestBody struct {
-	LoginID         string                 `json:"loginId,omitempty"`
-	RedirectURL     string                 `json:"redirectUrl,omitempty"`
-	TemplateOptions map[string]interface{} `json:"templateOptions,omitempty"`
+	LoginID         string            `json:"loginId,omitempty"`
+	RedirectURL     string            `json:"redirectUrl,omitempty"`
+	TemplateOptions map[string]string `json:"templateOptions,omitempty"`
 }
 
 type authenticationPasswordUpdateRequestBody struct {

@@ -117,7 +117,7 @@ func TestPasswordSendReset(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	err = a.Password().SendPasswordReset(context.Background(), loginID, url, map[string]interface{}{"cc": "dd"})
+	err = a.Password().SendPasswordReset(context.Background(), loginID, url, map[string]string{"cc": "dd"})
 	require.NoError(t, err)
 }
 

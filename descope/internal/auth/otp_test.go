@@ -92,7 +92,7 @@ func TestSignUpEmailWithSignUpOptions(t *testing.T) {
 	require.NoError(t, err)
 	me, err := a.OTP().SignUp(context.Background(), descope.MethodEmail, email, &descope.User{Name: "test"}, &descope.SignUpOptions{
 		CustomClaims:    map[string]interface{}{"aa": "bb"},
-		TemplateOptions: map[string]interface{}{"cc": "dd"},
+		TemplateOptions: map[string]string{"cc": "dd"},
 	})
 	require.NoError(t, err)
 	assert.EqualValues(t, maskedEmail, me)
@@ -186,7 +186,7 @@ func TestSignUpOrInSMSWithSignUpOptions(t *testing.T) {
 	require.NoError(t, err)
 	_, err = a.OTP().SignUpOrIn(context.Background(), descope.MethodSMS, loginID, &descope.SignUpOptions{
 		CustomClaims:    map[string]interface{}{"aa": "bb"},
-		TemplateOptions: map[string]interface{}{"cc": "dd"},
+		TemplateOptions: map[string]string{"cc": "dd"},
 	})
 	require.NoError(t, err)
 }
@@ -486,7 +486,7 @@ func TestUpdateEmailOTPWithTemplateOptions(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	me, err := a.OTP().UpdateUserEmail(context.Background(), loginID, email, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true, TemplateOptions: map[string]interface{}{"cc": "dd"}}, r)
+	me, err := a.OTP().UpdateUserEmail(context.Background(), loginID, email, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true, TemplateOptions: map[string]string{"cc": "dd"}}, r)
 	require.NoError(t, err)
 	require.EqualValues(t, maskedEmail, me)
 	checkOptions = false
@@ -591,7 +591,7 @@ func TestUpdatePhoneOTPWithTemplateOptions(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	mp, err := a.OTP().UpdateUserPhone(context.Background(), descope.MethodSMS, loginID, phone, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true, TemplateOptions: map[string]interface{}{"cc": "dd"}}, r)
+	mp, err := a.OTP().UpdateUserPhone(context.Background(), descope.MethodSMS, loginID, phone, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true, TemplateOptions: map[string]string{"cc": "dd"}}, r)
 	require.NoError(t, err)
 	require.EqualValues(t, maskedPhone, mp)
 	checkOptions = false

@@ -153,7 +153,7 @@ type Password interface {
 	// if those are the chosen reset methods. See the Magic Link and Enchanted Link sections
 	// for more details.
 	// templateOptions is used to pass dynamic options for the messaging (email / text message) template
-	SendPasswordReset(ctx context.Context, loginID, redirectURL string, templateOptions map[string]interface{}) error
+	SendPasswordReset(ctx context.Context, loginID, redirectURL string, templateOptions map[string]string) error
 
 	// UpdateUserPassword - updates a user's password according to the given loginID.
 	// This function requires the user to have an active session.

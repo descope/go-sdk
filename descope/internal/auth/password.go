@@ -39,7 +39,7 @@ func (auth *password) SignIn(ctx context.Context, loginID string, cleartext stri
 	return auth.generateAuthenticationInfo(res, w)
 }
 
-func (auth *password) SendPasswordReset(ctx context.Context, loginID, redirectURL string, templateOptions map[string]interface{}) error {
+func (auth *password) SendPasswordReset(ctx context.Context, loginID, redirectURL string, templateOptions map[string]string) error {
 	if loginID == "" {
 		return utils.NewInvalidArgumentError("loginID")
 	}

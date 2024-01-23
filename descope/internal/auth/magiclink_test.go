@@ -215,7 +215,7 @@ func TestSignUpMagicLinkEmailWithSignUpOptions(t *testing.T) {
 	require.NoError(t, err)
 	me, err := a.MagicLink().SignUp(context.Background(), descope.MethodEmail, email, uri, &descope.User{Name: "test"}, &descope.SignUpOptions{
 		CustomClaims:    map[string]interface{}{"aa": "bb"},
-		TemplateOptions: map[string]interface{}{"cc": "dd"},
+		TemplateOptions: map[string]string{"cc": "dd"},
 	})
 	require.NoError(t, err)
 	require.EqualValues(t, maskedEmail, me)
@@ -287,7 +287,7 @@ func TestSignUpOrInMagicLinkEmailWithLoginOptions(t *testing.T) {
 	require.NoError(t, err)
 	me, err := a.MagicLink().SignUpOrIn(context.Background(), descope.MethodEmail, email, uri, &descope.SignUpOptions{
 		CustomClaims:    map[string]interface{}{"aa": "bb"},
-		TemplateOptions: map[string]interface{}{"cc": "dd"},
+		TemplateOptions: map[string]string{"cc": "dd"},
 	})
 	require.NoError(t, err)
 	require.EqualValues(t, maskedEmail, me)
@@ -520,7 +520,7 @@ func TestUpdateUserEmailWithTemplateOptions(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	me, err := a.MagicLink().UpdateUserEmail(context.Background(), loginID, email, uri, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true, TemplateOptions: map[string]interface{}{"cc": "dd"}}, r)
+	me, err := a.MagicLink().UpdateUserEmail(context.Background(), loginID, email, uri, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true, TemplateOptions: map[string]string{"cc": "dd"}}, r)
 	require.NoError(t, err)
 	require.EqualValues(t, maskedEmail, me)
 	checkOptions = false
@@ -622,7 +622,7 @@ func TestUpdateUserPhoneWithTemplateOptions(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	mp, err := a.MagicLink().UpdateUserPhone(context.Background(), descope.MethodSMS, loginID, phone, uri, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true, TemplateOptions: map[string]interface{}{"cc": "dd"}}, r)
+	mp, err := a.MagicLink().UpdateUserPhone(context.Background(), descope.MethodSMS, loginID, phone, uri, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true, TemplateOptions: map[string]string{"cc": "dd"}}, r)
 	require.NoError(t, err)
 	require.EqualValues(t, maskedPhone, mp)
 	checkOptions = false

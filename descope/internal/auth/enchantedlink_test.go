@@ -156,7 +156,7 @@ func TestSignUpEnchantedLinkWithSignUpOptions(t *testing.T) {
 	require.NoError(t, err)
 	response, err := a.EnchantedLink().SignUp(context.Background(), email, uri, &descope.User{Name: "test"}, &descope.SignUpOptions{
 		CustomClaims:    map[string]interface{}{"aa": "bb"},
-		TemplateOptions: map[string]interface{}{"cc": "dd"},
+		TemplateOptions: map[string]string{"cc": "dd"},
 	})
 	require.NoError(t, err)
 	require.EqualValues(t, pendingRefResponse, response.PendingRef)
@@ -208,7 +208,7 @@ func TestSignUpOrInEnchantedLinkWithLoginOptions(t *testing.T) {
 	require.NoError(t, err)
 	response, err := a.EnchantedLink().SignUpOrIn(context.Background(), email, uri, &descope.SignUpOptions{
 		CustomClaims:    map[string]interface{}{"aa": "bb"},
-		TemplateOptions: map[string]interface{}{"cc": "dd"},
+		TemplateOptions: map[string]string{"cc": "dd"},
 	})
 	require.NoError(t, err)
 	require.EqualValues(t, pendingRefResponse, response.PendingRef)
@@ -381,7 +381,7 @@ func TestUpdateUserEmailEnchantedLinkWithTemplateOptions(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	_, err = a.EnchantedLink().UpdateUserEmail(context.Background(), loginID, email, uri, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true, TemplateOptions: map[string]interface{}{"cc": "dd"}}, r)
+	_, err = a.EnchantedLink().UpdateUserEmail(context.Background(), loginID, email, uri, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true, TemplateOptions: map[string]string{"cc": "dd"}}, r)
 	require.NoError(t, err)
 	checkOptions = false
 	_, err = a.EnchantedLink().UpdateUserEmail(context.Background(), loginID, email, uri, nil, r)
