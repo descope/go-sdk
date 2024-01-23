@@ -2,6 +2,7 @@ package mocksmgmt
 
 import (
 	"context"
+	"time"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/sdk"
@@ -1224,6 +1225,10 @@ type MockAuthz struct {
 	WhatCanTargetAccessAssert   func(target string)
 	WhatCanTargetAccessResponse []*descope.AuthzRelation
 	WhatCanTargetAccessError    error
+
+	GetModifiedAssert   func(since time.Time)
+	GetModifiedResponse *descope.AuthzModified
+	GetModifiedError    error
 }
 
 func (m *MockAuthz) SaveSchema(_ context.Context, schema *descope.AuthzSchema, upgrade bool) error {
@@ -1323,4 +1328,11 @@ func (m *MockAuthz) WhatCanTargetAccess(_ context.Context, target string) ([]*de
 		m.WhatCanTargetAccessAssert(target)
 	}
 	return m.WhatCanTargetAccessResponse, m.WhatCanTargetAccessError
+}
+
+func (m *MockAuthz) GetModified(_ context.Context, since time.Time) (*descope.AuthzModified, error) {
+	if m.GetModifiedAssert != nil {
+		m.GetModifiedAssert(since)
+	}
+	return m.GetModifiedResponse, m.GetModifiedError
 }

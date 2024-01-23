@@ -83,3 +83,10 @@ type AuthzRelationQuery struct {
 	Target             string `json:"target"`
 	HasRelation        bool   `json:"hasRelation"`
 }
+
+// AuthzModified resources and targets since given timestamp
+type AuthzModified struct {
+	Resources     []string `json:"resources"`
+	Targets       []string `json:"targets"`
+	SchemaChanged bool     `json:"schemaChanged"`
+}

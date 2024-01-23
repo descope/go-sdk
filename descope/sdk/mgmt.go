@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"time"
 
 	"github.com/descope/go-sdk/descope"
 )
@@ -701,6 +702,10 @@ type Authz interface {
 
 	// WhatCanTargetAccess returns the list of all relations for the given target including derived relations from the schema tree.
 	WhatCanTargetAccess(ctx context.Context, target string) ([]*descope.AuthzRelation, error)
+
+	// GetModified list of targets and resources changed since the given date
+	// Should be used to invalidate local caches
+	GetModified(ctx context.Context, since time.Time) (*descope.AuthzModified, error)
 }
 
 // Provides various APIs for managing a Descope project programmatically. A management key must

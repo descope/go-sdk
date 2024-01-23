@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/internal/utils"
@@ -67,6 +68,24 @@ func TestSaveNamespaceMissingArgument(t *testing.T) {
 	require.ErrorContains(t, err, utils.NewInvalidArgumentError("namespace").Message)
 }
 
+func TestDeleteNamespaceSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "keke", req["name"])
+		require.Equal(t, "kaka", req["schemaName"])
+	}))
+	err := mgmt.Authz().DeleteNamespace(context.Background(), "keke", "kaka")
+	require.NoError(t, err)
+}
+
+func TestDeleteNamespaceMissingArgument(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.Authz().DeleteNamespace(context.Background(), "", "")
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("name").Message)
+}
+
 func TestSaveRelationDefinitionSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -87,6 +106,27 @@ func TestSaveRelationDefinitionMissingArgument(t *testing.T) {
 	err := mgmt.Authz().SaveRelationDefinition(context.Background(), nil, "", "", "")
 	require.ErrorContains(t, err, utils.NewInvalidArgumentError("relationDefinition").Message)
 	err = mgmt.Authz().SaveRelationDefinition(context.Background(), &descope.AuthzRelationDefinition{Name: "kiki"}, "", "", "")
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("namespace").Message)
+}
+
+func TestDeleteRelationDefinitionSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "kuku", req["name"])
+		require.Equal(t, "keke", req["namespace"])
+		require.Equal(t, "kaka", req["schemaName"])
+	}))
+	err := mgmt.Authz().DeleteRelationDefinition(context.Background(), "kuku", "keke", "kaka")
+	require.NoError(t, err)
+}
+
+func TestDeleteRelationDefinitionMissingArgument(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.Authz().DeleteRelationDefinition(context.Background(), "", "", "")
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("name").Message)
+	err = mgmt.Authz().DeleteRelationDefinition(context.Background(), "x", "", "")
 	require.ErrorContains(t, err, utils.NewInvalidArgumentError("namespace").Message)
 }
 
@@ -316,4 +356,47 @@ func TestWhatCanTargetAccessMissingArgument(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
 	_, err := mgmt.Authz().WhatCanTargetAccess(context.Background(), "")
 	require.ErrorContains(t, err, utils.NewInvalidArgumentError("target").Message)
+}
+
+func TestGetModifiedWrongArgument(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	_, err := mgmt.Authz().GetModified(context.Background(), time.Now().Add(10*time.Second))
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("since").Message)
+	_, err = mgmt.Authz().GetModified(context.Background(), time.Now().AddDate(0, 0, -2))
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("since").Message)
+}
+
+func TestGetModifiedSuccessZeroTime(t *testing.T) {
+	response := &descope.AuthzModified{
+		Resources:     []string{"r"},
+		Targets:       []string{"t"},
+		SchemaChanged: true,
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Nil(t, req["since"])
+	}, response))
+	res, err := mgmt.Authz().GetModified(context.Background(), time.Time{})
+	require.NoError(t, err)
+	assert.EqualValues(t, response, res)
+}
+
+func TestGetModifiedSuccess(t *testing.T) {
+	response := &descope.AuthzModified{
+		Resources:     []string{"r"},
+		Targets:       []string{"t"},
+		SchemaChanged: true,
+	}
+	since := time.Now().Add(-5 * time.Second)
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.EqualValues(t, since.UnixMilli(), req["since"])
+	}, response))
+	res, err := mgmt.Authz().GetModified(context.Background(), since)
+	require.NoError(t, err)
+	assert.EqualValues(t, response, res)
 }
