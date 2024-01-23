@@ -110,13 +110,14 @@ func TestPasswordSendReset(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, loginID, body["loginId"])
 		assert.EqualValues(t, url, body["redirectUrl"])
+		assert.EqualValues(t, map[string]interface{}{"cc": "dd"}, body["templateOptions"])
 
 		respBytes, err := utils.Marshal("")
 		require.NoError(t, err)
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	err = a.Password().SendPasswordReset(context.Background(), loginID, url, nil)
+	err = a.Password().SendPasswordReset(context.Background(), loginID, url, map[string]interface{}{"cc": "dd"})
 	require.NoError(t, err)
 }
 
