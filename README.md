@@ -40,7 +40,7 @@ These sections show how to use the SDK to perform various authentication/authori
 2. [Magic Link](#magic-link)
 3. [Enchanted Link](#enchanted-link)
 4. [OAuth](#oauth)
-5. [SSO/SAML](#ssosaml)
+5. [SSO (SAML / OIDC)](#sso-saml--oidc)
 6. [TOTP Authentication](#totp-authentication)
 7. [Passwords](#passwords)
 8. [Session Validation](#session-validation)
@@ -246,9 +246,9 @@ if err != nil {
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
 
-### SSO SAML/OIDC
+### SSO (SAML / OIDC)
 
-Users can authenticate to a specific tenant using SAML or OIDC. Configure your SSO SAML/OIDC settings on the [Descope console](https://app.descope.com/settings/authentication/sso). To start a flow call:
+Users can authenticate to a specific tenant using SAML or OIDC. Configure your SSO (SAML / OIDC) settings on the [Descope console](https://app.descope.com/settings/authentication/sso). To start a flow call:
 
 ```go
 // Choose which tenant to log into
