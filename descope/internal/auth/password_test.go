@@ -110,7 +110,7 @@ func TestPasswordSendReset(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, loginID, body["loginId"])
 		assert.EqualValues(t, url, body["redirectUrl"])
-		assert.EqualValues(t, map[string]interface{}{"cc": "dd"}, body["templateOptions"])
+		assert.EqualValues(t, map[string]string{"cc": "dd"}, body["templateOptions"])
 
 		respBytes, err := utils.Marshal("")
 		require.NoError(t, err)
