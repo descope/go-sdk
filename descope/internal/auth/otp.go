@@ -49,6 +49,10 @@ func (auth *otp) SignUpOrIn(ctx context.Context, method descope.DeliveryMethod, 
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
 
+	if signUpOptions == nil {
+		signUpOptions = &descope.SignUpOptions{}
+	}
+
 	masked := getMaskedValue(method)
 	options := &api.HTTPRequest{ResBodyObj: masked}
 	_, err := auth.client.DoPostRequest(ctx, composeSignUpOrInURL(method), newSignInRequestBody(loginID, &descope.LoginOptions{

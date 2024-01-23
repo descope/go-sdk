@@ -168,6 +168,9 @@ func newMagicLinkAuthenticationSignUpRequestBody(method descope.DeliveryMethod, 
 	b := newSignUpRequestBody(method, user)
 	b.User = user
 	b.LoginID = loginID
+	if signUpOptions == nil {
+		signUpOptions = &descope.SignUpOptions{}
+	}
 	b.LoginOptions = &descope.LoginOptions{
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
@@ -183,6 +186,9 @@ func newAuthenticationSignUpRequestBody(method descope.DeliveryMethod, loginID s
 	b := newSignUpRequestBody(method, user)
 	b.User = user
 	b.LoginID = loginID
+	if signUpOptions == nil {
+		signUpOptions = &descope.SignUpOptions{}
+	}
 	b.LoginOptions = &descope.LoginOptions{
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,

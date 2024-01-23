@@ -48,6 +48,9 @@ func (auth *magicLink) SignUpOrIn(ctx context.Context, method descope.DeliveryMe
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
+	if signUpOptions == nil {
+		signUpOptions = &descope.SignUpOptions{}
+	}
 	masked := getMaskedValue(method)
 	options := &api.HTTPRequest{ResBodyObj: masked}
 	_, err := auth.client.DoPostRequest(ctx, composeMagicLinkSignUpOrInURL(method), newMagicLinkAuthenticationRequestBody(loginID, URI, false, &descope.LoginOptions{

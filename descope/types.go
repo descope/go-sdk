@@ -288,13 +288,13 @@ type LoginOptions struct {
 	TemplateOptions map[string]interface{} `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 }
 
+func (lo *LoginOptions) IsJWTRequired() bool {
+	return lo != nil && (lo.Stepup || lo.MFA)
+}
+
 type SignUpOptions struct {
 	CustomClaims    map[string]interface{} `json:"customClaims,omitempty"`
 	TemplateOptions map[string]interface{} `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
-}
-
-func (lo *LoginOptions) IsJWTRequired() bool {
-	return lo != nil && (lo.Stepup || lo.MFA)
 }
 
 type JWTResponse struct {
