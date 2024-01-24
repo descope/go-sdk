@@ -539,6 +539,8 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 		require.EqualValues(t, map[string]any{"a": "b"}, req["customAttributes"])
 		require.EqualValues(t, []any{"a@b.com"}, req["emails"])
 		require.EqualValues(t, []any{"+11111111"}, req["phones"])
+		require.EqualValues(t, "blue", req["text"])
+		require.EqualValues(t, []interface{}([]interface{}{map[string]interface{}{"Desc": true, "Field": "nono"}, map[string]interface{}{"Desc": false, "Field": "lolo"}}), req["sort"])
 	}, response))
 	res, err := m.User().SearchAll(context.Background(), &descope.UserSearchOptions{
 		Statuses:         []descope.UserStatus{descope.UserStatusDisabled},
@@ -548,6 +550,11 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 		CustomAttributes: map[string]any{"a": "b"},
 		Emails:           []string{"a@b.com"},
 		Phones:           []string{"+11111111"},
+		Text:             "blue",
+		Sort: []descope.UserSearchSort{
+			{Field: "nono", Desc: true},
+			{Field: "lolo", Desc: false},
+		},
 	})
 	require.NoError(t, err)
 	require.NotNil(t, res)
