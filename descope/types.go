@@ -381,26 +381,43 @@ type BatchUser struct {
 	UserRequest `json:",inline"`
 }
 
+// Set a cleartext or prehashed password for a new user (only one should be set).
 type BatchUserPassword struct {
 	Cleartext string
 	Hashed    *BatchUserPasswordHashed
 }
 
+// Set the kind of prehashed password for a user (only one should be set).
 type BatchUserPasswordHashed struct {
-	Algorithm  BatchUserPasswordAlgorithm
-	Hash       []byte
-	Salt       []byte
-	Iterations int
+	Bcrypt   *BatchUserPasswordBcrypt   `json:"bcrypt,omitempty"`
+	Firebase *BatchUserPasswordFirebase `json:"firebase,omitempty"`
+	Pbkdf2   *BatchUserPasswordPbkdf2   `json:"pbkdf2,omitempty"`
+	Django   *BatchUserPasswordDjango   `json:"django,omitempty"`
 }
 
-type BatchUserPasswordAlgorithm string
+type BatchUserPasswordBcrypt struct {
+	Hash string `json:"hash"` // the bcrypt hash in plaintext format, for example "$2a$..."
+}
 
-const (
-	BatchUserPasswordAlgorithmBcrypt       BatchUserPasswordAlgorithm = "bcrypt"
-	BatchUserPasswordAlgorithmPBKDF2SHA1   BatchUserPasswordAlgorithm = "pbkdf2sha1"
-	BatchUserPasswordAlgorithmPBKDF2SHA256 BatchUserPasswordAlgorithm = "pbkdf2sha256"
-	BatchUserPasswordAlgorithmPBKDF2SHA512 BatchUserPasswordAlgorithm = "pbkdf2sha512"
-)
+type BatchUserPasswordFirebase struct {
+	Hash          []byte `json:"hash"`          // the hash in raw bytes (base64 strings should be decoded first)
+	Salt          []byte `json:"salt"`          // the salt in raw bytes (base64 strings should be decoded first)
+	SaltSeparator []byte `json:"saltSeparator"` // the salt separator (usually 1 byte long)
+	SignerKey     []byte `json:"signerKey"`     // the signer key (base64 strings should be decoded first)
+	Memory        int    `json:"memory"`        // the memory cost value (usually between 12 to 17)
+	Rounds        int    `json:"rounds"`        // the rounds cost value (usually between 6 to 10)
+}
+
+type BatchUserPasswordPbkdf2 struct {
+	Hash       []byte `json:"hash"`       // the hash in raw bytes (base64 strings should be decoded first)
+	Salt       []byte `json:"salt"`       // the salt in raw bytes (base64 strings should be decoded first)
+	Iterations int    `json:"iterations"` // the iterations cost value (usually in the thousands)
+	Type       string `json:"type"`       // the hash name (sha1, sha256, sha512)
+}
+
+type BatchUserPasswordDjango struct {
+	Hash string `json:"hash"` // the django hash in plaintext format, for example "pbkdf2_sha256$..."
+}
 
 type UserResponse struct {
 	User             `json:",inline"`
