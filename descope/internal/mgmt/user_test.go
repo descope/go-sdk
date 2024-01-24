@@ -129,10 +129,12 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 	u2.Email = "two@two.com"
 	u2.Roles = []string{"two"}
 	u2.Password = &descope.BatchUserPassword{Hashed: &descope.BatchUserPasswordHashed{
-		Algorithm:  descope.BatchUserPasswordAlgorithmPBKDF2SHA256,
-		Hash:       []byte("1"),
-		Salt:       []byte("2"),
-		Iterations: 100,
+		Pbkdf2: &descope.BatchUserPasswordPbkdf2{
+			Hash:       []byte("1"),
+			Salt:       []byte("2"),
+			Iterations: 100,
+			Type:       "sha256",
+		},
 	}}
 
 	users = append(users, u1, u2)
@@ -170,10 +172,12 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 		assert.Nil(t, userRes2["customAttributes"])
 		pass2, _ := userRes2["hashedPassword"].(map[string]any)
 		require.NotNil(t, pass2)
-		require.Equal(t, "pbkdf2sha256", pass2["algorithm"])
-		require.Equal(t, "MQ", pass2["hash"])
-		require.Equal(t, "Mg", pass2["salt"])
-		require.EqualValues(t, 100, pass2["iterations"])
+		pbkdf2, _ := pass2["pbkdf2"].(map[string]any)
+		require.NotNil(t, pbkdf2)
+		require.Equal(t, "MQ==", pbkdf2["hash"])
+		require.Equal(t, "Mg==", pbkdf2["salt"])
+		require.EqualValues(t, 100, pbkdf2["iterations"])
+		require.Equal(t, "sha256", pbkdf2["type"])
 		roleNames = userRes2["roleNames"].([]any)
 		require.Len(t, roleNames, 1)
 		require.Equal(t, u2.Roles[0], roleNames[0])

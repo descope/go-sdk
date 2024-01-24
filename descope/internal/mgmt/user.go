@@ -2,7 +2,6 @@ package mgmt
 
 import (
 	"context"
-	"encoding/base64"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
@@ -61,7 +60,10 @@ func (u *user) create(ctx context.Context, loginID, email, phone, displayName, g
 }
 
 func (u *user) createBatch(ctx context.Context, users []*descope.BatchUser, options *descope.InviteOptions) (*descope.UsersBatchResponse, error) {
-	req := makeCreateUsersBatchRequest(users, options)
+	req, err := makeCreateUsersBatchRequest(users, options)
+	if err != nil {
+		return nil, err
+	}
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserCreateBatch(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -570,7 +572,7 @@ func makeCreateUserRequest(loginID, email, phone, displayName, givenName, middle
 	return req
 }
 
-func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.InviteOptions) map[string]any {
+func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.InviteOptions) (map[string]any, error) {
 	var usersReq []map[string]any
 	for _, u := range users {
 		user := makeUpdateUserRequest(u.LoginID, u.Email, u.Phone, u.Name, u.GivenName, u.MiddleName, u.FamilyName, u.Picture, u.Roles, u.Tenants, u.CustomAttributes, u.VerifiedEmail, u.VerifiedPhone, u.AdditionalLoginIDs, u.SSOAppIDs)
@@ -579,15 +581,13 @@ func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.In
 				user["password"] = u.Password.Cleartext
 			}
 			if hashed := u.Password.Hashed; hashed != nil {
-				m := map[string]any{
-					"algorithm": hashed.Algorithm,
-					"hash":      base64.RawStdEncoding.EncodeToString(hashed.Hash),
+				b, err := utils.Marshal(hashed)
+				if err != nil {
+					return nil, err
 				}
-				if len(hashed.Salt) > 0 {
-					m["salt"] = base64.RawStdEncoding.EncodeToString(hashed.Salt)
-				}
-				if hashed.Iterations != 0 {
-					m["iterations"] = hashed.Iterations
+				var m map[string]any
+				if err := utils.Unmarshal(b, &m); err != nil {
+					return nil, err
 				}
 				user["hashedPassword"] = m
 			}
@@ -610,7 +610,7 @@ func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.In
 		}
 	}
 
-	return req
+	return req, nil
 }
 
 func makeUpdateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture string, roles []string, tenants []*descope.AssociatedTenant, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, ssoAppIDs []string) map[string]any {
