@@ -93,7 +93,7 @@ user := &descope.User{
     Phone: "212-555-1234",
     Email: loginID,
 }
-maskedAddress, err := descopeClient.Auth.OTP().SignUp(context.Background(), descope.MethodEmail, loginID, user)
+maskedAddress, err := descopeClient.Auth.OTP().SignUp(context.Background(), descope.MethodEmail, loginID, user, nil)
 if err != nil {
     if errors.Is(err, descope.ErrUserAlreadyExists) {
         // user already exists with this loginID
@@ -132,7 +132,7 @@ The user can either `sign up`, `sign in` or `sign up or in`
 ```go
 // If configured globally, the redirect URI is optional. If provided however, it will be used
 // instead of any global configuration
-maskedAddress, err := descopeClient.Auth.MagicLink().SignUpOrIn(context.Background(), descope.MethodEmail, "desmond@descope.com", "http://myapp.com/verify-magic-link")
+maskedAddress, err := descopeClient.Auth.MagicLink().SignUpOrIn(context.Background(), descope.MethodEmail, "desmond@descope.com", "http://myapp.com/verify-magic-link", nil)
 if err {
     // handle error
 }
@@ -395,7 +395,7 @@ In the [password authentication method](https://app.descope.com/settings/authent
 // same way as in regular magic link authentication.
 loginID := "desmond@descope.com"
 redirectURL := "https://myapp.com/password-reset"
-err := descopeClient.Auth.Password().SendPasswordReset(context.Background(), loginID, redirectURL)
+err := descopeClient.Auth.Password().SendPasswordReset(context.Background(), loginID, redirectURL, nil)
 ```
 
 The magic link, in this case, must then be verified like any other magic link (see the [magic link section](#magic-link) for more details). However, after verifying the user, it is expected
@@ -1490,7 +1490,7 @@ link, pendingRef, err := descopeClient.Management.User().GenerateEnchantedLinkFo
 Handle API rate limits by comparing the error to the ErrRateLimitExceeded error, which includes the Info map with the key "RateLimitExceededRetryAfter." This key indicates how many seconds until the next valid API call can take place.
 
 ```go
-err := descopeClient.Auth.MagicLink().SignUpOrIn(context.Background(), descope.MethodEmail, "desmond@descope.com", "http://myapp.com/verify-magic-link")
+err := descopeClient.Auth.MagicLink().SignUpOrIn(context.Background(), descope.MethodEmail, "desmond@descope.com", "http://myapp.com/verify-magic-link", nil)
 if err != nil {
     if errors.Is(err, descope.ErrRateLimitExceeded) {
         if rateLimitErr, ok := err.(*descope.Error); ok {
