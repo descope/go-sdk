@@ -633,30 +633,34 @@ func (r *Role) GetCreatedTime() time.Time {
 
 // Options for searching and filtering users
 //
-// The TenantIDs parameter is an optional array of tenant IDs to filter by.
-//
-// The roles parameter is an optional array of role names to filter by.
-//
-// The limit parameter limits the number of returned users. Leave at 0 to return the
-// default amount.
-//
-// The page parameter allow to paginate over the results. Pages start at 0 and must non-negative.
-//
-// The customAttributes map is an optional filter for custom attributes
+// Limit - limits the number of returned users. Leave at 0 to return the default amount.
+// Page - allows to paginate over the results. Pages start at 0 and must non-negative.
+// Sort - allows to sort by fields.
+// Text - allows free text search among all user's attributes.
+// TenantIDs - filter by tenant IDs.
+// Roles - filter by role names.
+// CustomAttributes map is an optional filter for custom attributes:
 // where the keys are the attribute names and the values are either a value we are searching for or list of these values in a slice.
 // We currently support string, int and bool values
 type UserSearchOptions struct {
-	TenantIDs        []string
-	Roles            []string
-	Statuses         []UserStatus
-	Limit            int32
 	Page             int32
-	WithTestUsers    bool
-	TestUsersOnly    bool
-	CustomAttributes map[string]any
+	Limit            int32
+	Sort             []UserSearchSort
+	Text             string
 	Emails           []string
 	Phones           []string
+	Statuses         []UserStatus
+	Roles            []string
+	TenantIDs        []string
 	SSOAppIDs        []string
+	CustomAttributes map[string]any
+	WithTestUsers    bool
+	TestUsersOnly    bool
+}
+
+type UserSearchSort struct {
+	Field string
+	Desc  bool
 }
 
 type UserStatus string

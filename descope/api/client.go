@@ -176,6 +176,7 @@ var (
 			authzREResource:                  "mgmt/authz/re/resource",
 			authzRETargets:                   "mgmt/authz/re/targets",
 			authzRETargetAll:                 "mgmt/authz/re/targetall",
+			authzGetModified:                 "mgmt/authz/getmodified",
 		},
 		logout:       "auth/logout",
 		logoutAll:    "auth/logoutall",
@@ -360,6 +361,7 @@ type mgmtEndpoints struct {
 	authzREResource        string
 	authzRETargets         string
 	authzRETargetAll       string
+	authzGetModified       string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -912,6 +914,10 @@ func (e *endpoints) ManagementAuthzRETargets() string {
 
 func (e *endpoints) ManagementAuthzRETargetAll() string {
 	return path.Join(e.version, e.mgmt.authzRETargetAll)
+}
+
+func (e *endpoints) ManagementAuthzGetModified() string {
+	return path.Join(e.version, e.mgmt.authzGetModified)
 }
 
 type sdkInfo struct {
