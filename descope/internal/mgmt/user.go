@@ -673,6 +673,8 @@ func makeSearchAllRequest(options *descope.UserSearchOptions) map[string]any {
 		"roleNames":        options.Roles,
 		"limit":            options.Limit,
 		"page":             options.Page,
+		"sort":             options.Sort,
+		"text":             options.Text,
 		"testUsersOnly":    options.TestUsersOnly,
 		"withTestUser":     options.WithTestUsers,
 		"customAttributes": options.CustomAttributes,
