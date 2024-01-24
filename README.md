@@ -700,7 +700,7 @@ userReqInvite.SSOAppIDs = []string{"appId1", "appId2"}
 options := &descope.InviteOptions{InviteURL: "https://sub.domain.com"}
 err := descopeClient.Management.User().Invite(context.Background(), "desmond@descope.com", userReqInvite, options)
 
-// batch invite
+// Invite multiple users with InviteBatch
 options := &descope.InviteOptions{InviteURL: "https://sub.domain.com"}
 batchUsers := []*descope.BatchUser{}
 u1 := &descope.BatchUser{}
@@ -716,6 +716,19 @@ u2.Roles = []string{"two"}
 
 batchUsers = append(batchUsers, u1, u2)
 users, err := descopeClient.Management.User().InviteBatch(context.Background(), batchUsers, options)
+
+// Import users from another service by calling CreateBatch with each user's password hash
+user := &descope.BatchUser{
+    LoginID: "desmond@descope.com",
+    Password: &descope.BatchUserPassword{
+        Hashed: &descope.BatchUserPasswordHashed{
+            Bcrypt: &descope.BatchUserPasswordBcrypt{
+                Hash: "$2a$...",
+            },
+        },
+    },
+}
+users, err := descopeClient.Management.User().CreateBatch(context.Background(), []*descope.BatchUser{user})
 
 // Update will override all fields as is. Use carefully.
 userReqUpdate := &descope.UserRequest{}
@@ -762,8 +775,7 @@ if err == nil {
 err := descopeClient.Management.User().LogoutUser(context.Background(), "<login id>")
 
 // Logout given user from all its devices, by user ID
-err := descopeClient.Management.User()LogoutUserByUserID(context.Background(), "<user id>")
-
+err := descopeClient.Management.User().LogoutUserByUserID(context.Background(), "<user id>")
 ```
 
 #### Set or Expire User Password
@@ -832,7 +844,6 @@ err := descopeClient.Management.AccessKey().Delete(context.Background(), "access
 You can manage SSO (SAML or OIDC) settings for a specific tenant.
 
 ```go
-
 // Load all tenant SSO settings
 ssoSettings, err := cc.HC.DescopeClient().Management.SSO().LoadSettings(context.Background(), "tenant-id")
 
@@ -893,6 +904,9 @@ attributeMapping := &descope.AttributeMapping {
     PhoneNumber: "IDP_PHONE",
 }
 err := descopeClient.Management.SSO().ConfigureMapping(context.Background(), tenantID, roleMapping, attributeMapping)
+
+// To delete SSO settings, call the following method
+err := descopeClient.Management.SSO().DeleteSettings(context.Background(), "tenant-id")
 ```
 
 Note: Certificates should have a similar structure to:
@@ -902,9 +916,6 @@ Note: Certificates should have a similar structure to:
 Certifcate contents
 -----END CERTIFICATE-----
 ```
-
-// To delete SSO settings, call the following method
-err := descopeClient.Management.SSO().DeleteSettings(context.Background(), "tenant-id")
 
 ### Manage Password Setting
 
