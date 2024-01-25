@@ -1112,11 +1112,11 @@ func (m *MockFlow) ImportTheme(_ context.Context, theme *descope.Theme) (*descop
 // Mock Project
 
 type MockProject struct {
-	ExportRawResponse map[string]any
-	ExportRawError    error
+	ExportResponse map[string]any
+	ExportError    error
 
-	ImportRawAssert func(files map[string]any)
-	ImportRawError  error
+	ImportAssert func(files map[string]any)
+	ImportError  error
 
 	UpdateNameAssert func(name string)
 	UpdateNameError  error
@@ -1129,15 +1129,15 @@ type MockProject struct {
 	DeleteError  error
 }
 
-func (m *MockProject) ExportRaw(_ context.Context) (map[string]any, error) {
-	return m.ExportRawResponse, m.ExportRawError
+func (m *MockProject) Export(_ context.Context) (map[string]any, error) {
+	return m.ExportResponse, m.ExportError
 }
 
-func (m *MockProject) ImportRaw(_ context.Context, files map[string]any) error {
-	if m.ImportRawAssert != nil {
-		m.ImportRawAssert(files)
+func (m *MockProject) Import(_ context.Context, files map[string]any) error {
+	if m.ImportAssert != nil {
+		m.ImportAssert(files)
 	}
-	return m.ExportRawError
+	return m.ExportError
 }
 
 func (m *MockProject) UpdateName(_ context.Context, name string) error {

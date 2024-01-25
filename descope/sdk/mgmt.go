@@ -613,21 +613,21 @@ type Flow interface {
 // Provides functions for exporting and importing project settings, flows, styles, etc.
 type Project interface {
 	// Exports all settings and configurations for a project and returns the raw JSON
-	// result as a map.
+	// files response as a map.
 	//
 	// This API is meant to be used via the 'environment' command line tool that can be
 	// found in the '/tools' directory.
-	ExportRaw(ctx context.Context) (map[string]any, error)
+	Export(ctx context.Context) (map[string]any, error)
 
 	// Imports all settings and configurations for a project overriding any current
 	// configuration.
 	//
-	// The input is expected to be a raw JSON map in the same format as the one returned
-	// by calls to ExportRaw.
+	// The input is expected to be a raw JSON map of files in the same format as the one
+	// returned by calls to Export.
 	//
 	// This API is meant to be used via the 'environment' command line tool that can be
 	// found in the '/tools' directory.
-	ImportRaw(ctx context.Context, files map[string]any) error
+	Import(ctx context.Context, files map[string]any) error
 
 	// Update the current project name.
 	UpdateName(ctx context.Context, name string) error

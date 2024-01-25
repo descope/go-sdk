@@ -9,19 +9,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestProjectExportRaw(t *testing.T) {
+func TestProjectExport(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 	}, map[string]any{"files": map[string]any{"foo": "bar"}}))
-	m, err := mgmt.Project().ExportRaw(context.Background())
+	m, err := mgmt.Project().Export(context.Background())
 	require.NoError(t, err)
 	require.NotNil(t, m)
 	require.Equal(t, "bar", m["foo"])
 }
 
-func TestProjectImportRaw(t *testing.T) {
+func TestProjectImport(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
@@ -30,7 +30,7 @@ func TestProjectImportRaw(t *testing.T) {
 		require.True(t, ok)
 		require.Equal(t, "bar", files["foo"])
 	}))
-	err := mgmt.Project().ImportRaw(context.Background(), map[string]any{"foo": "bar"})
+	err := mgmt.Project().Import(context.Background(), map[string]any{"foo": "bar"})
 	require.NoError(t, err)
 }
 

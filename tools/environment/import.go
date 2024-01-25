@@ -27,7 +27,7 @@ func (im *importer) Import() error {
 	}
 
 	fmt.Println("* Importing project...")
-	if err := descopeClient.Management.Project().ImportRaw(im.files); err != nil {
+	if err := descopeClient.Management.Project().Import(im.files); err != nil {
 		return fmt.Errorf("failed to import project: %w", err)
 	}
 
