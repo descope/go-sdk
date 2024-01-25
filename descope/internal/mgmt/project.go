@@ -25,7 +25,7 @@ type cloneProjectBody struct {
 	Tag  string `json:"tag"`
 }
 
-func (p *project) ExportRaw(ctx context.Context) (map[string]any, error) {
+func (p *project) Export(ctx context.Context) (map[string]any, error) {
 	body := map[string]any{}
 	res, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectExport(), body, nil, p.conf.ManagementKey)
 	if err != nil {
@@ -38,7 +38,7 @@ func (p *project) ExportRaw(ctx context.Context) (map[string]any, error) {
 	return export.Files, nil
 }
 
-func (p *project) ImportRaw(ctx context.Context, files map[string]any) error {
+func (p *project) Import(ctx context.Context, files map[string]any) error {
 	body := projectBody{Files: files}
 	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectImport(), body, nil, p.conf.ManagementKey)
 	return err

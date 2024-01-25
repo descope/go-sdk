@@ -19,7 +19,7 @@ type exporter struct {
 
 func (ex *exporter) Export() error {
 	fmt.Println("* Exporting project...")
-	files, err := descopeClient.Management.Project().ExportRaw()
+	files, err := descopeClient.Management.Project().Export()
 	if err != nil {
 		return fmt.Errorf("failed to export project: %w", err)
 	}
