@@ -229,6 +229,30 @@ func (auth *authenticationService) Me(request *http.Request) (*descope.UserRespo
 	return auth.extractUserResponse(httpResponse.BodyStr)
 }
 
+func (auth *authenticationService) History(request *http.Request) ([]*descope.UserHistoryResponse, error) {
+	if request == nil {
+		return nil, utils.NewInvalidArgumentError("request")
+	}
+
+	_, refreshToken := provideTokens(request)
+	if refreshToken == "" {
+		logger.LogDebug("Unable to find tokens from cookies")
+		return nil, descope.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
+	}
+
+	_, err := auth.validateJWT(refreshToken)
+	if err != nil {
+		logger.LogDebug("Invalid refresh token")
+		return nil, descope.ErrRefreshToken.WithMessage("Invalid refresh token")
+	}
+
+	httpResponse, err := auth.client.DoGetRequest(request.Context(), api.Routes.History(), &api.HTTPRequest{}, refreshToken)
+	if err != nil {
+		return nil, err
+	}
+	return auth.extractUserHistoryResponse(httpResponse.BodyStr)
+}
+
 // Validate Session
 
 func (auth *authenticationService) ValidateSessionWithRequest(request *http.Request) (bool, *descope.Token, error) {
@@ -478,6 +502,16 @@ func (auth *authenticationsBase) extractUserResponse(bodyStr string) (*descope.U
 		return nil, err
 	}
 	return &res, nil
+}
+
+func (auth *authenticationsBase) extractUserHistoryResponse(bodyStr string) ([]*descope.UserHistoryResponse, error) {
+	res := []*descope.UserHistoryResponse{}
+	err := utils.Unmarshal([]byte(bodyStr), &res)
+	if err != nil {
+		logger.LogError("Unable to parse user history response", err)
+		return nil, err
+	}
+	return res, nil
 }
 
 func (auth *authenticationsBase) collectJwts(jwt, rJwt string, tokens []*descope.Token) ([]*descope.Token, error) {

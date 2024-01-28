@@ -359,6 +359,10 @@ type User interface {
 	// Generate an embedded link token, later can be used to authenticate via magiclink verify method
 	// or via flow verify step
 	GenerateEmbeddedLink(ctx context.Context, loginID string, customClaims map[string]any) (string, error)
+
+	// Use to retrieve users' authentication history, by user's ids.
+	// returns slice of users' authentication history.
+	History(ctx context.Context, loginIDs []string) ([]*descope.UserHistoryResponse, error)
 }
 
 // Provides functions for managing access keys in a project.

@@ -362,4 +362,8 @@ type Authentication interface {
 	// Me - Use to retrieve current session user details. The request requires a valid refresh token.
 	// returns the user details or error if the refresh token is not valid.
 	Me(request *http.Request) (*descope.UserResponse, error)
+
+	// History - Use to retrieve current session user history. The request requires a valid refresh token.
+	// returns the user authentication history or error if the refresh token is not valid.
+	History(request *http.Request) ([]*descope.UserHistoryResponse, error)
 }
