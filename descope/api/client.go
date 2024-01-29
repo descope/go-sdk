@@ -744,7 +744,7 @@ func (e *endpoints) ManagementUserGenerateEnchantedLinkForTest() string {
 }
 
 func (e *endpoints) ManagementUserHistory() string {
-	return path.Join(e.version, e.mgmt.userGenerateEnchantedLinkForTest)
+	return path.Join(e.version, e.mgmt.userHistory)
 }
 
 func (e *endpoints) ManagementAccessKeyCreate() string {
