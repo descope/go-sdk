@@ -555,9 +555,7 @@ func (u *user) History(ctx context.Context, loginIDs []string) ([]*descope.UserH
 	if loginIDs == nil {
 		return nil, utils.NewInvalidArgumentError("loginIDs")
 	}
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserHistory(), map[string]any{
-		"loginIds": loginIDs,
-	}, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserHistory(), loginIDs, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}
