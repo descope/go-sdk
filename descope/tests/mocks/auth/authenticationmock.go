@@ -592,6 +592,10 @@ type MockSession struct {
 	MeAssert   func(r *http.Request)
 	MeError    error
 	MeResponse *descope.UserResponse
+
+	HistoryAssert   func(r *http.Request)
+	HistoryError    error
+	HistoryResponse []*descope.UserHistoryResponse
 }
 
 func (m *MockSession) ValidateSessionWithRequest(r *http.Request) (bool, *descope.Token, error) {
@@ -765,4 +769,11 @@ func (m *MockSession) Me(r *http.Request) (*descope.UserResponse, error) {
 		m.MeAssert(r)
 	}
 	return m.MeResponse, m.MeError
+}
+
+func (m *MockSession) History(r *http.Request) ([]*descope.UserHistoryResponse, error) {
+	if m.HistoryAssert != nil {
+		m.HistoryAssert(r)
+	}
+	return m.HistoryResponse, m.HistoryError
 }

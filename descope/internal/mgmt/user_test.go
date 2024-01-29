@@ -1575,3 +1575,65 @@ func TestUserCreateWithVerifiedPhoneUserSuccess(t *testing.T) {
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
 }
+
+func TestUserHistorySuccess(t *testing.T) {
+	response := []map[string]any{
+		{
+			"userId":    "kuku",
+			"city":      "kefar saba",
+			"country":   "Israel",
+			"ip":        "1.1.1.1",
+			"loginTime": 32,
+		},
+		{
+			"userId":    "nunu",
+			"city":      "eilat",
+			"country":   "Israele",
+			"ip":        "1.1.1.2",
+			"loginTime": 23,
+		},
+	}
+
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := []string{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, []string{"one", "two"}, req)
+	}, response))
+
+	userHistory, err := m.User().History(context.Background(), []string{"one", "two"})
+	require.NoError(t, err)
+	require.NotNil(t, userHistory)
+	require.Len(t, userHistory, 2)
+
+	assert.Equal(t, "kuku", userHistory[0].UserID)
+	assert.Equal(t, "kefar saba", userHistory[0].City)
+	assert.Equal(t, "Israel", userHistory[0].Country)
+	assert.Equal(t, "1.1.1.1", userHistory[0].IP)
+	assert.Equal(t, int32(32), userHistory[0].LoginTime)
+
+	assert.Equal(t, "nunu", userHistory[1].UserID)
+	assert.Equal(t, "eilat", userHistory[1].City)
+	assert.Equal(t, "Israele", userHistory[1].Country)
+	assert.Equal(t, "1.1.1.2", userHistory[1].IP)
+	assert.Equal(t, int32(23), userHistory[1].LoginTime)
+}
+
+func TestHistoryNoLoginIDs(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	userHistory, err := m.User().History(context.TODO(), nil)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Nil(t, userHistory)
+}
+
+func TestHistoryFailure(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := []string{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, []string{"one", "two"}, req)
+	}))
+	userHistory, err := m.User().History(context.TODO(), []string{"one", "two"})
+	assert.ErrorIs(t, err, descope.ErrInvalidResponse)
+	assert.Nil(t, userHistory)
+}

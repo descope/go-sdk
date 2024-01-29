@@ -551,6 +551,22 @@ func (u *user) GenerateEmbeddedLink(ctx context.Context, loginID string, customC
 	return tRes.Token, nil
 }
 
+func (u *user) History(ctx context.Context, loginIDs []string) ([]*descope.UserHistoryResponse, error) {
+	if loginIDs == nil {
+		return nil, utils.NewInvalidArgumentError("loginIDs")
+	}
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserHistory(), loginIDs, nil, u.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	tRes := []*descope.UserHistoryResponse{}
+	err = utils.Unmarshal([]byte(res.BodyStr), &tRes)
+	if err != nil {
+		return nil, err //notest
+	}
+	return tRes, nil
+}
+
 func makeCreateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, options *descope.InviteOptions, ssoAppIDs []string) map[string]any {
 	req := makeUpdateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture, roles, tenants, customAttributes, verifiedEmail, verifiedPhone, additionalLoginIDs, ssoAppIDs)
 	req["invite"] = invite

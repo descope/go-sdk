@@ -122,6 +122,7 @@ var (
 			userGenerateMagicLinkForTest:     "mgmt/tests/generate/magiclink",
 			userGenerateEnchantedLinkForTest: "mgmt/tests/generate/enchantedlink",
 			userCreateEmbeddedLink:           "mgmt/user/signin/embeddedlink",
+			userHistory:                      "mgmt/user/history",
 			accessKeyCreate:                  "mgmt/accesskey/create",
 			accessKeyLoad:                    "mgmt/accesskey",
 			accessKeySearchAll:               "mgmt/accesskey/search",
@@ -184,6 +185,7 @@ var (
 		refresh:      "auth/refresh",
 		selectTenant: "auth/tenant/select",
 		me:           "auth/me",
+		history:      "auth/me/history",
 	}
 )
 
@@ -198,6 +200,7 @@ type endpoints struct {
 	refresh      string
 	selectTenant string
 	me           string
+	history      string
 }
 
 type authEndpoints struct {
@@ -295,6 +298,8 @@ type mgmtEndpoints struct {
 	userGenerateEnchantedLinkForTest string
 	userCreateEmbeddedLink           string
 
+	userHistory string
+
 	accessKeyCreate     string
 	accessKeyLoad       string
 	accessKeySearchAll  string
@@ -367,51 +372,67 @@ type mgmtEndpoints struct {
 func (e *endpoints) SignInOTP() string {
 	return path.Join(e.version, e.auth.signInOTP)
 }
+
 func (e *endpoints) SignUpOTP() string {
 	return path.Join(e.version, e.auth.signUpOTP)
 }
+
 func (e *endpoints) SignUpOrInOTP() string {
 	return path.Join(e.version, e.auth.signUpOrInOTP)
 }
+
 func (e *endpoints) SignUpTOTP() string {
 	return path.Join(e.version, e.auth.signUpTOTP)
 }
+
 func (e *endpoints) UpdateTOTP() string {
 	return path.Join(e.version, e.auth.updateTOTP)
 }
+
 func (e *endpoints) VerifyCode() string {
 	return path.Join(e.version, e.auth.verifyCode)
 }
+
 func (e *endpoints) VerifyTOTPCode() string {
 	return path.Join(e.version, e.auth.verifyTOTPCode)
 }
+
 func (e *endpoints) SignUpPassword() string {
 	return path.Join(e.version, e.auth.signUpPassword)
 }
+
 func (e *endpoints) SignInPassword() string {
 	return path.Join(e.version, e.auth.signInPassword)
 }
+
 func (e *endpoints) SendResetPassword() string {
 	return path.Join(e.version, e.auth.sendResetPassword)
 }
+
 func (e *endpoints) UpdateUserPassword() string {
 	return path.Join(e.version, e.auth.updateUserPassword)
 }
+
 func (e *endpoints) ReplaceUserPassword() string {
 	return path.Join(e.version, e.auth.replaceUserPassword)
 }
+
 func (e *endpoints) PasswordPolicy() string {
 	return path.Join(e.version, e.auth.passwordPolicy)
 }
+
 func (e *endpoints) SignInMagicLink() string {
 	return path.Join(e.version, e.auth.signInMagicLink)
 }
+
 func (e *endpoints) SignUpMagicLink() string {
 	return path.Join(e.version, e.auth.signUpMagicLink)
 }
+
 func (e *endpoints) SignUpOrInMagicLink() string {
 	return path.Join(e.version, e.auth.signUpOrInMagicLink)
 }
+
 func (e *endpoints) VerifyMagicLink() string {
 	return path.Join(e.version, e.auth.verifyMagicLink)
 }
@@ -419,24 +440,31 @@ func (e *endpoints) VerifyMagicLink() string {
 func (e *endpoints) SignInEnchantedLink() string {
 	return path.Join(e.version, e.auth.signInEnchantedLink)
 }
+
 func (e *endpoints) SignUpEnchantedLink() string {
 	return path.Join(e.version, e.auth.signUpEnchantedLink)
 }
+
 func (e *endpoints) SignUpOrInEnchantedLink() string {
 	return path.Join(e.version, e.auth.signUpOrInEnchantedLink)
 }
+
 func (e *endpoints) UpdateUserEmailEnchantedlink() string {
 	return path.Join(e.version, e.auth.updateUserEmailEnchantedLink)
 }
+
 func (e *endpoints) VerifyEnchantedLink() string {
 	return path.Join(e.version, e.auth.verifyEnchantedLink)
 }
+
 func (e *endpoints) GetEnchantedLinkSession() string {
 	return path.Join(e.version, e.auth.getEnchantedLinkSession)
 }
+
 func (e *endpoints) OAuthStart() string {
 	return path.Join(e.version, e.auth.oauthStart)
 }
+
 func (e *endpoints) ExchangeTokenOAuth() string {
 	return path.Join(e.version, e.auth.exchangeTokenOAuth)
 }
@@ -454,45 +482,63 @@ func (e *endpoints) ExchangeTokenSAML() string {
 func (e *endpoints) SSOStart() string {
 	return path.Join(e.version, e.auth.ssoStart)
 }
+
 func (e *endpoints) ExchangeTokenSSO() string {
 	return path.Join(e.version, e.auth.exchangeTokenSSO)
 }
+
 func (e *endpoints) WebAuthnSignUpStart() string {
 	return path.Join(e.version, e.auth.webauthnSignUpStart)
 }
+
 func (e *endpoints) WebAuthnSignUpFinish() string {
 	return path.Join(e.version, e.auth.webauthnSignUpFinish)
 }
+
 func (e *endpoints) WebAuthnSignInStart() string {
 	return path.Join(e.version, e.auth.webauthnSignInStart)
 }
+
 func (e *endpoints) WebAuthnSignInFinish() string {
 	return path.Join(e.version, e.auth.webauthnSignInFinish)
 }
+
 func (e *endpoints) WebAuthnSignUpOrInStart() string {
 	return path.Join(e.version, e.auth.webauthnSignUpOrInStart)
 }
+
 func (e *endpoints) WebAuthnUpdateUserDeviceStart() string {
 	return path.Join(e.version, e.auth.webauthnUpdateStart)
 }
+
 func (e *endpoints) WebAuthnUpdateUserDeviceFinish() string {
 	return path.Join(e.version, e.auth.webauthnUpdateFinish)
 }
+
 func (e *endpoints) Logout() string {
 	return path.Join(e.version, e.logout)
 }
+
 func (e *endpoints) LogoutAll() string {
 	return path.Join(e.version, e.logoutAll)
 }
+
 func (e *endpoints) Me() string {
 	return path.Join(e.version, e.me)
 }
+
+func (e *endpoints) History() string {
+	return path.Join(e.version, e.history)
+}
+
 func (e *endpoints) GetKeys() string {
 	return path.Join(e.versionV2, e.keys)
 }
+
 func (e *endpoints) RefreshToken() string {
 	return path.Join(e.version, e.refresh)
 }
+
 func (e *endpoints) SelectTenant() string {
 	return path.Join(e.version, e.selectTenant)
 }
@@ -695,6 +741,10 @@ func (e *endpoints) ManagementUserGenerateMagicLinkForTest() string {
 
 func (e *endpoints) ManagementUserGenerateEnchantedLinkForTest() string {
 	return path.Join(e.version, e.mgmt.userGenerateEnchantedLinkForTest)
+}
+
+func (e *endpoints) ManagementUserHistory() string {
+	return path.Join(e.version, e.mgmt.userHistory)
 }
 
 func (e *endpoints) ManagementAccessKeyCreate() string {

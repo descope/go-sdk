@@ -573,6 +573,21 @@ invalidate all user's refresh tokens. After calling this function, you must inva
 descopeClient.Auth.LogoutAll(request, w)
 ```
 
+Get the current session user history. The request requires a valid refresh token.
+
+```go
+loginHistoryRes, err := descopeClient.Auth.History(request, r)
+if err == nil {
+    for i := range loginHistoryRes {
+        fmt.Println(loginHistoryRes[i].UserID)
+        fmt.Println(loginHistoryRes[i].City)
+        fmt.Println(loginHistoryRes[i].Country)
+        fmt.Println(loginHistoryRes[i].IP)
+        fmt.Println(loginHistoryRes[i].LoginTime)
+    }
+}
+```
+
 ## Management Functions
 
 It is very common for some form of management or automation to be required. These can be performed
@@ -667,7 +682,7 @@ err := descopeClient.Management.Tenant().ConfigureSettings(context.Background(),
 
 ### Manage Users
 
-You can create, update, delete or load users, as well as search according to filters:
+You can create, update, delete, logout, get user history and load users, as well as search according to filters:
 
 ```go
 // A user must have a loginID, other fields are optional.
@@ -776,6 +791,18 @@ err := descopeClient.Management.User().LogoutUser(context.Background(), "<login 
 
 // Logout given user from all its devices, by user ID
 err := descopeClient.Management.User().LogoutUserByUserID(context.Background(), "<user id>")
+
+// Get users' authentication history
+loginHistoryRes, err := descopeClient.Management.User().History(context.Background(), []string{"<user id 1>", "<user id 2>"})
+if err == nil {
+    for i := range loginHistoryRes {
+        fmt.Println(loginHistoryRes[i].UserID)
+        fmt.Println(loginHistoryRes[i].City)
+        fmt.Println(loginHistoryRes[i].Country)
+        fmt.Println(loginHistoryRes[i].IP)
+        fmt.Println(loginHistoryRes[i].LoginTime)
+    }
+}
 ```
 
 #### Set or Expire User Password
