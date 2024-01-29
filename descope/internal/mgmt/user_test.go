@@ -1596,9 +1596,9 @@ func TestUserHistorySuccess(t *testing.T) {
 
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
-		req := map[string]any{}
+		req := []string{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		require.Equal(t, []interface{}{"one", "two"}, req["loginIds"])
+		require.Equal(t, []string{"one", "two"}, req)
 	}, response))
 
 	userHistory, err := m.User().History(context.Background(), []string{"one", "two"})
@@ -1629,9 +1629,9 @@ func TestHistoryNoLoginIDs(t *testing.T) {
 func TestHistoryFailure(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
-		req := map[string]any{}
+		req := []string{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		require.Equal(t, []interface{}{"one", "two"}, req["loginIds"])
+		require.Equal(t, []string{"one", "two"}, req)
 	}))
 	userHistory, err := m.User().History(context.TODO(), []string{"one", "two"})
 	assert.ErrorIs(t, err, descope.ErrInvalidResponse)
