@@ -360,9 +360,9 @@ type User interface {
 	// or via flow verify step
 	GenerateEmbeddedLink(ctx context.Context, loginID string, customClaims map[string]any) (string, error)
 
-	// Use to retrieve users' authentication history, by user's ids.
+	// Use to retrieve users' authentication history, by the given user's ids.
 	// returns slice of users' authentication history.
-	History(ctx context.Context, loginIDs []string) ([]*descope.UserHistoryResponse, error)
+	History(ctx context.Context, userIDs []string) ([]*descope.UserHistoryResponse, error)
 }
 
 // Provides functions for managing access keys in a project.

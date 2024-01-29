@@ -375,7 +375,7 @@ type MockUser struct {
 	LogoutAssert func(id string)
 	LogoutError  error
 
-	HistoryAssert   func(loginIDs []string)
+	HistoryAssert   func(userIDs []string)
 	HistoryResponse []*descope.UserHistoryResponse
 	HistoryError    error
 }
@@ -681,9 +681,9 @@ func (m *MockUser) GenerateEmbeddedLink(_ context.Context, loginID string, custo
 	return m.GenerateEmbeddedLinkResponse, m.GenerateEmbeddedLinkError
 }
 
-func (m *MockUser) History(_ context.Context, loginIDs []string) ([]*descope.UserHistoryResponse, error) {
+func (m *MockUser) History(_ context.Context, userIDs []string) ([]*descope.UserHistoryResponse, error) {
 	if m.HistoryAssert != nil {
-		m.HistoryAssert(loginIDs)
+		m.HistoryAssert(userIDs)
 	}
 	return m.HistoryResponse, m.HistoryError
 }

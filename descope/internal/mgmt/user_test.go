@@ -1619,7 +1619,7 @@ func TestUserHistorySuccess(t *testing.T) {
 	assert.Equal(t, int32(23), userHistory[1].LoginTime)
 }
 
-func TestHistoryNoLoginIDs(t *testing.T) {
+func TestHistoryNoUserIDs(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
 	userHistory, err := m.User().History(context.TODO(), nil)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)

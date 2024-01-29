@@ -551,11 +551,11 @@ func (u *user) GenerateEmbeddedLink(ctx context.Context, loginID string, customC
 	return tRes.Token, nil
 }
 
-func (u *user) History(ctx context.Context, loginIDs []string) ([]*descope.UserHistoryResponse, error) {
-	if loginIDs == nil {
-		return nil, utils.NewInvalidArgumentError("loginIDs")
+func (u *user) History(ctx context.Context, userIDs []string) ([]*descope.UserHistoryResponse, error) {
+	if userIDs == nil {
+		return nil, utils.NewInvalidArgumentError("userIDs")
 	}
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserHistory(), loginIDs, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserHistory(), userIDs, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}
