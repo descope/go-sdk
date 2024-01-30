@@ -20,12 +20,13 @@ func TestAccessKeyCreateSuccess(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["name"])
+		require.Equal(t, "uid", req["userId"])
 		require.EqualValues(t, 0, req["expireTime"])
 		roleNames := req["roleNames"].([]any)
 		require.Len(t, roleNames, 1)
 		require.Equal(t, "foo", roleNames[0])
 	}, response))
-	cleartext, key, err := mgmt.AccessKey().Create(context.Background(), "abc", 0, []string{"foo"}, nil)
+	cleartext, key, err := mgmt.AccessKey().Create(context.Background(), "abc", 0, []string{"foo"}, nil, "uid")
 	require.NoError(t, err)
 	require.Equal(t, "cleartext", cleartext)
 	require.Equal(t, "abc", key.Name)
@@ -33,7 +34,7 @@ func TestAccessKeyCreateSuccess(t *testing.T) {
 
 func TestAccessKeyCreateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	_, _, err := mgmt.AccessKey().Create(context.Background(), "", 0, nil, nil)
+	_, _, err := mgmt.AccessKey().Create(context.Background(), "", 0, nil, nil, "")
 	require.Error(t, err)
 }
 
