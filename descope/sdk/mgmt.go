@@ -380,6 +380,7 @@ type AccessKey interface {
 	// aren't associated with a tenant, while the keyTenants parameter can be used
 	// to specify which tenants to associate the access key with and what roles the
 	// access key has in each one.
+	// If userID is supplied, then authorization would be ignored, and access key would be bound to the users authorization
 	Create(ctx context.Context, name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string) (string, *descope.AccessKeyResponse, error)
 
 	// Load an existing access key.

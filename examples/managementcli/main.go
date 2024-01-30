@@ -163,7 +163,11 @@ func accessKeyCreate(args []string) error {
 	if err != nil {
 		return err
 	}
-	cleartext, res, err := descopeClient.Management.AccessKey().Create(context.Background(), args[0], expireTime, nil, tenants, "")
+	userID := ""
+	if len(args) > 2 {
+		userID = args[2]
+	}
+	cleartext, res, err := descopeClient.Management.AccessKey().Create(context.Background(), args[0], expireTime, nil, tenants, userID)
 	if err != nil {
 		return err
 	}
@@ -629,8 +633,8 @@ func main() {
 		cmd.Args = cobra.ExactArgs(1)
 	})
 
-	addCommand(accessKeyCreate, "access-key-create <name> <expireTime>", "Create a new access key", func(cmd *cobra.Command) {
-		cmd.Args = cobra.ExactArgs(2)
+	addCommand(accessKeyCreate, "access-key-create <name> <expireTime> <userId optional>", "Create a new access key", func(cmd *cobra.Command) {
+		cmd.Args = cobra.RangeArgs(2, 3)
 		cmd.Flags().StringSliceVarP(&flags.Tenants, "tenants", "T", nil, "the ids of the user's tenants")
 	})
 
