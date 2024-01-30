@@ -47,6 +47,7 @@ These sections show how to use the SDK to perform various authentication/authori
 9. [Roles & Permission Validation](#roles--permission-validation)
 10. [Tenant selection](#tenant-selection)
 11. [Logging Out](#logging-out)
+11. [History](#history)
 
 ## Management Functions
 
@@ -573,9 +574,13 @@ invalidate all user's refresh tokens. After calling this function, you must inva
 descopeClient.Auth.LogoutAll(request, w)
 ```
 
-Get the current session user history. The request requires a valid refresh token.
+### History
+
+You can get the current session user history.
+The request requires a valid refresh token.
 
 ```go
+// Refresh token will be taken from the request header or cookies automatically
 loginHistoryRes, err := descopeClient.Auth.History(request, r)
 if err == nil {
     for i := range loginHistoryRes {
