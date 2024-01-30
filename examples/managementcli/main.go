@@ -163,7 +163,7 @@ func accessKeyCreate(args []string) error {
 	if err != nil {
 		return err
 	}
-	cleartext, res, err := descopeClient.Management.AccessKey().Create(context.Background(), args[0], expireTime, nil, tenants)
+	cleartext, res, err := descopeClient.Management.AccessKey().Create(context.Background(), args[0], expireTime, nil, tenants, "")
 	if err != nil {
 		return err
 	}
