@@ -47,7 +47,7 @@ These sections show how to use the SDK to perform various authentication/authori
 9. [Roles & Permission Validation](#roles--permission-validation)
 10. [Tenant selection](#tenant-selection)
 11. [Logging Out](#logging-out)
-11. [History](#history)
+12. [History](#history)
 
 ## Management Functions
 
