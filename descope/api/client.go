@@ -998,6 +998,7 @@ type ClientParams struct {
 	DefaultClient        IHttpClient
 	CustomDefaultHeaders map[string]string
 	CertificateVerify    CertificateVerifyMode
+	RequestTimeout       time.Duration
 }
 
 type IHttpClient interface {
@@ -1042,8 +1043,12 @@ func NewClient(conf ClientParams) *Client {
 			// this will include the tls config
 			rt = http.DefaultTransport
 		}
+		var timeout = time.Second * 60
+		if conf.RequestTimeout != 0 {
+			timeout = conf.RequestTimeout
+		}
 		httpClient = &http.Client{
-			Timeout:   time.Second * 10,
+			Timeout:   timeout,
 			Transport: rt,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse // notest
