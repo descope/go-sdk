@@ -55,6 +55,7 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 		DefaultClient:        config.DefaultClient,
 		CustomDefaultHeaders: config.CustomDefaultHeaders,
 		CertificateVerify:    config.CertificateVerify,
+		RequestTimeout:       config.RequestTimeout,
 	})
 
 	authService, err := auth.NewAuth(auth.AuthParams{
