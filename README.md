@@ -886,7 +886,7 @@ ssoSettings, err := descopeClient.Management.SSO().GetSettings(context.Backgroun
 // Configure tenant SSO by OIDC settings
 
 oidcSettings := &descope.SSOOIDCSettings{..}
-err = cc.HC.DescopeClient().Management.SSO().ConfigureOIDCSettings("tenant-id", oidcSettings, "https://redirectlocation.com", "")
+err = cc.HC.DescopeClient().Management.SSO().ConfigureOIDCSettings("tenant-id", oidcSettings, "")
 // OR
 // Load all tenant SSO settings and use them for configure OIDC settings
 ssoSettings, err := cc.HC.DescopeClient().Management.SSO().LoadSettings("tenant-id")
@@ -894,7 +894,7 @@ ssoSettings.Oidc.Name = "my prOvider"
 ssoSettings.Oidc.AuthURL = authorizeEndpoint
 ...
 ssoSettings.Oidc.Scope = []string{"openid", "profile", "email"}
-err = cc.HC.DescopeClient().Management.SSO().ConfigureOIDCSettings("tenant-id", ssoSettings.Oidc, "https://redirectlocation.com", "")
+err = cc.HC.DescopeClient().Management.SSO().ConfigureOIDCSettings("tenant-id", ssoSettings.Oidc, "")
 
 // Configure tenant SSO by SAML settings
 tenantID := "tenant-id" // Which tenant this configuration is for

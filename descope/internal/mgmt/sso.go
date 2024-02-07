@@ -106,7 +106,7 @@ func (s *sso) ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID stri
 	return err
 }
 
-func (s *sso) ConfigureOIDCSettings(ctx context.Context, tenantID string, settings *descope.SSOOIDCSettings, redirectURL string, domains []string) error {
+func (s *sso) ConfigureOIDCSettings(ctx context.Context, tenantID string, settings *descope.SSOOIDCSettings, domains []string) error {
 	if tenantID == "" {
 		return utils.NewInvalidArgumentError("tenantID")
 	}
@@ -116,10 +116,9 @@ func (s *sso) ConfigureOIDCSettings(ctx context.Context, tenantID string, settin
 	}
 
 	req := map[string]any{
-		"tenantId":    tenantID,
-		"settings":    settings,
-		"redirectUrl": redirectURL,
-		"domains":     domains,
+		"tenantId": tenantID,
+		"settings": settings,
+		"domains":  domains,
 	}
 
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOOIDCSettings(), req, nil, s.conf.ManagementKey)
