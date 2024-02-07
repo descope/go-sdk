@@ -109,7 +109,7 @@ type MockSSO struct {
 	ConfigureSAMLSettingsByMetadataAssert func(tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domains []string)
 	ConfigureSAMLSettingsByMetadataError  error
 
-	ConfigureOIDCSettingsAssert func(tenantID string, settings *descope.SSOOIDCSettings, redirectURL string, domains []string) error
+	ConfigureOIDCSettingsAssert func(tenantID string, settings *descope.SSOOIDCSettings, domains []string) error
 	ConfigureOIDCSettingsError  error
 
 	DeleteSettingsAssert func(tenantID string)
@@ -150,9 +150,9 @@ func (m *MockSSO) ConfigureSAMLSettingsByMetadata(_ context.Context, tenantID st
 	return m.ConfigureSAMLSettingsByMetadataError
 }
 
-func (m *MockSSO) ConfigureOIDCSettings(_ context.Context, tenantID string, settings *descope.SSOOIDCSettings, redirectURL string, domains []string) error {
+func (m *MockSSO) ConfigureOIDCSettings(_ context.Context, tenantID string, settings *descope.SSOOIDCSettings, domains []string) error {
 	if m.ConfigureOIDCSettingsAssert != nil {
-		m.ConfigureOIDCSettingsAssert(tenantID, settings, redirectURL, domains)
+		m.ConfigureOIDCSettingsAssert(tenantID, settings, domains)
 	}
 	return m.ConfigureOIDCSettingsError
 }

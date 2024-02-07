@@ -451,11 +451,10 @@ type SSO interface {
 	//
 	// tenantID, settings are required.
 	//
-	// redirectURL is optional, however if not given it has to be set when starting an SSO authentication via the request.
 	// domains is optional, it is used to map users to this tenant when authenticating via SSO.
 	//
-	// Both optional values will override whatever is currently set even if left empty.
-	ConfigureOIDCSettings(_ context.Context, tenantID string, settings *descope.SSOOIDCSettings, redirectURL string, domains []string) error
+	// Optional value will override whatever is currently set even if left empty.
+	ConfigureOIDCSettings(_ context.Context, tenantID string, settings *descope.SSOOIDCSettings, domains []string) error
 
 	// tenantID is required.
 	DeleteSettings(ctx context.Context, tenantID string) error
