@@ -551,6 +551,7 @@ type TenantSettings struct {
 	EnableInactivity           bool     `json:"enableInactivity,omitempty"`
 	InactivityTime             int32    `json:"inactivityTime,omitempty"`
 	InactivityTimeUnit         string   `json:"inactivityTimeUnit,omitempty"`
+	JITDisabled                bool     `json:"JITDisabled,omitempty"`
 }
 
 type SAMLIDPAttributeMappingInfo struct {

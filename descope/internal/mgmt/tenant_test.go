@@ -221,6 +221,7 @@ func TestGetTenantSettingsSuccess(t *testing.T) {
 		"refreshTokenExpirationUnit": "weeks",
 		"sessionTokenExpiration":     11,
 		"sessionTokenExpirationUnit": "minutes",
+		"JITDisabled":                true,
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -237,6 +238,7 @@ func TestGetTenantSettingsSuccess(t *testing.T) {
 	assert.EqualValues(t, "minutes", res.SessionTokenExpirationUnit)
 	assert.EqualValues(t, 10, res.RefreshTokenExpiration)
 	assert.EqualValues(t, "weeks", res.RefreshTokenExpirationUnit)
+	assert.True(t, res.JITDisabled)
 }
 
 func TestGetTenantSettingsError(t *testing.T) {
