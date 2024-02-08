@@ -269,11 +269,11 @@ func TestSkipVerifyValue(t *testing.T) {
 }
 
 func TestBaseURLForProjectID(t *testing.T) {
-	useUrl := fmt.Sprintf("%s.use1.%s", defaultAPIPrefix, defaultDomainName)
+	useURL := fmt.Sprintf("%s.use1.%s", defaultAPIPrefix, defaultDomainName)
 	assert.EqualValues(t, defaultURL, baseURLForProjectID("P2aAc4T2V93bddihGEx2Ryhc8e5Z"))
 	assert.EqualValues(t, defaultURL, baseURLForProjectID(""))
 	assert.EqualValues(t, defaultURL, baseURLForProjectID("Puse"))
 	assert.EqualValues(t, defaultURL, baseURLForProjectID("Puse1ar"))
-	assert.EqualValues(t, useUrl, baseURLForProjectID("Puse12aAc4T2V93bddihGEx2Ryhc8e5Zfoobar"))
-	assert.EqualValues(t, useUrl, baseURLForProjectID("Puse12aAc4T2V93bddihGEx2Ryhc8e5Z"))
+	assert.EqualValues(t, useURL, baseURLForProjectID("Puse12aAc4T2V93bddihGEx2Ryhc8e5Zfoobar"))
+	assert.EqualValues(t, useURL, baseURLForProjectID("Puse12aAc4T2V93bddihGEx2Ryhc8e5Z"))
 }
