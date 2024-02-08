@@ -22,7 +22,9 @@ import (
 )
 
 const (
-	defaultURL                = "https://api.descope.com"
+	defaultAPIPrefix          = "https://api"
+	defaultDomainName         = "descope.com"
+	defaultURL                = defaultAPIPrefix + "." + defaultDomainName
 	AuthorizationHeaderName   = "Authorization"
 	BearerAuthorizationPrefix = "Bearer "
 	nullString                = "null"
@@ -1026,6 +1028,14 @@ type HTTPRequest struct {
 	Cookies     []*http.Cookie
 }
 
+func baseURLForProjectID(projectID string) string {
+	if len(projectID) >= 32 {
+		region := projectID[1:5]
+		return strings.Join([]string{defaultAPIPrefix, region, defaultDomainName}, ".")
+	}
+	return defaultURL
+}
+
 func NewClient(conf ClientParams) *Client {
 	httpClient := conf.DefaultClient
 	if httpClient == nil {
@@ -1062,7 +1072,7 @@ func NewClient(conf ClientParams) *Client {
 	}
 
 	if conf.BaseURL == "" {
-		conf.BaseURL = defaultURL
+		conf.BaseURL = baseURLForProjectID(conf.ProjectID)
 	}
 
 	return &Client{
