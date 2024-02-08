@@ -543,11 +543,14 @@ type TenantSearchOptions struct {
 type TenantSettings struct {
 	Domains                    []string `json:"domains,omitempty"`
 	SelfProvisioningDomains    []string `json:"selfProvisioningDomains,omitempty"`
+	AuthType                   string   `json:"authType,omitempty"`
 	SessionSettingsEnabled     bool     `json:"sessionSettingsEnabled,omitempty"`
 	RefreshTokenExpiration     int32    `json:"refreshTokenExpiration,omitempty"`
 	RefreshTokenExpirationUnit string   `json:"refreshTokenExpirationUnit,omitempty"`
 	SessionTokenExpiration     int32    `json:"sessionTokenExpiration,omitempty"`
 	SessionTokenExpirationUnit string   `json:"sessionTokenExpirationUnit,omitempty"`
+	StepupTokenExpiration      int32    `json:"stepupTokenExpiration,omitempty"`
+	StepupTokenExpirationUnit  string   `json:"stepupTokenExpirationUnit,omitempty"`
 	EnableInactivity           bool     `json:"enableInactivity,omitempty"`
 	InactivityTime             int32    `json:"inactivityTime,omitempty"`
 	InactivityTimeUnit         string   `json:"inactivityTimeUnit,omitempty"`

@@ -226,7 +226,7 @@ func TestGetTenantSettingsSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		params := helpers.ReadParams(r)
-		require.Equal(t, tenantID, params["tenantId"])
+		require.Equal(t, tenantID, params["id"])
 	}, response))
 	res, err := mgmt.Tenant().GetSettings(context.Background(), tenantID)
 	require.NoError(t, err)
@@ -246,7 +246,7 @@ func TestGetTenantSettingsError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		params := helpers.ReadParams(r)
-		require.Equal(t, tenantID, params["tenantId"])
+		require.Equal(t, tenantID, params["id"])
 	}))
 	res, err := mgmt.Tenant().GetSettings(context.Background(), tenantID)
 	require.Error(t, err)
@@ -262,9 +262,10 @@ func TestTenantConfigureSettingsSuccess(t *testing.T) {
 		require.Equal(t, true, req["enabled"])
 		require.Equal(t, true, req["enableInactivity"])
 		require.Equal(t, float64(19), req["sessionTokenExpiration"])
+		require.Equal(t, true, req["JITDisabled"])
 		require.EqualValues(t, []any{"test"}, req["selfProvisioningDomains"])
 	}))
-	err := mgmt.Tenant().ConfigureSettings(context.Background(), "tenant", &descope.TenantSettings{EnableInactivity: true, SessionSettingsEnabled: true, SessionTokenExpiration: 19, SelfProvisioningDomains: []string{"test"}})
+	err := mgmt.Tenant().ConfigureSettings(context.Background(), "tenant", &descope.TenantSettings{EnableInactivity: true, SessionSettingsEnabled: true, SessionTokenExpiration: 19, SelfProvisioningDomains: []string{"test"}, JITDisabled: true})
 	require.NoError(t, err)
 }
 
