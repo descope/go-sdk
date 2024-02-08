@@ -110,7 +110,7 @@ func (t *tenant) GetSettings(ctx context.Context, tenantID string) (*descope.Ten
 		return nil, utils.NewInvalidArgumentError("tenantID")
 	}
 	req := &api.HTTPRequest{
-		QueryParams: map[string]string{"tenantId": tenantID},
+		QueryParams: map[string]string{"id": tenantID},
 	}
 	res, err := t.client.DoGetRequest(ctx, api.Routes.ManagementTenantSettings(), req, t.conf.ManagementKey)
 	if err != nil {
@@ -126,14 +126,17 @@ func (t *tenant) ConfigureSettings(ctx context.Context, tenantID string, setting
 	req := map[string]any{
 		"tenantId":                   tenantID,
 		"selfProvisioningDomains":    settings.SelfProvisioningDomains,
+		"authType":                   settings.AuthType,
 		"enabled":                    settings.SessionSettingsEnabled,
-		"sessionTokenExpiration":     settings.SessionTokenExpiration,
 		"refreshTokenExpiration":     settings.RefreshTokenExpiration,
-		"sessionTokenExpirationUnit": settings.SessionTokenExpirationUnit,
 		"refreshTokenExpirationUnit": settings.RefreshTokenExpirationUnit,
+		"sessionTokenExpiration":     settings.SessionTokenExpiration,
+		"sessionTokenExpirationUnit": settings.SessionTokenExpirationUnit,
+		"stepupTokenExpiration":      settings.StepupTokenExpiration,
+		"stepupTokenExpirationUnit":  settings.StepupTokenExpirationUnit,
+		"enableInactivity":           settings.EnableInactivity,
 		"inactivityTime":             settings.InactivityTime,
 		"inactivityTimeUnit":         settings.InactivityTimeUnit,
-		"enableInactivity":           settings.EnableInactivity,
 		"domains":                    settings.Domains,
 		"JITDisabled":                settings.JITDisabled,
 	}
