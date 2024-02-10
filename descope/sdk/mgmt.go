@@ -549,7 +549,8 @@ type Role interface {
 	// The description parameter is an optional description to briefly explain
 	// what this role allows.
 	// The permissionNames parameter denotes which permissions are included in this role.
-	Create(ctx context.Context, name, description string, permissionNames []string) error
+	// tenantID is an optional field to tie this role to a specific tenant
+	Create(ctx context.Context, name, description string, permissionNames []string, tenantID string) error
 
 	// Update an existing role.
 	//
@@ -559,12 +560,12 @@ type Role interface {
 	//
 	// IMPORTANT: All parameters will override whatever values are currently set
 	// in the existing role. Use carefully.
-	Update(ctx context.Context, name, newName, description string, permissionNames []string) error
+	Update(ctx context.Context, name, tenantID, newName, description string, permissionNames []string) error
 
 	// Delete an existing role.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
-	Delete(ctx context.Context, name string) error
+	Delete(ctx context.Context, name, tenantID string) error
 
 	// Load all roles.
 	LoadAll(ctx context.Context) ([]*descope.Role, error)

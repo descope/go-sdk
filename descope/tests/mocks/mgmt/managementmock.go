@@ -976,36 +976,36 @@ func (m *MockPermission) LoadAll(_ context.Context) ([]*descope.Permission, erro
 // Mock Role
 
 type MockRole struct {
-	CreateAssert func(name, description string, permissionNames []string)
+	CreateAssert func(name, description string, permissionNames []string, tenantID string)
 	CreateError  error
 
-	UpdateAssert func(name, newName, description string, permissionNames []string)
+	UpdateAssert func(name, tenantID, newName, description string, permissionNames []string)
 	UpdateError  error
 
-	DeleteAssert func(name string)
+	DeleteAssert func(name, tenantID string)
 	DeleteError  error
 
 	LoadAllResponse []*descope.Role
 	LoadAllError    error
 }
 
-func (m *MockRole) Create(_ context.Context, name, description string, permissionNames []string) error {
+func (m *MockRole) Create(_ context.Context, name, description string, permissionNames []string, tenantID string) error {
 	if m.CreateAssert != nil {
-		m.CreateAssert(name, description, permissionNames)
+		m.CreateAssert(name, description, permissionNames, tenantID)
 	}
 	return m.CreateError
 }
 
-func (m *MockRole) Update(_ context.Context, name, newName, description string, permissionNames []string) error {
+func (m *MockRole) Update(_ context.Context, name, tenantID string, newName, description string, permissionNames []string) error {
 	if m.UpdateAssert != nil {
-		m.UpdateAssert(name, newName, description, permissionNames)
+		m.UpdateAssert(name, tenantID, newName, description, permissionNames)
 	}
 	return m.UpdateError
 }
 
-func (m *MockRole) Delete(_ context.Context, name string) error {
+func (m *MockRole) Delete(_ context.Context, name, tenantID string) error {
 	if m.DeleteAssert != nil {
-		m.DeleteAssert(name)
+		m.DeleteAssert(name, tenantID)
 	}
 	return m.DeleteError
 }

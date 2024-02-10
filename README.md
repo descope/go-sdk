@@ -1013,16 +1013,17 @@ You can create, update, delete or load roles:
 name := "My Role"
 description := "Optional description to briefly explain what this role allows."
 permissionNames := []string{"My Updated Permission"},
-descopeClient.Management.Role().Create(context.Background(), name, description, permissionNames)
+tenantID := ""
+descopeClient.Management.Role().Create(context.Background(), name, description, permissionNames, tenantID)
 
 // Update will override all fields as is. Use carefully.
 newName := "My Updated Role"
 description = "A revised description",
 permissionNames = append(permissionNames, "Another Permission")
-descopeClient.Management.Role().Update(context.Background(), name, newName, description, permissionNames)
+descopeClient.Management.Role().Update(context.Background(), name, tenantID, newName, description, permissionNames)
 
 // Role deletion cannot be undone. Use carefully.
-descopeClient.Management.Role().Delete(context.Background(), newName)
+descopeClient.Management.Role().Delete(context.Background(), newName, tenantID)
 
 // Load all roles
 res, err := descopeClient.Management.Role().LoadAll(context.Background())
