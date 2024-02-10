@@ -12,7 +12,7 @@ type role struct {
 	managementBase
 }
 
-func (r *role) Create(ctx context.Context, name, description string, permissionNames []string) error {
+func (r *role) Create(ctx context.Context, name, description string, permissionNames []string, tenantID string) error {
 	if name == "" {
 		return utils.NewInvalidArgumentError("name")
 	}
@@ -20,12 +20,13 @@ func (r *role) Create(ctx context.Context, name, description string, permissionN
 		"name":            name,
 		"description":     description,
 		"permissionNames": permissionNames,
+		"tenantId":        tenantID,
 	}
 	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleCreate(), body, nil, r.conf.ManagementKey)
 	return err
 }
 
-func (r *role) Update(ctx context.Context, name, newName, description string, permissionNames []string) error {
+func (r *role) Update(ctx context.Context, name, tenantID, newName, description string, permissionNames []string) error {
 	if name == "" {
 		return utils.NewInvalidArgumentError("name")
 	}
@@ -37,16 +38,20 @@ func (r *role) Update(ctx context.Context, name, newName, description string, pe
 		"newName":         newName,
 		"description":     description,
 		"permissionNames": permissionNames,
+		"tenantId":        tenantID,
 	}
 	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleUpdate(), body, nil, r.conf.ManagementKey)
 	return err
 }
 
-func (r *role) Delete(ctx context.Context, name string) error {
+func (r *role) Delete(ctx context.Context, name, tenantID string) error {
 	if name == "" {
 		return utils.NewInvalidArgumentError("name")
 	}
-	body := map[string]any{"name": name}
+	body := map[string]any{
+		"name":     name,
+		"tenantId": tenantID,
+	}
 	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleDelete(), body, nil, r.conf.ManagementKey)
 	return err
 }

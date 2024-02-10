@@ -328,15 +328,15 @@ func permissionAll(args []string) error {
 }
 
 func roleCreate(args []string) error {
-	return descopeClient.Management.Role().Create(context.Background(), args[0], flags.Description, flags.Permissions)
+	return descopeClient.Management.Role().Create(context.Background(), args[0], flags.Description, flags.Permissions, "")
 }
 
 func roleUpdate(args []string) error {
-	return descopeClient.Management.Role().Update(context.Background(), args[0], args[1], flags.Description, flags.Permissions)
+	return descopeClient.Management.Role().Update(context.Background(), args[0], "", args[1], flags.Description, flags.Permissions)
 }
 
 func roleDelete(args []string) error {
-	return descopeClient.Management.Role().Delete(context.Background(), args[0])
+	return descopeClient.Management.Role().Delete(context.Background(), args[0], "")
 }
 
 func roleAll(args []string) error {

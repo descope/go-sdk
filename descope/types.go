@@ -655,6 +655,7 @@ type Role struct {
 	Description     string   `json:"description,omitempty"`
 	PermissionNames []string `json:"permissionNames,omitempty"`
 	CreatedTime     int32    `json:"createdTime,omitempty"`
+	TenantID        string   `json:"tenantId,omitempty"`
 }
 
 func (r *Role) GetCreatedTime() time.Time {
