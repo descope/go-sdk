@@ -1013,7 +1013,7 @@ You can create, update, delete or load roles:
 name := "My Role"
 description := "Optional description to briefly explain what this role allows."
 permissionNames := []string{"My Updated Permission"},
-tenantID := ""
+tenantID := "" // set here tenant ID value in order to create a role for a specific tenant
 descopeClient.Management.Role().Create(context.Background(), name, description, permissionNames, tenantID)
 
 // Update will override all fields as is. Use carefully.
