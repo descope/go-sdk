@@ -1197,22 +1197,37 @@ func TestUserSetPasswordSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["loginId"])
 		require.Equal(t, "123", req["password"])
+		require.False(t, req["persistPassword"].(bool))
 	}, response))
-	err := m.User().SetPassword(context.Background(), "abc", "123")
+	err := m.User().SetPassword(context.Background(), "abc", "123", false)
+	require.NoError(t, err)
+}
+
+func TestUserSetPasswordPersistPasswordSuccess(t *testing.T) {
+	response := map[string]any{}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, "123", req["password"])
+		require.True(t, req["persistPassword"].(bool))
+	}, response))
+	err := m.User().SetPassword(context.Background(), "abc", "123", true)
 	require.NoError(t, err)
 }
 
 func TestUserSetPasswordBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	err := m.User().SetPassword(context.Background(), "", "123")
+	err := m.User().SetPassword(context.Background(), "", "123", false)
 	require.Error(t, err)
-	err = m.User().SetPassword(context.Background(), "abc", "")
+	err = m.User().SetPassword(context.Background(), "abc", "", false)
 	require.Error(t, err)
 }
 
 func TestUserSetPasswordError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	err := m.User().SetPassword(context.Background(), "abc", "123")
+	err := m.User().SetPassword(context.Background(), "abc", "123", false)
 	require.Error(t, err)
 }
 
