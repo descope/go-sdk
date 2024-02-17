@@ -136,11 +136,11 @@ func userSearchAll(args []string) error {
 func setUserPassword(args []string) error {
 	loginID := args[0]
 	password := args[1]
-	persistPassword, err := strconv.ParseBool(args[2])
+	setActive, err := strconv.ParseBool(args[2])
 	if err != nil {
 		return err
 	}
-	return descopeClient.Management.User().SetPassword(context.Background(), loginID, password, persistPassword)
+	return descopeClient.Management.User().SetPassword(context.Background(), loginID, password, setActive)
 }
 
 func expireUserPassword(args []string) error {
@@ -738,7 +738,7 @@ func main() {
 		cmd.Args = cobra.ExactArgs(2)
 	})
 
-	addCommand(setUserPassword, "user-set-password <loginId> <password> <persistPassword>", "Set user password (The password will be initially set as expired unless persistPassword flag will be set to True)", func(cmd *cobra.Command) {
+	addCommand(setUserPassword, "user-set-password <loginId> <password> <setActive>", "Set user password (The password will be initially set as expired unless persistPassword flag will be set to True)", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(3)
 	})
 

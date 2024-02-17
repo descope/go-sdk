@@ -1197,13 +1197,13 @@ func TestUserSetPasswordSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["loginId"])
 		require.Equal(t, "123", req["password"])
-		require.False(t, req["persistPassword"].(bool))
+		require.False(t, req["setActive"].(bool))
 	}, response))
 	err := m.User().SetPassword(context.Background(), "abc", "123", false)
 	require.NoError(t, err)
 }
 
-func TestUserSetPasswordPersistPasswordSuccess(t *testing.T) {
+func TestUserSetPasswordSetActiveSuccess(t *testing.T) {
 	response := map[string]any{}
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -1211,7 +1211,7 @@ func TestUserSetPasswordPersistPasswordSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["loginId"])
 		require.Equal(t, "123", req["password"])
-		require.True(t, req["persistPassword"].(bool))
+		require.True(t, req["setActive"].(bool))
 	}, response))
 	err := m.User().SetPassword(context.Background(), "abc", "123", true)
 	require.NoError(t, err)

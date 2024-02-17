@@ -342,7 +342,7 @@ type MockUser struct {
 	RemoveTenantRoleResponse *descope.UserResponse
 	RemoveTenantRoleError    error
 
-	SetPasswordAssert func(loginID, password string, persistPassword bool)
+	SetPasswordAssert func(loginID, password string, setActive bool)
 	SetPasswordError  error
 
 	ExpirePasswordAssert func(loginID string)
@@ -625,9 +625,9 @@ func (m *MockUser) RemoveTenantRoles(_ context.Context, loginID string, tenantID
 	return m.RemoveTenantRoleResponse, m.RemoveTenantRoleError
 }
 
-func (m *MockUser) SetPassword(_ context.Context, loginID string, password string, persistPassword bool) error {
+func (m *MockUser) SetPassword(_ context.Context, loginID string, password string, setActive bool) error {
 	if m.SetPasswordAssert != nil {
-		m.SetPasswordAssert(loginID, password, persistPassword)
+		m.SetPasswordAssert(loginID, password, setActive)
 	}
 	return m.SetPasswordError
 }

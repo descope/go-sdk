@@ -320,7 +320,7 @@ type User interface {
 	// The user will not be able to log-in with this password, and will be required to replace it on next login.
 	// Only if persistent flag is True the password will be kept
 	// See also: ExpirePassword
-	SetPassword(ctx context.Context, loginID string, password string, persistPassword bool) error
+	SetPassword(ctx context.Context, loginID string, password string, setActive bool) error
 
 	// Expire the password for the given login ID.
 	// Note: user sign-in with an expired password, the user will get `errors.ErrPasswordExpired` error.

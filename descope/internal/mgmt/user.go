@@ -420,7 +420,7 @@ func (u *user) RemoveTenantRoles(ctx context.Context, loginID string, tenantID s
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) SetPassword(ctx context.Context, loginID string, password string, persistPassword bool) error {
+func (u *user) SetPassword(ctx context.Context, loginID string, password string, setActive bool) error {
 	if loginID == "" {
 		return utils.NewInvalidArgumentError("loginID")
 	}
@@ -428,7 +428,7 @@ func (u *user) SetPassword(ctx context.Context, loginID string, password string,
 		return utils.NewInvalidArgumentError("password")
 	}
 
-	req := makeSetPasswordRequest(loginID, password, persistPassword)
+	req := makeSetPasswordRequest(loginID, password, setActive)
 	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetPassword(), req, nil, u.conf.ManagementKey)
 	return err
 }
@@ -676,11 +676,11 @@ func makeUpdateUserSSOAppsRequest(loginID string, ssoAppIDs []string) map[string
 	}
 }
 
-func makeSetPasswordRequest(loginID string, password string, persistPassword bool) map[string]any {
+func makeSetPasswordRequest(loginID string, password string, setActive bool) map[string]any {
 	return map[string]any{
-		"loginId":         loginID,
-		"password":        password,
-		"persistPassword": persistPassword,
+		"loginId":   loginID,
+		"password":  password,
+		"setActive": setActive,
 	}
 }
 

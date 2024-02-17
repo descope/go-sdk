@@ -813,7 +813,7 @@ if err == nil {
 #### Set or Expire User Password
 
 You can set or expire a user's password.
-Note: When setting a password, it will automatically be set as expired if persistPassword flag is false.
+Note: When setting a password, it will automatically be set as expired if setActive flag is false.
 The user will not be able log-in using an expired password, and will be required replace it on next login.
 
 ```go
