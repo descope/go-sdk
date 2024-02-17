@@ -58,12 +58,17 @@ func (ex *exporter) writeObject(path string, object map[string]any) error {
 	if err != nil {
 		return fmt.Errorf("failed to format object file %s: %w", path, err)
 	}
+	bytes = append(bytes, '\n')
 	return ex.writeBytes(path, bytes)
 }
 
 func (ex *exporter) writeAsset(path string, asset string) error {
 	if filepath.Ext(path) == ".txt" || filepath.Ext(path) == ".html" {
-		return ex.writeBytes(path, []byte(asset))
+		bytes := []byte(asset)
+		if n := len(bytes); n != 0 && bytes[n-1] != '\n' {
+			bytes = append(bytes, '\n')
+		}
+		return ex.writeBytes(path, bytes)
 	}
 	bytes, err := base64.StdEncoding.DecodeString(asset)
 	if err != nil {

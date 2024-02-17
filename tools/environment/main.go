@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"os"
 
 	"github.com/descope/go-sdk/descope"
@@ -42,6 +41,7 @@ var cli = &cobra.Command{
 	Version:           "0.9.0",
 	Use:               "environment",
 	Short:             "A command line utility for managing Descope project environments",
+	SilenceUsage:      true,
 	CompletionOptions: cobra.CompletionOptions{HiddenDefaultCmd: true},
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if len(args) > 0 {
@@ -55,10 +55,8 @@ func addCommand(action func([]string) error, use string, help string, setup func
 	cmd := &cobra.Command{
 		Use:   use,
 		Short: help,
-		Run: func(_ *cobra.Command, args []string) {
-			if err := action(args); err != nil {
-				fmt.Fprintln(os.Stderr, err)
-			}
+		RunE: func(_ *cobra.Command, args []string) error {
+			return action(args)
 		},
 	}
 	setup(cmd)
