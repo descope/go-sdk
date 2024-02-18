@@ -817,7 +817,7 @@ Note: When using SetTemporaryPassword password will automatically be set as expi
 The user will not be able log-in using an expired password, and will be required replace it on next login.
 
 ```go
-// Set a user's password
+// Set a user's temporary password
 err := descopeClient.Management.User().SetTemporaryPassword(context.Background(), "<login-id>", "<some-password>")
 
 // Set a user's password
