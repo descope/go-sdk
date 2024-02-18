@@ -420,7 +420,7 @@ func (u *user) RemoveTenantRoles(ctx context.Context, loginID string, tenantID s
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) SetPassword(ctx context.Context, loginID string, password string, setActive bool) error {
+func (u *user) SetTemporaryPassword(ctx context.Context, loginID string, password string) error {
 	if loginID == "" {
 		return utils.NewInvalidArgumentError("loginID")
 	}
@@ -428,7 +428,33 @@ func (u *user) SetPassword(ctx context.Context, loginID string, password string,
 		return utils.NewInvalidArgumentError("password")
 	}
 
-	req := makeSetPasswordRequest(loginID, password, setActive)
+	req := makeSetPasswordRequest(loginID, password, false)
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetPassword(), req, nil, u.conf.ManagementKey)
+	return err
+}
+func (u *user) SetActivePassword(ctx context.Context, loginID string, password string) error {
+	if loginID == "" {
+		return utils.NewInvalidArgumentError("loginID")
+	}
+	if password == "" {
+		return utils.NewInvalidArgumentError("password")
+	}
+
+	req := makeSetPasswordRequest(loginID, password, true)
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetPassword(), req, nil, u.conf.ManagementKey)
+	return err
+}
+
+/* Deprecated */
+func (u *user) SetPassword(ctx context.Context, loginID string, password string) error {
+	if loginID == "" {
+		return utils.NewInvalidArgumentError("loginID")
+	}
+	if password == "" {
+		return utils.NewInvalidArgumentError("password")
+	}
+
+	req := makeSetPasswordRequest(loginID, password, false)
 	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetPassword(), req, nil, u.conf.ManagementKey)
 	return err
 }

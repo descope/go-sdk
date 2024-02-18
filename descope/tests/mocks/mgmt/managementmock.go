@@ -625,9 +625,24 @@ func (m *MockUser) RemoveTenantRoles(_ context.Context, loginID string, tenantID
 	return m.RemoveTenantRoleResponse, m.RemoveTenantRoleError
 }
 
-func (m *MockUser) SetPassword(_ context.Context, loginID string, password string, setActive bool) error {
+func (m *MockUser) SetTemporaryPassword(_ context.Context, loginID string, password string) error {
 	if m.SetPasswordAssert != nil {
-		m.SetPasswordAssert(loginID, password, setActive)
+		m.SetPasswordAssert(loginID, password, false)
+	}
+	return m.SetPasswordError
+}
+
+func (m *MockUser) SetActivePassword(_ context.Context, loginID string, password string) error {
+	if m.SetPasswordAssert != nil {
+		m.SetPasswordAssert(loginID, password, true)
+	}
+	return m.SetPasswordError
+}
+
+/* Deprecated */
+func (m *MockUser) SetPassword(_ context.Context, loginID string, password string) error {
+	if m.SetPasswordAssert != nil {
+		m.SetPasswordAssert(loginID, password, false)
 	}
 	return m.SetPasswordError
 }

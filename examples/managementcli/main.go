@@ -133,14 +133,16 @@ func userSearchAll(args []string) error {
 	return err
 }
 
-func setUserPassword(args []string) error {
+func setUserTemporaryPassword(args []string) error {
 	loginID := args[0]
 	password := args[1]
-	setActive, err := strconv.ParseBool(args[2])
-	if err != nil {
-		return err
-	}
-	return descopeClient.Management.User().SetPassword(context.Background(), loginID, password, setActive)
+	return descopeClient.Management.User().SetTemporaryPassword(context.Background(), loginID, password)
+}
+
+func setUserActivePassword(args []string) error {
+	loginID := args[0]
+	password := args[1]
+	return descopeClient.Management.User().SetActivePassword(context.Background(), loginID, password)
 }
 
 func expireUserPassword(args []string) error {
@@ -738,8 +740,12 @@ func main() {
 		cmd.Args = cobra.ExactArgs(2)
 	})
 
-	addCommand(setUserPassword, "user-set-password <loginId> <password> <setActive>", "Set user password (The password will be initially set as expired unless setActive flag will be set to True)", func(cmd *cobra.Command) {
-		cmd.Args = cobra.ExactArgs(3)
+	addCommand(setUserTemporaryPassword, "user-set-temporary-password <loginId> <password>", "Set user password, the password will be initially set as expired", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(2)
+	})
+
+	addCommand(setUserActivePassword, "user-set-active-password <loginId> <password>", "Set user password", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(2)
 	})
 
 	addCommand(expireUserPassword, "user-expire-password <loginId>", "Expire user password", func(cmd *cobra.Command) {

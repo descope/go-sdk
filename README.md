@@ -812,13 +812,19 @@ if err == nil {
 
 #### Set or Expire User Password
 
-You can set or expire a user's password.
-Note: When setting a password, it will automatically be set as expired if setActive flag is false.
+You can set (temporary/active) or expire a user's password.
+Note: When using SetTemporaryPassword password will automatically be set as expired.
 The user will not be able log-in using an expired password, and will be required replace it on next login.
 
 ```go
 // Set a user's password
-err := descopeClient.Management.User().SetPassword(context.Background(), "<login-id>", "<some-password>", false)
+err := descopeClient.Management.User().SetTemporaryPassword(context.Background(), "<login-id>", "<some-password>")
+
+// Set a user's password
+err := descopeClient.Management.User().SetActivePassword(context.Background(), "<login-id>", "<some-password>")
+
+/* Deprecated */
+err := descopeClient.Management.User().SetPassword(context.Background(), "<login-id>", "<some-password>")
 
 // Or alternatively, expire a user password
 err := descopeClient.Management.User().ExpirePassword(context.Background(), "<login-id>")

@@ -1189,6 +1189,62 @@ func TestUserRemoveTenantRoleError(t *testing.T) {
 	require.Nil(t, res)
 }
 
+func TestUserSetTemporaryPasswordSuccess(t *testing.T) {
+	response := map[string]any{}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, "123", req["password"])
+		require.False(t, req["setActive"].(bool))
+	}, response))
+	err := m.User().SetTemporaryPassword(context.Background(), "abc", "123")
+	require.NoError(t, err)
+}
+
+func TestUserSetTemporaryPasswordBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	err := m.User().SetTemporaryPassword(context.Background(), "", "123")
+	require.Error(t, err)
+	err = m.User().SetTemporaryPassword(context.Background(), "abc", "")
+	require.Error(t, err)
+}
+
+func TestUserSetTemporaryPasswordError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	err := m.User().SetTemporaryPassword(context.Background(), "abc", "123")
+	require.Error(t, err)
+}
+
+func TestUserSetActivePasswordSuccess(t *testing.T) {
+	response := map[string]any{}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, "123", req["password"])
+		require.True(t, req["setActive"].(bool))
+	}, response))
+	err := m.User().SetActivePassword(context.Background(), "abc", "123")
+	require.NoError(t, err)
+}
+
+func TestUserSetActivePasswordBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	err := m.User().SetActivePassword(context.Background(), "", "123")
+	require.Error(t, err)
+	err = m.User().SetActivePassword(context.Background(), "abc", "")
+	require.Error(t, err)
+}
+
+func TestUserSetActivePasswordError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	err := m.User().SetActivePassword(context.Background(), "abc", "123")
+	require.Error(t, err)
+}
+
 func TestUserSetPasswordSuccess(t *testing.T) {
 	response := map[string]any{}
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -1199,35 +1255,21 @@ func TestUserSetPasswordSuccess(t *testing.T) {
 		require.Equal(t, "123", req["password"])
 		require.False(t, req["setActive"].(bool))
 	}, response))
-	err := m.User().SetPassword(context.Background(), "abc", "123", false)
-	require.NoError(t, err)
-}
-
-func TestUserSetPasswordSetActiveSuccess(t *testing.T) {
-	response := map[string]any{}
-	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
-		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
-		req := map[string]any{}
-		require.NoError(t, helpers.ReadBody(r, &req))
-		require.Equal(t, "abc", req["loginId"])
-		require.Equal(t, "123", req["password"])
-		require.True(t, req["setActive"].(bool))
-	}, response))
-	err := m.User().SetPassword(context.Background(), "abc", "123", true)
+	err := m.User().SetPassword(context.Background(), "abc", "123")
 	require.NoError(t, err)
 }
 
 func TestUserSetPasswordBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	err := m.User().SetPassword(context.Background(), "", "123", false)
+	err := m.User().SetPassword(context.Background(), "", "123")
 	require.Error(t, err)
-	err = m.User().SetPassword(context.Background(), "abc", "", false)
+	err = m.User().SetPassword(context.Background(), "abc", "")
 	require.Error(t, err)
 }
 
 func TestUserSetPasswordError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	err := m.User().SetPassword(context.Background(), "abc", "123", false)
+	err := m.User().SetPassword(context.Background(), "abc", "123")
 	require.Error(t, err)
 }
 

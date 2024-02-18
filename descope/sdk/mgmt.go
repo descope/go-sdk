@@ -318,9 +318,19 @@ type User interface {
 	// Set a password for the given login ID.
 	// Note: The password will automatically be set as expired.
 	// The user will not be able to log-in with this password, and will be required to replace it on next login.
-	// Only if setActive flag is True the password will be kept
 	// See also: ExpirePassword
-	SetPassword(ctx context.Context, loginID string, password string, setActive bool) error
+	SetTemporaryPassword(ctx context.Context, loginID string, password string) error
+
+	// Set a password for the given login ID.
+	// The password will not be expired on the next login
+	SetActivePassword(ctx context.Context, loginID string, password string) error
+
+	/* Deprecated (use SetTemporaryPassword instead) */
+	// Set a password for the given login ID.
+	// Note: The password will automatically be set as expired.
+	// The user will not be able to log-in with this password, and will be required to replace it on next login.
+	// See also: ExpirePassword
+	SetPassword(ctx context.Context, loginID string, password string) error
 
 	// Expire the password for the given login ID.
 	// Note: user sign-in with an expired password, the user will get `errors.ErrPasswordExpired` error.
