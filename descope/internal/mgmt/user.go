@@ -429,7 +429,7 @@ func (u *user) SetTemporaryPassword(ctx context.Context, loginID string, passwor
 	}
 
 	req := makeSetPasswordRequest(loginID, password, false)
-	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetPassword(), req, nil, u.conf.ManagementKey)
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetTemporaryPassword(), req, nil, u.conf.ManagementKey)
 	return err
 }
 func (u *user) SetActivePassword(ctx context.Context, loginID string, password string) error {
@@ -441,7 +441,7 @@ func (u *user) SetActivePassword(ctx context.Context, loginID string, password s
 	}
 
 	req := makeSetPasswordRequest(loginID, password, true)
-	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetPassword(), req, nil, u.conf.ManagementKey)
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetActivePassword(), req, nil, u.conf.ManagementKey)
 	return err
 }
 
