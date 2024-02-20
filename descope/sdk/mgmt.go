@@ -315,7 +315,7 @@ type User interface {
 	// Remove roles from a user in a specific tenant.
 	RemoveTenantRoles(ctx context.Context, loginID string, tenantID string, roles []string) (*descope.UserResponse, error)
 
-	// Set a password for the given login ID.
+	// Set a temporary password for the given login ID.
 	// Note: The password will automatically be set as expired.
 	// The user will not be able to log-in with this password, and will be required to replace it on next login.
 	// See also: ExpirePassword
