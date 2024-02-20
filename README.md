@@ -812,17 +812,21 @@ if err == nil {
 
 #### Set or Expire User Password
 
-You can set a new active password for a user that they can sign in with. You can also set a temporary password that they user will be forced to change on the next login. For a user that already has an active password, you can expire their current password, effectively requiring them to change it on the next login.
-The user will not be able log-in using an expired password, and will be required replace it on next login.
+You can set a new active password for a user, which they can then use to sign in. You can also set a temporary
+password that the user will be forced to change on the next login.
 
 ```go
-// Set a user's temporary password
+// Set a temporary password for the user which they'll need to replace it on next login
 err := descopeClient.Management.User().SetTemporaryPassword(context.Background(), "<login-id>", "<some-password>")
 
-// Set a user's password
+// Set an active password for the user which they can use to login
 err := descopeClient.Management.User().SetActivePassword(context.Background(), "<login-id>", "<some-password>")
+```
 
-// Or alternatively, expire a user password
+For a user that already has a password, you can expire it to require them to change it on the next login.
+
+```go
+// Expire the user's active password
 err := descopeClient.Management.User().ExpirePassword(context.Background(), "<login-id>")
 
 // Later, if the user is signing in with an expired password, the returned error will be ErrPasswordExpired
