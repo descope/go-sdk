@@ -823,9 +823,6 @@ err := descopeClient.Management.User().SetTemporaryPassword(context.Background()
 // Set a user's password
 err := descopeClient.Management.User().SetActivePassword(context.Background(), "<login-id>", "<some-password>")
 
-/* Deprecated */
-err := descopeClient.Management.User().SetPassword(context.Background(), "<login-id>", "<some-password>")
-
 // Or alternatively, expire a user password
 err := descopeClient.Management.User().ExpirePassword(context.Background(), "<login-id>")
 
