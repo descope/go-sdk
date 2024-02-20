@@ -315,10 +315,21 @@ type User interface {
 	// Remove roles from a user in a specific tenant.
 	RemoveTenantRoles(ctx context.Context, loginID string, tenantID string, roles []string) (*descope.UserResponse, error)
 
+	// Set a temporary password for the given login ID.
+	// Note: The password will automatically be set as expired.
+	// The user will not be able to log-in with this password, and will be required to replace it on next login.
+	// See also: ExpirePassword
+	SetTemporaryPassword(ctx context.Context, loginID string, password string) error
+
+	// Set a password for the given login ID.
+	// The password will not be expired on the next login
+	SetActivePassword(ctx context.Context, loginID string, password string) error
+
 	// Set a password for the given login ID.
 	// Note: The password will automatically be set as expired.
 	// The user will not be able to log-in with this password, and will be required to replace it on next login.
 	// See also: ExpirePassword
+	// Deprecated: Use SetTemporaryPassword instead
 	SetPassword(ctx context.Context, loginID string, password string) error
 
 	// Expire the password for the given login ID.
@@ -509,6 +520,11 @@ type JWT interface {
 	// Update a valid JWT with the custom claims provided
 	// The new JWT will be returned
 	UpdateJWTWithCustomClaims(ctx context.Context, jwt string, customClaims map[string]any) (string, error)
+
+	// Impersonate to another user
+	// The impersonator user must have `impersonation` permission in order for this request to work
+	// The response would be a refresh JWT of the impersonated user
+	Impersonate(ctx context.Context, impersonatorID string, loginID string, validateConcent bool) (string, error)
 }
 
 // Provides functions for managing permissions in a project.

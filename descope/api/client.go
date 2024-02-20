@@ -118,6 +118,8 @@ var (
 			userSetSsoApps:                   "mgmt/user/update/ssoapp/set",
 			userRemoveSsoApps:                "mgmt/user/update/ssoapp/remove",
 			userSetPassword:                  "mgmt/user/password/set",
+			userSetTemporaryPassword:         "mgmt/user/password/set/temporary",
+			userSetActivePassword:            "mgmt/user/password/set/active",
 			userExpirePassword:               "mgmt/user/password/expire",
 			userRemoveAllPasskeys:            "mgmt/user/passkeys/delete",
 			userGetProviderToken:             "mgmt/user/provider/token",
@@ -143,6 +145,7 @@ var (
 			ssoMapping:                       "mgmt/sso/mapping",
 			passwordSettings:                 "mgmt/password/settings",
 			updateJWT:                        "mgmt/jwt/update",
+			impersonate:                      "mgmt/impersonate",
 			permissionCreate:                 "mgmt/permission/create",
 			permissionUpdate:                 "mgmt/permission/update",
 			permissionDelete:                 "mgmt/permission/delete",
@@ -291,6 +294,8 @@ type mgmtEndpoints struct {
 	userSetRole               string
 	userRemoveRole            string
 	userSetPassword           string
+	userSetTemporaryPassword  string
+	userSetActivePassword     string
 	userExpirePassword        string
 	userRemoveAllPasskeys     string
 	userGetProviderToken      string
@@ -325,6 +330,7 @@ type mgmtEndpoints struct {
 	ssoSAMLSettingsByMetadata string
 	ssoOIDCSettings           string
 	updateJWT                 string
+	impersonate               string
 
 	passwordSettings string
 
@@ -725,8 +731,17 @@ func (e *endpoints) ManagementUserRemoveSSOApps() string {
 	return path.Join(e.version, e.mgmt.userRemoveSsoApps)
 }
 
+// Deprecated
 func (e *endpoints) ManagementUserSetPassword() string {
 	return path.Join(e.version, e.mgmt.userSetPassword)
+}
+
+func (e *endpoints) ManagementUserSetTemporaryPassword() string {
+	return path.Join(e.version, e.mgmt.userSetTemporaryPassword)
+}
+
+func (e *endpoints) ManagementUserSetActivePassword() string {
+	return path.Join(e.version, e.mgmt.userSetActivePassword)
 }
 
 func (e *endpoints) ManagementUserExpirePassword() string {
@@ -822,6 +837,10 @@ func (e *endpoints) ManagementPasswordSettings() string {
 
 func (e *endpoints) ManagementUpdateJWT() string {
 	return path.Join(e.version, e.mgmt.updateJWT)
+}
+
+func (e *endpoints) ManagementImpersonate() string {
+	return path.Join(e.version, e.mgmt.impersonate)
 }
 
 func (e *endpoints) ManagementGenerateEmbeddedLink() string {

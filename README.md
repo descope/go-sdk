@@ -62,6 +62,7 @@ These sections show how to use the SDK to perform API management functions. Befo
 7. [Query SSO Groups](#query-sso-groups)
 8. [Manage Flows](#manage-flows)
 9. [Manage JWTs](#manage-jwts)
+9. [Impersonate](#impersonate)
 10. [Search Audit](#search-audit)
 11. [Embedded Links](#embedded-links)
 12. [Manage ReBAC Authz](#manage-rebac-authz)
@@ -812,15 +813,21 @@ if err == nil {
 
 #### Set or Expire User Password
 
-You can set or expire a user's password.
-Note: When setting a password, it will automatically be set as expired.
-The user will not be able log-in using an expired password, and will be required replace it on next login.
+You can set a new active password for a user, which they can then use to sign in. You can also set a temporary
+password that the user will be forced to change on the next login.
 
 ```go
-// Set a user's password
-err := descopeClient.Management.User().SetPassword(context.Background(), "<login-id>", "<some-password>")
+// Set a temporary password for the user which they'll need to replace it on next login
+err := descopeClient.Management.User().SetTemporaryPassword(context.Background(), "<login-id>", "<some-password>")
 
-// Or alternatively, expire a user password
+// Set an active password for the user which they can use to login
+err := descopeClient.Management.User().SetActivePassword(context.Background(), "<login-id>", "<some-password>")
+```
+
+For a user that already has a password, you can expire it to require them to change it on the next login.
+
+```go
+// Expire the user's active password
 err := descopeClient.Management.User().ExpirePassword(context.Background(), "<login-id>")
 
 // Later, if the user is signing in with an expired password, the returned error will be ErrPasswordExpired
@@ -1123,6 +1130,18 @@ updatedJWT, err := descopeClient.Management.JWT().UpdateJWTWithCustomClaims(cont
     "custom-key1": "custom-value1",
     "custom-key2": "custom-value2",
 })
+if err != nil {
+    // handle error
+}
+```
+
+### Impersonate
+
+You can impersonate to another user
+The impersonator user must have the `impersonation` permission in order for this request to work.
+The response would be a refresh JWT of the impersonated user
+```go
+refreshJWT, err := descopeClient.Management.JWT().Impersonate(context.Background(), "impersonator id", "login id", true)
 if err != nil {
     // handle error
 }
