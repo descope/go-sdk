@@ -178,11 +178,29 @@ type Password interface {
 }
 
 type OAuth interface {
-	// Start - Use to start an OAuth authentication using the given OAuthProvider.
+	// Start [Deprecated: Use SignUpOrIn instead] - Use to start an OAuth authentication using the given OAuthProvider.
 	// returns an error upon failure and a string represent the redirect URL upon success.
 	// Uses the response writer to automatically redirect the client to the provider url for authentication.
 	// A successful authentication will result in a callback to the url defined in the current project settings.
 	Start(ctx context.Context, provider descope.OAuthProvider, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error)
+
+	// SignUpOrIn - Use to start an OAuth authentication using the given OAuthProvider.
+	// returns an error upon failure and a string represent the redirect URL upon success.
+	// Uses the response writer to automatically redirect the client to the provider url for authentication.
+	// A successful authentication will result in a callback to the url defined in the current project settings.
+	SignUpOrIn(ctx context.Context, provider descope.OAuthProvider, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error)
+
+	// SignUp - Use to start an OAuth authentication using the given OAuthProvider and force a sign up only.
+	// returns an error upon failure and a string represent the redirect URL upon success.
+	// Uses the response writer to automatically redirect the client to the provider url for authentication.
+	// A successful authentication will result in a callback to the url defined in the current project settings.
+	SignUp(ctx context.Context, provider descope.OAuthProvider, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error)
+
+	// SignIn - Use to start an OAuth authentication using the given OAuthProvider and force a sign in only.
+	// returns an error upon failure and a string represent the redirect URL upon success.
+	// Uses the response writer to automatically redirect the client to the provider url for authentication.
+	// A successful authentication will result in a callback to the url defined in the current project settings.
+	SignIn(ctx context.Context, provider descope.OAuthProvider, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error)
 
 	// ExchangeToken - Finalize OAuth
 	// code should be extracted from the redirect URL of OAth/SAML authentication flow

@@ -58,7 +58,9 @@ var (
 			verifyEnchantedLink:          "auth/enchantedlink/verify",
 			getEnchantedLinkSession:      "auth/enchantedlink/pending-session",
 			updateUserEmailEnchantedLink: "auth/enchantedlink/update/email",
-			oauthStart:                   "auth/oauth/authorize",
+			oauthSignUpOrIn:              "auth/oauth/authorize",
+			oauthSignUp:                  "auth/oauth/authorize/signup",
+			oauthSignIn:                  "auth/oauth/authorize/signin",
 			exchangeTokenOAuth:           "auth/oauth/exchange",
 			samlStart:                    "auth/saml/authorize",
 			exchangeTokenSAML:            "auth/saml/exchange",
@@ -229,7 +231,9 @@ type authEndpoints struct {
 	verifyEnchantedLink          string
 	getEnchantedLinkSession      string
 	updateUserEmailEnchantedLink string
-	oauthStart                   string
+	oauthSignUpOrIn              string
+	oauthSignUp                  string
+	oauthSignIn                  string
 	exchangeTokenOAuth           string
 	samlStart                    string
 	ssoStart                     string
@@ -463,8 +467,16 @@ func (e *endpoints) GetEnchantedLinkSession() string {
 	return path.Join(e.version, e.auth.getEnchantedLinkSession)
 }
 
-func (e *endpoints) OAuthStart() string {
-	return path.Join(e.version, e.auth.oauthStart)
+func (e *endpoints) OAuthSignUpOrIn() string {
+	return path.Join(e.version, e.auth.oauthSignUpOrIn)
+}
+
+func (e *endpoints) OAuthSignIn() string {
+	return path.Join(e.version, e.auth.oauthSignIn)
+}
+
+func (e *endpoints) OAuthSignUp() string {
+	return path.Join(e.version, e.auth.oauthSignUp)
 }
 
 func (e *endpoints) ExchangeTokenOAuth() string {

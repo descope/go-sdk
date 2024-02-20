@@ -18,7 +18,7 @@ type oauthStartResponse struct {
 	URL string `json:"url"`
 }
 
-func (auth *oauth) Start(ctx context.Context, provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (url string, err error) {
+func (auth *oauth) start(ctx context.Context, provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter, authorizeURL string) (url string, err error) {
 	m := map[string]string{
 		"provider": string(provider),
 	}
@@ -33,7 +33,7 @@ func (auth *oauth) Start(ctx context.Context, provider descope.OAuthProvider, re
 		}
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(ctx, composeOAuthURL(), loginOptions, &api.HTTPRequest{QueryParams: m}, pswd)
+	httpResponse, err := auth.client.DoPostRequest(ctx, authorizeURL, loginOptions, &api.HTTPRequest{QueryParams: m}, pswd)
 	if err != nil {
 		return
 	}
@@ -50,6 +50,22 @@ func (auth *oauth) Start(ctx context.Context, provider descope.OAuthProvider, re
 	}
 
 	return
+}
+
+func (auth *oauth) SignUpOrIn(ctx context.Context, provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (url string, err error) {
+	return auth.start(ctx, provider, redirectURL, r, loginOptions, w, composeOAuthURL())
+}
+
+func (auth *oauth) SignUp(ctx context.Context, provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (url string, err error) {
+	return auth.start(ctx, provider, redirectURL, r, loginOptions, w, composeOAuthSignUpURL())
+}
+
+func (auth *oauth) SignIn(ctx context.Context, provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (url string, err error) {
+	return auth.start(ctx, provider, redirectURL, r, loginOptions, w, composeOAuthSignInURL())
+}
+
+func (auth *oauth) Start(ctx context.Context, provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (url string, err error) {
+	return auth.SignUpOrIn(ctx, provider, redirectURL, r, loginOptions, w)
 }
 
 func (auth *oauth) ExchangeToken(ctx context.Context, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {

@@ -894,7 +894,15 @@ func composeUpdateUserEmailEnchantedLink() string {
 }
 
 func composeOAuthURL() string {
-	return api.Routes.OAuthStart()
+	return api.Routes.OAuthSignUpOrIn()
+}
+
+func composeOAuthSignInURL() string {
+	return api.Routes.OAuthSignIn()
+}
+
+func composeOAuthSignUpURL() string {
+	return api.Routes.OAuthSignUp()
 }
 
 func composeOAuthExchangeTokenURL() string {
