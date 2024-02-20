@@ -62,6 +62,7 @@ These sections show how to use the SDK to perform API management functions. Befo
 7. [Query SSO Groups](#query-sso-groups)
 8. [Manage Flows](#manage-flows)
 9. [Manage JWTs](#manage-jwts)
+9. [Impersonate](#impersonate)
 10. [Search Audit](#search-audit)
 11. [Embedded Links](#embedded-links)
 12. [Manage ReBAC Authz](#manage-rebac-authz)
@@ -1129,6 +1130,18 @@ updatedJWT, err := descopeClient.Management.JWT().UpdateJWTWithCustomClaims(cont
     "custom-key1": "custom-value1",
     "custom-key2": "custom-value2",
 })
+if err != nil {
+    // handle error
+}
+```
+
+### Impersonate
+
+You can impersonate to another user
+The impersonator user must have the `impersonation` permission in order for this request to work.
+The response would be a refresh JWT of the impersonated user
+```go
+refreshJWT, err := descopeClient.Management.JWT().Impersonate(context.Background(), "impersonator id", "login id", true)
 if err != nil {
     // handle error
 }

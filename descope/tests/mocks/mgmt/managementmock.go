@@ -87,6 +87,10 @@ type MockJWT struct {
 	UpdateJWTWithCustomClaimsAssert   func(jwt string, customClaims map[string]any)
 	UpdateJWTWithCustomClaimsResponse string
 	UpdateJWTWithCustomClaimsError    error
+
+	ImpersonateAssert   func(impersonatorID string, loginID string, validateConcent bool)
+	ImpersonateResponse string
+	ImpersonateError    error
 }
 
 func (m *MockJWT) UpdateJWTWithCustomClaims(_ context.Context, jwt string, customClaims map[string]any) (string, error) {
@@ -94,6 +98,13 @@ func (m *MockJWT) UpdateJWTWithCustomClaims(_ context.Context, jwt string, custo
 		m.UpdateJWTWithCustomClaimsAssert(jwt, customClaims)
 	}
 	return m.UpdateJWTWithCustomClaimsResponse, m.UpdateJWTWithCustomClaimsError
+}
+
+func (m *MockJWT) Impersonate(_ context.Context, impersonatorID string, loginID string, validateConcent bool) (string, error) {
+	if m.ImpersonateAssert != nil {
+		m.ImpersonateAssert(impersonatorID, loginID, validateConcent)
+	}
+	return m.ImpersonateResponse, m.ImpersonateError
 }
 
 // Mock SSO
