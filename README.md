@@ -812,8 +812,7 @@ if err == nil {
 
 #### Set or Expire User Password
 
-You can set (temporary/active) or expire a user's password.
-Note: When using SetTemporaryPassword password will automatically be set as expired.
+You can set a new active password for a user that they can sign in with. You can also set a temporary password that they user will be forced to change on the next login. For a user that already has an active password, you can expire their current password, effectively requiring them to change it on the next login.
 The user will not be able log-in using an expired password, and will be required replace it on next login.
 
 ```go
