@@ -509,6 +509,11 @@ type JWT interface {
 	// Update a valid JWT with the custom claims provided
 	// The new JWT will be returned
 	UpdateJWTWithCustomClaims(ctx context.Context, jwt string, customClaims map[string]any) (string, error)
+
+	// Impersonate to another user
+	// The impersonator user must have `impersonation` permission in order for this request to work
+	// The response would be a refresh JWT of the impersonated user
+	Impersonate(ctx context.Context, impersonatorID string, loginID string, validateConcent bool) (string, error)
 }
 
 // Provides functions for managing permissions in a project.

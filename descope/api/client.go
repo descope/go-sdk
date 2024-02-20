@@ -141,6 +141,7 @@ var (
 			ssoMapping:                       "mgmt/sso/mapping",
 			passwordSettings:                 "mgmt/password/settings",
 			updateJWT:                        "mgmt/jwt/update",
+			impersonate:                      "mgmt/impersonate",
 			permissionCreate:                 "mgmt/permission/create",
 			permissionUpdate:                 "mgmt/permission/update",
 			permissionDelete:                 "mgmt/permission/delete",
@@ -321,6 +322,7 @@ type mgmtEndpoints struct {
 	ssoSAMLSettingsByMetadata string
 	ssoOIDCSettings           string
 	updateJWT                 string
+	impersonate               string
 
 	passwordSettings string
 
@@ -810,6 +812,10 @@ func (e *endpoints) ManagementPasswordSettings() string {
 
 func (e *endpoints) ManagementUpdateJWT() string {
 	return path.Join(e.version, e.mgmt.updateJWT)
+}
+
+func (e *endpoints) ManagementImpersonate() string {
+	return path.Join(e.version, e.mgmt.impersonate)
 }
 
 func (e *endpoints) ManagementGenerateEmbeddedLink() string {
