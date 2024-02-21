@@ -229,7 +229,7 @@ Users can authenticate using their social logins, using the OAuth protocol. Conf
 // If configured globally, the return URL is optional. If provided however, it will be used
 // instead of any global configuration.
 // Redirect the user to the returned URL to start the OAuth redirect chain
-url, err := descopeClient.Auth.OAuth().Start(context.Background(), "google", "https://my-app.com/handle-oauth", nil, nil, w)
+url, err := descopeClient.Auth.OAuth().SignUpOrIn(context.Background(), "google", "https://my-app.com/handle-oauth", nil, nil, w)
 if err != nil {
     // handle error
 }
