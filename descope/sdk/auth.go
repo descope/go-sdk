@@ -190,13 +190,13 @@ type OAuth interface {
 	// A successful authentication will result in a callback to the url defined in the current project settings.
 	SignUpOrIn(ctx context.Context, provider descope.OAuthProvider, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error)
 
-	// SignUp - Use to start an OAuth authentication using the given OAuthProvider and force a sign up only.
+	// SignUp - Use to start an OAuth authentication using the given OAuthProvider to create a new user.
 	// returns an error upon failure and a string represent the redirect URL upon success.
 	// Uses the response writer to automatically redirect the client to the provider url for authentication.
 	// A successful authentication will result in a callback to the url defined in the current project settings.
 	SignUp(ctx context.Context, provider descope.OAuthProvider, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error)
 
-	// SignIn - Use to start an OAuth authentication using the given OAuthProvider and force a sign in only.
+	// SignIn - Use to start an OAuth authentication using the given OAuthProvider to sign in an existing user.
 	// returns an error upon failure and a string represent the redirect URL upon success.
 	// Uses the response writer to automatically redirect the client to the provider url for authentication.
 	// A successful authentication will result in a callback to the url defined in the current project settings.
@@ -204,6 +204,9 @@ type OAuth interface {
 
 	// ExchangeToken - Finalize OAuth
 	// code should be extracted from the redirect URL of OAth/SAML authentication flow
+	// **Important:** The redirect URL might not contain a code URL parameter
+	// but can contain an `err` URL parameter instead. This can occur when attempting to
+	// [signUp] with an existing user or trying to [signIn] with a non-existing user.
 	ExchangeToken(ctx context.Context, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error)
 }
 

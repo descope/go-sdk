@@ -53,7 +53,7 @@ func (auth *oauth) start(ctx context.Context, provider descope.OAuthProvider, re
 }
 
 func (auth *oauth) SignUpOrIn(ctx context.Context, provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (url string, err error) {
-	return auth.start(ctx, provider, redirectURL, r, loginOptions, w, composeOAuthURL())
+	return auth.start(ctx, provider, redirectURL, r, loginOptions, w, composeOAuthSignUpOrInURL())
 }
 
 func (auth *oauth) SignUp(ctx context.Context, provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (url string, err error) {
