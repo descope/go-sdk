@@ -66,6 +66,33 @@ func TestOAuthSignUpForwardResponse(t *testing.T) {
 	assert.EqualValues(t, http.StatusTemporaryRedirect, w.Result().StatusCode)
 }
 
+func TestOAuthUpdateUserForwardResponse(t *testing.T) {
+	uri := "http://test.me"
+	landingURL := "https://test.com"
+	provider := descope.OAuthGithub
+	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {
+		assert.EqualValues(t, fmt.Sprintf("%s?allowAllMerge=%s&provider=%s&redirectURL=%s", composeOAuthUpdateUserURL(), "true", provider, url.QueryEscape(landingURL)), r.URL.RequestURI())
+	}))
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	urlStr, err := a.OAuth().UpdateUser(context.Background(), provider, landingURL, true, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, nil, w)
+	require.NoError(t, err)
+	assert.EqualValues(t, uri, urlStr)
+	assert.EqualValues(t, urlStr, w.Result().Header.Get(descope.RedirectLocationCookieName))
+	assert.EqualValues(t, http.StatusTemporaryRedirect, w.Result().StatusCode)
+}
+
+func TestOAuthUpdateUserForwardResponsepNoJWT(t *testing.T) {
+	uri := "http://test.me"
+	landingURL := "https://test.com"
+	provider := descope.OAuthGithub
+	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {}))
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	_, err = a.OAuth().UpdateUser(context.Background(), provider, landingURL, true, nil, nil, w)
+	assert.ErrorIs(t, err, descope.ErrRefreshToken)
+}
+
 func TestOAuthStartForwardResponseStepup(t *testing.T) {
 	uri := "http://test.me"
 	landingURL := "https://test.com"
