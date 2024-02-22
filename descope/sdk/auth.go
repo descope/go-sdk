@@ -330,7 +330,7 @@ type Authentication interface {
 	ValidateAndRefreshSessionWithTokens(ctx context.Context, sessionToken, refreshToken string) (bool, *descope.Token, error)
 
 	// ExchangeAccessKey - Use to exchange an access key for a session token.
-	ExchangeAccessKey(ctx context.Context, accessKey string) (bool, *descope.Token, error)
+	ExchangeAccessKey(ctx context.Context, accessKey string, loginOptions *descope.AccessKeyLoginOptions) (bool, *descope.Token, error)
 
 	// ValidatePermissions - Use to ensure that a validated session token has been granted
 	// the specified permissions.

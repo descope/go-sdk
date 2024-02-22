@@ -292,6 +292,10 @@ func (lo *LoginOptions) IsJWTRequired() bool {
 	return lo != nil && (lo.Stepup || lo.MFA)
 }
 
+type AccessKeyLoginOptions struct {
+	CustomClaims map[string]interface{} `json:"customClaims,omitempty"`
+}
+
 type SignUpOptions struct {
 	CustomClaims    map[string]interface{} `json:"customClaims,omitempty"`
 	TemplateOptions map[string]string      `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
