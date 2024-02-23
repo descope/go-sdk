@@ -246,6 +246,16 @@ if err != nil {
 }
 ```
 
+Users can also connect the social login account to their existing user:
+```go
+// A valid Refresh Token of the existing user is required and will be taken from the request header or cookies automatically.
+// If allowAllMerge is 'true' the users will be merged also if there is no common identifier between the social provider and the existing user (like email).
+url, err := descopeClient.Auth.OAuth().UpdateUser(context.Background(), "google", "https://my-app.com/handle-oauth", true, nil, nil, w)
+if err != nil {
+    // handle error
+}
+```
+
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
 
 ### SSO (SAML / OIDC)
