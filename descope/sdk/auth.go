@@ -202,6 +202,13 @@ type OAuth interface {
 	// A successful authentication will result in a callback to the url defined in the current project settings.
 	SignIn(ctx context.Context, provider descope.OAuthProvider, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error)
 
+	// UserUpdate - Use to start an OAuth authentication using the given OAuthProvider to enable an existing user to sign in also with OAuth method.
+	// returns an error upon failure and a string represent the redirect URL upon success.
+	// Uses the response writer to automatically redirect the client to the provider url for authentication.
+	// A successful authentication will result in a callback to the url defined in the current project settings.
+	// allowAllMerge - allow updating the existing user also if there is no common identifier between the OAuth and the existing user (like email)
+	UpdateUser(ctx context.Context, provider descope.OAuthProvider, returnURL string, allowAllMerge bool, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error)
+
 	// ExchangeToken - Finalize OAuth
 	// code should be extracted from the redirect URL of OAth/SAML authentication flow
 	// **Important:** The redirect URL might not contain a code URL parameter

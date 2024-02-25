@@ -905,6 +905,10 @@ func composeOAuthSignUpURL() string {
 	return api.Routes.OAuthSignUp()
 }
 
+func composeOAuthUpdateUserURL() string {
+	return api.Routes.OAuthUpdateUser()
+}
+
 func composeOAuthExchangeTokenURL() string {
 	return api.Routes.ExchangeTokenOAuth()
 }

@@ -61,6 +61,7 @@ var (
 			oauthSignUpOrIn:              "auth/oauth/authorize",
 			oauthSignUp:                  "auth/oauth/authorize/signup",
 			oauthSignIn:                  "auth/oauth/authorize/signin",
+			oauthUpdateUser:              "auth/oauth/authorize/update",
 			exchangeTokenOAuth:           "auth/oauth/exchange",
 			samlStart:                    "auth/saml/authorize",
 			exchangeTokenSAML:            "auth/saml/exchange",
@@ -237,6 +238,7 @@ type authEndpoints struct {
 	oauthSignUpOrIn              string
 	oauthSignUp                  string
 	oauthSignIn                  string
+	oauthUpdateUser              string
 	exchangeTokenOAuth           string
 	samlStart                    string
 	ssoStart                     string
@@ -483,6 +485,10 @@ func (e *endpoints) OAuthSignIn() string {
 
 func (e *endpoints) OAuthSignUp() string {
 	return path.Join(e.version, e.auth.oauthSignUp)
+}
+
+func (e *endpoints) OAuthUpdateUser() string {
+	return path.Join(e.version, e.auth.oauthUpdateUser)
 }
 
 func (e *endpoints) ExchangeTokenOAuth() string {
