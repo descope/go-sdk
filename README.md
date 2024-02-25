@@ -889,6 +889,15 @@ err := descopeClient.Management.AccessKey().Activate(context.Background(), "acce
 err := descopeClient.Management.AccessKey().Delete(context.Background(), "access-key-id")
 ```
 
+Exchange the access key and provide optional access key login options:
+```go
+loginOptions := &descope.AccessKeyLoginOptions{
+	CustomClaims: map[string]any{"k1": "v1"},
+}
+ok, token, err := a.ExchangeAccessKey(context.Background(), "accessKey", loginOptions)
+```
+
+
 ### Manage SSO Setting
 
 You can manage SSO (SAML or OIDC) settings for a specific tenant.
