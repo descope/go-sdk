@@ -14,6 +14,7 @@ import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
+	"github.com/descope/go-sdk/descope/tests/helpers"
 	"github.com/descope/go-sdk/descope/tests/mocks"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/stretchr/testify/assert"
@@ -857,7 +858,34 @@ func TestExchangeAccessKey(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 
-	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo")
+	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo", nil)
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.NotNil(t, token)
+}
+
+func TestExchangeAccessKeyWithLoginOptions(t *testing.T) {
+	response := map[string]any{}
+	err := utils.Unmarshal([]byte(mockAuthSessionBody), &response)
+	a, err := newTestAuth(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		rlo, found := req["loginOptions"]
+		require.True(t, found)
+		cc, found := rlo.(map[string]any)["customClaims"]
+		require.True(t, found)
+		customClaims, ok := cc.(map[string]any)
+		require.True(t, ok)
+		d, found := customClaims["k1"]
+		require.True(t, found)
+		require.EqualValues(t, "v1", d)
+	}, response))
+
+	loginOptions := &descope.AccessKeyLoginOptions{
+		CustomClaims: map[string]any{"k1": "v1"},
+	}
+
+	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo", loginOptions)
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.NotNil(t, token)
@@ -867,7 +895,7 @@ func TestExchangeAccessKeyBadRequest(t *testing.T) {
 	a, err := newTestAuth(nil, DoBadRequest(nil))
 	require.NoError(t, err)
 
-	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo")
+	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo", nil)
 	require.ErrorIs(t, err, descope.ErrBadRequest)
 	require.False(t, ok)
 	require.Nil(t, token)
@@ -877,7 +905,7 @@ func TestExchangeAccessKeyEmptyResponse(t *testing.T) {
 	a, err := newTestAuth(nil, DoOkWithBody(nil, ""))
 	require.NoError(t, err)
 
-	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo")
+	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo", nil)
 	require.ErrorIs(t, err, descope.ErrUnexpectedResponse)
 	require.False(t, ok)
 	require.Nil(t, token)
@@ -888,7 +916,7 @@ func TestExchangeAccessKeyInvalidResponse(t *testing.T) {
 	a, err := newTestAuth(nil, DoOkWithBody(nil, expectedResponse))
 	require.NoError(t, err)
 
-	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo")
+	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo", nil)
 	require.ErrorIs(t, err, descope.ErrUnexpectedResponse)
 	require.False(t, ok)
 	require.Nil(t, token)

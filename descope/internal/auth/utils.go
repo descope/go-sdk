@@ -220,6 +220,14 @@ func newExchangeTokenBody(code string) *exchangeTokenBody {
 	return &exchangeTokenBody{Code: code}
 }
 
+type exchangeAccessKeyBody struct {
+	LoginOptions *descope.AccessKeyLoginOptions `json:"loginOptions,omitempty"`
+}
+
+func newExchangeAccessKeyBody(loginOptions *descope.AccessKeyLoginOptions) *exchangeAccessKeyBody {
+	return &exchangeAccessKeyBody{LoginOptions: loginOptions}
+}
+
 const (
 	claimAttributeName = "drn"
 	claimPermissions   = "permissions"

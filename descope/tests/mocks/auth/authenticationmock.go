@@ -590,7 +590,7 @@ type MockSession struct {
 	RefreshSessionResponseArray   []*descope.Token
 	RefreshSessionResponseCounter int
 
-	ExchangeAccessKeyAssert          func(accessKey string)
+	ExchangeAccessKeyAssert          func(accessKey string, loginOptions *descope.AccessKeyLoginOptions)
 	ExchangeAccessKeyError           error
 	ExchangeAccessKeyResponse        *descope.Token
 	ExchangeAccessKeyResponseFailure bool
@@ -713,9 +713,9 @@ func (m *MockSession) ValidateAndRefreshSessionWithTokens(_ context.Context, ses
 	return !m.ValidateAndRefreshSessionTokensResponseFailure, m.ValidateAndRefreshSessionTokensResponse, m.ValidateAndRefreshSessionTokensError
 }
 
-func (m *MockSession) ExchangeAccessKey(_ context.Context, accessKey string) (bool, *descope.Token, error) {
+func (m *MockSession) ExchangeAccessKey(_ context.Context, accessKey string, loginOptions *descope.AccessKeyLoginOptions) (bool, *descope.Token, error) {
 	if m.ExchangeAccessKeyAssert != nil {
-		m.ExchangeAccessKeyAssert(accessKey)
+		m.ExchangeAccessKeyAssert(accessKey, loginOptions)
 	}
 	return !m.ExchangeAccessKeyResponseFailure, m.ExchangeAccessKeyResponse, m.ExchangeAccessKeyError
 }
