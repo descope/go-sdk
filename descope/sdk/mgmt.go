@@ -392,7 +392,9 @@ type AccessKey interface {
 	// to specify which tenants to associate the access key with and what roles the
 	// access key has in each one.
 	// If userID is supplied, then authorization would be ignored, and access key would be bound to the users authorization
-	Create(ctx context.Context, name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string) (string, *descope.AccessKeyResponse, error)
+	// If customClaims is supplied, those claims will be presented in the jwt
+	// the customClaims parameter is optional map of claims and their values that will be presented in the jwt
+	Create(ctx context.Context, name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any) (string, *descope.AccessKeyResponse, error)
 
 	// Load an existing access key.
 	//
