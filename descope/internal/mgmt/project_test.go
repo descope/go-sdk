@@ -30,7 +30,7 @@ func TestProjectImport(t *testing.T) {
 		require.True(t, ok)
 		require.Equal(t, "bar", files["foo"])
 	}))
-	err := mgmt.Project().Import(context.Background(), map[string]any{"foo": "bar"})
+	err := mgmt.Project().Import(context.Background(), map[string]any{"foo": "bar"}, nil)
 	require.NoError(t, err)
 }
 

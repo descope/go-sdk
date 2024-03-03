@@ -1170,18 +1170,21 @@ func (m *MockProject) Export(_ context.Context) (map[string]any, error) {
 	return m.ExportResponse, m.ExportError
 }
 
-func (m *MockProject) Import(_ context.Context, files map[string]any) error {
+func (m *MockProject) Import(_ context.Context, files map[string]any, _ []map[string]any) error {
 	if m.ImportAssert != nil {
 		m.ImportAssert(files)
 	}
-	return m.ExportError
+	return m.ImportError
+}
+
+func (m *MockProject) ValidateImport(_ context.Context, _ map[string]any, _ []map[string]any) ([]map[string]any, error) {
+	return nil, m.ImportError
 }
 
 func (m *MockProject) UpdateName(_ context.Context, name string) error {
 	if m.UpdateNameAssert != nil {
 		m.UpdateNameAssert(name)
 	}
-
 	return m.UpdateNameError
 }
 

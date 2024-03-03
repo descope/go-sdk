@@ -648,7 +648,9 @@ type Project interface {
 	//
 	// This API is meant to be used via the 'environment' command line tool that can be
 	// found in the '/tools' directory.
-	Import(ctx context.Context, files map[string]any) error
+	Import(ctx context.Context, files map[string]any, secrets []map[string]any) error
+
+	ValidateImport(ctx context.Context, files map[string]any, secrets []map[string]any) ([]map[string]any, error)
 
 	// Update the current project name.
 	UpdateName(ctx context.Context, name string) error
