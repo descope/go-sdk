@@ -860,7 +860,7 @@ You can create, update, delete or load access keys, as well as search according 
 // Roles should be set directly if no tenants exist, otherwise set
 // on a per-tenant basis.
 // If userID is supplied, then authorization would be ignored, and access key would be bound to the users authorization
-// If customClaims is supplied, then claims will be presented in the jwt
+// If customClaims is supplied, then those claims will be present in the JWT returned by calls to ExchangeAccessKey.
 res, err := descopeClient.Management.AccessKey().Create(context.Background(), "access-key-1", 0, nil, []*descope.AssociatedTenant{
 		{TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
     	{TenantID: "tenant-ID2"},
