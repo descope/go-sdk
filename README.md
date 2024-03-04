@@ -865,8 +865,8 @@ res, err := descopeClient.Management.AccessKey().Create(context.Background(), "a
 		{TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
     	{TenantID: "tenant-ID2"},
     }, 
-	map[string]any{"k1": "v1"}, 
-    "")
+	"", 
+    map[string]any{"k1": "v1"})
 
 // Load specific user
 res, err := descopeClient.Management.AccessKey().Load(context.Background(), "access-key-id")
