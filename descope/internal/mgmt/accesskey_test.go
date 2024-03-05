@@ -13,7 +13,8 @@ func TestAccessKeyCreateSuccess(t *testing.T) {
 	response := map[string]any{
 		"cleartext": "cleartext",
 		"key": map[string]any{
-			"name": "abc",
+			"name":         "abc",
+			"customClaims": map[string]any{"k1": "v1"},
 		}}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -25,16 +26,20 @@ func TestAccessKeyCreateSuccess(t *testing.T) {
 		roleNames := req["roleNames"].([]any)
 		require.Len(t, roleNames, 1)
 		require.Equal(t, "foo", roleNames[0])
+		require.Len(t, req["customClaims"], 1)
 	}, response))
-	cleartext, key, err := mgmt.AccessKey().Create(context.Background(), "abc", 0, []string{"foo"}, nil, "uid")
+	cc := map[string]any{"k1": "v1"}
+	cleartext, key, err := mgmt.AccessKey().Create(context.Background(), "abc", 0, []string{"foo"}, nil, "uid", cc)
 	require.NoError(t, err)
 	require.Equal(t, "cleartext", cleartext)
 	require.Equal(t, "abc", key.Name)
+	require.Len(t, key.CustomClaims, 1)
+	require.Equal(t, "v1", key.CustomClaims["k1"])
 }
 
 func TestAccessKeyCreateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	_, _, err := mgmt.AccessKey().Create(context.Background(), "", 0, nil, nil, "")
+	_, _, err := mgmt.AccessKey().Create(context.Background(), "", 0, nil, nil, "", nil)
 	require.Error(t, err)
 }
 
