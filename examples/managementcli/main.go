@@ -133,10 +133,16 @@ func userSearchAll(args []string) error {
 	return err
 }
 
-func setUserPassword(args []string) error {
+func setUserTemporaryPassword(args []string) error {
 	loginID := args[0]
 	password := args[1]
-	return descopeClient.Management.User().SetPassword(context.Background(), loginID, password)
+	return descopeClient.Management.User().SetTemporaryPassword(context.Background(), loginID, password)
+}
+
+func setUserActivePassword(args []string) error {
+	loginID := args[0]
+	password := args[1]
+	return descopeClient.Management.User().SetActivePassword(context.Background(), loginID, password)
 }
 
 func expireUserPassword(args []string) error {
@@ -163,7 +169,11 @@ func accessKeyCreate(args []string) error {
 	if err != nil {
 		return err
 	}
-	cleartext, res, err := descopeClient.Management.AccessKey().Create(context.Background(), args[0], expireTime, nil, tenants)
+	userID := ""
+	if len(args) > 2 {
+		userID = args[2]
+	}
+	cleartext, res, err := descopeClient.Management.AccessKey().Create(context.Background(), args[0], expireTime, nil, tenants, userID)
 	if err != nil {
 		return err
 	}
@@ -324,15 +334,15 @@ func permissionAll(args []string) error {
 }
 
 func roleCreate(args []string) error {
-	return descopeClient.Management.Role().Create(context.Background(), args[0], flags.Description, flags.Permissions)
+	return descopeClient.Management.Role().Create(context.Background(), args[0], flags.Description, flags.Permissions, "")
 }
 
 func roleUpdate(args []string) error {
-	return descopeClient.Management.Role().Update(context.Background(), args[0], args[1], flags.Description, flags.Permissions)
+	return descopeClient.Management.Role().Update(context.Background(), args[0], "", args[1], flags.Description, flags.Permissions)
 }
 
 func roleDelete(args []string) error {
-	return descopeClient.Management.Role().Delete(context.Background(), args[0])
+	return descopeClient.Management.Role().Delete(context.Background(), args[0], "")
 }
 
 func roleAll(args []string) error {
@@ -629,8 +639,8 @@ func main() {
 		cmd.Args = cobra.ExactArgs(1)
 	})
 
-	addCommand(accessKeyCreate, "access-key-create <name> <expireTime>", "Create a new access key", func(cmd *cobra.Command) {
-		cmd.Args = cobra.ExactArgs(2)
+	addCommand(accessKeyCreate, "access-key-create <name> <expireTime> <userId optional>", "Create a new access key", func(cmd *cobra.Command) {
+		cmd.Args = cobra.RangeArgs(2, 3)
 		cmd.Flags().StringSliceVarP(&flags.Tenants, "tenants", "T", nil, "the ids of the user's tenants")
 	})
 
@@ -730,7 +740,11 @@ func main() {
 		cmd.Args = cobra.ExactArgs(2)
 	})
 
-	addCommand(setUserPassword, "user-set-password <loginId> <password>", "Set user password (The password will be initially set as expired)", func(cmd *cobra.Command) {
+	addCommand(setUserTemporaryPassword, "user-set-temporary-password <loginId> <password>", "Set user password, the password will be initially set as expired", func(cmd *cobra.Command) {
+		cmd.Args = cobra.ExactArgs(2)
+	})
+
+	addCommand(setUserActivePassword, "user-set-active-password <loginId> <password>", "Set user password", func(cmd *cobra.Command) {
 		cmd.Args = cobra.ExactArgs(2)
 	})
 

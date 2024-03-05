@@ -282,13 +282,23 @@ func (to *Token) IsMFA() bool {
 }
 
 type LoginOptions struct {
-	Stepup       bool                   `json:"stepup,omitempty"`
-	MFA          bool                   `json:"mfa,omitempty"`
-	CustomClaims map[string]interface{} `json:"customClaims,omitempty"`
+	Stepup          bool                   `json:"stepup,omitempty"`
+	MFA             bool                   `json:"mfa,omitempty"`
+	CustomClaims    map[string]interface{} `json:"customClaims,omitempty"`
+	TemplateOptions map[string]string      `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 }
 
 func (lo *LoginOptions) IsJWTRequired() bool {
 	return lo != nil && (lo.Stepup || lo.MFA)
+}
+
+type AccessKeyLoginOptions struct {
+	CustomClaims map[string]interface{} `json:"customClaims,omitempty"`
+}
+
+type SignUpOptions struct {
+	CustomClaims    map[string]interface{} `json:"customClaims,omitempty"`
+	TemplateOptions map[string]string      `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 }
 
 type JWTResponse struct {
@@ -375,26 +385,43 @@ type BatchUser struct {
 	UserRequest `json:",inline"`
 }
 
+// Set a cleartext or prehashed password for a new user (only one should be set).
 type BatchUserPassword struct {
 	Cleartext string
 	Hashed    *BatchUserPasswordHashed
 }
 
+// Set the kind of prehashed password for a user (only one should be set).
 type BatchUserPasswordHashed struct {
-	Algorithm  BatchUserPasswordAlgorithm
-	Hash       []byte
-	Salt       []byte
-	Iterations int
+	Bcrypt   *BatchUserPasswordBcrypt   `json:"bcrypt,omitempty"`
+	Firebase *BatchUserPasswordFirebase `json:"firebase,omitempty"`
+	Pbkdf2   *BatchUserPasswordPbkdf2   `json:"pbkdf2,omitempty"`
+	Django   *BatchUserPasswordDjango   `json:"django,omitempty"`
 }
 
-type BatchUserPasswordAlgorithm string
+type BatchUserPasswordBcrypt struct {
+	Hash string `json:"hash"` // the bcrypt hash in plaintext format, for example "$2a$..."
+}
 
-const (
-	BatchUserPasswordAlgorithmBcrypt       BatchUserPasswordAlgorithm = "bcrypt"
-	BatchUserPasswordAlgorithmPBKDF2SHA1   BatchUserPasswordAlgorithm = "pbkdf2sha1"
-	BatchUserPasswordAlgorithmPBKDF2SHA256 BatchUserPasswordAlgorithm = "pbkdf2sha256"
-	BatchUserPasswordAlgorithmPBKDF2SHA512 BatchUserPasswordAlgorithm = "pbkdf2sha512"
-)
+type BatchUserPasswordFirebase struct {
+	Hash          []byte `json:"hash"`          // the hash in raw bytes (base64 strings should be decoded first)
+	Salt          []byte `json:"salt"`          // the salt in raw bytes (base64 strings should be decoded first)
+	SaltSeparator []byte `json:"saltSeparator"` // the salt separator (usually 1 byte long)
+	SignerKey     []byte `json:"signerKey"`     // the signer key (base64 strings should be decoded first)
+	Memory        int    `json:"memory"`        // the memory cost value (usually between 12 to 17)
+	Rounds        int    `json:"rounds"`        // the rounds cost value (usually between 6 to 10)
+}
+
+type BatchUserPasswordPbkdf2 struct {
+	Hash       []byte `json:"hash"`       // the hash in raw bytes (base64 strings should be decoded first)
+	Salt       []byte `json:"salt"`       // the salt in raw bytes (base64 strings should be decoded first)
+	Iterations int    `json:"iterations"` // the iterations cost value (usually in the thousands)
+	Type       string `json:"type"`       // the hash name (sha1, sha256, sha512)
+}
+
+type BatchUserPasswordDjango struct {
+	Hash string `json:"hash"` // the django hash in plaintext format, for example "pbkdf2_sha256$..."
+}
 
 type UserResponse struct {
 	User             `json:",inline"`
@@ -415,6 +442,14 @@ type UserResponse struct {
 	SAML             bool                `json:"saml,omitempty"`
 	OAuth            map[string]bool     `json:"oauth,omitempty"`
 	SSOAppIDs        []string            `json:"ssoAppIds,omitempty"`
+}
+
+type UserHistoryResponse struct {
+	UserID    string `json:"userId,omitempty"`
+	LoginTime int32  `json:"loginTime,omitempty"`
+	City      string `json:"city,omitempty"`
+	Country   string `json:"country,omitempty"`
+	IP        string `json:"ip,omitempty"`
 }
 
 type UsersFailedResponse struct {
@@ -440,8 +475,9 @@ type ProviderTokenResponse struct {
 }
 
 type UpdateOptions struct {
-	AddToLoginIDs      bool `json:"addToLoginIDs,omitempty"`
-	OnMergeUseExisting bool `json:"onMergeUseExisting,omitempty"`
+	AddToLoginIDs      bool              `json:"addToLoginIDs,omitempty"`
+	OnMergeUseExisting bool              `json:"onMergeUseExisting,omitempty"`
+	TemplateOptions    map[string]string `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 }
 
 type AccessKeyResponse struct {
@@ -454,6 +490,7 @@ type AccessKeyResponse struct {
 	ExpireTime  int32               `json:"expireTime,omitempty"`
 	CreatedBy   string              `json:"createdBy,omitempty"`
 	ClientID    string              `json:"clientId,omitempty"`
+	UserID      string              `json:"boundUserId,omitempty"`
 }
 
 // Represents a tenant association for a User or an Access Key. The tenant ID is required
@@ -510,14 +547,18 @@ type TenantSearchOptions struct {
 type TenantSettings struct {
 	Domains                    []string `json:"domains,omitempty"`
 	SelfProvisioningDomains    []string `json:"selfProvisioningDomains,omitempty"`
+	AuthType                   string   `json:"authType,omitempty"`
 	SessionSettingsEnabled     bool     `json:"sessionSettingsEnabled,omitempty"`
 	RefreshTokenExpiration     int32    `json:"refreshTokenExpiration,omitempty"`
 	RefreshTokenExpirationUnit string   `json:"refreshTokenExpirationUnit,omitempty"`
 	SessionTokenExpiration     int32    `json:"sessionTokenExpiration,omitempty"`
 	SessionTokenExpirationUnit string   `json:"sessionTokenExpirationUnit,omitempty"`
+	StepupTokenExpiration      int32    `json:"stepupTokenExpiration,omitempty"`
+	StepupTokenExpirationUnit  string   `json:"stepupTokenExpirationUnit,omitempty"`
 	EnableInactivity           bool     `json:"enableInactivity,omitempty"`
 	InactivityTime             int32    `json:"inactivityTime,omitempty"`
 	InactivityTimeUnit         string   `json:"inactivityTimeUnit,omitempty"`
+	JITDisabled                bool     `json:"JITDisabled,omitempty"`
 }
 
 type SAMLIDPAttributeMappingInfo struct {
@@ -618,6 +659,7 @@ type Role struct {
 	Description     string   `json:"description,omitempty"`
 	PermissionNames []string `json:"permissionNames,omitempty"`
 	CreatedTime     int32    `json:"createdTime,omitempty"`
+	TenantID        string   `json:"tenantId,omitempty"`
 }
 
 func (r *Role) GetCreatedTime() time.Time {
@@ -626,30 +668,34 @@ func (r *Role) GetCreatedTime() time.Time {
 
 // Options for searching and filtering users
 //
-// The TenantIDs parameter is an optional array of tenant IDs to filter by.
-//
-// The roles parameter is an optional array of role names to filter by.
-//
-// The limit parameter limits the number of returned users. Leave at 0 to return the
-// default amount.
-//
-// The page parameter allow to paginate over the results. Pages start at 0 and must non-negative.
-//
-// The customAttributes map is an optional filter for custom attributes
+// Limit - limits the number of returned users. Leave at 0 to return the default amount.
+// Page - allows to paginate over the results. Pages start at 0 and must non-negative.
+// Sort - allows to sort by fields.
+// Text - allows free text search among all user's attributes.
+// TenantIDs - filter by tenant IDs.
+// Roles - filter by role names.
+// CustomAttributes map is an optional filter for custom attributes:
 // where the keys are the attribute names and the values are either a value we are searching for or list of these values in a slice.
 // We currently support string, int and bool values
 type UserSearchOptions struct {
-	TenantIDs        []string
-	Roles            []string
-	Statuses         []UserStatus
-	Limit            int32
 	Page             int32
-	WithTestUsers    bool
-	TestUsersOnly    bool
-	CustomAttributes map[string]any
+	Limit            int32
+	Sort             []UserSearchSort
+	Text             string
 	Emails           []string
 	Phones           []string
+	Statuses         []UserStatus
+	Roles            []string
+	TenantIDs        []string
 	SSOAppIDs        []string
+	CustomAttributes map[string]any
+	WithTestUsers    bool
+	TestUsersOnly    bool
+}
+
+type UserSearchSort struct {
+	Field string
+	Desc  bool
 }
 
 type UserStatus string

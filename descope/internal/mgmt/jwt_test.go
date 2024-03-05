@@ -48,3 +48,45 @@ func TestUpdateJwtHTTPError(t *testing.T) {
 	require.True(t, called)
 	require.Empty(t, jwtRes)
 }
+
+func TestImpersonate(t *testing.T) {
+	impID := "id1"
+	loginID := "id2"
+	expectedJWT := "res"
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.EqualValues(t, impID, req["impersonatorId"])
+		require.EqualValues(t, loginID, req["loginId"])
+		require.EqualValues(t, true, req["validateConsent"])
+
+	}, map[string]interface{}{"jwt": expectedJWT}))
+	jwtRes, err := mgmt.JWT().Impersonate(context.Background(), impID, loginID, true)
+	require.NoError(t, err)
+	require.EqualValues(t, expectedJWT, jwtRes)
+}
+
+func TestImpersonateMissingLoginID(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		called = true
+
+	}))
+	jwtRes, err := mgmt.JWT().Impersonate(context.Background(), "test", "", true)
+	require.Error(t, err)
+	require.False(t, called)
+	require.Empty(t, jwtRes)
+}
+
+func TestImpersonateMissingImpersonator(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		called = true
+
+	}))
+	jwtRes, err := mgmt.JWT().Impersonate(context.Background(), "", "test", true)
+	require.Error(t, err)
+	require.False(t, called)
+	require.Empty(t, jwtRes)
+}

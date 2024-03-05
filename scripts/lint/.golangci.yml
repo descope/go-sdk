@@ -8,12 +8,12 @@ linters-settings:
     # simplify code: gofmt with `-s` option, true by default
     simplify: false
   depguard:
-    # Do not allow package imports
-    list-type: denylist
-    include-go-root: true
+    rules:
+      packages-with-error-message:
+        deny:
+          - pkg: io/ioutil
+            desc: "replaced by io and os packages since Go 1.16: https://tip.golang.org/doc/go1.16#ioutil"
   revive:
-    # minimal confidence for issues, default is 0.8
-    min-confidence: 0.8
     rules:
       - name: defer
         arguments: [["loop", "return"]]

@@ -456,6 +456,7 @@ func TestSSOConfigureOIDCSettingsSuccess(t *testing.T) {
 		AuthURL:     "http://dummy.com",
 		TokenURL:    "http://dummy.com",
 		UserDataURL: "http://dummy.com",
+		RedirectURL: "https://redirect",
 		AttributeMapping: &descope.OIDCAttributeMapping{
 			GivenName: "myGivenName",
 		},
@@ -465,7 +466,6 @@ func TestSSOConfigureOIDCSettingsSuccess(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["tenantId"])
-		require.Equal(t, "https://redirect", req["redirectUrl"])
 
 		domains := req["domains"].([]any)
 		require.Len(t, domains, 1)
@@ -480,20 +480,21 @@ func TestSSOConfigureOIDCSettingsSuccess(t *testing.T) {
 		require.Equal(t, "http://dummy.com", sett["authUrl"])
 		require.Equal(t, "http://dummy.com", sett["tokenUrl"])
 		require.Equal(t, "http://dummy.com", sett["userDataUrl"])
+		require.Equal(t, "https://redirect", sett["redirectUrl"])
 
 		userAttrMappingInt, found := sett["userAttrMapping"]
 		require.True(t, found)
 		userAttrMapping, _ := userAttrMappingInt.(map[string]any)
 		require.Equal(t, "myGivenName", userAttrMapping["givenName"])
 	}))
-	err := mgmt.SSO().ConfigureOIDCSettings(context.Background(), "abc", oidcSettings, "https://redirect", []string{"domain.com"})
+	err := mgmt.SSO().ConfigureOIDCSettings(context.Background(), "abc", oidcSettings, []string{"domain.com"})
 	require.NoError(t, err)
 }
 
 func TestSSOConfigureOIDCSettingsError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.SSO().ConfigureOIDCSettings(context.Background(), "", nil, "", []string{})
+	err := mgmt.SSO().ConfigureOIDCSettings(context.Background(), "", nil, []string{})
 	require.Error(t, err)
-	err = mgmt.SSO().ConfigureOIDCSettings(context.Background(), "abc", nil, "", []string{})
+	err = mgmt.SSO().ConfigureOIDCSettings(context.Background(), "abc", nil, []string{})
 	require.Error(t, err)
 }

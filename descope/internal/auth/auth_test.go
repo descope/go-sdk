@@ -14,6 +14,7 @@ import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
+	"github.com/descope/go-sdk/descope/tests/helpers"
 	"github.com/descope/go-sdk/descope/tests/mocks"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"github.com/stretchr/testify/assert"
@@ -52,7 +53,13 @@ var (
 	mockAuthSessionBody             = fmt.Sprintf(`{"sessionJwt": "%s", "refreshJwt": "%s", "cookiePath": "%s", "cookieDomain": "%s" }`, jwtTokenValid, jwtRTokenValid, "/my-path", "my-domain")
 	mockAuthSessionBodyNoRefreshJwt = fmt.Sprintf(`{"sessionJwt": "%s", "cookiePath": "%s", "cookieDomain": "%s" }`, jwtTokenValid, "/my-path", "my-domain")
 
-	mockUserResponseBody = fmt.Sprintf(`{"name": "%s", "email": "%s", "userId": "%s", "picture": "%s"}`, "kuku name", "kuku@test.com", "kuku", "@(^_^)@")
+	mockUserResponseBody        = fmt.Sprintf(`{"name": "%s", "email": "%s", "userId": "%s", "picture": "%s"}`, "kuku name", "kuku@test.com", "kuku", "@(^_^)@")
+	mockUserHistoryResponseBody = fmt.Sprintf(`[
+		{"city": "%s", "country": "%s", "userId": "%s", "ip": "%s", "loginTime": %d},
+		{"city": "%s", "country": "%s", "userId": "%s", "ip": "%s", "loginTime": %d}
+	]`,
+		"kefar saba", "Israel", "kuku", "1.1.1.1", 32,
+		"eilat", "Israele", "nunu", "1.1.1.2", 23)
 
 	permissions                  = []interface{}{"foo", "bar"}
 	roles                        = []interface{}{"abc", "xyz"}
@@ -851,7 +858,34 @@ func TestExchangeAccessKey(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
 
-	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo")
+	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo", nil)
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.NotNil(t, token)
+}
+
+func TestExchangeAccessKeyWithLoginOptions(t *testing.T) {
+	response := map[string]any{}
+	err := utils.Unmarshal([]byte(mockAuthSessionBody), &response)
+	a, err := newTestAuth(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		rlo, found := req["loginOptions"]
+		require.True(t, found)
+		cc, found := rlo.(map[string]any)["customClaims"]
+		require.True(t, found)
+		customClaims, ok := cc.(map[string]any)
+		require.True(t, ok)
+		d, found := customClaims["k1"]
+		require.True(t, found)
+		require.EqualValues(t, "v1", d)
+	}, response))
+
+	loginOptions := &descope.AccessKeyLoginOptions{
+		CustomClaims: map[string]any{"k1": "v1"},
+	}
+
+	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo", loginOptions)
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.NotNil(t, token)
@@ -861,7 +895,7 @@ func TestExchangeAccessKeyBadRequest(t *testing.T) {
 	a, err := newTestAuth(nil, DoBadRequest(nil))
 	require.NoError(t, err)
 
-	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo")
+	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo", nil)
 	require.ErrorIs(t, err, descope.ErrBadRequest)
 	require.False(t, ok)
 	require.Nil(t, token)
@@ -871,7 +905,7 @@ func TestExchangeAccessKeyEmptyResponse(t *testing.T) {
 	a, err := newTestAuth(nil, DoOkWithBody(nil, ""))
 	require.NoError(t, err)
 
-	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo")
+	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo", nil)
 	require.ErrorIs(t, err, descope.ErrUnexpectedResponse)
 	require.False(t, ok)
 	require.Nil(t, token)
@@ -882,7 +916,7 @@ func TestExchangeAccessKeyInvalidResponse(t *testing.T) {
 	a, err := newTestAuth(nil, DoOkWithBody(nil, expectedResponse))
 	require.NoError(t, err)
 
-	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo")
+	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo", nil)
 	require.ErrorIs(t, err, descope.ErrUnexpectedResponse)
 	require.False(t, ok)
 	require.Nil(t, token)
@@ -1050,6 +1084,74 @@ func TestMeEmptyResponse(t *testing.T) {
 	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
 
 	user, err := a.Me(request)
+	assert.ErrorContains(t, err, "JSON input")
+	assert.Nil(t, user)
+}
+
+func TestHistory(t *testing.T) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockUserHistoryResponseBody))}, nil
+	})
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
+
+	userHistory, err := a.History(request)
+	require.NoError(t, err)
+	require.Len(t, userHistory, 2)
+
+	assert.Equal(t, "kuku", userHistory[0].UserID)
+	assert.Equal(t, "kefar saba", userHistory[0].City)
+	assert.Equal(t, "Israel", userHistory[0].Country)
+	assert.Equal(t, "1.1.1.1", userHistory[0].IP)
+	assert.Equal(t, int32(32), userHistory[0].LoginTime)
+
+	assert.Equal(t, "nunu", userHistory[1].UserID)
+	assert.Equal(t, "eilat", userHistory[1].City)
+	assert.Equal(t, "Israele", userHistory[1].Country)
+	assert.Equal(t, "1.1.1.2", userHistory[1].IP)
+	assert.Equal(t, int32(23), userHistory[1].LoginTime)
+}
+
+func TestHistoryNoRequest(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	user, err := a.History(nil)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Nil(t, user)
+}
+
+func TestHistoryNoToken(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	user, err := a.History(request)
+	assert.ErrorIs(t, err, descope.ErrRefreshToken)
+	assert.ErrorContains(t, err, "Unable to find tokens")
+	assert.Nil(t, user)
+}
+
+func TestHistoryInvalidToken(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenExpired})
+
+	user, err := a.History(request)
+	assert.ErrorIs(t, err, descope.ErrRefreshToken)
+	assert.ErrorContains(t, err, "Invalid refresh token")
+	assert.Nil(t, user)
+}
+
+func TestHistoryEmptyResponse(t *testing.T) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(""))}, nil
+	})
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
+
+	user, err := a.History(request)
 	assert.ErrorContains(t, err, "JSON input")
 	assert.Nil(t, user)
 }

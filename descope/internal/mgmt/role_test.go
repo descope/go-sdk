@@ -19,14 +19,15 @@ func TestRoleCreateSuccess(t *testing.T) {
 		roleNames := req["permissionNames"].([]any)
 		require.Len(t, roleNames, 1)
 		require.Equal(t, "foo", roleNames[0])
+		require.Equal(t, "t1", req["tenantId"])
 	}))
-	err := mgmt.Role().Create(context.Background(), "abc", "description", []string{"foo"})
+	err := mgmt.Role().Create(context.Background(), "abc", "description", []string{"foo"}, "t1")
 	require.NoError(t, err)
 }
 
 func TestRoleCreateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.Role().Create(context.Background(), "", "description", []string{"foo"})
+	err := mgmt.Role().Create(context.Background(), "", "description", []string{"foo"}, "")
 	require.Error(t, err)
 }
 
@@ -41,16 +42,17 @@ func TestRoleUpdateSuccess(t *testing.T) {
 		roleNames := req["permissionNames"].([]any)
 		require.Len(t, roleNames, 1)
 		require.Equal(t, "foo", roleNames[0])
+		require.Equal(t, "t1", req["tenantId"])
 	}))
-	err := mgmt.Role().Update(context.Background(), "abc", "def", "description", []string{"foo"})
+	err := mgmt.Role().Update(context.Background(), "abc", "t1", "def", "description", []string{"foo"})
 	require.NoError(t, err)
 }
 
 func TestRoleUpdateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.Role().Update(context.Background(), "", "def", "description", []string{"foo"})
+	err := mgmt.Role().Update(context.Background(), "", "", "def", "description", []string{"foo"})
 	require.Error(t, err)
-	err = mgmt.Role().Update(context.Background(), "abc", "", "description", []string{"foo"})
+	err = mgmt.Role().Update(context.Background(), "abc", "", "", "description", []string{"foo"})
 	require.Error(t, err)
 }
 
@@ -60,14 +62,15 @@ func TestRoleDeleteSuccess(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["name"])
+		require.Equal(t, "t1", req["tenantId"])
 	}))
-	err := mgmt.Role().Delete(context.Background(), "abc")
+	err := mgmt.Role().Delete(context.Background(), "abc", "t1")
 	require.NoError(t, err)
 }
 
 func TestRoleDeleteError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.Role().Delete(context.Background(), "")
+	err := mgmt.Role().Delete(context.Background(), "", "")
 	require.Error(t, err)
 }
 

@@ -2,6 +2,7 @@ package mgmt
 
 import (
 	"context"
+	"time"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
@@ -274,4 +275,27 @@ func (a *authz) WhatCanTargetAccess(ctx context.Context, target string) ([]*desc
 		return nil, err
 	}
 	return response.Relations, nil
+}
+
+func (a *authz) GetModified(ctx context.Context, since time.Time) (*descope.AuthzModified, error) {
+	body := map[string]any{}
+	if !since.IsZero() {
+		now := time.Now()
+		if since.After(now) || since.Before(now.AddDate(0, 0, -1)) {
+			return nil, utils.NewInvalidArgumentError("since")
+		}
+		body["since"] = since.UnixMilli()
+	}
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzGetModified(), body, nil, a.conf.ManagementKey)
+	if err != nil {
+		// notest
+		return nil, err
+	}
+	var response *descope.AuthzModified
+	err = utils.Unmarshal([]byte(res.BodyStr), &response)
+	if err != nil {
+		// notest
+		return nil, err
+	}
+	return response, nil
 }

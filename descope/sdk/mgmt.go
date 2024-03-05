@@ -2,6 +2,7 @@ package sdk
 
 import (
 	"context"
+	"time"
 
 	"github.com/descope/go-sdk/descope"
 )
@@ -314,10 +315,21 @@ type User interface {
 	// Remove roles from a user in a specific tenant.
 	RemoveTenantRoles(ctx context.Context, loginID string, tenantID string, roles []string) (*descope.UserResponse, error)
 
+	// Set a temporary password for the given login ID.
+	// Note: The password will automatically be set as expired.
+	// The user will not be able to log-in with this password, and will be required to replace it on next login.
+	// See also: ExpirePassword
+	SetTemporaryPassword(ctx context.Context, loginID string, password string) error
+
+	// Set a password for the given login ID.
+	// The password will not be expired on the next login
+	SetActivePassword(ctx context.Context, loginID string, password string) error
+
 	// Set a password for the given login ID.
 	// Note: The password will automatically be set as expired.
 	// The user will not be able to log-in with this password, and will be required to replace it on next login.
 	// See also: ExpirePassword
+	// Deprecated: Use SetTemporaryPassword instead
 	SetPassword(ctx context.Context, loginID string, password string) error
 
 	// Expire the password for the given login ID.
@@ -358,6 +370,10 @@ type User interface {
 	// Generate an embedded link token, later can be used to authenticate via magiclink verify method
 	// or via flow verify step
 	GenerateEmbeddedLink(ctx context.Context, loginID string, customClaims map[string]any) (string, error)
+
+	// Use to retrieve users' authentication history, by the given user's ids.
+	// returns slice of users' authentication history.
+	History(ctx context.Context, userIDs []string) ([]*descope.UserHistoryResponse, error)
 }
 
 // Provides functions for managing access keys in a project.
@@ -375,7 +391,8 @@ type AccessKey interface {
 	// aren't associated with a tenant, while the keyTenants parameter can be used
 	// to specify which tenants to associate the access key with and what roles the
 	// access key has in each one.
-	Create(ctx context.Context, name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant) (string, *descope.AccessKeyResponse, error)
+	// If userID is supplied, then authorization would be ignored, and access key would be bound to the users authorization
+	Create(ctx context.Context, name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string) (string, *descope.AccessKeyResponse, error)
 
 	// Load an existing access key.
 	//
@@ -445,11 +462,10 @@ type SSO interface {
 	//
 	// tenantID, settings are required.
 	//
-	// redirectURL is optional, however if not given it has to be set when starting an SSO authentication via the request.
 	// domains is optional, it is used to map users to this tenant when authenticating via SSO.
 	//
-	// Both optional values will override whatever is currently set even if left empty.
-	ConfigureOIDCSettings(_ context.Context, tenantID string, settings *descope.SSOOIDCSettings, redirectURL string, domains []string) error
+	// Optional value will override whatever is currently set even if left empty.
+	ConfigureOIDCSettings(_ context.Context, tenantID string, settings *descope.SSOOIDCSettings, domains []string) error
 
 	// tenantID is required.
 	DeleteSettings(ctx context.Context, tenantID string) error
@@ -504,6 +520,11 @@ type JWT interface {
 	// Update a valid JWT with the custom claims provided
 	// The new JWT will be returned
 	UpdateJWTWithCustomClaims(ctx context.Context, jwt string, customClaims map[string]any) (string, error)
+
+	// Impersonate to another user
+	// The impersonator user must have `impersonation` permission in order for this request to work
+	// The response would be a refresh JWT of the impersonated user
+	Impersonate(ctx context.Context, impersonatorID string, loginID string, validateConcent bool) (string, error)
 }
 
 // Provides functions for managing permissions in a project.
@@ -544,7 +565,8 @@ type Role interface {
 	// The description parameter is an optional description to briefly explain
 	// what this role allows.
 	// The permissionNames parameter denotes which permissions are included in this role.
-	Create(ctx context.Context, name, description string, permissionNames []string) error
+	// tenantID is an optional field to tie this role to a specific tenant
+	Create(ctx context.Context, name, description string, permissionNames []string, tenantID string) error
 
 	// Update an existing role.
 	//
@@ -554,12 +576,12 @@ type Role interface {
 	//
 	// IMPORTANT: All parameters will override whatever values are currently set
 	// in the existing role. Use carefully.
-	Update(ctx context.Context, name, newName, description string, permissionNames []string) error
+	Update(ctx context.Context, name, tenantID, newName, description string, permissionNames []string) error
 
 	// Delete an existing role.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
-	Delete(ctx context.Context, name string) error
+	Delete(ctx context.Context, name, tenantID string) error
 
 	// Load all roles.
 	LoadAll(ctx context.Context) ([]*descope.Role, error)
@@ -612,21 +634,21 @@ type Flow interface {
 // Provides functions for exporting and importing project settings, flows, styles, etc.
 type Project interface {
 	// Exports all settings and configurations for a project and returns the raw JSON
-	// result as a map.
+	// files response as a map.
 	//
 	// This API is meant to be used via the 'environment' command line tool that can be
 	// found in the '/tools' directory.
-	ExportRaw(ctx context.Context) (map[string]any, error)
+	Export(ctx context.Context) (map[string]any, error)
 
 	// Imports all settings and configurations for a project overriding any current
 	// configuration.
 	//
-	// The input is expected to be a raw JSON map in the same format as the one returned
-	// by calls to ExportRaw.
+	// The input is expected to be a raw JSON map of files in the same format as the one
+	// returned by calls to Export.
 	//
 	// This API is meant to be used via the 'environment' command line tool that can be
 	// found in the '/tools' directory.
-	ImportRaw(ctx context.Context, files map[string]any) error
+	Import(ctx context.Context, files map[string]any) error
 
 	// Update the current project name.
 	UpdateName(ctx context.Context, name string) error
@@ -701,6 +723,10 @@ type Authz interface {
 
 	// WhatCanTargetAccess returns the list of all relations for the given target including derived relations from the schema tree.
 	WhatCanTargetAccess(ctx context.Context, target string) ([]*descope.AuthzRelation, error)
+
+	// GetModified list of targets and resources changed since the given date
+	// Should be used to invalidate local caches
+	GetModified(ctx context.Context, since time.Time) (*descope.AuthzModified, error)
 }
 
 // Provides various APIs for managing a Descope project programmatically. A management key must
