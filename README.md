@@ -1057,7 +1057,18 @@ descopeClient.Management.Role().Delete(context.Background(), newName, tenantID)
 // Load all roles
 res, err := descopeClient.Management.Role().LoadAll(context.Background())
 if err == nil {
-    for _, permission := range res {
+    for _, role := range res {
+        // Do something
+    }
+}
+
+// Search roles
+res, err := descopeClient.Management.Role().Search(context.Background(), &descope.RoleSearchOptions{
+	TenantIDs: []string{"tenant1", "tenant2"},
+	RoleNames: []string{"name1"},
+})
+if err == nil {
+    for _, role := range res {
         // Do something
     }
 }
