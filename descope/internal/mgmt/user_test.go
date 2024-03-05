@@ -129,10 +129,12 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 	u2.Email = "two@two.com"
 	u2.Roles = []string{"two"}
 	u2.Password = &descope.BatchUserPassword{Hashed: &descope.BatchUserPasswordHashed{
-		Algorithm:  descope.BatchUserPasswordAlgorithmPBKDF2SHA256,
-		Hash:       []byte("1"),
-		Salt:       []byte("2"),
-		Iterations: 100,
+		Pbkdf2: &descope.BatchUserPasswordPbkdf2{
+			Hash:       []byte("1"),
+			Salt:       []byte("2"),
+			Iterations: 100,
+			Type:       "sha256",
+		},
 	}}
 
 	users = append(users, u1, u2)
@@ -170,10 +172,12 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 		assert.Nil(t, userRes2["customAttributes"])
 		pass2, _ := userRes2["hashedPassword"].(map[string]any)
 		require.NotNil(t, pass2)
-		require.Equal(t, "pbkdf2sha256", pass2["algorithm"])
-		require.Equal(t, "MQ", pass2["hash"])
-		require.Equal(t, "Mg", pass2["salt"])
-		require.EqualValues(t, 100, pass2["iterations"])
+		pbkdf2, _ := pass2["pbkdf2"].(map[string]any)
+		require.NotNil(t, pbkdf2)
+		require.Equal(t, "MQ==", pbkdf2["hash"])
+		require.Equal(t, "Mg==", pbkdf2["salt"])
+		require.EqualValues(t, 100, pbkdf2["iterations"])
+		require.Equal(t, "sha256", pbkdf2["type"])
 		roleNames = userRes2["roleNames"].([]any)
 		require.Len(t, roleNames, 1)
 		require.Equal(t, u2.Roles[0], roleNames[0])
@@ -539,6 +543,8 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 		require.EqualValues(t, map[string]any{"a": "b"}, req["customAttributes"])
 		require.EqualValues(t, []any{"a@b.com"}, req["emails"])
 		require.EqualValues(t, []any{"+11111111"}, req["phones"])
+		require.EqualValues(t, "blue", req["text"])
+		require.EqualValues(t, []interface{}([]interface{}{map[string]interface{}{"Desc": true, "Field": "nono"}, map[string]interface{}{"Desc": false, "Field": "lolo"}}), req["sort"])
 	}, response))
 	res, err := m.User().SearchAll(context.Background(), &descope.UserSearchOptions{
 		Statuses:         []descope.UserStatus{descope.UserStatusDisabled},
@@ -548,6 +554,11 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 		CustomAttributes: map[string]any{"a": "b"},
 		Emails:           []string{"a@b.com"},
 		Phones:           []string{"+11111111"},
+		Text:             "blue",
+		Sort: []descope.UserSearchSort{
+			{Field: "nono", Desc: true},
+			{Field: "lolo", Desc: false},
+		},
 	})
 	require.NoError(t, err)
 	require.NotNil(t, res)
@@ -1178,6 +1189,62 @@ func TestUserRemoveTenantRoleError(t *testing.T) {
 	require.Nil(t, res)
 }
 
+func TestUserSetTemporaryPasswordSuccess(t *testing.T) {
+	response := map[string]any{}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, "123", req["password"])
+		require.False(t, req["setActive"].(bool))
+	}, response))
+	err := m.User().SetTemporaryPassword(context.Background(), "abc", "123")
+	require.NoError(t, err)
+}
+
+func TestUserSetTemporaryPasswordBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	err := m.User().SetTemporaryPassword(context.Background(), "", "123")
+	require.Error(t, err)
+	err = m.User().SetTemporaryPassword(context.Background(), "abc", "")
+	require.Error(t, err)
+}
+
+func TestUserSetTemporaryPasswordError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	err := m.User().SetTemporaryPassword(context.Background(), "abc", "123")
+	require.Error(t, err)
+}
+
+func TestUserSetActivePasswordSuccess(t *testing.T) {
+	response := map[string]any{}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, "123", req["password"])
+		require.True(t, req["setActive"].(bool))
+	}, response))
+	err := m.User().SetActivePassword(context.Background(), "abc", "123")
+	require.NoError(t, err)
+}
+
+func TestUserSetActivePasswordBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	err := m.User().SetActivePassword(context.Background(), "", "123")
+	require.Error(t, err)
+	err = m.User().SetActivePassword(context.Background(), "abc", "")
+	require.Error(t, err)
+}
+
+func TestUserSetActivePasswordError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	err := m.User().SetActivePassword(context.Background(), "abc", "123")
+	require.Error(t, err)
+}
+
 func TestUserSetPasswordSuccess(t *testing.T) {
 	response := map[string]any{}
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -1186,6 +1253,7 @@ func TestUserSetPasswordSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["loginId"])
 		require.Equal(t, "123", req["password"])
+		require.False(t, req["setActive"].(bool))
 	}, response))
 	err := m.User().SetPassword(context.Background(), "abc", "123")
 	require.NoError(t, err)
@@ -1563,4 +1631,66 @@ func TestUserCreateWithVerifiedPhoneUserSuccess(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
+}
+
+func TestUserHistorySuccess(t *testing.T) {
+	response := []map[string]any{
+		{
+			"userId":    "kuku",
+			"city":      "kefar saba",
+			"country":   "Israel",
+			"ip":        "1.1.1.1",
+			"loginTime": 32,
+		},
+		{
+			"userId":    "nunu",
+			"city":      "eilat",
+			"country":   "Israele",
+			"ip":        "1.1.1.2",
+			"loginTime": 23,
+		},
+	}
+
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := []string{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, []string{"one", "two"}, req)
+	}, response))
+
+	userHistory, err := m.User().History(context.Background(), []string{"one", "two"})
+	require.NoError(t, err)
+	require.NotNil(t, userHistory)
+	require.Len(t, userHistory, 2)
+
+	assert.Equal(t, "kuku", userHistory[0].UserID)
+	assert.Equal(t, "kefar saba", userHistory[0].City)
+	assert.Equal(t, "Israel", userHistory[0].Country)
+	assert.Equal(t, "1.1.1.1", userHistory[0].IP)
+	assert.Equal(t, int32(32), userHistory[0].LoginTime)
+
+	assert.Equal(t, "nunu", userHistory[1].UserID)
+	assert.Equal(t, "eilat", userHistory[1].City)
+	assert.Equal(t, "Israele", userHistory[1].Country)
+	assert.Equal(t, "1.1.1.2", userHistory[1].IP)
+	assert.Equal(t, int32(23), userHistory[1].LoginTime)
+}
+
+func TestHistoryNoUserIDs(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	userHistory, err := m.User().History(context.TODO(), nil)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Nil(t, userHistory)
+}
+
+func TestHistoryFailure(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := []string{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, []string{"one", "two"}, req)
+	}))
+	userHistory, err := m.User().History(context.TODO(), []string{"one", "two"})
+	assert.ErrorIs(t, err, descope.ErrInvalidResponse)
+	assert.Nil(t, userHistory)
 }

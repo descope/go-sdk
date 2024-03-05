@@ -2,6 +2,7 @@ package mocksmgmt
 
 import (
 	"context"
+	"time"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/sdk"
@@ -86,6 +87,10 @@ type MockJWT struct {
 	UpdateJWTWithCustomClaimsAssert   func(jwt string, customClaims map[string]any)
 	UpdateJWTWithCustomClaimsResponse string
 	UpdateJWTWithCustomClaimsError    error
+
+	ImpersonateAssert   func(impersonatorID string, loginID string, validateConcent bool)
+	ImpersonateResponse string
+	ImpersonateError    error
 }
 
 func (m *MockJWT) UpdateJWTWithCustomClaims(_ context.Context, jwt string, customClaims map[string]any) (string, error) {
@@ -93,6 +98,13 @@ func (m *MockJWT) UpdateJWTWithCustomClaims(_ context.Context, jwt string, custo
 		m.UpdateJWTWithCustomClaimsAssert(jwt, customClaims)
 	}
 	return m.UpdateJWTWithCustomClaimsResponse, m.UpdateJWTWithCustomClaimsError
+}
+
+func (m *MockJWT) Impersonate(_ context.Context, impersonatorID string, loginID string, validateConcent bool) (string, error) {
+	if m.ImpersonateAssert != nil {
+		m.ImpersonateAssert(impersonatorID, loginID, validateConcent)
+	}
+	return m.ImpersonateResponse, m.ImpersonateError
 }
 
 // Mock SSO
@@ -108,7 +120,7 @@ type MockSSO struct {
 	ConfigureSAMLSettingsByMetadataAssert func(tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domains []string)
 	ConfigureSAMLSettingsByMetadataError  error
 
-	ConfigureOIDCSettingsAssert func(tenantID string, settings *descope.SSOOIDCSettings, redirectURL string, domains []string) error
+	ConfigureOIDCSettingsAssert func(tenantID string, settings *descope.SSOOIDCSettings, domains []string) error
 	ConfigureOIDCSettingsError  error
 
 	DeleteSettingsAssert func(tenantID string)
@@ -149,9 +161,9 @@ func (m *MockSSO) ConfigureSAMLSettingsByMetadata(_ context.Context, tenantID st
 	return m.ConfigureSAMLSettingsByMetadataError
 }
 
-func (m *MockSSO) ConfigureOIDCSettings(_ context.Context, tenantID string, settings *descope.SSOOIDCSettings, redirectURL string, domains []string) error {
+func (m *MockSSO) ConfigureOIDCSettings(_ context.Context, tenantID string, settings *descope.SSOOIDCSettings, domains []string) error {
 	if m.ConfigureOIDCSettingsAssert != nil {
-		m.ConfigureOIDCSettingsAssert(tenantID, settings, redirectURL, domains)
+		m.ConfigureOIDCSettingsAssert(tenantID, settings, domains)
 	}
 	return m.ConfigureOIDCSettingsError
 }
@@ -341,7 +353,7 @@ type MockUser struct {
 	RemoveTenantRoleResponse *descope.UserResponse
 	RemoveTenantRoleError    error
 
-	SetPasswordAssert func(loginID, password string)
+	SetPasswordAssert func(loginID, password string, setActive bool)
 	SetPasswordError  error
 
 	ExpirePasswordAssert func(loginID string)
@@ -373,6 +385,10 @@ type MockUser struct {
 
 	LogoutAssert func(id string)
 	LogoutError  error
+
+	HistoryAssert   func(userIDs []string)
+	HistoryResponse []*descope.UserHistoryResponse
+	HistoryError    error
 }
 
 func (m *MockUser) Create(_ context.Context, loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
@@ -620,9 +636,24 @@ func (m *MockUser) RemoveTenantRoles(_ context.Context, loginID string, tenantID
 	return m.RemoveTenantRoleResponse, m.RemoveTenantRoleError
 }
 
+func (m *MockUser) SetTemporaryPassword(_ context.Context, loginID string, password string) error {
+	if m.SetPasswordAssert != nil {
+		m.SetPasswordAssert(loginID, password, false)
+	}
+	return m.SetPasswordError
+}
+
+func (m *MockUser) SetActivePassword(_ context.Context, loginID string, password string) error {
+	if m.SetPasswordAssert != nil {
+		m.SetPasswordAssert(loginID, password, true)
+	}
+	return m.SetPasswordError
+}
+
+/* Deprecated */
 func (m *MockUser) SetPassword(_ context.Context, loginID string, password string) error {
 	if m.SetPasswordAssert != nil {
-		m.SetPasswordAssert(loginID, password)
+		m.SetPasswordAssert(loginID, password, false)
 	}
 	return m.SetPasswordError
 }
@@ -676,10 +707,17 @@ func (m *MockUser) GenerateEmbeddedLink(_ context.Context, loginID string, custo
 	return m.GenerateEmbeddedLinkResponse, m.GenerateEmbeddedLinkError
 }
 
+func (m *MockUser) History(_ context.Context, userIDs []string) ([]*descope.UserHistoryResponse, error) {
+	if m.HistoryAssert != nil {
+		m.HistoryAssert(userIDs)
+	}
+	return m.HistoryResponse, m.HistoryError
+}
+
 // Mock Access Key
 
 type MockAccessKey struct {
-	CreateAssert     func(name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant)
+	CreateAssert     func(name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string)
 	CreateResponseFn func() (string, *descope.AccessKeyResponse)
 	CreateError      error
 
@@ -705,9 +743,9 @@ type MockAccessKey struct {
 	DeleteError  error
 }
 
-func (m *MockAccessKey) Create(_ context.Context, name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant) (string, *descope.AccessKeyResponse, error) {
+func (m *MockAccessKey) Create(_ context.Context, name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string) (string, *descope.AccessKeyResponse, error) {
 	if m.CreateAssert != nil {
-		m.CreateAssert(name, expireTime, roles, keyTenants)
+		m.CreateAssert(name, expireTime, roles, keyTenants, userID)
 	}
 	var cleartext string
 	var key *descope.AccessKeyResponse
@@ -964,36 +1002,36 @@ func (m *MockPermission) LoadAll(_ context.Context) ([]*descope.Permission, erro
 // Mock Role
 
 type MockRole struct {
-	CreateAssert func(name, description string, permissionNames []string)
+	CreateAssert func(name, description string, permissionNames []string, tenantID string)
 	CreateError  error
 
-	UpdateAssert func(name, newName, description string, permissionNames []string)
+	UpdateAssert func(name, tenantID, newName, description string, permissionNames []string)
 	UpdateError  error
 
-	DeleteAssert func(name string)
+	DeleteAssert func(name, tenantID string)
 	DeleteError  error
 
 	LoadAllResponse []*descope.Role
 	LoadAllError    error
 }
 
-func (m *MockRole) Create(_ context.Context, name, description string, permissionNames []string) error {
+func (m *MockRole) Create(_ context.Context, name, description string, permissionNames []string, tenantID string) error {
 	if m.CreateAssert != nil {
-		m.CreateAssert(name, description, permissionNames)
+		m.CreateAssert(name, description, permissionNames, tenantID)
 	}
 	return m.CreateError
 }
 
-func (m *MockRole) Update(_ context.Context, name, newName, description string, permissionNames []string) error {
+func (m *MockRole) Update(_ context.Context, name, tenantID string, newName, description string, permissionNames []string) error {
 	if m.UpdateAssert != nil {
-		m.UpdateAssert(name, newName, description, permissionNames)
+		m.UpdateAssert(name, tenantID, newName, description, permissionNames)
 	}
 	return m.UpdateError
 }
 
-func (m *MockRole) Delete(_ context.Context, name string) error {
+func (m *MockRole) Delete(_ context.Context, name, tenantID string) error {
 	if m.DeleteAssert != nil {
-		m.DeleteAssert(name)
+		m.DeleteAssert(name, tenantID)
 	}
 	return m.DeleteError
 }
@@ -1111,11 +1149,11 @@ func (m *MockFlow) ImportTheme(_ context.Context, theme *descope.Theme) (*descop
 // Mock Project
 
 type MockProject struct {
-	ExportRawResponse map[string]any
-	ExportRawError    error
+	ExportResponse map[string]any
+	ExportError    error
 
-	ImportRawAssert func(files map[string]any)
-	ImportRawError  error
+	ImportAssert func(files map[string]any)
+	ImportError  error
 
 	UpdateNameAssert func(name string)
 	UpdateNameError  error
@@ -1128,15 +1166,15 @@ type MockProject struct {
 	DeleteError  error
 }
 
-func (m *MockProject) ExportRaw(_ context.Context) (map[string]any, error) {
-	return m.ExportRawResponse, m.ExportRawError
+func (m *MockProject) Export(_ context.Context) (map[string]any, error) {
+	return m.ExportResponse, m.ExportError
 }
 
-func (m *MockProject) ImportRaw(_ context.Context, files map[string]any) error {
-	if m.ImportRawAssert != nil {
-		m.ImportRawAssert(files)
+func (m *MockProject) Import(_ context.Context, files map[string]any) error {
+	if m.ImportAssert != nil {
+		m.ImportAssert(files)
 	}
-	return m.ExportRawError
+	return m.ExportError
 }
 
 func (m *MockProject) UpdateName(_ context.Context, name string) error {
@@ -1224,6 +1262,10 @@ type MockAuthz struct {
 	WhatCanTargetAccessAssert   func(target string)
 	WhatCanTargetAccessResponse []*descope.AuthzRelation
 	WhatCanTargetAccessError    error
+
+	GetModifiedAssert   func(since time.Time)
+	GetModifiedResponse *descope.AuthzModified
+	GetModifiedError    error
 }
 
 func (m *MockAuthz) SaveSchema(_ context.Context, schema *descope.AuthzSchema, upgrade bool) error {
@@ -1323,4 +1365,11 @@ func (m *MockAuthz) WhatCanTargetAccess(_ context.Context, target string) ([]*de
 		m.WhatCanTargetAccessAssert(target)
 	}
 	return m.WhatCanTargetAccessResponse, m.WhatCanTargetAccessError
+}
+
+func (m *MockAuthz) GetModified(_ context.Context, since time.Time) (*descope.AuthzModified, error) {
+	if m.GetModifiedAssert != nil {
+		m.GetModifiedAssert(since)
+	}
+	return m.GetModifiedResponse, m.GetModifiedError
 }

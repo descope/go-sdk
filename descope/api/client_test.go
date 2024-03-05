@@ -260,9 +260,20 @@ func TestSkipVerifyValue(t *testing.T) {
 	require.False(t, CertificateVerifyAutomatic.SkipVerifyValue("http://example.com"))
 	require.False(t, CertificateVerifyAutomatic.SkipVerifyValue(defaultURL))
 	require.False(t, CertificateVerifyAutomatic.SkipVerifyValue(defaultURL+"/v1/auth"))
+	require.False(t, CertificateVerifyAutomatic.SkipVerifyValue(defaultAPIPrefix+"."+"use1"+defaultDomainName+"/v1/auth"))
 	require.False(t, CertificateVerifyAutomatic.SkipVerifyValue(" http://example.com"))
 	require.True(t, CertificateVerifyAutomatic.SkipVerifyValue("https://localhost"))
 	require.True(t, CertificateVerifyAutomatic.SkipVerifyValue("https://apache/foo"))
 	require.True(t, CertificateVerifyAutomatic.SkipVerifyValue("https://127.0.0.1"))
 	require.True(t, CertificateVerifyAutomatic.SkipVerifyValue("https://example.com:8443"))
+}
+
+func TestBaseURLForProjectID(t *testing.T) {
+	useURL := fmt.Sprintf("%s.use1.%s", defaultAPIPrefix, defaultDomainName)
+	assert.EqualValues(t, defaultURL, baseURLForProjectID("P2aAc4T2V93bddihGEx2Ryhc8e5Z"))
+	assert.EqualValues(t, defaultURL, baseURLForProjectID(""))
+	assert.EqualValues(t, defaultURL, baseURLForProjectID("Puse"))
+	assert.EqualValues(t, defaultURL, baseURLForProjectID("Puse1ar"))
+	assert.EqualValues(t, useURL, baseURLForProjectID("Puse12aAc4T2V93bddihGEx2Ryhc8e5Zfoobar"))
+	assert.EqualValues(t, useURL, baseURLForProjectID("Puse12aAc4T2V93bddihGEx2Ryhc8e5Z"))
 }
