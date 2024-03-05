@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/tests/helpers"
 	"github.com/stretchr/testify/require"
 )
@@ -92,6 +93,39 @@ func TestRoleLoadSuccess(t *testing.T) {
 func TestRoleLoadError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
 	res, err := mgmt.Role().LoadAll(context.Background())
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestRoleSearchSuccess(t *testing.T) {
+	response := map[string]any{
+		"roles": []map[string]any{{
+			"name": "abc",
+		}}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.ElementsMatch(t, []string{"t1"}, req["tenantIds"])
+		require.ElementsMatch(t, []string{"r1"}, req["roleNames"])
+		require.Equal(t, "abc", req["roleNameLike"])
+		require.ElementsMatch(t, []string{"p1"}, req["permissionNames"])
+	}, response))
+	res, err := mgmt.Role().Search(context.Background(), &descope.RoleSearchOptions{
+		TenantIDs:       []string{"t1"},
+		RoleNames:       []string{"r1"},
+		RoleNameLike:    "abc",
+		PermissionNames: []string{"p1"},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Len(t, res, 1)
+	require.Equal(t, "abc", res[0].Name)
+}
+
+func TestRoleSearchError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := mgmt.Role().Search(context.Background(), &descope.RoleSearchOptions{})
 	require.Error(t, err)
 	require.Nil(t, res)
 }

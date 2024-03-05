@@ -666,6 +666,13 @@ func (r *Role) GetCreatedTime() time.Time {
 	return time.Unix(int64(r.CreatedTime), 0)
 }
 
+type RoleSearchOptions struct {
+	TenantIDs       []string `json:"tenantIds,omitempty"`
+	RoleNames       []string `json:"roleNames,omitempty"`
+	RoleNameLike    string   `json:"roleNameLike,omitempty"`
+	PermissionNames []string `json:"permissionNames,omitempty"`
+}
+
 // Options for searching and filtering users
 //
 // Limit - limits the number of returned users. Leave at 0 to return the default amount.

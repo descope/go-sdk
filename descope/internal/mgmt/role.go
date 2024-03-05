@@ -64,6 +64,14 @@ func (r *role) LoadAll(ctx context.Context) ([]*descope.Role, error) {
 	return unmarshalRolesLoadAllResponse(res)
 }
 
+func (r *role) Search(ctx context.Context, options *descope.RoleSearchOptions) ([]*descope.Role, error) {
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleSearch(), options, nil, r.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalRolesLoadAllResponse(res)
+}
+
 func unmarshalRolesLoadAllResponse(res *api.HTTPResponse) ([]*descope.Role, error) {
 	pres := struct {
 		Roles []*descope.Role
