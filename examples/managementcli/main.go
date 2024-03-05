@@ -173,7 +173,7 @@ func accessKeyCreate(args []string) error {
 	if len(args) > 2 {
 		userID = args[2]
 	}
-	cleartext, res, err := descopeClient.Management.AccessKey().Create(context.Background(), args[0], expireTime, nil, tenants, userID)
+	cleartext, res, err := descopeClient.Management.AccessKey().Create(context.Background(), args[0], expireTime, nil, tenants, userID, nil)
 	if err != nil {
 		return err
 	}
