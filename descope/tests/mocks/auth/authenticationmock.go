@@ -63,10 +63,10 @@ type MockMagicLink struct {
 	SignInAssert func(method descope.DeliveryMethod, loginID, URI string, r *http.Request, loginOptions *descope.LoginOptions)
 	SignInError  error
 
-	SignUpAssert func(method descope.DeliveryMethod, loginID, URI string, user *descope.User)
+	SignUpAssert func(method descope.DeliveryMethod, loginID, URI string, user *descope.User, signUpOptions *descope.SignUpOptions)
 	SignUpError  error
 
-	SignUpOrInAssert func(method descope.DeliveryMethod, loginID string, URI string)
+	SignUpOrInAssert func(method descope.DeliveryMethod, loginID string, URI string, signUpOptions *descope.SignUpOptions)
 	SignUpOrInError  error
 
 	VerifyAssert   func(token string, w http.ResponseWriter) (*descope.AuthenticationInfo, error)
@@ -87,16 +87,16 @@ func (m *MockMagicLink) SignIn(_ context.Context, method descope.DeliveryMethod,
 	return "", m.SignInError
 }
 
-func (m *MockMagicLink) SignUp(_ context.Context, method descope.DeliveryMethod, loginID, URI string, user *descope.User) (string, error) {
+func (m *MockMagicLink) SignUp(_ context.Context, method descope.DeliveryMethod, loginID, URI string, user *descope.User, signUpOptions *descope.SignUpOptions) (string, error) {
 	if m.SignUpAssert != nil {
-		m.SignUpAssert(method, loginID, URI, user)
+		m.SignUpAssert(method, loginID, URI, user, signUpOptions)
 	}
 	return "", m.SignUpError
 }
 
-func (m *MockMagicLink) SignUpOrIn(_ context.Context, method descope.DeliveryMethod, loginID string, URI string) (string, error) {
+func (m *MockMagicLink) SignUpOrIn(_ context.Context, method descope.DeliveryMethod, loginID string, URI string, signUpOptions *descope.SignUpOptions) (string, error) {
 	if m.SignUpOrInAssert != nil {
-		m.SignUpOrInAssert(method, loginID, URI)
+		m.SignUpOrInAssert(method, loginID, URI, signUpOptions)
 	}
 	return "", m.SignUpOrInError
 }
@@ -129,11 +129,11 @@ type MockEnchantedLink struct {
 	SignInError    error
 	SignInResponse *descope.EnchantedLinkResponse
 
-	SignUpAssert   func(loginID, URI string, user *descope.User)
+	SignUpAssert   func(loginID, URI string, user *descope.User, signUpOptions *descope.SignUpOptions)
 	SignUpError    error
 	SignUpResponse *descope.EnchantedLinkResponse
 
-	SignUpOrInAssert   func(loginID string, URI string)
+	SignUpOrInAssert   func(loginID string, URI string, signUpOptions *descope.SignUpOptions)
 	SignUpOrInError    error
 	SignUpOrInResponse *descope.EnchantedLinkResponse
 
@@ -156,16 +156,16 @@ func (m *MockEnchantedLink) SignIn(_ context.Context, loginID, URI string, r *ht
 	return m.SignInResponse, m.SignInError
 }
 
-func (m *MockEnchantedLink) SignUp(_ context.Context, loginID, URI string, user *descope.User) (*descope.EnchantedLinkResponse, error) {
+func (m *MockEnchantedLink) SignUp(_ context.Context, loginID, URI string, user *descope.User, signUpOptions *descope.SignUpOptions) (*descope.EnchantedLinkResponse, error) {
 	if m.SignUpAssert != nil {
-		m.SignUpAssert(loginID, URI, user)
+		m.SignUpAssert(loginID, URI, user, signUpOptions)
 	}
 	return m.SignUpResponse, m.SignUpError
 }
 
-func (m *MockEnchantedLink) SignUpOrIn(_ context.Context, loginID string, URI string) (*descope.EnchantedLinkResponse, error) {
+func (m *MockEnchantedLink) SignUpOrIn(_ context.Context, loginID string, URI string, signUpOptions *descope.SignUpOptions) (*descope.EnchantedLinkResponse, error) {
 	if m.SignUpOrInAssert != nil {
-		m.SignUpOrInAssert(loginID, URI)
+		m.SignUpOrInAssert(loginID, URI, signUpOptions)
 	}
 	return m.SignUpOrInResponse, m.SignUpOrInError
 }
@@ -197,10 +197,10 @@ type MockOTP struct {
 	SignInAssert func(method descope.DeliveryMethod, loginID string, r *http.Request, loginOptions *descope.LoginOptions)
 	SignInError  error
 
-	SignUpAssert func(method descope.DeliveryMethod, loginID string, user *descope.User)
+	SignUpAssert func(method descope.DeliveryMethod, loginID string, user *descope.User, signUpOptions *descope.SignUpOptions)
 	SignUpError  error
 
-	SignUpOrInAssert func(method descope.DeliveryMethod, loginID string)
+	SignUpOrInAssert func(method descope.DeliveryMethod, loginID string, signUpOptions *descope.SignUpOptions)
 	SignUpOrInError  error
 
 	VerifyCodeAssert   func(method descope.DeliveryMethod, loginID string, code string, w http.ResponseWriter)
@@ -221,16 +221,16 @@ func (m *MockOTP) SignIn(_ context.Context, method descope.DeliveryMethod, login
 	return "", m.SignInError
 }
 
-func (m *MockOTP) SignUp(_ context.Context, method descope.DeliveryMethod, loginID string, user *descope.User) (string, error) {
+func (m *MockOTP) SignUp(_ context.Context, method descope.DeliveryMethod, loginID string, user *descope.User, signUpOptions *descope.SignUpOptions) (string, error) {
 	if m.SignUpAssert != nil {
-		m.SignUpAssert(method, loginID, user)
+		m.SignUpAssert(method, loginID, user, signUpOptions)
 	}
 	return "", m.SignUpError
 }
 
-func (m *MockOTP) SignUpOrIn(_ context.Context, method descope.DeliveryMethod, loginID string) (string, error) {
+func (m *MockOTP) SignUpOrIn(_ context.Context, method descope.DeliveryMethod, loginID string, signUpOptions *descope.SignUpOptions) (string, error) {
 	if m.SignUpOrInAssert != nil {
-		m.SignUpOrInAssert(method, loginID)
+		m.SignUpOrInAssert(method, loginID, signUpOptions)
 	}
 	return "", m.SignUpOrInError
 }
@@ -304,7 +304,7 @@ type MockPassword struct {
 	SignInError    error
 	SignInResponse *descope.AuthenticationInfo
 
-	ResetAssert func(loginID, redirectURL string)
+	ResetAssert func(loginID, redirectURL string, templateOptions map[string]string)
 	ResetError  error
 
 	UpdateAssert func(loginID, newPassword string, r *http.Request)
@@ -332,9 +332,9 @@ func (m *MockPassword) SignIn(_ context.Context, loginID string, password string
 	return m.SignInResponse, m.SignInError
 }
 
-func (m *MockPassword) SendPasswordReset(_ context.Context, loginID, redirectURL string) error {
+func (m *MockPassword) SendPasswordReset(_ context.Context, loginID, redirectURL string, templateOptions map[string]string) error {
 	if m.ResetAssert != nil {
-		m.ResetAssert(loginID, redirectURL)
+		m.ResetAssert(loginID, redirectURL, templateOptions)
 	}
 	return m.ResetError
 }
@@ -360,20 +360,64 @@ func (m *MockPassword) GetPasswordPolicy(_ context.Context) (*descope.PasswordPo
 // Mock OAuth
 
 type MockOAuth struct {
-	StartAssert   func(provider descope.OAuthProvider, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
+	StartAssert   func(provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
 	StartError    error
 	StartResponse string
+
+	SignUpOrInAssert   func(provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
+	SignUpOrInError    error
+	SignUpOrInResponse string
+
+	SignInAssert   func(provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
+	SignInError    error
+	SignInResponse string
+
+	SignUpAssert   func(provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
+	SignUpError    error
+	SignUpResponse string
+
+	UpdateUserAssert   func(provider descope.OAuthProvider, redirectURL string, allowAllMerge bool, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
+	UpdateUserError    error
+	UpdateUserResponse string
 
 	ExchangeTokenAssert   func(code string, w http.ResponseWriter)
 	ExchangeTokenError    error
 	ExchangeTokenResponse *descope.AuthenticationInfo
 }
 
-func (m *MockOAuth) Start(_ context.Context, provider descope.OAuthProvider, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
+func (m *MockOAuth) Start(_ context.Context, provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
 	if m.StartAssert != nil {
-		m.StartAssert(provider, returnURL, r, loginOptions, w)
+		m.StartAssert(provider, redirectURL, r, loginOptions, w)
 	}
 	return m.StartResponse, m.StartError
+}
+
+func (m *MockOAuth) SignUpOrIn(_ context.Context, provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
+	if m.SignUpOrInAssert != nil {
+		m.SignUpOrInAssert(provider, redirectURL, r, loginOptions, w)
+	}
+	return m.SignUpOrInResponse, m.SignUpOrInError
+}
+
+func (m *MockOAuth) SignIn(_ context.Context, provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
+	if m.SignInAssert != nil {
+		m.SignInAssert(provider, redirectURL, r, loginOptions, w)
+	}
+	return m.SignInResponse, m.SignInError
+}
+
+func (m *MockOAuth) SignUp(_ context.Context, provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
+	if m.SignUpAssert != nil {
+		m.SignUpAssert(provider, redirectURL, r, loginOptions, w)
+	}
+	return m.SignUpResponse, m.SignUpError
+}
+
+func (m *MockOAuth) UpdateUser(_ context.Context, provider descope.OAuthProvider, redirectURL string, allowAllMerge bool, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
+	if m.UpdateUserAssert != nil {
+		m.UpdateUserAssert(provider, redirectURL, allowAllMerge, r, loginOptions, w)
+	}
+	return m.UpdateUserResponse, m.UpdateUserError
 }
 
 func (m *MockOAuth) ExchangeToken(_ context.Context, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
@@ -386,7 +430,7 @@ func (m *MockOAuth) ExchangeToken(_ context.Context, code string, w http.Respons
 // Mock SAML
 
 type MockSAML struct {
-	StartAssert   func(tenant string, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
+	StartAssert   func(tenant string, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
 	StartError    error
 	StartResponse string
 
@@ -395,9 +439,9 @@ type MockSAML struct {
 	ExchangeTokenResponse *descope.AuthenticationInfo
 }
 
-func (m *MockSAML) Start(_ context.Context, tenant string, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (redirectURL string, err error) {
+func (m *MockSAML) Start(_ context.Context, tenant string, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
 	if m.StartAssert != nil {
-		m.StartAssert(tenant, returnURL, r, loginOptions, w)
+		m.StartAssert(tenant, redirectURL, r, loginOptions, w)
 	}
 	return m.StartResponse, m.StartError
 }
@@ -412,7 +456,7 @@ func (m *MockSAML) ExchangeToken(_ context.Context, code string, w http.Response
 // Mock SSO
 
 type MockSSO struct {
-	StartAssert   func(tenant string, returnURL string, prompt string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
+	StartAssert   func(tenant string, redirectURL string, prompt string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
 	StartError    error
 	StartResponse string
 
@@ -421,9 +465,9 @@ type MockSSO struct {
 	ExchangeTokenResponse *descope.AuthenticationInfo
 }
 
-func (m *MockSSO) Start(_ context.Context, tenant string, returnURL string, prompt string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (redirectURL string, err error) {
+func (m *MockSSO) Start(_ context.Context, tenant string, redirectURL string, prompt string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
 	if m.StartAssert != nil {
-		m.StartAssert(tenant, returnURL, prompt, r, loginOptions, w)
+		m.StartAssert(tenant, redirectURL, prompt, r, loginOptions, w)
 	}
 	return m.StartResponse, m.StartError
 }
@@ -546,7 +590,7 @@ type MockSession struct {
 	RefreshSessionResponseArray   []*descope.Token
 	RefreshSessionResponseCounter int
 
-	ExchangeAccessKeyAssert          func(accessKey string)
+	ExchangeAccessKeyAssert          func(accessKey string, loginOptions *descope.AccessKeyLoginOptions)
 	ExchangeAccessKeyError           error
 	ExchangeAccessKeyResponse        *descope.Token
 	ExchangeAccessKeyResponseFailure bool
@@ -592,6 +636,10 @@ type MockSession struct {
 	MeAssert   func(r *http.Request)
 	MeError    error
 	MeResponse *descope.UserResponse
+
+	HistoryAssert   func(r *http.Request)
+	HistoryError    error
+	HistoryResponse []*descope.UserHistoryResponse
 }
 
 func (m *MockSession) ValidateSessionWithRequest(r *http.Request) (bool, *descope.Token, error) {
@@ -665,9 +713,9 @@ func (m *MockSession) ValidateAndRefreshSessionWithTokens(_ context.Context, ses
 	return !m.ValidateAndRefreshSessionTokensResponseFailure, m.ValidateAndRefreshSessionTokensResponse, m.ValidateAndRefreshSessionTokensError
 }
 
-func (m *MockSession) ExchangeAccessKey(_ context.Context, accessKey string) (bool, *descope.Token, error) {
+func (m *MockSession) ExchangeAccessKey(_ context.Context, accessKey string, loginOptions *descope.AccessKeyLoginOptions) (bool, *descope.Token, error) {
 	if m.ExchangeAccessKeyAssert != nil {
-		m.ExchangeAccessKeyAssert(accessKey)
+		m.ExchangeAccessKeyAssert(accessKey, loginOptions)
 	}
 	return !m.ExchangeAccessKeyResponseFailure, m.ExchangeAccessKeyResponse, m.ExchangeAccessKeyError
 }
@@ -765,4 +813,11 @@ func (m *MockSession) Me(r *http.Request) (*descope.UserResponse, error) {
 		m.MeAssert(r)
 	}
 	return m.MeResponse, m.MeError
+}
+
+func (m *MockSession) History(r *http.Request) ([]*descope.UserHistoryResponse, error) {
+	if m.HistoryAssert != nil {
+		m.HistoryAssert(r)
+	}
+	return m.HistoryResponse, m.HistoryError
 }

@@ -22,7 +22,9 @@ import (
 )
 
 const (
-	defaultURL                = "https://api.descope.com"
+	defaultAPIPrefix          = "https://api"
+	defaultDomainName         = "descope.com"
+	defaultURL                = defaultAPIPrefix + "." + defaultDomainName
 	AuthorizationHeaderName   = "Authorization"
 	BearerAuthorizationPrefix = "Bearer "
 	nullString                = "null"
@@ -56,7 +58,10 @@ var (
 			verifyEnchantedLink:          "auth/enchantedlink/verify",
 			getEnchantedLinkSession:      "auth/enchantedlink/pending-session",
 			updateUserEmailEnchantedLink: "auth/enchantedlink/update/email",
-			oauthStart:                   "auth/oauth/authorize",
+			oauthSignUpOrIn:              "auth/oauth/authorize",
+			oauthSignUp:                  "auth/oauth/authorize/signup",
+			oauthSignIn:                  "auth/oauth/authorize/signin",
+			oauthUpdateUser:              "auth/oauth/authorize/update",
 			exchangeTokenOAuth:           "auth/oauth/exchange",
 			samlStart:                    "auth/saml/authorize",
 			exchangeTokenSAML:            "auth/saml/exchange",
@@ -114,6 +119,8 @@ var (
 			userSetSsoApps:                   "mgmt/user/update/ssoapp/set",
 			userRemoveSsoApps:                "mgmt/user/update/ssoapp/remove",
 			userSetPassword:                  "mgmt/user/password/set",
+			userSetTemporaryPassword:         "mgmt/user/password/set/temporary",
+			userSetActivePassword:            "mgmt/user/password/set/active",
 			userExpirePassword:               "mgmt/user/password/expire",
 			userRemoveAllPasskeys:            "mgmt/user/passkeys/delete",
 			userGetProviderToken:             "mgmt/user/provider/token",
@@ -122,6 +129,7 @@ var (
 			userGenerateMagicLinkForTest:     "mgmt/tests/generate/magiclink",
 			userGenerateEnchantedLinkForTest: "mgmt/tests/generate/enchantedlink",
 			userCreateEmbeddedLink:           "mgmt/user/signin/embeddedlink",
+			userHistory:                      "mgmt/user/history",
 			accessKeyCreate:                  "mgmt/accesskey/create",
 			accessKeyLoad:                    "mgmt/accesskey",
 			accessKeySearchAll:               "mgmt/accesskey/search",
@@ -138,6 +146,7 @@ var (
 			ssoMapping:                       "mgmt/sso/mapping",
 			passwordSettings:                 "mgmt/password/settings",
 			updateJWT:                        "mgmt/jwt/update",
+			impersonate:                      "mgmt/impersonate",
 			permissionCreate:                 "mgmt/permission/create",
 			permissionUpdate:                 "mgmt/permission/update",
 			permissionDelete:                 "mgmt/permission/delete",
@@ -176,6 +185,7 @@ var (
 			authzREResource:                  "mgmt/authz/re/resource",
 			authzRETargets:                   "mgmt/authz/re/targets",
 			authzRETargetAll:                 "mgmt/authz/re/targetall",
+			authzGetModified:                 "mgmt/authz/getmodified",
 		},
 		logout:       "auth/logout",
 		logoutAll:    "auth/logoutall",
@@ -183,6 +193,7 @@ var (
 		refresh:      "auth/refresh",
 		selectTenant: "auth/tenant/select",
 		me:           "auth/me",
+		history:      "auth/me/history",
 	}
 )
 
@@ -197,6 +208,7 @@ type endpoints struct {
 	refresh      string
 	selectTenant string
 	me           string
+	history      string
 }
 
 type authEndpoints struct {
@@ -223,7 +235,10 @@ type authEndpoints struct {
 	verifyEnchantedLink          string
 	getEnchantedLinkSession      string
 	updateUserEmailEnchantedLink string
-	oauthStart                   string
+	oauthSignUpOrIn              string
+	oauthSignUp                  string
+	oauthSignIn                  string
+	oauthUpdateUser              string
 	exchangeTokenOAuth           string
 	samlStart                    string
 	ssoStart                     string
@@ -281,6 +296,8 @@ type mgmtEndpoints struct {
 	userSetRole               string
 	userRemoveRole            string
 	userSetPassword           string
+	userSetTemporaryPassword  string
+	userSetActivePassword     string
 	userExpirePassword        string
 	userRemoveAllPasskeys     string
 	userGetProviderToken      string
@@ -293,6 +310,8 @@ type mgmtEndpoints struct {
 	userGenerateMagicLinkForTest     string
 	userGenerateEnchantedLinkForTest string
 	userCreateEmbeddedLink           string
+
+	userHistory string
 
 	accessKeyCreate     string
 	accessKeyLoad       string
@@ -313,6 +332,7 @@ type mgmtEndpoints struct {
 	ssoSAMLSettingsByMetadata string
 	ssoOIDCSettings           string
 	updateJWT                 string
+	impersonate               string
 
 	passwordSettings string
 
@@ -360,56 +380,73 @@ type mgmtEndpoints struct {
 	authzREResource        string
 	authzRETargets         string
 	authzRETargetAll       string
+	authzGetModified       string
 }
 
 func (e *endpoints) SignInOTP() string {
 	return path.Join(e.version, e.auth.signInOTP)
 }
+
 func (e *endpoints) SignUpOTP() string {
 	return path.Join(e.version, e.auth.signUpOTP)
 }
+
 func (e *endpoints) SignUpOrInOTP() string {
 	return path.Join(e.version, e.auth.signUpOrInOTP)
 }
+
 func (e *endpoints) SignUpTOTP() string {
 	return path.Join(e.version, e.auth.signUpTOTP)
 }
+
 func (e *endpoints) UpdateTOTP() string {
 	return path.Join(e.version, e.auth.updateTOTP)
 }
+
 func (e *endpoints) VerifyCode() string {
 	return path.Join(e.version, e.auth.verifyCode)
 }
+
 func (e *endpoints) VerifyTOTPCode() string {
 	return path.Join(e.version, e.auth.verifyTOTPCode)
 }
+
 func (e *endpoints) SignUpPassword() string {
 	return path.Join(e.version, e.auth.signUpPassword)
 }
+
 func (e *endpoints) SignInPassword() string {
 	return path.Join(e.version, e.auth.signInPassword)
 }
+
 func (e *endpoints) SendResetPassword() string {
 	return path.Join(e.version, e.auth.sendResetPassword)
 }
+
 func (e *endpoints) UpdateUserPassword() string {
 	return path.Join(e.version, e.auth.updateUserPassword)
 }
+
 func (e *endpoints) ReplaceUserPassword() string {
 	return path.Join(e.version, e.auth.replaceUserPassword)
 }
+
 func (e *endpoints) PasswordPolicy() string {
 	return path.Join(e.version, e.auth.passwordPolicy)
 }
+
 func (e *endpoints) SignInMagicLink() string {
 	return path.Join(e.version, e.auth.signInMagicLink)
 }
+
 func (e *endpoints) SignUpMagicLink() string {
 	return path.Join(e.version, e.auth.signUpMagicLink)
 }
+
 func (e *endpoints) SignUpOrInMagicLink() string {
 	return path.Join(e.version, e.auth.signUpOrInMagicLink)
 }
+
 func (e *endpoints) VerifyMagicLink() string {
 	return path.Join(e.version, e.auth.verifyMagicLink)
 }
@@ -417,24 +454,43 @@ func (e *endpoints) VerifyMagicLink() string {
 func (e *endpoints) SignInEnchantedLink() string {
 	return path.Join(e.version, e.auth.signInEnchantedLink)
 }
+
 func (e *endpoints) SignUpEnchantedLink() string {
 	return path.Join(e.version, e.auth.signUpEnchantedLink)
 }
+
 func (e *endpoints) SignUpOrInEnchantedLink() string {
 	return path.Join(e.version, e.auth.signUpOrInEnchantedLink)
 }
+
 func (e *endpoints) UpdateUserEmailEnchantedlink() string {
 	return path.Join(e.version, e.auth.updateUserEmailEnchantedLink)
 }
+
 func (e *endpoints) VerifyEnchantedLink() string {
 	return path.Join(e.version, e.auth.verifyEnchantedLink)
 }
+
 func (e *endpoints) GetEnchantedLinkSession() string {
 	return path.Join(e.version, e.auth.getEnchantedLinkSession)
 }
-func (e *endpoints) OAuthStart() string {
-	return path.Join(e.version, e.auth.oauthStart)
+
+func (e *endpoints) OAuthSignUpOrIn() string {
+	return path.Join(e.version, e.auth.oauthSignUpOrIn)
 }
+
+func (e *endpoints) OAuthSignIn() string {
+	return path.Join(e.version, e.auth.oauthSignIn)
+}
+
+func (e *endpoints) OAuthSignUp() string {
+	return path.Join(e.version, e.auth.oauthSignUp)
+}
+
+func (e *endpoints) OAuthUpdateUser() string {
+	return path.Join(e.version, e.auth.oauthUpdateUser)
+}
+
 func (e *endpoints) ExchangeTokenOAuth() string {
 	return path.Join(e.version, e.auth.exchangeTokenOAuth)
 }
@@ -452,45 +508,63 @@ func (e *endpoints) ExchangeTokenSAML() string {
 func (e *endpoints) SSOStart() string {
 	return path.Join(e.version, e.auth.ssoStart)
 }
+
 func (e *endpoints) ExchangeTokenSSO() string {
 	return path.Join(e.version, e.auth.exchangeTokenSSO)
 }
+
 func (e *endpoints) WebAuthnSignUpStart() string {
 	return path.Join(e.version, e.auth.webauthnSignUpStart)
 }
+
 func (e *endpoints) WebAuthnSignUpFinish() string {
 	return path.Join(e.version, e.auth.webauthnSignUpFinish)
 }
+
 func (e *endpoints) WebAuthnSignInStart() string {
 	return path.Join(e.version, e.auth.webauthnSignInStart)
 }
+
 func (e *endpoints) WebAuthnSignInFinish() string {
 	return path.Join(e.version, e.auth.webauthnSignInFinish)
 }
+
 func (e *endpoints) WebAuthnSignUpOrInStart() string {
 	return path.Join(e.version, e.auth.webauthnSignUpOrInStart)
 }
+
 func (e *endpoints) WebAuthnUpdateUserDeviceStart() string {
 	return path.Join(e.version, e.auth.webauthnUpdateStart)
 }
+
 func (e *endpoints) WebAuthnUpdateUserDeviceFinish() string {
 	return path.Join(e.version, e.auth.webauthnUpdateFinish)
 }
+
 func (e *endpoints) Logout() string {
 	return path.Join(e.version, e.logout)
 }
+
 func (e *endpoints) LogoutAll() string {
 	return path.Join(e.version, e.logoutAll)
 }
+
 func (e *endpoints) Me() string {
 	return path.Join(e.version, e.me)
 }
+
+func (e *endpoints) History() string {
+	return path.Join(e.version, e.history)
+}
+
 func (e *endpoints) GetKeys() string {
 	return path.Join(e.versionV2, e.keys)
 }
+
 func (e *endpoints) RefreshToken() string {
 	return path.Join(e.version, e.refresh)
 }
+
 func (e *endpoints) SelectTenant() string {
 	return path.Join(e.version, e.selectTenant)
 }
@@ -663,8 +737,17 @@ func (e *endpoints) ManagementUserRemoveSSOApps() string {
 	return path.Join(e.version, e.mgmt.userRemoveSsoApps)
 }
 
+// Deprecated
 func (e *endpoints) ManagementUserSetPassword() string {
 	return path.Join(e.version, e.mgmt.userSetPassword)
+}
+
+func (e *endpoints) ManagementUserSetTemporaryPassword() string {
+	return path.Join(e.version, e.mgmt.userSetTemporaryPassword)
+}
+
+func (e *endpoints) ManagementUserSetActivePassword() string {
+	return path.Join(e.version, e.mgmt.userSetActivePassword)
 }
 
 func (e *endpoints) ManagementUserExpirePassword() string {
@@ -693,6 +776,10 @@ func (e *endpoints) ManagementUserGenerateMagicLinkForTest() string {
 
 func (e *endpoints) ManagementUserGenerateEnchantedLinkForTest() string {
 	return path.Join(e.version, e.mgmt.userGenerateEnchantedLinkForTest)
+}
+
+func (e *endpoints) ManagementUserHistory() string {
+	return path.Join(e.version, e.mgmt.userHistory)
 }
 
 func (e *endpoints) ManagementAccessKeyCreate() string {
@@ -756,6 +843,10 @@ func (e *endpoints) ManagementPasswordSettings() string {
 
 func (e *endpoints) ManagementUpdateJWT() string {
 	return path.Join(e.version, e.mgmt.updateJWT)
+}
+
+func (e *endpoints) ManagementImpersonate() string {
+	return path.Join(e.version, e.mgmt.impersonate)
 }
 
 func (e *endpoints) ManagementGenerateEmbeddedLink() string {
@@ -914,6 +1005,10 @@ func (e *endpoints) ManagementAuthzRETargetAll() string {
 	return path.Join(e.version, e.mgmt.authzRETargetAll)
 }
 
+func (e *endpoints) ManagementAuthzGetModified() string {
+	return path.Join(e.version, e.mgmt.authzGetModified)
+}
+
 type sdkInfo struct {
 	name      string
 	version   string
@@ -942,6 +1037,7 @@ type ClientParams struct {
 	DefaultClient        IHttpClient
 	CustomDefaultHeaders map[string]string
 	CertificateVerify    CertificateVerifyMode
+	RequestTimeout       time.Duration
 }
 
 type IHttpClient interface {
@@ -969,6 +1065,14 @@ type HTTPRequest struct {
 	Cookies     []*http.Cookie
 }
 
+func baseURLForProjectID(projectID string) string {
+	if len(projectID) >= 32 {
+		region := projectID[1:5]
+		return strings.Join([]string{defaultAPIPrefix, region, defaultDomainName}, ".")
+	}
+	return defaultURL
+}
+
 func NewClient(conf ClientParams) *Client {
 	httpClient := conf.DefaultClient
 	if httpClient == nil {
@@ -986,8 +1090,12 @@ func NewClient(conf ClientParams) *Client {
 			// this will include the tls config
 			rt = http.DefaultTransport
 		}
+		var timeout = time.Second * 60
+		if conf.RequestTimeout != 0 {
+			timeout = conf.RequestTimeout
+		}
 		httpClient = &http.Client{
-			Timeout:   time.Second * 10,
+			Timeout:   timeout,
 			Transport: rt,
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse // notest
@@ -1001,7 +1109,7 @@ func NewClient(conf ClientParams) *Client {
 	}
 
 	if conf.BaseURL == "" {
-		conf.BaseURL = defaultURL
+		conf.BaseURL = baseURLForProjectID(conf.ProjectID)
 	}
 
 	return &Client{

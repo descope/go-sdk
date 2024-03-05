@@ -2,7 +2,6 @@ package mgmt
 
 import (
 	"context"
-	"encoding/base64"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
@@ -61,7 +60,10 @@ func (u *user) create(ctx context.Context, loginID, email, phone, displayName, g
 }
 
 func (u *user) createBatch(ctx context.Context, users []*descope.BatchUser, options *descope.InviteOptions) (*descope.UsersBatchResponse, error) {
-	req := makeCreateUsersBatchRequest(users, options)
+	req, err := makeCreateUsersBatchRequest(users, options)
+	if err != nil {
+		return nil, err
+	}
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserCreateBatch(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -418,6 +420,32 @@ func (u *user) RemoveTenantRoles(ctx context.Context, loginID string, tenantID s
 	return unmarshalUserResponse(res)
 }
 
+func (u *user) SetTemporaryPassword(ctx context.Context, loginID string, password string) error {
+	if loginID == "" {
+		return utils.NewInvalidArgumentError("loginID")
+	}
+	if password == "" {
+		return utils.NewInvalidArgumentError("password")
+	}
+
+	req := makeSetPasswordRequest(loginID, password, false)
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetTemporaryPassword(), req, nil, u.conf.ManagementKey)
+	return err
+}
+func (u *user) SetActivePassword(ctx context.Context, loginID string, password string) error {
+	if loginID == "" {
+		return utils.NewInvalidArgumentError("loginID")
+	}
+	if password == "" {
+		return utils.NewInvalidArgumentError("password")
+	}
+
+	req := makeSetPasswordRequest(loginID, password, true)
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetActivePassword(), req, nil, u.conf.ManagementKey)
+	return err
+}
+
+/* Deprecated */
 func (u *user) SetPassword(ctx context.Context, loginID string, password string) error {
 	if loginID == "" {
 		return utils.NewInvalidArgumentError("loginID")
@@ -426,7 +454,7 @@ func (u *user) SetPassword(ctx context.Context, loginID string, password string)
 		return utils.NewInvalidArgumentError("password")
 	}
 
-	req := makeSetPasswordRequest(loginID, password)
+	req := makeSetPasswordRequest(loginID, password, false)
 	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetPassword(), req, nil, u.conf.ManagementKey)
 	return err
 }
@@ -549,6 +577,22 @@ func (u *user) GenerateEmbeddedLink(ctx context.Context, loginID string, customC
 	return tRes.Token, nil
 }
 
+func (u *user) History(ctx context.Context, userIDs []string) ([]*descope.UserHistoryResponse, error) {
+	if userIDs == nil {
+		return nil, utils.NewInvalidArgumentError("userIDs")
+	}
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserHistory(), userIDs, nil, u.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	tRes := []*descope.UserHistoryResponse{}
+	err = utils.Unmarshal([]byte(res.BodyStr), &tRes)
+	if err != nil {
+		return nil, err //notest
+	}
+	return tRes, nil
+}
+
 func makeCreateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, options *descope.InviteOptions, ssoAppIDs []string) map[string]any {
 	req := makeUpdateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture, roles, tenants, customAttributes, verifiedEmail, verifiedPhone, additionalLoginIDs, ssoAppIDs)
 	req["invite"] = invite
@@ -570,7 +614,7 @@ func makeCreateUserRequest(loginID, email, phone, displayName, givenName, middle
 	return req
 }
 
-func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.InviteOptions) map[string]any {
+func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.InviteOptions) (map[string]any, error) {
 	var usersReq []map[string]any
 	for _, u := range users {
 		user := makeUpdateUserRequest(u.LoginID, u.Email, u.Phone, u.Name, u.GivenName, u.MiddleName, u.FamilyName, u.Picture, u.Roles, u.Tenants, u.CustomAttributes, u.VerifiedEmail, u.VerifiedPhone, u.AdditionalLoginIDs, u.SSOAppIDs)
@@ -579,15 +623,13 @@ func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.In
 				user["password"] = u.Password.Cleartext
 			}
 			if hashed := u.Password.Hashed; hashed != nil {
-				m := map[string]any{
-					"algorithm": hashed.Algorithm,
-					"hash":      base64.RawStdEncoding.EncodeToString(hashed.Hash),
+				b, err := utils.Marshal(hashed)
+				if err != nil {
+					return nil, err
 				}
-				if len(hashed.Salt) > 0 {
-					m["salt"] = base64.RawStdEncoding.EncodeToString(hashed.Salt)
-				}
-				if hashed.Iterations != 0 {
-					m["iterations"] = hashed.Iterations
+				var m map[string]any
+				if err := utils.Unmarshal(b, &m); err != nil {
+					return nil, err
 				}
 				user["hashedPassword"] = m
 			}
@@ -610,7 +652,7 @@ func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.In
 		}
 	}
 
-	return req
+	return req, nil
 }
 
 func makeUpdateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture string, roles []string, tenants []*descope.AssociatedTenant, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, ssoAppIDs []string) map[string]any {
@@ -660,10 +702,11 @@ func makeUpdateUserSSOAppsRequest(loginID string, ssoAppIDs []string) map[string
 	}
 }
 
-func makeSetPasswordRequest(loginID string, password string) map[string]any {
+func makeSetPasswordRequest(loginID string, password string, setActive bool) map[string]any {
 	return map[string]any{
-		"loginId":  loginID,
-		"password": password,
+		"loginId":   loginID,
+		"password":  password,
+		"setActive": setActive,
 	}
 }
 
@@ -673,6 +716,8 @@ func makeSearchAllRequest(options *descope.UserSearchOptions) map[string]any {
 		"roleNames":        options.Roles,
 		"limit":            options.Limit,
 		"page":             options.Page,
+		"sort":             options.Sort,
+		"text":             options.Text,
 		"testUsersOnly":    options.TestUsersOnly,
 		"withTestUser":     options.WithTestUsers,
 		"customAttributes": options.CustomAttributes,

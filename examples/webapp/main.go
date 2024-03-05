@@ -155,7 +155,7 @@ func help(w http.ResponseWriter, r *http.Request) {
 
 func handleSignUp(w http.ResponseWriter, r *http.Request) {
 	method, loginID := getMethodAndLoginID(r)
-	masked, err := descopeClient.Auth.OTP().SignUp(r.Context(), method, loginID, &descope.User{Name: "test"})
+	masked, err := descopeClient.Auth.OTP().SignUp(r.Context(), method, loginID, &descope.User{Name: "test"}, nil)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {
@@ -242,7 +242,7 @@ func handleMagicLinkSignIn(w http.ResponseWriter, r *http.Request) {
 func handleMagicLinkSignUp(w http.ResponseWriter, r *http.Request) {
 	method, loginID := getMethodAndLoginID(r)
 	user := &descope.User{Name: "test"}
-	masked, err := descopeClient.Auth.MagicLink().SignUp(r.Context(), method, loginID, verifyMagicLinkURI, user)
+	masked, err := descopeClient.Auth.MagicLink().SignUp(r.Context(), method, loginID, verifyMagicLinkURI, user, nil)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 		return
@@ -287,7 +287,7 @@ func handleEnchantedLinkSignIn(w http.ResponseWriter, r *http.Request) {
 func handleEnchantedLinkSignUp(w http.ResponseWriter, r *http.Request) {
 	_, loginID := getMethodAndLoginID(r)
 	user := &descope.User{Name: "test"}
-	enchantedRes, err := descopeClient.Auth.EnchantedLink().SignUp(r.Context(), loginID, verifyMagicLinkURI, user)
+	enchantedRes, err := descopeClient.Auth.EnchantedLink().SignUp(r.Context(), loginID, verifyMagicLinkURI, user, nil)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), "", loginID)
 		return
@@ -426,7 +426,7 @@ func handleStepup(w http.ResponseWriter, r *http.Request) {
 
 func handleStepupSignUpInEmail(w http.ResponseWriter, r *http.Request) {
 	method, loginID := getMethodAndLoginID(r)
-	masked, err := descopeClient.Auth.OTP().SignUpOrIn(r.Context(), method, loginID)
+	masked, err := descopeClient.Auth.OTP().SignUpOrIn(r.Context(), method, loginID, nil)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {
@@ -492,7 +492,7 @@ func handleStepupConfUpdateVerify(w http.ResponseWriter, r *http.Request) {
 
 func handleStepupLogin(w http.ResponseWriter, r *http.Request) {
 	method, loginID := getMethodAndLoginID(r)
-	masked, err := descopeClient.Auth.OTP().SignUpOrIn(r.Context(), method, loginID)
+	masked, err := descopeClient.Auth.OTP().SignUpOrIn(r.Context(), method, loginID, nil)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {

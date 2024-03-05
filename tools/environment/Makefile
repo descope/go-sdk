@@ -15,7 +15,7 @@ build: ensure-go ## builds the environment command line tool
 
 install: ensure-go ## installs the environment command line tool to $GOPATH/bin
 	go install .
-	echo The $$'\e[33m'environment$$'\e[0m' has been installed to $$GOPATH/bin
+	echo The $$'\e[33m'environment$$'\e[0m' tool has been installed to $$GOPATH/bin
 
 ensure-go:
 	if ! command -v go &> /dev/null; then \
