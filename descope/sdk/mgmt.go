@@ -587,6 +587,8 @@ type Role interface {
 
 	// Load all roles.
 	LoadAll(ctx context.Context) ([]*descope.Role, error)
+
+	Search(ctx context.Context, options *descope.RoleSearchOptions) ([]*descope.Role, error)
 }
 
 // Provides functions for querying SSO groups in a project's tenant.

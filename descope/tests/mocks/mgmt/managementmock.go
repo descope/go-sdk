@@ -1013,6 +1013,9 @@ type MockRole struct {
 
 	LoadAllResponse []*descope.Role
 	LoadAllError    error
+
+	SearchResponse []*descope.Role
+	SearchError    error
 }
 
 func (m *MockRole) Create(_ context.Context, name, description string, permissionNames []string, tenantID string) error {
@@ -1038,6 +1041,10 @@ func (m *MockRole) Delete(_ context.Context, name, tenantID string) error {
 
 func (m *MockRole) LoadAll(_ context.Context) ([]*descope.Role, error) {
 	return m.LoadAllResponse, m.LoadAllError
+}
+
+func (m *MockRole) Search(_ context.Context, _ *descope.RoleSearchOptions) ([]*descope.Role, error) {
+	return m.SearchResponse, m.SearchError
 }
 
 // Mock Group
