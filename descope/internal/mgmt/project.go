@@ -12,11 +12,6 @@ type project struct {
 	managementBase
 }
 
-type projectBody struct {
-	Files   map[string]any   `json:"files"`
-	Secrets []map[string]any `json:"secrets"`
-}
-
 type updateProjectBody struct {
 	Name string `json:"name"`
 }
@@ -26,40 +21,34 @@ type cloneProjectBody struct {
 	Tag  string `json:"tag"`
 }
 
-type projectValidationResponse struct {
-	Secrets []map[string]any `json:"secrets"`
-}
-
-func (p *project) Export(ctx context.Context) (map[string]any, error) {
+func (p *project) Export(ctx context.Context) (*descope.ExportProjectResponse, error) {
 	body := map[string]any{}
 	res, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectExport(), body, nil, p.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}
-	var export projectBody
+	var export descope.ExportProjectResponse
 	if err := utils.Unmarshal([]byte(res.BodyStr), &export); err != nil {
 		return nil, err // notest
 	}
-	return export.Files, nil
+	return &export, nil
 }
 
-func (p *project) Import(ctx context.Context, files map[string]any, secrets []map[string]any) error {
-	body := projectBody{Files: files, Secrets: secrets}
-	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectImport(), body, nil, p.conf.ManagementKey)
+func (p *project) Import(ctx context.Context, req *descope.ImportProjectRequest) error {
+	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectImport(), req, nil, p.conf.ManagementKey)
 	return err
 }
 
-func (p *project) ValidateImport(ctx context.Context, files map[string]any, secrets []map[string]any) ([]map[string]any, error) {
-	body := projectBody{Files: files, Secrets: secrets}
-	res, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectImportValidate(), body, nil, p.conf.ManagementKey)
+func (p *project) ValidateImport(ctx context.Context, req *descope.ImportProjectRequest) (*descope.ValidateImportProjectResponse, error) {
+	res, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectImportValidate(), req, nil, p.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}
-	var validation projectValidationResponse
+	var validation descope.ValidateImportProjectResponse
 	if err := utils.Unmarshal([]byte(res.BodyStr), &validation); err != nil {
 		return nil, err // notest
 	}
-	return validation.Secrets, nil
+	return &validation, nil
 }
 
 func (p *project) UpdateName(ctx context.Context, name string) error {

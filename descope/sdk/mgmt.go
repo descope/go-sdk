@@ -638,7 +638,7 @@ type Project interface {
 	//
 	// This API is meant to be used via the 'environment' command line tool that can be
 	// found in the '/tools' directory.
-	Export(ctx context.Context) (map[string]any, error)
+	Export(ctx context.Context) (*descope.ExportProjectResponse, error)
 
 	// Imports all settings and configurations for a project overriding any current
 	// configuration.
@@ -648,9 +648,12 @@ type Project interface {
 	//
 	// This API is meant to be used via the 'environment' command line tool that can be
 	// found in the '/tools' directory.
-	Import(ctx context.Context, files map[string]any, secrets []map[string]any) error
+	Import(ctx context.Context, req *descope.ImportProjectRequest) error
 
-	ValidateImport(ctx context.Context, files map[string]any, secrets []map[string]any) ([]map[string]any, error)
+	//
+	//
+	//
+	ValidateImport(ctx context.Context, req *descope.ImportProjectRequest) (*descope.ValidateImportProjectResponse, error)
 
 	// Update the current project name.
 	UpdateName(ctx context.Context, name string) error

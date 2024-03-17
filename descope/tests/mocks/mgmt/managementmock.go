@@ -1149,10 +1149,10 @@ func (m *MockFlow) ImportTheme(_ context.Context, theme *descope.Theme) (*descop
 // Mock Project
 
 type MockProject struct {
-	ExportResponse map[string]any
+	ExportResponse *descope.ExportProjectResponse
 	ExportError    error
 
-	ImportAssert func(files map[string]any)
+	ImportAssert func(req *descope.ImportProjectRequest)
 	ImportError  error
 
 	UpdateNameAssert func(name string)
@@ -1166,18 +1166,18 @@ type MockProject struct {
 	DeleteError  error
 }
 
-func (m *MockProject) Export(_ context.Context) (map[string]any, error) {
+func (m *MockProject) Export(_ context.Context) (*descope.ExportProjectResponse, error) {
 	return m.ExportResponse, m.ExportError
 }
 
-func (m *MockProject) Import(_ context.Context, files map[string]any, _ []map[string]any) error {
+func (m *MockProject) Import(_ context.Context, req *descope.ImportProjectRequest) error {
 	if m.ImportAssert != nil {
-		m.ImportAssert(files)
+		m.ImportAssert(req)
 	}
 	return m.ImportError
 }
 
-func (m *MockProject) ValidateImport(_ context.Context, _ map[string]any, _ []map[string]any) ([]map[string]any, error) {
+func (m *MockProject) ValidateImport(_ context.Context, req *descope.ImportProjectRequest) (*descope.ValidateImportProjectResponse, error) {
 	return nil, m.ImportError
 }
 

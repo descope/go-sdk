@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/tests/helpers"
 	"github.com/stretchr/testify/require"
 )
@@ -18,7 +19,7 @@ func TestProjectExport(t *testing.T) {
 	m, err := mgmt.Project().Export(context.Background())
 	require.NoError(t, err)
 	require.NotNil(t, m)
-	require.Equal(t, "bar", m["foo"])
+	require.Equal(t, "bar", m.Files["foo"])
 }
 
 func TestProjectImport(t *testing.T) {
@@ -30,8 +31,50 @@ func TestProjectImport(t *testing.T) {
 		require.True(t, ok)
 		require.Equal(t, "bar", files["foo"])
 	}))
-	err := mgmt.Project().Import(context.Background(), map[string]any{"foo": "bar"}, nil)
+	req := &descope.ImportProjectRequest{Files: map[string]any{"foo": "bar"}}
+	err := mgmt.Project().Import(context.Background(), req)
 	require.NoError(t, err)
+}
+
+func TestValidateProjectImport(t *testing.T) {
+	resbody := map[string]any{
+		"ok":       false,
+		"failures": []any{"foo"},
+		"secrets": map[string]any{
+			"connectors": []any{map[string]any{"id": "i"}},
+		},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		files, ok := req["files"].(map[string]any)
+		require.True(t, ok)
+		require.Equal(t, "bar", files["foo"])
+		secrets, ok := req["secrets"].(map[string]any)
+		require.True(t, ok)
+		list, ok := secrets["connectors"].([]any)
+		require.True(t, ok)
+		require.Len(t, list, 1)
+		conn, ok := list[0].(map[string]any)
+		require.True(t, ok)
+		require.Equal(t, "i", conn["id"])
+		require.Equal(t, "v", conn["value"])
+	}, resbody))
+	req := &descope.ImportProjectRequest{
+		Files: map[string]any{"foo": "bar"},
+		InputSecrets: &descope.ImportProjectSecrets{
+			Connectors: []*descope.ImportProjectSecret{{ID: "i", Name: "n", Type: "t", Value: "v"}},
+		},
+	}
+	res, err := mgmt.Project().ValidateImport(context.Background(), req)
+	require.NoError(t, err)
+	require.False(t, res.Ok)
+	require.Len(t, res.Failures, 1)
+	require.Equal(t, "foo", res.Failures[0])
+	require.NotNil(t, res.MissingSecrets)
+	require.Len(t, res.MissingSecrets.Connectors, 1)
+	require.Equal(t, "i", res.MissingSecrets.Connectors[0].ID)
 }
 
 func TestProjectUpdateNameSuccess(t *testing.T) {
