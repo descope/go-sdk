@@ -717,7 +717,7 @@ func (m *MockUser) History(_ context.Context, userIDs []string) ([]*descope.User
 // Mock Access Key
 
 type MockAccessKey struct {
-	CreateAssert     func(name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string)
+	CreateAssert     func(name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any)
 	CreateResponseFn func() (string, *descope.AccessKeyResponse)
 	CreateError      error
 
@@ -743,9 +743,9 @@ type MockAccessKey struct {
 	DeleteError  error
 }
 
-func (m *MockAccessKey) Create(_ context.Context, name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string) (string, *descope.AccessKeyResponse, error) {
+func (m *MockAccessKey) Create(_ context.Context, name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any) (string, *descope.AccessKeyResponse, error) {
 	if m.CreateAssert != nil {
-		m.CreateAssert(name, expireTime, roles, keyTenants, userID)
+		m.CreateAssert(name, expireTime, roles, keyTenants, userID, customClaims)
 	}
 	var cleartext string
 	var key *descope.AccessKeyResponse
@@ -1013,6 +1013,9 @@ type MockRole struct {
 
 	LoadAllResponse []*descope.Role
 	LoadAllError    error
+
+	SearchResponse []*descope.Role
+	SearchError    error
 }
 
 func (m *MockRole) Create(_ context.Context, name, description string, permissionNames []string, tenantID string) error {
@@ -1038,6 +1041,10 @@ func (m *MockRole) Delete(_ context.Context, name, tenantID string) error {
 
 func (m *MockRole) LoadAll(_ context.Context) ([]*descope.Role, error) {
 	return m.LoadAllResponse, m.LoadAllError
+}
+
+func (m *MockRole) Search(_ context.Context, _ *descope.RoleSearchOptions) ([]*descope.Role, error) {
+	return m.SearchResponse, m.SearchError
 }
 
 // Mock Group

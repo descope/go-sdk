@@ -860,10 +860,13 @@ You can create, update, delete or load access keys, as well as search according 
 // Roles should be set directly if no tenants exist, otherwise set
 // on a per-tenant basis.
 // If userID is supplied, then authorization would be ignored, and access key would be bound to the users authorization
+// If customClaims is supplied, then those claims will be present in the JWT returned by calls to ExchangeAccessKey.
 res, err := descopeClient.Management.AccessKey().Create(context.Background(), "access-key-1", 0, nil, []*descope.AssociatedTenant{
-    {TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
-    {TenantID: "tenant-ID2"},
-}, "")
+		{TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
+    	{TenantID: "tenant-ID2"},
+    }, 
+	"", 
+    map[string]any{"k1": "v1"})
 
 // Load specific user
 res, err := descopeClient.Management.AccessKey().Load(context.Background(), "access-key-id")
@@ -1054,7 +1057,18 @@ descopeClient.Management.Role().Delete(context.Background(), newName, tenantID)
 // Load all roles
 res, err := descopeClient.Management.Role().LoadAll(context.Background())
 if err == nil {
-    for _, permission := range res {
+    for _, role := range res {
+        // Do something
+    }
+}
+
+// Search roles
+res, err := descopeClient.Management.Role().Search(context.Background(), &descope.RoleSearchOptions{
+	TenantIDs: []string{"tenant1", "tenant2"},
+	RoleNames: []string{"name1"},
+})
+if err == nil {
+    for _, role := range res {
         // Do something
     }
 }

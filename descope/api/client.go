@@ -155,6 +155,7 @@ var (
 			roleUpdate:                       "mgmt/role/update",
 			roleDelete:                       "mgmt/role/delete",
 			roleLoadAll:                      "mgmt/role/all",
+			roleSearch:                       "mgmt/role/search",
 			groupLoadAllGroups:               "mgmt/group/all",
 			groupLoadAllGroupsForMember:      "mgmt/group/member/all",
 			groupLoadAllGroupMembers:         "mgmt/group/members",
@@ -346,6 +347,7 @@ type mgmtEndpoints struct {
 	roleUpdate  string
 	roleDelete  string
 	roleLoadAll string
+	roleSearch  string
 
 	groupLoadAllGroups          string
 	groupLoadAllGroupsForMember string
@@ -885,6 +887,10 @@ func (e *endpoints) ManagementRoleDelete() string {
 
 func (e *endpoints) ManagementRoleLoadAll() string {
 	return path.Join(e.version, e.mgmt.roleLoadAll)
+}
+
+func (e *endpoints) ManagementRoleSearch() string {
+	return path.Join(e.version, e.mgmt.roleSearch)
 }
 
 func (e *endpoints) ManagementGroupLoadAllGroups() string {

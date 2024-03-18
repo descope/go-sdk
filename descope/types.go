@@ -481,16 +481,17 @@ type UpdateOptions struct {
 }
 
 type AccessKeyResponse struct {
-	ID          string              `json:"id,omitempty"`
-	Name        string              `json:"name,omitempty"`
-	RoleNames   []string            `json:"roleNames,omitempty"`
-	KeyTenants  []*AssociatedTenant `json:"keyTenants,omitempty"`
-	Status      string              `json:"status,omitempty"`
-	CreatedTime int32               `json:"createdTime,omitempty"`
-	ExpireTime  int32               `json:"expireTime,omitempty"`
-	CreatedBy   string              `json:"createdBy,omitempty"`
-	ClientID    string              `json:"clientId,omitempty"`
-	UserID      string              `json:"boundUserId,omitempty"`
+	ID           string              `json:"id,omitempty"`
+	Name         string              `json:"name,omitempty"`
+	RoleNames    []string            `json:"roleNames,omitempty"`
+	KeyTenants   []*AssociatedTenant `json:"keyTenants,omitempty"`
+	Status       string              `json:"status,omitempty"`
+	CreatedTime  int32               `json:"createdTime,omitempty"`
+	ExpireTime   int32               `json:"expireTime,omitempty"`
+	CreatedBy    string              `json:"createdBy,omitempty"`
+	ClientID     string              `json:"clientId,omitempty"`
+	UserID       string              `json:"boundUserId,omitempty"`
+	CustomClaims map[string]any      `json:"customClaims,omitempty"`
 }
 
 // Represents a tenant association for a User or an Access Key. The tenant ID is required
@@ -664,6 +665,13 @@ type Role struct {
 
 func (r *Role) GetCreatedTime() time.Time {
 	return time.Unix(int64(r.CreatedTime), 0)
+}
+
+type RoleSearchOptions struct {
+	TenantIDs       []string `json:"tenantIds,omitempty"`
+	RoleNames       []string `json:"roleNames,omitempty"`
+	RoleNameLike    string   `json:"roleNameLike,omitempty"`
+	PermissionNames []string `json:"permissionNames,omitempty"`
 }
 
 // Options for searching and filtering users
