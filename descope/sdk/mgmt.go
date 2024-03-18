@@ -636,8 +636,8 @@ type Project interface {
 	// Exports all settings and configurations for a project and returns the raw JSON
 	// files response as a map.
 	//
-	// This API is meant to be used via the 'environment' command line tool that can be
-	// found in the '/tools' directory.
+	// This API is meant to be used via the 'descopecli' command line tool that can be
+	// found at https://github.com/descope/descopecli
 	Export(ctx context.Context) (*descope.ExportProjectResponse, error)
 
 	// Imports all settings and configurations for a project overriding any current
@@ -646,13 +646,23 @@ type Project interface {
 	// The input is expected to be a raw JSON map of files in the same format as the one
 	// returned by calls to Export.
 	//
-	// This API is meant to be used via the 'environment' command line tool that can be
-	// found in the '/tools' directory.
+	// This API is meant to be used via the 'descopecli' command line tool that can be
+	// found at https://github.com/descope/descopecli
 	Import(ctx context.Context, req *descope.ImportProjectRequest) error
 
+	// Validates project data by performing an import dry run and reporting any validation
+	// failures or missing data. This should be called right before calling Import to
+	// minimize the risk of the import failing midway.
 	//
+	// The response will have `Ok: true` if the validation passed. Otherise, a list of
+	// failures will be provided in the `Failures` field, and any missing secrets will
+	// be listed along with details about which entity requires them.
 	//
+	// Validation can be retried by providing settings values in the `Value` in each
+	// missing secret and passing it as the `InputSecrets` field of the import request.
 	//
+	// This API is meant to be used via the 'descopecli' command line tool that can be
+	// found at https://github.com/descope/descopecli
 	ValidateImport(ctx context.Context, req *descope.ImportProjectRequest) (*descope.ValidateImportProjectResponse, error)
 
 	// Update the current project name.
