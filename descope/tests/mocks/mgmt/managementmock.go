@@ -1162,6 +1162,10 @@ type MockProject struct {
 	ImportAssert func(req *descope.ImportProjectRequest)
 	ImportError  error
 
+	ValidateImportAssert   func(req *descope.ImportProjectRequest)
+	ValidateImportError    error
+	ValidateImportResponse *descope.ValidateImportProjectResponse
+
 	UpdateNameAssert func(name string)
 	UpdateNameError  error
 
@@ -1185,7 +1189,10 @@ func (m *MockProject) Import(_ context.Context, req *descope.ImportProjectReques
 }
 
 func (m *MockProject) ValidateImport(_ context.Context, req *descope.ImportProjectRequest) (*descope.ValidateImportProjectResponse, error) {
-	return nil, m.ImportError
+	if m.ValidateImportAssert != nil {
+		m.ValidateImportAssert(req)
+	}
+	return m.ValidateImportResponse, m.ValidateImportError
 }
 
 func (m *MockProject) UpdateName(_ context.Context, name string) error {
