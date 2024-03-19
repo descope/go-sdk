@@ -40,7 +40,7 @@ func TestValidateProjectImport(t *testing.T) {
 	resbody := map[string]any{
 		"ok":       false,
 		"failures": []any{"foo"},
-		"secrets": map[string]any{
+		"missingSecrets": map[string]any{
 			"connectors": []any{map[string]any{"id": "i"}},
 		},
 	}
@@ -51,7 +51,7 @@ func TestValidateProjectImport(t *testing.T) {
 		files, ok := req["files"].(map[string]any)
 		require.True(t, ok)
 		require.Equal(t, "bar", files["foo"])
-		secrets, ok := req["secrets"].(map[string]any)
+		secrets, ok := req["inputSecrets"].(map[string]any)
 		require.True(t, ok)
 		list, ok := secrets["connectors"].([]any)
 		require.True(t, ok)
