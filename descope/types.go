@@ -823,13 +823,13 @@ type ExportProjectResponse struct {
 
 type ImportProjectRequest struct {
 	Files        map[string]any        `json:"files"`
-	InputSecrets *ImportProjectSecrets `json:"secrets,omitempty"`
+	InputSecrets *ImportProjectSecrets `json:"inputSecrets,omitempty"`
 }
 
 type ValidateImportProjectResponse struct {
 	Ok             bool                  `json:"ok"`
 	Failures       []string              `json:"failures,omitempty"`
-	MissingSecrets *ImportProjectSecrets `json:"secrets,omitempty"`
+	MissingSecrets *ImportProjectSecrets `json:"missingSecrets,omitempty"`
 }
 
 type CloneProjectResponse struct {
