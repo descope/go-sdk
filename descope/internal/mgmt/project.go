@@ -8,10 +8,6 @@ import (
 	"github.com/descope/go-sdk/descope/internal/utils"
 )
 
-type projectBody struct {
-	Files map[string]any `json:"files"`
-}
-
 type project struct {
 	managementBase
 }
@@ -25,23 +21,34 @@ type cloneProjectBody struct {
 	Tag  string `json:"tag"`
 }
 
-func (p *project) Export(ctx context.Context) (map[string]any, error) {
+func (p *project) Export(ctx context.Context) (*descope.ExportProjectResponse, error) {
 	body := map[string]any{}
 	res, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectExport(), body, nil, p.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}
-	var export projectBody
+	var export descope.ExportProjectResponse
 	if err := utils.Unmarshal([]byte(res.BodyStr), &export); err != nil {
 		return nil, err // notest
 	}
-	return export.Files, nil
+	return &export, nil
 }
 
-func (p *project) Import(ctx context.Context, files map[string]any) error {
-	body := projectBody{Files: files}
-	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectImport(), body, nil, p.conf.ManagementKey)
+func (p *project) Import(ctx context.Context, req *descope.ImportProjectRequest) error {
+	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectImport(), req, nil, p.conf.ManagementKey)
 	return err
+}
+
+func (p *project) ValidateImport(ctx context.Context, req *descope.ImportProjectRequest) (*descope.ValidateImportProjectResponse, error) {
+	res, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectImportValidate(), req, nil, p.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	var validation descope.ValidateImportProjectResponse
+	if err := utils.Unmarshal([]byte(res.BodyStr), &validation); err != nil {
+		return nil, err // notest
+	}
+	return &validation, nil
 }
 
 func (p *project) UpdateName(ctx context.Context, name string) error {

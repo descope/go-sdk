@@ -805,6 +805,33 @@ type AuditSearchOptions struct {
 	Text            string    `json:"text"`                      // Free text search across all fields
 }
 
+type ImportProjectSecret struct {
+	ID    string `json:"id"`
+	Name  string `json:"name"`
+	Type  string `json:"type"`
+	Value string `json:"value,omitempty"`
+}
+
+type ImportProjectSecrets struct {
+	Connectors     []*ImportProjectSecret `json:"connectors,omitempty"`
+	OAuthProviders []*ImportProjectSecret `json:"oauthProviders,omitempty"`
+}
+
+type ExportProjectResponse struct {
+	Files map[string]any `json:"files"`
+}
+
+type ImportProjectRequest struct {
+	Files        map[string]any        `json:"files"`
+	InputSecrets *ImportProjectSecrets `json:"secrets,omitempty"`
+}
+
+type ValidateImportProjectResponse struct {
+	Ok             bool                  `json:"ok"`
+	Failures       []string              `json:"failures,omitempty"`
+	MissingSecrets *ImportProjectSecrets `json:"secrets,omitempty"`
+}
+
 type CloneProjectResponse struct {
 	ProjectID   string `json:"projectId"`
 	ProjectName string `json:"projectName"`

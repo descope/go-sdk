@@ -167,6 +167,7 @@ var (
 			themeImport:                      "mgmt/theme/import",
 			projectExport:                    "mgmt/project/export",
 			projectImport:                    "mgmt/project/import",
+			projectImportValidate:            "mgmt/project/import/validate",
 			projectUpdateName:                "mgmt/project/update/name",
 			projectClone:                     "mgmt/project/clone",
 			projectDelete:                    "mgmt/project/delete",
@@ -359,11 +360,12 @@ type mgmtEndpoints struct {
 	themeExport string
 	themeImport string
 
-	projectExport     string
-	projectImport     string
-	projectUpdateName string
-	projectClone      string
-	projectDelete     string
+	projectExport         string
+	projectImport         string
+	projectImportValidate string
+	projectUpdateName     string
+	projectClone          string
+	projectDelete         string
 
 	auditSearch string
 
@@ -933,6 +935,10 @@ func (e *endpoints) ManagementProjectExport() string {
 
 func (e *endpoints) ManagementProjectImport() string {
 	return path.Join(e.version, e.mgmt.projectImport)
+}
+
+func (e *endpoints) ManagementProjectImportValidate() string {
+	return path.Join(e.version, e.mgmt.projectImportValidate)
 }
 
 func (e *endpoints) ManagementProjectUpdateName() string {

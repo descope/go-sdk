@@ -1156,11 +1156,15 @@ func (m *MockFlow) ImportTheme(_ context.Context, theme *descope.Theme) (*descop
 // Mock Project
 
 type MockProject struct {
-	ExportResponse map[string]any
+	ExportResponse *descope.ExportProjectResponse
 	ExportError    error
 
-	ImportAssert func(files map[string]any)
+	ImportAssert func(req *descope.ImportProjectRequest)
 	ImportError  error
+
+	ValidateImportAssert   func(req *descope.ImportProjectRequest)
+	ValidateImportError    error
+	ValidateImportResponse *descope.ValidateImportProjectResponse
 
 	UpdateNameAssert func(name string)
 	UpdateNameError  error
@@ -1173,22 +1177,28 @@ type MockProject struct {
 	DeleteError  error
 }
 
-func (m *MockProject) Export(_ context.Context) (map[string]any, error) {
+func (m *MockProject) Export(_ context.Context) (*descope.ExportProjectResponse, error) {
 	return m.ExportResponse, m.ExportError
 }
 
-func (m *MockProject) Import(_ context.Context, files map[string]any) error {
+func (m *MockProject) Import(_ context.Context, req *descope.ImportProjectRequest) error {
 	if m.ImportAssert != nil {
-		m.ImportAssert(files)
+		m.ImportAssert(req)
 	}
-	return m.ExportError
+	return m.ImportError
+}
+
+func (m *MockProject) ValidateImport(_ context.Context, req *descope.ImportProjectRequest) (*descope.ValidateImportProjectResponse, error) {
+	if m.ValidateImportAssert != nil {
+		m.ValidateImportAssert(req)
+	}
+	return m.ValidateImportResponse, m.ValidateImportError
 }
 
 func (m *MockProject) UpdateName(_ context.Context, name string) error {
 	if m.UpdateNameAssert != nil {
 		m.UpdateNameAssert(name)
 	}
-
 	return m.UpdateNameError
 }
 
