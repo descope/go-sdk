@@ -637,49 +637,63 @@ type Flow interface {
 
 // Provides functions for exporting and importing project settings, flows, styles, etc.
 type Project interface {
-	// Exports all settings and configurations for a project and returns the raw JSON
-	// files response as a map.
-	//
-	// This API is meant to be used via the 'descopecli' command line tool that can be
-	// found at https://github.com/descope/descopecli
-	Export(ctx context.Context) (*descope.ExportProjectResponse, error)
-
-	// Imports all settings and configurations for a project overriding any current
-	// configuration.
-	//
-	// The input is expected to be a raw JSON map of files in the same format as the one
-	// returned by calls to Export.
-	//
-	// This API is meant to be used via the 'descopecli' command line tool that can be
-	// found at https://github.com/descope/descopecli
-	Import(ctx context.Context, req *descope.ImportProjectRequest) error
-
-	// Validates project data by performing an import dry run and reporting any validation
-	// failures or missing data. This should be called right before calling Import to
-	// minimize the risk of the import failing midway.
-	//
-	// The response will have `Ok: true` if the validation passed. Otherise, a list of
-	// failures will be provided in the `Failures` field, and any missing secrets will
-	// be listed along with details about which entity requires them.
-	//
-	// Validation can be retried by providing settings values in the `Value` in each
-	// missing secret and passing it as the `InputSecrets` field of the import request.
-	//
-	// This API is meant to be used via the 'descopecli' command line tool that can be
-	// found at https://github.com/descope/descopecli
-	ValidateImport(ctx context.Context, req *descope.ImportProjectRequest) (*descope.ValidateImportProjectResponse, error)
-
-	// Update the current project name.
-	UpdateName(ctx context.Context, name string) error
-
 	// Clone the current project, including its settings and configurations.
 	// - This action is supported only with a pro license or above.
 	// - Users, tenants and access keys are not cloned.
 	// Returns The new project details (name, id, and tag).
 	Clone(ctx context.Context, name string, tag descope.ProjectTag) (*descope.CloneProjectResponse, error)
 
+	// Update the current project name.
+	UpdateName(ctx context.Context, name string) error
+
 	// Delete the current project.
 	Delete(ctx context.Context) error
+
+	// Exports a snapshot of all the settings and configurations for a project and returns
+	// the raw JSON files response as a map.
+	//
+	// Note: The values for secrets such as tokens and keys are left blank in the snapshot.
+	// When a snapshot is imported into a project, the secrets for entities that already
+	// exist such as connectors or OAuth providers are preserved if the matching values
+	// in the snapshot are left blank. See below for more details.
+	//
+	// This API is meant to be used via the 'descopecli' command line tool that can be
+	// found at https://github.com/descope/descopecli
+	ExportSnapshot(ctx context.Context) (*descope.ExportSnapshotResponse, error)
+
+	// Imports a snapshot of all settings and configurations into a project, overriding any
+	// current configuration.
+	//
+	// The input is expected to be a request with a raw JSON map of files in the same format
+	// as the one returned by calls to ExportSnapshot.
+	//
+	// Note: The values for secrets such as tokens and keys are left blank in exported
+	// snapshots. When a snapshot is imported into a project, the secrets for entities that
+	// already exist such as connectors or OAuth providers are preserved if the matching values
+	// in the snapshot are left blank. However, new entities that need to be created during
+	// the import operation must any required secrets provided in the request, otherwise the
+	// import operation will fail. The ValidateImport method can be used to get a human and
+	// machine readable JSON of missing secrets that be passed to the ImportSnapshot call.
+	//
+	// This API is meant to be used via the 'descopecli' command line tool that can be
+	// found at https://github.com/descope/descopecli
+	ImportSnapshot(ctx context.Context, req *descope.ImportSnapshotRequest) error
+
+	// Validates a snapshot by performing an import dry run and reporting any validation
+	// failures or missing data. This should be called right before ImportSnapshot to
+	// minimize the risk of the import failing.
+	//
+	// The response will have `Ok: true` if the validation passed. Otherise, a list of
+	// failures will be provided in the `Failures` field, and any missing secrets will
+	// be listed along with details about which entity requires them.
+	//
+	// Validation can be retried by set the required cleartext secret values in the
+	// `Value` field of each missing secret and setting this object as the `InputSecrets`
+	// field of the import request.
+	//
+	// This API is meant to be used via the 'descopecli' command line tool that can be
+	// found at https://github.com/descope/descopecli
+	ValidateSnapshot(ctx context.Context, req *descope.ValidateSnapshotRequest) (*descope.ValidateSnapshotResponse, error)
 }
 
 // Provides search project audit trail

@@ -16,7 +16,7 @@ func TestProjectExport(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 	}, map[string]any{"files": map[string]any{"foo": "bar"}}))
-	m, err := mgmt.Project().Export(context.Background())
+	m, err := mgmt.Project().ExportSnapshot(context.Background())
 	require.NoError(t, err)
 	require.NotNil(t, m)
 	require.Equal(t, "bar", m.Files["foo"])
@@ -31,8 +31,8 @@ func TestProjectImport(t *testing.T) {
 		require.True(t, ok)
 		require.Equal(t, "bar", files["foo"])
 	}))
-	req := &descope.ImportProjectRequest{Files: map[string]any{"foo": "bar"}}
-	err := mgmt.Project().Import(context.Background(), req)
+	req := &descope.ImportSnapshotRequest{Files: map[string]any{"foo": "bar"}}
+	err := mgmt.Project().ImportSnapshot(context.Background(), req)
 	require.NoError(t, err)
 }
 
@@ -61,13 +61,13 @@ func TestValidateProjectImport(t *testing.T) {
 		require.Equal(t, "i", conn["id"])
 		require.Equal(t, "v", conn["value"])
 	}, resbody))
-	req := &descope.ImportProjectRequest{
+	req := &descope.ValidateSnapshotRequest{
 		Files: map[string]any{"foo": "bar"},
-		InputSecrets: &descope.ImportProjectSecrets{
-			Connectors: []*descope.ImportProjectSecret{{ID: "i", Name: "n", Type: "t", Value: "v"}},
+		InputSecrets: &descope.SnapshotSecrets{
+			Connectors: []*descope.SnapshotSecret{{ID: "i", Name: "n", Type: "t", Value: "v"}},
 		},
 	}
-	res, err := mgmt.Project().ValidateImport(context.Background(), req)
+	res, err := mgmt.Project().ValidateSnapshot(context.Background(), req)
 	require.NoError(t, err)
 	require.False(t, res.Ok)
 	require.Len(t, res.Failures, 1)

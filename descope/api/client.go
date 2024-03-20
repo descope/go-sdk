@@ -165,12 +165,12 @@ var (
 			flowImport:                       "mgmt/flow/import",
 			themeExport:                      "mgmt/theme/export",
 			themeImport:                      "mgmt/theme/import",
-			projectExport:                    "mgmt/project/export",
-			projectImport:                    "mgmt/project/import",
-			projectImportValidate:            "mgmt/project/import/validate",
-			projectUpdateName:                "mgmt/project/update/name",
 			projectClone:                     "mgmt/project/clone",
+			projectUpdateName:                "mgmt/project/update/name",
 			projectDelete:                    "mgmt/project/delete",
+			projectExportSnapshot:            "mgmt/project/snapshot/export",
+			projectImportSnapshot:            "mgmt/project/snapshot/import",
+			projectValidateSnapshot:          "mgmt/project/snapshot/validate",
 			auditSearch:                      "mgmt/audit/search",
 			authzSchemaSave:                  "mgmt/authz/schema/save",
 			authzSchemaDelete:                "mgmt/authz/schema/delete",
@@ -360,12 +360,12 @@ type mgmtEndpoints struct {
 	themeExport string
 	themeImport string
 
-	projectExport         string
-	projectImport         string
-	projectImportValidate string
-	projectUpdateName     string
-	projectClone          string
-	projectDelete         string
+	projectClone            string
+	projectUpdateName       string
+	projectDelete           string
+	projectExportSnapshot   string
+	projectImportSnapshot   string
+	projectValidateSnapshot string
 
 	auditSearch string
 
@@ -929,28 +929,28 @@ func (e *endpoints) ManagementThemeImport() string {
 	return path.Join(e.version, e.mgmt.themeImport)
 }
 
-func (e *endpoints) ManagementProjectExport() string {
-	return path.Join(e.version, e.mgmt.projectExport)
-}
-
-func (e *endpoints) ManagementProjectImport() string {
-	return path.Join(e.version, e.mgmt.projectImport)
-}
-
-func (e *endpoints) ManagementProjectImportValidate() string {
-	return path.Join(e.version, e.mgmt.projectImportValidate)
+func (e *endpoints) ManagementProjectClone() string {
+	return path.Join(e.version, e.mgmt.projectClone)
 }
 
 func (e *endpoints) ManagementProjectUpdateName() string {
 	return path.Join(e.version, e.mgmt.projectUpdateName)
 }
 
-func (e *endpoints) ManagementProjectClone() string {
-	return path.Join(e.version, e.mgmt.projectClone)
-}
-
 func (e *endpoints) ManagementProjectDelete() string {
 	return path.Join(e.version, e.mgmt.projectDelete)
+}
+
+func (e *endpoints) ManagementProjectExportSnapshot() string {
+	return path.Join(e.version, e.mgmt.projectExportSnapshot)
+}
+
+func (e *endpoints) ManagementProjectImportSnapshot() string {
+	return path.Join(e.version, e.mgmt.projectImportSnapshot)
+}
+
+func (e *endpoints) ManagementProjectValidateSnapshot() string {
+	return path.Join(e.version, e.mgmt.projectValidateSnapshot)
 }
 
 func (e *endpoints) ManagementAuditSearch() string {

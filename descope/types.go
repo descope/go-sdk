@@ -805,31 +805,56 @@ type AuditSearchOptions struct {
 	Text            string    `json:"text"`                      // Free text search across all fields
 }
 
-type ImportProjectSecret struct {
-	ID    string `json:"id"`
-	Name  string `json:"name"`
-	Type  string `json:"type"`
-	Value string `json:"value,omitempty"`
-}
-
-type ImportProjectSecrets struct {
-	Connectors     []*ImportProjectSecret `json:"connectors,omitempty"`
-	OAuthProviders []*ImportProjectSecret `json:"oauthProviders,omitempty"`
-}
-
-type ExportProjectResponse struct {
+type ExportSnapshotResponse struct {
+	// All project settings and configurations represented as JSON files
 	Files map[string]any `json:"files"`
 }
 
-type ImportProjectRequest struct {
-	Files        map[string]any        `json:"files"`
-	InputSecrets *ImportProjectSecrets `json:"inputSecrets,omitempty"`
+type ImportSnapshotRequest struct {
+	// All project settings and configurations represented as JSON files
+	Files map[string]any `json:"files"`
+	// An optional map of project entities and their secrets that will be
+	// injected into the snapshot before import (see below)
+	InputSecrets *SnapshotSecrets `json:"inputSecrets,omitempty"`
 }
 
-type ValidateImportProjectResponse struct {
-	Ok             bool                  `json:"ok"`
-	Failures       []string              `json:"failures,omitempty"`
-	MissingSecrets *ImportProjectSecrets `json:"missingSecrets,omitempty"`
+type ValidateSnapshotRequest struct {
+	// All project settings and configurations represented as JSON files
+	Files map[string]any `json:"files"`
+	// An optional map of project entities and their secrets that will be
+	// injected into the snapshot before validation (see below)
+	InputSecrets *SnapshotSecrets `json:"inputSecrets,omitempty"`
+}
+
+type ValidateSnapshotResponse struct {
+	// Whether the validation passed or not (true if and only if Failures is empty)
+	Ok bool `json:"ok"`
+	// A string representation of any validation failures that were found
+	Failures []string `json:"failures,omitempty"`
+	// An optional object that lists which if any secret values need to be provided in
+	// the request for an ImportSnapshot call so it doesn't fail (see below)
+	MissingSecrets *SnapshotSecrets `json:"missingSecrets,omitempty"`
+}
+
+type SnapshotSecrets struct {
+	// Any missing or input secrets for connectors in a snapshot
+	Connectors []*SnapshotSecret `json:"connectors,omitempty"`
+	// Any missing or input secrets for OAuth providers in a snapshot
+	OAuthProviders []*SnapshotSecret `json:"oauthProviders,omitempty"`
+}
+
+type SnapshotSecret struct {
+	// The id of the project entity that requires this secret
+	ID string `json:"id"`
+	// The name of the project entity that requires this secret
+	Name string `json:"name"`
+	// The type of secret, e.g., "bearertoken", "password"
+	Type string `json:"type"`
+	// The cleartext value of the secret. This value must not be empty when used in
+	// request objects when calling ValidateSnapshot and ImportSnapshot. Conversely,
+	// this value is an empty string when returned in ValidateSnapshotResponse to
+	// signify that this is a missing secret.
+	Value string `json:"value,omitempty"`
 }
 
 type CloneProjectResponse struct {
