@@ -1156,15 +1156,15 @@ func (m *MockFlow) ImportTheme(_ context.Context, theme *descope.Theme) (*descop
 // Mock Project
 
 type MockProject struct {
-	ExportResponse *descope.ExportProjectResponse
-	ExportError    error
+	ExportSnapshotResponse *descope.ExportSnapshotResponse
+	ExportSnapshotError    error
 
-	ImportAssert func(req *descope.ImportProjectRequest)
-	ImportError  error
+	ImportSnapshotAssert func(req *descope.ImportSnapshotRequest)
+	ImportSnapshotError  error
 
-	ValidateImportAssert   func(req *descope.ImportProjectRequest)
-	ValidateImportError    error
-	ValidateImportResponse *descope.ValidateImportProjectResponse
+	ValidateSnapshotAssert   func(req *descope.ValidateSnapshotRequest)
+	ValidateSnapshotError    error
+	ValidateSnapshotResponse *descope.ValidateSnapshotResponse
 
 	UpdateNameAssert func(name string)
 	UpdateNameError  error
@@ -1177,22 +1177,22 @@ type MockProject struct {
 	DeleteError  error
 }
 
-func (m *MockProject) Export(_ context.Context) (*descope.ExportProjectResponse, error) {
-	return m.ExportResponse, m.ExportError
+func (m *MockProject) ExportSnapshot(_ context.Context) (*descope.ExportSnapshotResponse, error) {
+	return m.ExportSnapshotResponse, m.ExportSnapshotError
 }
 
-func (m *MockProject) Import(_ context.Context, req *descope.ImportProjectRequest) error {
-	if m.ImportAssert != nil {
-		m.ImportAssert(req)
+func (m *MockProject) ImportSnapshot(_ context.Context, req *descope.ImportSnapshotRequest) error {
+	if m.ImportSnapshotAssert != nil {
+		m.ImportSnapshotAssert(req)
 	}
-	return m.ImportError
+	return m.ImportSnapshotError
 }
 
-func (m *MockProject) ValidateImport(_ context.Context, req *descope.ImportProjectRequest) (*descope.ValidateImportProjectResponse, error) {
-	if m.ValidateImportAssert != nil {
-		m.ValidateImportAssert(req)
+func (m *MockProject) ValidateSnapshot(_ context.Context, req *descope.ValidateSnapshotRequest) (*descope.ValidateSnapshotResponse, error) {
+	if m.ValidateSnapshotAssert != nil {
+		m.ValidateSnapshotAssert(req)
 	}
-	return m.ValidateImportResponse, m.ValidateImportError
+	return m.ValidateSnapshotResponse, m.ValidateSnapshotError
 }
 
 func (m *MockProject) UpdateName(_ context.Context, name string) error {

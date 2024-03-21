@@ -1383,22 +1383,57 @@ relations, err := descopeClient.Management.Authz().HasRelations(context.Backgrou
 
 ### Manage Project
 
-You can update project name, as well as to clone the current project to a new one:
+You can update a project's name, as well as clone the current project to create a new one:
 
 ```go
-
 // Update project name
-descopeClient.Management.Project().UpdateName(context.Background(), "new-project-name")
+descopeClient.Management.Project().UpdateName(context.Background(), "project-name")
 
 // Clone the current project to a new one
 // Note that this action is supported only with a pro license or above.
 res, err := descopeClient.Management.Project().Clone(context.Background(), "new-project-name", "")
 if err == nil {
-		fmt.Println(cloneRes)
+	fmt.Println(cloneRes)
 }
 
-// Delete the current project. Kindly note that following calls on the `descopeClient` are most likely to fail because the current project has been deleted 
+// Delete the current project. Kindly note that following calls on the `descopeClient` are
+// most likely to fail because the current project has been deleted 
 err := descopeClient.Management.Project().Delete(context.Background())
+```
+
+You can manage your project's settings and configurations by exporting a snapshot.
+
+```go
+// Exports the current state of the project
+exportRes, err := descopeClient.Management.Project().ExportSnapshot(context.Background())
+if err != nil {
+	// unexpected failure
+}
+files := exportRes.Files
+```
+
+You can also import previously exported snapshots into the same project or a different one.
+
+```go
+// Validate that an exported snapshot can be imported into the current project
+validateReq := &descope.ValidateSnapshotRequest{Files: files}
+validateRes, err := descopeClient.Management.Project().ValidateSnapshot(context.Background(), validateReq)
+if err != nil {
+	// unexpected failure
+}
+if !res.Ok {
+	// validation failed, check Failures and MissingSecrets to fix this
+}
+
+// Get additional secrets if validation said we were missing any
+inputSecrets := ...
+
+// Import the previously exported snapshot into the current project
+importReq := &descope.ImportSnapshotRequest{Files: files, InputSecrets: inputSecrets}
+err := descopeClient.Management.Project().ImportSnapshot(context.Background(), importReq)
+if err != nil {
+	// handle import failure
+}
 ```
 
 ### Manage SSO Applications
