@@ -85,6 +85,7 @@ func TestUserCreateSuccessWithOptions(t *testing.T) {
 		require.Nil(t, req["test"])
 		assert.EqualValues(t, ca, req["customAttributes"])
 		assert.EqualValues(t, "https://some.domain.com", req["inviteUrl"])
+		assert.EqualValues(t, map[string]any{"k1": "v1"}, req["templateOptions"])
 		assert.Nil(t, req["sendMail"])
 		assert.Nil(t, req["sendSMS"])
 	}, response))
@@ -93,7 +94,10 @@ func TestUserCreateSuccessWithOptions(t *testing.T) {
 	user.Roles = []string{"foo"}
 	user.CustomAttributes = ca
 
-	res, err := m.User().Invite(context.Background(), "abc", user, &descope.InviteOptions{InviteURL: "https://some.domain.com"})
+	res, err := m.User().Invite(context.Background(), "abc", user, &descope.InviteOptions{
+		InviteURL:       "https://some.domain.com",
+		TemplateOptions: map[string]string{"k1": "v1"},
+	})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
