@@ -728,11 +728,23 @@ userReqInvite.Tenants = []*descope.AssociatedTenant{
 }
 userReqInvite.SSOAppIDs = []string{"appId1", "appId2"}
 // options can be nil, and in this case, value will be taken from project settings page
-options := &descope.InviteOptions{InviteURL: "https://sub.domain.com"}
+options := &descope.InviteOptions{
+	InviteURL: "https://sub.domain.com",
+	// You can inject custom data into the template.
+  	// Note that you first need to configure custom template in Descope Console
+  	// For example: configure {{options_k1}} in the custom template, and pass { k1: 'v1' } as templateOptions
+	TemplatesOptions: map[string]string{"k1": "v1",},
+}
 err := descopeClient.Management.User().Invite(context.Background(), "desmond@descope.com", userReqInvite, options)
 
 // Invite multiple users with InviteBatch
-options := &descope.InviteOptions{InviteURL: "https://sub.domain.com"}
+options := &descope.InviteOptions{
+	InviteURL: "https://sub.domain.com",
+	// You can inject custom data into the template.
+  	// Note that you first need to configure custom template in Descope Console
+  	// For example: configure {{options_k1}} in the custom template, and pass { k1: 'v1' } as templateOptions
+	TemplatesOptions: map[string]string{"k1": "v1",},	
+}
 batchUsers := []*descope.BatchUser{}
 u1 := &descope.BatchUser{}
 u1.LoginID = "one"
