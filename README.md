@@ -62,12 +62,12 @@ These sections show how to use the SDK to perform API management functions. Befo
 7. [Query SSO Groups](#query-sso-groups)
 8. [Manage Flows](#manage-flows)
 9. [Manage JWTs](#manage-jwts)
-9. [Impersonate](#impersonate)
-10. [Search Audit](#search-audit)
-11. [Embedded Links](#embedded-links)
-12. [Manage ReBAC Authz](#manage-rebac-authz)
-13. [Manage Project](#manage-project)
-14. [Manage SSO Applications](#manage-sso-applications)
+10. [Impersonate](#impersonate)
+11. [Search Audit](#search-audit)
+12. [Embedded Links](#embedded-links)
+13. [Manage ReBAC Authz](#manage-rebac-authz)
+14. [Manage Project](#manage-project)
+15. [Manage SSO Applications](#manage-sso-applications)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -162,10 +162,10 @@ displayed when initiating the authentication process.
 
 This method is similar to [Magic Link](#magic-link) but differs in two major ways:
 
-- The user must choose the correct link out of the three, instead of having just one
-  single link.
-- This supports cross-device clicking, meaning the user can try to log in on one device,
-  like a computer, while clicking the link on another device, for instance a mobile phone.
+-   The user must choose the correct link out of the three, instead of having just one
+    single link.
+-   This supports cross-device clicking, meaning the user can try to log in on one device,
+    like a computer, while clicking the link on another device, for instance a mobile phone.
 
 The Enchanted Link will redirect the user to page where the its token needs to be verified.
 This redirection can be configured in code per request, or set globally in the [Descope Console](https://app.descope.com/settings/authentication/enchantedlink).
@@ -247,6 +247,7 @@ if err != nil {
 ```
 
 Users can also connect the social login account to their existing user:
+
 ```go
 // A valid Refresh Token of the existing user is required and will be taken from the request header or cookies automatically.
 // If allowAllMerge is 'true' the users will be merged also if there is no common identifier between the social provider and the existing user (like email).
@@ -272,7 +273,6 @@ if err != nil {
     // handle error
 }
 ```
-
 
 ```go
 //* Deprecated (use Auth.SSO().Start(..) instead) *//
@@ -876,15 +876,15 @@ You can create, update, delete or load access keys, as well as search according 
 res, err := descopeClient.Management.AccessKey().Create(context.Background(), "access-key-1", 0, nil, []*descope.AssociatedTenant{
 		{TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
     	{TenantID: "tenant-ID2"},
-    }, 
-	"", 
+    },
+	"",
     map[string]any{"k1": "v1"})
 
-// Load specific user
+// Load specific access key
 res, err := descopeClient.Management.AccessKey().Load(context.Background(), "access-key-id")
 
-// Search all users, optionally according to tenant and/or role filter
-accessKeysResp = err := descopeClient.Management.AccessKey().SearchAll(context.Background(), []string{"my-tenant-id"})
+// Search all access keys, optionally according to tenant and/or role filter
+accessKeysResp, err := descopeClient.Management.AccessKey().SearchAll(context.Background(), []string{"my-tenant-id"})
 if err == nil {
     for _, accessKey := range accessKeysResp {
         // Do something
@@ -905,13 +905,13 @@ err := descopeClient.Management.AccessKey().Delete(context.Background(), "access
 ```
 
 Exchange the access key and provide optional access key login options:
+
 ```go
 loginOptions := &descope.AccessKeyLoginOptions{
 	CustomClaims: map[string]any{"k1": "v1"},
 }
-ok, token, err := a.ExchangeAccessKey(context.Background(), "accessKey", loginOptions)
+ok, token, err := descopeClient.Auth.ExchangeAccessKey(context.Background(), "accessKey", loginOptions)
 ```
-
 
 ### Manage SSO Setting
 
@@ -1185,6 +1185,7 @@ if err != nil {
 You can impersonate to another user
 The impersonator user must have the `impersonation` permission in order for this request to work.
 The response would be a refresh JWT of the impersonated user
+
 ```go
 refreshJWT, err := descopeClient.Management.JWT().Impersonate(context.Background(), "impersonator id", "login id", true)
 if err != nil {
@@ -1409,7 +1410,7 @@ if err == nil {
 }
 
 // Delete the current project. Kindly note that following calls on the `descopeClient` are
-// most likely to fail because the current project has been deleted 
+// most likely to fail because the current project has been deleted
 err := descopeClient.Management.Project().Delete(context.Background())
 ```
 
@@ -1481,7 +1482,7 @@ appID, err = descopeClient.Management.SSOApplication().CreateSAMLApplication(con
 
 // Update OIDC SSO application
 // Update will override all fields as is. Use carefully.
-err = tc.DescopeClient().Management.SSOApplication().UpdateOIDCApplication(context.TODO(), 
+err = tc.DescopeClient().Management.SSOApplication().UpdateOIDCApplication(context.TODO(),
 	&descope.OIDCApplicationRequest{ID: oidcAppID, Name: "oidcNewAppName"
 })
 
@@ -1525,19 +1526,19 @@ export DESCOPE_PROJECT_ID=<ProjectID>
 
 1. Run this command in your project to build the examples.
 
-   ```bash
-   make build
-   ```
+    ```bash
+    make build
+    ```
 
 2. Run a specific example
 
-   ```bash
-   # Gin web app
-   make run-gin-example
+    ```bash
+    # Gin web app
+    make run-gin-example
 
-   # Gorilla Mux web app
-   make run-example
-   ```
+       # Gorilla Mux web app
+       make run-example
+    ```
 
 ### Using Visual Studio Code
 
@@ -1551,8 +1552,8 @@ Simplify your unit testing by using our mocks package for testing your app witho
 
 Mock usage examples:
 
-- [Authentication](https://github.com/descope/go-sdk/blob/main/descope/tests/mocks/auth/authenticationmock_test.go)
-- [Management](https://github.com/descope/go-sdk/blob/main/descope/tests/mocks/mgmt/managementmock_test.go)
+-   [Authentication](https://github.com/descope/go-sdk/blob/main/descope/tests/mocks/auth/authenticationmock_test.go)
+-   [Management](https://github.com/descope/go-sdk/blob/main/descope/tests/mocks/mgmt/managementmock_test.go)
 
 In the following snippet we mocked the Descope Authentication and Management SDKs, and have assertions to check the actual inputs passed to the SDK:
 
