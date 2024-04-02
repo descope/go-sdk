@@ -120,6 +120,28 @@ func TestSignUpSMS(t *testing.T) {
 	require.EqualValues(t, maskedPhone, mp)
 }
 
+func TestSignUpVoice(t *testing.T) {
+	phone := "943248329844"
+	maskedPhone := "*********44"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeSignUpURL(descope.MethodVoice), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, body["phone"])
+		assert.EqualValues(t, phone, body["loginId"])
+		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
+		resp := MaskedPhoneRes{MaskedPhone: maskedPhone}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	mp, err := a.OTP().SignUp(context.Background(), descope.MethodVoice, phone, &descope.User{Name: "test"}, nil)
+	require.NoError(t, err)
+	require.EqualValues(t, maskedPhone, mp)
+}
+
 func TestSignUpWhatsApp(t *testing.T) {
 	phone := "943248329844"
 	maskedPhone := "*********44"
@@ -172,6 +194,21 @@ func TestSignUpOrInSMS(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestSignUpOrInVoice(t *testing.T) {
+	loginID := "943248329844"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeSignUpOrInURL(descope.MethodVoice), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, loginID, body["loginId"])
+		assert.Nil(t, body["user"])
+	}))
+	require.NoError(t, err)
+	_, err = a.OTP().SignUpOrIn(context.Background(), descope.MethodVoice, loginID, nil)
+	require.NoError(t, err)
+}
+
 func TestSignUpOrInSMSWithSignUpOptions(t *testing.T) {
 	loginID := "943248329844"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
@@ -185,6 +222,25 @@ func TestSignUpOrInSMSWithSignUpOptions(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	_, err = a.OTP().SignUpOrIn(context.Background(), descope.MethodSMS, loginID, &descope.SignUpOptions{
+		CustomClaims:    map[string]interface{}{"aa": "bb"},
+		TemplateOptions: map[string]string{"cc": "dd"},
+	})
+	require.NoError(t, err)
+}
+
+func TestSignUpOrInVoiceWithSignUpOptions(t *testing.T) {
+	loginID := "943248329844"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeSignUpOrInURL(descope.MethodVoice), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, loginID, body["loginId"])
+		assert.Nil(t, body["user"])
+		assert.EqualValues(t, map[string]interface{}{"customClaims": map[string]interface{}{"aa": "bb"}, "templateOptions": map[string]interface{}{"cc": "dd"}}, body["loginOptions"])
+	}))
+	require.NoError(t, err)
+	_, err = a.OTP().SignUpOrIn(context.Background(), descope.MethodVoice, loginID, &descope.SignUpOptions{
 		CustomClaims:    map[string]interface{}{"aa": "bb"},
 		TemplateOptions: map[string]string{"cc": "dd"},
 	})
@@ -348,6 +404,22 @@ func TestVerifyCodeWhatsApp(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	_, err = a.OTP().VerifyCode(context.Background(), descope.MethodWhatsApp, phone, code, nil)
+	require.NoError(t, err)
+}
+
+func TestVerifyCodeVoice(t *testing.T) {
+	phone := "943248329844"
+	code := "4914"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeVerifyCodeURL(descope.MethodVoice), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, body["loginId"])
+		assert.EqualValues(t, code, body["code"])
+	}))
+	require.NoError(t, err)
+	_, err = a.OTP().VerifyCode(context.Background(), descope.MethodVoice, phone, code, nil)
 	require.NoError(t, err)
 }
 
@@ -525,6 +597,46 @@ func TestUpdatePhoneOTP(t *testing.T) {
 	checkOptions := true
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		assert.EqualValues(t, composeUpdateUserPhoneOTP(descope.MethodSMS), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, loginID, body["loginId"])
+		assert.EqualValues(t, phone, body["phone"])
+		if checkOptions {
+			assert.EqualValues(t, true, body["addToLoginIDs"])
+			assert.EqualValues(t, true, body["onMergeUseExisting"])
+		} else {
+			assert.EqualValues(t, nil, body["addToLoginIDs"])
+			assert.EqualValues(t, nil, body["onMergeUseExisting"])
+		}
+
+		u, p := getProjectAndJwt(r)
+		assert.NotEmpty(t, u)
+		assert.NotEmpty(t, p)
+		resp := MaskedPhoneRes{MaskedPhone: maskedPhone}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	mp, err := a.OTP().UpdateUserPhone(context.Background(), descope.MethodSMS, loginID, phone, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true}, r)
+	require.NoError(t, err)
+	require.EqualValues(t, maskedPhone, mp)
+	checkOptions = false
+	mp, err = a.OTP().UpdateUserPhone(context.Background(), descope.MethodSMS, loginID, phone, nil, r)
+	require.NoError(t, err)
+	require.EqualValues(t, maskedPhone, mp)
+}
+
+func TestUpdatePhoneOTPVoice(t *testing.T) {
+	loginID := "943248329844"
+	phone := "+111111111111"
+	maskedPhone := "+*******111"
+	checkOptions := true
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeUpdateUserPhoneOTP(descope.MethodVoice), r.URL.RequestURI())
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)

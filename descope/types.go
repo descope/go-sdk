@@ -875,6 +875,7 @@ type ProjectTag string
 const (
 	MethodWhatsApp DeliveryMethod = "whatsapp"
 	MethodSMS      DeliveryMethod = "sms"
+	MethodVoice    DeliveryMethod = "voice"
 	MethodEmail    DeliveryMethod = "email"
 	MethodEmbedded DeliveryMethod = "Embedded"
 
