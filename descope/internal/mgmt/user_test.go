@@ -1392,6 +1392,39 @@ func TestGenerateOTPForTestUserSuccess(t *testing.T) {
 	assert.EqualValues(t, code, resCode)
 }
 
+func TestGenerateOTPForTestUserSuccessMethodVoice(t *testing.T) {
+	loginID := "some-id"
+	code := "123456"
+	response := map[string]any{
+		"loginId": loginID,
+		"code":    code,
+	}
+	loginOptions := descope.LoginOptions{
+		MFA: true,
+	}
+	visited := false
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		visited = true
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, loginID, req["loginId"])
+		require.Equal(t, string(descope.MethodVoice), req["deliveryMethod"])
+		b, err := utils.Marshal(req["loginOptions"])
+		require.NoError(t, err)
+		var loginOptionsReq descope.LoginOptions
+		err = utils.Unmarshal(b, &loginOptionsReq)
+		require.NoError(t, err)
+		require.Equal(t, loginOptions, loginOptionsReq)
+	}, response))
+
+	resCode, err := m.User().GenerateOTPForTestUser(context.Background(), descope.MethodVoice, loginID, &loginOptions)
+	require.NoError(t, err)
+	require.NotEmpty(t, resCode)
+	require.True(t, visited)
+	assert.EqualValues(t, code, resCode)
+}
+
 func TestGenerateOTPForTestUserNoLoginID(t *testing.T) {
 	loginID := "some-id"
 	code := "123456"

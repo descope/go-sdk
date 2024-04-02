@@ -155,6 +155,8 @@ func TestVerifyDeliveryMethod(t *testing.T) {
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 	err = a.verifyDeliveryMethod(descope.MethodSMS, "abc@notaphone.com", &descope.User{})
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+	err = a.verifyDeliveryMethod(descope.MethodVoice, "abc@notaphone.com", &descope.User{})
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 	err = a.verifyDeliveryMethod(descope.MethodWhatsApp, "abc@notaphone.com", &descope.User{})
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 
@@ -171,12 +173,17 @@ func TestVerifyDeliveryMethod(t *testing.T) {
 	err = a.verifyDeliveryMethod(descope.MethodSMS, "+19999999999", u)
 	assert.Nil(t, err)
 	assert.NotEmpty(t, u.Phone)
+	err = a.verifyDeliveryMethod(descope.MethodVoice, "+19999999999", u)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, u.Phone)
 	err = a.verifyDeliveryMethod(descope.MethodWhatsApp, "+19999999999", u)
 	assert.Nil(t, err)
 	assert.NotEmpty(t, u.Phone)
 
 	u = &descope.User{Phone: "+19999999999"}
 	err = a.verifyDeliveryMethod(descope.MethodSMS, "my username", u)
+	assert.Nil(t, err)
+	err = a.verifyDeliveryMethod(descope.MethodVoice, "my username", u)
 	assert.Nil(t, err)
 	err = a.verifyDeliveryMethod(descope.MethodWhatsApp, "my username", u)
 	assert.Nil(t, err)
