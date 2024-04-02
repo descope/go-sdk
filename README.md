@@ -743,7 +743,7 @@ options := &descope.InviteOptions{
 	// You can inject custom data into the template.
   	// Note that you first need to configure custom template in Descope Console
   	// For example: configure {{options_k1}} in the custom template, and pass { k1: 'v1' } as templateOptions
-	TemplatesOptions: map[string]string{"k1": "v1",},	
+	TemplatesOptions: map[string]string{"k1": "v1",},
 }
 batchUsers := []*descope.BatchUser{}
 u1 := &descope.BatchUser{}
@@ -919,7 +919,7 @@ You can manage SSO (SAML or OIDC) settings for a specific tenant.
 
 ```go
 // Load all tenant SSO settings
-ssoSettings, err := cc.HC.DescopeClient().Management.SSO().LoadSettings(context.Background(), "tenant-id")
+ssoSettings, err := descopeClient.Management.SSO().LoadSettings(context.Background(), "tenant-id")
 
 //* Deprecated (use LoadSettings(..) instead) *//
 ssoSettings, err := descopeClient.Management.SSO().GetSettings(context.Background(), "tenant-id")
@@ -927,15 +927,15 @@ ssoSettings, err := descopeClient.Management.SSO().GetSettings(context.Backgroun
 // Configure tenant SSO by OIDC settings
 
 oidcSettings := &descope.SSOOIDCSettings{..}
-err = cc.HC.DescopeClient().Management.SSO().ConfigureOIDCSettings("tenant-id", oidcSettings, "")
+err = descopeClient.Management.SSO().ConfigureOIDCSettings("tenant-id", oidcSettings, "")
 // OR
-// Load all tenant SSO settings and use them for configure OIDC settings
+// Load all tenant SSO settings and use them to configure OIDC settings
 ssoSettings, err := cc.HC.DescopeClient().Management.SSO().LoadSettings("tenant-id")
 ssoSettings.Oidc.Name = "my prOvider"
 ssoSettings.Oidc.AuthURL = authorizeEndpoint
 ...
 ssoSettings.Oidc.Scope = []string{"openid", "profile", "email"}
-err = cc.HC.DescopeClient().Management.SSO().ConfigureOIDCSettings("tenant-id", ssoSettings.Oidc, "")
+err = descopeClient.Management.SSO().ConfigureOIDCSettings("tenant-id", ssoSettings.Oidc, "")
 
 // Configure tenant SSO by SAML settings
 tenantID := "tenant-id" // Which tenant this configuration is for
@@ -951,7 +951,7 @@ samlSettings := &descope.SSOSAMLSettings{
 	AttributeMapping: &descope.AttributeMapping{Email: "myEmail", ..},
 	RoleMappings: []*RoleMapping{{..}},
 }
-err = cc.HC.DescopeClient().Management.SSO().ConfigureSAMLSettings(context.Background(), tenantID, samlSettings, redirectURL, domain)
+err = descopeClient.Management.SSO().ConfigureSAMLSettings(context.Background(), tenantID, samlSettings, redirectURL, domain)
 
 //* Deprecated (use ConfigureSAMLSettings(..) instead) *//
 err := descopeClient.Management.SSO().ConfigureSettings(context.Background(), tenantID, idpURL, entityID, idpCert, redirectURL, domain)
@@ -962,7 +962,7 @@ samlSettings := &descope.SSOSAMLSettingsByMetadata{
 	AttributeMapping: &descope.AttributeMapping{Email: "myEmail", ..},
 	RoleMappings: []*RoleMapping{{..}},
 }
-err = cc.HC.DescopeClient().Management.SSO().ConfigureSAMLSettingsByMetadata(context.Background(), tenantID, samlSettings, redirectURL, domain)
+err = descopeClient.Management.SSO().ConfigureSAMLSettingsByMetadata(context.Background(), tenantID, samlSettings, redirectURL, domain)
 
 //* Deprecated (use ConfigureSAMLSettingsByMetadata(..) instead) *//
 err := descopeClient.Management.SSO().ConfigureMetadata(tenantID, "https://idp.com/my-idp-metadata", redirectURL, domain)
@@ -996,12 +996,12 @@ Certifcate contents
 You can manage password settings for tenants and projects.
 
 ```go
-// You can get password settings for a specific tenant ID. Tenant ID is required.
+// You can get password settings for the project or for a specific tenant ID.
 settings, err := descopeClient.Management.Password().GetSettings(context.Background(), "tenant-id")
 
-// You can configure password settings by setting the required fields directly and provide the tenant ID to update.
-tenantID := "tenant-id" // Which tenant this configuration is for
-settingsToUpdate := &descope.PasswordSettings{
+// You can configure the project level or tenant level password settings. The update is performed as-is
+// in an overriding manner - use carefully.
+updatedSettings := &descope.PasswordSettings{
     Enabled:               true,
     MinLength:             8,
     Lowercase:             true,
@@ -1015,7 +1015,7 @@ settingsToUpdate := &descope.PasswordSettings{
     Lock:                  true,
     LockAttempts:          5,
 }
-err := descopeClient.Management.Password().ConfigureSettings(context.Background(), tenantID, settingsToUpdate)
+err := descopeClient.Management.Password().ConfigureSettings(context.Background(), "tenant-id", updatedSettings)
 ```
 
 ### Manage Permissions
@@ -1231,133 +1231,133 @@ A simple example for a file system like schema would be:
 # Example schema for the authz tests
 name: Files
 namespaces:
-  - name: org
-    relationDefinitions:
-      - name: parent
-      - name: member
-        complexDefinition:
-          nType: union
-          children:
-            - nType: child
-              expression:
-                neType: self
-            - nType: child
-              expression:
-                neType: relationLeft
-                relationDefinition: parent
-                relationDefinitionNamespace: org
-                targetRelationDefinition: member
-                targetRelationDefinitionNamespace: org
-  - name: folder
-    relationDefinitions:
-      - name: parent
-      - name: owner
-        complexDefinition:
-          nType: union
-          children:
-            - nType: child
-              expression:
-                neType: self
-            - nType: child
-              expression:
-                neType: relationRight
-                relationDefinition: parent
-                relationDefinitionNamespace: folder
-                targetRelationDefinition: owner
-                targetRelationDefinitionNamespace: folder
-      - name: editor
-        complexDefinition:
-          nType: union
-          children:
-            - nType: child
-              expression:
-                neType: self
-            - nType: child
-              expression:
-                neType: relationRight
-                relationDefinition: parent
-                relationDefinitionNamespace: folder
-                targetRelationDefinition: editor
-                targetRelationDefinitionNamespace: folder
-            - nType: child
-              expression:
-                neType: targetSet
-                targetRelationDefinition: owner
-                targetRelationDefinitionNamespace: folder
-      - name: viewer
-        complexDefinition:
-          nType: union
-          children:
-            - nType: child
-              expression:
-                neType: self
-            - nType: child
-              expression:
-                neType: relationRight
-                relationDefinition: parent
-                relationDefinitionNamespace: folder
-                targetRelationDefinition: viewer
-                targetRelationDefinitionNamespace: folder
-            - nType: child
-              expression:
-                neType: targetSet
-                targetRelationDefinition: editor
-                targetRelationDefinitionNamespace: folder
-  - name: doc
-    relationDefinitions:
-      - name: parent
-      - name: owner
-        complexDefinition:
-          nType: union
-          children:
-            - nType: child
-              expression:
-                neType: self
-            - nType: child
-              expression:
-                neType: relationRight
-                relationDefinition: parent
-                relationDefinitionNamespace: doc
-                targetRelationDefinition: owner
-                targetRelationDefinitionNamespace: folder
-      - name: editor
-        complexDefinition:
-          nType: union
-          children:
-            - nType: child
-              expression:
-                neType: self
-            - nType: child
-              expression:
-                neType: relationRight
-                relationDefinition: parent
-                relationDefinitionNamespace: doc
-                targetRelationDefinition: editor
-                targetRelationDefinitionNamespace: folder
-            - nType: child
-              expression:
-                neType: targetSet
-                targetRelationDefinition: owner
-                targetRelationDefinitionNamespace: doc
-      - name: viewer
-        complexDefinition:
-          nType: union
-          children:
-            - nType: child
-              expression:
-                neType: self
-            - nType: child
-              expression:
-                neType: relationRight
-                relationDefinition: parent
-                relationDefinitionNamespace: doc
-                targetRelationDefinition: viewer
-                targetRelationDefinitionNamespace: folder
-            - nType: child
-              expression:
-                neType: targetSet
-                targetRelationDefinition: editor
-                targetRelationDefinitionNamespace: doc
+    - name: org
+      relationDefinitions:
+          - name: parent
+          - name: member
+            complexDefinition:
+                nType: union
+                children:
+                    - nType: child
+                      expression:
+                          neType: self
+                    - nType: child
+                      expression:
+                          neType: relationLeft
+                          relationDefinition: parent
+                          relationDefinitionNamespace: org
+                          targetRelationDefinition: member
+                          targetRelationDefinitionNamespace: org
+    - name: folder
+      relationDefinitions:
+          - name: parent
+          - name: owner
+            complexDefinition:
+                nType: union
+                children:
+                    - nType: child
+                      expression:
+                          neType: self
+                    - nType: child
+                      expression:
+                          neType: relationRight
+                          relationDefinition: parent
+                          relationDefinitionNamespace: folder
+                          targetRelationDefinition: owner
+                          targetRelationDefinitionNamespace: folder
+          - name: editor
+            complexDefinition:
+                nType: union
+                children:
+                    - nType: child
+                      expression:
+                          neType: self
+                    - nType: child
+                      expression:
+                          neType: relationRight
+                          relationDefinition: parent
+                          relationDefinitionNamespace: folder
+                          targetRelationDefinition: editor
+                          targetRelationDefinitionNamespace: folder
+                    - nType: child
+                      expression:
+                          neType: targetSet
+                          targetRelationDefinition: owner
+                          targetRelationDefinitionNamespace: folder
+          - name: viewer
+            complexDefinition:
+                nType: union
+                children:
+                    - nType: child
+                      expression:
+                          neType: self
+                    - nType: child
+                      expression:
+                          neType: relationRight
+                          relationDefinition: parent
+                          relationDefinitionNamespace: folder
+                          targetRelationDefinition: viewer
+                          targetRelationDefinitionNamespace: folder
+                    - nType: child
+                      expression:
+                          neType: targetSet
+                          targetRelationDefinition: editor
+                          targetRelationDefinitionNamespace: folder
+    - name: doc
+      relationDefinitions:
+          - name: parent
+          - name: owner
+            complexDefinition:
+                nType: union
+                children:
+                    - nType: child
+                      expression:
+                          neType: self
+                    - nType: child
+                      expression:
+                          neType: relationRight
+                          relationDefinition: parent
+                          relationDefinitionNamespace: doc
+                          targetRelationDefinition: owner
+                          targetRelationDefinitionNamespace: folder
+          - name: editor
+            complexDefinition:
+                nType: union
+                children:
+                    - nType: child
+                      expression:
+                          neType: self
+                    - nType: child
+                      expression:
+                          neType: relationRight
+                          relationDefinition: parent
+                          relationDefinitionNamespace: doc
+                          targetRelationDefinition: editor
+                          targetRelationDefinitionNamespace: folder
+                    - nType: child
+                      expression:
+                          neType: targetSet
+                          targetRelationDefinition: owner
+                          targetRelationDefinitionNamespace: doc
+          - name: viewer
+            complexDefinition:
+                nType: union
+                children:
+                    - nType: child
+                      expression:
+                          neType: self
+                    - nType: child
+                      expression:
+                          neType: relationRight
+                          relationDefinition: parent
+                          relationDefinitionNamespace: doc
+                          targetRelationDefinition: viewer
+                          targetRelationDefinitionNamespace: folder
+                    - nType: child
+                      expression:
+                          neType: targetSet
+                          targetRelationDefinition: editor
+                          targetRelationDefinitionNamespace: doc
 ```
 
 Descope SDK allows you to fully manage the schema and relations as well as perform simple (and not so simple) checks regarding the existence of relations.
