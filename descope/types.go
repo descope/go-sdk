@@ -99,7 +99,7 @@ type SSOSAMLSettingsResponse struct {
 }
 
 type SSOSAMLSettings struct {
-	IdpURL           string            `json:"idpURL,omitempty"`
+	IdpURL           string            `json:"idpUrl,omitempty"`
 	IdpEntityID      string            `json:"entityId,omitempty"`
 	IdpCert          string            `json:"idpCert,omitempty"`
 	AttributeMapping *AttributeMapping `json:"attributeMapping,omitempty"`
