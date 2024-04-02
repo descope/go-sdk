@@ -661,11 +661,11 @@ func TestUpdatePhoneOTPVoice(t *testing.T) {
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	mp, err := a.OTP().UpdateUserPhone(context.Background(), descope.MethodSMS, loginID, phone, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true}, r)
+	mp, err := a.OTP().UpdateUserPhone(context.Background(), descope.MethodVoice, loginID, phone, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true}, r)
 	require.NoError(t, err)
 	require.EqualValues(t, maskedPhone, mp)
 	checkOptions = false
-	mp, err = a.OTP().UpdateUserPhone(context.Background(), descope.MethodSMS, loginID, phone, nil, r)
+	mp, err = a.OTP().UpdateUserPhone(context.Background(), descope.MethodVoice, loginID, phone, nil, r)
 	require.NoError(t, err)
 	require.EqualValues(t, maskedPhone, mp)
 }
