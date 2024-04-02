@@ -438,7 +438,7 @@ type SSO interface {
 	// Load all tenant SSO setting.
 	//
 	// tenantID is required.
-	LoadSettings(_ context.Context, tenantID string) (*descope.SSOTenantSettingsResponse, error)
+	LoadSettings(ctx context.Context, tenantID string) (*descope.SSOTenantSettingsResponse, error)
 
 	// Configure SSO SAML settings for a tenant manually.
 	//
@@ -448,7 +448,7 @@ type SSO interface {
 	// domains is optional, it is used to map users to this tenant when authenticating via SSO.
 	//
 	// Both optional values will override whatever is currently set even if left empty.
-	ConfigureSAMLSettings(_ context.Context, tenantID string, settings *descope.SSOSAMLSettings, redirectURL string, domains []string) error
+	ConfigureSAMLSettings(ctx context.Context, tenantID string, settings *descope.SSOSAMLSettings, redirectURL string, domains []string) error
 
 	// Configure SSO SAML settings for a tenant by fetching them from an IDP metadata URL.
 	//
@@ -458,7 +458,7 @@ type SSO interface {
 	// domains is optional, it is used to map users to this tenant when authenticating via SSO.
 	//
 	// Both optional values will override whatever is currently set even if left empty.
-	ConfigureSAMLSettingsByMetadata(_ context.Context, tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domains []string) error
+	ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domains []string) error
 
 	// Configure SSO OIDC settings for a tenant manually.
 	//
@@ -467,7 +467,7 @@ type SSO interface {
 	// domains is optional, it is used to map users to this tenant when authenticating via SSO.
 	//
 	// Optional value will override whatever is currently set even if left empty.
-	ConfigureOIDCSettings(_ context.Context, tenantID string, settings *descope.SSOOIDCSettings, domains []string) error
+	ConfigureOIDCSettings(ctx context.Context, tenantID string, settings *descope.SSOOIDCSettings, domains []string) error
 
 	// tenantID is required.
 	DeleteSettings(ctx context.Context, tenantID string) error
@@ -478,7 +478,7 @@ type SSO interface {
 	// Get SAML SSO setting for a tenant.
 	//
 	// tenantID is required.
-	GetSettings(_ context.Context, tenantID string) (*descope.SSOSettingsResponse, error)
+	GetSettings(ctx context.Context, tenantID string) (*descope.SSOSettingsResponse, error)
 
 	//* Deprecated (use ConfigureSAMLSettings() instead) *//
 	// Configure SSO settings for a tenant manually.
