@@ -25,8 +25,3 @@ echo 'Building importusers example..'
 if [ $? -ne 0 ]; then
     exit 1
 fi
-echo 'Building managementcli example..'
-(cd examples/managementcli && go mod tidy && go mod vendor && go build)
-if [ $? -ne 0 ]; then
-    exit 1
-fi
