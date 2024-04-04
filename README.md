@@ -638,7 +638,7 @@ You can create, update, delete or load tenants:
 
 // Creating and updating tenants takes the &descope.TenantRequest type. This is an example of a &descope.TenantRequest
 tenantRequest := &descope.TenantRequest{}
-tenantRequest.Name = []string{"My Tenant"}
+tenantRequest.Name = "My Tenant"
 tenantRequest.SelfProvisioningDomains = []string{"domain.com"}
 tenantRequest.CustomAttributes = map[string]any{"mycustomattribute": "Test"}
 
