@@ -187,6 +187,7 @@ var (
 			authzREResource:                  "mgmt/authz/re/resource",
 			authzRETargets:                   "mgmt/authz/re/targets",
 			authzRETargetAll:                 "mgmt/authz/re/targetall",
+			authzRETargetWithRelation:        "mgmt/authz/re/targetwithrelation",
 			authzGetModified:                 "mgmt/authz/getmodified",
 		},
 		logout:       "auth/logout",
@@ -369,22 +370,23 @@ type mgmtEndpoints struct {
 
 	auditSearch string
 
-	authzSchemaSave        string
-	authzSchemaDelete      string
-	authzSchemaLoad        string
-	authzNSSave            string
-	authzNSDelete          string
-	authzRDSave            string
-	authzRDDelete          string
-	authzRECreate          string
-	authzREDelete          string
-	authzREDeleteResources string
-	authzREHasRelations    string
-	authzREWho             string
-	authzREResource        string
-	authzRETargets         string
-	authzRETargetAll       string
-	authzGetModified       string
+	authzSchemaSave           string
+	authzSchemaDelete         string
+	authzSchemaLoad           string
+	authzNSSave               string
+	authzNSDelete             string
+	authzRDSave               string
+	authzRDDelete             string
+	authzRECreate             string
+	authzREDelete             string
+	authzREDeleteResources    string
+	authzREHasRelations       string
+	authzREWho                string
+	authzREResource           string
+	authzRETargets            string
+	authzRETargetAll          string
+	authzRETargetWithRelation string
+	authzGetModified          string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -1015,6 +1017,10 @@ func (e *endpoints) ManagementAuthzRETargets() string {
 
 func (e *endpoints) ManagementAuthzRETargetAll() string {
 	return path.Join(e.version, e.mgmt.authzRETargetAll)
+}
+
+func (e *endpoints) ManagementAuthzRETargetWithRelation() string {
+	return path.Join(e.version, e.mgmt.authzRETargetWithRelation)
 }
 
 func (e *endpoints) ManagementAuthzGetModified() string {
