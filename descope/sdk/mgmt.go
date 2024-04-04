@@ -757,6 +757,9 @@ type Authz interface {
 	// WhatCanTargetAccess returns the list of all relations for the given target including derived relations from the schema tree.
 	WhatCanTargetAccess(ctx context.Context, target string) ([]*descope.AuthzRelation, error)
 
+	// WhatCanTargetAccessWithRelation returns the list of all resources that the target has the given relation to including all derived relations
+	WhatCanTargetAccessWithRelation(ctx context.Context, target, relationDefinition, namespace string) ([]*descope.AuthzRelation, error)
+
 	// GetModified list of targets and resources changed since the given date
 	// Should be used to invalidate local caches
 	GetModified(ctx context.Context, since time.Time) (*descope.AuthzModified, error)

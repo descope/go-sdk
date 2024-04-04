@@ -1280,6 +1280,10 @@ type MockAuthz struct {
 	WhatCanTargetAccessResponse []*descope.AuthzRelation
 	WhatCanTargetAccessError    error
 
+	WhatCanTargetAccessWithRelationAssert   func(target, relationDefinition, namespace string)
+	WhatCanTargetAccessWithRelationResponse []*descope.AuthzRelation
+	WhatCanTargetAccessWithRelationError    error
+
 	GetModifiedAssert   func(since time.Time)
 	GetModifiedResponse *descope.AuthzModified
 	GetModifiedError    error
@@ -1382,6 +1386,13 @@ func (m *MockAuthz) WhatCanTargetAccess(_ context.Context, target string) ([]*de
 		m.WhatCanTargetAccessAssert(target)
 	}
 	return m.WhatCanTargetAccessResponse, m.WhatCanTargetAccessError
+}
+
+func (m *MockAuthz) WhatCanTargetAccessWithRelation(_ context.Context, target, relationDefinition, namespace string) ([]*descope.AuthzRelation, error) {
+	if m.WhatCanTargetAccessWithRelationAssert != nil {
+		m.WhatCanTargetAccessWithRelationAssert(target, relationDefinition, namespace)
+	}
+	return m.WhatCanTargetAccessWithRelationResponse, m.WhatCanTargetAccessWithRelationError
 }
 
 func (m *MockAuthz) GetModified(_ context.Context, since time.Time) (*descope.AuthzModified, error) {
