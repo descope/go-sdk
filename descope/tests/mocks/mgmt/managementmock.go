@@ -1280,7 +1280,7 @@ type MockAuthz struct {
 	WhatCanTargetAccessResponse []*descope.AuthzRelation
 	WhatCanTargetAccessError    error
 
-	WhatCanTargetAccessWithRelationAssert   func(target string)
+	WhatCanTargetAccessWithRelationAssert   func(target, relationDefinition, namespace string)
 	WhatCanTargetAccessWithRelationResponse []*descope.AuthzRelation
 	WhatCanTargetAccessWithRelationError    error
 
@@ -1390,7 +1390,7 @@ func (m *MockAuthz) WhatCanTargetAccess(_ context.Context, target string) ([]*de
 
 func (m *MockAuthz) WhatCanTargetAccessWithRelation(_ context.Context, target, relationDefinition, namespace string) ([]*descope.AuthzRelation, error) {
 	if m.WhatCanTargetAccessWithRelationAssert != nil {
-		m.WhatCanTargetAccessWithRelationAssert(target)
+		m.WhatCanTargetAccessWithRelationAssert(target, relationDefinition, namespace)
 	}
 	return m.WhatCanTargetAccessWithRelationResponse, m.WhatCanTargetAccessWithRelationError
 }
