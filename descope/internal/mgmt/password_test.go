@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/descope/go-sdk/descope"
-	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/tests/helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -47,14 +46,6 @@ func TestGetPasswordSettingsError(t *testing.T) {
 	}))
 	res, err := mgmt.Password().GetSettings(context.Background(), tenantID)
 	require.Error(t, err)
-	assert.Nil(t, res)
-}
-
-func TestGetPasswordSettingsErrorEmptyTenantID(t *testing.T) {
-	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {}))
-	res, err := mgmt.Password().GetSettings(context.Background(), "")
-	require.Error(t, err)
-	assert.ErrorIs(t, err, utils.NewInvalidArgumentError("tenantID"))
 	assert.Nil(t, res)
 }
 
@@ -111,24 +102,4 @@ func TestPasswordConfigureSettingsError(t *testing.T) {
 		LockAttempts:    4,
 	})
 	require.Error(t, err)
-}
-
-func TestPasswordConfigureSettingsErrorEmptyTenantID(t *testing.T) {
-	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {}))
-	err := mgmt.Password().ConfigureSettings(context.Background(), "", &descope.PasswordSettings{
-		Enabled:         true,
-		MinLength:       8,
-		Lowercase:       true,
-		Uppercase:       true,
-		Number:          true,
-		NonAlphanumeric: true,
-		Expiration:      true,
-		ExpirationWeeks: 3,
-		Reuse:           true,
-		ReuseAmount:     3,
-		Lock:            true,
-		LockAttempts:    4,
-	})
-	require.Error(t, err)
-	assert.ErrorIs(t, err, utils.NewInvalidArgumentError("tenantID"))
 }

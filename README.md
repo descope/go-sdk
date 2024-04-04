@@ -62,12 +62,12 @@ These sections show how to use the SDK to perform API management functions. Befo
 7. [Query SSO Groups](#query-sso-groups)
 8. [Manage Flows](#manage-flows)
 9. [Manage JWTs](#manage-jwts)
-9. [Impersonate](#impersonate)
-10. [Search Audit](#search-audit)
-11. [Embedded Links](#embedded-links)
-12. [Manage ReBAC Authz](#manage-rebac-authz)
-13. [Manage Project](#manage-project)
-14. [Manage SSO Applications](#manage-sso-applications)
+10. [Impersonate](#impersonate)
+11. [Search Audit](#search-audit)
+12. [Embedded Links](#embedded-links)
+13. [Manage ReBAC Authz](#manage-rebac-authz)
+14. [Manage Project](#manage-project)
+15. [Manage SSO Applications](#manage-sso-applications)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -81,7 +81,7 @@ For rate limiting information, please confer to the [API Rate Limits](#api-rate-
 
 ### OTP Authentication
 
-Send a user a one-time password (OTP) using your preferred delivery method (_email / SMS_). An email address or phone number must be provided accordingly.
+Send a user a one-time password (OTP) using your preferred delivery method (_Email / SMS / Voice call / WhatsApp_). An email address or phone number must be provided accordingly.
 
 The user can either `sign up`, `sign in` or `sign up or in`
 
@@ -125,7 +125,7 @@ The session and refresh JWTs should be returned to the caller, and passed with e
 
 ### Magic Link
 
-Send a user a Magic Link using your preferred delivery method (_email / SMS_).
+Send a user a Magic Link using your preferred delivery method (_Email / SMS / WhatsApp_).
 The Magic Link will redirect the user to page where the its token needs to be verified.
 This redirection can be configured in code, or globally in the [Descope Console](https://app.descope.com/settings/authentication/magiclink)
 
@@ -162,10 +162,10 @@ displayed when initiating the authentication process.
 
 This method is similar to [Magic Link](#magic-link) but differs in two major ways:
 
-- The user must choose the correct link out of the three, instead of having just one
-  single link.
-- This supports cross-device clicking, meaning the user can try to log in on one device,
-  like a computer, while clicking the link on another device, for instance a mobile phone.
+-   The user must choose the correct link out of the three, instead of having just one
+    single link.
+-   This supports cross-device clicking, meaning the user can try to log in on one device,
+    like a computer, while clicking the link on another device, for instance a mobile phone.
 
 The Enchanted Link will redirect the user to page where the its token needs to be verified.
 This redirection can be configured in code per request, or set globally in the [Descope Console](https://app.descope.com/settings/authentication/enchantedlink).
@@ -247,6 +247,7 @@ if err != nil {
 ```
 
 Users can also connect the social login account to their existing user:
+
 ```go
 // A valid Refresh Token of the existing user is required and will be taken from the request header or cookies automatically.
 // If allowAllMerge is 'true' the users will be merged also if there is no common identifier between the social provider and the existing user (like email).
@@ -272,7 +273,6 @@ if err != nil {
     // handle error
 }
 ```
-
 
 ```go
 //* Deprecated (use Auth.SSO().Start(..) instead) *//
@@ -638,7 +638,7 @@ You can create, update, delete or load tenants:
 
 // Creating and updating tenants takes the &descope.TenantRequest type. This is an example of a &descope.TenantRequest
 tenantRequest := &descope.TenantRequest{}
-tenantRequest.Name = []string{"My Tenant"}
+tenantRequest.Name = "My Tenant"
 tenantRequest.SelfProvisioningDomains = []string{"domain.com"}
 tenantRequest.CustomAttributes = map[string]any{"mycustomattribute": "Test"}
 
@@ -728,11 +728,23 @@ userReqInvite.Tenants = []*descope.AssociatedTenant{
 }
 userReqInvite.SSOAppIDs = []string{"appId1", "appId2"}
 // options can be nil, and in this case, value will be taken from project settings page
-options := &descope.InviteOptions{InviteURL: "https://sub.domain.com"}
+options := &descope.InviteOptions{
+	InviteURL: "https://sub.domain.com",
+	// You can inject custom data into the template.
+  	// Note that you first need to configure custom template in Descope Console
+  	// For example: configure {{options_k1}} in the custom template, and pass { k1: 'v1' } as templateOptions
+	TemplatesOptions: map[string]string{"k1": "v1",},
+}
 err := descopeClient.Management.User().Invite(context.Background(), "desmond@descope.com", userReqInvite, options)
 
 // Invite multiple users with InviteBatch
-options := &descope.InviteOptions{InviteURL: "https://sub.domain.com"}
+options := &descope.InviteOptions{
+	InviteURL: "https://sub.domain.com",
+	// You can inject custom data into the template.
+  	// Note that you first need to configure custom template in Descope Console
+  	// For example: configure {{options_k1}} in the custom template, and pass { k1: 'v1' } as templateOptions
+	TemplatesOptions: map[string]string{"k1": "v1",},
+}
 batchUsers := []*descope.BatchUser{}
 u1 := &descope.BatchUser{}
 u1.LoginID = "one"
@@ -864,15 +876,15 @@ You can create, update, delete or load access keys, as well as search according 
 res, err := descopeClient.Management.AccessKey().Create(context.Background(), "access-key-1", 0, nil, []*descope.AssociatedTenant{
 		{TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
     	{TenantID: "tenant-ID2"},
-    }, 
-	"", 
+    },
+	"",
     map[string]any{"k1": "v1"})
 
-// Load specific user
+// Load specific access key
 res, err := descopeClient.Management.AccessKey().Load(context.Background(), "access-key-id")
 
-// Search all users, optionally according to tenant and/or role filter
-accessKeysResp = err := descopeClient.Management.AccessKey().SearchAll(context.Background(), []string{"my-tenant-id"})
+// Search all access keys, optionally according to tenant and/or role filter
+accessKeysResp, err := descopeClient.Management.AccessKey().SearchAll(context.Background(), []string{"my-tenant-id"})
 if err == nil {
     for _, accessKey := range accessKeysResp {
         // Do something
@@ -893,13 +905,13 @@ err := descopeClient.Management.AccessKey().Delete(context.Background(), "access
 ```
 
 Exchange the access key and provide optional access key login options:
+
 ```go
 loginOptions := &descope.AccessKeyLoginOptions{
 	CustomClaims: map[string]any{"k1": "v1"},
 }
-ok, token, err := a.ExchangeAccessKey(context.Background(), "accessKey", loginOptions)
+ok, token, err := descopeClient.Auth.ExchangeAccessKey(context.Background(), "accessKey", loginOptions)
 ```
-
 
 ### Manage SSO Setting
 
@@ -907,7 +919,7 @@ You can manage SSO (SAML or OIDC) settings for a specific tenant.
 
 ```go
 // Load all tenant SSO settings
-ssoSettings, err := cc.HC.DescopeClient().Management.SSO().LoadSettings(context.Background(), "tenant-id")
+ssoSettings, err := descopeClient.Management.SSO().LoadSettings(context.Background(), "tenant-id")
 
 //* Deprecated (use LoadSettings(..) instead) *//
 ssoSettings, err := descopeClient.Management.SSO().GetSettings(context.Background(), "tenant-id")
@@ -915,15 +927,15 @@ ssoSettings, err := descopeClient.Management.SSO().GetSettings(context.Backgroun
 // Configure tenant SSO by OIDC settings
 
 oidcSettings := &descope.SSOOIDCSettings{..}
-err = cc.HC.DescopeClient().Management.SSO().ConfigureOIDCSettings("tenant-id", oidcSettings, "")
+err = descopeClient.Management.SSO().ConfigureOIDCSettings("tenant-id", oidcSettings, "")
 // OR
-// Load all tenant SSO settings and use them for configure OIDC settings
+// Load all tenant SSO settings and use them to configure OIDC settings
 ssoSettings, err := cc.HC.DescopeClient().Management.SSO().LoadSettings("tenant-id")
 ssoSettings.Oidc.Name = "my prOvider"
 ssoSettings.Oidc.AuthURL = authorizeEndpoint
 ...
 ssoSettings.Oidc.Scope = []string{"openid", "profile", "email"}
-err = cc.HC.DescopeClient().Management.SSO().ConfigureOIDCSettings("tenant-id", ssoSettings.Oidc, "")
+err = descopeClient.Management.SSO().ConfigureOIDCSettings("tenant-id", ssoSettings.Oidc, "")
 
 // Configure tenant SSO by SAML settings
 tenantID := "tenant-id" // Which tenant this configuration is for
@@ -939,7 +951,7 @@ samlSettings := &descope.SSOSAMLSettings{
 	AttributeMapping: &descope.AttributeMapping{Email: "myEmail", ..},
 	RoleMappings: []*RoleMapping{{..}},
 }
-err = cc.HC.DescopeClient().Management.SSO().ConfigureSAMLSettings(context.Background(), tenantID, samlSettings, redirectURL, domain)
+err = descopeClient.Management.SSO().ConfigureSAMLSettings(context.Background(), tenantID, samlSettings, redirectURL, domain)
 
 //* Deprecated (use ConfigureSAMLSettings(..) instead) *//
 err := descopeClient.Management.SSO().ConfigureSettings(context.Background(), tenantID, idpURL, entityID, idpCert, redirectURL, domain)
@@ -950,7 +962,7 @@ samlSettings := &descope.SSOSAMLSettingsByMetadata{
 	AttributeMapping: &descope.AttributeMapping{Email: "myEmail", ..},
 	RoleMappings: []*RoleMapping{{..}},
 }
-err = cc.HC.DescopeClient().Management.SSO().ConfigureSAMLSettingsByMetadata(context.Background(), tenantID, samlSettings, redirectURL, domain)
+err = descopeClient.Management.SSO().ConfigureSAMLSettingsByMetadata(context.Background(), tenantID, samlSettings, redirectURL, domain)
 
 //* Deprecated (use ConfigureSAMLSettingsByMetadata(..) instead) *//
 err := descopeClient.Management.SSO().ConfigureMetadata(tenantID, "https://idp.com/my-idp-metadata", redirectURL, domain)
@@ -984,12 +996,12 @@ Certifcate contents
 You can manage password settings for tenants and projects.
 
 ```go
-// You can get password settings for a specific tenant ID. Tenant ID is required.
+// You can get password settings for the project or for a specific tenant ID.
 settings, err := descopeClient.Management.Password().GetSettings(context.Background(), "tenant-id")
 
-// You can configure password settings by setting the required fields directly and provide the tenant ID to update.
-tenantID := "tenant-id" // Which tenant this configuration is for
-settingsToUpdate := &descope.PasswordSettings{
+// You can configure the project level or tenant level password settings. The update is performed as-is
+// in an overriding manner - use carefully.
+updatedSettings := &descope.PasswordSettings{
     Enabled:               true,
     MinLength:             8,
     Lowercase:             true,
@@ -1003,7 +1015,7 @@ settingsToUpdate := &descope.PasswordSettings{
     Lock:                  true,
     LockAttempts:          5,
 }
-err := descopeClient.Management.Password().ConfigureSettings(context.Background(), tenantID, settingsToUpdate)
+err := descopeClient.Management.Password().ConfigureSettings(context.Background(), "tenant-id", updatedSettings)
 ```
 
 ### Manage Permissions
@@ -1173,6 +1185,7 @@ if err != nil {
 You can impersonate to another user
 The impersonator user must have the `impersonation` permission in order for this request to work.
 The response would be a refresh JWT of the impersonated user
+
 ```go
 refreshJWT, err := descopeClient.Management.JWT().Impersonate(context.Background(), "impersonator id", "login id", true)
 if err != nil {
@@ -1218,133 +1231,133 @@ A simple example for a file system like schema would be:
 # Example schema for the authz tests
 name: Files
 namespaces:
-  - name: org
-    relationDefinitions:
-      - name: parent
-      - name: member
-        complexDefinition:
-          nType: union
-          children:
-            - nType: child
-              expression:
-                neType: self
-            - nType: child
-              expression:
-                neType: relationLeft
-                relationDefinition: parent
-                relationDefinitionNamespace: org
-                targetRelationDefinition: member
-                targetRelationDefinitionNamespace: org
-  - name: folder
-    relationDefinitions:
-      - name: parent
-      - name: owner
-        complexDefinition:
-          nType: union
-          children:
-            - nType: child
-              expression:
-                neType: self
-            - nType: child
-              expression:
-                neType: relationRight
-                relationDefinition: parent
-                relationDefinitionNamespace: folder
-                targetRelationDefinition: owner
-                targetRelationDefinitionNamespace: folder
-      - name: editor
-        complexDefinition:
-          nType: union
-          children:
-            - nType: child
-              expression:
-                neType: self
-            - nType: child
-              expression:
-                neType: relationRight
-                relationDefinition: parent
-                relationDefinitionNamespace: folder
-                targetRelationDefinition: editor
-                targetRelationDefinitionNamespace: folder
-            - nType: child
-              expression:
-                neType: targetSet
-                targetRelationDefinition: owner
-                targetRelationDefinitionNamespace: folder
-      - name: viewer
-        complexDefinition:
-          nType: union
-          children:
-            - nType: child
-              expression:
-                neType: self
-            - nType: child
-              expression:
-                neType: relationRight
-                relationDefinition: parent
-                relationDefinitionNamespace: folder
-                targetRelationDefinition: viewer
-                targetRelationDefinitionNamespace: folder
-            - nType: child
-              expression:
-                neType: targetSet
-                targetRelationDefinition: editor
-                targetRelationDefinitionNamespace: folder
-  - name: doc
-    relationDefinitions:
-      - name: parent
-      - name: owner
-        complexDefinition:
-          nType: union
-          children:
-            - nType: child
-              expression:
-                neType: self
-            - nType: child
-              expression:
-                neType: relationRight
-                relationDefinition: parent
-                relationDefinitionNamespace: doc
-                targetRelationDefinition: owner
-                targetRelationDefinitionNamespace: folder
-      - name: editor
-        complexDefinition:
-          nType: union
-          children:
-            - nType: child
-              expression:
-                neType: self
-            - nType: child
-              expression:
-                neType: relationRight
-                relationDefinition: parent
-                relationDefinitionNamespace: doc
-                targetRelationDefinition: editor
-                targetRelationDefinitionNamespace: folder
-            - nType: child
-              expression:
-                neType: targetSet
-                targetRelationDefinition: owner
-                targetRelationDefinitionNamespace: doc
-      - name: viewer
-        complexDefinition:
-          nType: union
-          children:
-            - nType: child
-              expression:
-                neType: self
-            - nType: child
-              expression:
-                neType: relationRight
-                relationDefinition: parent
-                relationDefinitionNamespace: doc
-                targetRelationDefinition: viewer
-                targetRelationDefinitionNamespace: folder
-            - nType: child
-              expression:
-                neType: targetSet
-                targetRelationDefinition: editor
-                targetRelationDefinitionNamespace: doc
+    - name: org
+      relationDefinitions:
+          - name: parent
+          - name: member
+            complexDefinition:
+                nType: union
+                children:
+                    - nType: child
+                      expression:
+                          neType: self
+                    - nType: child
+                      expression:
+                          neType: relationLeft
+                          relationDefinition: parent
+                          relationDefinitionNamespace: org
+                          targetRelationDefinition: member
+                          targetRelationDefinitionNamespace: org
+    - name: folder
+      relationDefinitions:
+          - name: parent
+          - name: owner
+            complexDefinition:
+                nType: union
+                children:
+                    - nType: child
+                      expression:
+                          neType: self
+                    - nType: child
+                      expression:
+                          neType: relationRight
+                          relationDefinition: parent
+                          relationDefinitionNamespace: folder
+                          targetRelationDefinition: owner
+                          targetRelationDefinitionNamespace: folder
+          - name: editor
+            complexDefinition:
+                nType: union
+                children:
+                    - nType: child
+                      expression:
+                          neType: self
+                    - nType: child
+                      expression:
+                          neType: relationRight
+                          relationDefinition: parent
+                          relationDefinitionNamespace: folder
+                          targetRelationDefinition: editor
+                          targetRelationDefinitionNamespace: folder
+                    - nType: child
+                      expression:
+                          neType: targetSet
+                          targetRelationDefinition: owner
+                          targetRelationDefinitionNamespace: folder
+          - name: viewer
+            complexDefinition:
+                nType: union
+                children:
+                    - nType: child
+                      expression:
+                          neType: self
+                    - nType: child
+                      expression:
+                          neType: relationRight
+                          relationDefinition: parent
+                          relationDefinitionNamespace: folder
+                          targetRelationDefinition: viewer
+                          targetRelationDefinitionNamespace: folder
+                    - nType: child
+                      expression:
+                          neType: targetSet
+                          targetRelationDefinition: editor
+                          targetRelationDefinitionNamespace: folder
+    - name: doc
+      relationDefinitions:
+          - name: parent
+          - name: owner
+            complexDefinition:
+                nType: union
+                children:
+                    - nType: child
+                      expression:
+                          neType: self
+                    - nType: child
+                      expression:
+                          neType: relationRight
+                          relationDefinition: parent
+                          relationDefinitionNamespace: doc
+                          targetRelationDefinition: owner
+                          targetRelationDefinitionNamespace: folder
+          - name: editor
+            complexDefinition:
+                nType: union
+                children:
+                    - nType: child
+                      expression:
+                          neType: self
+                    - nType: child
+                      expression:
+                          neType: relationRight
+                          relationDefinition: parent
+                          relationDefinitionNamespace: doc
+                          targetRelationDefinition: editor
+                          targetRelationDefinitionNamespace: folder
+                    - nType: child
+                      expression:
+                          neType: targetSet
+                          targetRelationDefinition: owner
+                          targetRelationDefinitionNamespace: doc
+          - name: viewer
+            complexDefinition:
+                nType: union
+                children:
+                    - nType: child
+                      expression:
+                          neType: self
+                    - nType: child
+                      expression:
+                          neType: relationRight
+                          relationDefinition: parent
+                          relationDefinitionNamespace: doc
+                          targetRelationDefinition: viewer
+                          targetRelationDefinitionNamespace: folder
+                    - nType: child
+                      expression:
+                          neType: targetSet
+                          targetRelationDefinition: editor
+                          targetRelationDefinitionNamespace: doc
 ```
 
 Descope SDK allows you to fully manage the schema and relations as well as perform simple (and not so simple) checks regarding the existence of relations.
@@ -1397,7 +1410,7 @@ if err == nil {
 }
 
 // Delete the current project. Kindly note that following calls on the `descopeClient` are
-// most likely to fail because the current project has been deleted 
+// most likely to fail because the current project has been deleted
 err := descopeClient.Management.Project().Delete(context.Background())
 ```
 
@@ -1469,7 +1482,7 @@ appID, err = descopeClient.Management.SSOApplication().CreateSAMLApplication(con
 
 // Update OIDC SSO application
 // Update will override all fields as is. Use carefully.
-err = tc.DescopeClient().Management.SSOApplication().UpdateOIDCApplication(context.TODO(), 
+err = tc.DescopeClient().Management.SSOApplication().UpdateOIDCApplication(context.TODO(),
 	&descope.OIDCApplicationRequest{ID: oidcAppID, Name: "oidcNewAppName"
 })
 
@@ -1513,19 +1526,19 @@ export DESCOPE_PROJECT_ID=<ProjectID>
 
 1. Run this command in your project to build the examples.
 
-   ```bash
-   make build
-   ```
+    ```bash
+    make build
+    ```
 
 2. Run a specific example
 
-   ```bash
-   # Gin web app
-   make run-gin-example
+    ```bash
+    # Gin web app
+    make run-gin-example
 
-   # Gorilla Mux web app
-   make run-example
-   ```
+       # Gorilla Mux web app
+       make run-example
+    ```
 
 ### Using Visual Studio Code
 
@@ -1539,8 +1552,8 @@ Simplify your unit testing by using our mocks package for testing your app witho
 
 Mock usage examples:
 
-- [Authentication](https://github.com/descope/go-sdk/blob/main/descope/tests/mocks/auth/authenticationmock_test.go)
-- [Management](https://github.com/descope/go-sdk/blob/main/descope/tests/mocks/mgmt/managementmock_test.go)
+-   [Authentication](https://github.com/descope/go-sdk/blob/main/descope/tests/mocks/auth/authenticationmock_test.go)
+-   [Management](https://github.com/descope/go-sdk/blob/main/descope/tests/mocks/mgmt/managementmock_test.go)
 
 In the following snippet we mocked the Descope Authentication and Management SDKs, and have assertions to check the actual inputs passed to the SDK:
 
@@ -1581,7 +1594,7 @@ assert.EqualValues(t, updateJWTWithCustomClaimsResponse, res)
 ### Utils for your end to end (e2e) tests and integration tests
 
 To ease your e2e tests, we exposed dedicated management methods,
-that way, you don't need to use 3rd party messaging services in order to receive sign-in/up Emails or SMS, and avoid the need of parsing the code and token from them.
+that way, you don't need to use 3rd party messaging services in order to receive sign-in/up Email, SMS, Voice call or WhatsApp, and avoid the need of parsing the code and token from them.
 
 ```go
 // User for test can be created, this user will be able to generate code/link without

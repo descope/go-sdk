@@ -99,7 +99,7 @@ type SSOSAMLSettingsResponse struct {
 }
 
 type SSOSAMLSettings struct {
-	IdpURL           string            `json:"idpURL,omitempty"`
+	IdpURL           string            `json:"idpUrl,omitempty"`
 	IdpEntityID      string            `json:"entityId,omitempty"`
 	IdpCert          string            `json:"idpCert,omitempty"`
 	AttributeMapping *AttributeMapping `json:"attributeMapping,omitempty"`
@@ -353,9 +353,10 @@ func NewToken(JWT string, token jwt.Token) *Token {
 }
 
 type InviteOptions struct {
-	InviteURL string `json:"inviteUrl,omitempty"`
-	SendMail  *bool  `json:"sendMail,omitempty"` // send invite via mail, default is according to project settings
-	SendSMS   *bool  `json:"sendSMS,omitempty"`  // send invite via text message, default is according to project settings
+	InviteURL       string            `json:"inviteUrl,omitempty"`
+	SendMail        *bool             `json:"sendMail,omitempty"`        // send invite via mail, default is according to project settings
+	SendSMS         *bool             `json:"sendSMS,omitempty"`         // send invite via text message, default is according to project settings
+	TemplateOptions map[string]string `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 }
 
 type User struct {
@@ -874,6 +875,7 @@ type ProjectTag string
 const (
 	MethodWhatsApp DeliveryMethod = "whatsapp"
 	MethodSMS      DeliveryMethod = "sms"
+	MethodVoice    DeliveryMethod = "voice"
 	MethodEmail    DeliveryMethod = "email"
 	MethodEmbedded DeliveryMethod = "Embedded"
 
