@@ -129,9 +129,11 @@ func help(w http.ResponseWriter, r *http.Request) {
 	helpTxt := "Sign up with otp email go to: /otp/signup?email=\n\n"
 	helpTxt += "Sign up with otp sms go to: /otp/signup?sms=\n\n"
 	helpTxt += "Sign up with otp whatsapp go to: /otp/signup?whatsapp=\n\n"
+	helpTxt += "Sign up with otp voice go to: /otp/signup?voice=\n\n"
 	helpTxt += "Sign in of existing user with otp email go to: /otp/signin?email=\n\n"
 	helpTxt += "Sign in of existing user with otp sms go to: /otp/signin?sms=\n\n"
 	helpTxt += "Sign in of existing user with otp whatsapp go to: /otp/signin?whatsapp=\n\n"
+	helpTxt += "Sign in of existing user with otp voice go to: /otp/signin?voice=\n\n"
 	helpTxt += "---------------------------------------------------------\n\n"
 	helpTxt += "Sign up/in with OAuth go to: /oauth?provider=[google|github|facebook]\n\n"
 	helpTxt += "---------------------------------------------------------\n\n"
@@ -140,9 +142,11 @@ func help(w http.ResponseWriter, r *http.Request) {
 	helpTxt += "Sign up with magiclink and email go to: /magiclink/signup?email=\n\n"
 	helpTxt += "Sign up with magiclink and sms go to: /magiclink/signup?sms=\n\n"
 	helpTxt += "Sign up with magiclink and whatsapp go to: /magiclink/signup?whatsapp=\n\n"
+	helpTxt += "Sign up with magiclink and voice go to: /magiclink/signup?voice=\n\n"
 	helpTxt += "Sign in of existing user with magiclink email go to: /magiclink/signin?email=\n\n"
 	helpTxt += "Sign in of existing user with magiclink sms go to: /magiclink/signin?sms=\n\n"
 	helpTxt += "Sign in of existing user with magiclink whatsapp go to: /magiclink/signin?whatsapp=\n\n"
+	helpTxt += "Sign in of existing user with magiclink voice go to: /magiclink/signin?voice=\n\n"
 	helpTxt += "---------------------------------------------------------\n\n"
 	helpTxt += "Sign up with enchanted link go to: /enchantedlink/signup?email=\n\n"
 	helpTxt += "Sign in of existing user with enchanted link email go to: /enchantedlink/signin?email=\n\n"
@@ -615,6 +619,9 @@ func getMethodAndLoginID(r *http.Request) (descope.DeliveryMethod, string) {
 	} else if whatsapp, ok := r.URL.Query()["whatsapp"]; ok {
 		method = descope.MethodWhatsApp
 		loginID = whatsapp[0]
+	} else if voice, ok := r.URL.Query()["voice"]; ok {
+		method = descope.MethodVoice
+		loginID = voice[0]
 	}
 	return method, loginID
 }

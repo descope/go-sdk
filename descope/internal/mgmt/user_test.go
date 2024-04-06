@@ -85,6 +85,7 @@ func TestUserCreateSuccessWithOptions(t *testing.T) {
 		require.Nil(t, req["test"])
 		assert.EqualValues(t, ca, req["customAttributes"])
 		assert.EqualValues(t, "https://some.domain.com", req["inviteUrl"])
+		assert.EqualValues(t, map[string]any{"k1": "v1"}, req["templateOptions"])
 		assert.Nil(t, req["sendMail"])
 		assert.Nil(t, req["sendSMS"])
 	}, response))
@@ -93,7 +94,10 @@ func TestUserCreateSuccessWithOptions(t *testing.T) {
 	user.Roles = []string{"foo"}
 	user.CustomAttributes = ca
 
-	res, err := m.User().Invite(context.Background(), "abc", user, &descope.InviteOptions{InviteURL: "https://some.domain.com"})
+	res, err := m.User().Invite(context.Background(), "abc", user, &descope.InviteOptions{
+		InviteURL:       "https://some.domain.com",
+		TemplateOptions: map[string]string{"k1": "v1"},
+	})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
@@ -1382,6 +1386,39 @@ func TestGenerateOTPForTestUserSuccess(t *testing.T) {
 	}, response))
 
 	resCode, err := m.User().GenerateOTPForTestUser(context.Background(), descope.MethodSMS, loginID, &loginOptions)
+	require.NoError(t, err)
+	require.NotEmpty(t, resCode)
+	require.True(t, visited)
+	assert.EqualValues(t, code, resCode)
+}
+
+func TestGenerateOTPForTestUserSuccessMethodVoice(t *testing.T) {
+	loginID := "some-id"
+	code := "123456"
+	response := map[string]any{
+		"loginId": loginID,
+		"code":    code,
+	}
+	loginOptions := descope.LoginOptions{
+		MFA: true,
+	}
+	visited := false
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		visited = true
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, loginID, req["loginId"])
+		require.Equal(t, string(descope.MethodVoice), req["deliveryMethod"])
+		b, err := utils.Marshal(req["loginOptions"])
+		require.NoError(t, err)
+		var loginOptionsReq descope.LoginOptions
+		err = utils.Unmarshal(b, &loginOptionsReq)
+		require.NoError(t, err)
+		require.Equal(t, loginOptions, loginOptionsReq)
+	}, response))
+
+	resCode, err := m.User().GenerateOTPForTestUser(context.Background(), descope.MethodVoice, loginID, &loginOptions)
 	require.NoError(t, err)
 	require.NotEmpty(t, resCode)
 	require.True(t, visited)

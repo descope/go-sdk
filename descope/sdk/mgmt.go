@@ -438,7 +438,7 @@ type SSO interface {
 	// Load all tenant SSO setting.
 	//
 	// tenantID is required.
-	LoadSettings(_ context.Context, tenantID string) (*descope.SSOTenantSettingsResponse, error)
+	LoadSettings(ctx context.Context, tenantID string) (*descope.SSOTenantSettingsResponse, error)
 
 	// Configure SSO SAML settings for a tenant manually.
 	//
@@ -448,7 +448,7 @@ type SSO interface {
 	// domains is optional, it is used to map users to this tenant when authenticating via SSO.
 	//
 	// Both optional values will override whatever is currently set even if left empty.
-	ConfigureSAMLSettings(_ context.Context, tenantID string, settings *descope.SSOSAMLSettings, redirectURL string, domains []string) error
+	ConfigureSAMLSettings(ctx context.Context, tenantID string, settings *descope.SSOSAMLSettings, redirectURL string, domains []string) error
 
 	// Configure SSO SAML settings for a tenant by fetching them from an IDP metadata URL.
 	//
@@ -458,7 +458,7 @@ type SSO interface {
 	// domains is optional, it is used to map users to this tenant when authenticating via SSO.
 	//
 	// Both optional values will override whatever is currently set even if left empty.
-	ConfigureSAMLSettingsByMetadata(_ context.Context, tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domains []string) error
+	ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domains []string) error
 
 	// Configure SSO OIDC settings for a tenant manually.
 	//
@@ -467,7 +467,7 @@ type SSO interface {
 	// domains is optional, it is used to map users to this tenant when authenticating via SSO.
 	//
 	// Optional value will override whatever is currently set even if left empty.
-	ConfigureOIDCSettings(_ context.Context, tenantID string, settings *descope.SSOOIDCSettings, domains []string) error
+	ConfigureOIDCSettings(ctx context.Context, tenantID string, settings *descope.SSOOIDCSettings, domains []string) error
 
 	// tenantID is required.
 	DeleteSettings(ctx context.Context, tenantID string) error
@@ -478,7 +478,7 @@ type SSO interface {
 	// Get SAML SSO setting for a tenant.
 	//
 	// tenantID is required.
-	GetSettings(_ context.Context, tenantID string) (*descope.SSOSettingsResponse, error)
+	GetSettings(ctx context.Context, tenantID string) (*descope.SSOSettingsResponse, error)
 
 	//* Deprecated (use ConfigureSAMLSettings() instead) *//
 	// Configure SSO settings for a tenant manually.
@@ -523,7 +523,7 @@ type JWT interface {
 	// The new JWT will be returned
 	UpdateJWTWithCustomClaims(ctx context.Context, jwt string, customClaims map[string]any) (string, error)
 
-	// Impersonate to another user
+	// Impersonate another user
 	// The impersonator user must have `impersonation` permission in order for this request to work
 	// The response would be a refresh JWT of the impersonated user
 	Impersonate(ctx context.Context, impersonatorID string, loginID string, validateConcent bool) (string, error)
@@ -637,34 +637,63 @@ type Flow interface {
 
 // Provides functions for exporting and importing project settings, flows, styles, etc.
 type Project interface {
-	// Exports all settings and configurations for a project and returns the raw JSON
-	// files response as a map.
-	//
-	// This API is meant to be used via the 'environment' command line tool that can be
-	// found in the '/tools' directory.
-	Export(ctx context.Context) (map[string]any, error)
-
-	// Imports all settings and configurations for a project overriding any current
-	// configuration.
-	//
-	// The input is expected to be a raw JSON map of files in the same format as the one
-	// returned by calls to Export.
-	//
-	// This API is meant to be used via the 'environment' command line tool that can be
-	// found in the '/tools' directory.
-	Import(ctx context.Context, files map[string]any) error
-
-	// Update the current project name.
-	UpdateName(ctx context.Context, name string) error
-
 	// Clone the current project, including its settings and configurations.
 	// - This action is supported only with a pro license or above.
 	// - Users, tenants and access keys are not cloned.
 	// Returns The new project details (name, id, and tag).
 	Clone(ctx context.Context, name string, tag descope.ProjectTag) (*descope.CloneProjectResponse, error)
 
+	// Update the current project name.
+	UpdateName(ctx context.Context, name string) error
+
 	// Delete the current project.
 	Delete(ctx context.Context) error
+
+	// Exports a snapshot of all the settings and configurations for a project and returns
+	// the raw JSON files response as a map.
+	//
+	// Note: The values for secrets such as tokens and keys are left blank in the snapshot.
+	// When a snapshot is imported into a project, the secrets for entities that already
+	// exist such as connectors or OAuth providers are preserved if the matching values
+	// in the snapshot are left blank. See below for more details.
+	//
+	// This API is meant to be used via the 'descopecli' command line tool that can be
+	// found at https://github.com/descope/descopecli
+	ExportSnapshot(ctx context.Context) (*descope.ExportSnapshotResponse, error)
+
+	// Imports a snapshot of all settings and configurations into a project, overriding any
+	// current configuration.
+	//
+	// The input is expected to be a request with a raw JSON map of files in the same format
+	// as the one returned by calls to ExportSnapshot.
+	//
+	// Note: The values for secrets such as tokens and keys are left blank in exported
+	// snapshots. When a snapshot is imported into a project, the secrets for entities that
+	// already exist such as connectors or OAuth providers are preserved if the matching values
+	// in the snapshot are left blank. However, new entities that need to be created during
+	// the import operation must any required secrets provided in the request, otherwise the
+	// import operation will fail. The ValidateImport method can be used to get a human and
+	// machine readable JSON of missing secrets that be passed to the ImportSnapshot call.
+	//
+	// This API is meant to be used via the 'descopecli' command line tool that can be
+	// found at https://github.com/descope/descopecli
+	ImportSnapshot(ctx context.Context, req *descope.ImportSnapshotRequest) error
+
+	// Validates a snapshot by performing an import dry run and reporting any validation
+	// failures or missing data. This should be called right before ImportSnapshot to
+	// minimize the risk of the import failing.
+	//
+	// The response will have `Ok: true` if the validation passed. Otherise, a list of
+	// failures will be provided in the `Failures` field, and any missing secrets will
+	// be listed along with details about which entity requires them.
+	//
+	// Validation can be retried by set the required cleartext secret values in the
+	// `Value` field of each missing secret and setting this object as the `InputSecrets`
+	// field of the import request.
+	//
+	// This API is meant to be used via the 'descopecli' command line tool that can be
+	// found at https://github.com/descope/descopecli
+	ValidateSnapshot(ctx context.Context, req *descope.ValidateSnapshotRequest) (*descope.ValidateSnapshotResponse, error)
 }
 
 // Provides search project audit trail
@@ -727,6 +756,9 @@ type Authz interface {
 
 	// WhatCanTargetAccess returns the list of all relations for the given target including derived relations from the schema tree.
 	WhatCanTargetAccess(ctx context.Context, target string) ([]*descope.AuthzRelation, error)
+
+	// WhatCanTargetAccessWithRelation returns the list of all resources that the target has the given relation to including all derived relations
+	WhatCanTargetAccessWithRelation(ctx context.Context, target, relationDefinition, namespace string) ([]*descope.AuthzRelation, error)
 
 	// GetModified list of targets and resources changed since the given date
 	// Should be used to invalidate local caches
