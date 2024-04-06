@@ -358,6 +358,46 @@ func TestWhatCanTargetAccessMissingArgument(t *testing.T) {
 	require.ErrorContains(t, err, utils.NewInvalidArgumentError("target").Message)
 }
 
+func TestWhatCanTargetAccessWithRelationSuccess(t *testing.T) {
+	response := []*descope.AuthzRelation{
+		{
+			Resource:           "r1",
+			RelationDefinition: "rd",
+			Namespace:          "n",
+			Target:             "u1",
+		},
+		{
+			Resource:           "r2",
+			RelationDefinition: "rd",
+			Namespace:          "n",
+			Target:             "u1",
+		},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "u1", req["target"])
+		require.Equal(t, "rd", req["relationDefinition"])
+		require.Equal(t, "n", req["namespace"])
+	}, map[string]any{"resources": []string{"r1", "r2"}}))
+	res, err := mgmt.Authz().WhatCanTargetAccessWithRelation(context.Background(), "u1", "rd", "n")
+	require.NoError(t, err)
+	assert.EqualValues(t, response, res)
+}
+
+func TestWhatCanTargetAccessWithRelationMissingArgument(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	_, err := mgmt.Authz().WhatCanTargetAccessWithRelation(context.Background(), "", "", "")
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("target").Message)
+
+	_, err = mgmt.Authz().WhatCanTargetAccessWithRelation(context.Background(), "tar", "", "")
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("relationDefinition").Message)
+
+	_, err = mgmt.Authz().WhatCanTargetAccessWithRelation(context.Background(), "tar", "def", "")
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("namespace").Message)
+}
+
 func TestGetModifiedWrongArgument(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
 	_, err := mgmt.Authz().GetModified(context.Background(), time.Now().Add(10*time.Second))

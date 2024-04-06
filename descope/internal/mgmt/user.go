@@ -12,6 +12,27 @@ type user struct {
 	managementBase
 }
 
+type createUserRequest struct {
+	loginID            string
+	email              string
+	phone              string
+	name               string
+	givenName          string
+	middleName         string
+	familyName         string
+	picture            string
+	roles              []string
+	tenants            []*descope.AssociatedTenant
+	invite             bool
+	test               bool
+	customAttributes   map[string]any
+	verifiedEmail      *bool
+	verifiedPhone      *bool
+	additionalLoginIDs []string
+	options            *descope.InviteOptions
+	ssoAppIDs          []string
+}
+
 func (u *user) Create(ctx context.Context, loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
 	if user == nil {
 		user = &descope.UserRequest{}
@@ -51,7 +72,27 @@ func (u *user) create(ctx context.Context, loginID, email, phone, displayName, g
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
-	req := makeCreateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture, roles, tenants, invite, test, customAttributes, verifiedEmail, verifiedPhone, additionalLoginIDs, options, ssoAppIDs)
+	req := makeCreateUserRequest(&createUserRequest{
+		loginID:            loginID,
+		email:              email,
+		phone:              phone,
+		name:               displayName,
+		givenName:          givenName,
+		middleName:         middleName,
+		familyName:         familyName,
+		picture:            picture,
+		roles:              roles,
+		tenants:            tenants,
+		invite:             invite,
+		test:               test,
+		customAttributes:   customAttributes,
+		verifiedEmail:      verifiedEmail,
+		verifiedPhone:      verifiedPhone,
+		additionalLoginIDs: additionalLoginIDs,
+		options:            options,
+		ssoAppIDs:          ssoAppIDs,
+	})
+
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserCreate(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -78,7 +119,23 @@ func (u *user) Update(ctx context.Context, loginID string, user *descope.UserReq
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
-	req := makeUpdateUserRequest(loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, user.SSOAppIDs)
+	req := makeUpdateUserRequest(&createUserRequest{
+		loginID:            loginID,
+		email:              user.Email,
+		phone:              user.Phone,
+		name:               user.Name,
+		givenName:          user.GivenName,
+		middleName:         user.MiddleName,
+		familyName:         user.FamilyName,
+		picture:            user.Picture,
+		roles:              user.Roles,
+		tenants:            user.Tenants,
+		customAttributes:   user.CustomAttributes,
+		verifiedEmail:      user.VerifiedEmail,
+		verifiedPhone:      user.VerifiedPhone,
+		additionalLoginIDs: user.AdditionalLoginIDs,
+		ssoAppIDs:          user.SSOAppIDs,
+	})
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdate(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -593,14 +650,14 @@ func (u *user) History(ctx context.Context, userIDs []string) ([]*descope.UserHi
 	return tRes, nil
 }
 
-func makeCreateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, options *descope.InviteOptions, ssoAppIDs []string) map[string]any {
-	req := makeUpdateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture, roles, tenants, customAttributes, verifiedEmail, verifiedPhone, additionalLoginIDs, ssoAppIDs)
-	req["invite"] = invite
-	req["additionalLoginIds"] = additionalLoginIDs
-	if test {
+func makeCreateUserRequest(createReq *createUserRequest) map[string]any {
+	req := makeUpdateUserRequest(createReq)
+	req["invite"] = createReq.invite
+	req["additionalLoginIds"] = createReq.additionalLoginIDs
+	if createReq.test {
 		req["test"] = true
 	}
-	if options != nil {
+	if options := createReq.options; options != nil {
 		if len(options.InviteURL) > 0 {
 			req["inviteUrl"] = options.InviteURL
 		}
@@ -610,6 +667,9 @@ func makeCreateUserRequest(loginID, email, phone, displayName, givenName, middle
 		if options.SendSMS != nil {
 			req["sendSMS"] = *options.SendSMS
 		}
+		if options.TemplateOptions != nil {
+			req["templateOptions"] = options.TemplateOptions
+		}
 	}
 	return req
 }
@@ -617,7 +677,23 @@ func makeCreateUserRequest(loginID, email, phone, displayName, givenName, middle
 func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.InviteOptions) (map[string]any, error) {
 	var usersReq []map[string]any
 	for _, u := range users {
-		user := makeUpdateUserRequest(u.LoginID, u.Email, u.Phone, u.Name, u.GivenName, u.MiddleName, u.FamilyName, u.Picture, u.Roles, u.Tenants, u.CustomAttributes, u.VerifiedEmail, u.VerifiedPhone, u.AdditionalLoginIDs, u.SSOAppIDs)
+		user := makeUpdateUserRequest(&createUserRequest{
+			loginID:            u.LoginID,
+			email:              u.Email,
+			phone:              u.Phone,
+			name:               u.Name,
+			givenName:          u.GivenName,
+			middleName:         u.MiddleName,
+			familyName:         u.FamilyName,
+			picture:            u.Picture,
+			roles:              u.Roles,
+			tenants:            u.Tenants,
+			customAttributes:   u.CustomAttributes,
+			verifiedEmail:      u.VerifiedEmail,
+			verifiedPhone:      u.VerifiedPhone,
+			additionalLoginIDs: u.AdditionalLoginIDs,
+			ssoAppIDs:          u.SSOAppIDs,
+		})
 		if u.Password != nil {
 			if cleartext := u.Password.Cleartext; cleartext != "" {
 				user["password"] = u.Password.Cleartext
@@ -655,28 +731,28 @@ func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.In
 	return req, nil
 }
 
-func makeUpdateUserRequest(loginID, email, phone, displayName, givenName, middleName, familyName, picture string, roles []string, tenants []*descope.AssociatedTenant, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, ssoAppIDs []string) map[string]any {
+func makeUpdateUserRequest(req *createUserRequest) map[string]any {
 	res := map[string]any{
-		"loginId":            loginID,
-		"email":              email,
-		"phone":              phone,
-		"displayName":        displayName,
-		"givenName":          givenName,
-		"middleName":         middleName,
-		"familyName":         familyName,
-		"roleNames":          roles,
-		"userTenants":        makeAssociatedTenantList(tenants),
-		"customAttributes":   customAttributes,
-		"picture":            picture,
-		"additionalLoginIds": additionalLoginIDs,
+		"loginId":            req.loginID,
+		"email":              req.email,
+		"phone":              req.phone,
+		"displayName":        req.name,
+		"givenName":          req.givenName,
+		"middleName":         req.middleName,
+		"familyName":         req.familyName,
+		"roleNames":          req.roles,
+		"userTenants":        makeAssociatedTenantList(req.tenants),
+		"customAttributes":   req.customAttributes,
+		"picture":            req.picture,
+		"additionalLoginIds": req.additionalLoginIDs,
 	}
-	if verifiedEmail != nil {
-		res["verifiedEmail"] = *verifiedEmail
+	if req.verifiedEmail != nil {
+		res["verifiedEmail"] = *req.verifiedEmail
 	}
-	if verifiedPhone != nil {
-		res["verifiedPhone"] = *verifiedPhone
+	if req.verifiedPhone != nil {
+		res["verifiedPhone"] = *req.verifiedPhone
 	}
-	res["ssoAppIDs"] = ssoAppIDs
+	res["ssoAppIDs"] = req.ssoAppIDs
 	return res
 }
 

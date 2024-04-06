@@ -13,10 +13,6 @@ type password struct {
 }
 
 func (s *password) GetSettings(ctx context.Context, tenantID string) (*descope.PasswordSettings, error) {
-	if tenantID == "" {
-		return nil, utils.NewInvalidArgumentError("tenantID")
-	}
-
 	req := &api.HTTPRequest{
 		QueryParams: map[string]string{"tenantId": tenantID},
 	}
@@ -28,10 +24,6 @@ func (s *password) GetSettings(ctx context.Context, tenantID string) (*descope.P
 }
 
 func (s *password) ConfigureSettings(ctx context.Context, tenantID string, passwordSettings *descope.PasswordSettings) error {
-	if tenantID == "" {
-		return utils.NewInvalidArgumentError("tenantID")
-	}
-
 	req := map[string]any{
 		"tenantId":        tenantID,
 		"enabled":         passwordSettings.Enabled,

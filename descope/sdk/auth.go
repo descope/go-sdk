@@ -109,7 +109,7 @@ type OTP interface {
 	UpdateUserEmail(ctx context.Context, loginID, email string, updateOptions *descope.UpdateOptions, request *http.Request) (maskedAddress string, err error)
 
 	// UpdateUserPhone - Use to update phone and validate via OTP
-	// allowed methods are phone based methods - whatsapp and SMS
+	// allowed methods are phone based methods - whatsapp and SMS or Voice call
 	// LoginID of user whom we want to update
 	// UpdateOptions to determine whether to add email as a login id and if to merge with existing user in that case
 	// Request is needed to obtain JWT and send it to Descope, for verification
@@ -152,7 +152,7 @@ type Password interface {
 	// redirectURL is an optional parameter that is used by Magic Link or Enchanted Link
 	// if those are the chosen reset methods. See the Magic Link and Enchanted Link sections
 	// for more details.
-	// templateOptions is used to pass dynamic options for the messaging (email / text message) template
+	// templateOptions is used to pass dynamic options for the messaging (Email / SMS / Voice call / WhatsApp) template
 	SendPasswordReset(ctx context.Context, loginID, redirectURL string, templateOptions map[string]string) error
 
 	// UpdateUserPassword - updates a user's password according to the given loginID.

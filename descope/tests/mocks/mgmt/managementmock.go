@@ -1156,11 +1156,15 @@ func (m *MockFlow) ImportTheme(_ context.Context, theme *descope.Theme) (*descop
 // Mock Project
 
 type MockProject struct {
-	ExportResponse map[string]any
-	ExportError    error
+	ExportSnapshotResponse *descope.ExportSnapshotResponse
+	ExportSnapshotError    error
 
-	ImportAssert func(files map[string]any)
-	ImportError  error
+	ImportSnapshotAssert func(req *descope.ImportSnapshotRequest)
+	ImportSnapshotError  error
+
+	ValidateSnapshotAssert   func(req *descope.ValidateSnapshotRequest)
+	ValidateSnapshotError    error
+	ValidateSnapshotResponse *descope.ValidateSnapshotResponse
 
 	UpdateNameAssert func(name string)
 	UpdateNameError  error
@@ -1173,22 +1177,28 @@ type MockProject struct {
 	DeleteError  error
 }
 
-func (m *MockProject) Export(_ context.Context) (map[string]any, error) {
-	return m.ExportResponse, m.ExportError
+func (m *MockProject) ExportSnapshot(_ context.Context) (*descope.ExportSnapshotResponse, error) {
+	return m.ExportSnapshotResponse, m.ExportSnapshotError
 }
 
-func (m *MockProject) Import(_ context.Context, files map[string]any) error {
-	if m.ImportAssert != nil {
-		m.ImportAssert(files)
+func (m *MockProject) ImportSnapshot(_ context.Context, req *descope.ImportSnapshotRequest) error {
+	if m.ImportSnapshotAssert != nil {
+		m.ImportSnapshotAssert(req)
 	}
-	return m.ExportError
+	return m.ImportSnapshotError
+}
+
+func (m *MockProject) ValidateSnapshot(_ context.Context, req *descope.ValidateSnapshotRequest) (*descope.ValidateSnapshotResponse, error) {
+	if m.ValidateSnapshotAssert != nil {
+		m.ValidateSnapshotAssert(req)
+	}
+	return m.ValidateSnapshotResponse, m.ValidateSnapshotError
 }
 
 func (m *MockProject) UpdateName(_ context.Context, name string) error {
 	if m.UpdateNameAssert != nil {
 		m.UpdateNameAssert(name)
 	}
-
 	return m.UpdateNameError
 }
 
@@ -1269,6 +1279,10 @@ type MockAuthz struct {
 	WhatCanTargetAccessAssert   func(target string)
 	WhatCanTargetAccessResponse []*descope.AuthzRelation
 	WhatCanTargetAccessError    error
+
+	WhatCanTargetAccessWithRelationAssert   func(target, relationDefinition, namespace string)
+	WhatCanTargetAccessWithRelationResponse []*descope.AuthzRelation
+	WhatCanTargetAccessWithRelationError    error
 
 	GetModifiedAssert   func(since time.Time)
 	GetModifiedResponse *descope.AuthzModified
@@ -1372,6 +1386,13 @@ func (m *MockAuthz) WhatCanTargetAccess(_ context.Context, target string) ([]*de
 		m.WhatCanTargetAccessAssert(target)
 	}
 	return m.WhatCanTargetAccessResponse, m.WhatCanTargetAccessError
+}
+
+func (m *MockAuthz) WhatCanTargetAccessWithRelation(_ context.Context, target, relationDefinition, namespace string) ([]*descope.AuthzRelation, error) {
+	if m.WhatCanTargetAccessWithRelationAssert != nil {
+		m.WhatCanTargetAccessWithRelationAssert(target, relationDefinition, namespace)
+	}
+	return m.WhatCanTargetAccessWithRelationResponse, m.WhatCanTargetAccessWithRelationError
 }
 
 func (m *MockAuthz) GetModified(_ context.Context, since time.Time) (*descope.AuthzModified, error) {
