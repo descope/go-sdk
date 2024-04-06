@@ -214,6 +214,10 @@ type relationsResponse struct {
 	Relations []*descope.AuthzRelation `json:"relations"`
 }
 
+type resourcesResponse struct {
+	Resources []string `json:"resources"`
+}
+
 func (a *authz) ResourceRelations(ctx context.Context, resource string) ([]*descope.AuthzRelation, error) {
 	if resource == "" {
 		return nil, utils.NewInvalidArgumentError("resource")
@@ -275,6 +279,45 @@ func (a *authz) WhatCanTargetAccess(ctx context.Context, target string) ([]*desc
 		return nil, err
 	}
 	return response.Relations, nil
+}
+
+func (a *authz) WhatCanTargetAccessWithRelation(ctx context.Context, target, relationDefinition, namespace string) ([]*descope.AuthzRelation, error) {
+	if target == "" {
+		return nil, utils.NewInvalidArgumentError("target")
+	}
+	if relationDefinition == "" {
+		return nil, utils.NewInvalidArgumentError("relationDefinition")
+	}
+	if namespace == "" {
+		return nil, utils.NewInvalidArgumentError("namespace")
+	}
+	body := map[string]any{
+		"target":             target,
+		"relationDefinition": relationDefinition,
+		"namespace":          namespace,
+	}
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRETargetWithRelation(), body, nil, a.conf.ManagementKey)
+	if err != nil {
+		// notest
+		return nil, err
+	}
+	var response *resourcesResponse
+	err = utils.Unmarshal([]byte(res.BodyStr), &response)
+	if err != nil {
+		// notest
+		return nil, err
+	}
+
+	var resp []*descope.AuthzRelation
+	for _, resource := range response.Resources {
+		resp = append(resp, &descope.AuthzRelation{
+			Resource:           resource,
+			Target:             target,
+			RelationDefinition: relationDefinition,
+			Namespace:          namespace,
+		})
+	}
+	return resp, nil
 }
 
 func (a *authz) GetModified(ctx context.Context, since time.Time) (*descope.AuthzModified, error) {
