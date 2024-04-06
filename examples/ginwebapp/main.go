@@ -61,6 +61,7 @@ func help(c *gin.Context) {
 	helpTxt := "Sign up or in with otp email go to /otp/signupOrIn?email=\n\n"
 	helpTxt += "Sign up or in with otp sms go to /otp/signupOrIn?sms=\n\n"
 	helpTxt += "Sign up or in with otp whatsapp go to /otp/signupOrIn?whatsapp=\n\n"
+	helpTxt += "Sign up or in with otp voice go to /otp/signupOrIn?voice=\n\n"
 	helpTxt += "-------------------------------------\n\n"
 	helpTxt += "See a private page /private\n\n"
 	helpTxt += "To see more examples see out webapp example (../webapp)\n\n"
@@ -111,6 +112,9 @@ func getMethodAndLoginID(c *gin.Context) (descope.DeliveryMethod, string) {
 	} else if whatsapp := c.Query("whatsapp"); whatsapp != "" {
 		method = descope.MethodWhatsApp
 		loginID = whatsapp
+	} else if voice := c.Query("voice"); voice != "" {
+		method = descope.MethodVoice
+		loginID = voice
 	}
 	return method, loginID
 }
