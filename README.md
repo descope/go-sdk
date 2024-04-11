@@ -1223,12 +1223,12 @@ You can also create audit event with data
 
 ```go
 err := descopeClient.Management.Audit().CreateEvent(context.Background(), &descope.AuditCreateOptions{ 
-	UserID: <user-id>,
-	Action: <action>,
-	Type: <action>,
-	ActorID: <actor-id>,
-	Data: <data>,
-	TenantID: <tenant-id>,
+	UserID: "UXXX",
+	Action: "pencil.created",
+	Type: "info", // info/warn/error
+	ActorID: "UXXX",
+	Data: map[string]string{},
+	TenantID: "tenant-id",
 })
 ```
 

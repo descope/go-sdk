@@ -44,7 +44,7 @@ func (a *audit) CreateEvent(ctx context.Context, options *descope.AuditCreateOpt
 	if options.TenantID == "" {
 		return utils.NewInvalidArgumentError("TenantID")
 	}
-	if options.Type == "" {
+	if options.Type == "" || (options.Type != "info" && options.Type != "warn" && options.Type != "error") {
 		return utils.NewInvalidArgumentError("Type")
 	}
 	if options.ActorID == "" {
