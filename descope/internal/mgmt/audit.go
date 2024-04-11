@@ -38,6 +38,18 @@ func (a *audit) Search(ctx context.Context, options *descope.AuditSearchOptions)
 }
 
 func (a *audit) CreateEvent(ctx context.Context, options *descope.AuditCreateOptions) error {
+	if options.Action == "" {
+		return utils.NewInvalidArgumentError("Action")
+	}
+	if options.TenantID == "" {
+		return utils.NewInvalidArgumentError("TenantID")
+	}
+	if options.Type == "" {
+		return utils.NewInvalidArgumentError("Type")
+	}
+	if options.ActorID == "" {
+		return utils.NewInvalidArgumentError("ActorID")
+	}
 	body := map[string]any{
 		"userId":   options.UserID,
 		"action":   options.Action,
