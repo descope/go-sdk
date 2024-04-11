@@ -809,7 +809,7 @@ type AuditSearchOptions struct {
 type AuditCreateOptions struct {
 	UserID   string                 `json:"userId,omitempty"`
 	Action   string                 `json:"action,omitempty"`
-	Type     string                 `json:"type,omitempty"`
+	Type     string                 `json:"type,omitempty"` // info/warn/error
 	ActorID  string                 `json:"actorId,omitempty"`
 	Data     map[string]interface{} `json:"data,omitempty"`
 	TenantID string                 `json:"tenantId,omitempty"`
