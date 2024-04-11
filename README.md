@@ -63,7 +63,7 @@ These sections show how to use the SDK to perform API management functions. Befo
 8. [Manage Flows](#manage-flows)
 9. [Manage JWTs](#manage-jwts)
 10. [Impersonate](#impersonate)
-11. [Search Audit](#search-audit)
+11. [Audit](#audit)
 12. [Embedded Links](#embedded-links)
 13. [Manage ReBAC Authz](#manage-rebac-authz)
 14. [Manage Project](#manage-project)
@@ -1201,7 +1201,7 @@ if err != nil {
 token, err := descopeClient.Management.User().GenerateEmbeddedLink(context.Background(), "desmond@descope.com", map[string]any{"key1":"value1"})
 ```
 
-### Search Audit
+### Audit
 
 You can perform an audit search for either specific values or full-text across the fields. Audit search is limited to the last 30 days.
 
@@ -1217,6 +1217,19 @@ res, err := descopeClient.Management.Audit().Search(context.Background(), &desco
 if err == nil {
     fmt.Println(res)
 }
+```
+
+You can also create audit event with data
+
+```go
+err := descopeClient.Management.Audit().CreateEvent(context.Background(), &descope.AuditCreateOptions{ 
+	UserID: <user-id>,
+	Action: <action>,
+	Type: <action>,
+	ActorID: <actor-id>,
+	Data: <data>,
+	TenantID: <tenant-id>,
+})
 ```
 
 ### Manage ReBAC Authz

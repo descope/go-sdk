@@ -89,3 +89,27 @@ func TestAuditSearch(t *testing.T) {
 	assert.EqualValues(t, response.Audits[0].Tenants, res[0].Tenants)
 	assert.EqualValues(t, response.Audits[0].Data["x"], res[0].Data["x"])
 }
+
+func TestAuditCreate(t *testing.T) {
+	auditCreateOptions := &descope.AuditCreateOptions{
+		UserID:   "userId",
+		Action:   "action",
+		Type:     "type",
+		ActorID:  "actorId",
+		Data:     map[string]interface{}{"aaa": "bbb"},
+		TenantID: "tenantId",
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, auditCreateOptions.UserID, req["userId"])
+		assert.EqualValues(t, auditCreateOptions.Action, req["action"])
+		assert.EqualValues(t, auditCreateOptions.Type, req["type"])
+		assert.EqualValues(t, auditCreateOptions.ActorID, req["actorId"])
+		assert.EqualValues(t, auditCreateOptions.Data, req["data"])
+		assert.EqualValues(t, auditCreateOptions.TenantID, req["tenantId"])
+	}, nil))
+	err := mgmt.Audit().CreateEvent(context.Background(), auditCreateOptions)
+	require.NoError(t, err)
+}

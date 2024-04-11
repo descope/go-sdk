@@ -37,6 +37,22 @@ func (a *audit) Search(ctx context.Context, options *descope.AuditSearchOptions)
 	return unmarshalAuditRecords(res)
 }
 
+func (a *audit) CreateEvent(ctx context.Context, options *descope.AuditCreateOptions) error {
+	body := map[string]any{
+		"userId":   options.UserID,
+		"action":   options.Action,
+		"type":     options.Type,
+		"actorId":  options.ActorID,
+		"data":     options.Data,
+		"tenantId": options.TenantID,
+	}
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuditCreate(), body, nil, a.conf.ManagementKey)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 type apiAuditRecord struct {
 	ProjectID     string   `json:"projectId,omitempty"`
 	UserID        string   `json:"userId,omitempty"`
