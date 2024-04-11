@@ -806,6 +806,15 @@ type AuditSearchOptions struct {
 	Text            string    `json:"text"`                      // Free text search across all fields
 }
 
+type AuditCreateOptions struct {
+	UserID   string                 `json:"userId,omitempty"`
+	Action   string                 `json:"action,omitempty"`
+	Type     string                 `json:"type,omitempty"`
+	ActorID  string                 `json:"actorId,omitempty"`
+	Data     map[string]interface{} `json:"data,omitempty"`
+	TenantID string                 `json:"tenantId,omitempty"`
+}
+
 type ExportSnapshotResponse struct {
 	// All project settings and configurations represented as JSON files
 	Files map[string]any `json:"files"`

@@ -699,6 +699,7 @@ type Project interface {
 // Provides search project audit trail
 type Audit interface {
 	Search(ctx context.Context, options *descope.AuditSearchOptions) ([]*descope.AuditRecord, error)
+	CreateEvent(ctx context.Context, options *descope.AuditCreateOptions) error
 }
 
 // Provides authorization ReBAC capabilities
@@ -802,7 +803,7 @@ type Management interface {
 	// Provide functions for managing flows and theme in a project
 	Flow() Flow
 
-	// Provides search project audit trail
+	// Provides functions for managing audit
 	Audit() Audit
 
 	// Provide functions for managing projects

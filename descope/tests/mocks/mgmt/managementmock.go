@@ -1221,6 +1221,9 @@ type MockAudit struct {
 	SearchAssert   func(*descope.AuditSearchOptions)
 	SearchResponse []*descope.AuditRecord
 	SearchError    error
+
+	CreateEventAssert func(*descope.AuditCreateOptions)
+	CreateEventError  error
 }
 
 func (m *MockAudit) Search(_ context.Context, options *descope.AuditSearchOptions) ([]*descope.AuditRecord, error) {
@@ -1228,6 +1231,13 @@ func (m *MockAudit) Search(_ context.Context, options *descope.AuditSearchOption
 		m.SearchAssert(options)
 	}
 	return m.SearchResponse, m.SearchError
+}
+
+func (m *MockAudit) CreateEvent(_ context.Context, options *descope.AuditCreateOptions) error {
+	if m.CreateEventAssert != nil {
+		m.CreateEventAssert(options)
+	}
+	return m.CreateEventError
 }
 
 type MockAuthz struct {

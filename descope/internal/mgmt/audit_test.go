@@ -14,6 +14,7 @@ import (
 )
 
 func TestAuditSearch(t *testing.T) {
+	called := false
 	response := &apiSearchAuditResponse{Audits: []*apiAuditRecord{
 		{
 			ProjectID:     "p1",
@@ -57,6 +58,7 @@ func TestAuditSearch(t *testing.T) {
 		Text:            "kuku",
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		called = true
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
@@ -88,4 +90,144 @@ func TestAuditSearch(t *testing.T) {
 	assert.EqualValues(t, response.Audits[0].ExternalIDs, res[0].LoginIDs)
 	assert.EqualValues(t, response.Audits[0].Tenants, res[0].Tenants)
 	assert.EqualValues(t, response.Audits[0].Data["x"], res[0].Data["x"])
+	assert.True(t, called)
+}
+
+func TestAuditCreate(t *testing.T) {
+	called := false
+	auditCreateOptions := &descope.AuditCreateOptions{
+		UserID:   "userId",
+		Action:   "action",
+		Type:     "type",
+		ActorID:  "actorId",
+		Data:     map[string]interface{}{"aaa": "bbb"},
+		TenantID: "tenantId",
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		called = true
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, auditCreateOptions.UserID, req["userId"])
+		assert.EqualValues(t, auditCreateOptions.Action, req["action"])
+		assert.EqualValues(t, auditCreateOptions.Type, req["type"])
+		assert.EqualValues(t, auditCreateOptions.ActorID, req["actorId"])
+		assert.EqualValues(t, auditCreateOptions.Data, req["data"])
+		assert.EqualValues(t, auditCreateOptions.TenantID, req["tenantId"])
+	}, nil))
+	err := mgmt.Audit().CreateEvent(context.Background(), auditCreateOptions)
+	require.NoError(t, err)
+	assert.True(t, called)
+}
+
+func TestAuditCreateMissingArgumentAction(t *testing.T) {
+	called := false
+	auditCreateOptions := &descope.AuditCreateOptions{
+		UserID:   "userId",
+		Action:   "",
+		Type:     "type",
+		ActorID:  "actorId",
+		Data:     map[string]interface{}{"aaa": "bbb"},
+		TenantID: "tenantId",
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		called = true
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, auditCreateOptions.UserID, req["userId"])
+		assert.EqualValues(t, auditCreateOptions.Action, req["action"])
+		assert.EqualValues(t, auditCreateOptions.Type, req["type"])
+		assert.EqualValues(t, auditCreateOptions.ActorID, req["actorId"])
+		assert.EqualValues(t, auditCreateOptions.Data, req["data"])
+		assert.EqualValues(t, auditCreateOptions.TenantID, req["tenantId"])
+	}, nil))
+	err := mgmt.Audit().CreateEvent(context.Background(), auditCreateOptions)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Contains(t, err.Error(), "Action")
+	assert.False(t, called)
+}
+
+func TestAuditCreateMissingArgumentType(t *testing.T) {
+	called := false
+	auditCreateOptions := &descope.AuditCreateOptions{
+		UserID:   "userId",
+		Action:   "action",
+		Type:     "",
+		ActorID:  "actorId",
+		Data:     map[string]interface{}{"aaa": "bbb"},
+		TenantID: "tenantId",
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		called = true
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, auditCreateOptions.UserID, req["userId"])
+		assert.EqualValues(t, auditCreateOptions.Action, req["action"])
+		assert.EqualValues(t, auditCreateOptions.Type, req["type"])
+		assert.EqualValues(t, auditCreateOptions.ActorID, req["actorId"])
+		assert.EqualValues(t, auditCreateOptions.Data, req["data"])
+		assert.EqualValues(t, auditCreateOptions.TenantID, req["tenantId"])
+	}, nil))
+	err := mgmt.Audit().CreateEvent(context.Background(), auditCreateOptions)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Contains(t, err.Error(), "Type")
+	assert.False(t, called)
+}
+
+func TestAuditCreateMissingArgumentActorID(t *testing.T) {
+	called := false
+	auditCreateOptions := &descope.AuditCreateOptions{
+		UserID:   "userId",
+		Action:   "action",
+		Type:     "type",
+		ActorID:  "",
+		Data:     map[string]interface{}{"aaa": "bbb"},
+		TenantID: "tenantId",
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		called = true
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, auditCreateOptions.UserID, req["userId"])
+		assert.EqualValues(t, auditCreateOptions.Action, req["action"])
+		assert.EqualValues(t, auditCreateOptions.Type, req["type"])
+		assert.EqualValues(t, auditCreateOptions.ActorID, req["actorId"])
+		assert.EqualValues(t, auditCreateOptions.Data, req["data"])
+		assert.EqualValues(t, auditCreateOptions.TenantID, req["tenantId"])
+	}, nil))
+	err := mgmt.Audit().CreateEvent(context.Background(), auditCreateOptions)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Contains(t, err.Error(), "ActorID")
+	assert.False(t, called)
+}
+
+func TestAuditCreateMissingArgumentTenantID(t *testing.T) {
+	called := false
+	auditCreateOptions := &descope.AuditCreateOptions{
+		UserID:   "userId",
+		Action:   "action",
+		Type:     "type",
+		ActorID:  "actor",
+		Data:     map[string]interface{}{"aaa": "bbb"},
+		TenantID: "",
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		called = true
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, auditCreateOptions.UserID, req["userId"])
+		assert.EqualValues(t, auditCreateOptions.Action, req["action"])
+		assert.EqualValues(t, auditCreateOptions.Type, req["type"])
+		assert.EqualValues(t, auditCreateOptions.ActorID, req["actorId"])
+		assert.EqualValues(t, auditCreateOptions.Data, req["data"])
+		assert.EqualValues(t, auditCreateOptions.TenantID, req["tenantId"])
+	}, nil))
+	err := mgmt.Audit().CreateEvent(context.Background(), auditCreateOptions)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Contains(t, err.Error(), "TenantID")
+	assert.False(t, called)
 }
