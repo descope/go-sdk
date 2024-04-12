@@ -777,6 +777,8 @@ type AuditRecord struct {
 	ProjectID     string    `json:"projectId,omitempty"`
 	UserID        string    `json:"userId,omitempty"`
 	Action        string    `json:"action,omitempty"`
+	Type          string    `json:"type,omitempty"`
+	ActorID       string    `json:"actorId,omitempty"`
 	Occurred      time.Time `json:"occurred,omitempty"`
 	Device        string    `json:"device,omitempty"`
 	Method        string    `json:"method,omitempty"`
