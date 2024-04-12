@@ -69,6 +69,8 @@ type apiAuditRecord struct {
 	ProjectID     string   `json:"projectId,omitempty"`
 	UserID        string   `json:"userId,omitempty"`
 	Action        string   `json:"action,omitempty"`
+	Type          string   `json:"type,omitempty"`
+	ActorID       string   `json:"actorId,omitempty"`
 	Occurred      string   `json:"occurred,omitempty"`
 	Device        string   `json:"device,omitempty"`
 	Method        string   `json:"method,omitempty"`
@@ -108,6 +110,8 @@ func unmarshalAuditRecords(res *api.HTTPResponse) ([]*descope.AuditRecord, error
 			LoginIDs:      rec.ExternalIDs,
 			Tenants:       rec.Tenants,
 			Data:          rec.Data,
+			ActorID:       rec.ActorID,
+			Type:          rec.Type,
 		})
 	}
 	return records, nil
