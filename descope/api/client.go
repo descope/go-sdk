@@ -1153,7 +1153,15 @@ func (c *Client) DoDeleteRequest(ctx context.Context, uri string, options *HTTPR
 	return c.DoRequest(ctx, http.MethodDelete, uri, nil, options, pswd)
 }
 
+func (c *Client) DoPutRequest(ctx context.Context, uri string, body interface{}, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
+	return c.doRequestWithBody(ctx, http.MethodPut, uri, body, options, pswd)
+}
+
 func (c *Client) DoPostRequest(ctx context.Context, uri string, body interface{}, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
+	return c.doRequestWithBody(ctx, http.MethodPost, uri, body, options, pswd)
+}
+
+func (c *Client) doRequestWithBody(ctx context.Context, method string, uri string, body interface{}, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
 	if options == nil {
 		options = &HTTPRequest{}
 	}
@@ -1178,7 +1186,7 @@ func (c *Client) DoPostRequest(ctx context.Context, uri string, body interface{}
 		}
 	}
 
-	return c.DoRequest(ctx, http.MethodPost, uri, payload, options, pswd)
+	return c.DoRequest(ctx, method, uri, payload, options, pswd)
 }
 
 func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.Reader, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
