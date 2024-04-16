@@ -66,6 +66,32 @@ func TestGetRequest(t *testing.T) {
 	assert.EqualValues(t, expectedResponse, res.BodyStr)
 }
 
+func TestPutRequest(t *testing.T) {
+	type dummy struct {
+		Test string
+	}
+
+	expectedOutput := &dummy{Test: "test"}
+	expectedHeaders := map[string]string{"header1": "value1"}
+	projectID := "test"
+	outputBytes, err := utils.Marshal(expectedOutput)
+	require.NoError(t, err)
+	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+		assert.NotNil(t, r.Body)
+		actualProject, _ := getProjectAndJwt(r)
+		assert.EqualValues(t, http.MethodPut, r.Method)
+		assert.EqualValues(t, projectID, actualProject)
+		assert.EqualValues(t, expectedHeaders["header1"], r.Header.Get("header1"))
+		return &http.Response{Body: io.NopCloser(bytes.NewReader(outputBytes)), StatusCode: http.StatusOK}, nil
+	})})
+
+	actualOutput := &dummy{}
+	res, err := c.DoPutRequest(context.Background(), "path", strings.NewReader("test"), &HTTPRequest{ResBodyObj: actualOutput, Headers: expectedHeaders}, "")
+	require.NoError(t, err)
+	assert.EqualValues(t, string(outputBytes), res.BodyStr)
+	assert.EqualValues(t, expectedOutput, actualOutput)
+}
+
 func TestPostRequest(t *testing.T) {
 	type dummy struct {
 		Test string
@@ -79,6 +105,7 @@ func TestPostRequest(t *testing.T) {
 	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
 		assert.NotNil(t, r.Body)
 		actualProject, _ := getProjectAndJwt(r)
+		assert.EqualValues(t, http.MethodPost, r.Method)
 		assert.EqualValues(t, projectID, actualProject)
 		assert.EqualValues(t, expectedHeaders["header1"], r.Header.Get("header1"))
 		return &http.Response{Body: io.NopCloser(bytes.NewReader(outputBytes)), StatusCode: http.StatusOK}, nil
