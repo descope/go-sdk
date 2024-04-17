@@ -19,6 +19,7 @@ var (
 	ErrEnchantedLinkUnauthorized = newServerError("E062503")
 	ErrPasswordExpired           = newServerError("E062909")
 	ErrTokenExpiredByLoggedOut   = newServerError("E064001")
+	ErrNOTPUnauthorized          = newServerError("E066103")
 
 	// server management
 	ErrManagementUserNotFound = newServerError("E112102")

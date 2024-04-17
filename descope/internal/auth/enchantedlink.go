@@ -68,7 +68,7 @@ func (auth *enchantedLink) SignUpOrIn(ctx context.Context, loginID, URI string, 
 
 func (auth *enchantedLink) GetSession(ctx context.Context, pendingRef string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	var err error
-	httpResponse, err := auth.client.DoPostRequest(ctx, composeGetSession(), newAuthenticationGetMagicLinkSessionBody(pendingRef), nil, "")
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeGetSession(), newAuthenticationGetSessionBody(pendingRef), nil, "")
 	if err != nil {
 		return nil, err
 	}
