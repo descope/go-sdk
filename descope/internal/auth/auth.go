@@ -40,6 +40,7 @@ type authenticationService struct {
 	magicLink     sdk.MagicLink
 	enchantedLink sdk.EnchantedLink
 	totp          sdk.TOTP
+	notp          sdk.NOTP
 	password      sdk.Password
 	webAuthn      sdk.WebAuthn
 	oauth         sdk.OAuth
@@ -59,6 +60,7 @@ func NewAuth(conf AuthParams, c *api.Client) (*authenticationService, error) {
 	authenticationService.sso = &sso{authenticationsBase: base}
 	authenticationService.webAuthn = &webAuthn{authenticationsBase: base}
 	authenticationService.totp = &totp{authenticationsBase: base}
+	authenticationService.notp = &notp{authenticationsBase: base}
 	authenticationService.password = &password{authenticationsBase: base}
 	return authenticationService, nil
 }
@@ -77,6 +79,10 @@ func (auth *authenticationService) OTP() sdk.OTP {
 
 func (auth *authenticationService) TOTP() sdk.TOTP {
 	return auth.totp
+}
+
+func (auth *authenticationService) NOTP() sdk.NOTP {
+	return auth.notp
 }
 
 func (auth *authenticationService) Password() sdk.Password {
@@ -830,6 +836,15 @@ func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (*descope.Enchant
 	return response, nil
 }
 
+func getNOTPResponse(httpResponse *api.HTTPResponse) (*descope.NOTPResponse, error) {
+	var response *descope.NOTPResponse
+	if err := utils.Unmarshal([]byte(httpResponse.BodyStr), &response); err != nil {
+		logger.LogError("Failed to load NOTP response from http response", err)
+		return response, descope.ErrUnexpectedResponse.WithMessage("Failed to load NOTP response")
+	}
+	return response, nil
+}
+
 func composeURLMethod(base string, method descope.DeliveryMethod) string {
 	return path.Join(base, string(method))
 }
@@ -852,6 +867,22 @@ func composeSignUpTOTPURL() string {
 
 func composeUpdateTOTPURL() string {
 	return api.Routes.UpdateTOTP()
+}
+
+func composeNOTPSignInURL() string {
+	return api.Routes.SignInNOTP()
+}
+
+func composeNOTPSignUpURL() string {
+	return api.Routes.SignUpNOTP()
+}
+
+func composeNOTPSignUpOrInURL() string {
+	return api.Routes.SignUpOrInNOTP()
+}
+
+func composeNOTPGetSession() string {
+	return api.Routes.GetNOTPSession()
 }
 
 func composeVerifyCodeURL(method descope.DeliveryMethod) string {

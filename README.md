@@ -40,14 +40,15 @@ These sections show how to use the SDK to perform various authentication/authori
 2. [Magic Link](#magic-link)
 3. [Enchanted Link](#enchanted-link)
 4. [OAuth](#oauth)
-5. [SSO (SAML / OIDC)](#sso-saml--oidc)
-6. [TOTP Authentication](#totp-authentication)
-7. [Passwords](#passwords)
-8. [Session Validation](#session-validation)
-9. [Roles & Permission Validation](#roles--permission-validation)
-10. [Tenant selection](#tenant-selection)
-11. [Logging Out](#logging-out)
-12. [History](#history)
+5. [NOTP (WhatsApp)] (#notp-whatsapp)
+6. [SSO (SAML / OIDC)](#sso-saml--oidc)
+7. [TOTP Authentication](#totp-authentication)
+8. [Passwords](#passwords)
+9. [Session Validation](#session-validation)
+10. [Roles & Permission Validation](#roles--permission-validation)
+11. [Tenant selection](#tenant-selection)
+12. [Logging Out](#logging-out)
+13. [History](#history)
 
 ## Management Functions
 
@@ -256,6 +257,61 @@ if err != nil {
     // handle error
 }
 ```
+
+The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
+
+### NOTP (WhatsApp)
+
+Using the NOTP (WhatsApp) APIs enables users to log in using their WhatsApp account, according to the following process:
+a. The user will be redirected to WhatsApp (with a QR Code or link) with a pre-filled message containing a 16-character alphanumeric code.
+b. The user will send the message to the WhatsApp Application associated with the Descope project.
+c. Descope will receive the message, validate the code, and send an approval message back to the user.
+d. The user will be logged in after receiving the approval message.
+
+Note: The NOTP (WhatsApp) authentication method should be configured in the Descope Console before using it
+
+The user can either `sign up`, `sign in`, or `sign up or in`:
+
+```go
+loginID := "" // OR phone number
+res, err := descopeClient.Auth.NOTP().SignUpOrIn(context.Background(), loginID, nil, nil)
+if err != nil {
+    // handle error
+}
+
+// The URL to redirect the user to initiate a conversation in the WhatsApp Web Application with the pre-filled message containing the code
+res.RedirectURL
+// A QR code image that can be displayed to the user to scan using their mobile device camera app to start the WhatsApp conversation
+res.Image
+// Used to poll for a valid session
+res.PendingRef
+```
+
+After sending the link, you must poll to receive a valid session using the `PendingRef` from the previous step. A valid session will be returned only after the user sends the message to the WhatsApp Application associated with the Project with the code
+
+```go
+// Poll for a certain number of tries / time frame
+for i := retriesCount; i > 0; i-- {
+    authInfo, err := descopeClient.Auth.NOTP().GetSession(context.Background(), res.PendingRef, w)
+    if err == nil {
+        // The user successfully authenticated
+        // The optional `w http.ResponseWriter` adds the session and refresh cookies to the response automatically.
+        // Otherwise they're available via authInfo
+        break
+    }
+    if errors.Is(err, descope.ErrNOTPUnauthorized) && i > 1 {
+        // poll again after X seconds
+        time.Sleep(time.Second * time.Duration(retryInterval))
+        continue
+    }
+    if err != nil {
+        // handle error
+        break
+    }
+}
+```
+
+The verification process is conducted using the WhatsApp application by the user sending a message with the token included in the link. After sending the message, the user will receive an approval message back, and the session polling will then receive a valid response
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
 
