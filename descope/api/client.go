@@ -41,10 +41,6 @@ var (
 			signUpTOTP:                   "auth/totp/signup",
 			updateTOTP:                   "auth/totp/update",
 			verifyTOTPCode:               "auth/totp/verify",
-			signUpNOTP:                   "auth/notp/whatsapp/signup",
-			signInNOTP:                   "auth/notp/whatsapp/signin",
-			signUpOrInNOTP:               "auth/notp/whatsapp/signup-in",
-			getNOTPSession:               "auth/notp/pending-session",
 			verifyCode:                   "auth/otp/verify",
 			signUpPassword:               "auth/password/signup",
 			signInPassword:               "auth/password/signin",
@@ -226,10 +222,6 @@ type authEndpoints struct {
 	signUpTOTP                   string
 	updateTOTP                   string
 	verifyTOTPCode               string
-	signUpNOTP                   string
-	signInNOTP                   string
-	signUpOrInNOTP               string
-	getNOTPSession               string
 	verifyCode                   string
 	signUpPassword               string
 	signInPassword               string
@@ -417,22 +409,6 @@ func (e *endpoints) SignUpTOTP() string {
 
 func (e *endpoints) UpdateTOTP() string {
 	return path.Join(e.version, e.auth.updateTOTP)
-}
-
-func (e *endpoints) SignUpNOTP() string {
-	return path.Join(e.version, e.auth.signUpNOTP)
-}
-
-func (e *endpoints) SignInNOTP() string {
-	return path.Join(e.version, e.auth.signInNOTP)
-}
-
-func (e *endpoints) SignUpOrInNOTP() string {
-	return path.Join(e.version, e.auth.signUpOrInNOTP)
-}
-
-func (e *endpoints) GetNOTPSession() string {
-	return path.Join(e.version, e.auth.getNOTPSession)
 }
 
 func (e *endpoints) VerifyCode() string {

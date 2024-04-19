@@ -13,7 +13,6 @@ type MockAuthentication struct {
 	*MockEnchantedLink
 	*MockOTP
 	*MockTOTP
-	*MockNOTP
 	*MockPassword
 	*MockOAuth
 	*MockSAML
@@ -36,10 +35,6 @@ func (m *MockAuthentication) OTP() sdk.OTP {
 
 func (m *MockAuthentication) TOTP() sdk.TOTP {
 	return m.MockTOTP
-}
-
-func (m *MockAuthentication) NOTP() sdk.NOTP {
-	return m.MockNOTP
 }
 
 func (m *MockAuthentication) Password() sdk.Password {
@@ -296,54 +291,6 @@ func (m *MockTOTP) UpdateUser(_ context.Context, loginID string, r *http.Request
 		m.UpdateUserAssert(loginID, r)
 	}
 	return m.UpdateUserResponse, m.UpdateUserError
-}
-
-// Mock NOTP
-
-type MockNOTP struct {
-	SignInAssert   func(loginID string, r *http.Request, loginOptions *descope.LoginOptions)
-	SignInError    error
-	SignInResponse *descope.NOTPResponse
-
-	SignUpAssert   func(loginID string, user *descope.User, signUpOptions *descope.SignUpOptions)
-	SignUpError    error
-	SignUpResponse *descope.NOTPResponse
-
-	SignUpOrInAssert   func(loginID string, signUpOptions *descope.SignUpOptions)
-	SignUpOrInError    error
-	SignUpOrInResponse *descope.NOTPResponse
-
-	GetSessionAssert   func(pendingRef string, w http.ResponseWriter)
-	GetSessionResponse *descope.AuthenticationInfo
-	GetSessionError    error
-}
-
-func (m *MockNOTP) SignIn(_ context.Context, loginID string, r *http.Request, loginOptions *descope.LoginOptions) (*descope.NOTPResponse, error) {
-	if m.SignInAssert != nil {
-		m.SignInAssert(loginID, r, loginOptions)
-	}
-	return m.SignInResponse, m.SignInError
-}
-
-func (m *MockNOTP) SignUp(_ context.Context, loginID string, user *descope.User, signUpOptions *descope.SignUpOptions) (*descope.NOTPResponse, error) {
-	if m.SignUpAssert != nil {
-		m.SignUpAssert(loginID, user, signUpOptions)
-	}
-	return m.SignUpResponse, m.SignUpError
-}
-
-func (m *MockNOTP) SignUpOrIn(_ context.Context, loginID string, signUpOptions *descope.SignUpOptions) (*descope.NOTPResponse, error) {
-	if m.SignUpOrInAssert != nil {
-		m.SignUpOrInAssert(loginID, signUpOptions)
-	}
-	return m.SignUpOrInResponse, m.SignUpOrInError
-}
-
-func (m *MockNOTP) GetSession(_ context.Context, pendingRef string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
-	if m.GetSessionAssert != nil {
-		m.GetSessionAssert(pendingRef, w)
-	}
-	return m.GetSessionResponse, m.GetSessionError
 }
 
 // Mock Password
