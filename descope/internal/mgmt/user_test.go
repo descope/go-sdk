@@ -532,6 +532,7 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 		"users": []map[string]any{{
 			"email": "a@b.c",
 		}},
+		"total": 85,
 	}
 	tenantIDs := []string{"t1"}
 	roleNames := []string{"role1"}
@@ -550,7 +551,7 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 		require.EqualValues(t, "blue", req["text"])
 		require.EqualValues(t, []interface{}([]interface{}{map[string]interface{}{"Desc": true, "Field": "nono"}, map[string]interface{}{"Desc": false, "Field": "lolo"}}), req["sort"])
 	}, response))
-	res, err := m.User().SearchAll(context.Background(), &descope.UserSearchOptions{
+	res, total, err := m.User().SearchAll(context.Background(), &descope.UserSearchOptions{
 		Statuses:         []descope.UserStatus{descope.UserStatusDisabled},
 		TenantIDs:        tenantIDs,
 		Roles:            roleNames,
@@ -568,26 +569,30 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 	require.NotNil(t, res)
 	require.Len(t, res, 1)
 	require.Equal(t, "a@b.c", res[0].Email)
+	require.Equal(t, 85, total)
 }
 
 func TestSearchAllUsersError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().SearchAll(context.Background(), nil)
+	res, total, err := m.User().SearchAll(context.Background(), nil)
 	require.Error(t, err)
 	require.Nil(t, res)
+	require.Zero(t, total)
 }
 
 func TestSearchAllUsersBadRequest(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().SearchAll(context.Background(), &descope.UserSearchOptions{Limit: -1})
+	res, total, err := m.User().SearchAll(context.Background(), &descope.UserSearchOptions{Limit: -1})
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.Contains(t, err.Error(), "limit")
 	require.Nil(t, res)
+	require.Zero(t, total)
 
-	res, err = m.User().SearchAll(context.Background(), &descope.UserSearchOptions{Page: -1})
+	res, total, err = m.User().SearchAll(context.Background(), &descope.UserSearchOptions{Page: -1})
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.Contains(t, err.Error(), "page")
 	require.Nil(t, res)
+	require.Zero(t, total)
 }
 
 func TestUserActivateSuccess(t *testing.T) {

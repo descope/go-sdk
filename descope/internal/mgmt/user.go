@@ -214,7 +214,7 @@ func (u *user) load(ctx context.Context, loginID, userID string) (*descope.UserR
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) SearchAll(ctx context.Context, options *descope.UserSearchOptions) ([]*descope.UserResponse, error) {
+func (u *user) SearchAll(ctx context.Context, options *descope.UserSearchOptions) ([]*descope.UserResponse, int, error) {
 	// Init empty options if non given
 	if options == nil {
 		options = &descope.UserSearchOptions{}
@@ -222,18 +222,18 @@ func (u *user) SearchAll(ctx context.Context, options *descope.UserSearchOptions
 
 	// Make sure limit is non-negative
 	if options.Limit < 0 {
-		return nil, utils.NewInvalidArgumentError("limit")
+		return nil, 0, utils.NewInvalidArgumentError("limit")
 	}
 
 	// Make sure page is non-negative
 	if options.Page < 0 {
-		return nil, utils.NewInvalidArgumentError("page")
+		return nil, 0, utils.NewInvalidArgumentError("page")
 	}
 
 	req := makeSearchAllRequest(options)
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSearchAll(), req, nil, u.conf.ManagementKey)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	return unmarshalUserSearchAllResponse(res)
 }
@@ -833,15 +833,16 @@ func unmarshalUserBatchResponse(res *api.HTTPResponse) (*descope.UsersBatchRespo
 	return ures, err
 }
 
-func unmarshalUserSearchAllResponse(res *api.HTTPResponse) ([]*descope.UserResponse, error) {
+func unmarshalUserSearchAllResponse(res *api.HTTPResponse) ([]*descope.UserResponse, int, error) {
 	ures := struct {
 		Users []*descope.UserResponse
+		Total int
 	}{}
 	err := utils.Unmarshal([]byte(res.BodyStr), &ures)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return ures.Users, nil
+	return ures.Users, ures.Total, nil
 }
 
 func unmarshalProviderTokenResponse(res *api.HTTPResponse) (*descope.ProviderTokenResponse, error) {
