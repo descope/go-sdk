@@ -391,7 +391,7 @@ type Authentication interface {
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	LogoutAll(request *http.Request, w http.ResponseWriter) error
 
-	// LogoutAll - Use to perform logout from all active sessions for the request user. This will revoke the given tokens
+	// LogoutAllWithToken - Use to perform logout from all active sessions for the request user. This will revoke the given tokens
 	// and if given options will also remove existing session on the given response sent to the client.
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	LogoutAllWithToken(refreshToken string, w http.ResponseWriter) error
