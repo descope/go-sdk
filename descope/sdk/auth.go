@@ -382,10 +382,19 @@ type Authentication interface {
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	Logout(request *http.Request, w http.ResponseWriter) error
 
+	// LogoutWithToken - Logs out from the current session and deletes the session and refresh cookies in the http response.
+	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
+	LogoutWithToken(refreshToken string, w http.ResponseWriter) error
+
 	// LogoutAll - Use to perform logout from all active sessions for the request user. This will revoke the given tokens
 	// and if given options will also remove existing session on the given response sent to the client.
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	LogoutAll(request *http.Request, w http.ResponseWriter) error
+
+	// LogoutAllWithToken - Use to perform logout from all active sessions for the request user. This will revoke the given tokens
+	// and if given options will also remove existing session on the given response sent to the client.
+	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
+	LogoutAllWithToken(refreshToken string, w http.ResponseWriter) error
 
 	// Me - Use to retrieve current session user details. The request requires a valid refresh token.
 	// returns the user details or error if the refresh token is not valid.

@@ -630,8 +630,14 @@ type MockSession struct {
 	LogoutAssert func(r *http.Request, w http.ResponseWriter)
 	LogoutError  error
 
+	LogoutWithTokenAssert func(refreshToken string, w http.ResponseWriter)
+	LogoutWithTokenError  error
+
 	LogoutAllAssert func(r *http.Request, w http.ResponseWriter)
 	LogoutAllError  error
+
+	LogoutAllWithTokenAssert func(refreshToken string, w http.ResponseWriter)
+	LogoutAllWithTokenError  error
 
 	MeAssert   func(r *http.Request)
 	MeError    error
@@ -801,11 +807,25 @@ func (m *MockSession) Logout(r *http.Request, w http.ResponseWriter) error {
 	return m.LogoutError
 }
 
+func (m *MockSession) LogoutWithToken(refreshToken string, w http.ResponseWriter) error {
+	if m.LogoutWithTokenAssert != nil {
+		m.LogoutWithTokenAssert(refreshToken, w)
+	}
+	return m.LogoutWithTokenError
+}
+
 func (m *MockSession) LogoutAll(r *http.Request, w http.ResponseWriter) error {
 	if m.LogoutAllAssert != nil {
 		m.LogoutAllAssert(r, w)
 	}
 	return m.LogoutAllError
+}
+
+func (m *MockSession) LogoutAllWithToken(refreshToken string, w http.ResponseWriter) error {
+	if m.LogoutAllWithTokenAssert != nil {
+		m.LogoutAllWithTokenAssert(refreshToken, w)
+	}
+	return m.LogoutAllWithTokenError
 }
 
 func (m *MockSession) Me(r *http.Request) (*descope.UserResponse, error) {

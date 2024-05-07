@@ -100,6 +100,16 @@ func (auth *authenticationService) WebAuthn() sdk.WebAuthn {
 }
 
 func (auth *authenticationService) Logout(request *http.Request, w http.ResponseWriter) error {
+	return auth.logout(request, w)
+}
+
+func (auth *authenticationService) LogoutWithToken(refreshToken string, w http.ResponseWriter) error {
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: refreshToken})
+	return auth.logout(request, w)
+}
+
+func (auth *authenticationService) logout(request *http.Request, w http.ResponseWriter) error {
 	if request == nil {
 		return utils.NewInvalidArgumentError("request")
 	}
@@ -153,6 +163,16 @@ func (auth *authenticationService) Logout(request *http.Request, w http.Response
 }
 
 func (auth *authenticationService) LogoutAll(request *http.Request, w http.ResponseWriter) error {
+	return auth.logoutAll(request, w)
+}
+
+func (auth *authenticationService) LogoutAllWithToken(refreshToken string, w http.ResponseWriter) error {
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: refreshToken})
+	return auth.logoutAll(request, w)
+}
+
+func (auth *authenticationService) logoutAll(request *http.Request, w http.ResponseWriter) error {
 	if request == nil {
 		return utils.NewInvalidArgumentError("request")
 	}
