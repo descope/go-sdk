@@ -650,6 +650,32 @@ func TestLogout(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestLogoutWithToken(t *testing.T) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
+	})
+	require.NoError(t, err)
+
+	w := httptest.NewRecorder()
+	err = a.LogoutWithToken(jwtRTokenValid, w)
+	strictCookies(t, w)
+	require.NoError(t, err)
+	require.Len(t, w.Result().Cookies(), 2)
+	c1 := w.Result().Cookies()[0]
+	assert.Empty(t, c1.Value)
+	assert.EqualValues(t, descope.SessionCookieName, c1.Name)
+	assert.EqualValues(t, "/my-path", c1.Path)
+	assert.EqualValues(t, "my-domain", c1.Domain)
+	c2 := w.Result().Cookies()[1]
+	assert.Empty(t, c2.Value)
+	assert.EqualValues(t, descope.RefreshCookieName, c2.Name)
+	assert.EqualValues(t, "/my-path", c2.Path)
+	assert.EqualValues(t, "my-domain", c2.Domain)
+
+	err = a.LogoutWithToken(jwtRTokenValid, nil)
+	require.NoError(t, err)
+}
+
 func TestLogoutAll(t *testing.T) {
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
@@ -675,6 +701,32 @@ func TestLogoutAll(t *testing.T) {
 	assert.EqualValues(t, "my-domain", c2.Domain)
 
 	err = a.LogoutAll(request, nil)
+	require.NoError(t, err)
+}
+
+func TestLogoutAllWithToken(t *testing.T) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
+	})
+	require.NoError(t, err)
+
+	w := httptest.NewRecorder()
+	err = a.LogoutAllWithToken(jwtRTokenValid, w)
+	strictCookies(t, w)
+	require.NoError(t, err)
+	require.Len(t, w.Result().Cookies(), 2)
+	c1 := w.Result().Cookies()[0]
+	assert.Empty(t, c1.Value)
+	assert.EqualValues(t, descope.SessionCookieName, c1.Name)
+	assert.EqualValues(t, "/my-path", c1.Path)
+	assert.EqualValues(t, "my-domain", c1.Domain)
+	c2 := w.Result().Cookies()[1]
+	assert.Empty(t, c2.Value)
+	assert.EqualValues(t, descope.RefreshCookieName, c2.Name)
+	assert.EqualValues(t, "/my-path", c2.Path)
+	assert.EqualValues(t, "my-domain", c2.Domain)
+
+	err = a.LogoutAllWithToken(jwtRTokenValid, nil)
 	require.NoError(t, err)
 }
 
