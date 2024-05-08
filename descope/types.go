@@ -398,6 +398,7 @@ type BatchUserPasswordHashed struct {
 	Firebase *BatchUserPasswordFirebase `json:"firebase,omitempty"`
 	Pbkdf2   *BatchUserPasswordPbkdf2   `json:"pbkdf2,omitempty"`
 	Django   *BatchUserPasswordDjango   `json:"django,omitempty"`
+	Phpass   *BatchUserPasswordPhpass   `json:"phpass,omitempty"`
 }
 
 type BatchUserPasswordBcrypt struct {
@@ -422,6 +423,13 @@ type BatchUserPasswordPbkdf2 struct {
 
 type BatchUserPasswordDjango struct {
 	Hash string `json:"hash"` // the django hash in plaintext format, for example "pbkdf2_sha256$..."
+}
+
+type BatchUserPasswordPhpass struct {
+	Hash       string `json:"hash"`       // the hash as base64 encoded string with . and / characters
+	Salt       string `json:"salt"`       // the salt as base64 encoded string with . and / characters
+	Iterations int    `json:"iterations"` // the iterations cost value (usually in the tens of thousands)
+	Type       string `json:"type"`       // the hash name (md5, sha512)
 }
 
 type UserResponse struct {
