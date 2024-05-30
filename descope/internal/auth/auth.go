@@ -820,11 +820,19 @@ func getAuthorizationClaimItems(token *descope.Token, tenant string, claim strin
 			}
 		}
 	} else {
-		if v, ok := token.GetTenantValue(tenant, claim).([]interface{}); ok {
-			for i := range v {
-				if item, ok := v[i].(string); ok {
-					items = append(items, item)
-				}
+		var claimValue []interface{}
+		if token.Claims[claimDescopeCurrentTenant] == tenant && len(token.GetTenants()) == 0 {
+			// The token may have the current tenant in the "dct" claim and without the "tenants" claim
+			if v, ok := token.Claims[claim].([]interface{}); ok {
+				claimValue = v
+			}
+		} else if v, ok := token.GetTenantValue(tenant, claim).([]interface{}); ok {
+			claimValue = v
+		}
+
+		for i := range claimValue {
+			if item, ok := claimValue[i].(string); ok {
+				items = append(items, item)
 			}
 		}
 	}
@@ -838,7 +846,7 @@ func getAuthorizationClaimItems(token *descope.Token, tenant string, claim strin
 }
 
 func isAssociatedWithTenant(token *descope.Token, tenant string) bool {
-	return slices.Contains(token.GetTenants(), tenant)
+	return slices.Contains(token.GetTenants(), tenant) || token.Claims[claimDescopeCurrentTenant] == tenant
 }
 
 func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (*descope.EnchantedLinkResponse, error) {
