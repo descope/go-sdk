@@ -846,7 +846,7 @@ func getAuthorizationClaimItems(token *descope.Token, tenant string, claim strin
 }
 
 func isAssociatedWithTenant(token *descope.Token, tenant string) bool {
-	return slices.Contains(token.GetTenants(), tenant) || token.Claims[claimDescopeCurrentTenant] == tenant
+	return slices.Contains(token.GetTenants(), tenant) || (token.Claims != nil && token.Claims[claimDescopeCurrentTenant] == tenant)
 }
 
 func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (*descope.EnchantedLinkResponse, error) {
