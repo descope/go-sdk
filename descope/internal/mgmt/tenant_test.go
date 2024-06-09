@@ -98,7 +98,7 @@ func TestTenantDeleteSuccess(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["id"])
-		require.Equal(t, true, req["cascafe"])
+		require.Equal(t, true, req["cascade"])
 	}))
 	err := mgmt.Tenant().Delete(context.Background(), "abc", true)
 	require.NoError(t, err)
