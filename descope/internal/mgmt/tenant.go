@@ -60,11 +60,11 @@ func (t *tenant) Update(ctx context.Context, id string, tenantRequest *descope.T
 	return err
 }
 
-func (t *tenant) Delete(ctx context.Context, id string) error {
+func (t *tenant) Delete(ctx context.Context, id string, cascade bool) error {
 	if id == "" {
 		return utils.NewInvalidArgumentError("id")
 	}
-	req := map[string]any{"id": id}
+	req := map[string]any{"id": id, "cascade": cascade}
 	_, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantDelete(), req, nil, t.conf.ManagementKey)
 	return err
 }

@@ -35,7 +35,7 @@ type Tenant interface {
 	// Delete an existing tenant.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, id string, cascade bool) error
 
 	// Load project tenant by id
 	Load(ctx context.Context, id string) (*descope.Tenant, error)
