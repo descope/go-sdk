@@ -98,14 +98,15 @@ func TestTenantDeleteSuccess(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["id"])
+		require.Equal(t, true, req["cascade"])
 	}))
-	err := mgmt.Tenant().Delete(context.Background(), "abc")
+	err := mgmt.Tenant().Delete(context.Background(), "abc", true)
 	require.NoError(t, err)
 }
 
 func TestTenantDeleteError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.Tenant().Delete(context.Background(), "")
+	err := mgmt.Tenant().Delete(context.Background(), "", false)
 	require.Error(t, err)
 }
 

@@ -811,7 +811,7 @@ type MockTenant struct {
 	UpdateAssert func(id string, tenantRequest *descope.TenantRequest)
 	UpdateError  error
 
-	DeleteAssert func(id string)
+	DeleteAssert func(id string, cascade bool)
 	DeleteError  error
 
 	LoadAssert   func(id string)
@@ -854,9 +854,9 @@ func (m *MockTenant) Update(_ context.Context, id string, tenantRequest *descope
 	return m.UpdateError
 }
 
-func (m *MockTenant) Delete(_ context.Context, id string) error {
+func (m *MockTenant) Delete(_ context.Context, id string, cascade bool) error {
 	if m.DeleteAssert != nil {
-		m.DeleteAssert(id)
+		m.DeleteAssert(id, cascade)
 	}
 	return m.DeleteError
 }

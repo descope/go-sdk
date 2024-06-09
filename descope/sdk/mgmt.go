@@ -33,9 +33,10 @@ type Tenant interface {
 	Update(ctx context.Context, id string, tenantRequest *descope.TenantRequest) error
 
 	// Delete an existing tenant.
+	// Pass true on `cascade` in case you want to delete all users/keys associated only with this tenant
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, id string, cascade bool) error
 
 	// Load project tenant by id
 	Load(ctx context.Context, id string) (*descope.Tenant, error)
