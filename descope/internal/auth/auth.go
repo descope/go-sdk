@@ -823,8 +823,10 @@ func getAuthorizationClaimItems(token *descope.Token, tenant string, claim strin
 		var claimValue []interface{}
 		if v, ok := token.GetTenantValue(tenant, claim).([]interface{}); ok {
 			claimValue = v
-		} else if token.Claims[descope.ClaimDescopeCurrentTenant] == tenant {
+		} else if token.Claims[descope.ClaimDescopeCurrentTenant] == tenant && token.Claims[descope.ClaimAuthorizedTenants] == nil {
 			// The token may have the current tenant in the "dct" claim and without the "tenants" claim
+			// Note: We also must ensure that the tenants claim is not present because in the if "tenants" claim exists,
+			// the top level claim represents for the project level roles/permissions
 			if v, ok := token.Claims[claim].([]interface{}); ok {
 				claimValue = v
 			}
