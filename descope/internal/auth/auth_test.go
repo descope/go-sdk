@@ -79,9 +79,9 @@ var (
 	}
 	mockAuthorizationCurrentTenantToken = &descope.Token{
 		Claims: map[string]any{
-			claimPermissions:          permissions,
-			claimRoles:                roles,
-			claimDescopeCurrentTenant: "t1",
+			claimPermissions:                  permissions,
+			claimRoles:                        roles,
+			descope.ClaimDescopeCurrentTenant: "t1",
 		},
 	}
 )
@@ -1043,6 +1043,12 @@ func TestValidatePermissions(t *testing.T) {
 		"t1",
 		[]string{"foo"},
 	))
+}
+
+func TestGetTenants(t *testing.T) {
+	require.Equal(t, []string{}, mockAuthorizationToken.GetTenants())
+	require.Equal(t, []string{"t1"}, mockAuthorizationCurrentTenantToken.GetTenants())
+	require.ElementsMatch(t, []string{"kuku", "t1"}, mockAuthorizationTenantToken.GetTenants())
 }
 
 func TestGetMatchedPermissions(t *testing.T) {
