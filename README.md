@@ -653,7 +653,7 @@ err := descopeClient.Management.Tenant().Update(context.Background(), "my-custom
 
 // Tenant deletion cannot be undone. Use carefully.
 // Pass true to cascade value, in case you want to delete all users/keys associated only with this tenant
-err := descopeClient.Management.Tenant().Delete(context.Background(), "my-custom-id", false)
+err := descopeClient.Management.Tenant().Delete(context.Background(), "my-custom-id", true)
 
 // Load tenant by id
 tenant, err := descopeClient.Management.Tenant().Load(context.Background(), "my-custom-id")
