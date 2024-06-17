@@ -17,6 +17,12 @@ type TOTPResponse struct {
 	Key             string `json:"key,omitempty"`
 }
 
+type NOTPResponse struct {
+	RedirectURL string `json:"redirectUrl,omitempty"`
+	Image       string `json:"image,omitempty"`
+	PendingRef  string `json:"pendingRef,omitempty"` // Pending referral code used to poll the authentication info
+}
+
 type AuthenticationInfo struct {
 	SessionToken *Token        `json:"token,omitempty"`
 	RefreshToken *Token        `json:"refreshToken,omitempty"`

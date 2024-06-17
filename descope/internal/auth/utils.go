@@ -80,6 +80,11 @@ type totpSignUpRequestBody struct {
 	User    *descope.User `json:"user,omitempty"`
 }
 
+type notpAuthenticationRequestBody struct {
+	*authenticationRequestBody `json:",inline"`
+	LoginOptions               *descope.LoginOptions `json:"loginOptions,omitempty"`
+}
+
 type otpUpdateEmailRequestBody struct {
 	*descope.UpdateOptions `json:",inline"`
 	LoginID                string `json:"loginId,omitempty"`
@@ -125,7 +130,7 @@ type magicLinkAuthenticationVerifyRequestBody struct {
 	Token string `json:"token"`
 }
 
-type authenticationGetMagicLinkSessionBody struct {
+type authenticationGetSessionBody struct {
 	PendingRef string `json:"pendingRef"`
 }
 
@@ -156,6 +161,24 @@ func newSignUPTOTPRequestBody(loginID string, user *descope.User) *totpSignUpReq
 
 func newOTPUpdateEmailRequestBody(loginID, email string, updateOptions *descope.UpdateOptions) *otpUpdateEmailRequestBody {
 	return &otpUpdateEmailRequestBody{LoginID: loginID, Email: email, UpdateOptions: updateOptions}
+}
+
+func newNOTPAuthenticationRequestBody(loginID string, loginOptions *descope.LoginOptions) *notpAuthenticationRequestBody {
+	return &notpAuthenticationRequestBody{authenticationRequestBody: newSignInRequestBody(loginID, loginOptions), LoginOptions: loginOptions}
+}
+
+func newNOTPAuthenticationSignUpRequestBody(loginID string, user *descope.User, signUpOptions *descope.SignUpOptions) *authenticationSignUpRequestBody {
+	res := newSignUpRequestBody(descope.MethodSMS, user)
+	res.User = user
+	res.LoginID = loginID
+	if signUpOptions == nil {
+		signUpOptions = &descope.SignUpOptions{}
+	}
+	res.LoginOptions = &descope.LoginOptions{
+		CustomClaims:    signUpOptions.CustomClaims,
+		TemplateOptions: signUpOptions.TemplateOptions,
+	}
+	return res
 }
 
 func newOTPUpdatePhoneRequestBody(loginID, phone string, updateOptions *descope.UpdateOptions) *otpUpdatePhoneRequestBody {
@@ -214,8 +237,8 @@ func newMagicLinkUpdatePhoneRequestBody(loginID, phone string, URI string, cross
 	return &magicLinkUpdatePhoneRequestBody{LoginID: loginID, Phone: phone, URI: URI, CrossDevice: crossDevice, UpdateOptions: updateOptions}
 }
 
-func newAuthenticationGetMagicLinkSessionBody(pendingRef string) *authenticationGetMagicLinkSessionBody {
-	return &authenticationGetMagicLinkSessionBody{PendingRef: pendingRef}
+func newAuthenticationGetSessionBody(pendingRef string) *authenticationGetSessionBody {
+	return &authenticationGetSessionBody{PendingRef: pendingRef}
 }
 
 func newExchangeTokenBody(code string) *exchangeTokenBody {
