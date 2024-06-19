@@ -169,6 +169,7 @@ var (
 			flowImport:                       "mgmt/flow/import",
 			themeExport:                      "mgmt/theme/export",
 			themeImport:                      "mgmt/theme/import",
+			projectsList:                     "mgmt/projects/list",
 			projectClone:                     "mgmt/project/clone",
 			projectUpdateName:                "mgmt/project/update/name",
 			projectDelete:                    "mgmt/project/delete",
@@ -370,6 +371,7 @@ type mgmtEndpoints struct {
 	themeExport string
 	themeImport string
 
+	projectsList            string
 	projectClone            string
 	projectUpdateName       string
 	projectDelete           string
@@ -955,6 +957,10 @@ func (e *endpoints) ManagementThemeExport() string {
 
 func (e *endpoints) ManagementThemeImport() string {
 	return path.Join(e.version, e.mgmt.themeImport)
+}
+
+func (e *endpoints) ManagementProjectsList() string {
+	return path.Join(e.version, e.mgmt.projectsList)
 }
 
 func (e *endpoints) ManagementProjectClone() string {

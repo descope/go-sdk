@@ -41,6 +41,20 @@ func (p *project) Delete(ctx context.Context) error {
 	return err
 }
 
+func (p *project) ListProjects(ctx context.Context) ([]*descope.Project, error) {
+	res, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectsList(), nil, nil, p.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	var response struct {
+		Projects []*descope.Project `json:"projects"`
+	}
+	if err := utils.Unmarshal([]byte(res.BodyStr), &response); err != nil {
+		return nil, err // notest
+	}
+	return response.Projects, nil
+}
+
 func (p *project) ExportSnapshot(ctx context.Context) (*descope.ExportSnapshotResponse, error) {
 	body := map[string]any{}
 	res, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectExportSnapshot(), body, nil, p.conf.ManagementKey)

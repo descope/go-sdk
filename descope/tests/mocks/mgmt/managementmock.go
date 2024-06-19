@@ -1176,6 +1176,10 @@ type MockProject struct {
 
 	DeleteAssert func()
 	DeleteError  error
+
+	ListProjectsAssert   func()
+	ListProjectsResponse []*descope.Project
+	ListProjectsError    error
 }
 
 func (m *MockProject) ExportSnapshot(_ context.Context) (*descope.ExportSnapshotResponse, error) {
@@ -1215,6 +1219,13 @@ func (m *MockProject) Delete(_ context.Context) error {
 		m.DeleteAssert()
 	}
 	return m.DeleteError
+}
+
+func (m *MockProject) ListProjects(_ context.Context) ([]*descope.Project, error) {
+	if m.ListProjectsAssert != nil {
+		m.ListProjectsAssert()
+	}
+	return m.ListProjectsResponse, m.ListProjectsError
 }
 
 // Mock Audit

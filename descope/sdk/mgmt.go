@@ -639,6 +639,11 @@ type Flow interface {
 
 // Provides functions for exporting and importing project settings, flows, styles, etc.
 type Project interface {
+	// Lists all projects for a company.
+	//
+	// IMPORTANT: Requires a company management key that's not limited to specific projects.
+	ListProjects(ctx context.Context) ([]*descope.Project, error)
+
 	// Clone the current project, including its settings and configurations.
 	// - This action is supported only with a pro license or above.
 	// - Users, tenants and access keys are not cloned.
