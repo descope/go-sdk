@@ -113,7 +113,6 @@ func TestProjectCloneSuccess(t *testing.T) {
 	require.NotNil(t, res)
 	require.Equal(t, "foo", res.ProjectName)
 	require.Equal(t, "id1", res.ProjectID)
-
 }
 
 func TestProjectCloneError(t *testing.T) {
@@ -134,4 +133,24 @@ func TestProjectDeleteError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
 	err := mgmt.Project().Delete(context.Background())
 	require.Error(t, err)
+}
+
+func TestProjectListSuccess(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+	}, map[string]any{"projects": []any{map[string]any{"id": "i", "name": "n", "tag": "t"}}}))
+	res, err := m.Project().ListProjects(context.Background())
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Len(t, res, 1)
+	require.Equal(t, "i", res[0].ID)
+	require.Equal(t, "n", res[0].Name)
+	require.Equal(t, "t", res[0].Tag)
+}
+
+func TestProjectListError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := mgmt.Project().ListProjects(context.Background())
+	require.Error(t, err)
+	require.Nil(t, res)
 }

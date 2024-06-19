@@ -883,6 +883,12 @@ type SnapshotSecret struct {
 	Value string `json:"value,omitempty"`
 }
 
+type Project struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	Tag  string `json:"tag"`
+}
+
 type CloneProjectResponse struct {
 	ProjectID   string `json:"projectId"`
 	ProjectName string `json:"projectName"`

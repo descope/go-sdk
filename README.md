@@ -1483,6 +1483,15 @@ if err == nil {
 err := descopeClient.Management.Project().Delete(context.Background())
 ```
 
+With using a company mangement key you can get a list of all the projects in the company:
+
+```go
+projects, err := descopeClient.Management.Project().ListProjects(context.Background())
+for _, p := range projects {
+	fmt.Println(p.Name)
+}
+```
+
 You can manage your project's settings and configurations by exporting a snapshot.
 
 ```go
