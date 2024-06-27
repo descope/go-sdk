@@ -710,6 +710,9 @@ func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.In
 				user["hashedPassword"] = m
 			}
 		}
+		if u.Seed != nil {
+			user["seed"] = u.Seed
+		}
 		usersReq = append(usersReq, user)
 	}
 	req := map[string]any{
