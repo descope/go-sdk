@@ -389,6 +389,7 @@ type UserRequest struct {
 type BatchUser struct {
 	LoginID     string             `json:"loginId,omitempty"`
 	Password    *BatchUserPassword `json:"password,omitempty"`
+	Seed        *string            `json:"seed,omitempty"`
 	UserRequest `json:",inline"`
 }
 

@@ -121,12 +121,14 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 
 	users := []*descope.BatchUser{}
 
+	u1Seed := "aaa"
 	u1 := &descope.BatchUser{}
 	u1.LoginID = "one"
 	u1.Email = "one@one.com"
 	u1.Roles = []string{"one"}
 	u1.CustomAttributes = ca
 	u1.Password = &descope.BatchUserPassword{Cleartext: "foo"}
+	u1.Seed = &u1Seed
 
 	u2 := &descope.BatchUser{}
 	u2.LoginID = "two"
@@ -170,6 +172,7 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 		roleNames := userRes1["roleNames"].([]any)
 		require.Len(t, roleNames, 1)
 		require.Equal(t, u1.Roles[0], roleNames[0])
+		require.EqualValues(t, &u1Seed, u1.Seed)
 
 		require.Equal(t, u2.LoginID, userRes2["loginId"])
 		require.Equal(t, u2.Email, userRes2["email"])
@@ -185,6 +188,7 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 		roleNames = userRes2["roleNames"].([]any)
 		require.Len(t, roleNames, 1)
 		require.Equal(t, u2.Roles[0], roleNames[0])
+		require.Nil(t, u2.Seed)
 	}, response))
 
 	res, err := m.User().InviteBatch(context.Background(), users, &descope.InviteOptions{
