@@ -77,11 +77,24 @@ var (
 			},
 		},
 	}
-	mockAuthorizationCurrentTenantToken = &descope.Token{
+	mockAuthorizationCurrentTenantTokenNoTenants = &descope.Token{
 		Claims: map[string]any{
-			claimPermissions:          permissions,
-			claimRoles:                roles,
-			claimDescopeCurrentTenant: "t1",
+			claimPermissions:                  permissions,
+			claimRoles:                        roles,
+			descope.ClaimDescopeCurrentTenant: "t1",
+		},
+	}
+	mockAuthorizationCurrentTenantTokenWithTenants = &descope.Token{
+		Claims: map[string]any{
+			claimPermissions: permissions,
+			claimRoles:       roles,
+			descope.ClaimAuthorizedTenants: map[string]any{
+				"t1": map[string]any{
+					claimPermissions: []interface{}{"t1-perm1", "t1-perm2"},
+					claimRoles:       []interface{}{"t1-role1", "t1-role2"},
+				},
+				"t2": map[string]any{},
+			},
 		},
 	}
 )
@@ -1030,9 +1043,12 @@ func TestValidatePermissions(t *testing.T) {
 	require.True(t, a.ValidateTenantPermissions(context.Background(), mockAuthorizationTenantToken, "t1", []string{}))
 	require.False(t, a.ValidateTenantPermissions(context.Background(), mockAuthorizationTenantToken, "t2", []string{}))
 
-	require.True(t, a.ValidateTenantPermissions(context.Background(), mockAuthorizationCurrentTenantToken, "t1", []string{"foo"}))
-	require.False(t, a.ValidateTenantPermissions(context.Background(), mockAuthorizationCurrentTenantToken, "t1", []string{"qux"}))
-	require.False(t, a.ValidateTenantPermissions(context.Background(), mockAuthorizationCurrentTenantToken, "t2", []string{"foo"}))
+	require.True(t, a.ValidateTenantPermissions(context.Background(), mockAuthorizationCurrentTenantTokenNoTenants, "t1", []string{"foo"}))
+	require.False(t, a.ValidateTenantPermissions(context.Background(), mockAuthorizationCurrentTenantTokenNoTenants, "t1", []string{"qux"}))
+	require.False(t, a.ValidateTenantPermissions(context.Background(), mockAuthorizationCurrentTenantTokenNoTenants, "t2", []string{"foo"}))
+
+	require.True(t, a.ValidateTenantPermissions(context.Background(), mockAuthorizationCurrentTenantTokenWithTenants, "t1", []string{"t1-perm1"}))
+	require.False(t, a.ValidateTenantPermissions(context.Background(), mockAuthorizationCurrentTenantTokenWithTenants, "t1", []string{"foo"}))
 
 	// check when the value of the claim is not a map
 	require.False(t, a.ValidateTenantPermissions(
@@ -1062,8 +1078,11 @@ func TestGetMatchedPermissions(t *testing.T) {
 	require.Equal(t, []string{"foo", "bar"}, a.GetMatchedTenantPermissions(context.Background(), mockAuthorizationTenantToken, "kuku", []string{"foo", "bar"}))
 	require.Equal(t, []string{"foo", "bar"}, a.GetMatchedTenantPermissions(context.Background(), mockAuthorizationTenantToken, "kuku", []string{"foo", "bar", "qux"}))
 
-	require.Equal(t, []string{"foo", "bar"}, a.GetMatchedTenantPermissions(context.Background(), mockAuthorizationCurrentTenantToken, "t1", []string{"foo", "bar", "qux"}))
-	require.Equal(t, []string{}, a.GetMatchedTenantPermissions(context.Background(), mockAuthorizationCurrentTenantToken, "t2", []string{"foo", "bar", "qux"}))
+	require.Equal(t, []string{"foo", "bar"}, a.GetMatchedTenantPermissions(context.Background(), mockAuthorizationCurrentTenantTokenNoTenants, "t1", []string{"foo", "bar", "qux"}))
+	require.Equal(t, []string{}, a.GetMatchedTenantPermissions(context.Background(), mockAuthorizationCurrentTenantTokenNoTenants, "t2", []string{"foo", "bar", "qux"}))
+
+	require.Equal(t, []string{"t1-perm1"}, a.GetMatchedTenantPermissions(context.Background(), mockAuthorizationCurrentTenantTokenWithTenants, "t1", []string{"t1-perm1"}))
+	require.Equal(t, []string{}, a.GetMatchedTenantPermissions(context.Background(), mockAuthorizationCurrentTenantTokenWithTenants, "t1", []string{"foo"}))
 }
 
 func TestValidateRoles(t *testing.T) {
@@ -1096,9 +1115,12 @@ func TestValidateRoles(t *testing.T) {
 	require.True(t, a.ValidateTenantRoles(context.Background(), mockAuthorizationTenantToken, "t1", []string{}))
 	require.False(t, a.ValidateTenantRoles(context.Background(), mockAuthorizationTenantToken, "t2", []string{}))
 
-	require.True(t, a.ValidateTenantRoles(context.Background(), mockAuthorizationCurrentTenantToken, "t1", []string{"abc"}))
-	require.False(t, a.ValidateTenantRoles(context.Background(), mockAuthorizationCurrentTenantToken, "t1", []string{"tuv"}))
-	require.False(t, a.ValidateTenantRoles(context.Background(), mockAuthorizationCurrentTenantToken, "t2", []string{"abc"}))
+	require.True(t, a.ValidateTenantRoles(context.Background(), mockAuthorizationCurrentTenantTokenNoTenants, "t1", []string{"abc"}))
+	require.False(t, a.ValidateTenantRoles(context.Background(), mockAuthorizationCurrentTenantTokenNoTenants, "t1", []string{"tuv"}))
+	require.False(t, a.ValidateTenantRoles(context.Background(), mockAuthorizationCurrentTenantTokenNoTenants, "t2", []string{"abc"}))
+
+	require.True(t, a.ValidateTenantRoles(context.Background(), mockAuthorizationCurrentTenantTokenWithTenants, "t1", []string{"t1-role1"}))
+	require.False(t, a.ValidateTenantRoles(context.Background(), mockAuthorizationCurrentTenantTokenWithTenants, "t1", []string{"abc"}))
 }
 
 func TestGetMatchedRoles(t *testing.T) {
@@ -1118,8 +1140,18 @@ func TestGetMatchedRoles(t *testing.T) {
 	require.Equal(t, []string{"abc", "xyz"}, a.GetMatchedTenantRoles(context.Background(), mockAuthorizationTenantToken, "kuku", []string{"abc", "xyz"}))
 	require.Equal(t, []string{"abc", "xyz"}, a.GetMatchedTenantRoles(context.Background(), mockAuthorizationTenantToken, "kuku", []string{"abc", "xyz", "tuv"}))
 
-	require.Equal(t, []string{"abc", "xyz"}, a.GetMatchedTenantRoles(context.Background(), mockAuthorizationCurrentTenantToken, "t1", []string{"abc", "xyz", "tuv"}))
-	require.Equal(t, []string{}, a.GetMatchedTenantRoles(context.Background(), mockAuthorizationCurrentTenantToken, "t2", []string{"abc", "xyz", "tuv"}))
+	require.Equal(t, []string{"abc", "xyz"}, a.GetMatchedTenantRoles(context.Background(), mockAuthorizationCurrentTenantTokenNoTenants, "t1", []string{"abc", "xyz", "tuv"}))
+	require.Equal(t, []string{}, a.GetMatchedTenantRoles(context.Background(), mockAuthorizationCurrentTenantTokenNoTenants, "t2", []string{"abc", "xyz", "tuv"}))
+
+	require.Equal(t, []string{"t1-role1"}, a.GetMatchedTenantRoles(context.Background(), mockAuthorizationCurrentTenantTokenWithTenants, "t1", []string{"t1-role1"}))
+	require.Equal(t, []string{}, a.GetMatchedTenantRoles(context.Background(), mockAuthorizationCurrentTenantTokenWithTenants, "t1", []string{"abc"}))
+}
+
+func TestGetTenants(t *testing.T) {
+	require.Equal(t, []string{}, mockAuthorizationToken.GetTenants())
+	require.Equal(t, []string{"t1"}, mockAuthorizationCurrentTenantTokenNoTenants.GetTenants())
+	require.ElementsMatch(t, []string{"kuku", "t1"}, mockAuthorizationTenantToken.GetTenants())
+	require.ElementsMatch(t, []string{"t1", "t2"}, mockAuthorizationCurrentTenantTokenWithTenants.GetTenants())
 }
 
 func TestMe(t *testing.T) {

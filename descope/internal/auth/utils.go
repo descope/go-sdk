@@ -254,10 +254,9 @@ func newExchangeAccessKeyBody(loginOptions *descope.AccessKeyLoginOptions) *exch
 }
 
 const (
-	claimAttributeName        = "drn"
-	claimPermissions          = "permissions"
-	claimRoles                = "roles"
-	claimDescopeCurrentTenant = "dct"
+	claimAttributeName = "drn"
+	claimPermissions   = "permissions"
+	claimRoles         = "roles"
 )
 
 var (
