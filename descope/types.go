@@ -386,6 +386,22 @@ type UserRequest struct {
 	SSOAppIDs          []string            `json:"ssoAppIDs,omitempty"`
 }
 
+type PatchUserRequest struct {
+	Name             *string              `json:"name,omitempty"`
+	GivenName        *string              `json:"givenName,omitempty"`
+	MiddleName       *string              `json:"middleName,omitempty"`
+	FamilyName       *string              `json:"familyName,omitempty"`
+	Phone            *string              `json:"phone,omitempty"`
+	Email            *string              `json:"email,omitempty"`
+	Roles            *[]string            `json:"roles,omitempty"`
+	Tenants          *[]*AssociatedTenant `json:"tenants,omitempty"`
+	CustomAttributes map[string]any       `json:"customAttributes,omitempty"`
+	Picture          *string              `json:"picture,omitempty"`
+	VerifiedEmail    *bool                `json:"verifiedEmail,omitempty"`
+	VerifiedPhone    *bool                `json:"verifiedPhone,omitempty"`
+	SSOAppIDs        *[]string            `json:"ssoAppIds,omitempty"`
+}
+
 type BatchUser struct {
 	LoginID     string             `json:"loginId,omitempty"`
 	Password    *BatchUserPassword `json:"password,omitempty"`

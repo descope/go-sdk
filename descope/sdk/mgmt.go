@@ -181,7 +181,13 @@ type User interface {
 	//
 	// IMPORTANT: All parameters will override whatever values are currently set
 	// in the existing user. Use carefully.
+	// Instead, use Patch if you don't want to pass all parameters.
 	Update(ctx context.Context, loginID string, user *descope.UserRequest) (*descope.UserResponse, error)
+
+	// Patches an existing user.
+	//
+	// Only the fields that are set in the request will be updated.
+	Patch(ctx context.Context, loginID string, user *descope.PatchUserRequest) (*descope.UserResponse, error)
 
 	// Delete an existing user.
 	//

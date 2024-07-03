@@ -143,6 +143,21 @@ func (u *user) Update(ctx context.Context, loginID string, user *descope.UserReq
 	return unmarshalUserResponse(res)
 }
 
+func (u *user) Patch(ctx context.Context, loginID string, user *descope.PatchUserRequest) (*descope.UserResponse, error) {
+	if loginID == "" {
+		return nil, utils.NewInvalidArgumentError("loginID")
+	}
+	if user == nil {
+		return nil, utils.NewInvalidArgumentError("user")
+	}
+	req := makePatchUserRequest(loginID, user)
+	res, err := u.client.DoPatchRequest(ctx, api.Routes.ManagementUserPatch(), req, nil, u.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalUserResponse(res)
+}
+
 func (u *user) Delete(ctx context.Context, loginID string) error {
 	if loginID == "" {
 		return utils.NewInvalidArgumentError("loginID")
@@ -756,6 +771,52 @@ func makeUpdateUserRequest(req *createUserRequest) map[string]any {
 		res["verifiedPhone"] = *req.verifiedPhone
 	}
 	res["ssoAppIDs"] = req.ssoAppIDs
+	return res
+}
+
+func makePatchUserRequest(loginID string, req *descope.PatchUserRequest) map[string]any {
+	res := map[string]interface{}{
+		"loginId": loginID,
+	}
+	if req.Name != nil {
+		res["name"] = *req.Name
+	}
+	if req.GivenName != nil {
+		res["givenName"] = *req.GivenName
+	}
+	if req.MiddleName != nil {
+		res["middleName"] = *req.MiddleName
+	}
+	if req.FamilyName != nil {
+		res["familyName"] = *req.FamilyName
+	}
+	if req.Phone != nil {
+		res["phone"] = *req.Phone
+	}
+	if req.Email != nil {
+		res["email"] = *req.Email
+	}
+	if req.Roles != nil {
+		res["roleNames"] = *req.Roles
+	}
+	if req.Tenants != nil {
+		res["userTenants"] = makeAssociatedTenantList(*req.Tenants)
+	}
+	if req.CustomAttributes != nil {
+		res["customAttributes"] = req.CustomAttributes
+	}
+	if req.Picture != nil {
+		res["picture"] = *req.Picture
+	}
+	if req.VerifiedEmail != nil {
+		res["verifiedEmail"] = *req.VerifiedEmail
+	}
+	if req.VerifiedPhone != nil {
+		res["verifiedPhone"] = *req.VerifiedPhone
+	}
+	if req.SSOAppIDs != nil {
+		res["ssoAppIds"] = *req.SSOAppIDs
+	}
 	return res
 }
 
