@@ -339,6 +339,172 @@ func TestUserUpdateError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestUserPatchError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	user := &descope.PatchUserRequest{}
+	email := "foo@bar.com"
+	user.Email = &email
+	_, err := m.User().Patch(context.Background(), "", user)
+	require.Error(t, err)
+	_, err = m.User().Patch(context.Background(), "abc", nil)
+	require.Error(t, err)
+}
+
+func TestUserPatchSuccess(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"name":          "name1",
+			"middleName":    "middleName1",
+			"phone":         "+9724567890",
+			"verifiedPhone": true,
+			"picture":       "https://test.com",
+			"roleNames":     []string{"foo", "bar"},
+		}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+
+		require.Equal(t, "name1", req["name"])
+		require.Equal(t, "middleName1", req["middleName"])
+		require.Equal(t, "+9724567890", req["phone"])
+		reqVerifiedPhone := req["verifiedPhone"].(bool)
+		require.True(t, reqVerifiedPhone)
+		require.Equal(t, "https://test.com", req["picture"])
+		roles := req["roleNames"].([]any)
+		require.EqualValues(t, []any{"foo", "bar"}, roles)
+
+		_, ok := req["givenName"]
+		require.False(t, ok)
+		_, ok = req["familyName"]
+		require.False(t, ok)
+		_, ok = req["email"]
+		require.False(t, ok)
+		_, ok = req["userTenants"]
+		require.False(t, ok)
+		_, ok = req["customAttributes"]
+		require.False(t, ok)
+		_, ok = req["verifiedEmail"]
+		require.False(t, ok)
+		_, ok = req["ssoAppIds"]
+		require.False(t, ok)
+	}, response))
+	user := &descope.PatchUserRequest{}
+	patchedName := "name1"
+	patchedMiddleName := "middleName1"
+	patchedPhone := "+9724567890"
+	patchedVerifiedPhone := true
+	patchedPicture := "https://test.com"
+	patchedRoles := []string{"foo", "bar"}
+	user.Name = &patchedName
+	user.MiddleName = &patchedMiddleName
+	user.Phone = &patchedPhone
+	user.VerifiedPhone = &patchedVerifiedPhone
+	user.Picture = &patchedPicture
+	user.Roles = &patchedRoles
+	res, err := m.User().Patch(context.Background(), "abc", user)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, "name1", res.Name)
+	require.Equal(t, "middleName1", res.MiddleName)
+	require.Equal(t, "+9724567890", res.Phone)
+	require.True(t, res.VerifiedPhone)
+	require.Equal(t, "https://test.com", res.Picture)
+	require.EqualValues(t, patchedRoles, res.RoleNames)
+}
+
+func TestUserPatchSuccess2(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"givenName":     "givenName1",
+			"familyName":    "familyName1",
+			"email":         "foo@bar.com",
+			"verifiedEmail": true,
+			"customAttributes": map[string]interface{}{
+				"ca1": "cavalue1",
+			},
+			"ssoAppIds": []string{"app1", "app2"},
+		}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+
+		require.Equal(t, "givenName1", req["givenName"])
+		require.Equal(t, "familyName1", req["familyName"])
+		require.Equal(t, "foo@bar.com", req["email"])
+		reqVerifiedEmail := req["verifiedEmail"].(bool)
+		require.True(t, reqVerifiedEmail)
+		require.EqualValues(t, map[string]interface{}{
+			"ca1": "cavalue1",
+		}, req["customAttributes"])
+		ssoAppIDs := req["ssoAppIds"].([]any)
+		require.EqualValues(t, []any{"app1", "app2"}, ssoAppIDs)
+		userTenants := req["userTenants"].([]any)
+		require.Len(t, userTenants, 2)
+		for i := range userTenants {
+			tenant := userTenants[i].(map[string]any)
+			roleNames := tenant["roleNames"].([]any)
+			if i == 0 {
+				require.Equal(t, "t1", tenant["tenantId"])
+				require.Len(t, roleNames, 2)
+				require.Equal(t, "foo", roleNames[0])
+				require.Equal(t, "foo2", roleNames[1])
+			} else {
+				require.Equal(t, "t2", tenant["tenantId"])
+				require.Len(t, roleNames, 1)
+				require.Equal(t, "bar", roleNames[0])
+			}
+		}
+
+		_, ok := req["name"]
+		require.False(t, ok)
+		_, ok = req["middleName"]
+		require.False(t, ok)
+		_, ok = req["phone"]
+		require.False(t, ok)
+		_, ok = req["picture"]
+		require.False(t, ok)
+		_, ok = req["verifiedPhone"]
+		require.False(t, ok)
+		_, ok = req["roleNames"]
+		require.False(t, ok)
+	}, response))
+	user := &descope.PatchUserRequest{}
+	patchedGivenName := "givenName1"
+	patchedFamilyName := "familyName1"
+	patchedEmail := "foo@bar.com"
+	patchedVerifiedEmail := true
+	patchedCustomAttributes := map[string]interface{}{
+		"ca1": "cavalue1",
+	}
+	patchedTenants := []*descope.AssociatedTenant{
+		{TenantID: "t1", Roles: []string{"foo", "foo2"}},
+		{TenantID: "t2", Roles: []string{"bar"}},
+	}
+	patchedSSOAppIDs := []string{"app1", "app2"}
+	user.GivenName = &patchedGivenName
+	user.FamilyName = &patchedFamilyName
+	user.Email = &patchedEmail
+	user.VerifiedEmail = &patchedVerifiedEmail
+	user.CustomAttributes = patchedCustomAttributes
+	user.Tenants = &patchedTenants
+	user.SSOAppIDs = &patchedSSOAppIDs
+	res, err := m.User().Patch(context.Background(), "abc", user)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, "givenName1", res.GivenName)
+	require.Equal(t, "familyName1", res.FamilyName)
+	require.Equal(t, "foo@bar.com", res.Email)
+	require.True(t, res.VerifiedEmail)
+	require.EqualValues(t, map[string]interface{}{
+		"ca1": "cavalue1",
+	}, res.CustomAttributes)
+	require.EqualValues(t, []string{"app1", "app2"}, res.SSOAppIDs)
+}
+
 func TestUserDeleteSuccess(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
