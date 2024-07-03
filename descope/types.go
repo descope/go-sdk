@@ -193,6 +193,9 @@ type Token struct {
 
 func (to *Token) GetTenants() []string {
 	tenants := to.getTenants()
+	if len(tenants) == 0 && to.Claims != nil && to.Claims[ClaimDescopeCurrentTenant] != nil {
+		return []string{to.Claims[ClaimDescopeCurrentTenant].(string)}
+	}
 	return maps.Keys(tenants)
 }
 
@@ -224,6 +227,9 @@ func (to *Token) IsPermitted(permission string) bool {
 func (to *Token) IsPermittedPerTenant(tenant string, permission string) bool {
 	permitted := false
 	tenants := to.getTenants()
+	if to.Claims[ClaimDescopeCurrentTenant] == tenant && len(tenants) == 0 {
+		return to.IsPermitted(permission)
+	}
 	tPermissions, ok := tenants[tenant]
 	if ok {
 		if tPermissionsMap, ok := tPermissions.(map[string]any); ok {
@@ -930,6 +936,7 @@ const (
 	ContextUserIDPropertyKey         ContextKey = ContextUserIDProperty
 	ClaimAuthorizedTenants                      = "tenants"
 	ClaimAuthorizedGlobalPermissions            = "permissions"
+	ClaimDescopeCurrentTenant                   = "dct"
 
 	EnvironmentVariableProjectID     = "DESCOPE_PROJECT_ID"
 	EnvironmentVariablePublicKey     = "DESCOPE_PUBLIC_KEY"
