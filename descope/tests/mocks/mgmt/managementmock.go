@@ -255,6 +255,10 @@ type MockUser struct {
 	UpdateResponse *descope.UserResponse
 	UpdateError    error
 
+	PatchAssert   func(loginID string, user *descope.PatchUserRequest)
+	PatchResponse *descope.UserResponse
+	PatchError    error
+
 	DeleteAssert func(loginID string)
 	DeleteError  error
 
@@ -432,6 +436,13 @@ func (m *MockUser) Update(_ context.Context, loginID string, user *descope.UserR
 		m.UpdateAssert(loginID, user)
 	}
 	return m.UpdateResponse, m.UpdateError
+}
+
+func (m *MockUser) Patch(_ context.Context, loginID string, user *descope.PatchUserRequest) (*descope.UserResponse, error) {
+	if m.PatchAssert != nil {
+		m.PatchAssert(loginID, user)
+	}
+	return m.PatchResponse, m.PatchError
 }
 
 func (m *MockUser) Delete(_ context.Context, loginID string) error {

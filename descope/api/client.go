@@ -102,6 +102,7 @@ var (
 			userCreate:                       "mgmt/user/create",
 			userCreateBatch:                  "mgmt/user/create/batch",
 			userUpdate:                       "mgmt/user/update",
+			userPatch:                        "mgmt/user/patch",
 			userDelete:                       "mgmt/user/delete",
 			userDeleteAllTestUsers:           "mgmt/user/test/delete/all",
 			userImport:                       "mgmt/user/import",
@@ -291,6 +292,7 @@ type mgmtEndpoints struct {
 	userCreate                string
 	userCreateBatch           string
 	userUpdate                string
+	userPatch                 string
 	userDelete                string
 	userDeleteAllTestUsers    string
 	userImport                string
@@ -689,6 +691,10 @@ func (e *endpoints) ManagementUserCreateBatch() string {
 
 func (e *endpoints) ManagementUserUpdate() string {
 	return path.Join(e.version, e.mgmt.userUpdate)
+}
+
+func (e *endpoints) ManagementUserPatch() string {
+	return path.Join(e.version, e.mgmt.userPatch)
 }
 
 func (e *endpoints) ManagementUserDelete() string {
@@ -1189,6 +1195,10 @@ func (c *Client) DoPutRequest(ctx context.Context, uri string, body interface{},
 
 func (c *Client) DoPostRequest(ctx context.Context, uri string, body interface{}, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
 	return c.doRequestWithBody(ctx, http.MethodPost, uri, body, options, pswd)
+}
+
+func (c *Client) DoPatchRequest(ctx context.Context, uri string, body interface{}, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
+	return c.doRequestWithBody(ctx, http.MethodPatch, uri, body, options, pswd)
 }
 
 func (c *Client) doRequestWithBody(ctx context.Context, method string, uri string, body interface{}, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
