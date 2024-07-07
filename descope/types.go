@@ -504,6 +504,11 @@ func (ur *UserResponse) GetCreatedTime() time.Time {
 	return time.Unix(int64(ur.CreatedTime), 0)
 }
 
+type ProviderTokenOptions struct {
+	WithRefreshToken bool `json:"withRefreshToken,omitempty"`
+	ForceRefresh     bool `json:"forceRefresh,omitempty"`
+}
+
 type ProviderTokenResponse struct {
 	Provider       string   `json:"provider,omitempty"`
 	ProviderUserID string   `json:"providerUserID,omitempty"`

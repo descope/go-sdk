@@ -552,20 +552,26 @@ func (u *user) RemoveAllPasskeys(ctx context.Context, loginID string) error {
 	return err
 }
 
-func (u *user) GetProviderToken(ctx context.Context, loginID, provider string, withRefreshToken, forceRefresh bool) (*descope.ProviderTokenResponse, error) {
+func (u *user) GetProviderToken(ctx context.Context, loginID, provider string) (*descope.ProviderTokenResponse, error) {
+	return u.GetProviderTokenWithOptions(ctx, loginID, provider, nil)
+}
+
+func (u *user) GetProviderTokenWithOptions(ctx context.Context, loginID, provider string, options *descope.ProviderTokenOptions) (*descope.ProviderTokenResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	if provider == "" {
 		return nil, utils.NewInvalidArgumentError("provider")
 	}
-
+	if options == nil {
+		options = &descope.ProviderTokenOptions{}
+	}
 	req := &api.HTTPRequest{
 		QueryParams: map[string]string{
 			"loginId":          loginID,
 			"provider":         provider,
-			"withRefreshToken": strconv.FormatBool(withRefreshToken),
-			"forceRefresh":     strconv.FormatBool(forceRefresh),
+			"withRefreshToken": strconv.FormatBool(options.WithRefreshToken),
+			"forceRefresh":     strconv.FormatBool(options.ForceRefresh),
 		},
 	}
 	res, err := u.client.DoGetRequest(ctx, api.Routes.ManagementUserGetProviderToken(), req, u.conf.ManagementKey)
