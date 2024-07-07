@@ -2,6 +2,7 @@ package mgmt
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
@@ -551,7 +552,7 @@ func (u *user) RemoveAllPasskeys(ctx context.Context, loginID string) error {
 	return err
 }
 
-func (u *user) GetProviderToken(ctx context.Context, loginID, provider string) (*descope.ProviderTokenResponse, error) {
+func (u *user) GetProviderToken(ctx context.Context, loginID, provider string, withRefreshToken, forceRefresh bool) (*descope.ProviderTokenResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
@@ -560,7 +561,12 @@ func (u *user) GetProviderToken(ctx context.Context, loginID, provider string) (
 	}
 
 	req := &api.HTTPRequest{
-		QueryParams: map[string]string{"loginId": loginID, "provider": provider},
+		QueryParams: map[string]string{
+			"loginId":          loginID,
+			"provider":         provider,
+			"withRefreshToken": strconv.FormatBool(withRefreshToken),
+			"forceRefresh":     strconv.FormatBool(forceRefresh),
+		},
 	}
 	res, err := u.client.DoGetRequest(ctx, api.Routes.ManagementUserGetProviderToken(), req, u.conf.ManagementKey)
 	if err != nil {

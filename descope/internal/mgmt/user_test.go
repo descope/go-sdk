@@ -1502,34 +1502,41 @@ func TestUserRemoveAllPasskeysError(t *testing.T) {
 
 func TestUserProviderTokenSuccess(t *testing.T) {
 	response := map[string]any{
-		"provider": "pro",
+		"provider":     "pro",
+		"accessToken":  "abc",
+		"refreshToken": "def",
 	}
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		params := helpers.ReadParams(r)
 		require.Equal(t, "abc", params["loginId"])
 		require.Equal(t, "pro", params["provider"])
+		require.Equal(t, "false", params["withRefreshToken"])
+		require.Equal(t, "true", params["forceRefresh"])
+
 	}, response))
-	res, err := m.User().GetProviderToken(context.Background(), "abc", "pro")
+	res, err := m.User().GetProviderToken(context.Background(), "abc", "pro", false, true)
 	require.NoError(t, err)
 	require.NotEmpty(t, res)
 	assert.EqualValues(t, "pro", res.Provider)
+	assert.EqualValues(t, "abc", res.AccessToken)
+	assert.EqualValues(t, "def", res.RefreshToken)
 }
 
 func TestUserProviderTokenBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().GetProviderToken(context.Background(), "", "pro")
+	res, err := m.User().GetProviderToken(context.Background(), "", "pro", false, false)
 	require.Error(t, err)
 	require.Empty(t, res)
 
-	res, err = m.User().GetProviderToken(context.Background(), "abc", "")
+	res, err = m.User().GetProviderToken(context.Background(), "abc", "", false, false)
 	require.Error(t, err)
 	require.Empty(t, res)
 }
 
 func TestUserProviderTokenError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().GetProviderToken(context.Background(), "abc", "pro")
+	res, err := m.User().GetProviderToken(context.Background(), "abc", "pro", false, false)
 	require.Error(t, err)
 	require.Empty(t, res)
 }

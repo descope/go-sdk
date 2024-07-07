@@ -510,6 +510,7 @@ type ProviderTokenResponse struct {
 	AccessToken    string   `json:"accessToken,omitempty"`
 	Expiration     uint32   `json:"expiration,omitempty"`
 	Scopes         []string `json:"scopes,omitempty"`
+	RefreshToken   string   `json:"refreshToken,omitempty"`
 }
 
 type UpdateOptions struct {
