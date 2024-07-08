@@ -367,6 +367,10 @@ type MockUser struct {
 	RemoveAllPasskeysAssert func(loginID string)
 	RemoveAllPasskeysError  error
 
+	GetProviderTokenWithOptionsAssert   func(loginID, provider string, options *descope.ProviderTokenOptions)
+	GetProviderTokenWithOptionsResponse *descope.ProviderTokenResponse
+	GetProviderTokenWithOptionsError    error
+
 	GetProviderTokenAssert   func(loginID, provider string)
 	GetProviderTokenResponse *descope.ProviderTokenResponse
 	GetProviderTokenError    error
@@ -689,6 +693,13 @@ func (m *MockUser) GetProviderToken(_ context.Context, loginID, provider string)
 		m.GetProviderTokenAssert(loginID, provider)
 	}
 	return m.GetProviderTokenResponse, m.GetProviderTokenError
+}
+
+func (m *MockUser) GetProviderTokenWithOptions(_ context.Context, loginID, provider string, options *descope.ProviderTokenOptions) (*descope.ProviderTokenResponse, error) {
+	if m.GetProviderTokenWithOptionsAssert != nil {
+		m.GetProviderTokenWithOptionsAssert(loginID, provider, options)
+	}
+	return m.GetProviderTokenWithOptionsResponse, m.GetProviderTokenWithOptionsError
 }
 
 func (m *MockUser) GenerateOTPForTestUser(_ context.Context, method descope.DeliveryMethod, loginID string, loginOptions *descope.LoginOptions) (code string, err error) {

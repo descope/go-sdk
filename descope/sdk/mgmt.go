@@ -355,6 +355,14 @@ type User interface {
 	// Note: The 'Manage tokens from provider' setting must be enabled.
 	GetProviderToken(ctx context.Context, loginID, provider string) (*descope.ProviderTokenResponse, error)
 
+	// Get the provider token for the given login ID with additional options.
+	// Only users that sign-in using social providers will have token.
+	// Note: The 'Manage tokens from provider' setting must be enabled.
+	// The providerTokenOptions is optional. It can be used with the following options:
+	// 	withRefreshToken - to include the refresh token in the response
+	//	forceRefresh - force to refresh the token
+	GetProviderTokenWithOptions(ctx context.Context, loginID, provider string, options *descope.ProviderTokenOptions) (*descope.ProviderTokenResponse, error)
+
 	// Generate OTP for the given login ID of a test user.
 	// Choose the selected delivery method for verification. (see auth/DeliveryMethod)
 	// It returns the code for the login (exactly as it sent via Email or SMS)

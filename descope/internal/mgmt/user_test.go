@@ -1502,18 +1502,46 @@ func TestUserRemoveAllPasskeysError(t *testing.T) {
 
 func TestUserProviderTokenSuccess(t *testing.T) {
 	response := map[string]any{
-		"provider": "pro",
+		"provider":    "pro",
+		"accessToken": "abc",
 	}
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		params := helpers.ReadParams(r)
 		require.Equal(t, "abc", params["loginId"])
 		require.Equal(t, "pro", params["provider"])
+		require.Equal(t, "false", params["withRefreshToken"])
+		require.Equal(t, "false", params["forceRefresh"])
+
 	}, response))
 	res, err := m.User().GetProviderToken(context.Background(), "abc", "pro")
 	require.NoError(t, err)
 	require.NotEmpty(t, res)
 	assert.EqualValues(t, "pro", res.Provider)
+	assert.EqualValues(t, "abc", res.AccessToken)
+}
+
+func TestUserProviderTokenWithOptionsSuccess(t *testing.T) {
+	response := map[string]any{
+		"provider":     "pro",
+		"accessToken":  "abc",
+		"refreshToken": "def",
+	}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		params := helpers.ReadParams(r)
+		require.Equal(t, "abc", params["loginId"])
+		require.Equal(t, "pro", params["provider"])
+		require.Equal(t, "true", params["withRefreshToken"])
+		require.Equal(t, "true", params["forceRefresh"])
+
+	}, response))
+	res, err := m.User().GetProviderTokenWithOptions(context.Background(), "abc", "pro", &descope.ProviderTokenOptions{WithRefreshToken: true, ForceRefresh: true})
+	require.NoError(t, err)
+	require.NotEmpty(t, res)
+	assert.EqualValues(t, "pro", res.Provider)
+	assert.EqualValues(t, "abc", res.AccessToken)
+	assert.EqualValues(t, "def", res.RefreshToken)
 }
 
 func TestUserProviderTokenBadInput(t *testing.T) {
