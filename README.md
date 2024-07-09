@@ -40,7 +40,7 @@ These sections show how to use the SDK to perform various authentication/authori
 2. [Magic Link](#magic-link)
 3. [Enchanted Link](#enchanted-link)
 4. [OAuth](#oauth)
-5. [NOTP (WhatsApp)] (#notp-whatsapp)
+5. [nOTP (WhatsApp)](#notp-whatsapp)
 6. [SSO (SAML / OIDC)](#sso-saml--oidc)
 7. [TOTP Authentication](#totp-authentication)
 8. [Passwords](#passwords)
@@ -260,15 +260,15 @@ if err != nil {
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
 
-### NOTP (WhatsApp)
+### nOTP (WhatsApp)
 
-Using the NOTP (WhatsApp) APIs enables users to log in using their WhatsApp account, according to the following process:
+Using the nOTP (WhatsApp) APIs enables users to log in using their WhatsApp account, according to the following process:
 a. The user will be redirected to WhatsApp (with a QR Code or link) with a pre-filled message containing a 16-character alphanumeric code.
 b. The user will send the message to the WhatsApp Application associated with the Descope project.
 c. Descope will receive the message, validate the code, and send an approval message back to the user.
 d. The user will be logged in after receiving the approval message.
 
-Note: The NOTP (WhatsApp) authentication method should be configured in the Descope Console before using it
+Note: The nOTP (WhatsApp) authentication method should be configured in the Descope Console before using it
 
 The user can either `sign up`, `sign in`, or `sign up or in`:
 
