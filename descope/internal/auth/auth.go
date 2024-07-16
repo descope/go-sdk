@@ -391,7 +391,15 @@ func (auth *authenticationService) ExchangeAccessKey(ctx context.Context, access
 	}
 
 	tokens, err := auth.extractTokens(jwtResponse)
-	if err != nil || len(tokens) == 0 {
+	if err != nil {
+		errMsg := err.Error()
+		if len(errMsg) == 0 {
+			errMsg = "Missing token in JWT response"
+		}
+		return false, nil, descope.ErrUnexpectedResponse.WithMessage(errMsg)
+	}
+
+	if len(tokens) == 0 {
 		return false, nil, descope.ErrUnexpectedResponse.WithMessage("Missing token in JWT response")
 	}
 
