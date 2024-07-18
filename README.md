@@ -930,12 +930,14 @@ You can create, update, delete or load access keys, as well as search according 
 // on a per-tenant basis.
 // If userID is supplied, then authorization would be ignored, and access key would be bound to the users authorization
 // If customClaims is supplied, then those claims will be present in the JWT returned by calls to ExchangeAccessKey.
+// If permittedIps is supplied, then we will only allow using the access key from those IP addresses or CIDR ranges.
 res, err := descopeClient.Management.AccessKey().Create(context.Background(), "access-key-1", 0, nil, []*descope.AssociatedTenant{
 		{TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
     	{TenantID: "tenant-ID2"},
     },
 	"",
-    map[string]any{"k1": "v1"})
+    map[string]any{"k1": "v1"},
+	nil)
 
 // Load specific access key
 res, err := descopeClient.Management.AccessKey().Load(context.Background(), "access-key-id")
@@ -1279,7 +1281,7 @@ if err == nil {
 You can also create audit event with data
 
 ```go
-err := descopeClient.Management.Audit().CreateEvent(context.Background(), &descope.AuditCreateOptions{ 
+err := descopeClient.Management.Audit().CreateEvent(context.Background(), &descope.AuditCreateOptions{
 	Action: "pencil.created",
 	Type: "info", // info/warn/error
 	ActorID: "UXXX",

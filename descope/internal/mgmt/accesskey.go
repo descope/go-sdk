@@ -12,11 +12,11 @@ type accessKey struct {
 	managementBase
 }
 
-func (a *accessKey) Create(ctx context.Context, name string, expireTime int64, roleNames []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any) (string, *descope.AccessKeyResponse, error) {
+func (a *accessKey) Create(ctx context.Context, name string, expireTime int64, roleNames []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIps []string) (string, *descope.AccessKeyResponse, error) {
 	if name == "" {
 		return "", nil, utils.NewInvalidArgumentError("name")
 	}
-	body := makeCreateAccessKeyBody(name, expireTime, roleNames, keyTenants, userID, customClaims)
+	body := makeCreateAccessKeyBody(name, expireTime, roleNames, keyTenants, userID, customClaims, permittedIps)
 	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyCreate(), body, nil, a.conf.ManagementKey)
 	if err != nil {
 		return "", nil, err
@@ -89,7 +89,7 @@ func (a *accessKey) Delete(ctx context.Context, id string) error {
 	return err
 }
 
-func makeCreateAccessKeyBody(name string, expireTime int64, roleNames []string, tenants []*descope.AssociatedTenant, userID string, customClaims map[string]any) map[string]any {
+func makeCreateAccessKeyBody(name string, expireTime int64, roleNames []string, tenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIps []string) map[string]any {
 	return map[string]any{
 		"name":         name,
 		"expireTime":   expireTime,
@@ -97,6 +97,7 @@ func makeCreateAccessKeyBody(name string, expireTime int64, roleNames []string, 
 		"keyTenants":   makeAssociatedTenantList(tenants),
 		"userId":       userID,
 		"customClaims": customClaims,
+		"permittedIps": permittedIps,
 	}
 }
 
