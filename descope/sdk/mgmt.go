@@ -410,7 +410,10 @@ type AccessKey interface {
 	// If userID is supplied, then authorization would be ignored, and access key would be bound to the users authorization
 	// The customClaims parameter is an optional map of claims and their values, and if it's provided then
 	// those claims will be present in the JWT returned by calls to ExchangeAccessKey.
-	Create(ctx context.Context, name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any) (string, *descope.AccessKeyResponse, error)
+	//
+	// The permittedIps parameter is an optional list of IP addresses or CIDR ranges that are allowed to use this access key.
+	// If not provided, all IPs are allowed.
+	Create(ctx context.Context, name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIps []string) (string, *descope.AccessKeyResponse, error)
 
 	// Load an existing access key.
 	//

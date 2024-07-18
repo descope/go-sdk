@@ -740,7 +740,7 @@ func (m *MockUser) History(_ context.Context, userIDs []string) ([]*descope.User
 // Mock Access Key
 
 type MockAccessKey struct {
-	CreateAssert     func(name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any)
+	CreateAssert     func(name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIps []string)
 	CreateResponseFn func() (string, *descope.AccessKeyResponse)
 	CreateError      error
 
@@ -766,9 +766,9 @@ type MockAccessKey struct {
 	DeleteError  error
 }
 
-func (m *MockAccessKey) Create(_ context.Context, name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any) (string, *descope.AccessKeyResponse, error) {
+func (m *MockAccessKey) Create(_ context.Context, name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIps []string) (string, *descope.AccessKeyResponse, error) {
 	if m.CreateAssert != nil {
-		m.CreateAssert(name, expireTime, roles, keyTenants, userID, customClaims)
+		m.CreateAssert(name, expireTime, roles, keyTenants, userID, customClaims, permittedIps)
 	}
 	var cleartext string
 	var key *descope.AccessKeyResponse
