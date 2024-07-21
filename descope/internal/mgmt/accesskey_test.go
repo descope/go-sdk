@@ -28,9 +28,9 @@ func TestAccessKeyCreateSuccess(t *testing.T) {
 		require.Len(t, roleNames, 1)
 		require.Equal(t, "foo", roleNames[0])
 		require.Len(t, req["customClaims"], 1)
-		permittedIps := req["permittedIps"].([]any)
-		require.Len(t, permittedIps, 1)
-		require.Equal(t, "10.0.0.1", permittedIps[0])
+		permittedIPs := req["permittedIps"].([]any)
+		require.Len(t, permittedIPs, 1)
+		require.Equal(t, "10.0.0.1", permittedIPs[0])
 	}, response))
 	cc := map[string]any{"k1": "v1"}
 	cleartext, key, err := mgmt.AccessKey().Create(context.Background(), "abc", 0, []string{"foo"}, nil, "uid", cc, []string{"10.0.0.1"})
@@ -39,6 +39,8 @@ func TestAccessKeyCreateSuccess(t *testing.T) {
 	require.Equal(t, "abc", key.Name)
 	require.Len(t, key.CustomClaims, 1)
 	require.Equal(t, "v1", key.CustomClaims["k1"])
+	require.Len(t, key.PermittedIPs, 1)
+	require.Equal(t, "10.0.0.1", key.PermittedIPs[0])
 }
 
 func TestAccessKeyCreateError(t *testing.T) {
