@@ -413,7 +413,7 @@ type AccessKey interface {
 	//
 	// The permittedIps parameter is an optional list of IP addresses or CIDR ranges that are allowed to use this access key.
 	// If not provided, all IPs are allowed.
-	Create(ctx context.Context, name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIps []string) (string, *descope.AccessKeyResponse, error)
+	Create(ctx context.Context, name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, description string, permittedIps []string) (string, *descope.AccessKeyResponse, error)
 
 	// Load an existing access key.
 	//
@@ -432,7 +432,7 @@ type AccessKey interface {
 	//
 	// IMPORTANT: All parameters will override whatever values are currently set
 	// in the existing access key. Use carefully.
-	Update(ctx context.Context, id, name string) (*descope.AccessKeyResponse, error)
+	Update(ctx context.Context, id, name string, description string) (*descope.AccessKeyResponse, error)
 
 	// Deactivate an existing access key.
 	//

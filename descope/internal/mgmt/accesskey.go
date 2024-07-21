@@ -12,11 +12,11 @@ type accessKey struct {
 	managementBase
 }
 
-func (a *accessKey) Create(ctx context.Context, name string, expireTime int64, roleNames []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIps []string) (string, *descope.AccessKeyResponse, error) {
+func (a *accessKey) Create(ctx context.Context, name string, expireTime int64, roleNames []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, description string, permittedIps []string) (string, *descope.AccessKeyResponse, error) {
 	if name == "" {
 		return "", nil, utils.NewInvalidArgumentError("name")
 	}
-	body := makeCreateAccessKeyBody(name, expireTime, roleNames, keyTenants, userID, customClaims, permittedIps)
+	body := makeCreateAccessKeyBody(name, expireTime, roleNames, keyTenants, userID, customClaims, description, permittedIps)
 	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyCreate(), body, nil, a.conf.ManagementKey)
 	if err != nil {
 		return "", nil, err
@@ -47,14 +47,14 @@ func (a *accessKey) SearchAll(ctx context.Context, tenantIDs []string) ([]*desco
 	return unmarshalAccessKeySearchAllResponse(res)
 }
 
-func (a *accessKey) Update(ctx context.Context, id, name string) (*descope.AccessKeyResponse, error) {
+func (a *accessKey) Update(ctx context.Context, id, name string, description string) (*descope.AccessKeyResponse, error) {
 	if id == "" {
 		return nil, utils.NewInvalidArgumentError("id")
 	}
 	if name == "" {
 		return nil, utils.NewInvalidArgumentError("name")
 	}
-	body := map[string]any{"id": id, "name": name}
+	body := map[string]any{"id": id, "name": name, "description": description}
 	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyUpdate(), body, nil, a.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -89,7 +89,7 @@ func (a *accessKey) Delete(ctx context.Context, id string) error {
 	return err
 }
 
-func makeCreateAccessKeyBody(name string, expireTime int64, roleNames []string, tenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIps []string) map[string]any {
+func makeCreateAccessKeyBody(name string, expireTime int64, roleNames []string, tenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, description string, permittedIps []string) map[string]any {
 	return map[string]any{
 		"name":         name,
 		"expireTime":   expireTime,
@@ -97,6 +97,7 @@ func makeCreateAccessKeyBody(name string, expireTime int64, roleNames []string, 
 		"keyTenants":   makeAssociatedTenantList(tenants),
 		"userId":       userID,
 		"customClaims": customClaims,
+		"description":  description,
 		"permittedIps": permittedIps,
 	}
 }
