@@ -15,7 +15,7 @@ func TestAccessKeyCreateSuccess(t *testing.T) {
 		"key": map[string]any{
 			"name":         "abc",
 			"customClaims": map[string]any{"k1": "v1"},
-			"description": "abc123",
+			"description":  "abc123",
 			"permittedIps": []string{"10.0.0.1"},
 		}}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -53,8 +53,8 @@ func TestAccessKeyCreateError(t *testing.T) {
 func TestAccessKeyLoadSuccess(t *testing.T) {
 	response := map[string]any{
 		"key": map[string]any{
-			"id":   "ak1",
-			"name": "abc",
+			"id":          "ak1",
+			"name":        "abc",
 			"description": "a123f",
 		}}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
