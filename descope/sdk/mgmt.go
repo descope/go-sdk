@@ -411,9 +411,9 @@ type AccessKey interface {
 	// The customClaims parameter is an optional map of claims and their values, and if it's provided then
 	// those claims will be present in the JWT returned by calls to ExchangeAccessKey.
 	//
-	// The permittedIps parameter is an optional list of IP addresses or CIDR ranges that are allowed to use this access key.
+	// The permittedIPs parameter is an optional list of IP addresses or CIDR ranges that are allowed to use this access key.
 	// If not provided, all IPs are allowed.
-	Create(ctx context.Context, name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, description string, permittedIps []string) (string, *descope.AccessKeyResponse, error)
+	Create(ctx context.Context, name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, description string, permittedIPs []string) (string, *descope.AccessKeyResponse, error)
 
 	// Load an existing access key.
 	//

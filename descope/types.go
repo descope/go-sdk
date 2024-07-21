@@ -537,7 +537,7 @@ type AccessKeyResponse struct {
 	UserID       string              `json:"boundUserId,omitempty"`
 	CustomClaims map[string]any      `json:"customClaims,omitempty"`
 	Description  string              `json:"description,omitempty"`
-	PermittedIps []string            `json:"permittedIps,omitempty"`
+	PermittedIPs []string            `json:"permittedIps,omitempty"`
 }
 
 // Represents a tenant association for a User or an Access Key. The tenant ID is required
