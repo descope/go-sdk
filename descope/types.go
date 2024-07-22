@@ -536,6 +536,7 @@ type AccessKeyResponse struct {
 	ClientID     string              `json:"clientId,omitempty"`
 	UserID       string              `json:"boundUserId,omitempty"`
 	CustomClaims map[string]any      `json:"customClaims,omitempty"`
+	Description  string              `json:"description,omitempty"`
 	PermittedIPs []string            `json:"permittedIps,omitempty"`
 }
 

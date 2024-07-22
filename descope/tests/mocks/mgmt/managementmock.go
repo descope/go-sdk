@@ -740,7 +740,7 @@ func (m *MockUser) History(_ context.Context, userIDs []string) ([]*descope.User
 // Mock Access Key
 
 type MockAccessKey struct {
-	CreateAssert     func(name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIPs []string)
+	CreateAssert     func(name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, description string, permittedIPs []string)
 	CreateResponseFn func() (string, *descope.AccessKeyResponse)
 	CreateError      error
 
@@ -752,7 +752,7 @@ type MockAccessKey struct {
 	SearchAllResponse []*descope.AccessKeyResponse
 	SearchAllError    error
 
-	UpdateAssert   func(id, name string)
+	UpdateAssert   func(id, name string, description *string)
 	UpdateResponse *descope.AccessKeyResponse
 	UpdateError    error
 
@@ -766,9 +766,9 @@ type MockAccessKey struct {
 	DeleteError  error
 }
 
-func (m *MockAccessKey) Create(_ context.Context, name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIPs []string) (string, *descope.AccessKeyResponse, error) {
+func (m *MockAccessKey) Create(_ context.Context, name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, description string, permittedIPs []string) (string, *descope.AccessKeyResponse, error) {
 	if m.CreateAssert != nil {
-		m.CreateAssert(name, expireTime, roles, keyTenants, userID, customClaims, permittedIPs)
+		m.CreateAssert(name, expireTime, roles, keyTenants, userID, customClaims, description, permittedIPs)
 	}
 	var cleartext string
 	var key *descope.AccessKeyResponse
@@ -792,9 +792,9 @@ func (m *MockAccessKey) SearchAll(_ context.Context, tenantIDs []string) ([]*des
 	return m.SearchAllResponse, m.SearchAllError
 }
 
-func (m *MockAccessKey) Update(_ context.Context, id, name string) (*descope.AccessKeyResponse, error) {
+func (m *MockAccessKey) Update(_ context.Context, id, name string, description *string) (*descope.AccessKeyResponse, error) {
 	if m.UpdateAssert != nil {
-		m.UpdateAssert(id, name)
+		m.UpdateAssert(id, name, description)
 	}
 	return m.UpdateResponse, m.UpdateError
 }
