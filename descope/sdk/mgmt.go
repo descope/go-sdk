@@ -413,7 +413,7 @@ type AccessKey interface {
 	// The description parameter is an optional text providing a brief summary about the accessKey.
 	// The permittedIPs parameter is an optional list of IP addresses or CIDR ranges that are allowed to use this access key.
 	// If not provided, all IPs are allowed.
-	Create(ctx context.Context, name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, description string, permittedIPs []string) (string, *descope.AccessKeyResponse, error)
+	Create(ctx context.Context, name string, expireTime int64, roles []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, description *string, permittedIPs []string) (string, *descope.AccessKeyResponse, error)
 
 	// Load an existing access key.
 	//
@@ -430,9 +430,8 @@ type AccessKey interface {
 	// The parameters follow the same convention as those for the Create function.
 	// Only the name and description are settable for the time being.
 	//
-	// IMPORTANT: All parameters will override whatever values are currently set
-	// in the existing access key. Use carefully.
-	Update(ctx context.Context, id, name string, description string) (*descope.AccessKeyResponse, error)
+	// IMPORTANT: id and name are mandatory parameters.
+	Update(ctx context.Context, id, name string, description *string) (*descope.AccessKeyResponse, error)
 
 	// Deactivate an existing access key.
 	//
