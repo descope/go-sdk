@@ -56,7 +56,7 @@ func (a *accessKey) Update(ctx context.Context, id, name string, description *st
 	}
 	body := map[string]any{"id": id, "name": name}
 	if description != nil {
-		body["description"] = description
+		body["description"] = *description
 	}
 	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyUpdate(), body, nil, a.conf.ManagementKey)
 	if err != nil {
