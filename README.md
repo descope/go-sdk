@@ -841,6 +841,11 @@ userReqUpdate.Tenants = []*descope.AssociatedTenant{
 userReqUpdate.SSOAppIDs = []string{"appId3"}
 err := descopeClient.Management.User().Update(context.Background(), "desmond@descope.com", userReqUpdate)
 
+// On the other hand, the patch functionality will only change selected fields as is. Use carefully.
+userReqPath := &descope.UserRequest{}
+userReqPatch.Name = "Desmond Copeland Jr."
+err := descopeClient.Management.User().Patch(context.Background(), "desmond@descope.com", userReqPatch)
+
 // Update loginID of a user, or remove a login ID (last login ID cannot be removed)
 err := descopeClient.Management.User().UpdateLoginID(context.Background(), "desmond@descope.com", "bane@descope.com")
 
