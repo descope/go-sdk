@@ -97,6 +97,7 @@ type SSOApplication interface {
 	// SubjectNameIDType: Optional define the SAML Assertion subject name type, leave empty for using Descope user-id or set to "email"/"phone".
 	// SubjectNameIDFormat: Optional define the SAML Assertion subject name format, leave empty for using "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified".
 	// ForceAuthentication: Optional determine if the IdP should force the user to re-authenticate.
+	// LogoutRedirectURL: Optional Target URL to which the user will be redirected upon logout completion.
 	//
 	// The argument appRequest.Id value is optional and will be auto generated if provided with empty value
 	// The argument appRequest.Id and appRequest.Name must be unique per project.
