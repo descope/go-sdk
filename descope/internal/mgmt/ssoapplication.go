@@ -121,12 +121,13 @@ func (s *SSOApplication) LoadAll(ctx context.Context) ([]*descope.SSOApplication
 
 func makeCreateUpdateOIDCApplicationRequest(appRequest *descope.OIDCApplicationRequest) map[string]any {
 	return map[string]any{
-		"id":           appRequest.ID,
-		"name":         appRequest.Name,
-		"description":  appRequest.Description,
-		"enabled":      appRequest.Enabled,
-		"logo":         appRequest.Logo,
-		"loginPageUrl": appRequest.LoginPageURL,
+		"id":                  appRequest.ID,
+		"name":                appRequest.Name,
+		"description":         appRequest.Description,
+		"enabled":             appRequest.Enabled,
+		"logo":                appRequest.Logo,
+		"loginPageUrl":        appRequest.LoginPageURL,
+		"forceAuthentication": appRequest.ForceAuthentication,
 	}
 }
 
@@ -146,8 +147,11 @@ func makeCreateUpdateSAMLApplicationRequest(appRequest *descope.SAMLApplicationR
 		"attributeMapping":    appRequest.AttributeMapping,
 		"groupsMapping":       appRequest.GroupsMapping,
 		"acsAllowedCallbacks": appRequest.AcsAllowedCallbacks,
+		"defaultRelayState":   appRequest.DefaultRelayState,
 		"subjectNameIdType":   appRequest.SubjectNameIDType,
 		"subjectNameIdFormat": appRequest.SubjectNameIDFormat,
+		"forceAuthentication": appRequest.ForceAuthentication,
+		"logoutRedirectUrl":   appRequest.LogoutRedirectURL,
 	}
 }
 

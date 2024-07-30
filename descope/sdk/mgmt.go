@@ -70,6 +70,7 @@ type SSOApplication interface {
 	// Enabled: Optional set the sso application as enabled or disabled.
 	// Logo: Optional sso application logo.
 	// LoginPageURL: The URL where login page is hosted.
+	// ForceAuthentication: Optional determine if the IdP should force the user to re-authenticate.
 	//
 	// The argument appRequest.Id value is optional and will be auto generated if provided with empty value
 	// The argument appRequest.Id and appRequest.Name must be unique per project.
@@ -92,8 +93,10 @@ type SSOApplication interface {
 	// AttributeMapping: Optional list of Descope (IdP) attributes to SP mapping.
 	// GroupsMapping: Optional list of Descope (IdP) roles that will be mapped to SP groups.
 	// AcsAllowedCallbacks: Optional list of urls wildcards strings represents the allowed ACS urls that will be accepted while arriving on the SAML request as SP callback urls.
+	// DefaultRelayState: Optional default relay state value that will be used in the SAML request.
 	// SubjectNameIDType: Optional define the SAML Assertion subject name type, leave empty for using Descope user-id or set to "email"/"phone".
 	// SubjectNameIDFormat: Optional define the SAML Assertion subject name format, leave empty for using "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified".
+	// ForceAuthentication: Optional determine if the IdP should force the user to re-authenticate.
 	//
 	// The argument appRequest.Id value is optional and will be auto generated if provided with empty value
 	// The argument appRequest.Id and appRequest.Name must be unique per project.
