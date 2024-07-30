@@ -22,15 +22,17 @@ func TestSSOApplicationCreateOIDCApplicationSuccess(t *testing.T) {
 		require.Equal(t, true, req["enabled"])
 		require.Equal(t, "logo", req["logo"])
 		require.Equal(t, "http://dummy.com", req["loginPageUrl"])
+		require.True(t, req["forceAuthentication"].(bool))
 	}, response))
 
 	id, err := mgmt.SSOApplication().CreateOIDCApplication(context.Background(), &descope.OIDCApplicationRequest{
-		ID:           "id1",
-		Name:         "abc",
-		Description:  "desc",
-		Enabled:      true,
-		Logo:         "logo",
-		LoginPageURL: "http://dummy.com",
+		ID:                  "id1",
+		Name:                "abc",
+		Description:         "desc",
+		Enabled:             true,
+		Logo:                "logo",
+		LoginPageURL:        "http://dummy.com",
+		ForceAuthentication: true,
 	})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)
@@ -71,8 +73,11 @@ func TestSSOApplicationCreateSAMLApplicationSuccess(t *testing.T) {
 		require.Equal(t, []any{map[string]any{"name": "n1", "type": "t1", "value": "v1"}}, req["attributeMapping"])
 		require.Equal(t, []any{map[string]any{"filterType": "ft1", "name": "n1", "roles": []any{map[string]any{"id": "r1", "name": "rn1"}}, "type": "t1", "value": "v1"}}, req["groupsMapping"])
 		require.Equal(t, []any{"http://dummy.com/acsallow"}, req["acsAllowedCallbacks"])
+		require.Equal(t, "rs", req["defaultRelayState"])
 		require.Equal(t, "email", req["subjectNameIdType"])
 		require.Equal(t, "", req["subjectNameIdFormat"])
+		require.True(t, req["forceAuthentication"].(bool))
+		require.Equal(t, "http://dummy.com/logout", req["logoutRedirectUrl"])
 
 	}, response))
 
@@ -91,8 +96,11 @@ func TestSSOApplicationCreateSAMLApplicationSuccess(t *testing.T) {
 		AttributeMapping:    []descope.SAMLIDPAttributeMappingInfo{{Name: "n1", Type: "t1", Value: "v1"}},
 		GroupsMapping:       []descope.SAMLIDPGroupsMappingInfo{{Name: "n1", Type: "t1", FilterType: "ft1", Value: "v1", Roles: []descope.SAMLIDPRoleGroupMappingInfo{{ID: "r1", Name: "rn1"}}}},
 		AcsAllowedCallbacks: []string{"http://dummy.com/acsallow"},
+		DefaultRelayState:   "rs",
 		SubjectNameIDType:   "email",
 		SubjectNameIDFormat: "",
+		ForceAuthentication: true,
+		LogoutRedirectURL:   "http://dummy.com/logout",
 	})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)
@@ -124,15 +132,17 @@ func TestSSOApplicationUpdateOIDCApplicationSuccess(t *testing.T) {
 		require.Equal(t, true, req["enabled"])
 		require.Equal(t, "logo", req["logo"])
 		require.Equal(t, "http://dummy.com", req["loginPageUrl"])
+		require.True(t, req["forceAuthentication"].(bool))
 	}, response))
 
 	err := mgmt.SSOApplication().UpdateOIDCApplication(context.Background(), &descope.OIDCApplicationRequest{
-		ID:           "id1",
-		Name:         "abc",
-		Description:  "desc",
-		Enabled:      true,
-		Logo:         "logo",
-		LoginPageURL: "http://dummy.com",
+		ID:                  "id1",
+		Name:                "abc",
+		Description:         "desc",
+		Enabled:             true,
+		Logo:                "logo",
+		LoginPageURL:        "http://dummy.com",
+		ForceAuthentication: true,
 	})
 	require.NoError(t, err)
 }
@@ -174,8 +184,11 @@ func TestSSOApplicationUpdateSAMLApplicationSuccess(t *testing.T) {
 		require.Equal(t, []any{map[string]any{"name": "n1", "type": "t1", "value": "v1"}}, req["attributeMapping"])
 		require.Equal(t, []any{map[string]any{"filterType": "ft1", "name": "n1", "roles": []any{map[string]any{"id": "r1", "name": "rn1"}}, "type": "t1", "value": "v1"}}, req["groupsMapping"])
 		require.Equal(t, []any{"http://dummy.com/acsallow"}, req["acsAllowedCallbacks"])
+		require.Equal(t, "rs", req["defaultRelayState"])
 		require.Equal(t, "email", req["subjectNameIdType"])
 		require.Equal(t, "", req["subjectNameIdFormat"])
+		require.True(t, req["forceAuthentication"].(bool))
+		require.Equal(t, "http://dummy.com/logout", req["logoutRedirectUrl"])
 
 	}, response))
 
@@ -194,8 +207,11 @@ func TestSSOApplicationUpdateSAMLApplicationSuccess(t *testing.T) {
 		AttributeMapping:    []descope.SAMLIDPAttributeMappingInfo{{Name: "n1", Type: "t1", Value: "v1"}},
 		GroupsMapping:       []descope.SAMLIDPGroupsMappingInfo{{Name: "n1", Type: "t1", FilterType: "ft1", Value: "v1", Roles: []descope.SAMLIDPRoleGroupMappingInfo{{ID: "r1", Name: "rn1"}}}},
 		AcsAllowedCallbacks: []string{"http://dummy.com/acsallow"},
+		DefaultRelayState:   "rs",
 		SubjectNameIDType:   "email",
 		SubjectNameIDFormat: "",
+		ForceAuthentication: true,
+		LogoutRedirectURL:   "http://dummy.com/logout",
 	})
 	require.NoError(t, err)
 }
@@ -242,9 +258,10 @@ func TestSSOApplicationLoadOIDCSuccess(t *testing.T) {
 		"logo":        "logo",
 		"appType":     "oidc",
 		"oidcSettings": map[string]any{
-			"loginPageUrl": "http://dummy.com",
-			"issuer":       "http://dummy.com/P2AAAAA",
-			"discoveryUrl": "http://dummy.com/P2AAAAA/.well-known/openid-configuration",
+			"loginPageUrl":        "http://dummy.com",
+			"issuer":              "http://dummy.com/P2AAAAA",
+			"discoveryUrl":        "http://dummy.com/P2AAAAA/.well-known/openid-configuration",
+			"forceAuthentication": true,
 		},
 	}
 
@@ -264,6 +281,7 @@ func TestSSOApplicationLoadOIDCSuccess(t *testing.T) {
 	require.Equal(t, "http://dummy.com", res.OIDCSettings.LoginPageURL)
 	require.Equal(t, "http://dummy.com/P2AAAAA", res.OIDCSettings.Issuer)
 	require.Equal(t, "http://dummy.com/P2AAAAA/.well-known/openid-configuration", res.OIDCSettings.DiscoveryURL)
+	require.True(t, res.OIDCSettings.ForceAuthentication)
 	require.Nil(t, res.SAMLSettings)
 }
 
@@ -289,8 +307,13 @@ func TestSSOApplicationLoadSAMLSuccess(t *testing.T) {
 			"idpMetadataUrl":      "http://dummy.com/ssomd",
 			"idpEntityId":         "eId1",
 			"idpSsoUrl":           "http://dummy.com/sso",
+			"defaultRelayState":   "rs",
+			"idpInitiatedUrl":     "http://dummy.com/idpinit",
 			"subjectNameIdType":   "email",
 			"subjectNameIdFormat": "",
+			"forceAuthentication": true,
+			"idpLogoutUrl":        "http://dummy.com/idplogout",
+			"logoutRedirectUrl":   "http://dummy.com/logout",
 		},
 	}
 
@@ -321,8 +344,13 @@ func TestSSOApplicationLoadSAMLSuccess(t *testing.T) {
 	require.Equal(t, "http://dummy.com/ssomd", res.SAMLSettings.IdpMetadataURL)
 	require.Equal(t, "eId1", res.SAMLSettings.IdpEntityID)
 	require.Equal(t, "http://dummy.com/sso", res.SAMLSettings.IdpSSOURL)
+	require.Equal(t, "rs", res.SAMLSettings.DefaultRelayState)
+	require.Equal(t, "http://dummy.com/idpinit", res.SAMLSettings.IdpInitiatedURL)
 	require.Equal(t, "email", res.SAMLSettings.SubjectNameIDType)
 	require.Equal(t, "", res.SAMLSettings.SubjectNameIDFormat)
+	require.True(t, res.SAMLSettings.ForceAuthentication)
+	require.Equal(t, "http://dummy.com/idplogout", res.SAMLSettings.IdpLogoutURL)
+	require.Equal(t, "http://dummy.com/logout", res.SAMLSettings.LogoutRedirectURL)
 }
 
 func TestSSOApplicationLoadError(t *testing.T) {

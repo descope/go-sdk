@@ -641,14 +641,20 @@ type SSOApplicationSAMLSettings struct {
 	IdpEntityID         string                        `json:"idpEntityId"`
 	IdpSSOURL           string                        `json:"idpSsoUrl"`
 	AcsAllowedCallbacks []string                      `json:"acsAllowedCallbacks"`
+	DefaultRelayState   string                        `json:"defaultRelayState"`
+	IdpInitiatedURL     string                        `json:"idpInitiatedUrl"`
 	SubjectNameIDType   string                        `json:"subjectNameIdType"`
 	SubjectNameIDFormat string                        `json:"subjectNameIdFormat"`
+	ForceAuthentication bool                          `json:"forceAuthentication"`
+	IdpLogoutURL        string                        `json:"idpLogoutUrl"`
+	LogoutRedirectURL   string                        `json:"logoutRedirectUrl"`
 }
 
 type SSOApplicationOIDCSettings struct {
-	LoginPageURL string `json:"loginPageUrl"`
-	Issuer       string `json:"issuer"`
-	DiscoveryURL string `json:"discoveryUrl"`
+	LoginPageURL        string `json:"loginPageUrl"`
+	Issuer              string `json:"issuer"`
+	DiscoveryURL        string `json:"discoveryUrl"`
+	ForceAuthentication bool   `json:"forceAuthentication"`
 }
 
 type SSOApplication struct {
@@ -663,12 +669,13 @@ type SSOApplication struct {
 }
 
 type OIDCApplicationRequest struct {
-	ID           string `json:"id"`
-	Name         string `json:"name"`
-	Description  string `json:"description"`
-	Enabled      bool   `json:"enabled"`
-	Logo         string `json:"logo"`
-	LoginPageURL string `json:"loginPageUrl"`
+	ID                  string `json:"id"`
+	Name                string `json:"name"`
+	Description         string `json:"description"`
+	Enabled             bool   `json:"enabled"`
+	Logo                string `json:"logo"`
+	LoginPageURL        string `json:"loginPageUrl"`
+	ForceAuthentication bool   `json:"forceAuthentication"`
 }
 
 type SAMLApplicationRequest struct {
@@ -686,8 +693,11 @@ type SAMLApplicationRequest struct {
 	AttributeMapping    []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
 	GroupsMapping       []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
 	AcsAllowedCallbacks []string                      `json:"acsAllowedCallbacks"`
+	DefaultRelayState   string                        `json:"defaultRelayState"`
 	SubjectNameIDType   string                        `json:"subjectNameIdType"`
 	SubjectNameIDFormat string                        `json:"subjectNameIdFormat"`
+	ForceAuthentication bool                          `json:"forceAuthentication"`
+	LogoutRedirectURL   string                        `json:"logoutRedirectUrl"`
 }
 
 type SSOApplicationSearchOptions struct {

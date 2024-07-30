@@ -1563,6 +1563,7 @@ req := &descope.SAMLApplicationRequest{
 			Roles:      []descope.SAMLIDPRoleGroupMappingInfo{{ID: "rl1", Name: "rlName1"}},
 		},
 	},
+	LogoutRedirectURL: "http://dummy.com/logout",
 }
 appID, err = descopeClient.Management.SSOApplication().CreateSAMLApplication(context.Background(), req)
 
