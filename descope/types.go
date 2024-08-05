@@ -925,15 +925,21 @@ type SnapshotSecret struct {
 }
 
 type Project struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-	Tag  string `json:"tag"`
+	ID         string   `json:"id"`
+	Name       string   `json:"name"`
+	Tag        string   `json:"tag"`
+	CustomTags []string `json:"customTags"`
 }
 
 type CloneProjectResponse struct {
-	ProjectID   string `json:"projectId"`
-	ProjectName string `json:"projectName"`
-	Tag         string `json:"tag"`
+	ProjectID   string   `json:"projectId"`
+	ProjectName string   `json:"projectName"`
+	Tag         string   `json:"tag"`
+	CustomTags  []string `json:"customTags"`
+}
+
+type UpdateProjectCustomTagsResponse struct {
+	Project Project `json:"project"`
 }
 
 type DeliveryMethod string
