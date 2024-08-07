@@ -8,8 +8,8 @@ help: ## This help
 .DEFAULT_GOAL := help
 
 build: ## Build package
-	go mod tidy && go mod vendor && go build ./...
+	go mod tidy && go build ./...
 run-example: ## Run example web application
-	cd examples/webapp && go mod tidy && go mod vendor && go run main.go
+	cd examples/webapp && go mod tidy && go run main.go
 run-gin-example: ## Run example web application
-	cd examples/ginwebapp && go mod tidy && go mod vendor && go run main.go
+	cd examples/ginwebapp && go mod tidy && go run main.go
