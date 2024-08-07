@@ -5,11 +5,14 @@ import (
 
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
+	"github.com/descope/go-sdk/descope/sdk"
 )
 
 type jwt struct {
 	managementBase
 }
+
+var _ sdk.JWT = &jwt{}
 
 type jwtRes struct {
 	JWT string `json:"jwt,omitempty"`

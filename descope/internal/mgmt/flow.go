@@ -6,11 +6,14 @@ import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
+	"github.com/descope/go-sdk/descope/sdk"
 )
 
 type flow struct {
 	managementBase
 }
+
+var _ sdk.Flow = &flow{}
 
 func (r *flow) ListFlows(ctx context.Context) (*descope.FlowsResponse, error) {
 	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementListFlows(), nil, nil, r.conf.ManagementKey)

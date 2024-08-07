@@ -40,7 +40,7 @@ func NewManagement(conf ManagementParams, c *api.Client) *managementService {
 	base := managementBase{conf: &conf, client: c}
 	service := &managementService{managementBase: base}
 	service.tenant = &tenant{managementBase: base}
-	service.ssoApplication = &SSOApplication{managementBase: base}
+	service.ssoApplication = &ssoApplication{managementBase: base}
 	service.user = &user{managementBase: base}
 	service.accessKey = &accessKey{managementBase: base}
 	service.sso = &sso{managementBase: base}
@@ -52,7 +52,7 @@ func NewManagement(conf ManagementParams, c *api.Client) *managementService {
 	service.project = &project{managementBase: base}
 	service.audit = &audit{managementBase: base}
 	service.authz = &authz{managementBase: base}
-	service.password = &password{managementBase: base}
+	service.password = &passwordManagement{managementBase: base}
 	return service
 }
 

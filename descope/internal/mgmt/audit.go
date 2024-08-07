@@ -8,11 +8,14 @@ import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
+	"github.com/descope/go-sdk/descope/sdk"
 )
 
 type audit struct {
 	managementBase
 }
+
+var _ sdk.Audit = &audit{}
 
 func (a *audit) Search(ctx context.Context, options *descope.AuditSearchOptions) ([]*descope.AuditRecord, error) {
 	body := map[string]any{
