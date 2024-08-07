@@ -12,7 +12,7 @@ type accessKey struct {
 	managementBase
 }
 
-func (a *accessKey) Create(ctx context.Context, name string, expireTime int64, roleNames []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, description string, permittedIPs []string) (string, *descope.AccessKeyResponse, error) {
+func (a *accessKey) Create(ctx context.Context, name string, description string, expireTime int64, roleNames []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIPs []string) (string, *descope.AccessKeyResponse, error) {
 	if name == "" {
 		return "", nil, utils.NewInvalidArgumentError("name")
 	}
