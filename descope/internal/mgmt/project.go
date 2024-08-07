@@ -41,13 +41,10 @@ func (p *project) UpdateName(ctx context.Context, name string) error {
 	return err
 }
 
-func (p *project) UpdateCustomTags(ctx context.Context, tags []string) (*descope.UpdateProjectCustomTagsResponse, error) {
+func (p *project) UpdateCustomTags(ctx context.Context, tags []string) error {
 	body := updateProjectCustomTagsBody{CustomTags: tags}
-	res, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectUpdateCustomTags(), body, nil, p.conf.ManagementKey)
-	if err != nil {
-		return nil, err
-	}
-	return unmarshalNewUpdateProjectCustomTagsResponse(res)
+	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectUpdateCustomTags(), body, nil, p.conf.ManagementKey)
+	return err
 }
 
 func (p *project) Delete(ctx context.Context) error {
@@ -101,15 +98,6 @@ func (p *project) ValidateSnapshot(ctx context.Context, req *descope.ValidateSna
 
 func unmarshalNewProjectResponseResponse(res *api.HTTPResponse) (*descope.CloneProjectResponse, error) {
 	var newProjectRes *descope.CloneProjectResponse
-	err := utils.Unmarshal([]byte(res.BodyStr), &newProjectRes)
-	if err != nil {
-		return nil, err
-	}
-	return newProjectRes, err
-}
-
-func unmarshalNewUpdateProjectCustomTagsResponse(res *api.HTTPResponse) (*descope.UpdateProjectCustomTagsResponse, error) {
-	var newProjectRes *descope.UpdateProjectCustomTagsResponse
 	err := utils.Unmarshal([]byte(res.BodyStr), &newProjectRes)
 	if err != nil {
 		return nil, err

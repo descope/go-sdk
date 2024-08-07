@@ -938,10 +938,6 @@ type CloneProjectResponse struct {
 	CustomTags  []string `json:"customTags"`
 }
 
-type UpdateProjectCustomTagsResponse struct {
-	Project Project `json:"project"`
-}
-
 type DeliveryMethod string
 
 type OAuthProvider string

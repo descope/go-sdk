@@ -97,26 +97,21 @@ func TestProjectUpdateNameError(t *testing.T) {
 }
 
 func TestProjectUpdateCustomTagsSuccess(t *testing.T) {
-	expectedResponse := &descope.Project{
-		CustomTags: []string{"foo"},
-	}
-	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		tags, ok := req["customTags"]
 		require.True(t, ok)
 		require.Equal(t, []any{"foo"}, tags)
-	}, map[string]any{"project": expectedResponse}))
-	res, err := mgmt.Project().UpdateCustomTags(context.Background(), []string{"foo"})
+	}))
+	err := mgmt.Project().UpdateCustomTags(context.Background(), []string{"foo"})
 	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, []string{"foo"}, res.Project.CustomTags)
 }
 
 func TestProjectUpdateCustomTagsError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	_, err := mgmt.Project().UpdateCustomTags(context.Background(), []string{"foo"})
+	err := mgmt.Project().UpdateCustomTags(context.Background(), []string{"foo"})
 	require.Error(t, err)
 }
 

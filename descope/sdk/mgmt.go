@@ -674,7 +674,7 @@ type Project interface {
 	UpdateName(ctx context.Context, name string) error
 
 	// Update the current project custom tags.
-	UpdateCustomTags(ctx context.Context, tags []string) (*descope.UpdateProjectCustomTagsResponse, error)
+	UpdateCustomTags(ctx context.Context, tags []string) error
 
 	// Delete the current project.
 	Delete(ctx context.Context) error
