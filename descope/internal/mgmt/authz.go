@@ -7,11 +7,14 @@ import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
+	"github.com/descope/go-sdk/descope/sdk"
 )
 
 type authz struct {
 	managementBase
 }
+
+var _ sdk.Authz = &authz{}
 
 func (a *authz) SaveSchema(ctx context.Context, schema *descope.AuthzSchema, upgrade bool) error {
 	if schema == nil {

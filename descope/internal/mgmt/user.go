@@ -7,11 +7,14 @@ import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
+	"github.com/descope/go-sdk/descope/sdk"
 )
 
 type user struct {
 	managementBase
 }
+
+var _ sdk.User = &user{}
 
 type createUserRequest struct {
 	loginID            string

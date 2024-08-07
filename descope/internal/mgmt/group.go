@@ -6,11 +6,14 @@ import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
+	"github.com/descope/go-sdk/descope/sdk"
 )
 
 type group struct {
 	managementBase
 }
+
+var _ sdk.Group = &group{}
 
 func (r *group) LoadAllGroups(ctx context.Context, tenantID string) ([]*descope.Group, error) {
 	if tenantID == "" {

@@ -6,11 +6,14 @@ import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
+	"github.com/descope/go-sdk/descope/sdk"
 )
 
 type tenant struct {
 	managementBase
 }
+
+var _ sdk.Tenant = &tenant{}
 
 func (t *tenant) Create(ctx context.Context, tenantRequest *descope.TenantRequest) (id string, err error) {
 	if tenantRequest == nil {

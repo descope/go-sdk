@@ -6,13 +6,16 @@ import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
+	"github.com/descope/go-sdk/descope/sdk"
 )
 
-type password struct {
+type passwordManagement struct {
 	managementBase
 }
 
-func (s *password) GetSettings(ctx context.Context, tenantID string) (*descope.PasswordSettings, error) {
+var _ sdk.PasswordManagement = &passwordManagement{}
+
+func (s *passwordManagement) GetSettings(ctx context.Context, tenantID string) (*descope.PasswordSettings, error) {
 	req := &api.HTTPRequest{
 		QueryParams: map[string]string{"tenantId": tenantID},
 	}
@@ -23,7 +26,7 @@ func (s *password) GetSettings(ctx context.Context, tenantID string) (*descope.P
 	return unmarshalPasswordSettingsResponse(res)
 }
 
-func (s *password) ConfigureSettings(ctx context.Context, tenantID string, passwordSettings *descope.PasswordSettings) error {
+func (s *passwordManagement) ConfigureSettings(ctx context.Context, tenantID string, passwordSettings *descope.PasswordSettings) error {
 	req := map[string]any{
 		"tenantId":        tenantID,
 		"enabled":         passwordSettings.Enabled,
