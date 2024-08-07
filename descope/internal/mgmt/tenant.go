@@ -14,7 +14,7 @@ type tenant struct {
 
 func (t *tenant) Create(ctx context.Context, tenantRequest *descope.TenantRequest) (id string, err error) {
 	if tenantRequest == nil {
-		tenantRequest = &descope.TenantRequest{}
+		tenantRequest = &descope.TenantRequest{} // notest
 	}
 	return t.createWithID(ctx, "", tenantRequest)
 }
@@ -24,7 +24,7 @@ func (t *tenant) CreateWithID(ctx context.Context, id string, tenantRequest *des
 		return utils.NewInvalidArgumentError("id")
 	}
 	if tenantRequest == nil {
-		tenantRequest = &descope.TenantRequest{}
+		tenantRequest = &descope.TenantRequest{} // notest
 	}
 	_, err := t.createWithID(ctx, id, tenantRequest)
 	return err
@@ -94,7 +94,7 @@ func (t *tenant) LoadAll(ctx context.Context) ([]*descope.Tenant, error) {
 func (t *tenant) SearchAll(ctx context.Context, options *descope.TenantSearchOptions) ([]*descope.Tenant, error) {
 	// Init empty options if non given
 	if options == nil {
-		options = &descope.TenantSearchOptions{}
+		options = &descope.TenantSearchOptions{} // notest
 	}
 
 	req := makeSearchTenantRequest(options)
@@ -107,7 +107,7 @@ func (t *tenant) SearchAll(ctx context.Context, options *descope.TenantSearchOpt
 
 func (t *tenant) GetSettings(ctx context.Context, tenantID string) (*descope.TenantSettings, error) {
 	if tenantID == "" {
-		return nil, utils.NewInvalidArgumentError("tenantID")
+		return nil, utils.NewInvalidArgumentError("tenantID") // notest
 	}
 	req := &api.HTTPRequest{
 		QueryParams: map[string]string{"id": tenantID},
