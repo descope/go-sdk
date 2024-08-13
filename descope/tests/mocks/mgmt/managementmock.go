@@ -1192,10 +1192,10 @@ type MockProject struct {
 	UpdateNameAssert func(name string)
 	UpdateNameError  error
 
-	UpdateCustomTagsAssert func(tags []string)
-	UpdateCustomTagsError  error
+	SetTagsAssert func(tags []string)
+	SetTagsError  error
 
-	CloneAssert   func(name string, tag descope.ProjectTag, customTags []string)
+	CloneAssert   func(name string, tag descope.ProjectEnvironment, tags []string)
 	CloneResponse *descope.CloneProjectResponse
 	CloneError    error
 
@@ -1232,16 +1232,16 @@ func (m *MockProject) UpdateName(_ context.Context, name string) error {
 	return m.UpdateNameError
 }
 
-func (m *MockProject) UpdateCustomTags(_ context.Context, tags []string) error {
-	if m.UpdateCustomTagsAssert != nil {
-		m.UpdateCustomTagsAssert(tags)
+func (m *MockProject) SetTags(_ context.Context, tags []string) error {
+	if m.SetTagsAssert != nil {
+		m.SetTagsAssert(tags)
 	}
-	return m.UpdateCustomTagsError
+	return m.SetTagsError
 }
 
-func (m *MockProject) Clone(_ context.Context, name string, tag descope.ProjectTag, customTags []string) (*descope.CloneProjectResponse, error) {
+func (m *MockProject) Clone(_ context.Context, name string, environment descope.ProjectEnvironment, tags []string) (*descope.CloneProjectResponse, error) {
 	if m.CloneAssert != nil {
-		m.CloneAssert(name, tag, customTags)
+		m.CloneAssert(name, environment, tags)
 	}
 	return m.CloneResponse, m.CloneError
 }

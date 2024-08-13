@@ -925,17 +925,18 @@ type SnapshotSecret struct {
 }
 
 type Project struct {
-	ID         string   `json:"id"`
-	Name       string   `json:"name"`
-	Tag        string   `json:"tag"`
-	CustomTags []string `json:"customTags"`
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Environment string   `json:"environment"`
+	Tags        []string `json:"tags"`
 }
 
 type CloneProjectResponse struct {
 	ProjectID   string   `json:"projectId"`
 	ProjectName string   `json:"projectName"`
 	Tag         string   `json:"tag"`
-	CustomTags  []string `json:"customTags"`
+	Environment string   `json:"environment"`
+	Tags        []string `json:"tags"`
 }
 
 type DeliveryMethod string
@@ -944,7 +945,7 @@ type OAuthProvider string
 
 type ContextKey string
 
-type ProjectTag string
+type ProjectEnvironment string
 
 const (
 	MethodWhatsApp DeliveryMethod = "whatsapp"
@@ -960,8 +961,8 @@ const (
 	OAuthGitlab    OAuthProvider = "gitlab"
 	OAuthApple     OAuthProvider = "apple"
 
-	ProjectTagNone       ProjectTag = ""
-	ProjectTagProduction ProjectTag = "production"
+	ProjectEnvironmentNone       ProjectEnvironment = ""
+	ProjectEnvironmentProduction ProjectEnvironment = "production"
 
 	SessionCookieName = "DS"
 	RefreshCookieName = "DSR"

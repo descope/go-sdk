@@ -16,18 +16,18 @@ type updateProjectBody struct {
 	Name string `json:"name"`
 }
 
-type updateProjectCustomTagsBody struct {
-	CustomTags []string `json:"customTags"`
+type setProjectTagsBody struct {
+	Tags []string `json:"tags"`
 }
 
 type cloneProjectBody struct {
-	Name       string   `json:"name"`
-	Tag        string   `json:"tag"`
-	CustomTags []string `json:"customTags"`
+	Name        string   `json:"name"`
+	Environment string   `json:"environment"`
+	Tags        []string `json:"tags"`
 }
 
-func (p *project) Clone(ctx context.Context, name string, tag descope.ProjectTag, customTags []string) (*descope.CloneProjectResponse, error) {
-	body := cloneProjectBody{Name: name, Tag: string(tag), CustomTags: customTags}
+func (p *project) Clone(ctx context.Context, name string, environment descope.ProjectEnvironment, tags []string) (*descope.CloneProjectResponse, error) {
+	body := cloneProjectBody{Name: name, Environment: string(environment), Tags: tags}
 	res, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectClone(), body, nil, p.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -41,9 +41,9 @@ func (p *project) UpdateName(ctx context.Context, name string) error {
 	return err
 }
 
-func (p *project) UpdateCustomTags(ctx context.Context, tags []string) error {
-	body := updateProjectCustomTagsBody{CustomTags: tags}
-	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectUpdateCustomTags(), body, nil, p.conf.ManagementKey)
+func (p *project) SetTags(ctx context.Context, tags []string) error {
+	body := setProjectTagsBody{Tags: tags}
+	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectSetTags(), body, nil, p.conf.ManagementKey)
 	return err
 }
 
