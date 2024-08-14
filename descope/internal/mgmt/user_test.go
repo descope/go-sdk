@@ -924,7 +924,7 @@ func TestUserUpdatePhoneError(t *testing.T) {
 	require.Nil(t, res)
 }
 
-func TestUserUpdateNameSuccess(t *testing.T) {
+func TestUserUpdateDisplayNameSuccess(t *testing.T) {
 	response := map[string]any{
 		"user": map[string]any{
 			"name": "foo",
@@ -942,16 +942,50 @@ func TestUserUpdateNameSuccess(t *testing.T) {
 	require.Equal(t, "foo", res.Name)
 }
 
-func TestUserUpdateNameBadInput(t *testing.T) {
+func TestUserUpdateDisplayNameBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
 	res, err := m.User().UpdateDisplayName(context.Background(), "", "foo")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
-func TestUserUpdateNameError(t *testing.T) {
+func TestUserUpdateDisplayNameError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
 	res, err := m.User().UpdateDisplayName(context.Background(), "abc", "foo")
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserUpdateNamesSuccess(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"name": "foo",
+		}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, "g", req["givenName"])
+		require.Equal(t, "m", req["middleName"])
+		require.Equal(t, "f", req["familyName"])
+	}, response))
+	res, err := m.User().UpdateUserNames(context.Background(), "abc", "g", "m", "f")
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, "foo", res.Name)
+}
+
+func TestUserUpdateNamesBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := m.User().UpdateUserNames(context.Background(), "", "g", "m", "f")
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserUpdateNamesError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := m.User().UpdateUserNames(context.Background(), "abc", "g", "m", "f")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -1284,6 +1318,46 @@ func TestUserRemoveTenantBadInput(t *testing.T) {
 func TestUserRemoveTenantError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
 	res, err := m.User().RemoveTenant(context.Background(), "abc", "123")
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserSetTenantRoleSuccess(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"userTenants": []map[string]any{
+				{
+					"tenantId":  "123",
+					"roleNames": []string{"foo"},
+				},
+			},
+		}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, "123", req["tenantId"])
+		require.Equal(t, []any{"foo"}, req["roleNames"])
+	}, response))
+	res, err := m.User().SetTenantRoles(context.Background(), "abc", "123", []string{"foo"})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Len(t, res.UserTenants, 1)
+	require.Equal(t, "123", res.UserTenants[0].TenantID)
+	require.Equal(t, []string{"foo"}, res.UserTenants[0].Roles)
+}
+
+func TestUserSetTenantRoleBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := m.User().SetTenantRoles(context.Background(), "", "123", []string{"foo"})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserSetTenantRoleError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := m.User().SetTenantRoles(context.Background(), "abc", "123", []string{"foo"})
 	require.Error(t, err)
 	require.Nil(t, res)
 }

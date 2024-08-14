@@ -6,11 +6,14 @@ import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
+	"github.com/descope/go-sdk/descope/sdk"
 )
 
 type sso struct {
 	managementBase
 }
+
+var _ sdk.SSO = &sso{}
 
 func (s *sso) LoadSettings(ctx context.Context, tenantID string) (*descope.SSOTenantSettingsResponse, error) {
 	if tenantID == "" {

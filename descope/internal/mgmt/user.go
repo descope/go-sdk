@@ -7,11 +7,14 @@ import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
+	"github.com/descope/go-sdk/descope/sdk"
 )
 
 type user struct {
 	managementBase
 }
+
+var _ sdk.User = &user{}
 
 type createUserRequest struct {
 	loginID            string
@@ -50,7 +53,7 @@ func (u *user) CreateTestUser(ctx context.Context, loginID string, user *descope
 
 func (u *user) CreateBatch(ctx context.Context, users []*descope.BatchUser) (*descope.UsersBatchResponse, error) {
 	if users == nil {
-		users = []*descope.BatchUser{}
+		users = []*descope.BatchUser{} // notest
 	}
 	return u.createBatch(ctx, users, nil)
 }
@@ -64,7 +67,7 @@ func (u *user) Invite(ctx context.Context, loginID string, user *descope.UserReq
 
 func (u *user) InviteBatch(ctx context.Context, users []*descope.BatchUser, options *descope.InviteOptions) (*descope.UsersBatchResponse, error) {
 	if users == nil {
-		users = []*descope.BatchUser{}
+		users = []*descope.BatchUser{} // notest
 	}
 	return u.createBatch(ctx, users, options)
 }

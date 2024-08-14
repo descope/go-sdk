@@ -6,11 +6,14 @@ import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
+	"github.com/descope/go-sdk/descope/sdk"
 )
 
 type project struct {
 	managementBase
 }
+
+var _ sdk.Project = &project{}
 
 type updateProjectBody struct {
 	Name string `json:"name"`

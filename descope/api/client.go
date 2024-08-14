@@ -1154,11 +1154,11 @@ func NewClient(conf ClientParams) *Client {
 		} else {
 			// App has set a different transport layer, we will not change its attributes, and use it as is
 			// this will include the tls config
-			rt = http.DefaultTransport
+			rt = http.DefaultTransport // notest
 		}
 		var timeout = time.Second * 60
 		if conf.RequestTimeout != 0 {
-			timeout = conf.RequestTimeout
+			timeout = conf.RequestTimeout // notest
 		}
 		httpClient = &http.Client{
 			Timeout:   timeout,

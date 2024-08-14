@@ -43,9 +43,8 @@ lint_check_not_main() {
 
 # Run go mod commands
 lint_go_mod() {
-	echo "- Running go tidy and go mod vendor"
+	echo "- Running go tidy"
 	go mod tidy
-	go mod vendor
 }
 
 # Run go build (default is cmd dir)

@@ -6,13 +6,16 @@ import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
+	"github.com/descope/go-sdk/descope/sdk"
 )
 
-type SSOApplication struct {
+type ssoApplication struct {
 	managementBase
 }
 
-func (s *SSOApplication) CreateOIDCApplication(ctx context.Context, appRequest *descope.OIDCApplicationRequest) (id string, err error) {
+var _ sdk.SSOApplication = &ssoApplication{}
+
+func (s *ssoApplication) CreateOIDCApplication(ctx context.Context, appRequest *descope.OIDCApplicationRequest) (id string, err error) {
 	if appRequest == nil {
 		return "", utils.NewInvalidArgumentError("appRequest")
 	}
@@ -34,7 +37,7 @@ func (s *SSOApplication) CreateOIDCApplication(ctx context.Context, appRequest *
 	return res.ID, nil
 }
 
-func (s *SSOApplication) CreateSAMLApplication(ctx context.Context, appRequest *descope.SAMLApplicationRequest) (id string, err error) {
+func (s *ssoApplication) CreateSAMLApplication(ctx context.Context, appRequest *descope.SAMLApplicationRequest) (id string, err error) {
 	if appRequest == nil {
 		return "", utils.NewInvalidArgumentError("appRequest")
 	}
@@ -56,7 +59,7 @@ func (s *SSOApplication) CreateSAMLApplication(ctx context.Context, appRequest *
 	return res.ID, nil
 }
 
-func (s *SSOApplication) UpdateOIDCApplication(ctx context.Context, appRequest *descope.OIDCApplicationRequest) error {
+func (s *ssoApplication) UpdateOIDCApplication(ctx context.Context, appRequest *descope.OIDCApplicationRequest) error {
 	if appRequest == nil {
 		return utils.NewInvalidArgumentError("appRequest")
 	}
@@ -72,7 +75,7 @@ func (s *SSOApplication) UpdateOIDCApplication(ctx context.Context, appRequest *
 	return err
 }
 
-func (s *SSOApplication) UpdateSAMLApplication(ctx context.Context, appRequest *descope.SAMLApplicationRequest) error {
+func (s *ssoApplication) UpdateSAMLApplication(ctx context.Context, appRequest *descope.SAMLApplicationRequest) error {
 	if appRequest == nil {
 		return utils.NewInvalidArgumentError("appRequest")
 	}
@@ -88,7 +91,7 @@ func (s *SSOApplication) UpdateSAMLApplication(ctx context.Context, appRequest *
 	return err
 }
 
-func (s *SSOApplication) Delete(ctx context.Context, id string) error {
+func (s *ssoApplication) Delete(ctx context.Context, id string) error {
 	if id == "" {
 		return utils.NewInvalidArgumentError("id")
 	}
@@ -97,7 +100,7 @@ func (s *SSOApplication) Delete(ctx context.Context, id string) error {
 	return err
 }
 
-func (s *SSOApplication) Load(ctx context.Context, id string) (*descope.SSOApplication, error) {
+func (s *ssoApplication) Load(ctx context.Context, id string) (*descope.SSOApplication, error) {
 	if id == "" {
 		return nil, utils.NewInvalidArgumentError("id")
 	}
@@ -111,7 +114,7 @@ func (s *SSOApplication) Load(ctx context.Context, id string) (*descope.SSOAppli
 	return unmarshalLoadSSOApplicationResponse(res)
 }
 
-func (s *SSOApplication) LoadAll(ctx context.Context) ([]*descope.SSOApplication, error) {
+func (s *ssoApplication) LoadAll(ctx context.Context) ([]*descope.SSOApplication, error) {
 	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementSSOApplicationLoadAll(), nil, s.conf.ManagementKey)
 	if err != nil {
 		return nil, err
