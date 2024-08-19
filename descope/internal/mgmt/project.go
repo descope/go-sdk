@@ -44,9 +44,9 @@ func (p *project) UpdateName(ctx context.Context, name string) error {
 	return err
 }
 
-func (p *project) SetTags(ctx context.Context, tags []string) error {
+func (p *project) UpdateTags(ctx context.Context, tags []string) error {
 	body := setProjectTagsBody{Tags: tags}
-	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectSetTags(), body, nil, p.conf.ManagementKey)
+	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectUpdateTags(), body, nil, p.conf.ManagementKey)
 	return err
 }
 

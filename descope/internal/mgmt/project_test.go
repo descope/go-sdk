@@ -105,13 +105,13 @@ func TestProjectSetTagsSuccess(t *testing.T) {
 		require.True(t, ok)
 		require.Equal(t, []any{"foo"}, tags)
 	}))
-	err := mgmt.Project().SetTags(context.Background(), []string{"foo"})
+	err := mgmt.Project().UpdateTags(context.Background(), []string{"foo"})
 	require.NoError(t, err)
 }
 
 func TestProjectSetTagsError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	err := mgmt.Project().SetTags(context.Background(), []string{"foo"})
+	err := mgmt.Project().UpdateTags(context.Background(), []string{"foo"})
 	require.Error(t, err)
 }
 

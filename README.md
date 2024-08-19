@@ -1480,7 +1480,7 @@ You can update a project's name, as well as clone the current project to create 
 descopeClient.Management.Project().UpdateName(context.Background(), "project-name")
 
 // Set project tags (free text)
-descopeClient.Management.Project().SetTags(context.Background(), []string{"marketing", "health"})
+descopeClient.Management.Project().UpdateTags(context.Background(), []string{"marketing", "health"})
 
 // Clone the current project to a new one
 // Note that this action is supported only with a pro license or above.

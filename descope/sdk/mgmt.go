@@ -674,7 +674,7 @@ type Project interface {
 	UpdateName(ctx context.Context, name string) error
 
 	// Update the current project tags.
-	SetTags(ctx context.Context, tags []string) error
+	UpdateTags(ctx context.Context, tags []string) error
 
 	// Delete the current project.
 	Delete(ctx context.Context) error
