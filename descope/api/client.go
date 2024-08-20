@@ -173,6 +173,7 @@ var (
 			projectsList:                     "mgmt/projects/list",
 			projectClone:                     "mgmt/project/clone",
 			projectUpdateName:                "mgmt/project/update/name",
+			projectUpdateTags:                "mgmt/project/update/tags",
 			projectDelete:                    "mgmt/project/delete",
 			projectExportSnapshot:            "mgmt/project/snapshot/export",
 			projectImportSnapshot:            "mgmt/project/snapshot/import",
@@ -376,6 +377,7 @@ type mgmtEndpoints struct {
 	projectsList            string
 	projectClone            string
 	projectUpdateName       string
+	projectUpdateTags       string
 	projectDelete           string
 	projectExportSnapshot   string
 	projectImportSnapshot   string
@@ -975,6 +977,10 @@ func (e *endpoints) ManagementProjectClone() string {
 
 func (e *endpoints) ManagementProjectUpdateName() string {
 	return path.Join(e.version, e.mgmt.projectUpdateName)
+}
+
+func (e *endpoints) ManagementProjectUpdateTags() string {
+	return path.Join(e.version, e.mgmt.projectUpdateTags)
 }
 
 func (e *endpoints) ManagementProjectDelete() string {

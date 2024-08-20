@@ -96,6 +96,25 @@ func TestProjectUpdateNameError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestProjectSetTagsSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		tags, ok := req["tags"]
+		require.True(t, ok)
+		require.Equal(t, []any{"foo"}, tags)
+	}))
+	err := mgmt.Project().UpdateTags(context.Background(), []string{"foo"})
+	require.NoError(t, err)
+}
+
+func TestProjectSetTagsError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	err := mgmt.Project().UpdateTags(context.Background(), []string{"foo"})
+	require.Error(t, err)
+}
+
 func TestProjectCloneSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -104,11 +123,14 @@ func TestProjectCloneSuccess(t *testing.T) {
 		name, ok := req["name"].(string)
 		require.True(t, ok)
 		require.Equal(t, "foo", name)
-		tag, ok := req["tag"].(string)
+		env, ok := req["environment"].(string)
 		require.True(t, ok)
-		require.Equal(t, "production", tag)
+		require.Equal(t, "production", env)
+		tags, ok := req["tags"]
+		require.True(t, ok)
+		require.Equal(t, []any{"tag1", "tag2!"}, tags)
 	}, map[string]any{"projectId": "id1", "projectName": "foo"}))
-	res, err := mgmt.Project().Clone(context.Background(), "foo", "production")
+	res, err := mgmt.Project().Clone(context.Background(), "foo", "production", []string{"tag1", "tag2!"})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "foo", res.ProjectName)
@@ -117,7 +139,7 @@ func TestProjectCloneSuccess(t *testing.T) {
 
 func TestProjectCloneError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	_, err := mgmt.Project().Clone(context.Background(), "foo", "")
+	_, err := mgmt.Project().Clone(context.Background(), "foo", "", nil)
 	require.Error(t, err)
 }
 
@@ -138,14 +160,15 @@ func TestProjectDeleteError(t *testing.T) {
 func TestProjectListSuccess(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
-	}, map[string]any{"projects": []any{map[string]any{"id": "i", "name": "n", "tag": "t"}}}))
+	}, map[string]any{"projects": []any{map[string]any{"id": "i", "name": "n", "environment": "t", "tags": []string{"tag1", "t!"}}}}))
 	res, err := m.Project().ListProjects(context.Background())
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res, 1)
 	require.Equal(t, "i", res[0].ID)
 	require.Equal(t, "n", res[0].Name)
-	require.Equal(t, "t", res[0].Tag)
+	require.Equal(t, "t", res[0].Environment)
+	require.Equal(t, []string{"tag1", "t!"}, res[0].Tags)
 }
 
 func TestProjectListError(t *testing.T) {
