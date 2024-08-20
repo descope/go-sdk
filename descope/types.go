@@ -934,7 +934,6 @@ type Project struct {
 type CloneProjectResponse struct {
 	ProjectID   string   `json:"projectId"`
 	ProjectName string   `json:"projectName"`
-	Tag         string   `json:"tag"`
 	Environment string   `json:"environment"`
 	Tags        []string `json:"tags"`
 }
