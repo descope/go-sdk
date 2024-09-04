@@ -147,6 +147,23 @@ func (t *tenant) ConfigureSettings(ctx context.Context, tenantID string, setting
 	return err
 }
 
+func (t *tenant) GenerateSSOConfigurationLink(ctx context.Context, tenantID string, expireDuration int64) (string, error) {
+	if tenantID == "" {
+		return "", utils.NewInvalidArgumentError("tenantID")
+	}
+
+	req := map[string]any{
+		"tenantId":   tenantID,
+		"expireTime": expireDuration,
+	}
+
+	res, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantGenerateSSOConfigurationLink(), req, nil, t.conf.ManagementKey)
+	if err != nil {
+		return "", err
+	}
+	return unmarshalGenerateSSOConfigurationLinkResponse(res)
+}
+
 func makeCreateUpdateTenantRequest(id string, tenantRequest *descope.TenantRequest) map[string]any {
 	return map[string]any{"id": id, "name": tenantRequest.Name, "selfProvisioningDomains": tenantRequest.SelfProvisioningDomains, "customAttributes": tenantRequest.CustomAttributes}
 }
@@ -192,4 +209,13 @@ func unmarshalTenantSettingsResponse(res *api.HTTPResponse) (*descope.TenantSett
 	}
 	tres.TenantSettings.SessionSettingsEnabled = tres.Enabled
 	return tres.TenantSettings, nil
+}
+
+func unmarshalGenerateSSOConfigurationLinkResponse(res *api.HTTPResponse) (string, error) {
+	var resp *descope.GenerateSSOConfigurationLinkResponse
+	err := utils.Unmarshal([]byte(res.BodyStr), &resp)
+	if err != nil {
+		return "", err
+	}
+	return resp.AdminSSOConfigurationLink, err
 }

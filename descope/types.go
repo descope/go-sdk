@@ -156,6 +156,10 @@ type SSOTenantSettingsResponse struct {
 	Oidc   *SSOOIDCSettings         `json:"oidc,omitempty"`
 }
 
+type GenerateSSOConfigurationLinkResponse struct {
+	AdminSSOConfigurationLink string `json:"adminSSOConfigurationLink,omitempty"`
+}
+
 // PasswordPolicy - represents the rules for valid passwords configured in the policy
 // in the Descope console. This can be used to implement client-side validation of new
 // user passwords for a better user experience. Either way, the comprehensive

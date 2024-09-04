@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/descope/go-sdk/descope"
+	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/tests/helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -280,4 +281,46 @@ func TestTenantConfigureSettingsError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
 	err := mgmt.Tenant().ConfigureSettings(context.Background(), "test", &descope.TenantSettings{})
 	require.Error(t, err)
+}
+
+func TestTenantGenerateSSOConfigurationLinkSuccess(t *testing.T) {
+	response := map[string]any{
+		"adminSSOConfigurationLink": "some link",
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "tenant", req["tenantId"])
+		require.Equal(t, float64(60*60*24), req["expireTime"])
+	}, response))
+	link, err := mgmt.Tenant().GenerateSSOConfigurationLink(context.Background(), "tenant", 60*60*24)
+	require.NoError(t, err)
+	assert.EqualValues(t, "some link", link)
+}
+
+func TestTenantGenerateSSOConfigurationLinkError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "tenant", req["tenantId"])
+		require.Equal(t, float64(60*60*24), req["expireTime"])
+	}))
+	link, err := mgmt.Tenant().GenerateSSOConfigurationLink(context.Background(), "tenant", 60*60*24)
+	require.Error(t, err)
+	assert.Empty(t, link)
+}
+
+func TestTenantGenerateSSOConfigurationLinkNoTenantID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "tenant", req["tenantId"])
+		require.Equal(t, float64(60*60*24), req["expireTime"])
+	}))
+	link, err := mgmt.Tenant().GenerateSSOConfigurationLink(context.Background(), "", 60*60*24)
+	require.ErrorIs(t, err, utils.NewInvalidArgumentError("tenantId"))
+	assert.Empty(t, link)
 }

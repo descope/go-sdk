@@ -57,6 +57,10 @@ type Tenant interface {
 	// Configure tenant settings for a tenant. Tenant ID is required.
 	// All settings arguments are required and will override whatever is currently set even if left default.
 	ConfigureSettings(ctx context.Context, tenantID string, settings *descope.TenantSettings) error
+
+	// Generate tenant admin self service SSO configuration link
+	// The expireDuration parameter indicates the link expiration duration in seconds
+	GenerateSSOConfigurationLink(ctx context.Context, tenantID string, expireDuration int64) (string, error)
 }
 
 // Provides functions for managing SSO applications in a project.
