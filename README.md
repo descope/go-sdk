@@ -751,6 +751,9 @@ settingsRequest.InactivityTimeUnit = "days"
 // update the tenant settings
 err := descopeClient.Management.Tenant().ConfigureSettings(context.Background(), "My Tenant", settingsRequest)
 
+// Generate tenant admin self service link for SSO configuration (valid for 24 hours)
+link, err := descopeClient.Management.Tenant().GenerateSSOConfigurationLink(context.Background(), "My Tenant", 60 * 60 * 24)
+
 ```
 
 ### Manage Users
