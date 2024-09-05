@@ -759,6 +759,7 @@ type UserSearchOptions struct {
 	CustomAttributes map[string]any
 	WithTestUsers    bool
 	TestUsersOnly    bool
+	LoginIDs         []string
 }
 
 type UserSearchSort struct {
