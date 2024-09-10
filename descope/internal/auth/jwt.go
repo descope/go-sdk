@@ -18,17 +18,17 @@ type provider struct {
 	client      *api.Client
 	conf        *AuthParams
 	providedKey jwk.Key
-	keySet      *atomic.Value
+	keySet      atomic.Value
 }
 
 func newProvider(client *api.Client, conf *AuthParams) *provider {
-	ks := &atomic.Value{}
-	ks.Store(&map[string]jwk.Key{})
+	ks := atomic.Value{}
+	ks.Store(map[string]jwk.Key{})
 	return &provider{client: client, conf: conf, keySet: ks}
 }
 
 func (p *provider) keySetMap() map[string]jwk.Key {
-	return *p.keySet.Load().(*map[string]jwk.Key)
+	return p.keySet.Load().(map[string]jwk.Key)
 }
 
 func (p *provider) publicKeyExists() bool {
@@ -85,7 +85,7 @@ func (p *provider) requestKeys() error {
 	}
 
 	logger.LogDebug("Refresh keys set with %d key(s)", len(tempKeySet))
-	p.keySet.Swap(&tempKeySet)
+	p.keySet.Swap(tempKeySet)
 	return nil
 }
 
