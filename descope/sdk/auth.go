@@ -428,6 +428,12 @@ type Authentication interface {
 	// returns the user details or error if the refresh token is not valid.
 	Me(request *http.Request) (*descope.UserResponse, error)
 
+	// MyTenants - Use to retrieve current session user tenants. The request requires a valid refresh token.
+	// returns the tenant requested or error if the refresh token is not valid.
+	// set dct to true - if the required tenant is the one that is set on the dct claim
+	// or provide a list of tenant ids that user is part of
+	MyTenants(ctx context.Context, request *http.Request, dct bool, tenantIDs []string) (*descope.TenantsResponse, error)
+
 	// History - Use to retrieve current session user history. The request requires a valid refresh token.
 	// returns the user authentication history or error if the refresh token is not valid.
 	History(request *http.Request) ([]*descope.UserHistoryResponse, error)

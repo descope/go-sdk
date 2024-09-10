@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"path"
+	"sync/atomic"
 
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwk"
@@ -18,15 +19,21 @@ type provider struct {
 	client      *api.Client
 	conf        *AuthParams
 	providedKey jwk.Key
-	keySet      map[string]jwk.Key
+	keySet      *atomic.Pointer[map[string]jwk.Key]
 }
 
 func newProvider(client *api.Client, conf *AuthParams) *provider {
-	return &provider{client: client, conf: conf, keySet: make(map[string]jwk.Key)}
+	ks := &atomic.Pointer[map[string]jwk.Key]{}
+	ks.Store(&map[string]jwk.Key{})
+	return &provider{client: client, conf: conf, keySet: ks}
+}
+
+func (p *provider) keySetMap() map[string]jwk.Key {
+	return *p.keySet.Load()
 }
 
 func (p *provider) publicKeyExists() bool {
-	return len(p.keySet) > 0 || p.providedKey != nil
+	return len(p.keySetMap()) > 0 || p.providedKey != nil
 }
 
 func (p *provider) selectKey(sink jws.KeySink, key jwk.Key) error {
@@ -50,7 +57,7 @@ func (p *provider) selectKey(sink jws.KeySink, key jwk.Key) error {
 func (p *provider) requestKeys() error {
 	projectID := p.conf.ProjectID
 	keysWrapper := map[string][]map[string]interface{}{}
-	_, err := p.client.DoGetRequest(nil, path.Join(api.Routes.GetKeys(), projectID), &api.HTTPRequest{ResBodyObj: &keysWrapper}, "")
+	_, err := p.client.DoGetRequest(context.Background(), path.Join(api.Routes.GetKeys(), projectID), &api.HTTPRequest{ResBodyObj: &keysWrapper}, "")
 	if err != nil {
 		return err
 	}
@@ -79,7 +86,7 @@ func (p *provider) requestKeys() error {
 	}
 
 	logger.LogDebug("Refresh keys set with %d key(s)", len(tempKeySet))
-	p.keySet = tempKeySet
+	p.keySet.Swap(&tempKeySet)
 	return nil
 }
 
@@ -119,10 +126,10 @@ func (p *provider) findKey(kid string) (jwk.Key, error) {
 		return nil, err
 	}
 
-	key, ok := p.keySet[kid]
+	key, ok := p.keySetMap()[kid]
 	if !ok {
 		err := descope.ErrPublicKey.WithMessage("Required public key does not exist in key set")
-		logger.LogInfo("Required public key does not exist in key set (key set size [%d])", len(p.keySet))
+		logger.LogInfo("Required public key does not exist in key set (key set size [%d])", len(p.keySetMap()))
 		return nil, err
 	}
 
@@ -131,7 +138,7 @@ func (p *provider) findKey(kid string) (jwk.Key, error) {
 
 func (p *provider) FetchKeys(_ context.Context, sink jws.KeySink, sig *jws.Signature, _ *jws.Message) error {
 	wantedKid := sig.ProtectedHeaders().KeyID()
-	v, ok := p.keySet[wantedKid]
+	v, ok := p.keySetMap()[wantedKid]
 	if !ok {
 		logger.LogDebug("Key was not found, looking for key id [%s]", wantedKid)
 		if key, err := p.findKey(wantedKid); key != nil {

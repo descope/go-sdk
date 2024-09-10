@@ -255,6 +255,40 @@ func (auth *authenticationService) Me(request *http.Request) (*descope.UserRespo
 	return auth.extractUserResponse(httpResponse.BodyStr)
 }
 
+func (auth *authenticationService) MyTenants(ctx context.Context, request *http.Request, dct bool, tenantIDs []string) (*descope.TenantsResponse, error) {
+	if request == nil {
+		return nil, utils.NewInvalidArgumentError("request")
+	}
+
+	if dct && len(tenantIDs) > 0 {
+		return nil, utils.NewInvalidArgumentError("Only one of dct or tenant ids should be provided")
+	}
+
+	_, refreshToken := provideTokens(request)
+	if refreshToken == "" {
+		logger.LogDebug("Unable to find tokens from cookies")
+		return nil, descope.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
+	}
+
+	_, err := auth.validateJWT(refreshToken)
+	if err != nil {
+		logger.LogDebug("Invalid refresh token")
+		return nil, descope.ErrRefreshToken.WithMessage("Invalid refresh token")
+	}
+
+	httpResponse, err := auth.client.DoPostRequest(ctx, api.Routes.MeTenants(), map[string]any{"dct": dct, "ids": tenantIDs}, &api.HTTPRequest{}, refreshToken)
+	if err != nil {
+		return nil, err
+	}
+	res := descope.TenantsResponse{}
+	err = utils.Unmarshal([]byte(httpResponse.BodyStr), &res)
+	if err != nil {
+		logger.LogError("Unable to parse tenant response", err)
+		return nil, err
+	}
+	return &res, nil
+}
+
 func (auth *authenticationService) History(request *http.Request) ([]*descope.UserHistoryResponse, error) {
 	if request == nil {
 		return nil, utils.NewInvalidArgumentError("request")
