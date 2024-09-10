@@ -958,6 +958,7 @@ func TestExchangeAccessKey(t *testing.T) {
 func TestExchangeAccessKeyWithLoginOptions(t *testing.T) {
 	response := map[string]any{}
 	err := utils.Unmarshal([]byte(mockAuthSessionBody), &response)
+	require.NoError(t, err)
 	a, err := newTestAuth(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
@@ -971,7 +972,7 @@ func TestExchangeAccessKeyWithLoginOptions(t *testing.T) {
 		require.True(t, found)
 		require.EqualValues(t, "v1", d)
 	}, response))
-
+	require.NoError(t, err)
 	loginOptions := &descope.AccessKeyLoginOptions{
 		CustomClaims: map[string]any{"k1": "v1"},
 	}
