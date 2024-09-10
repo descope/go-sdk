@@ -85,7 +85,7 @@ func (p *provider) requestKeys() error {
 	}
 
 	logger.LogDebug("Refresh keys set with %d key(s)", len(tempKeySet))
-	p.keySet.Swap(tempKeySet)
+	p.keySet.Store(tempKeySet)
 	return nil
 }
 
