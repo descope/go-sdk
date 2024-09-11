@@ -117,6 +117,7 @@ func TestAllTenantsLoadSuccess(t *testing.T) {
 			"id":                      "t1",
 			"name":                    "abc",
 			"selfProvisioningDomains": []string{"domain.com"},
+			"CreatedTime":             int32(1726067547),
 		}}}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -129,6 +130,8 @@ func TestAllTenantsLoadSuccess(t *testing.T) {
 	require.Equal(t, "abc", res[0].Name)
 	require.Len(t, res[0].SelfProvisioningDomains, 1)
 	require.Equal(t, "domain.com", res[0].SelfProvisioningDomains[0])
+	require.Equal(t, int32(1726067547), res[0].CreatedTime)
+
 }
 
 func TestAllTenantsLoadError(t *testing.T) {
@@ -178,6 +181,7 @@ func TestTenantLoadSuccess(t *testing.T) {
 		"id":                      "t1",
 		"name":                    "abc",
 		"selfProvisioningDomains": []string{"domain.com"},
+		"CreatedTime":             int32(1726067547),
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -189,6 +193,7 @@ func TestTenantLoadSuccess(t *testing.T) {
 	require.Equal(t, "abc", res.Name)
 	require.Len(t, res.SelfProvisioningDomains, 1)
 	require.Equal(t, "domain.com", res.SelfProvisioningDomains[0])
+	require.Equal(t, int32(1726067547), res.CreatedTime)
 }
 
 func TestTenantLoadError(t *testing.T) {
