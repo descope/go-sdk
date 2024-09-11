@@ -1214,6 +1214,70 @@ func TestMeEmptyResponse(t *testing.T) {
 	assert.Nil(t, user)
 }
 
+func TestTenants(t *testing.T) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		m := &map[string]any{}
+		readBody(r, m)
+		assert.EqualValues(t, map[string]any{"dct": true, "ids": nil}, *m)
+		res := descope.TenantsResponse{Tenants: []descope.MeTenant{{ID: "a"}}}
+		bs, err := utils.Marshal(res)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(string(bs)))}, nil
+	})
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
+
+	tnts, err := a.MyTenants(context.Background(), request, true, nil)
+	require.NoError(t, err)
+	assert.Len(t, tnts.Tenants, 1)
+}
+
+func TestTenantsInvalidArgs(t *testing.T) {
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		res := descope.TenantsResponse{Tenants: []descope.MeTenant{{ID: "a"}}}
+		bs, err := utils.Marshal(res)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(string(bs)))}, nil
+	})
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
+
+	_, err = a.MyTenants(context.Background(), request, true, []string{"a"})
+	require.Error(t, err)
+}
+
+func TestTenantsNoRequest(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	user, err := a.MyTenants(context.Background(), nil, true, nil)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Nil(t, user)
+}
+
+func TestTenantsNoToken(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	user, err := a.MyTenants(context.Background(), request, true, nil)
+	assert.ErrorIs(t, err, descope.ErrRefreshToken)
+	assert.ErrorContains(t, err, "Unable to find tokens")
+	assert.Nil(t, user)
+}
+
+func TestTenantsInvalidToken(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenExpired})
+
+	user, err := a.MyTenants(context.Background(), request, true, nil)
+	assert.ErrorIs(t, err, descope.ErrRefreshToken)
+	assert.ErrorContains(t, err, "Invalid refresh token")
+	assert.Nil(t, user)
+}
+
 func TestHistory(t *testing.T) {
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockUserHistoryResponseBody))}, nil

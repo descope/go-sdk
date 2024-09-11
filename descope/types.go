@@ -486,6 +486,16 @@ type UserResponse struct {
 	SSOAppIDs        []string            `json:"ssoAppIds,omitempty"`
 }
 
+type MeTenant struct {
+	ID               string         `json:"id"`
+	Name             string         `json:"name"`
+	CustomAttributes map[string]any `json:"customAttributes,omitempty"`
+}
+
+type TenantsResponse struct {
+	Tenants []MeTenant `json:"tenants,omitempty"`
+}
+
 type UserHistoryResponse struct {
 	UserID    string `json:"userId,omitempty"`
 	LoginTime int32  `json:"loginTime,omitempty"`

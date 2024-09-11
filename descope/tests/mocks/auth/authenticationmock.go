@@ -696,6 +696,10 @@ type MockSession struct {
 	MeError    error
 	MeResponse *descope.UserResponse
 
+	MyTenantsAssert   func(r *http.Request, dct bool, tenantIDs []string)
+	MyTenantsError    error
+	MyTenantsResponse *descope.TenantsResponse
+
 	HistoryAssert   func(r *http.Request)
 	HistoryError    error
 	HistoryResponse []*descope.UserHistoryResponse
@@ -886,6 +890,13 @@ func (m *MockSession) Me(r *http.Request) (*descope.UserResponse, error) {
 		m.MeAssert(r)
 	}
 	return m.MeResponse, m.MeError
+}
+
+func (m *MockSession) MyTenants(_ context.Context, r *http.Request, dct bool, tenantIDs []string) (*descope.TenantsResponse, error) {
+	if m.MyTenantsAssert != nil {
+		m.MyTenantsAssert(r, dct, tenantIDs)
+	}
+	return m.MyTenantsResponse, m.MyTenantsError
 }
 
 func (m *MockSession) History(r *http.Request) ([]*descope.UserHistoryResponse, error) {

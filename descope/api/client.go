@@ -205,6 +205,7 @@ var (
 		refresh:      "auth/refresh",
 		selectTenant: "auth/tenant/select",
 		me:           "auth/me",
+		meTenants:    "auth/me/tenants",
 		history:      "auth/me/history",
 	}
 )
@@ -220,6 +221,7 @@ type endpoints struct {
 	refresh      string
 	selectTenant string
 	me           string
+	meTenants    string
 	history      string
 }
 
@@ -592,6 +594,10 @@ func (e *endpoints) LogoutAll() string {
 
 func (e *endpoints) Me() string {
 	return path.Join(e.version, e.me)
+}
+
+func (e *endpoints) MeTenants() string {
+	return path.Join(e.version, e.meTenants)
 }
 
 func (e *endpoints) History() string {

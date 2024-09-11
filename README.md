@@ -49,6 +49,7 @@ These sections show how to use the SDK to perform various authentication/authori
 11. [Tenant selection](#tenant-selection)
 12. [Logging Out](#logging-out)
 13. [History](#history)
+14. [My Tenants](#my-tenants)
 
 ## Management Functions
 
@@ -648,7 +649,7 @@ The request requires a valid refresh token.
 
 ```go
 // Refresh token will be taken from the request header or cookies automatically
-loginHistoryRes, err := descopeClient.Auth.History(request, r)
+loginHistoryRes, err := descopeClient.Auth.History(request)
 if err == nil {
     for i := range loginHistoryRes {
         fmt.Println(loginHistoryRes[i].UserID)
@@ -656,6 +657,23 @@ if err == nil {
         fmt.Println(loginHistoryRes[i].Country)
         fmt.Println(loginHistoryRes[i].IP)
         fmt.Println(loginHistoryRes[i].LoginTime)
+    }
+}
+```
+
+### My Tenants
+
+You can get the current session user tenants.
+The request requires a valid refresh token.
+And either a boolean to receive the current selected tenant
+Or a list of tenant IDs that this user is part of
+
+```go
+// Refresh token will be taken from the request header or cookies automatically
+tenants, err := descopeClient.Auth.MyTenants(context.Background(), request, true, nil)
+if err == nil {
+    for i := range tenants.Tenants {
+
     }
 }
 ```
