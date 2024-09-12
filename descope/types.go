@@ -589,6 +589,7 @@ type Tenant struct {
 	CustomAttributes        map[string]any `json:"customAttributes,omitempty"`
 	AuthType                string         `json:"authType,omitempty"`
 	Domains                 []string       `json:"domains,omitempty"`
+	CreatedTime             int32          `json:"createdTime,omitempty"`
 }
 
 type TenantRequest struct {
