@@ -117,7 +117,7 @@ func TestAllTenantsLoadSuccess(t *testing.T) {
 			"id":                      "t1",
 			"name":                    "abc",
 			"selfProvisioningDomains": []string{"domain.com"},
-			"CreatedTime":             int32(1726067547),
+			"createdTime":             int32(1726067547),
 		}}}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -181,7 +181,7 @@ func TestTenantLoadSuccess(t *testing.T) {
 		"id":                      "t1",
 		"name":                    "abc",
 		"selfProvisioningDomains": []string{"domain.com"},
-		"CreatedTime":             int32(1726067547),
+		"createdTime":             int32(1726067547),
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
