@@ -729,7 +729,7 @@ func (e *endpoints) ManagementUserLoad() string {
 }
 
 func (e *endpoints) ManagementUserSearchAll() string {
-	return path.Join(e.version, e.mgmt.userSearchAll)
+	return path.Join(e.versionV2, e.mgmt.userSearchAll)
 }
 
 func (e *endpoints) ManagementUserUpdateStatus() string {
