@@ -62,7 +62,7 @@ lint_go_build() {
 # Run golangci-lint
 lint_run_golangci() {
 	echo "- Running golangci-lint"
-	GOLANG_CI_SUPPORTED_VERSION="1.55.2"
+	GOLANG_CI_SUPPORTED_VERSION="1.61.0"
 	INSTALLED_GOLANG_CLI_VERSION="$(golangci-lint --version)"
 	if [[ $INSTALLED_GOLANG_CLI_VERSION != *"$GOLANG_CI_SUPPORTED_VERSION"* ]]; then
 		echo "Installing golangci-lint for the first time..."
@@ -71,7 +71,7 @@ lint_run_golangci() {
 	fi
 
 	local golang_cli_config="${1:-"${CURRENT_DIR}/.golangci.yml"}" # get first argument and set "cmd" to be default
-	lintresult=$(golangci-lint --config ${golang_cli_config} --out-format github-actions run)
+	lintresult=$(golangci-lint --config ${golang_cli_config} --out-format colored-line-number run)
 	if [[ -n $lintresult ]]; then
 		echo "Some files aren't passing lint, please run 'golangci-lint run' to see the errors it flags and correct your source code before committing"
 		echo $lintresult

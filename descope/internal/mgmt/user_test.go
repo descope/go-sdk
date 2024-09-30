@@ -682,7 +682,7 @@ func TestUserLogoutUserByLoginIDSuccess(t *testing.T) {
 }
 
 func TestUserLogoutUserByUserIdErr(t *testing.T) {
-	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {
 		assert.Fail(t, "shouldn't get here")
 	}, nil))
 	err := m.User().LogoutUserByUserID(context.Background(), "")
@@ -690,7 +690,7 @@ func TestUserLogoutUserByUserIdErr(t *testing.T) {
 }
 
 func TestUserLogoutUserByLoginIdErr(t *testing.T) {
-	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {
 		assert.Fail(t, "shouldn't get here")
 	}, nil))
 	err := m.User().LogoutUser(context.Background(), "")
@@ -1870,7 +1870,7 @@ func TestGenerateEmbeddedLink(t *testing.T) {
 
 func TestGenerateEmbeddedLinkMissingLoginID(t *testing.T) {
 	called := false
-	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
 		called = true
 
 	}))
@@ -1882,7 +1882,7 @@ func TestGenerateEmbeddedLinkMissingLoginID(t *testing.T) {
 
 func TestGenerateEmbeddedLinkHTTPError(t *testing.T) {
 	called := false
-	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(_ *http.Request) {
 		called = true
 	}))
 	token, err := mgmt.User().GenerateEmbeddedLink(context.Background(), "test", map[string]any{"ak": "av"})

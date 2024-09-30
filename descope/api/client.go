@@ -1178,7 +1178,7 @@ func NewClient(conf ClientParams) *Client {
 		httpClient = &http.Client{
 			Timeout:   timeout,
 			Transport: rt,
-			CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			CheckRedirect: func(_ *http.Request, _ []*http.Request) error {
 				return http.ErrUseLastResponse // notest
 			},
 		}

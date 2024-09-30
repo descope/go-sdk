@@ -28,9 +28,8 @@ func TestUpdateJwt(t *testing.T) {
 
 func TestUpdateJwtMissingJWT(t *testing.T) {
 	called := false
-	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
 		called = true
-
 	}))
 	jwtRes, err := mgmt.JWT().UpdateJWTWithCustomClaims(context.Background(), "", nil)
 	require.Error(t, err)
@@ -40,7 +39,7 @@ func TestUpdateJwtMissingJWT(t *testing.T) {
 
 func TestUpdateJwtHTTPError(t *testing.T) {
 	called := false
-	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(_ *http.Request) {
 		called = true
 	}))
 	jwtRes, err := mgmt.JWT().UpdateJWTWithCustomClaims(context.Background(), "test", nil)
@@ -69,9 +68,8 @@ func TestImpersonate(t *testing.T) {
 
 func TestImpersonateMissingLoginID(t *testing.T) {
 	called := false
-	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
 		called = true
-
 	}))
 	jwtRes, err := mgmt.JWT().Impersonate(context.Background(), "test", "", true)
 	require.Error(t, err)
@@ -81,9 +79,8 @@ func TestImpersonateMissingLoginID(t *testing.T) {
 
 func TestImpersonateMissingImpersonator(t *testing.T) {
 	called := false
-	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
 		called = true
-
 	}))
 	jwtRes, err := mgmt.JWT().Impersonate(context.Background(), "", "test", true)
 	require.Error(t, err)

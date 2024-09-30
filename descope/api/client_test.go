@@ -194,7 +194,7 @@ func TestPostUnauthorized(t *testing.T) {
 }
 
 func TestPostRateLimitExceeded(t *testing.T) {
-	c := NewClient(ClientParams{ProjectID: "test", DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+	c := NewClient(ClientParams{ProjectID: "test", DefaultClient: mocks.NewTestClient(func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusTooManyRequests, Body: io.NopCloser(strings.NewReader(`{"errorCode":"E130429"}`))}, nil
 	})})
 
@@ -202,7 +202,7 @@ func TestPostRateLimitExceeded(t *testing.T) {
 	require.ErrorIs(t, err, descope.ErrRateLimitExceeded)
 	require.Nil(t, err.(*descope.Error).Info[descope.ErrorInfoKeys.RateLimitExceededRetryAfter])
 
-	c = NewClient(ClientParams{ProjectID: "test", DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+	c = NewClient(ClientParams{ProjectID: "test", DefaultClient: mocks.NewTestClient(func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusTooManyRequests, Header: http.Header{"Retry-After": []string{"10"}}, Body: io.NopCloser(strings.NewReader(`{"errorCode":"E130429"}`))}, nil
 	})})
 
@@ -229,7 +229,7 @@ func TestPostError(t *testing.T) {
 	expectedErr := "error here"
 	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
 		assert.Nil(t, r.Body)
-		return nil, fmt.Errorf(expectedErr)
+		return nil, fmt.Errorf("%s", expectedErr)
 	})})
 
 	_, err := c.DoPostRequest(context.Background(), "path", nil, nil, "")

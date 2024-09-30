@@ -14,7 +14,7 @@ import (
 func TestAuthenticationMiddlewareFailure(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	handlerToTest := sdk.AuthenticationMiddleware(a, func(w http.ResponseWriter, r *http.Request, err error) {
+	handlerToTest := sdk.AuthenticationMiddleware(a, func(w http.ResponseWriter, _ *http.Request, err error) {
 		require.ErrorIs(t, err, descope.ErrPublicKey)
 		w.WriteHeader(http.StatusBadGateway)
 	}, nil)(nil)
@@ -66,7 +66,7 @@ func TestAuthenticationMiddlewareSuccess(t *testing.T) {
 	handlerToTest := sdk.AuthenticationMiddleware(a, nil, func(w http.ResponseWriter, r *http.Request, next http.Handler, token *descope.Token) {
 		assert.EqualValues(t, "someuser", token.ID)
 		next.ServeHTTP(w, r)
-	})(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	})(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusTeapot)
 	}))
 

@@ -86,7 +86,7 @@ func TestDeleteSSOSettingsSuccess(t *testing.T) {
 
 func TestDeleteSSOSettingsError(t *testing.T) {
 	called := false
-	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {
 		called = true
 	}, map[string]any{}))
 	err := mgmt.SSO().DeleteSettings(context.Background(), "")
@@ -107,7 +107,7 @@ func TestGetSSOSettingsError(t *testing.T) {
 }
 
 func TestGetSSOSettingsErrorMissingTenantID(t *testing.T) {
-	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {}))
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(_ *http.Request) {}))
 	res, err := mgmt.SSO().GetSettings(context.Background(), "")
 	require.ErrorIs(t, err, utils.NewInvalidArgumentError("tenantID"))
 	assert.Nil(t, res)
@@ -300,7 +300,7 @@ func TestLoadSettingsError(t *testing.T) {
 }
 
 func TestLoadSettingsErrorMissingTenantID(t *testing.T) {
-	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {}))
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(_ *http.Request) {}))
 	res, err := mgmt.SSO().LoadSettings(context.Background(), "")
 	require.ErrorIs(t, err, utils.NewInvalidArgumentError("tenantID"))
 	assert.Nil(t, res)
