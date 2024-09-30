@@ -86,7 +86,7 @@ func TestOAuthUpdateUserForwardResponsepNoJWT(t *testing.T) {
 	uri := "http://test.me"
 	landingURL := "https://test.com"
 	provider := descope.OAuthGithub
-	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {}))
+	a, err := newTestAuth(nil, DoRedirect(uri, func(_ *http.Request) {}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
 	_, err = a.OAuth().UpdateUser(context.Background(), provider, landingURL, true, nil, nil, w)
@@ -123,7 +123,7 @@ func TestOAuthStartForwardResponseStepupNoJWT(t *testing.T) {
 	uri := "http://test.me"
 	landingURL := "https://test.com"
 	provider := descope.OAuthGithub
-	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {}))
+	a, err := newTestAuth(nil, DoRedirect(uri, func(_ *http.Request) {}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
 	_, err = a.OAuth().Start(context.Background(), provider, landingURL, nil, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, w)

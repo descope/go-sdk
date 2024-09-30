@@ -18,7 +18,7 @@ func TestMockAuthentication(t *testing.T) {
 	descopeClient := client.DescopeClient{
 		Auth: &MockAuthentication{
 			MockOAuth: &MockOAuth{
-				StartAssert: func(provider descope.OAuthProvider, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) {
+				StartAssert: func(provider descope.OAuthProvider, _ string, _ *http.Request, _ *descope.LoginOptions, _ http.ResponseWriter) {
 					called = true
 					assert.EqualValues(t, descope.OAuthApple, provider)
 				},

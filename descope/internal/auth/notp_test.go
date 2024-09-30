@@ -23,7 +23,7 @@ const (
 
 func TestSignInNOTPEmptyLoginID(t *testing.T) {
 	phone := ""
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{
 			StatusCode: http.StatusOK,
 			Body:       io.NopCloser(bytes.NewBufferString(`{"pendingRef": "pr1","image": "image1", "redirectUrl":"redirect-1"}`)),
@@ -97,7 +97,7 @@ func TestSignInNOTPStepup(t *testing.T) {
 
 func TestSignInNOTPInvalidResponse(t *testing.T) {
 	phone := "+111111111111"
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{
 			StatusCode: http.StatusOK,
 			Body:       io.NopCloser(bytes.NewBufferString(`{"pendingRef"`)),
@@ -206,7 +206,7 @@ func TestSignUpOrInNOTPWithLoginOptions(t *testing.T) {
 }
 
 func TestSignUpNOTPEmptyLoginID(t *testing.T) {
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{
 			StatusCode: http.StatusOK,
 			Body:       io.NopCloser(bytes.NewBufferString(`{"pendingRef": "pr1","image": "image1", "redirectUrl":"redirect-1"}`)),
@@ -236,7 +236,7 @@ func TestNOTPGetSession(t *testing.T) {
 
 func TestNOTPGetSessionGenerateAuthenticationInfoValidDSRCookie(t *testing.T) {
 	pendingRef := "pending_ref"
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		cookie := &http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid} // valid token
 		return &http.Response{StatusCode: http.StatusOK,
 			Body:   io.NopCloser(bytes.NewBufferString(mockAuthSessionBodyNoRefreshJwt)),
@@ -255,7 +255,7 @@ func TestNOTPGetSessionGenerateAuthenticationInfoValidDSRCookie(t *testing.T) {
 
 func TestNOTPGetSessionGenerateAuthenticationInfoInValidDSRCookie(t *testing.T) {
 	pendingRef := "pending_ref"
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		cookie := &http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenExpired} // invalid token
 		return &http.Response{StatusCode: http.StatusOK,
 			Body:   io.NopCloser(bytes.NewBufferString(mockAuthSessionBodyNoRefreshJwt)),
@@ -272,7 +272,7 @@ func TestNOTPGetSessionGenerateAuthenticationInfoInValidDSRCookie(t *testing.T) 
 
 func TesNOTPtGetSessionGenerateAuthenticationInfoNoDSRCookie(t *testing.T) {
 	pendingRef := "pending_ref"
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK,
 			Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBodyNoRefreshJwt)),
 		}, nil
@@ -289,7 +289,7 @@ func TesNOTPtGetSessionGenerateAuthenticationInfoNoDSRCookie(t *testing.T) {
 
 func TestGetNOTPSessionError(t *testing.T) {
 	pendingRef := "pending_ref"
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusBadGateway}, nil
 	})
 	require.NoError(t, err)
@@ -314,7 +314,7 @@ func TestSignUpNOTPNoUser(t *testing.T) {
 	require.NoError(t, err)
 }
 func TestSignUpOrInNOTPNoLoginID(t *testing.T) {
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{
 			StatusCode: http.StatusOK,
 			Body:       io.NopCloser(bytes.NewBufferString(`{"pendingRef": "pr1","image": "image1", "redirectUrl":"redirect-1"}`)),

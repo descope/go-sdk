@@ -232,7 +232,7 @@ func TestAuthDefaultURL(t *testing.T) {
 }
 
 func TestEmptyPublicKey(t *testing.T) {
-	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, mocks.Do(func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, mocks.Do(func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader("[]"))}, nil
 	}))
 	require.NoError(t, err)
@@ -244,7 +244,7 @@ func TestEmptyPublicKey(t *testing.T) {
 }
 
 func TestErrorFetchPublicKey(t *testing.T) {
-	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, mocks.Do(func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, mocks.Do(func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusInternalServerError, Body: io.NopCloser(strings.NewReader("what"))}, nil
 	}))
 	require.NoError(t, err)
@@ -532,7 +532,7 @@ func TestValidateAndRefreshSessionWithTokenExpired(t *testing.T) {
 
 func TestValidateSessionFetchKeyCalledOnce(t *testing.T) {
 	count := 0
-	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, mocks.Do(func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, mocks.Do(func(_ *http.Request) (*http.Response, error) {
 		count++
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf(`{"keys":[%s]}`, publicKey)))}, nil
 	}))
@@ -548,7 +548,7 @@ func TestValidateSessionFetchKeyCalledOnce(t *testing.T) {
 }
 
 func TestValidateSessionFetchKeyMalformed(t *testing.T) {
-	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, mocks.Do(func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, mocks.Do(func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf(`{"keys":[%s]}`, unknownPublicKey)))}, nil
 	}))
 	require.NoError(t, err)
@@ -561,7 +561,7 @@ func TestValidateSessionFetchKeyMalformed(t *testing.T) {
 
 func TestValidateSessionFailWithInvalidKey(t *testing.T) {
 	count := 0
-	a, err := newTestAuthConf(&AuthParams{PublicKey: unknownPublicKey}, nil, mocks.Do(func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuthConf(&AuthParams{PublicKey: unknownPublicKey}, nil, mocks.Do(func(_ *http.Request) (*http.Response, error) {
 		count++
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf("[%s]", publicKey)))}, nil
 	}))
@@ -573,7 +573,7 @@ func TestValidateSessionFailWithInvalidKey(t *testing.T) {
 }
 
 func TestValidateSessionFailWithInvalidAlgorithm(t *testing.T) {
-	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, mocks.Do(func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, mocks.Do(func(_ *http.Request) (*http.Response, error) {
 		badKey := strings.ReplaceAll(publicKey, "ES384", "ES123")
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf(`{"keys":[%s]}`, badKey)))}, nil
 	}))
@@ -608,7 +608,7 @@ func TestValidateSessionRequestHeader(t *testing.T) {
 }
 
 func TestValidateSessionRequestRefreshSession(t *testing.T) {
-	a, err := newTestAuthConf(&AuthParams{ProjectID: "a", PublicKey: publicKey, CookieDomain: "cookiedomain.com"}, nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuthConf(&AuthParams{ProjectID: "a", PublicKey: publicKey, CookieDomain: "cookiedomain.com"}, nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
 	})
 	a.conf.SessionJWTViaCookie = true
@@ -655,7 +655,7 @@ func TestConvertError(t *testing.T) {
 }
 
 func TestLogout(t *testing.T) {
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
 	})
 	require.NoError(t, err)
@@ -683,7 +683,7 @@ func TestLogout(t *testing.T) {
 }
 
 func TestLogoutWithToken(t *testing.T) {
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
 	})
 	require.NoError(t, err)
@@ -709,7 +709,7 @@ func TestLogoutWithToken(t *testing.T) {
 }
 
 func TestLogoutAll(t *testing.T) {
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
 	})
 	require.NoError(t, err)
@@ -737,7 +737,7 @@ func TestLogoutAll(t *testing.T) {
 }
 
 func TestLogoutAllWithToken(t *testing.T) {
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
 	})
 	require.NoError(t, err)
@@ -763,7 +763,7 @@ func TestLogoutAllWithToken(t *testing.T) {
 }
 
 func TestLogoutNoClaims(t *testing.T) {
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK}, nil
 	})
 	require.NoError(t, err)
@@ -788,7 +788,7 @@ func TestLogoutNoClaims(t *testing.T) {
 }
 
 func TestLogoutAllNoClaims(t *testing.T) {
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK}, nil
 	})
 	require.NoError(t, err)
@@ -813,7 +813,7 @@ func TestLogoutAllNoClaims(t *testing.T) {
 }
 
 func TestLogoutFailure(t *testing.T) {
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusBadGateway}, nil
 	})
 	require.NoError(t, err)
@@ -825,7 +825,7 @@ func TestLogoutFailure(t *testing.T) {
 }
 
 func TestLogoutAllFailure(t *testing.T) {
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusBadGateway}, nil
 	})
 	require.NoError(t, err)
@@ -857,7 +857,7 @@ func TestLogoutAllInvalidRefreshToken(t *testing.T) {
 }
 
 func TestLogoutEmptyRequest(t *testing.T) {
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusBadGateway}, nil
 	})
 	require.NoError(t, err)
@@ -868,7 +868,7 @@ func TestLogoutEmptyRequest(t *testing.T) {
 }
 
 func TestLogoutAllEmptyRequest(t *testing.T) {
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusBadGateway}, nil
 	})
 	require.NoError(t, err)
@@ -879,7 +879,7 @@ func TestLogoutAllEmptyRequest(t *testing.T) {
 }
 
 func TestLogoutMissingToken(t *testing.T) {
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusBadGateway}, nil
 	})
 	require.NoError(t, err)
@@ -891,7 +891,7 @@ func TestLogoutMissingToken(t *testing.T) {
 }
 
 func TestLogoutAllMissingToken(t *testing.T) {
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusBadGateway}, nil
 	})
 	require.NoError(t, err)
@@ -1156,7 +1156,7 @@ func TestGetTenants(t *testing.T) {
 }
 
 func TestMe(t *testing.T) {
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockUserResponseBody))}, nil
 	})
 	require.NoError(t, err)
@@ -1202,7 +1202,7 @@ func TestMeInvalidToken(t *testing.T) {
 }
 
 func TestMeEmptyResponse(t *testing.T) {
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(""))}, nil
 	})
 	require.NoError(t, err)
@@ -1234,7 +1234,7 @@ func TestTenants(t *testing.T) {
 }
 
 func TestTenantsInvalidArgs(t *testing.T) {
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		res := descope.TenantsResponse{Tenants: []descope.MeTenant{{ID: "a"}}}
 		bs, err := utils.Marshal(res)
 		require.NoError(t, err)
@@ -1279,7 +1279,7 @@ func TestTenantsInvalidToken(t *testing.T) {
 }
 
 func TestHistory(t *testing.T) {
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockUserHistoryResponseBody))}, nil
 	})
 	require.NoError(t, err)
@@ -1334,7 +1334,7 @@ func TestHistoryInvalidToken(t *testing.T) {
 }
 
 func TestHistoryEmptyResponse(t *testing.T) {
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(""))}, nil
 	})
 	require.NoError(t, err)

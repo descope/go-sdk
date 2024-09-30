@@ -95,7 +95,7 @@ func TestSignInEnchantedLinkStepup(t *testing.T) {
 func TestSignInEnchantedLinkInvalidResponse(t *testing.T) {
 	email := "test@email.com"
 	uri := "http://test.me"
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{
 			StatusCode: http.StatusOK,
 			Body:       io.NopCloser(bytes.NewBufferString(`{"pendingRef"`)),
@@ -243,7 +243,7 @@ func TestGetSession(t *testing.T) {
 
 func TestGetSessionGenerateAuthenticationInfoValidDSRCookie(t *testing.T) {
 	pendingRef := "pending_ref"
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		cookie := &http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid} // valid token
 		return &http.Response{StatusCode: http.StatusOK,
 			Body:   io.NopCloser(bytes.NewBufferString(mockAuthSessionBodyNoRefreshJwt)),
@@ -262,7 +262,7 @@ func TestGetSessionGenerateAuthenticationInfoValidDSRCookie(t *testing.T) {
 
 func TestGetSessionGenerateAuthenticationInfoInValidDSRCookie(t *testing.T) {
 	pendingRef := "pending_ref"
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		cookie := &http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenExpired} // invalid token
 		return &http.Response{StatusCode: http.StatusOK,
 			Body:   io.NopCloser(bytes.NewBufferString(mockAuthSessionBodyNoRefreshJwt)),
@@ -279,7 +279,7 @@ func TestGetSessionGenerateAuthenticationInfoInValidDSRCookie(t *testing.T) {
 
 func TestGetSessionGenerateAuthenticationInfoNoDSRCookie(t *testing.T) {
 	pendingRef := "pending_ref"
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK,
 			Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBodyNoRefreshJwt)),
 		}, nil
@@ -296,7 +296,7 @@ func TestGetSessionGenerateAuthenticationInfoNoDSRCookie(t *testing.T) {
 
 func TestGetEnchantedLinkSessionError(t *testing.T) {
 	pendingRef := "pending_ref"
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusBadGateway}, nil
 	})
 	require.NoError(t, err)

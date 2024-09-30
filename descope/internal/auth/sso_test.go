@@ -38,7 +38,7 @@ func TestSSOStart(t *testing.T) {
 
 func TestSSOStartFailureNoTenant(t *testing.T) {
 	uri := "http://test.me"
-	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {}))
+	a, err := newTestAuth(nil, DoRedirect(uri, func(_ *http.Request) {}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
 	landingURL := "https://test.com"

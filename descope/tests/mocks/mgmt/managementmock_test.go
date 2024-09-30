@@ -17,7 +17,7 @@ func TestMockManagement(t *testing.T) {
 	descopeClient := client.DescopeClient{
 		Management: &MockManagement{
 			MockUser: &MockUser{
-				CreateAssert: func(loginID string, user *descope.UserRequest) {
+				CreateAssert: func(loginID string, _ *descope.UserRequest) {
 					called = true
 					assert.EqualValues(t, expectedLoginID, loginID)
 				},
