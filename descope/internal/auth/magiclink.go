@@ -56,6 +56,7 @@ func (auth *magicLink) SignUpOrIn(ctx context.Context, method descope.DeliveryMe
 	_, err := auth.client.DoPostRequest(ctx, composeMagicLinkSignUpOrInURL(method), newMagicLinkAuthenticationRequestBody(loginID, URI, false, &descope.LoginOptions{
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
+		TemplateID:      signUpOptions.TemplateID,
 	}), options, "")
 	return masked.GetMasked(), err
 }

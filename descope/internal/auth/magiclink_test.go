@@ -209,13 +209,14 @@ func TestSignUpMagicLinkEmailWithSignUpOptions(t *testing.T) {
 		resp := MaskedEmailRes{MaskedEmail: maskedEmail}
 		respBytes, err := utils.Marshal(resp)
 		require.NoError(t, err)
-		assert.EqualValues(t, map[string]interface{}{"customClaims": map[string]interface{}{"aa": "bb"}, "templateOptions": map[string]interface{}{"cc": "dd"}}, m["loginOptions"])
+		assert.EqualValues(t, map[string]interface{}{"customClaims": map[string]interface{}{"aa": "bb"}, "templateOptions": map[string]interface{}{"cc": "dd"}, "templateId": "foo"}, m["loginOptions"])
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
 	me, err := a.MagicLink().SignUp(context.Background(), descope.MethodEmail, email, uri, &descope.User{Name: "test"}, &descope.SignUpOptions{
 		CustomClaims:    map[string]interface{}{"aa": "bb"},
 		TemplateOptions: map[string]string{"cc": "dd"},
+		TemplateID:      "foo",
 	})
 	require.NoError(t, err)
 	require.EqualValues(t, maskedEmail, me)

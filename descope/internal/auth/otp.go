@@ -58,6 +58,7 @@ func (auth *otp) SignUpOrIn(ctx context.Context, method descope.DeliveryMethod, 
 	_, err := auth.client.DoPostRequest(ctx, composeSignUpOrInURL(method), newSignInRequestBody(loginID, &descope.LoginOptions{
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
+		TemplateID:      signUpOptions.TemplateID,
 	}), options, "")
 	return masked.GetMasked(), err
 }
