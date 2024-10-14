@@ -59,6 +59,7 @@ func (auth *enchantedLink) SignUpOrIn(ctx context.Context, loginID, URI string, 
 	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignUpOrInURL(), newMagicLinkAuthenticationRequestBody(loginID, URI, true, &descope.LoginOptions{
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
+		TemplateID:      signUpOptions.TemplateID,
 	}), nil, "")
 	if err != nil {
 		return nil, err

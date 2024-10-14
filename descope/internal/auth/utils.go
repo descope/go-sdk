@@ -199,6 +199,7 @@ func newMagicLinkAuthenticationSignUpRequestBody(method descope.DeliveryMethod, 
 	b.LoginOptions = &descope.LoginOptions{
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
+		TemplateID:      signUpOptions.TemplateID,
 	}
 	return &magicLinkAuthenticationSignUpRequestBody{authenticationSignUpRequestBody: b, CrossDevice: crossDevice, URI: URI}
 }
@@ -217,6 +218,7 @@ func newAuthenticationSignUpRequestBody(method descope.DeliveryMethod, loginID s
 	b.LoginOptions = &descope.LoginOptions{
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
+		TemplateID:      signUpOptions.TemplateID,
 	}
 	return b
 }

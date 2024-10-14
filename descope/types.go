@@ -301,6 +301,7 @@ type LoginOptions struct {
 	Stepup          bool                   `json:"stepup,omitempty"`
 	MFA             bool                   `json:"mfa,omitempty"`
 	CustomClaims    map[string]interface{} `json:"customClaims,omitempty"`
+	TemplateID      string                 `json:"templateId,omitempty"`      // for overriding the default messaging template
 	TemplateOptions map[string]string      `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 }
 
@@ -314,6 +315,7 @@ type AccessKeyLoginOptions struct {
 
 type SignUpOptions struct {
 	CustomClaims    map[string]interface{} `json:"customClaims,omitempty"`
+	TemplateID      string                 `json:"templateId,omitempty"`      // for overriding the default messaging template
 	TemplateOptions map[string]string      `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 }
 
