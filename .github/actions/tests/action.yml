@@ -29,7 +29,7 @@ runs:
           coverage.html
 
     - name: Convert coverage to lcov
-      uses: jandelgado/gcov2lcov-action@v1.1.0
+      uses: jandelgado/gcov2lcov-action@v1.1.1
 
     - name: Enforce coverage
       uses: devmasx/coverage-check-action@v1.2.0

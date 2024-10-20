@@ -434,6 +434,7 @@ type BatchUserPasswordHashed struct {
 	Pbkdf2   *BatchUserPasswordPbkdf2   `json:"pbkdf2,omitempty"`
 	Django   *BatchUserPasswordDjango   `json:"django,omitempty"`
 	Phpass   *BatchUserPasswordPhpass   `json:"phpass,omitempty"`
+	Md5      *BatchUserPasswordMd5      `json:"md5,omitempty"`
 }
 
 type BatchUserPasswordBcrypt struct {
@@ -465,6 +466,10 @@ type BatchUserPasswordPhpass struct {
 	Salt       string `json:"salt"`       // the salt as base64 encoded string with . and / characters
 	Iterations int    `json:"iterations"` // the iterations cost value (usually in the tens of thousands)
 	Type       string `json:"type"`       // the hash name (md5, sha512)
+}
+
+type BatchUserPasswordMd5 struct {
+	Hash string `json:"hash"` // the md5 hash in plaintext format, for example "68f724c9ad..."
 }
 
 type UserResponse struct {
