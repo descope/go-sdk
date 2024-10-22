@@ -110,12 +110,20 @@ type SSOSAMLSettings struct {
 	IdpCert          string            `json:"idpCert,omitempty"`
 	AttributeMapping *AttributeMapping `json:"attributeMapping,omitempty"`
 	RoleMappings     []*RoleMapping    `json:"roleMappings,omitempty"`
+
+	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
+	SpAcsURL   string `json:"spAcsUrl,omitempty"`
+	SpEntityID string `json:"spEntityId,omitempty"`
 }
 
 type SSOSAMLSettingsByMetadata struct {
 	IdpMetadataURL   string            `json:"idpMetadataUrl,omitempty"`
 	AttributeMapping *AttributeMapping `json:"attributeMapping,omitempty"`
 	RoleMappings     []*RoleMapping    `json:"roleMappings,omitempty"`
+
+	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
+	SpAcsURL   string `json:"spAcsUrl,omitempty"`
+	SpEntityID string `json:"spEntityId,omitempty"`
 }
 
 type OIDCAttributeMapping struct {

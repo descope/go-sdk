@@ -323,6 +323,8 @@ func TestSSOConfigureSAMLSettingsSuccess(t *testing.T) {
 				Role:   "role1",
 			},
 		},
+		SpAcsURL:   "https://spacsurl.com",
+		SpEntityID: "spentityid",
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -342,6 +344,9 @@ func TestSSOConfigureSAMLSettingsSuccess(t *testing.T) {
 		require.Equal(t, "http://idpURL", sett["idpUrl"])
 		require.Equal(t, "mycert", sett["idpCert"])
 		require.Equal(t, "entity", sett["entityId"])
+
+		require.Equal(t, "https://spacsurl.com", sett["spAcsUrl"])
+		require.Equal(t, "spentityid", sett["spEntityId"])
 
 		userAttrMappingMap, found := sett["attributeMapping"]
 		require.True(t, found)
@@ -398,6 +403,8 @@ func TestSSOConfigureSAMLSettingsByMetadataSuccess(t *testing.T) {
 				Role:   "role1",
 			},
 		},
+		SpAcsURL:   "https://spacsurl.com",
+		SpEntityID: "spentityid",
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -415,6 +422,9 @@ func TestSSOConfigureSAMLSettingsByMetadataSuccess(t *testing.T) {
 		sett, ok := settings.(map[string]any)
 		require.True(t, ok)
 		require.Equal(t, "http://idpURL", sett["idpMetadataUrl"])
+
+		require.Equal(t, "https://spacsurl.com", sett["spAcsUrl"])
+		require.Equal(t, "spentityid", sett["spEntityId"])
 
 		userAttrMappingMap, found := sett["attributeMapping"]
 		require.True(t, found)
