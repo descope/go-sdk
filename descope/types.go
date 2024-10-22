@@ -112,7 +112,7 @@ type SSOSAMLSettings struct {
 	RoleMappings     []*RoleMapping    `json:"roleMappings,omitempty"`
 
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
-	SpAcsURL   string `json:"spAcsUrl,omitempty"`
+	SpACSUrl   string `json:"spACSUrl,omitempty"`
 	SpEntityID string `json:"spEntityId,omitempty"`
 }
 
@@ -122,7 +122,7 @@ type SSOSAMLSettingsByMetadata struct {
 	RoleMappings     []*RoleMapping    `json:"roleMappings,omitempty"`
 
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
-	SpAcsURL   string `json:"spAcsUrl,omitempty"`
+	SpACSUrl   string `json:"spACSUrl,omitempty"`
 	SpEntityID string `json:"spEntityId,omitempty"`
 }
 
