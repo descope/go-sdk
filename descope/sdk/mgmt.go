@@ -717,13 +717,14 @@ type Project interface {
 	// failures or missing data. This should be called right before ImportSnapshot to
 	// minimize the risk of the import failing.
 	//
-	// The response will have `Ok: true` if the validation passed. Otherise, a list of
+	// The response will have `Ok: true` if the validation passes. Otherwise, a list of
 	// failures will be provided in the `Failures` field, and any missing secrets will
 	// be listed along with details about which entity requires them.
 	//
-	// Validation can be retried by set the required cleartext secret values in the
+	// Validation can be retried by setting the required cleartext secret values in the
 	// `Value` field of each missing secret and setting this object as the `InputSecrets`
-	// field of the import request.
+	// field of the validate request. The same `inputSecrets` object should then be
+	// provided to the `ImportSnapshot` call afterwards so it doesn't fail as well.
 	//
 	// This API is meant to be used via the 'descopecli' command line tool that can be
 	// found at https://github.com/descope/descopecli
