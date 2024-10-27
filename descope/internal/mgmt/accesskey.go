@@ -50,7 +50,7 @@ func (a *accessKey) SearchAll(ctx context.Context, tenantIDs []string) ([]*desco
 	return unmarshalAccessKeySearchAllResponse(res)
 }
 
-func (a *accessKey) Update(ctx context.Context, id, name string, description *string) (*descope.AccessKeyResponse, error) {
+func (a *accessKey) Update(ctx context.Context, id, name string, description *string, roles []string, keyTenants []*descope.AssociatedTenant, customClaims map[string]any, permittedIPs []string) (*descope.AccessKeyResponse, error) {
 	if id == "" {
 		return nil, utils.NewInvalidArgumentError("id")
 	}
@@ -60,6 +60,18 @@ func (a *accessKey) Update(ctx context.Context, id, name string, description *st
 	body := map[string]any{"id": id, "name": name}
 	if description != nil {
 		body["description"] = *description
+	}
+	if roles != nil {
+		body["roleNames"] = roles
+	}
+	if keyTenants != nil {
+		body["keyTenants"] = makeAssociatedTenantList(keyTenants)
+	}
+	if customClaims != nil {
+		body["customClaims"] = customClaims
+	}
+	if permittedIPs != nil {
+		body["permittedIps"] = permittedIPs
 	}
 	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyUpdate(), body, nil, a.conf.ManagementKey)
 	if err != nil {

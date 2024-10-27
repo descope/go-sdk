@@ -752,7 +752,7 @@ type MockAccessKey struct {
 	SearchAllResponse []*descope.AccessKeyResponse
 	SearchAllError    error
 
-	UpdateAssert   func(id, name string, description *string)
+	UpdateAssert   func(id, name string, description *string, roles []string, keyTenants []*descope.AssociatedTenant, customClaims map[string]any, permittedIPs []string)
 	UpdateResponse *descope.AccessKeyResponse
 	UpdateError    error
 
@@ -792,9 +792,9 @@ func (m *MockAccessKey) SearchAll(_ context.Context, tenantIDs []string) ([]*des
 	return m.SearchAllResponse, m.SearchAllError
 }
 
-func (m *MockAccessKey) Update(_ context.Context, id, name string, description *string) (*descope.AccessKeyResponse, error) {
+func (m *MockAccessKey) Update(_ context.Context, id, name string, description *string, roles []string, keyTenants []*descope.AssociatedTenant, customClaims map[string]any, permittedIPs []string) (*descope.AccessKeyResponse, error) {
 	if m.UpdateAssert != nil {
-		m.UpdateAssert(id, name, description)
+		m.UpdateAssert(id, name, description, roles, keyTenants, customClaims, permittedIPs)
 	}
 	return m.UpdateResponse, m.UpdateError
 }

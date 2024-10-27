@@ -977,8 +977,8 @@ if err == nil {
     }
 }
 
-// Update will override all fields as is. Use carefully.
-res, err := descopeClient.Management.AccessKey().Update(context.Background(), "access-key-id", "updated-name")
+// If permittedIPs is nil, then the existing list of permitted IPs will be preserved.
+res, err := descopeClient.Management.AccessKey().Update(context.Background(), "access-key-id", "updated-name", nil)
 
 // Access keys can be deactivated to prevent usage. This can be undone using "activate".
 err := descopeClient.Management.AccessKey().Deactivate(context.Background(), "access-key-id")
