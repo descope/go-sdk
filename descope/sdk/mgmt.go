@@ -436,8 +436,7 @@ type AccessKey interface {
 	// Update an existing access key.
 	//
 	// The parameters follow the same convention as those for the Create function.
-	// Only the name and description are settable for the time being.
-	// If roles, keyTenants, customClaims, or permittedIPs are nil, their existing values will be preserved.
+	// If description, roles, keyTenants, customClaims, or permittedIPs are nil, their existing values will be preserved.
 	//
 	// IMPORTANT: id and name are mandatory parameters.
 	Update(ctx context.Context, id, name string, description *string, roles []string, keyTenants []*descope.AssociatedTenant, customClaims map[string]any, permittedIPs []string) (*descope.AccessKeyResponse, error)
