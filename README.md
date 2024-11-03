@@ -977,8 +977,10 @@ if err == nil {
     }
 }
 
-// Update will override all fields as is. Use carefully.
-res, err := descopeClient.Management.AccessKey().Update(context.Background(), "access-key-id", "updated-name")
+// Update access key
+// If description, roles, tenants, customClaims, or permittedIPs are nil, their existing values will be preserved. If you want to remove them, pass an empty slice or map.
+updatedDescription := "Updated description"
+res, err := descopeClient.Management.AccessKey().Update(context.Background(), "access-key-id", "updated-name", &updatedDescription, []string{"role"}, []*descope.AssociatedTenant{{TenantID: "t1", Roles: []string{"role"}}}, map[string]any{"k1": "v1"}, []string{"1.2.3.4"})
 
 // Access keys can be deactivated to prevent usage. This can be undone using "activate".
 err := descopeClient.Management.AccessKey().Deactivate(context.Background(), "access-key-id")

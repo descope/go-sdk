@@ -15,11 +15,11 @@ type accessKey struct {
 
 var _ sdk.AccessKey = &accessKey{}
 
-func (a *accessKey) Create(ctx context.Context, name string, description string, expireTime int64, roleNames []string, keyTenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIPs []string) (string, *descope.AccessKeyResponse, error) {
+func (a *accessKey) Create(ctx context.Context, name string, description string, expireTime int64, roleNames []string, tenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIPs []string) (string, *descope.AccessKeyResponse, error) {
 	if name == "" {
 		return "", nil, utils.NewInvalidArgumentError("name")
 	}
-	body := makeCreateAccessKeyBody(name, expireTime, roleNames, keyTenants, userID, customClaims, description, permittedIPs)
+	body := makeCreateAccessKeyBody(name, expireTime, roleNames, tenants, userID, customClaims, description, permittedIPs)
 	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyCreate(), body, nil, a.conf.ManagementKey)
 	if err != nil {
 		return "", nil, err
@@ -50,7 +50,7 @@ func (a *accessKey) SearchAll(ctx context.Context, tenantIDs []string) ([]*desco
 	return unmarshalAccessKeySearchAllResponse(res)
 }
 
-func (a *accessKey) Update(ctx context.Context, id, name string, description *string) (*descope.AccessKeyResponse, error) {
+func (a *accessKey) Update(ctx context.Context, id, name string, description *string, roles []string, tenants []*descope.AssociatedTenant, customClaims map[string]any, permittedIPs []string) (*descope.AccessKeyResponse, error) {
 	if id == "" {
 		return nil, utils.NewInvalidArgumentError("id")
 	}
@@ -60,6 +60,18 @@ func (a *accessKey) Update(ctx context.Context, id, name string, description *st
 	body := map[string]any{"id": id, "name": name}
 	if description != nil {
 		body["description"] = *description
+	}
+	if roles != nil {
+		body["roleNames"] = roles
+	}
+	if tenants != nil {
+		body["keyTenants"] = makeAssociatedTenantList(tenants)
+	}
+	if customClaims != nil {
+		body["customClaims"] = customClaims
+	}
+	if permittedIPs != nil {
+		body["permittedIps"] = permittedIPs
 	}
 	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyUpdate(), body, nil, a.conf.ManagementKey)
 	if err != nil {
