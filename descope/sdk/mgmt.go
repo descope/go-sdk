@@ -635,7 +635,7 @@ type Group interface {
 // Provides functions for flow and theme management including export and import by ID.
 type Flow interface {
 	// Returns metadata of all project flows
-	ListFlows(ctx context.Context) (*descope.FlowsResponse, error)
+	ListFlows(ctx context.Context) (*descope.FlowList, error)
 
 	// Delete flows by flow ids.
 	//
@@ -643,13 +643,14 @@ type Flow interface {
 	DeleteFlows(ctx context.Context, flowIDs []string) error
 
 	// Export a flow and its screens by the flow id.
-	ExportFlow(ctx context.Context, flowID string) (*descope.FlowResponse, error)
+	ExportFlow(ctx context.Context, flowID string) (*descope.Flow, error)
 
 	// Import a flow and its screens as a given flow id. This will override the existing flow.
-	// Returns the new flow and screens after a successful import or an error on failure.
+	//
+	// The value of the flowID parameter will override whatever is set in the flow object.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
-	ImportFlow(ctx context.Context, flowID string, flow *descope.Flow, screens []*descope.Screen) (*descope.FlowResponse, error)
+	ImportFlow(ctx context.Context, flowID string, flow *descope.Flow) error
 
 	// Export the project theme.
 	ExportTheme(ctx context.Context) (*descope.Theme, error)
@@ -658,7 +659,7 @@ type Flow interface {
 	// Returns the new theme after a successful import or an error on failure.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
-	ImportTheme(ctx context.Context, theme *descope.Theme) (*descope.Theme, error)
+	ImportTheme(ctx context.Context, theme *descope.Theme) error
 }
 
 // Provides functions for exporting and importing project settings, flows, styles, etc.

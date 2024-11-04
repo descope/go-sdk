@@ -15,7 +15,7 @@ type flow struct {
 
 var _ sdk.Flow = &flow{}
 
-func (r *flow) ListFlows(ctx context.Context) (*descope.FlowsResponse, error) {
+func (r *flow) ListFlows(ctx context.Context) (*descope.FlowList, error) {
 	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementListFlows(), nil, nil, r.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -31,7 +31,7 @@ func (r *flow) DeleteFlows(ctx context.Context, flowIDs []string) error {
 	return err
 }
 
-func (r *flow) ExportFlow(ctx context.Context, flowID string) (*descope.FlowResponse, error) {
+func (r *flow) ExportFlow(ctx context.Context, flowID string) (*descope.Flow, error) {
 	if flowID == "" {
 		return nil, utils.NewInvalidArgumentError("flowID")
 	}
@@ -42,23 +42,19 @@ func (r *flow) ExportFlow(ctx context.Context, flowID string) (*descope.FlowResp
 	if err != nil {
 		return nil, err
 	}
-	return unmarshalFlowResponse(res)
+	return unmarshalFlow(res)
 }
 
-func (r *flow) ImportFlow(ctx context.Context, flowID string, flow *descope.Flow, screens []*descope.Screen) (*descope.FlowResponse, error) {
+func (r *flow) ImportFlow(ctx context.Context, flowID string, flow *descope.Flow) error {
 	if flowID == "" {
-		return nil, utils.NewInvalidArgumentError("flowID")
+		return utils.NewInvalidArgumentError("flowID")
 	}
+	flow.FlowID = flowID
 	body := map[string]any{
-		"flowId":  flowID,
-		"flow":    flow,
-		"screens": screens,
+		"flow": flow,
 	}
-	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementFlowImport(), body, nil, r.conf.ManagementKey)
-	if err != nil {
-		return nil, err
-	}
-	return unmarshalFlowResponse(res)
+	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementFlowImport(), body, nil, r.conf.ManagementKey)
+	return err
 }
 
 func (r *flow) ExportTheme(ctx context.Context) (*descope.Theme, error) {
@@ -69,23 +65,19 @@ func (r *flow) ExportTheme(ctx context.Context) (*descope.Theme, error) {
 	return unmarshalTheme(res)
 }
 
-func (r *flow) ImportTheme(ctx context.Context, theme *descope.Theme) (*descope.Theme, error) {
+func (r *flow) ImportTheme(ctx context.Context, theme *descope.Theme) error {
 	if theme == nil {
-		return nil, utils.NewInvalidArgumentError("theme")
+		return utils.NewInvalidArgumentError("theme")
 	}
 	body := map[string]any{
 		"theme": theme,
 	}
-	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementThemeImport(), body, nil, r.conf.ManagementKey)
-	if err != nil {
-		return nil, err
-	}
-	return unmarshalTheme(res)
-
+	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementThemeImport(), body, nil, r.conf.ManagementKey)
+	return err
 }
 
-func unmarshalFlowsResponse(res *api.HTTPResponse) (*descope.FlowsResponse, error) {
-	var a *descope.FlowsResponse
+func unmarshalFlowsResponse(res *api.HTTPResponse) (*descope.FlowList, error) {
+	var a *descope.FlowList
 	err := utils.Unmarshal([]byte(res.BodyStr), &a)
 	if err != nil {
 		// notest
@@ -94,22 +86,26 @@ func unmarshalFlowsResponse(res *api.HTTPResponse) (*descope.FlowsResponse, erro
 	return a, nil
 }
 
-func unmarshalFlowResponse(res *api.HTTPResponse) (*descope.FlowResponse, error) {
-	var a *descope.FlowResponse
+func unmarshalFlow(res *api.HTTPResponse) (*descope.Flow, error) {
+	type flowResponse struct {
+		Flow *descope.Flow `json:"flow"`
+	}
+	var a *flowResponse
 	err := utils.Unmarshal([]byte(res.BodyStr), &a)
-	if err != nil {
-		// notest
+	if err != nil { // notest
 		return nil, err
 	}
-	return a, nil
+	return a.Flow, nil
 }
 
 func unmarshalTheme(res *api.HTTPResponse) (*descope.Theme, error) {
-	var a *descope.Theme
+	type themeResponse struct {
+		Theme *descope.Theme `json:"theme"`
+	}
+	var a *themeResponse
 	err := utils.Unmarshal([]byte(res.BodyStr), &a)
-	if err != nil {
-		// notest
+	if err != nil { // notest
 		return nil, err
 	}
-	return a, nil
+	return a.Theme, nil
 }

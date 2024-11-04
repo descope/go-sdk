@@ -824,39 +824,34 @@ type Group struct {
 }
 
 type Flow struct {
-	FlowMetadata
-	DSL  any    `json:"dsl"`
-	ETag string `json:"etag,omitempty"`
+	FlowID     string         `json:"flowId"`
+	Metadata   map[string]any `json:"metadata"`
+	Contents   map[string]any `json:"contents"`
+	Screens    []*FlowScreen  `json:"screens,omitempty"`
+	References map[string]any `json:"references,omitempty"`
 }
 
-type FlowMetadata struct {
-	ID          string `json:"id"`
+type FlowScreen struct {
+	ScreenID     string           `json:"screenId"`
+	Contents     map[string]any   `json:"contents"`
+	Interactions []map[string]any `json:"interactions,omitempty"`
+}
+
+type FlowList struct {
+	Flows []*FlowListEnty `json:"flows"`
+}
+
+type FlowListEnty struct {
+	FlowID      string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
-	Disabled    bool   `json:"disabled"`
-}
-
-type Screen struct {
-	ID           string `json:"id"`
-	FlowID       string `json:"flowId"`
-	Inputs       any    `json:"inputs,omitempty"`
-	Interactions any    `json:"interactions,omitempty"`
-	HTMLTemplate any    `json:"htmlTemplate"`
-}
-
-type FlowResponse struct {
-	Flow    *Flow     `json:"flow"`
-	Screens []*Screen `json:"screens"`
-}
-
-type FlowsResponse struct {
-	Flows []*FlowMetadata `json:"flows"`
-	Total int             `json:"total"`
+	Disabled    bool   `json:"disabled,omitempty"`
 }
 
 type Theme struct {
-	ID          string `json:"id"`
-	CSSTemplate any    `json:"cssTemplate,omitempty"`
+	Styles            map[string]any `json:"styles"`
+	References        map[string]any `json:"references,omitempty"`
+	ComponentsVersion string         `json:"componentsVersion,omitempty"`
 }
 
 type AuditRecord struct {
