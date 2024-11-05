@@ -525,8 +525,9 @@ type UsersFailedResponse struct {
 }
 
 type UsersBatchResponse struct {
-	CreatedUsers []*UserResponse        `json:"createdUsers,omitempty"`
-	FailedUsers  []*UsersFailedResponse `json:"failedUsers,omitempty"`
+	CreatedUsers     []*UserResponse        `json:"createdUsers,omitempty"`
+	FailedUsers      []*UsersFailedResponse `json:"failedUsers,omitempty"`
+	AdditionalErrors map[string]string      `json:"additionalErrors,omitempty"`
 }
 
 func (ur *UserResponse) GetCreatedTime() time.Time {
