@@ -22,6 +22,8 @@ func TestUserCreateSuccess(t *testing.T) {
 	i := 0
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.NotNil(t, r.URL)
+		require.Equal(t, "/v1/mgmt/user/create", r.URL.Path)
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["loginId"])
@@ -223,6 +225,8 @@ func TestUserCreateTestUserSuccess(t *testing.T) {
 		}}
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.NotNil(t, r.URL)
+		require.Equal(t, "/v1/mgmt/user/create/test", r.URL.Path)
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["loginId"])
@@ -708,6 +712,8 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 	roleNames := []string{"role1"}
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.NotNil(t, r.URL)
+		require.Equal(t, "/v2/mgmt/user/search", r.URL.Path)
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.EqualValues(t, tenantIDs[0], req["tenantIds"].([]any)[0])
@@ -740,6 +746,61 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 	require.Len(t, res, 1)
 	require.Equal(t, "a@b.c", res[0].Email)
 	require.Equal(t, 85, total)
+}
+
+func TestSearchAllTestUsersSuccess(t *testing.T) {
+	response := map[string]any{
+		"users": []map[string]any{{
+			"email": "a@b.c",
+			"test":  true,
+		}},
+		"total": 85,
+	}
+
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.NotNil(t, r.URL)
+		require.Equal(t, "/v2/mgmt/user/search/test", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.EqualValues(t, true, req["testUsersOnly"].(bool))
+		require.EqualValues(t, true, req["withTestUser"].(bool))
+		require.EqualValues(t, []any{"a@b.com"}, req["emails"])
+	}, response))
+	res, _, err := m.User().SearchAllTest(context.Background(), &descope.UserSearchOptions{
+		Emails: []string{"a@b.com"},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Len(t, res, 1)
+	require.Equal(t, "a@b.c", res[0].Email)
+	require.Equal(t, true, res[0].Test)
+}
+
+func TestSearchAllTestUsersSuccessEmptyOptions(t *testing.T) {
+	response := map[string]any{
+		"users": []map[string]any{{
+			"email": "a@b.c",
+			"test":  true,
+		}},
+		"total": 85,
+	}
+
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.NotNil(t, r.URL)
+		require.Equal(t, "/v2/mgmt/user/search/test", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.EqualValues(t, true, req["testUsersOnly"].(bool))
+		require.EqualValues(t, true, req["withTestUser"].(bool))
+	}, response))
+	res, _, err := m.User().SearchAllTest(context.Background(), nil)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Len(t, res, 1)
+	require.Equal(t, "a@b.c", res[0].Email)
+	require.Equal(t, true, res[0].Test)
 }
 
 func TestSearchAllUsersError(t *testing.T) {
