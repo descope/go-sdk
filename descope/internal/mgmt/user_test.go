@@ -767,7 +767,7 @@ func TestSearchAllTestUsersSuccess(t *testing.T) {
 		require.EqualValues(t, true, req["withTestUser"].(bool))
 		require.EqualValues(t, []any{"a@b.com"}, req["emails"])
 	}, response))
-	res, _, err := m.User().SearchAllTest(context.Background(), &descope.UserSearchOptions{
+	res, _, err := m.User().SearchAllTestUsers(context.Background(), &descope.UserSearchOptions{
 		Emails: []string{"a@b.com"},
 	})
 	require.NoError(t, err)
@@ -795,7 +795,7 @@ func TestSearchAllTestUsersSuccessEmptyOptions(t *testing.T) {
 		require.EqualValues(t, true, req["testUsersOnly"].(bool))
 		require.EqualValues(t, true, req["withTestUser"].(bool))
 	}, response))
-	res, _, err := m.User().SearchAllTest(context.Background(), nil)
+	res, _, err := m.User().SearchAllTestUsers(context.Background(), nil)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res, 1)

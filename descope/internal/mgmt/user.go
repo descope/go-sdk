@@ -244,7 +244,7 @@ func (u *user) SearchAll(ctx context.Context, options *descope.UserSearchOptions
 	return u.searchAll(ctx, options)
 }
 
-func (u *user) SearchAllTest(ctx context.Context, options *descope.UserSearchOptions) ([]*descope.UserResponse, int, error) {
+func (u *user) SearchAllTestUsers(ctx context.Context, options *descope.UserSearchOptions) ([]*descope.UserResponse, int, error) {
 	// Init empty options if non given
 	if options == nil {
 		options = &descope.UserSearchOptions{}

@@ -278,10 +278,10 @@ type MockUser struct {
 	SearchAllTotalResponse int
 	SearchAllError         error
 
-	SearchAllTestAssert        func(options *descope.UserSearchOptions)
-	SearchAllTestResponse      []*descope.UserResponse
-	SearchAllTestTotalResponse int
-	SearchAllTestError         error
+	SearchAllTestUsersAssert        func(options *descope.UserSearchOptions)
+	SearchAllTestUsersResponse      []*descope.UserResponse
+	SearchAllTestUsersTotalResponse int
+	SearchAllTestUsersError         error
 
 	ActivateAssert   func(loginID string)
 	ActivateResponse *descope.UserResponse
@@ -517,11 +517,11 @@ func (m *MockUser) SearchAll(_ context.Context, options *descope.UserSearchOptio
 	return m.SearchAllResponse, m.SearchAllTotalResponse, m.SearchAllError
 }
 
-func (m *MockUser) SearchAllTest(_ context.Context, options *descope.UserSearchOptions) ([]*descope.UserResponse, int, error) {
-	if m.SearchAllTestAssert != nil {
-		m.SearchAllTestAssert(options)
+func (m *MockUser) SearchAllTestUsers(_ context.Context, options *descope.UserSearchOptions) ([]*descope.UserResponse, int, error) {
+	if m.SearchAllTestUsersAssert != nil {
+		m.SearchAllTestUsersAssert(options)
 	}
-	return m.SearchAllTestResponse, m.SearchAllTestTotalResponse, m.SearchAllTestError
+	return m.SearchAllTestUsersResponse, m.SearchAllTestUsersTotalResponse, m.SearchAllTestUsersError
 }
 
 func (m *MockUser) Activate(_ context.Context, loginID string) (*descope.UserResponse, error) {
