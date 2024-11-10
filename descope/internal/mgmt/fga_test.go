@@ -16,8 +16,8 @@ func TestSaveFGASchemaSuccess(t *testing.T) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		require.NotNil(t, req["schema"])
-		require.Equal(t, "some schema", req["schema"])
+		require.NotNil(t, req["dsl"])
+		require.Equal(t, "some schema", req["dsl"])
 	}))
 	err := mgmt.FGA().SaveSchema(context.Background(), &descope.FGASchema{Schema: "some schema"})
 	require.NoError(t, err)
@@ -78,7 +78,7 @@ func TestDeleteFGARelationsMissingTuples(t *testing.T) {
 
 func TestCheckFGARelationsSuccess(t *testing.T) {
 	response := map[string]any{
-		"checkResponseTuple": []*descope.FGACheck{
+		"tuples": []*descope.FGACheck{
 			{
 				Allowed:  true,
 				Relation: &descope.FGARelation{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"},
@@ -109,5 +109,5 @@ func TestCheckFGARelationsMissingTuples(t *testing.T) {
 	mgmt := newTestMgmt(nil, nil)
 	_, err := mgmt.FGA().Check(context.Background(), nil)
 	require.Error(t, err)
-	require.ErrorContains(t, err, utils.NewInvalidArgumentError("checks").Message)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("relations").Message)
 }
