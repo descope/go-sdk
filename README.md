@@ -1384,7 +1384,8 @@ relations, err := descopeClient.Management.FGA().Check(context.Background(), []*
 		Target: "u1", 
 		TargetType: "user"
     }
-}) -->
+})
+```
 
 
 ### Manage Project
