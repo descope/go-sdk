@@ -23,6 +23,7 @@ type MockManagement struct {
 	*MockProject
 	*MockAudit
 	*MockAuthz
+	*MockFGA
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -79,6 +80,10 @@ func (m *MockManagement) Authz() sdk.Authz {
 
 func (m *MockManagement) Password() sdk.PasswordManagement {
 	return m.MockPasswordManagement
+}
+
+func (m *MockManagement) FGA() sdk.FGA {
+	return m.MockFGA
 }
 
 // Mock JWT
@@ -1465,4 +1470,47 @@ func (m *MockAuthz) GetModified(_ context.Context, since time.Time) (*descope.Au
 		m.GetModifiedAssert(since)
 	}
 	return m.GetModifiedResponse, m.GetModifiedError
+}
+
+type MockFGA struct {
+	SaveSchemaAssert func(schema *descope.FGASchema) error
+	SaveSchemaError  error
+
+	CreateRelationsAssert func(relations []*descope.FGARelation) error
+	CreateRelationsError  error
+
+	DeleteRelationsAssert func(relations []*descope.FGARelation) error
+	DeleteRelationsError  error
+
+	CheckAssert   func(relations []*descope.FGARelation)
+	CheckResponse []*descope.FGACheck
+	CheckError    error
+}
+
+func (m *MockFGA) SaveSchema(_ context.Context, schema *descope.FGASchema) error {
+	if m.SaveSchemaAssert != nil {
+		m.SaveSchemaAssert(schema)
+	}
+	return m.SaveSchemaError
+}
+
+func (m *MockFGA) CreateRelations(_ context.Context, relations []*descope.FGARelation) error {
+	if m.CreateRelationsAssert != nil {
+		m.CreateRelationsAssert(relations)
+	}
+	return m.CreateRelationsError
+}
+
+func (m *MockFGA) DeleteRelations(_ context.Context, relations []*descope.FGARelation) error {
+	if m.DeleteRelationsAssert != nil {
+		m.DeleteRelationsAssert(relations)
+	}
+	return m.DeleteRelationsError
+}
+
+func (m *MockFGA) Check(_ context.Context, relations []*descope.FGARelation) ([]*descope.FGACheck, error) {
+	if m.CheckAssert != nil {
+		m.CheckAssert(relations)
+	}
+	return m.CheckResponse, m.CheckError
 }

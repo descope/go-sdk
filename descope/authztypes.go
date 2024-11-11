@@ -90,3 +90,25 @@ type AuthzModified struct {
 	Targets       []string `json:"targets"`
 	SchemaChanged bool     `json:"schemaChanged"`
 }
+
+// FGA
+
+// FGASchema holds the schema for a project
+type FGASchema struct {
+	Schema string `json:"schema"`
+}
+
+// FGARelation defines a relation between resource and target
+type FGARelation struct {
+	Resource     string `json:"resource"`
+	ResourceType string `json:"resourceType"`
+	Relation     string `json:"relation"`
+	Target       string `json:"target"`
+	TargetType   string `json:"targetType"`
+}
+
+// FGACheck holds the result of a check
+type FGACheck struct {
+	Allowed  bool         `json:"allowed"`
+	Relation *FGARelation `json:"relation"`
+}
