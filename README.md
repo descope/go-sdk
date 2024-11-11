@@ -67,7 +67,7 @@ These sections show how to use the SDK to perform API management functions. Befo
 10. [Impersonate](#impersonate)
 11. [Audit](#audit)
 12. [Embedded Links](#embedded-links)
-13. [Manage FGA Authz](#manage-fga-authz)
+13. [Manage FGA (Fine-grained Authorization)](#manage-fga-fine-grained-authorization)
 14. [Manage Project](#manage-project)
 15. [Manage SSO Applications](#manage-sso-applications)
 
@@ -1319,14 +1319,14 @@ err := descopeClient.Management.Audit().CreateEvent(context.Background(), &desco
 })
 ```
 
-### Manage FGA Authz
+### Manage FGA (Fine-grained Authorization)
 
 Descope supports full relation based access control (ReBAC) using a zanzibar like schema and operations.
 A schema is comprized of types (entities like documents, folders, orgs, etc.) and each type has relation definitions and permission to define relations to other types.
 
 A simple example for a file system like schema would be:
 
-```
+```yaml
 model AuthZ 1.0
 
 type user
@@ -1347,13 +1347,14 @@ type folder
 
 type doc
   relation parent: folder
-  relation owner: user | | org#member
+  relation owner: user | org#member
   relation editor: user 
   relation viewer: user 
 
   permission can_create: owner | parent.owner
   permission can_edit: editor | can_create
   permission can_view: viewer | can_edit
+```  
 
 
 Descope SDK allows you to fully manage the schema and relations as well as perform simple (and not so simple) checks regarding the existence of relations.
