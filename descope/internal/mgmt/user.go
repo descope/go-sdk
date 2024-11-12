@@ -241,7 +241,7 @@ func (u *user) load(ctx context.Context, loginID, userID string) (*descope.UserR
 }
 
 func (u *user) SearchAll(ctx context.Context, options *descope.UserSearchOptions) ([]*descope.UserResponse, int, error) {
-	return u.searchAll(ctx, options)
+	return u.searchAll(ctx, options, false)
 }
 
 func (u *user) SearchAllTestUsers(ctx context.Context, options *descope.UserSearchOptions) ([]*descope.UserResponse, int, error) {
@@ -251,10 +251,10 @@ func (u *user) SearchAllTestUsers(ctx context.Context, options *descope.UserSear
 	}
 	options.WithTestUsers = true
 	options.TestUsersOnly = true
-	return u.searchAll(ctx, options)
+	return u.searchAll(ctx, options, true)
 }
 
-func (u *user) searchAll(ctx context.Context, options *descope.UserSearchOptions) ([]*descope.UserResponse, int, error) {
+func (u *user) searchAll(ctx context.Context, options *descope.UserSearchOptions, useTestEndpoint bool) ([]*descope.UserResponse, int, error) {
 	// Init empty options if non given
 	if options == nil {
 		options = &descope.UserSearchOptions{}
@@ -274,7 +274,7 @@ func (u *user) searchAll(ctx context.Context, options *descope.UserSearchOptions
 
 	var res *api.HTTPResponse
 	var err error
-	if options.WithTestUsers {
+	if useTestEndpoint {
 		res, err = u.client.DoPostRequest(ctx, api.Routes.ManagementTestUserSearchAll(), req, nil, u.conf.ManagementKey)
 	} else {
 		res, err = u.client.DoPostRequest(ctx, api.Routes.ManagementUserSearchAll(), req, nil, u.conf.ManagementKey)
