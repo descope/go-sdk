@@ -200,6 +200,10 @@ var (
 			authzRETargetAll:                   "mgmt/authz/re/targetall",
 			authzRETargetWithRelation:          "mgmt/authz/re/targetwithrelation",
 			authzGetModified:                   "mgmt/authz/getmodified",
+			fgaSaveSchema:                      "mgmt/fga/schema",
+			fgaCreateRelations:                 "mgmt/fga/relations",
+			fgaDeleteRelations:                 "mgmt/fga/relations/delete",
+			fgaCheck:                           "mgmt/fga/check",
 		},
 		logout:       "auth/logout",
 		logoutAll:    "auth/logoutall",
@@ -412,6 +416,11 @@ type mgmtEndpoints struct {
 	authzRETargetAll          string
 	authzRETargetWithRelation string
 	authzGetModified          string
+
+	fgaSaveSchema      string
+	fgaCreateRelations string
+	fgaDeleteRelations string
+	fgaCheck           string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -1100,6 +1109,22 @@ func (e *endpoints) ManagementAuthzRETargetWithRelation() string {
 
 func (e *endpoints) ManagementAuthzGetModified() string {
 	return path.Join(e.version, e.mgmt.authzGetModified)
+}
+
+func (e *endpoints) ManagementFGASaveSchema() string {
+	return path.Join(e.version, e.mgmt.fgaSaveSchema)
+}
+
+func (e *endpoints) ManagementFGACreateRelations() string {
+	return path.Join(e.version, e.mgmt.fgaCreateRelations)
+}
+
+func (e *endpoints) ManagementFGADeleteRelations() string {
+	return path.Join(e.version, e.mgmt.fgaDeleteRelations)
+}
+
+func (e *endpoints) ManagementFGACheck() string {
+	return path.Join(e.version, e.mgmt.fgaCheck)
 }
 
 type sdkInfo struct {
