@@ -762,6 +762,28 @@ func TestLogoutAllWithToken(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestLogoutPrevious(t *testing.T) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
+	})
+	require.NoError(t, err)
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
+
+	err = a.LogoutPrevious(request)
+	require.NoError(t, err)
+}
+
+func TestLogoutPreviousWithToken(t *testing.T) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
+	})
+	require.NoError(t, err)
+
+	err = a.LogoutPreviousWithToken(jwtRTokenValid)
+	require.NoError(t, err)
+}
+
 func TestLogoutNoClaims(t *testing.T) {
 	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK}, nil

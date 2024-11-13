@@ -203,30 +203,32 @@ var (
 			fgaDeleteRelations:                 "mgmt/fga/relations/delete",
 			fgaCheck:                           "mgmt/fga/check",
 		},
-		logout:       "auth/logout",
-		logoutAll:    "auth/logoutall",
-		keys:         "/keys/",
-		refresh:      "auth/refresh",
-		selectTenant: "auth/tenant/select",
-		me:           "auth/me",
-		meTenants:    "auth/me/tenants",
-		history:      "auth/me/history",
+		logout:         "auth/logout",
+		logoutAll:      "auth/logoutall",
+		logoutPrevious: "auth/logoutprevious",
+		keys:           "/keys/",
+		refresh:        "auth/refresh",
+		selectTenant:   "auth/tenant/select",
+		me:             "auth/me",
+		meTenants:      "auth/me/tenants",
+		history:        "auth/me/history",
 	}
 )
 
 type endpoints struct {
-	version      string
-	versionV2    string
-	auth         authEndpoints
-	mgmt         mgmtEndpoints
-	logout       string
-	logoutAll    string
-	keys         string
-	refresh      string
-	selectTenant string
-	me           string
-	meTenants    string
-	history      string
+	version        string
+	versionV2      string
+	auth           authEndpoints
+	mgmt           mgmtEndpoints
+	logout         string
+	logoutAll      string
+	logoutPrevious string
+	keys           string
+	refresh        string
+	selectTenant   string
+	me             string
+	meTenants      string
+	history        string
 }
 
 type authEndpoints struct {
@@ -599,6 +601,10 @@ func (e *endpoints) Logout() string {
 
 func (e *endpoints) LogoutAll() string {
 	return path.Join(e.version, e.logoutAll)
+}
+
+func (e *endpoints) LogoutPrevious() string {
+	return path.Join(e.version, e.logoutPrevious)
 }
 
 func (e *endpoints) Me() string {
