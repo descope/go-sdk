@@ -692,6 +692,12 @@ type MockSession struct {
 	LogoutAllWithTokenAssert func(refreshToken string, w http.ResponseWriter)
 	LogoutAllWithTokenError  error
 
+	LogoutPreviousAssert func(r *http.Request)
+	LogoutPreviousError  error
+
+	LogoutPreviousWithTokenAssert func(refreshToken string)
+	LogoutPreviousWithTokenError  error
+
 	MeAssert   func(r *http.Request)
 	MeError    error
 	MeResponse *descope.UserResponse
@@ -883,6 +889,20 @@ func (m *MockSession) LogoutAllWithToken(refreshToken string, w http.ResponseWri
 		m.LogoutAllWithTokenAssert(refreshToken, w)
 	}
 	return m.LogoutAllWithTokenError
+}
+
+func (m *MockSession) LogoutPrevious(r *http.Request) error {
+	if m.LogoutPreviousAssert != nil {
+		m.LogoutPreviousAssert(r)
+	}
+	return m.LogoutPreviousError
+}
+
+func (m *MockSession) LogoutPreviousWithToken(refreshToken string) error {
+	if m.LogoutPreviousWithTokenAssert != nil {
+		m.LogoutPreviousWithTokenAssert(refreshToken)
+	}
+	return m.LogoutPreviousWithTokenError
 }
 
 func (m *MockSession) Me(r *http.Request) (*descope.UserResponse, error) {

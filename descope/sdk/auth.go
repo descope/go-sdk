@@ -424,6 +424,12 @@ type Authentication interface {
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	LogoutAllWithToken(refreshToken string, w http.ResponseWriter) error
 
+	// LogoutPrevious - Use to perform logout from all active sessions that were created prior to the given token.
+	LogoutPrevious(request *http.Request) error
+
+	// LogoutPreviousWithToken - Use to perform logout from all active sessions that were created prior to the given token.
+	LogoutPreviousWithToken(refreshToken string) error
+
 	// Me - Use to retrieve current session user details. The request requires a valid refresh token.
 	// returns the user details or error if the refresh token is not valid.
 	Me(request *http.Request) (*descope.UserResponse, error)
