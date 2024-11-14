@@ -67,7 +67,7 @@ These sections show how to use the SDK to perform API management functions. Befo
 10. [Impersonate](#impersonate)
 11. [Audit](#audit)
 12. [Embedded Links](#embedded-links)
-13. [Manage ReBAC Authz](#manage-rebac-authz)
+13. [Manage FGA (Fine-grained Authorization)](#manage-fga-fine-grained-authorization)
 14. [Manage Project](#manage-project)
 15. [Manage SSO Applications](#manage-sso-applications)
 
@@ -958,7 +958,7 @@ You can create, update, delete or load access keys, as well as search according 
 // If customClaims is supplied, then those claims will be present in the JWT returned by calls to ExchangeAccessKey.
 // If description is supplied, then the access key will hold a descriptive text.
 // If permittedIPs is supplied, then we will only allow using the access key from those IP addresses or CIDR ranges.
-res, err := descopeClient.Management.AccessKey().Create(context.Background(), "access-key-1", 0, nil, []*descope.AssociatedTenant{
+res, err := descopeClient.Management.AccessKey().Create(context.Background(), "access-key-1", "key-description", 0, nil, []*descope.AssociatedTenant{
 		{TenantID: "tenant-ID1", RoleNames: []string{"role-name1"}},
     	{TenantID: "tenant-ID2"},
     },
@@ -980,7 +980,7 @@ if err == nil {
 // Update access key
 // If description, roles, tenants, customClaims, or permittedIPs are nil, their existing values will be preserved. If you want to remove them, pass an empty slice or map.
 updatedDescription := "Updated description"
-res, err := descopeClient.Management.AccessKey().Update(context.Background(), "access-key-id", "updated-name", &updatedDescription, []string{"role"}, []*descope.AssociatedTenant{{TenantID: "t1", Roles: []string{"role"}}}, map[string]any{"k1": "v1"}, []string{"1.2.3.4"})
+res, err := descopeClient.Management.AccessKey().Update(context.Background(), "access-key-id", "updated-name", &updatedDescription, []string{"role"}, nil, map[string]any{"k1": "v1"}, []string{"1.2.3.4"})
 
 // Access keys can be deactivated to prevent usage. This can be undone using "activate".
 err := descopeClient.Management.AccessKey().Deactivate(context.Background(), "access-key-id")
@@ -1319,180 +1319,74 @@ err := descopeClient.Management.Audit().CreateEvent(context.Background(), &desco
 })
 ```
 
-### Manage ReBAC Authz
+### Manage FGA (Fine-grained Authorization)
 
 Descope supports full relation based access control (ReBAC) using a zanzibar like schema and operations.
-A schema is comprized of namespaces (entities like documents, folders, orgs, etc.) and each namespace has relation definitions to define relations.
-Each relation definition can be simple (either you have it or not) or complex (union of nodes).
+A schema is comprized of types (entities like documents, folders, orgs, etc.) and each type has relation definitions and permission to define relations to other types.
 
 A simple example for a file system like schema would be:
 
 ```yaml
-# Example schema for the authz tests
-name: Files
-namespaces:
-    - name: org
-      relationDefinitions:
-          - name: parent
-          - name: member
-            complexDefinition:
-                nType: union
-                children:
-                    - nType: child
-                      expression:
-                          neType: self
-                    - nType: child
-                      expression:
-                          neType: relationLeft
-                          relationDefinition: parent
-                          relationDefinitionNamespace: org
-                          targetRelationDefinition: member
-                          targetRelationDefinitionNamespace: org
-    - name: folder
-      relationDefinitions:
-          - name: parent
-          - name: owner
-            complexDefinition:
-                nType: union
-                children:
-                    - nType: child
-                      expression:
-                          neType: self
-                    - nType: child
-                      expression:
-                          neType: relationRight
-                          relationDefinition: parent
-                          relationDefinitionNamespace: folder
-                          targetRelationDefinition: owner
-                          targetRelationDefinitionNamespace: folder
-          - name: editor
-            complexDefinition:
-                nType: union
-                children:
-                    - nType: child
-                      expression:
-                          neType: self
-                    - nType: child
-                      expression:
-                          neType: relationRight
-                          relationDefinition: parent
-                          relationDefinitionNamespace: folder
-                          targetRelationDefinition: editor
-                          targetRelationDefinitionNamespace: folder
-                    - nType: child
-                      expression:
-                          neType: targetSet
-                          targetRelationDefinition: owner
-                          targetRelationDefinitionNamespace: folder
-          - name: viewer
-            complexDefinition:
-                nType: union
-                children:
-                    - nType: child
-                      expression:
-                          neType: self
-                    - nType: child
-                      expression:
-                          neType: relationRight
-                          relationDefinition: parent
-                          relationDefinitionNamespace: folder
-                          targetRelationDefinition: viewer
-                          targetRelationDefinitionNamespace: folder
-                    - nType: child
-                      expression:
-                          neType: targetSet
-                          targetRelationDefinition: editor
-                          targetRelationDefinitionNamespace: folder
-    - name: doc
-      relationDefinitions:
-          - name: parent
-          - name: owner
-            complexDefinition:
-                nType: union
-                children:
-                    - nType: child
-                      expression:
-                          neType: self
-                    - nType: child
-                      expression:
-                          neType: relationRight
-                          relationDefinition: parent
-                          relationDefinitionNamespace: doc
-                          targetRelationDefinition: owner
-                          targetRelationDefinitionNamespace: folder
-          - name: editor
-            complexDefinition:
-                nType: union
-                children:
-                    - nType: child
-                      expression:
-                          neType: self
-                    - nType: child
-                      expression:
-                          neType: relationRight
-                          relationDefinition: parent
-                          relationDefinitionNamespace: doc
-                          targetRelationDefinition: editor
-                          targetRelationDefinitionNamespace: folder
-                    - nType: child
-                      expression:
-                          neType: targetSet
-                          targetRelationDefinition: owner
-                          targetRelationDefinitionNamespace: doc
-          - name: viewer
-            complexDefinition:
-                nType: union
-                children:
-                    - nType: child
-                      expression:
-                          neType: self
-                    - nType: child
-                      expression:
-                          neType: relationRight
-                          relationDefinition: parent
-                          relationDefinitionNamespace: doc
-                          targetRelationDefinition: viewer
-                          targetRelationDefinitionNamespace: folder
-                    - nType: child
-                      expression:
-                          neType: targetSet
-                          targetRelationDefinition: editor
-                          targetRelationDefinitionNamespace: doc
-```
+model AuthZ 1.0
+
+type user
+
+type org
+  relation member: user
+  relation parent: org
+
+type folder
+  relation parent: folder
+  relation owner: user | org#member
+  relation editor: user 
+  relation viewer: user 
+
+  permission can_create: owner | parent.owner
+  permission can_edit: editor | can_create
+  permission can_view: viewer | can_edit
+
+type doc
+  relation parent: folder
+  relation owner: user | org#member
+  relation editor: user 
+  relation viewer: user 
+
+  permission can_create: owner | parent.owner
+  permission can_edit: editor | can_create
+  permission can_view: viewer | can_edit
+```  
+
 
 Descope SDK allows you to fully manage the schema and relations as well as perform simple (and not so simple) checks regarding the existence of relations.
 
 ```go
-// Load the existing schema
-schema, err := descopeClient.Management.Authz().LoadSchema(context.Background())
-if err != nil {
-    // handle error
-}
-
-// Save schema and make sure to remove all namespaces not listed
-err := descopeClient.Management.Authz().SaveSchema(context.Background(), schema, true)
+// Save schema
+err := descopeClient.Management.FGA().SaveSchema(context.Background(), schema)
 
 // Create a relation between a resource and user
-err := descopeClient.Management.Authz().CreateRelations(context.Background(), []*descope.AuthzRelation {
-    {
-        resource: "some-doc",
-        relationDefinition: "owner",
-        namespace: "doc",
-        target: "u1",
+err := descopeClient.Management.FGA().CreateRelations(context.Background(), []*descope.FGARelation {
+    {   
+		Resource: "some-doc", 
+		ResourceType: "doc", 
+		Relation: "owner", 
+		Target: "u1", 
+		TargetType: "user"
     },
 })
 
-// Check if target has the relevant relation
-// The answer should be true because an owner is also a viewer
-relations, err := descopeClient.Management.Authz().HasRelations(context.Background(), []*descope.AuthzRelationQuery{
+// Check if target has a relevant relation
+// The answer should be true because an owner can also view
+relations, err := descopeClient.Management.FGA().Check(context.Background(), []*descope.FGARelation{
     {
-        resource: "some-doc",
-        relationDefinition: "viewer",
-        namespace: "doc",
-        target: "u1",
+		Resource: "some-doc", 
+		ResourceType: "doc", 
+		Relation: "can_view", 
+		Target: "u1", 
+		TargetType: "user"
     }
 })
 ```
+
 
 ### Manage Project
 

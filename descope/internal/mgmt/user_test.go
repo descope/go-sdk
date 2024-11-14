@@ -146,6 +146,7 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 	users = append(users, u1, u2)
 
 	sendSMS := true
+	sendMail := true
 
 	called := false
 	invite := true
@@ -155,10 +156,17 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		if invite {
-			assert.EqualValues(t, true, req["invite"])
-			assert.EqualValues(t, "https://some.domain.com", req["inviteUrl"])
-			assert.Nil(t, req["sendMail"])
-			assert.EqualValues(t, true, req["sendSMS"])
+			if sendSMS {
+				assert.EqualValues(t, true, req["invite"])
+				assert.EqualValues(t, "https://some.domain.com", req["inviteUrl"])
+				assert.Nil(t, req["sendMail"])
+				assert.EqualValues(t, true, req["sendSMS"])
+			} else if sendMail {
+				assert.EqualValues(t, true, req["invite"])
+				assert.EqualValues(t, "https://some.domain.com", req["inviteUrl"])
+				assert.EqualValues(t, true, req["sendMail"])
+				assert.Nil(t, req["sendSMS"])
+			}
 		} else {
 			assert.Nil(t, req["invite"])
 		}
@@ -194,6 +202,20 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 	res, err := m.User().InviteBatch(context.Background(), users, &descope.InviteOptions{
 		InviteURL: "https://some.domain.com",
 		SendSMS:   &sendSMS,
+	})
+	require.True(t, called)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Len(t, res.CreatedUsers, 1)
+	require.Len(t, res.FailedUsers, 1)
+	assert.EqualValues(t, u1.Email, res.CreatedUsers[0].Email)
+	assert.EqualValues(t, u2.Email, res.FailedUsers[0].User.Email)
+	assert.EqualValues(t, "some failure", res.FailedUsers[0].Failure)
+
+	sendSMS = false
+	res, err = m.User().InviteBatch(context.Background(), users, &descope.InviteOptions{
+		InviteURL: "https://some.domain.com",
+		SendMail:  &sendMail,
 	})
 	require.True(t, called)
 	require.NoError(t, err)

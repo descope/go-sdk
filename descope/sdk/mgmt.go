@@ -802,6 +802,20 @@ type Authz interface {
 	GetModified(ctx context.Context, since time.Time) (*descope.AuthzModified, error)
 }
 
+type FGA interface {
+	// SaveSchema creates a new schema for the project.
+	SaveSchema(ctx context.Context, schema *descope.FGASchema) error
+
+	// CreateRelation creates new relations for the project.
+	CreateRelations(ctx context.Context, relations []*descope.FGARelation) error
+
+	// DeleteRelations deletes relations for the project.
+	DeleteRelations(ctx context.Context, relations []*descope.FGARelation) error
+
+	// Check checks if the given relations are satisfied.
+	Check(ctx context.Context, relations []*descope.FGARelation) ([]*descope.FGACheck, error)
+}
+
 // Provides various APIs for managing a Descope project programmatically. A management key must
 // be provided in the DecopeClient configuration or by setting the DESCOPE_MANAGEMENT_KEY
 // environment variable. Management keys can be generated in the Descope console.
@@ -847,4 +861,7 @@ type Management interface {
 
 	// Provides functions for ReBAC authz management
 	Authz() Authz
+
+	// Provides functions for FGA authz management
+	FGA() FGA
 }
