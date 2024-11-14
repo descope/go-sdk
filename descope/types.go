@@ -824,20 +824,6 @@ type Group struct {
 	Members []GroupMember `json:"members,omitempty"`
 }
 
-type Flow struct {
-	FlowID     string         `json:"flowId"`
-	Metadata   map[string]any `json:"metadata"`
-	Contents   map[string]any `json:"contents"`
-	Screens    []*FlowScreen  `json:"screens,omitempty"`
-	References map[string]any `json:"references,omitempty"`
-}
-
-type FlowScreen struct {
-	ScreenID     string           `json:"screenId"`
-	Contents     map[string]any   `json:"contents"`
-	Interactions []map[string]any `json:"interactions,omitempty"`
-}
-
 type FlowList struct {
 	Flows []*FlowListEnty `json:"flows"`
 }
@@ -847,12 +833,6 @@ type FlowListEnty struct {
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
 	Disabled    bool   `json:"disabled,omitempty"`
-}
-
-type Theme struct {
-	Styles            map[string]any `json:"styles"`
-	References        map[string]any `json:"references,omitempty"`
-	ComponentsVersion string         `json:"componentsVersion,omitempty"`
 }
 
 type AuditRecord struct {

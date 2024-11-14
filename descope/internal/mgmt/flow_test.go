@@ -42,10 +42,9 @@ func TestDeleteFlowsFailure(t *testing.T) {
 
 func TestExportFlowSuccess(t *testing.T) {
 	flowID := "abc"
-	flow := &descope.Flow{
-		FlowID:   "xyz",
-		Metadata: map[string]any{"foo": "bar"},
-		Screens:  []*descope.FlowScreen{{ScreenID: "qux"}},
+	flow := map[string]any{
+		"flowId":   "xyz",
+		"metadata": map[string]any{"foo": "bar"},
 	}
 	body := map[string]any{
 		"flow": flow,
@@ -71,10 +70,9 @@ func TestExportFlowMissingArgument(t *testing.T) {
 
 func TestImportFlowSuccess(t *testing.T) {
 	flowID := "abc"
-	flow := &descope.Flow{
-		FlowID:   "xyz",
-		Metadata: map[string]any{"foo": "bar"},
-		Screens:  []*descope.FlowScreen{{ScreenID: "qux", Contents: map[string]any{}}},
+	flow := map[string]any{
+		"flowId":   "xyz",
+		"metadata": map[string]any{"foo": "bar"},
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -84,7 +82,6 @@ func TestImportFlowSuccess(t *testing.T) {
 		flow := req["flow"].(map[string]any)
 		require.Equal(t, flowID, flow["flowId"])
 		require.Equal(t, map[string]any{"foo": "bar"}, flow["metadata"])
-		require.Equal(t, []any{map[string]any{"screenId": "qux", "contents": map[string]any{}}}, flow["screens"])
 	}, nil))
 	err := mgmt.Flow().ImportFlow(context.Background(), flowID, flow)
 	require.NoError(t, err)
@@ -93,13 +90,13 @@ func TestImportFlowSuccess(t *testing.T) {
 func TestImportFlowMissingArgument(t *testing.T) {
 	flowID := ""
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.Flow().ImportFlow(context.Background(), flowID, &descope.Flow{})
+	err := mgmt.Flow().ImportFlow(context.Background(), flowID, map[string]any{})
 	require.ErrorContains(t, err, utils.NewInvalidArgumentError("flowID").Message)
 }
 
 func TestExportThemeSuccess(t *testing.T) {
-	theme := &descope.Theme{
-		Styles: map[string]any{"foo": "bar"},
+	theme := map[string]any{
+		"styles": map[string]any{"foo": "bar"},
 	}
 	body := map[string]any{
 		"theme": theme,
@@ -113,8 +110,8 @@ func TestExportThemeSuccess(t *testing.T) {
 }
 
 func TestImportThemeSuccess(t *testing.T) {
-	theme := &descope.Theme{
-		Styles: map[string]any{"foo": "bar"},
+	theme := map[string]any{
+		"styles": map[string]any{"foo": "bar"},
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")

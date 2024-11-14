@@ -643,23 +643,23 @@ type Flow interface {
 	DeleteFlows(ctx context.Context, flowIDs []string) error
 
 	// Export a flow and its screens by the flow id.
-	ExportFlow(ctx context.Context, flowID string) (*descope.Flow, error)
+	ExportFlow(ctx context.Context, flowID string) (map[string]any, error)
 
 	// Import a flow and its screens as a given flow id. This will override the existing flow.
 	//
-	// The value of the flowID parameter will override whatever is set in the flow object.
+	// The value of the flowID parameter will override whatever is set in the flow data.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
-	ImportFlow(ctx context.Context, flowID string, flow *descope.Flow) error
+	ImportFlow(ctx context.Context, flowID string, flow map[string]any) error
 
 	// Export the project theme.
-	ExportTheme(ctx context.Context) (*descope.Theme, error)
+	ExportTheme(ctx context.Context) (map[string]any, error)
 
 	// Import a given theme. This will override the existing project theme.
 	// Returns the new theme after a successful import or an error on failure.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
-	ImportTheme(ctx context.Context, theme *descope.Theme) error
+	ImportTheme(ctx context.Context, theme map[string]any) error
 }
 
 // Provides functions for exporting and importing project settings, flows, styles, etc.

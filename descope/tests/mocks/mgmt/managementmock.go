@@ -1134,17 +1134,17 @@ type MockFlow struct {
 	DeleteFlowsError  error
 
 	ExportFlowAssert   func(flowID string)
-	ExportFlowResponse *descope.Flow
+	ExportFlowResponse map[string]any
 	ExportFlowError    error
 
 	ExportThemeAssert   func()
-	ExportThemeResponse *descope.Theme
+	ExportThemeResponse map[string]any
 	ExportThemeError    error
 
-	ImportFlowAssert func(flowID string, flow *descope.Flow)
+	ImportFlowAssert func(flowID string, flow map[string]any)
 	ImportFlowError  error
 
-	ImportThemeAssert func(theme *descope.Theme)
+	ImportThemeAssert func(theme map[string]any)
 	ImportThemeError  error
 }
 
@@ -1162,28 +1162,28 @@ func (m *MockFlow) DeleteFlows(_ context.Context, flowIDs []string) error {
 	return m.DeleteFlowsError
 }
 
-func (m *MockFlow) ExportFlow(_ context.Context, flowID string) (*descope.Flow, error) {
+func (m *MockFlow) ExportFlow(_ context.Context, flowID string) (map[string]any, error) {
 	if m.ExportFlowAssert != nil {
 		m.ExportFlowAssert(flowID)
 	}
 	return m.ExportFlowResponse, m.ExportFlowError
 }
 
-func (m *MockFlow) ExportTheme(_ context.Context) (*descope.Theme, error) {
+func (m *MockFlow) ExportTheme(_ context.Context) (map[string]any, error) {
 	if m.ExportThemeAssert != nil {
 		m.ExportThemeAssert()
 	}
 	return m.ExportThemeResponse, m.ExportThemeError
 }
 
-func (m *MockFlow) ImportFlow(_ context.Context, flowID string, flow *descope.Flow) error {
+func (m *MockFlow) ImportFlow(_ context.Context, flowID string, flow map[string]any) error {
 	if m.ImportFlowAssert != nil {
 		m.ImportFlowAssert(flowID, flow)
 	}
 	return m.ImportFlowError
 }
 
-func (m *MockFlow) ImportTheme(_ context.Context, theme *descope.Theme) error {
+func (m *MockFlow) ImportTheme(_ context.Context, theme map[string]any) error {
 	if m.ImportThemeAssert != nil {
 		m.ImportThemeAssert(theme)
 	}

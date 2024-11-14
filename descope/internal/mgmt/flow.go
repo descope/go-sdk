@@ -31,7 +31,7 @@ func (r *flow) DeleteFlows(ctx context.Context, flowIDs []string) error {
 	return err
 }
 
-func (r *flow) ExportFlow(ctx context.Context, flowID string) (*descope.Flow, error) {
+func (r *flow) ExportFlow(ctx context.Context, flowID string) (map[string]any, error) {
 	if flowID == "" {
 		return nil, utils.NewInvalidArgumentError("flowID")
 	}
@@ -45,11 +45,11 @@ func (r *flow) ExportFlow(ctx context.Context, flowID string) (*descope.Flow, er
 	return unmarshalFlow(res)
 }
 
-func (r *flow) ImportFlow(ctx context.Context, flowID string, flow *descope.Flow) error {
+func (r *flow) ImportFlow(ctx context.Context, flowID string, flow map[string]any) error {
 	if flowID == "" {
 		return utils.NewInvalidArgumentError("flowID")
 	}
-	flow.FlowID = flowID
+	flow["flowId"] = flowID
 	body := map[string]any{
 		"flow": flow,
 	}
@@ -57,7 +57,7 @@ func (r *flow) ImportFlow(ctx context.Context, flowID string, flow *descope.Flow
 	return err
 }
 
-func (r *flow) ExportTheme(ctx context.Context) (*descope.Theme, error) {
+func (r *flow) ExportTheme(ctx context.Context) (map[string]any, error) {
 	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementThemeExport(), nil, nil, r.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -65,7 +65,7 @@ func (r *flow) ExportTheme(ctx context.Context) (*descope.Theme, error) {
 	return unmarshalTheme(res)
 }
 
-func (r *flow) ImportTheme(ctx context.Context, theme *descope.Theme) error {
+func (r *flow) ImportTheme(ctx context.Context, theme map[string]any) error {
 	if theme == nil {
 		return utils.NewInvalidArgumentError("theme")
 	}
@@ -86,9 +86,9 @@ func unmarshalFlowsResponse(res *api.HTTPResponse) (*descope.FlowList, error) {
 	return a, nil
 }
 
-func unmarshalFlow(res *api.HTTPResponse) (*descope.Flow, error) {
+func unmarshalFlow(res *api.HTTPResponse) (map[string]any, error) {
 	type flowResponse struct {
-		Flow *descope.Flow `json:"flow"`
+		Flow map[string]any `json:"flow"`
 	}
 	var a *flowResponse
 	err := utils.Unmarshal([]byte(res.BodyStr), &a)
@@ -98,9 +98,9 @@ func unmarshalFlow(res *api.HTTPResponse) (*descope.Flow, error) {
 	return a.Flow, nil
 }
 
-func unmarshalTheme(res *api.HTTPResponse) (*descope.Theme, error) {
+func unmarshalTheme(res *api.HTTPResponse) (map[string]any, error) {
 	type themeResponse struct {
-		Theme *descope.Theme `json:"theme"`
+		Theme map[string]any `json:"theme"`
 	}
 	var a *themeResponse
 	err := utils.Unmarshal([]byte(res.BodyStr), &a)
