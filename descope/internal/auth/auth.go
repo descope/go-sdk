@@ -231,37 +231,6 @@ func (auth *authenticationService) logoutAll(request *http.Request, w http.Respo
 	return nil
 }
 
-func (auth *authenticationService) LogoutPrevious(request *http.Request) error {
-	return auth.logoutPrevious(request)
-}
-
-func (auth *authenticationService) LogoutPreviousWithToken(refreshToken string) error {
-	request := &http.Request{Header: http.Header{}}
-	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: refreshToken})
-	return auth.logoutPrevious(request)
-}
-
-func (auth *authenticationService) logoutPrevious(request *http.Request) error {
-	if request == nil {
-		return utils.NewInvalidArgumentError("request")
-	}
-
-	_, refreshToken := provideTokens(request)
-	if refreshToken == "" {
-		logger.LogDebug("Unable to find tokens from cookies")
-		return descope.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
-	}
-
-	_, err := auth.validateJWT(refreshToken)
-	if err != nil {
-		logger.LogDebug("Invalid refresh token")
-		return descope.ErrRefreshToken.WithMessage("Invalid refresh token")
-	}
-
-	_, err = auth.client.DoPostRequest(request.Context(), api.Routes.LogoutPrevious(), nil, &api.HTTPRequest{}, refreshToken)
-	return err
-}
-
 func (auth *authenticationService) Me(request *http.Request) (*descope.UserResponse, error) {
 	if request == nil {
 		return nil, utils.NewInvalidArgumentError("request")
