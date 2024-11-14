@@ -1127,30 +1127,28 @@ func (m *MockGroup) LoadAllGroupMembers(_ context.Context, tenantID, groupID str
 
 type MockFlow struct {
 	ListFlowsAssert   func()
-	ListFlowsResponse *descope.FlowsResponse
+	ListFlowsResponse *descope.FlowList
 	ListFlowsError    error
 
 	DeleteFlowsAssert func(flowIDs []string)
 	DeleteFlowsError  error
 
 	ExportFlowAssert   func(flowID string)
-	ExportFlowResponse *descope.FlowResponse
+	ExportFlowResponse map[string]any
 	ExportFlowError    error
 
 	ExportThemeAssert   func()
-	ExportThemeResponse *descope.Theme
+	ExportThemeResponse map[string]any
 	ExportThemeError    error
 
-	ImportFlowAssert   func(flowID string, flow *descope.Flow, screens []*descope.Screen)
-	ImportFlowResponse *descope.FlowResponse
-	ImportFlowError    error
+	ImportFlowAssert func(flowID string, flow map[string]any)
+	ImportFlowError  error
 
-	ImportThemeAssert   func(theme *descope.Theme)
-	ImportThemeResponse *descope.Theme
-	ImportThemeError    error
+	ImportThemeAssert func(theme map[string]any)
+	ImportThemeError  error
 }
 
-func (m *MockFlow) ListFlows(_ context.Context) (*descope.FlowsResponse, error) {
+func (m *MockFlow) ListFlows(_ context.Context) (*descope.FlowList, error) {
 	if m.ListFlowsAssert != nil {
 		m.ListFlowsAssert()
 	}
@@ -1164,32 +1162,32 @@ func (m *MockFlow) DeleteFlows(_ context.Context, flowIDs []string) error {
 	return m.DeleteFlowsError
 }
 
-func (m *MockFlow) ExportFlow(_ context.Context, flowID string) (*descope.FlowResponse, error) {
+func (m *MockFlow) ExportFlow(_ context.Context, flowID string) (map[string]any, error) {
 	if m.ExportFlowAssert != nil {
 		m.ExportFlowAssert(flowID)
 	}
 	return m.ExportFlowResponse, m.ExportFlowError
 }
 
-func (m *MockFlow) ExportTheme(_ context.Context) (*descope.Theme, error) {
+func (m *MockFlow) ExportTheme(_ context.Context) (map[string]any, error) {
 	if m.ExportThemeAssert != nil {
 		m.ExportThemeAssert()
 	}
 	return m.ExportThemeResponse, m.ExportThemeError
 }
 
-func (m *MockFlow) ImportFlow(_ context.Context, flowID string, flow *descope.Flow, screens []*descope.Screen) (*descope.FlowResponse, error) {
+func (m *MockFlow) ImportFlow(_ context.Context, flowID string, flow map[string]any) error {
 	if m.ImportFlowAssert != nil {
-		m.ImportFlowAssert(flowID, flow, screens)
+		m.ImportFlowAssert(flowID, flow)
 	}
-	return m.ImportFlowResponse, m.ImportFlowError
+	return m.ImportFlowError
 }
 
-func (m *MockFlow) ImportTheme(_ context.Context, theme *descope.Theme) (*descope.Theme, error) {
+func (m *MockFlow) ImportTheme(_ context.Context, theme map[string]any) error {
 	if m.ImportThemeAssert != nil {
 		m.ImportThemeAssert(theme)
 	}
-	return m.ImportThemeResponse, m.ImportThemeError
+	return m.ImportThemeError
 }
 
 // Mock Project

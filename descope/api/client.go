@@ -976,19 +976,19 @@ func (e *endpoints) ManagementDeleteFlows() string {
 }
 
 func (e *endpoints) ManagementFlowExport() string {
-	return path.Join(e.version, e.mgmt.flowExport)
+	return path.Join(e.versionV2, e.mgmt.flowExport)
 }
 
 func (e *endpoints) ManagementFlowImport() string {
-	return path.Join(e.version, e.mgmt.flowImport)
+	return path.Join(e.versionV2, e.mgmt.flowImport)
 }
 
 func (e *endpoints) ManagementThemeExport() string {
-	return path.Join(e.version, e.mgmt.themeExport)
+	return path.Join(e.versionV2, e.mgmt.themeExport)
 }
 
 func (e *endpoints) ManagementThemeImport() string {
-	return path.Join(e.version, e.mgmt.themeImport)
+	return path.Join(e.versionV2, e.mgmt.themeImport)
 }
 
 func (e *endpoints) ManagementProjectsList() string {

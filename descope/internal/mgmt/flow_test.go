@@ -13,9 +13,8 @@ import (
 )
 
 func TestListFlowsSuccess(t *testing.T) {
-	response := &descope.FlowsResponse{
-		Flows: []*descope.FlowMetadata{{ID: "abc"}},
-		Total: 1,
+	response := &descope.FlowList{
+		Flows: []*descope.FlowListEnty{{FlowID: "abc"}},
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -43,19 +42,22 @@ func TestDeleteFlowsFailure(t *testing.T) {
 
 func TestExportFlowSuccess(t *testing.T) {
 	flowID := "abc"
-	response := &descope.FlowResponse{
-		Flow:    &descope.Flow{FlowMetadata: descope.FlowMetadata{ID: flowID}},
-		Screens: []*descope.Screen{},
+	flow := map[string]any{
+		"flowId":   "xyz",
+		"metadata": map[string]any{"foo": "bar"},
+	}
+	body := map[string]any{
+		"flow": flow,
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, flowID, req["flowId"])
-	}, response))
+	}, body))
 	res, err := mgmt.Flow().ExportFlow(context.Background(), flowID)
 	require.NoError(t, err)
-	assert.EqualValues(t, response, res)
+	assert.EqualValues(t, flow, res)
 }
 
 func TestExportFlowMissingArgument(t *testing.T) {
@@ -68,61 +70,62 @@ func TestExportFlowMissingArgument(t *testing.T) {
 
 func TestImportFlowSuccess(t *testing.T) {
 	flowID := "abc"
-	response := &descope.FlowResponse{
-		Flow:    &descope.Flow{FlowMetadata: descope.FlowMetadata{ID: flowID}},
-		Screens: []*descope.Screen{{}},
+	flow := map[string]any{
+		"flowId":   "xyz",
+		"metadata": map[string]any{"foo": "bar"},
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		require.Equal(t, flowID, req["flowId"])
-		require.NotEmpty(t, req["flow"])
-		require.Len(t, req["screens"], 1)
-	}, response))
-	res, err := mgmt.Flow().ImportFlow(context.Background(), flowID, response.Flow, response.Screens)
+		require.NotNil(t, req["flow"])
+		flow := req["flow"].(map[string]any)
+		require.Equal(t, flowID, flow["flowId"])
+		require.Equal(t, map[string]any{"foo": "bar"}, flow["metadata"])
+	}, nil))
+	err := mgmt.Flow().ImportFlow(context.Background(), flowID, flow)
 	require.NoError(t, err)
-	assert.EqualValues(t, response, res)
 }
 
 func TestImportFlowMissingArgument(t *testing.T) {
 	flowID := ""
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := mgmt.Flow().ImportFlow(context.Background(), flowID, &descope.Flow{}, nil)
+	err := mgmt.Flow().ImportFlow(context.Background(), flowID, map[string]any{})
 	require.ErrorContains(t, err, utils.NewInvalidArgumentError("flowID").Message)
-	assert.Nil(t, res)
 }
 
 func TestExportThemeSuccess(t *testing.T) {
-	theme := &descope.Theme{
-		ID: "aa",
+	theme := map[string]any{
+		"styles": map[string]any{"foo": "bar"},
+	}
+	body := map[string]any{
+		"theme": theme,
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
-	}, theme))
+	}, body))
 	res, err := mgmt.Flow().ExportTheme(context.Background())
 	require.NoError(t, err)
 	assert.EqualValues(t, theme, res)
 }
 
 func TestImportThemeSuccess(t *testing.T) {
-	theme := &descope.Theme{
-		ID: "asas",
+	theme := map[string]any{
+		"styles": map[string]any{"foo": "bar"},
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.NotEmpty(t, req["theme"])
-	}, theme))
-	res, err := mgmt.Flow().ImportTheme(context.Background(), theme)
+		assert.Equal(t, map[string]any{"styles": map[string]any{"foo": "bar"}}, req["theme"])
+	}, nil))
+	err := mgmt.Flow().ImportTheme(context.Background(), theme)
 	require.NoError(t, err)
-	assert.EqualValues(t, theme, res)
 }
 
 func TestImportThemeMissingArgument(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := mgmt.Flow().ImportTheme(context.Background(), nil)
+	err := mgmt.Flow().ImportTheme(context.Background(), nil)
 	require.ErrorContains(t, err, utils.NewInvalidArgumentError("theme").Message)
-	assert.Nil(t, res)
 }
