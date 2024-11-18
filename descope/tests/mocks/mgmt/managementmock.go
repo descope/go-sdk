@@ -283,6 +283,11 @@ type MockUser struct {
 	SearchAllTotalResponse int
 	SearchAllError         error
 
+	SearchAllTestUsersAssert        func(options *descope.UserSearchOptions)
+	SearchAllTestUsersResponse      []*descope.UserResponse
+	SearchAllTestUsersTotalResponse int
+	SearchAllTestUsersError         error
+
 	ActivateAssert   func(loginID string)
 	ActivateResponse *descope.UserResponse
 	ActivateError    error
@@ -515,6 +520,13 @@ func (m *MockUser) SearchAll(_ context.Context, options *descope.UserSearchOptio
 		m.SearchAllAssert(options)
 	}
 	return m.SearchAllResponse, m.SearchAllTotalResponse, m.SearchAllError
+}
+
+func (m *MockUser) SearchAllTestUsers(_ context.Context, options *descope.UserSearchOptions) ([]*descope.UserResponse, int, error) {
+	if m.SearchAllTestUsersAssert != nil {
+		m.SearchAllTestUsersAssert(options)
+	}
+	return m.SearchAllTestUsersResponse, m.SearchAllTestUsersTotalResponse, m.SearchAllTestUsersError
 }
 
 func (m *MockUser) Activate(_ context.Context, loginID string) (*descope.UserResponse, error) {

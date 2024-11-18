@@ -101,6 +101,7 @@ var (
 			ssoApplicationLoad:                 "mgmt/sso/idp/app/load",
 			ssoApplicationLoadAll:              "mgmt/sso/idp/apps/load",
 			userCreate:                         "mgmt/user/create",
+			testUserCreate:                     "mgmt/user/create/test",
 			userCreateBatch:                    "mgmt/user/create/batch",
 			userUpdate:                         "mgmt/user/update",
 			userPatch:                          "mgmt/user/patch",
@@ -109,6 +110,7 @@ var (
 			userImport:                         "mgmt/user/import",
 			userLoad:                           "mgmt/user",
 			userSearchAll:                      "mgmt/user/search",
+			testUserSearchAll:                  "mgmt/user/search/test",
 			userUpdateStatus:                   "mgmt/user/update/status",
 			userUpdateLoginID:                  "mgmt/user/update/loginid",
 			userUpdateEmail:                    "mgmt/user/update/email",
@@ -300,6 +302,7 @@ type mgmtEndpoints struct {
 	ssoApplicationLoadAll    string
 
 	userCreate                string
+	testUserCreate            string
 	userCreateBatch           string
 	userUpdate                string
 	userPatch                 string
@@ -308,6 +311,7 @@ type mgmtEndpoints struct {
 	userImport                string
 	userLoad                  string
 	userSearchAll             string
+	testUserSearchAll         string
 	userUpdateStatus          string
 	userUpdateLoginID         string
 	userUpdateEmail           string
@@ -709,6 +713,10 @@ func (e *endpoints) ManagementUserCreate() string {
 	return path.Join(e.version, e.mgmt.userCreate)
 }
 
+func (e *endpoints) ManagementTestUserCreate() string {
+	return path.Join(e.version, e.mgmt.testUserCreate)
+}
+
 func (e *endpoints) ManagementUserCreateBatch() string {
 	return path.Join(e.version, e.mgmt.userCreateBatch)
 }
@@ -739,6 +747,10 @@ func (e *endpoints) ManagementUserLoad() string {
 
 func (e *endpoints) ManagementUserSearchAll() string {
 	return path.Join(e.versionV2, e.mgmt.userSearchAll)
+}
+
+func (e *endpoints) ManagementTestUserSearchAll() string {
+	return path.Join(e.versionV2, e.mgmt.testUserSearchAll)
 }
 
 func (e *endpoints) ManagementUserUpdateStatus() string {

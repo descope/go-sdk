@@ -1614,6 +1614,15 @@ user, err := descopeClient.Management.User().CreateTestUser(context.Background()
     {TenantID: "tenant-ID2"},
 })
 
+// Search all test users, optionally according to tenant and/or role filter
+// Results can be paginated using the limit and page parameters
+usersResp, total, err := descopeClient.Management.User().SearchAllTestUsers(context.Background(), &descope.UserSearchOptions{TenantIDs: []string{"my-tenant-id"}})
+if err == nil {
+    for _, user := range usersResp {
+        // Do something
+    }
+}
+
 // Now test user got created, and this user will be available until you delete it,
 // you can use any management operation for test user CRUD.
 // You can also delete all test users.

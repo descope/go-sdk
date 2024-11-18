@@ -241,6 +241,14 @@ type User interface {
 	// Returns slice of users and total number of users for the query
 	SearchAll(ctx context.Context, options *descope.UserSearchOptions) ([]*descope.UserResponse, int, error)
 
+	// Search all test users according to given filters
+	//
+	// The options optional parameter allows to fine-tune the search filters
+	// and results. Using nil will result in a filter-less query with a set amount of
+	// results.
+	// Returns slice of users and total number of users for the query
+	SearchAllTestUsers(ctx context.Context, options *descope.UserSearchOptions) ([]*descope.UserResponse, int, error)
+
 	// Activate an existing user.
 	Activate(ctx context.Context, loginID string) (*descope.UserResponse, error)
 
