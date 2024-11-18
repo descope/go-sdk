@@ -306,11 +306,12 @@ func (to *Token) IsMFA() bool {
 }
 
 type LoginOptions struct {
-	Stepup          bool                   `json:"stepup,omitempty"`
-	MFA             bool                   `json:"mfa,omitempty"`
-	CustomClaims    map[string]interface{} `json:"customClaims,omitempty"`
-	TemplateID      string                 `json:"templateId,omitempty"`      // for overriding the default messaging template
-	TemplateOptions map[string]string      `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
+	Stepup              bool                   `json:"stepup,omitempty"`
+	MFA                 bool                   `json:"mfa,omitempty"`
+	RevokeOtherSessions bool                   `json:"revokeOtherSessions,omitempty"`
+	CustomClaims        map[string]interface{} `json:"customClaims,omitempty"`
+	TemplateID          string                 `json:"templateId,omitempty"`      // for overriding the default messaging template
+	TemplateOptions     map[string]string      `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 }
 
 func (lo *LoginOptions) IsJWTRequired() bool {
@@ -824,40 +825,15 @@ type Group struct {
 	Members []GroupMember `json:"members,omitempty"`
 }
 
-type Flow struct {
-	FlowMetadata
-	DSL  any    `json:"dsl"`
-	ETag string `json:"etag,omitempty"`
+type FlowList struct {
+	Flows []*FlowListEnty `json:"flows"`
 }
 
-type FlowMetadata struct {
-	ID          string `json:"id"`
+type FlowListEnty struct {
+	FlowID      string `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
-	Disabled    bool   `json:"disabled"`
-}
-
-type Screen struct {
-	ID           string `json:"id"`
-	FlowID       string `json:"flowId"`
-	Inputs       any    `json:"inputs,omitempty"`
-	Interactions any    `json:"interactions,omitempty"`
-	HTMLTemplate any    `json:"htmlTemplate"`
-}
-
-type FlowResponse struct {
-	Flow    *Flow     `json:"flow"`
-	Screens []*Screen `json:"screens"`
-}
-
-type FlowsResponse struct {
-	Flows []*FlowMetadata `json:"flows"`
-	Total int             `json:"total"`
-}
-
-type Theme struct {
-	ID          string `json:"id"`
-	CSSTemplate any    `json:"cssTemplate,omitempty"`
+	Disabled    bool   `json:"disabled,omitempty"`
 }
 
 type AuditRecord struct {

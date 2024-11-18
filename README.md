@@ -642,14 +642,6 @@ invalidate all user's refresh tokens. After calling this function, you must inva
 descopeClient.Auth.LogoutAll(request, w)
 ```
 
-It is also possible to sign the user out of previous session. Calling `logoutPrevious` will
-invalidate all user's refresh tokens that were generated prior to the given session.
-
-```go
-// Refresh token will be taken from the request header or cookies automatically
-descopeClient.Auth.LogoutPrevious(request)
-```
-
 ### History
 
 You can get the current session user history.

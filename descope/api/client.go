@@ -205,32 +205,30 @@ var (
 			fgaDeleteRelations:                 "mgmt/fga/relations/delete",
 			fgaCheck:                           "mgmt/fga/check",
 		},
-		logout:         "auth/logout",
-		logoutAll:      "auth/logoutall",
-		logoutPrevious: "auth/logoutprevious",
-		keys:           "/keys/",
-		refresh:        "auth/refresh",
-		selectTenant:   "auth/tenant/select",
-		me:             "auth/me",
-		meTenants:      "auth/me/tenants",
-		history:        "auth/me/history",
+		logout:       "auth/logout",
+		logoutAll:    "auth/logoutall",
+		keys:         "/keys/",
+		refresh:      "auth/refresh",
+		selectTenant: "auth/tenant/select",
+		me:           "auth/me",
+		meTenants:    "auth/me/tenants",
+		history:      "auth/me/history",
 	}
 )
 
 type endpoints struct {
-	version        string
-	versionV2      string
-	auth           authEndpoints
-	mgmt           mgmtEndpoints
-	logout         string
-	logoutAll      string
-	logoutPrevious string
-	keys           string
-	refresh        string
-	selectTenant   string
-	me             string
-	meTenants      string
-	history        string
+	version      string
+	versionV2    string
+	auth         authEndpoints
+	mgmt         mgmtEndpoints
+	logout       string
+	logoutAll    string
+	keys         string
+	refresh      string
+	selectTenant string
+	me           string
+	meTenants    string
+	history      string
 }
 
 type authEndpoints struct {
@@ -605,10 +603,6 @@ func (e *endpoints) Logout() string {
 
 func (e *endpoints) LogoutAll() string {
 	return path.Join(e.version, e.logoutAll)
-}
-
-func (e *endpoints) LogoutPrevious() string {
-	return path.Join(e.version, e.logoutPrevious)
 }
 
 func (e *endpoints) Me() string {
@@ -994,19 +988,19 @@ func (e *endpoints) ManagementDeleteFlows() string {
 }
 
 func (e *endpoints) ManagementFlowExport() string {
-	return path.Join(e.version, e.mgmt.flowExport)
+	return path.Join(e.versionV2, e.mgmt.flowExport)
 }
 
 func (e *endpoints) ManagementFlowImport() string {
-	return path.Join(e.version, e.mgmt.flowImport)
+	return path.Join(e.versionV2, e.mgmt.flowImport)
 }
 
 func (e *endpoints) ManagementThemeExport() string {
-	return path.Join(e.version, e.mgmt.themeExport)
+	return path.Join(e.versionV2, e.mgmt.themeExport)
 }
 
 func (e *endpoints) ManagementThemeImport() string {
-	return path.Join(e.version, e.mgmt.themeImport)
+	return path.Join(e.versionV2, e.mgmt.themeImport)
 }
 
 func (e *endpoints) ManagementProjectsList() string {
