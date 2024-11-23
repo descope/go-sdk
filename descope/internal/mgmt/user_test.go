@@ -3,6 +3,7 @@ package mgmt
 import (
 	"context"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/descope/go-sdk/descope"
@@ -1147,6 +1148,7 @@ func TestUserAddRoleSuccess(t *testing.T) {
 			"roleNames": []string{"foo"},
 		}}
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		assert.True(t, strings.HasPrefix(r.URL.RequestURI(), "/v2/"))
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
@@ -1457,6 +1459,7 @@ func TestUserAddTenantRoleSuccess(t *testing.T) {
 		}}
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		assert.True(t, strings.HasPrefix(r.URL.RequestURI(), "/v2/"))
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["loginId"])
