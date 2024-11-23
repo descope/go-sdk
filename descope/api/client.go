@@ -794,7 +794,7 @@ func (e *endpoints) ManagementUserSetRole() string {
 }
 
 func (e *endpoints) ManagementUserAddRole() string {
-	return path.Join(e.version, e.mgmt.userAddRole)
+	return path.Join(e.versionV2, e.mgmt.userAddRole)
 }
 
 func (e *endpoints) ManagementUserRemoveRole() string {
