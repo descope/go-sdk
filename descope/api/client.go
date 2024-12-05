@@ -204,6 +204,11 @@ var (
 			fgaCreateRelations:                 "mgmt/fga/relations",
 			fgaDeleteRelations:                 "mgmt/fga/relations/delete",
 			fgaCheck:                           "mgmt/fga/check",
+			thirdPartyApplicationCreate:        "mgmt/thirdparty/app/create",
+			thirdPartyApplicationUpdate:        "mgmt/thirdparty/app/update",
+			thirdPartyApplicationDelete:        "mgmt/thirdparty/app/delete",
+			thirdPartyApplicationLoad:          "mgmt/thirdparty/app/load",
+			thirdPartyApplicationLoadAll:       "mgmt/thirdparty/apps/load",
 		},
 		logout:       "auth/logout",
 		logoutAll:    "auth/logoutall",
@@ -421,6 +426,12 @@ type mgmtEndpoints struct {
 	fgaCreateRelations string
 	fgaDeleteRelations string
 	fgaCheck           string
+
+	thirdPartyApplicationCreate  string
+	thirdPartyApplicationUpdate  string
+	thirdPartyApplicationDelete  string
+	thirdPartyApplicationLoad    string
+	thirdPartyApplicationLoadAll string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -1125,6 +1136,26 @@ func (e *endpoints) ManagementFGADeleteRelations() string {
 
 func (e *endpoints) ManagementFGACheck() string {
 	return path.Join(e.version, e.mgmt.fgaCheck)
+}
+
+func (e *endpoints) ManagementThirdPartyApplicationCreate() string {
+	return path.Join(e.version, e.mgmt.thirdPartyApplicationCreate)
+}
+
+func (e *endpoints) ManagementThirdPartyApplicationUpdate() string {
+	return path.Join(e.version, e.mgmt.thirdPartyApplicationUpdate)
+}
+
+func (e *endpoints) ManagementThirdPartyApplicationDelete() string {
+	return path.Join(e.version, e.mgmt.thirdPartyApplicationDelete)
+}
+
+func (e *endpoints) ManagementThirdPartyApplicationLoad() string {
+	return path.Join(e.version, e.mgmt.thirdPartyApplicationLoad)
+}
+
+func (e *endpoints) ManagementThirdPartyApplicationLoadAll() string {
+	return path.Join(e.version, e.mgmt.thirdPartyApplicationLoadAll)
 }
 
 type sdkInfo struct {

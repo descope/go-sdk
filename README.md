@@ -1515,6 +1515,40 @@ apps, err = tc.DescopeClient().Management.SSOApplication().LoadAll(context.Backg
 descopeClient.DescopeClient().Management.SSOApplication().Delete(context.Background(), "appId")
 ```
 
+### Manage Third Party Applications
+
+You can create, update, delete or load third party applications:
+
+```go
+// Create third party application
+req := &descope.ThirdPartyApplicationRequest{
+	Name: "My OIDC App",
+	Logo: "data:image/jpeg;base64...",
+	LoginPageURL: "http://dummy.com",
+	PermissionsScopes: []*descope.ThirdPartyApplicationScope{
+		{Name: "read", Description: "Read all", Values: []string{"Support"}},
+	},
+	AttributesScopes: []*descope.ThirdPartyApplicationScope{
+		{Name: "base", Description: "Basic attribute requirements", Values: []string{"email", "phone"}},
+	},
+}
+appID, secret, err = descopeClient.Management.ThirdPartyApplication().Create(context.Background(), req)
+
+// Update a third party application by id
+// Update will override all fields as is. Use carefully.
+err = tc.DescopeClient().Management.ThirdPartyApplication().Update(context.TODO(), &descope.ThirdPartyApplicationRequest{ID: "my-id", Name: "my new name"})
+
+// Load third party application by id
+app, err = tc.DescopeClient().Management.ThirdPartyApplication().Load(context.Background(), "appId")
+
+// Load all third party applications
+apps, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadAll(context.Background())
+
+// Delete a third party application.
+// Deletion cannot be undone. Use carefully.
+descopeClient.DescopeClient().Management.ThirdPartyApplication().Delete(context.Background(), "appId")
+```
+
 ## Code Examples
 
 You can find various usage examples in the [examples folder](https://github.com/descope/go-sdk/blob/main/examples).

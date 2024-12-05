@@ -987,3 +987,32 @@ const (
 	EnvironmentVariableManagementKey = "DESCOPE_MANAGEMENT_KEY"
 	EnvironmentVariableBaseURL       = "DESCOPE_BASE_URL"
 )
+
+type ThirdPartyApplicationScope struct {
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	Values      []string `json:"values"`
+}
+
+type ThirdPartyApplication struct {
+	ID                   string                        `json:"id"`
+	Name                 string                        `json:"name"`
+	Description          string                        `json:"description"`
+	Logo                 string                        `json:"logo"`
+	LoginPageURL         string                        `json:"loginPageUrl"`
+	ClientID             string                        `json:"clientId"`
+	ApprovedCallbackUrls []string                      `json:"approvedCallbackUrls"`
+	PermissionsScopes    []*ThirdPartyApplicationScope `json:"permissionsScopes"`
+	AttributesScopes     []*ThirdPartyApplicationScope `json:"attributesScopes"`
+}
+
+type ThirdPartyApplicationRequest struct {
+	ID                   string                        `json:"id"`
+	Name                 string                        `json:"name"`
+	Description          string                        `json:"description"`
+	Logo                 string                        `json:"logo"`
+	LoginPageURL         string                        `json:"loginPageUrl"`
+	ApprovedCallbackUrls []string                      `json:"approvedCallbackUrls"`
+	PermissionsScopes    []*ThirdPartyApplicationScope `json:"permissionsScopes"`
+	AttributesScopes     []*ThirdPartyApplicationScope `json:"attributesScopes"`
+}
