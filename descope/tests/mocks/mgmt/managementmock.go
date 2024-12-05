@@ -24,6 +24,7 @@ type MockManagement struct {
 	*MockAudit
 	*MockAuthz
 	*MockFGA
+	*MockThirdPartyApplication
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -84,6 +85,10 @@ func (m *MockManagement) Password() sdk.PasswordManagement {
 
 func (m *MockManagement) FGA() sdk.FGA {
 	return m.MockFGA
+}
+
+func (m *MockManagement) ThirdPartyApplication() sdk.ThirdPartyApplication {
+	return m.MockThirdPartyApplication
 }
 
 // Mock JWT
@@ -1523,4 +1528,57 @@ func (m *MockFGA) Check(_ context.Context, relations []*descope.FGARelation) ([]
 		m.CheckAssert(relations)
 	}
 	return m.CheckResponse, m.CheckError
+}
+
+// Mock Third Party Application
+type MockThirdPartyApplication struct {
+	UpdateAssert func(*descope.ThirdPartyApplicationRequest) error
+	UpdateError  error
+
+	CreateAssert         func(*descope.ThirdPartyApplicationRequest) error
+	CreateIDResponse     string
+	CreateSecretResponse string
+	CreateError          error
+
+	DeleteAssert func(id string) error
+	DeleteError  error
+
+	LoadAssert   func(id string)
+	LoadResponse *descope.ThirdPartyApplication
+	LoadError    error
+
+	LoadAllResponse []*descope.ThirdPartyApplication
+	LoadAllError    error
+}
+
+func (m *MockThirdPartyApplication) Create(_ context.Context, app *descope.ThirdPartyApplicationRequest) (string, string, error) {
+	if m.CreateAssert != nil {
+		m.CreateAssert(app)
+	}
+	return m.CreateIDResponse, m.CreateSecretResponse, m.CreateError
+}
+
+func (m *MockThirdPartyApplication) Update(_ context.Context, app *descope.ThirdPartyApplicationRequest) error {
+	if m.UpdateAssert != nil {
+		m.UpdateAssert(app)
+	}
+	return m.UpdateError
+}
+
+func (m *MockThirdPartyApplication) Delete(_ context.Context, id string) error {
+	if m.DeleteAssert != nil {
+		m.DeleteAssert(id)
+	}
+	return m.DeleteError
+}
+
+func (m *MockThirdPartyApplication) Load(_ context.Context, id string) (*descope.ThirdPartyApplication, error) {
+	if m.LoadAssert != nil {
+		m.LoadAssert(id)
+	}
+	return m.LoadResponse, m.LoadError
+}
+
+func (m *MockThirdPartyApplication) LoadAll(_ context.Context) ([]*descope.ThirdPartyApplication, error) {
+	return m.LoadAllResponse, m.LoadAllError
 }
