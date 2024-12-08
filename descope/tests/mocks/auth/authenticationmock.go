@@ -509,7 +509,7 @@ func (m *MockSAML) ExchangeToken(_ context.Context, code string, w http.Response
 // Mock SSO
 
 type MockSSO struct {
-	StartAssert   func(tenant string, redirectURL string, prompt string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
+	StartAssert   func(tenant string, redirectURL string, prompt string, ssoID string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
 	StartError    error
 	StartResponse string
 
@@ -518,9 +518,9 @@ type MockSSO struct {
 	ExchangeTokenResponse *descope.AuthenticationInfo
 }
 
-func (m *MockSSO) Start(_ context.Context, tenant string, redirectURL string, prompt string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
+func (m *MockSSO) Start(_ context.Context, tenant string, redirectURL string, prompt string, ssoID string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
 	if m.StartAssert != nil {
-		m.StartAssert(tenant, redirectURL, prompt, r, loginOptions, w)
+		m.StartAssert(tenant, redirectURL, prompt, ssoID, r, loginOptions, w)
 	}
 	return m.StartResponse, m.StartError
 }
