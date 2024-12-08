@@ -261,7 +261,8 @@ type SSOServiceProvider interface {
 	// return will be the redirect URL that needs to return to client
 	// and finalize with the ExchangeToken call
 	// prompt argument relevant only in case tenant configured with AuthType OIDC
-	Start(ctx context.Context, tenant string, returnURL string, prompt string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (redirectURL string, err error)
+	// ssoID can be used for providing the relevant SSO configuration (when having multiple SSO configurations per tenant)
+	Start(ctx context.Context, tenant string, returnURL string, prompt string, ssoID string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (redirectURL string, err error)
 
 	// ExchangeToken - Finalize tenant login authentication
 	// code should be extracted from the redirect URL of SAML/OIDC authentication flow

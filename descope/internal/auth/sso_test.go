@@ -29,7 +29,26 @@ func TestSSOStart(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	urlStr, err := a.SSO().Start(context.Background(), tenant, landingURL, prompt, nil, nil, w)
+	urlStr, err := a.SSO().Start(context.Background(), tenant, landingURL, prompt, "", nil, nil, w)
+	require.NoError(t, err)
+	assert.EqualValues(t, uri, urlStr)
+	assert.EqualValues(t, urlStr, w.Result().Header.Get(descope.RedirectLocationCookieName))
+	assert.EqualValues(t, http.StatusTemporaryRedirect, w.Result().StatusCode)
+}
+
+func TestSSOStartWithSSOID(t *testing.T) {
+	uri := "http://test.me"
+	tenant := "tenantID"
+	prompt := "none"
+	landingURL := "https://test.com"
+	ssoID := "lu lu"
+	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {
+		assert.EqualValues(t, fmt.Sprintf("%s?prompt=%s&redirectURL=%s&ssoId=%s&tenant=%s", composeSSOStartURL(), prompt, url.QueryEscape(landingURL), url.QueryEscape(ssoID), tenant), r.URL.RequestURI())
+		assert.Nil(t, r.Body)
+	}))
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	urlStr, err := a.SSO().Start(context.Background(), tenant, landingURL, prompt, ssoID, nil, nil, w)
 	require.NoError(t, err)
 	assert.EqualValues(t, uri, urlStr)
 	assert.EqualValues(t, urlStr, w.Result().Header.Get(descope.RedirectLocationCookieName))
@@ -44,7 +63,7 @@ func TestSSOStartFailureNoTenant(t *testing.T) {
 	landingURL := "https://test.com"
 	prompt := "none"
 	tenant := ""
-	_, err = a.SSO().Start(context.Background(), tenant, landingURL, prompt, nil, nil, w)
+	_, err = a.SSO().Start(context.Background(), tenant, landingURL, prompt, "", nil, nil, w)
 	require.ErrorIs(t, err, utils.NewInvalidArgumentError("tenant"))
 }
 
@@ -68,7 +87,7 @@ func TestSSOStartStepup(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	urlStr, err := a.SSO().Start(context.Background(), tenant, landingURL, prompt, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, w)
+	urlStr, err := a.SSO().Start(context.Background(), tenant, landingURL, prompt, "", &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, w)
 	require.NoError(t, err)
 	assert.EqualValues(t, uri, urlStr)
 	assert.EqualValues(t, urlStr, w.Result().Header.Get(descope.RedirectLocationCookieName))
@@ -82,7 +101,7 @@ func TestSSOStartInvalidForwardResponse(t *testing.T) {
 	_, err = a.SAML().Start(context.Background(), "", "", nil, nil, w)
 	require.Error(t, err)
 
-	_, err = a.SSO().Start(context.Background(), "test", "", "", nil, &descope.LoginOptions{Stepup: true}, w)
+	_, err = a.SSO().Start(context.Background(), "test", "", "", "", nil, &descope.LoginOptions{Stepup: true}, w)
 	assert.ErrorIs(t, err, descope.ErrInvalidStepUpJWT)
 }
 
