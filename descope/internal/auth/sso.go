@@ -18,7 +18,7 @@ type ssoStartResponse struct {
 	URL string `json:"url"`
 }
 
-func (auth *sso) Start(ctx context.Context, tenant string, redirectURL string, prompt string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (url string, err error) {
+func (auth *sso) Start(ctx context.Context, tenant string, redirectURL string, prompt string, ssoID string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (url string, err error) {
 	if tenant == "" {
 		return "", utils.NewInvalidArgumentError("tenant")
 	}
@@ -31,6 +31,10 @@ func (auth *sso) Start(ctx context.Context, tenant string, redirectURL string, p
 	if len(prompt) > 0 {
 		m["prompt"] = prompt
 	}
+	if len(ssoID) > 0 {
+		m["ssoId"] = ssoID
+	}
+
 	var pswd string
 	if loginOptions.IsJWTRequired() {
 		pswd, err = getValidRefreshToken(r)
