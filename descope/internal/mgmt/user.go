@@ -28,7 +28,7 @@ type createUserRequest struct {
 	roles              []string
 	tenants            []*descope.AssociatedTenant
 	invite             bool
-	templateId         string
+	templateID         string
 	test               bool
 	customAttributes   map[string]any
 	verifiedEmail      *bool
@@ -77,9 +77,9 @@ func (u *user) create(ctx context.Context, loginID, email, phone, displayName, g
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
-	var templateId string
+	var templateID string
 	if options != nil {
-		templateId = options.TemplateID
+		templateID = options.TemplateID
 	}
 	req := makeCreateUserRequest(&createUserRequest{
 		loginID:            loginID,
@@ -93,7 +93,7 @@ func (u *user) create(ctx context.Context, loginID, email, phone, displayName, g
 		roles:              roles,
 		tenants:            tenants,
 		invite:             invite,
-		templateId:         templateId,
+		templateID:         templateID,
 		test:               test,
 		customAttributes:   customAttributes,
 		verifiedEmail:      verifiedEmail,
@@ -717,8 +717,8 @@ func (u *user) History(ctx context.Context, userIDs []string) ([]*descope.UserHi
 func makeCreateUserRequest(createReq *createUserRequest) map[string]any {
 	req := makeUpdateUserRequest(createReq)
 	req["invite"] = createReq.invite
-	if len(createReq.templateId) > 0 {
-		req["templateId"] = createReq.templateId
+	if len(createReq.templateID) > 0 {
+		req["templateId"] = createReq.templateID
 	}
 	req["additionalLoginIds"] = createReq.additionalLoginIDs
 	if createReq.test {
