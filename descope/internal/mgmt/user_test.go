@@ -39,6 +39,7 @@ func TestUserCreateSuccess(t *testing.T) {
 		if i == 2 {
 			assert.True(t, true, req["sendSMS"])
 			assert.EqualValues(t, false, req["sendMail"])
+			assert.EqualValues(t, "tid", req["templateId"])
 		} else {
 			assert.Nil(t, req["sendSMS"])
 			assert.Nil(t, req["sendMail"])
@@ -64,7 +65,7 @@ func TestUserCreateSuccess(t *testing.T) {
 
 	sendSMS := true
 	sendMail := false
-	res, err = m.User().Invite(context.Background(), "abc", user, &descope.InviteOptions{InviteURL: "https://some.domain.com", SendSMS: &sendSMS, SendMail: &sendMail})
+	res, err = m.User().Invite(context.Background(), "abc", user, &descope.InviteOptions{TemplateID: "tid", InviteURL: "https://some.domain.com", SendSMS: &sendSMS, SendMail: &sendMail})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
