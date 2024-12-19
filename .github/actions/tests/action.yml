@@ -4,16 +4,11 @@ inputs:
   min_coverage:
     description: "Minimum coverage"
     required: true
-  go_version:
-    description: "Go version to use"
-    required: true
 runs:
   using: "composite"
   steps:
     - name: Setup
       uses: ./.github/actions/setup
-      with:
-        go_version: ${{ inputs.go_version }}
 
     - name: Run tests
       run: |
