@@ -384,6 +384,7 @@ type InviteOptions struct {
 	SendMail        *bool             `json:"sendMail,omitempty"`        // send invite via mail, default is according to project settings
 	SendSMS         *bool             `json:"sendSMS,omitempty"`         // send invite via text message, default is according to project settings
 	TemplateOptions map[string]string `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
+	TemplateID      string            `json:"-"`
 }
 
 type User struct {
