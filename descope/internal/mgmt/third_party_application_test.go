@@ -7,6 +7,7 @@ import (
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/tests/helpers"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -23,7 +24,7 @@ func TestThirdPartyApplicationCreateSuccess(t *testing.T) {
 		require.Equal(t, "http://dummy.com", req["loginPageUrl"])
 	}, response))
 
-	id, secret, err := mgmt.ThirdPartyApplication().Create(context.Background(), &descope.ThirdPartyApplicationRequest{
+	id, secret, err := mgmt.ThirdPartyApplication().CreateApplication(context.Background(), &descope.ThirdPartyApplicationRequest{
 		ID:           "id1",
 		Name:         "abc",
 		Description:  "desc",
@@ -39,13 +40,13 @@ func TestThirdPartyApplicationCreateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
 
 	// Empty application
-	id, secret, err := mgmt.ThirdPartyApplication().Create(context.Background(), nil)
+	id, secret, err := mgmt.ThirdPartyApplication().CreateApplication(context.Background(), nil)
 	require.Error(t, err)
 	require.Empty(t, id)
 	require.Empty(t, secret)
 
 	// Empty application Name
-	id, secret, err = mgmt.ThirdPartyApplication().Create(context.Background(), &descope.ThirdPartyApplicationRequest{ID: "id1"})
+	id, secret, err = mgmt.ThirdPartyApplication().CreateApplication(context.Background(), &descope.ThirdPartyApplicationRequest{ID: "id1"})
 	require.Error(t, err)
 	require.Empty(t, id)
 	require.Empty(t, secret)
@@ -67,7 +68,7 @@ func TestThirdPartyApplicationUpdateSuccess(t *testing.T) {
 		require.Equal(t, []any{map[string]any{"name": "scope2", "description": "desc2", "values": []any{"v2"}}}, req["attributesScopes"])
 	}, response))
 
-	err := mgmt.ThirdPartyApplication().Update(context.Background(), &descope.ThirdPartyApplicationRequest{
+	err := mgmt.ThirdPartyApplication().UpdateApplication(context.Background(), &descope.ThirdPartyApplicationRequest{
 		ID:                   "id1",
 		Name:                 "abc",
 		Description:          "desc",
@@ -84,15 +85,15 @@ func TestThirdPartyApplicationUpdateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
 
 	// Empty application
-	err := mgmt.ThirdPartyApplication().Update(context.Background(), nil)
+	err := mgmt.ThirdPartyApplication().UpdateApplication(context.Background(), nil)
 	require.Error(t, err)
 
 	// Empty application ID
-	err = mgmt.ThirdPartyApplication().Update(context.Background(), &descope.ThirdPartyApplicationRequest{})
+	err = mgmt.ThirdPartyApplication().UpdateApplication(context.Background(), &descope.ThirdPartyApplicationRequest{})
 	require.Error(t, err)
 
 	// Empty application Name
-	err = mgmt.ThirdPartyApplication().Update(context.Background(), &descope.ThirdPartyApplicationRequest{ID: "id1"})
+	err = mgmt.ThirdPartyApplication().UpdateApplication(context.Background(), &descope.ThirdPartyApplicationRequest{ID: "id1"})
 	require.Error(t, err)
 }
 
@@ -103,13 +104,13 @@ func TestThirdPartyApplicationDeleteSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["id"])
 	}))
-	err := mgmt.ThirdPartyApplication().Delete(context.Background(), "abc")
+	err := mgmt.ThirdPartyApplication().DeleteApplication(context.Background(), "abc")
 	require.NoError(t, err)
 }
 
 func TestThirdPartyApplicationDeleteError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.ThirdPartyApplication().Delete(context.Background(), "")
+	err := mgmt.ThirdPartyApplication().DeleteApplication(context.Background(), "")
 	require.Error(t, err)
 }
 
@@ -131,7 +132,7 @@ func TestThirdPartyApplicationLoadSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 	}, response))
-	res, err := mgmt.ThirdPartyApplication().Load(context.Background(), "id1")
+	res, err := mgmt.ThirdPartyApplication().LoadApplication(context.Background(), "id1")
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "id1", res.ID)
@@ -150,12 +151,12 @@ func TestThirdPartyApplicationLoadSuccess(t *testing.T) {
 func TestThirdPartyApplicationLoadError(t *testing.T) {
 	// Empty ID
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := mgmt.ThirdPartyApplication().Load(context.Background(), "")
+	res, err := mgmt.ThirdPartyApplication().LoadApplication(context.Background(), "")
 	require.Error(t, err)
 	require.Nil(t, res)
 
 	mgmt = newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err = mgmt.ThirdPartyApplication().Load(context.Background(), "t1")
+	res, err = mgmt.ThirdPartyApplication().LoadApplication(context.Background(), "t1")
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -187,7 +188,7 @@ func TestAllThirdPartyApplicationsLoadSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 	}, response))
-	res, err := mgmt.ThirdPartyApplication().LoadAll(context.Background())
+	res, err := mgmt.ThirdPartyApplication().LoadAllApplications(context.Background())
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res, 2)
@@ -221,7 +222,84 @@ func TestAllThirdPartyApplicationsLoadSuccess(t *testing.T) {
 
 func TestAllThirdPartyApplicationsLoadError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := mgmt.ThirdPartyApplication().LoadAll(context.Background())
+	res, err := mgmt.ThirdPartyApplication().LoadAllApplications(context.Background())
 	require.Error(t, err)
 	require.Nil(t, res)
+}
+
+func TestSearchThirdPartyApplicationConsents(t *testing.T) {
+	response := map[string]any{
+		"consents": []map[string]any{
+			{
+				"id":     "id1",
+				"appId":  "app1",
+				"userId": "user1",
+				"scopes": []any{"scope1"},
+			},
+			{
+				"id":     "id2",
+				"appId":  "app2",
+				"userId": "user2",
+			},
+		},
+		"total": 2,
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+	}, response))
+	res, total, err := mgmt.ThirdPartyApplication().SearchConsents(context.Background(), &descope.ThirdPartyApplicationConsentSearchOptions{
+		AppID: "app1",
+	})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Len(t, res, 2)
+	require.Equal(t, 2, total)
+	assert.EqualValues(t, "id1", res[0].ID)
+	assert.EqualValues(t, "app1", res[0].AppID)
+	assert.EqualValues(t, "user1", res[0].UserID)
+	assert.Len(t, res[0].Scopes, 1)
+	assert.EqualValues(t, "scope1", res[0].Scopes[0])
+	assert.EqualValues(t, "id2", res[1].ID)
+}
+
+func TestSearchThirdPartyApplicationConsentsEmptyError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, total, err := mgmt.ThirdPartyApplication().SearchConsents(context.Background(), nil)
+	require.Error(t, err)
+	require.Nil(t, res)
+	require.Zero(t, total)
+}
+
+func TestSearchThirdPartyApplicationConsentError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, total, err := mgmt.ThirdPartyApplication().SearchConsents(context.Background(), &descope.ThirdPartyApplicationConsentSearchOptions{
+		AppID: "app1",
+	})
+	require.Error(t, err)
+	require.Nil(t, res)
+	require.Zero(t, total)
+}
+
+func TestDeleteThirdPartyApplicationConsents(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+	}))
+	err := mgmt.ThirdPartyApplication().DeleteConsents(context.Background(), &descope.ThirdPartyApplicationConsentDeleteOptions{
+		AppID: "app1",
+	})
+	require.NoError(t, err)
+}
+
+func TestDeleteThirdPartyApplicationConsentsEmptyError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.ThirdPartyApplication().DeleteConsents(context.Background(), nil)
+	require.Error(t, err)
+}
+
+func TestDeleteThirdPartyApplicationConsentsError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	err := mgmt.ThirdPartyApplication().DeleteConsents(context.Background(), &descope.ThirdPartyApplicationConsentDeleteOptions{
+		ConsentIDs: []string{"id1"},
+	})
+	require.Error(t, err)
 }

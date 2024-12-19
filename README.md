@@ -1532,21 +1532,32 @@ req := &descope.ThirdPartyApplicationRequest{
 		{Name: "base", Description: "Basic attribute requirements", Values: []string{"email", "phone"}},
 	},
 }
-appID, secret, err = descopeClient.Management.ThirdPartyApplication().Create(context.Background(), req)
+appID, secret, err = descopeClient.Management.ThirdPartyApplication().CreateApplication(context.Background(), req)
 
 // Update a third party application by id
 // Update will override all fields as is. Use carefully.
-err = tc.DescopeClient().Management.ThirdPartyApplication().Update(context.TODO(), &descope.ThirdPartyApplicationRequest{ID: "my-id", Name: "my new name"})
+err = tc.DescopeClient().Management.ThirdPartyApplication().UpdateApplication(context.TODO(), &descope.ThirdPartyApplicationRequest{ID: "my-id", Name: "my new name"})
 
 // Load third party application by id
-app, err = tc.DescopeClient().Management.ThirdPartyApplication().Load(context.Background(), "appId")
+app, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadApplication(context.Background(), "appId")
 
 // Load all third party applications
-apps, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadAll(context.Background())
+apps, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadAllApplications(context.Background())
 
 // Delete a third party application.
 // Deletion cannot be undone. Use carefully.
-descopeClient.DescopeClient().Management.ThirdPartyApplication().Delete(context.Background(), "appId")
+err = descopeClient.DescopeClient().Management.ThirdPartyApplication().DeleteApplication(context.Background(), "appId")
+
+// Search third party application consents by filter options
+consents, total, err = descopeClient.DescopeClient().Management.ThirdPartyApplication().SearchConsents(context.Background(), &descope.ThirdPartyApplicationConsentDeleteOptions{
+	AppID: "appId"
+})
+
+// Delete third party application consents by filter options
+err = descopeClient.DescopeClient().Management.ThirdPartyApplication().DeleteConsents(context.Background(),  &descope.ThirdPartyApplicationConsentDeleteOptions{
+	UserID: "my-user"
+})
+
 ```
 
 ## Code Examples

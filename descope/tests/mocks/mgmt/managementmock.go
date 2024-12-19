@@ -1532,53 +1532,75 @@ func (m *MockFGA) Check(_ context.Context, relations []*descope.FGARelation) ([]
 
 // Mock Third Party Application
 type MockThirdPartyApplication struct {
-	UpdateAssert func(*descope.ThirdPartyApplicationRequest) error
+	UpdateAssert func(*descope.ThirdPartyApplicationRequest)
 	UpdateError  error
 
-	CreateAssert         func(*descope.ThirdPartyApplicationRequest) error
-	CreateIDResponse     string
-	CreateSecretResponse string
-	CreateError          error
+	CreateApplicationAssert         func(*descope.ThirdPartyApplicationRequest)
+	CreateApplicationIDResponse     string
+	CreateApplicationSecretResponse string
+	CreateApplicationError          error
 
-	DeleteAssert func(id string) error
-	DeleteError  error
+	DeleteApplicationAssert func(id string)
+	DeleteApplicationError  error
 
-	LoadAssert   func(id string)
-	LoadResponse *descope.ThirdPartyApplication
-	LoadError    error
+	LoadApplicationAssert   func(id string)
+	LoadApplicationResponse *descope.ThirdPartyApplication
+	LoadApplicationError    error
 
-	LoadAllResponse []*descope.ThirdPartyApplication
-	LoadAllError    error
+	LoadAllApplicationsResponse []*descope.ThirdPartyApplication
+	LoadAllApplicationsError    error
+
+	DeleteConsentsAssert func(*descope.ThirdPartyApplicationConsentDeleteOptions)
+	DeleteConsentsError  error
+
+	SearchConsentsAssert        func(*descope.ThirdPartyApplicationConsentSearchOptions)
+	SearchConsentsResponse      []*descope.ThirdPartyApplicationConsent
+	SearchConsentsTotalResponse int
+	SearchConsentsError         error
 }
 
-func (m *MockThirdPartyApplication) Create(_ context.Context, app *descope.ThirdPartyApplicationRequest) (string, string, error) {
-	if m.CreateAssert != nil {
-		m.CreateAssert(app)
+func (m *MockThirdPartyApplication) CreateApplication(_ context.Context, app *descope.ThirdPartyApplicationRequest) (string, string, error) {
+	if m.CreateApplicationAssert != nil {
+		m.CreateApplicationAssert(app)
 	}
-	return m.CreateIDResponse, m.CreateSecretResponse, m.CreateError
+	return m.CreateApplicationIDResponse, m.CreateApplicationSecretResponse, m.CreateApplicationError
 }
 
-func (m *MockThirdPartyApplication) Update(_ context.Context, app *descope.ThirdPartyApplicationRequest) error {
+func (m *MockThirdPartyApplication) UpdateApplication(_ context.Context, app *descope.ThirdPartyApplicationRequest) error {
 	if m.UpdateAssert != nil {
 		m.UpdateAssert(app)
 	}
 	return m.UpdateError
 }
 
-func (m *MockThirdPartyApplication) Delete(_ context.Context, id string) error {
-	if m.DeleteAssert != nil {
-		m.DeleteAssert(id)
+func (m *MockThirdPartyApplication) DeleteApplication(_ context.Context, id string) error {
+	if m.DeleteApplicationAssert != nil {
+		m.DeleteApplicationAssert(id)
 	}
-	return m.DeleteError
+	return m.DeleteApplicationError
 }
 
-func (m *MockThirdPartyApplication) Load(_ context.Context, id string) (*descope.ThirdPartyApplication, error) {
-	if m.LoadAssert != nil {
-		m.LoadAssert(id)
+func (m *MockThirdPartyApplication) LoadApplication(_ context.Context, id string) (*descope.ThirdPartyApplication, error) {
+	if m.LoadApplicationAssert != nil {
+		m.LoadApplicationAssert(id)
 	}
-	return m.LoadResponse, m.LoadError
+	return m.LoadApplicationResponse, m.LoadApplicationError
 }
 
-func (m *MockThirdPartyApplication) LoadAll(_ context.Context) ([]*descope.ThirdPartyApplication, error) {
-	return m.LoadAllResponse, m.LoadAllError
+func (m *MockThirdPartyApplication) LoadAllApplications(_ context.Context) ([]*descope.ThirdPartyApplication, error) {
+	return m.LoadAllApplicationsResponse, m.LoadAllApplicationsError
+}
+
+func (m *MockThirdPartyApplication) DeleteConsents(_ context.Context, options *descope.ThirdPartyApplicationConsentDeleteOptions) error {
+	if m.DeleteConsentsAssert != nil {
+		m.DeleteConsentsAssert(options)
+	}
+	return m.DeleteConsentsError
+}
+
+func (m *MockThirdPartyApplication) SearchConsents(_ context.Context, options *descope.ThirdPartyApplicationConsentSearchOptions) ([]*descope.ThirdPartyApplicationConsent, int, error) {
+	if m.SearchConsentsAssert != nil {
+		m.SearchConsentsAssert(options)
+	}
+	return m.SearchConsentsResponse, m.SearchConsentsTotalResponse, m.SearchConsentsError
 }

@@ -838,24 +838,30 @@ type ThirdPartyApplication interface {
 	// AttributesScopes: List of attributes scopes.
 	//
 	// The argument appRequest.Name must be unique per project.
-	Create(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) (id string, secret string, err error)
+	CreateApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) (id string, secret string, err error)
 
 	// Update an existing third party application.
 	//
 	// IMPORTANT: All parameters are required and will override whatever value is currently
 	// set in the existing sso application. Use carefully.
-	Update(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) error
+	UpdateApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) error
 
 	// Delete an existing third party application.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
-	Delete(ctx context.Context, id string) error
+	DeleteApplication(ctx context.Context, id string) error
 
 	// Load a project third party application by id
-	Load(ctx context.Context, id string) (*descope.ThirdPartyApplication, error)
+	LoadApplication(ctx context.Context, id string) (*descope.ThirdPartyApplication, error)
 
 	// Load all project third party applications
-	LoadAll(ctx context.Context) ([]*descope.ThirdPartyApplication, error)
+	LoadAllApplications(ctx context.Context) ([]*descope.ThirdPartyApplication, error)
+
+	// Delete a consent for a third party application.
+	DeleteConsents(ctx context.Context, options *descope.ThirdPartyApplicationConsentDeleteOptions) error
+
+	// Search consents for a third party application.
+	SearchConsents(ctx context.Context, options *descope.ThirdPartyApplicationConsentSearchOptions) ([]*descope.ThirdPartyApplicationConsent, int, error)
 }
 
 // Provides various APIs for managing a Descope project programmatically. A management key must

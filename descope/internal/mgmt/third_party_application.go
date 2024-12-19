@@ -15,7 +15,7 @@ type thirdPartyApplication struct {
 
 var _ sdk.ThirdPartyApplication = &thirdPartyApplication{}
 
-func (s *thirdPartyApplication) Create(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) (id string, secret string, err error) {
+func (s *thirdPartyApplication) CreateApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) (id string, secret string, err error) {
 	if appRequest == nil {
 		return "", "", utils.NewInvalidArgumentError("appRequest")
 	}
@@ -38,7 +38,7 @@ func (s *thirdPartyApplication) Create(ctx context.Context, appRequest *descope.
 	return res.ID, res.Cleartext, nil
 }
 
-func (s *thirdPartyApplication) Update(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) error {
+func (s *thirdPartyApplication) UpdateApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) error {
 	if appRequest == nil {
 		return utils.NewInvalidArgumentError("appRequest")
 	}
@@ -54,7 +54,7 @@ func (s *thirdPartyApplication) Update(ctx context.Context, appRequest *descope.
 	return err
 }
 
-func (s *thirdPartyApplication) Delete(ctx context.Context, id string) error {
+func (s *thirdPartyApplication) DeleteApplication(ctx context.Context, id string) error {
 	if id == "" {
 		return utils.NewInvalidArgumentError("id")
 	}
@@ -63,7 +63,7 @@ func (s *thirdPartyApplication) Delete(ctx context.Context, id string) error {
 	return err
 }
 
-func (s *thirdPartyApplication) Load(ctx context.Context, id string) (*descope.ThirdPartyApplication, error) {
+func (s *thirdPartyApplication) LoadApplication(ctx context.Context, id string) (*descope.ThirdPartyApplication, error) {
 	if id == "" {
 		return nil, utils.NewInvalidArgumentError("id")
 	}
@@ -77,12 +77,47 @@ func (s *thirdPartyApplication) Load(ctx context.Context, id string) (*descope.T
 	return unmarshalLoadThirdPartyApplicationResponse(res)
 }
 
-func (s *thirdPartyApplication) LoadAll(ctx context.Context) ([]*descope.ThirdPartyApplication, error) {
+func (s *thirdPartyApplication) LoadAllApplications(ctx context.Context) ([]*descope.ThirdPartyApplication, error) {
 	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementThirdPartyApplicationLoadAll(), nil, s.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}
 	return unmarshalLoadAllThirdPartyApplicationsResponse(res)
+}
+
+func (s *thirdPartyApplication) DeleteConsents(ctx context.Context, consentRequest *descope.ThirdPartyApplicationConsentDeleteOptions) error {
+	if consentRequest == nil {
+		return utils.NewInvalidArgumentError("consentRequest")
+	}
+
+	req := map[string]any{
+		"consentIds": consentRequest.ConsentIDs,
+		"appId":      consentRequest.AppID,
+		"userIds":    consentRequest.UserIDs,
+	}
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationDeleteConsent(), req, nil, s.conf.ManagementKey)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *thirdPartyApplication) SearchConsents(ctx context.Context, consentRequest *descope.ThirdPartyApplicationConsentSearchOptions) ([]*descope.ThirdPartyApplicationConsent, int, error) {
+	if consentRequest == nil {
+		return nil, 0, utils.NewInvalidArgumentError("consentRequest")
+	}
+
+	req := map[string]any{
+		"consentId": consentRequest.ConsentID,
+		"appId":     consentRequest.AppID,
+		"userId":    consentRequest.UserID,
+		"page":      consentRequest.Page,
+	}
+	res, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationSearchConsents(), req, nil, s.conf.ManagementKey)
+	if err != nil {
+		return nil, 0, err
+	}
+	return unmarshalApplicationConsentsResponse(res)
 }
 
 func makeCreateUpdateThirdPartyApplicationRequest(appRequest *descope.ThirdPartyApplicationRequest) map[string]any {
@@ -116,4 +151,16 @@ func unmarshalLoadAllThirdPartyApplicationsResponse(res *api.HTTPResponse) ([]*d
 		return nil, err
 	}
 	return appsRes.Apps, nil
+}
+
+func unmarshalApplicationConsentsResponse(res *api.HTTPResponse) ([]*descope.ThirdPartyApplicationConsent, int, error) {
+	appsRes := struct {
+		Consents []*descope.ThirdPartyApplicationConsent
+		Total    int
+	}{}
+	err := utils.Unmarshal([]byte(res.BodyStr), &appsRes)
+	if err != nil {
+		return nil, 0, err
+	}
+	return appsRes.Consents, appsRes.Total, nil
 }

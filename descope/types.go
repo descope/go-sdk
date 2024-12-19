@@ -1017,3 +1017,46 @@ type ThirdPartyApplicationRequest struct {
 	PermissionsScopes    []*ThirdPartyApplicationScope `json:"permissionsScopes"`
 	AttributesScopes     []*ThirdPartyApplicationScope `json:"attributesScopes"`
 }
+
+type ThirdPartyApplicationConsent struct {
+	// Consent ID
+	ID string `json:"id"`
+	// Associated third party application ID
+	AppID string `json:"appId"`
+	// Associated user ID
+	UserID string `json:"userId"`
+	// Scopes granted by this user consent
+	Scopes []string `json:"scopes"`
+	// The user id the consent was granted by
+	GrantedBy string `json:"grantedBy"`
+	// The time the consent was granted in milliseconds since epoch
+	CreatedTime int32 `json:"createdTime"`
+}
+
+// Options for deleting third party application consents. At least one of ConsentIDs, AppID or UserIDs must be provided.
+//
+// AppID - allows to delete all consents by a given third party application id.
+// UserID - allows to delete all consents of a given user by user id.
+// ConsentIDs - allows to delete any consents by their given id.
+type ThirdPartyApplicationConsentDeleteOptions struct {
+	ConsentIDs []string `json:"consentIds"`
+	AppID      string   `json:"appId"`
+	UserIDs    []string `json:"userIds"`
+}
+
+// Options for searching and filtering third party application consents
+//
+// AppID - allows to filter consents by a given third party application id.
+// UserID - allows to filter by a given user id.
+// ConsentID - search a specific consent by id.
+// Page - allows to paginate over the results. Pages start at 0 and must non-negative.
+type ThirdPartyApplicationConsentSearchOptions struct {
+	AppID     string `json:"appId"`
+	UserID    string `json:"userId"`
+	ConsentID string `json:"consentId"`
+	Page      int32  `json:"page"`
+}
+
+func (c *ThirdPartyApplicationConsent) GetCreatedTime() time.Time {
+	return time.Unix(int64(c.CreatedTime), 0)
+}
