@@ -1515,6 +1515,51 @@ apps, err = tc.DescopeClient().Management.SSOApplication().LoadAll(context.Backg
 descopeClient.DescopeClient().Management.SSOApplication().Delete(context.Background(), "appId")
 ```
 
+### Manage Third Party Applications
+
+You can create, update, delete or load third party applications:
+
+```go
+// Create third party application
+req := &descope.ThirdPartyApplicationRequest{
+	Name: "My OIDC App",
+	Logo: "data:image/jpeg;base64...",
+	LoginPageURL: "http://dummy.com",
+	PermissionsScopes: []*descope.ThirdPartyApplicationScope{
+		{Name: "read", Description: "Read all", Values: []string{"Support"}},
+	},
+	AttributesScopes: []*descope.ThirdPartyApplicationScope{
+		{Name: "base", Description: "Basic attribute requirements", Values: []string{"email", "phone"}},
+	},
+}
+appID, secret, err = descopeClient.Management.ThirdPartyApplication().CreateApplication(context.Background(), req)
+
+// Update a third party application by id
+// Update will override all fields as is. Use carefully.
+err = tc.DescopeClient().Management.ThirdPartyApplication().UpdateApplication(context.TODO(), &descope.ThirdPartyApplicationRequest{ID: "my-id", Name: "my new name"})
+
+// Load third party application by id
+app, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadApplication(context.Background(), "appId")
+
+// Load all third party applications
+apps, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadAllApplications(context.Background())
+
+// Delete a third party application.
+// Deletion cannot be undone. Use carefully.
+err = descopeClient.DescopeClient().Management.ThirdPartyApplication().DeleteApplication(context.Background(), "appId")
+
+// Search third party application consents by filter options
+consents, total, err = descopeClient.DescopeClient().Management.ThirdPartyApplication().SearchConsents(context.Background(), &descope.ThirdPartyApplicationConsentDeleteOptions{
+	AppID: "appId"
+})
+
+// Delete third party application consents by filter options
+err = descopeClient.DescopeClient().Management.ThirdPartyApplication().DeleteConsents(context.Background(),  &descope.ThirdPartyApplicationConsentDeleteOptions{
+	UserID: "my-user"
+})
+
+```
+
 ## Code Examples
 
 You can find various usage examples in the [examples folder](https://github.com/descope/go-sdk/blob/main/examples).
