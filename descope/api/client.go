@@ -209,7 +209,7 @@ var (
 			thirdPartyApplicationDelete:         "mgmt/thirdparty/app/delete",
 			thirdPartyApplicationLoad:           "mgmt/thirdparty/app/load",
 			thirdPartyApplicationLoadAll:        "mgmt/thirdparty/apps/load",
-			thirdPartyApplicationConsentDelete:  "mgmt/thirdparty/consent/delete",
+			thirdPartyApplicationConsentDelete:  "mgmt/thirdparty/consents/delete",
 			thirdPartyApplicationConsentsSearch: "mgmt/thirdparty/consents/search",
 		},
 		logout:       "auth/logout",

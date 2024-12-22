@@ -1517,7 +1517,7 @@ descopeClient.DescopeClient().Management.SSOApplication().Delete(context.Backgro
 
 ### Manage Third Party Applications
 
-You can create, update, delete or load third party applications:
+You can create, update, delete or load third party applications, while also search and delete existing consents related to any third party application:
 
 ```go
 // Create third party application
@@ -1548,14 +1548,14 @@ apps, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadAllApplica
 // Deletion cannot be undone. Use carefully.
 err = descopeClient.DescopeClient().Management.ThirdPartyApplication().DeleteApplication(context.Background(), "appId")
 
-// Search third party application consents by filter options
-consents, total, err = descopeClient.DescopeClient().Management.ThirdPartyApplication().SearchConsents(context.Background(), &descope.ThirdPartyApplicationConsentDeleteOptions{
+// Search third party applications consents by pages using a filter options, such as application id, user id, etc.
+consents, total, err = descopeClient.DescopeClient().Management.ThirdPartyApplication().SearchConsents(context.Background(), &descope.ThirdPartyApplicationConsentSearchOptions{
 	AppID: "appId"
 })
 
-// Delete third party application consents by filter options
+// Delete third party applications consents by filter options, such as application id, consent ids or user ids.
 err = descopeClient.DescopeClient().Management.ThirdPartyApplication().DeleteConsents(context.Background(),  &descope.ThirdPartyApplicationConsentDeleteOptions{
-	UserID: "my-user"
+	UserIDs: string{"my-user"}
 })
 
 ```
