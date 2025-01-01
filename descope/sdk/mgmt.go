@@ -560,7 +560,7 @@ type JWT interface {
 	// Impersonate another user
 	// The impersonator user must have `impersonation` permission in order for this request to work
 	// The response would be a refresh JWT of the impersonated user
-	Impersonate(ctx context.Context, impersonatorID string, loginID string, validateConcent bool) (string, error)
+	Impersonate(ctx context.Context, impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string) (string, error)
 }
 
 // Provides functions for managing permissions in a project.
