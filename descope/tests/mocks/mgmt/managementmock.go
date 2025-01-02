@@ -93,7 +93,7 @@ type MockJWT struct {
 	UpdateJWTWithCustomClaimsResponse string
 	UpdateJWTWithCustomClaimsError    error
 
-	ImpersonateAssert   func(impersonatorID string, loginID string, validateConcent bool)
+	ImpersonateAssert   func(impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string)
 	ImpersonateResponse string
 	ImpersonateError    error
 }
@@ -105,9 +105,9 @@ func (m *MockJWT) UpdateJWTWithCustomClaims(_ context.Context, jwt string, custo
 	return m.UpdateJWTWithCustomClaimsResponse, m.UpdateJWTWithCustomClaimsError
 }
 
-func (m *MockJWT) Impersonate(_ context.Context, impersonatorID string, loginID string, validateConcent bool) (string, error) {
+func (m *MockJWT) Impersonate(_ context.Context, impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string) (string, error) {
 	if m.ImpersonateAssert != nil {
-		m.ImpersonateAssert(impersonatorID, loginID, validateConcent)
+		m.ImpersonateAssert(impersonatorID, loginID, validateConcent, customClaims, tenantID)
 	}
 	return m.ImpersonateResponse, m.ImpersonateError
 }

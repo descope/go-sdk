@@ -39,7 +39,7 @@ func (j *jwt) UpdateJWTWithCustomClaims(ctx context.Context, jwt string, customC
 	return jRes.JWT, nil
 }
 
-func (j *jwt) Impersonate(ctx context.Context, impersonatorID string, loginID string, validateConcent bool) (string, error) {
+func (j *jwt) Impersonate(ctx context.Context, impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string) (string, error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
@@ -50,6 +50,8 @@ func (j *jwt) Impersonate(ctx context.Context, impersonatorID string, loginID st
 		"loginId":         loginID,
 		"impersonatorId":  impersonatorID,
 		"validateConsent": validateConcent,
+		"customClaims":    customClaims,
+		"selectedTenant":  tenantID,
 	}
 	res, err := j.client.DoPostRequest(ctx, api.Routes.ManagementImpersonate(), req, nil, j.conf.ManagementKey)
 	if err != nil {

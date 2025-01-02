@@ -1273,9 +1273,10 @@ if err != nil {
 You can impersonate to another user
 The impersonator user must have the `impersonation` permission in order for this request to work.
 The response would be a refresh JWT of the impersonated user
-
+TenantID would be the tenant to set as DCT claim, in case set
+customClaims - would be extra claims that are needed on the JWT
 ```go
-refreshJWT, err := descopeClient.Management.JWT().Impersonate(context.Background(), "impersonator id", "login id", true)
+refreshJWT, err := descopeClient.Management.JWT().Impersonate(context.Background(), "impersonator id", "login id", true, map[string]any{"k1":"v1"}, "T1")
 if err != nil {
     // handle error
 }
