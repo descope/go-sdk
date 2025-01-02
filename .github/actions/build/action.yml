@@ -1,16 +1,11 @@
 name: Build
-description: 'Build'
-inputs:
-  go_version:
-    description: 'Go version to use'
-    required: true
+description: "Build"
+
 runs:
   using: "composite"
   steps:
     - name: Setup
       uses: ./.github/actions/setup
-      with:
-        go_version: ${{ inputs.go_version }}
 
     - name: Build
       run: |

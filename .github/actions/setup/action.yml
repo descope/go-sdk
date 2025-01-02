@@ -1,16 +1,13 @@
 name: Setup repo
 description: "Setup repo"
-inputs:
-  go_version:
-    description: "Go version to use"
-    required: true
+
 runs:
   using: "composite"
   steps:
     - name: Set up Go
-      uses: actions/setup-go@v3.0.0
+      uses: actions/setup-go@v5
       with:
-        go-version: ${{ inputs.go_version }}
+        go-version-file: go.mod
 
     - uses: actions/cache@v4
       with:
