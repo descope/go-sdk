@@ -32,6 +32,8 @@ func (a *audit) Search(ctx context.Context, options *descope.AuditSearchOptions)
 		"tenants":         options.Tenants,
 		"noTenants":       options.NoTenants,
 		"text":            options.Text,
+		"size":            options.Size,
+		"page":            options.Page,
 	}
 	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuditSearch(), body, nil, a.conf.ManagementKey)
 	if err != nil {

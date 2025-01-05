@@ -56,6 +56,8 @@ func TestAuditSearch(t *testing.T) {
 		Tenants:         []string{"t1"},
 		NoTenants:       true,
 		Text:            "kuku",
+		Size:            10,
+		Page:            1,
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		called = true
@@ -75,6 +77,8 @@ func TestAuditSearch(t *testing.T) {
 		require.EqualValues(t, []interface{}{searchOptions.Tenants[0]}, req["tenants"])
 		require.EqualValues(t, searchOptions.NoTenants, req["noTenants"])
 		require.EqualValues(t, searchOptions.Text, req["text"])
+		require.EqualValues(t, searchOptions.Size, req["size"])
+		require.EqualValues(t, searchOptions.Page, req["page"])
 	}, response))
 	res, err := mgmt.Audit().Search(context.Background(), searchOptions)
 	require.NoError(t, err)

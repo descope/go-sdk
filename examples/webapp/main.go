@@ -95,6 +95,8 @@ func main() {
 	router.HandleFunc("/stepup/stepup", handleStepupStepup).Methods(http.MethodGet)
 	router.HandleFunc("/stepup/stepup/verify", handleStepupStepupVerify).Methods(http.MethodGet)
 
+	router.HandleFunc("/mgmt/audit/search", handleAuditSearch).Methods(http.MethodGet)
+
 	authRouter := router.Methods(http.MethodGet).Subrouter()
 	authRouter.Use(sdk.AuthenticationMiddleware(descopeClient.Auth, func(w http.ResponseWriter, r *http.Request, err error) {
 		setResponse(w, http.StatusUnauthorized, "Unauthorized")
@@ -154,6 +156,8 @@ func help(w http.ResponseWriter, r *http.Request) {
 	helpTxt += "Start a stepup flow go to: /stepup\n\n"
 	helpTxt += "---------------------------------------------------------\n\n"
 	helpTxt += "See that you are actually logged in go to: /private \n\n"
+	helpTxt += "---------------------------------------------------------\n\n"
+	helpTxt += "Run a management audit search go to: /mgmt/audit/search \n\n"
 	setResponse(w, http.StatusOK, helpTxt)
 }
 
@@ -557,6 +561,19 @@ func handleStepupStepupVerify(w http.ResponseWriter, r *http.Request) {
 	mr, _ := json.MarshalIndent(authInfo, "", "")
 	helpTxt += string(mr)
 	setResponse(w, http.StatusOK, helpTxt)
+}
+
+func handleAuditSearch(w http.ResponseWriter, r *http.Request) {
+	searchOptions := &descope.AuditSearchOptions{}
+	auditSearchRes, err := descopeClient.Management.Audit().Search(r.Context(), searchOptions)
+	if err != nil {
+		setError(w, err.Error())
+	} else {
+		helpTxt := fmt.Sprintf("Audit Search Results (%d Results Returned):\n", len(auditSearchRes))
+		mr, _ := json.MarshalIndent(auditSearchRes, "", "\t")
+		helpTxt += string(mr) + "\n"
+		setResponse(w, http.StatusOK, helpTxt)
+	}
 }
 
 func queryBool(r *http.Request, key string) bool {
