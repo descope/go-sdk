@@ -274,6 +274,15 @@ type User interface {
 	// the email address.
 	UpdateEmail(ctx context.Context, loginID, email string, isVerified bool) (*descope.UserResponse, error)
 
+	// Update the email address for an existing user by User ID. The user ID can be found
+	// on the user's JWT.
+	//
+	// The email parameter can be empty in which case the email will be removed.
+	//
+	// The isVerified flag must be true for the user to be able to login with
+	// the email address.
+	UpdateEmailByUserID(ctx context.Context, userID, email string, isVerified bool) (*descope.UserResponse, error)
+
 	// Update the phone number for an existing user.
 	//
 	// The phone parameter can be empty in which case the phone will be removed.
