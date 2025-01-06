@@ -335,6 +335,18 @@ func (u *user) UpdateEmail(ctx context.Context, loginID, email string, isVerifie
 	return unmarshalUserResponse(res)
 }
 
+func (u *user) UpdateEmailByUserID(ctx context.Context, userID, email string, isVerified bool) (*descope.UserResponse, error) {
+	if userID == "" {
+		return nil, utils.NewInvalidArgumentError("userID")
+	}
+	req := map[string]any{"userId": userID, "email": email, "verified": isVerified}
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateEmail(), req, nil, u.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalUserResponse(res)
+}
+
 func (u *user) UpdatePhone(ctx context.Context, loginID, phone string, isVerified bool) (*descope.UserResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")

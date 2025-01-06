@@ -557,6 +557,13 @@ func (m *MockUser) UpdateEmail(_ context.Context, loginID, email string, isVerif
 	return m.UpdateEmailResponse, m.UpdateEmailError
 }
 
+func (m *MockUser) UpdateEmailByUserID(_ context.Context, userID, email string, isVerified bool) (*descope.UserResponse, error) {
+	if m.UpdateEmailAssert != nil {
+		m.UpdateEmailAssert(userID, email, isVerified)
+	}
+	return m.UpdateEmailResponse, m.UpdateEmailError
+}
+
 func (m *MockUser) UpdatePhone(_ context.Context, loginID, phone string, isVerified bool) (*descope.UserResponse, error) {
 	if m.UpdatePhoneAssert != nil {
 		m.UpdatePhoneAssert(loginID, phone, isVerified)
