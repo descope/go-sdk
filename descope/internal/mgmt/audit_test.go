@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAuditSearch(t *testing.T) {
+func TestAuditSearchAll(t *testing.T) {
 	called := false
 	response := &apiSearchAuditResponse{Audits: []*apiAuditRecord{
 		{
@@ -42,7 +42,9 @@ func TestAuditSearch(t *testing.T) {
 			Tenants:       []string{"t1"},
 			Data:          map[string]interface{}{"x": "y1", "z": 2},
 		},
-	}}
+	},
+		Total: 2,
+	}
 	searchOptions := &descope.AuditSearchOptions{
 		UserIDs:         []string{"u1", "u2"},
 		Actions:         []string{"a1", "a2"},
@@ -56,7 +58,7 @@ func TestAuditSearch(t *testing.T) {
 		Tenants:         []string{"t1"},
 		NoTenants:       true,
 		Text:            "kuku",
-		Size:            10,
+		Limit:           10,
 		Page:            1,
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -77,12 +79,13 @@ func TestAuditSearch(t *testing.T) {
 		require.EqualValues(t, []interface{}{searchOptions.Tenants[0]}, req["tenants"])
 		require.EqualValues(t, searchOptions.NoTenants, req["noTenants"])
 		require.EqualValues(t, searchOptions.Text, req["text"])
-		require.EqualValues(t, searchOptions.Size, req["size"])
+		require.EqualValues(t, searchOptions.Limit, req["size"])
 		require.EqualValues(t, searchOptions.Page, req["page"])
 	}, response))
-	res, err := mgmt.Audit().Search(context.Background(), searchOptions)
+	res, total, err := mgmt.Audit().SearchAll(context.Background(), searchOptions)
 	require.NoError(t, err)
 	require.Len(t, res, 2)
+	assert.Equal(t, 2, total)
 	assert.Equal(t, response.Audits[0].ProjectID, res[0].ProjectID)
 	assert.Equal(t, response.Audits[0].UserID, res[0].UserID)
 	assert.Equal(t, response.Audits[0].Action, res[0].Action)
