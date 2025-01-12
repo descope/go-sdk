@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAuditSearchAll(t *testing.T) {
+func TestAuditSearch(t *testing.T) {
 	called := false
 	response := &apiSearchAuditResponse{Audits: []*apiAuditRecord{
 		{
@@ -82,22 +82,29 @@ func TestAuditSearchAll(t *testing.T) {
 		require.EqualValues(t, searchOptions.Limit, req["size"])
 		require.EqualValues(t, searchOptions.Page, req["page"])
 	}, response))
+	doAsserts := func(res []*descope.AuditRecord, err error) {
+		require.NoError(t, err)
+		require.Len(t, res, 2)
+		assert.Equal(t, response.Audits[0].ProjectID, res[0].ProjectID)
+		assert.Equal(t, response.Audits[0].UserID, res[0].UserID)
+		assert.Equal(t, response.Audits[0].Action, res[0].Action)
+		assert.Equal(t, response.Audits[0].Occurred, strconv.FormatInt(res[0].Occurred.UnixMilli(), 10))
+		assert.Equal(t, response.Audits[0].Device, res[0].Device)
+		assert.Equal(t, response.Audits[0].Method, res[0].Method)
+		assert.Equal(t, response.Audits[0].Geo, res[0].Geo)
+		assert.Equal(t, response.Audits[0].RemoteAddress, res[0].RemoteAddress)
+		assert.EqualValues(t, response.Audits[0].ExternalIDs, res[0].LoginIDs)
+		assert.EqualValues(t, response.Audits[0].Tenants, res[0].Tenants)
+		assert.EqualValues(t, response.Audits[0].Data["x"], res[0].Data["x"])
+		assert.True(t, called)
+	}
+	//run test for Deprecated Search API
+	res, err := mgmt.Audit().Search(context.Background(), searchOptions)
+	doAsserts(res, err)
+	//run test for SearchAll API, and also assert the value of the "total" return value
 	res, total, err := mgmt.Audit().SearchAll(context.Background(), searchOptions)
-	require.NoError(t, err)
-	require.Len(t, res, 2)
+	doAsserts(res, err)
 	assert.Equal(t, 2, total)
-	assert.Equal(t, response.Audits[0].ProjectID, res[0].ProjectID)
-	assert.Equal(t, response.Audits[0].UserID, res[0].UserID)
-	assert.Equal(t, response.Audits[0].Action, res[0].Action)
-	assert.Equal(t, response.Audits[0].Occurred, strconv.FormatInt(res[0].Occurred.UnixMilli(), 10))
-	assert.Equal(t, response.Audits[0].Device, res[0].Device)
-	assert.Equal(t, response.Audits[0].Method, res[0].Method)
-	assert.Equal(t, response.Audits[0].Geo, res[0].Geo)
-	assert.Equal(t, response.Audits[0].RemoteAddress, res[0].RemoteAddress)
-	assert.EqualValues(t, response.Audits[0].ExternalIDs, res[0].LoginIDs)
-	assert.EqualValues(t, response.Audits[0].Tenants, res[0].Tenants)
-	assert.EqualValues(t, response.Audits[0].Data["x"], res[0].Data["x"])
-	assert.True(t, called)
 }
 
 func TestAuditCreate(t *testing.T) {
