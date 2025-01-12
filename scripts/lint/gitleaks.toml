@@ -651,4 +651,6 @@ paths = [
     '''(.*?)(jpg|gif|doc|pdf|bin|svg|socket)$''',
     '''(go.mod|go.sum)$''',
 	"vendor/",
+	"examples/key.pem",
+	"examples/cert.pem",
 ]

@@ -1290,6 +1290,7 @@ func (m *MockProject) ListProjects(_ context.Context) ([]*descope.Project, error
 type MockAudit struct {
 	SearchAssert   func(*descope.AuditSearchOptions)
 	SearchResponse []*descope.AuditRecord
+	SearchTotal    int
 	SearchError    error
 
 	CreateEventAssert func(*descope.AuditCreateOptions)
@@ -1301,6 +1302,13 @@ func (m *MockAudit) Search(_ context.Context, options *descope.AuditSearchOption
 		m.SearchAssert(options)
 	}
 	return m.SearchResponse, m.SearchError
+}
+
+func (m *MockAudit) SearchAll(_ context.Context, options *descope.AuditSearchOptions) ([]*descope.AuditRecord, int, error) {
+	if m.SearchAssert != nil {
+		m.SearchAssert(options)
+	}
+	return m.SearchResponse, m.SearchTotal, m.SearchError
 }
 
 func (m *MockAudit) CreateEvent(_ context.Context, options *descope.AuditCreateOptions) error {

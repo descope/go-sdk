@@ -870,7 +870,7 @@ type AuditSearchOptions struct {
 	Tenants         []string  `json:"tenants"`                   // List of tenants to filter by
 	NoTenants       bool      `json:"noTenants"`                 // Should audits without any tenants always be included
 	Text            string    `json:"text"`                      // Free text search across all fields
-	Size            int32     `json:"size,omitempty"`            // Number of results to include per retrived page. Current default, and max value, is 1000.
+	Limit           int32     `json:"limit,omitempty"`           // Number of results to include per retrieved page. Current default, and max value, is 1000
 	Page            int32     `json:"page,omitempty"`            // Page number of results to retrieve, zero-based. Default is 0.
 }
 

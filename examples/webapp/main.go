@@ -565,11 +565,11 @@ func handleStepupStepupVerify(w http.ResponseWriter, r *http.Request) {
 
 func handleAuditSearch(w http.ResponseWriter, r *http.Request) {
 	searchOptions := &descope.AuditSearchOptions{}
-	auditSearchRes, err := descopeClient.Management.Audit().Search(r.Context(), searchOptions)
+	auditSearchRes, total, err := descopeClient.Management.Audit().SearchAll(r.Context(), searchOptions)
 	if err != nil {
 		setError(w, err.Error())
 	} else {
-		helpTxt := fmt.Sprintf("Audit Search Results (%d Results Returned):\n", len(auditSearchRes))
+		helpTxt := fmt.Sprintf("Audit Search Results (%d Results Returned, %d Total):\n", len(auditSearchRes), total)
 		mr, _ := json.MarshalIndent(auditSearchRes, "", "\t")
 		helpTxt += string(mr) + "\n"
 		setResponse(w, http.StatusOK, helpTxt)

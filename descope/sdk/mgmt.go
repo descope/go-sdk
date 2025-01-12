@@ -742,7 +742,8 @@ type Project interface {
 
 // Provides search project audit trail
 type Audit interface {
-	Search(ctx context.Context, options *descope.AuditSearchOptions) ([]*descope.AuditRecord, error)
+	Search(ctx context.Context, options *descope.AuditSearchOptions) ([]*descope.AuditRecord, error) // Deprecated: replaced by Audit.SearchAll
+	SearchAll(ctx context.Context, options *descope.AuditSearchOptions) ([]*descope.AuditRecord, int, error)
 	CreateEvent(ctx context.Context, options *descope.AuditCreateOptions) error
 }
 
