@@ -24,6 +24,7 @@ type MockManagement struct {
 	*MockAudit
 	*MockAuthz
 	*MockFGA
+	*MockThirdPartyApplication
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -84,6 +85,10 @@ func (m *MockManagement) Password() sdk.PasswordManagement {
 
 func (m *MockManagement) FGA() sdk.FGA {
 	return m.MockFGA
+}
+
+func (m *MockManagement) ThirdPartyApplication() sdk.ThirdPartyApplication {
+	return m.MockThirdPartyApplication
 }
 
 // Mock JWT
@@ -1531,4 +1536,79 @@ func (m *MockFGA) Check(_ context.Context, relations []*descope.FGARelation) ([]
 		m.CheckAssert(relations)
 	}
 	return m.CheckResponse, m.CheckError
+}
+
+// Mock Third Party Application
+type MockThirdPartyApplication struct {
+	UpdateAssert func(*descope.ThirdPartyApplicationRequest)
+	UpdateError  error
+
+	CreateApplicationAssert         func(*descope.ThirdPartyApplicationRequest)
+	CreateApplicationIDResponse     string
+	CreateApplicationSecretResponse string
+	CreateApplicationError          error
+
+	DeleteApplicationAssert func(id string)
+	DeleteApplicationError  error
+
+	LoadApplicationAssert   func(id string)
+	LoadApplicationResponse *descope.ThirdPartyApplication
+	LoadApplicationError    error
+
+	LoadAllApplicationsResponse []*descope.ThirdPartyApplication
+	LoadAllApplicationsError    error
+
+	DeleteConsentsAssert func(*descope.ThirdPartyApplicationConsentDeleteOptions)
+	DeleteConsentsError  error
+
+	SearchConsentsAssert        func(*descope.ThirdPartyApplicationConsentSearchOptions)
+	SearchConsentsResponse      []*descope.ThirdPartyApplicationConsent
+	SearchConsentsTotalResponse int
+	SearchConsentsError         error
+}
+
+func (m *MockThirdPartyApplication) CreateApplication(_ context.Context, app *descope.ThirdPartyApplicationRequest) (string, string, error) {
+	if m.CreateApplicationAssert != nil {
+		m.CreateApplicationAssert(app)
+	}
+	return m.CreateApplicationIDResponse, m.CreateApplicationSecretResponse, m.CreateApplicationError
+}
+
+func (m *MockThirdPartyApplication) UpdateApplication(_ context.Context, app *descope.ThirdPartyApplicationRequest) error {
+	if m.UpdateAssert != nil {
+		m.UpdateAssert(app)
+	}
+	return m.UpdateError
+}
+
+func (m *MockThirdPartyApplication) DeleteApplication(_ context.Context, id string) error {
+	if m.DeleteApplicationAssert != nil {
+		m.DeleteApplicationAssert(id)
+	}
+	return m.DeleteApplicationError
+}
+
+func (m *MockThirdPartyApplication) LoadApplication(_ context.Context, id string) (*descope.ThirdPartyApplication, error) {
+	if m.LoadApplicationAssert != nil {
+		m.LoadApplicationAssert(id)
+	}
+	return m.LoadApplicationResponse, m.LoadApplicationError
+}
+
+func (m *MockThirdPartyApplication) LoadAllApplications(_ context.Context) ([]*descope.ThirdPartyApplication, error) {
+	return m.LoadAllApplicationsResponse, m.LoadAllApplicationsError
+}
+
+func (m *MockThirdPartyApplication) DeleteConsents(_ context.Context, options *descope.ThirdPartyApplicationConsentDeleteOptions) error {
+	if m.DeleteConsentsAssert != nil {
+		m.DeleteConsentsAssert(options)
+	}
+	return m.DeleteConsentsError
+}
+
+func (m *MockThirdPartyApplication) SearchConsents(_ context.Context, options *descope.ThirdPartyApplicationConsentSearchOptions) ([]*descope.ThirdPartyApplicationConsent, int, error) {
+	if m.SearchConsentsAssert != nil {
+		m.SearchConsentsAssert(options)
+	}
+	return m.SearchConsentsResponse, m.SearchConsentsTotalResponse, m.SearchConsentsError
 }
