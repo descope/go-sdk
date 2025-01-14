@@ -13,6 +13,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+type userUpdater func(m *managementService) (*descope.UserResponse, error)
+
 func TestUserCreateSuccess(t *testing.T) {
 	response := map[string]any{
 		"user": map[string]any{
@@ -940,24 +942,32 @@ func TestUserUpdateLoginIDBadInput(t *testing.T) {
 }
 
 func TestUserUpdateEmailSuccess(t *testing.T) {
-	response := map[string]any{
-		"user": map[string]any{
-			"email":         "a@b.c",
-			"verifiedEmail": true,
-		}}
-	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
-		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
-		req := map[string]any{}
-		require.NoError(t, helpers.ReadBody(r, &req))
-		require.Equal(t, "abc", req["loginId"])
-		require.Equal(t, "a@b.c", req["email"])
-		require.Equal(t, true, req["verified"])
-	}, response))
-	res, err := m.User().UpdateEmail(context.Background(), "abc", "a@b.c", true)
-	require.NoError(t, err)
-	require.NotNil(t, res)
-	require.Equal(t, "a@b.c", res.Email)
-	require.Equal(t, true, res.VerifiedEmail)
+	doTest := func(idType idType, updater userUpdater) {
+		response := map[string]any{
+			"user": map[string]any{
+				"email":         "a@b.c",
+				"verifiedEmail": true,
+			}}
+		m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+			require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+			req := map[string]any{}
+			require.NoError(t, helpers.ReadBody(r, &req))
+			require.Equal(t, "abc", req[idType.jsonName])
+			require.Equal(t, "a@b.c", req["email"])
+			require.Equal(t, true, req["verified"])
+		}, response))
+		res, err := updater(m)
+		require.NoError(t, err)
+		require.NotNil(t, res)
+		require.Equal(t, "a@b.c", res.Email)
+		require.Equal(t, true, res.VerifiedEmail)
+	}
+	doTest(idTypes.loginID, func(m *managementService) (*descope.UserResponse, error) {
+		return m.User().UpdateEmail(context.Background(), "abc", "a@b.c", true)
+	})
+	doTest(idTypes.userID, func(m *managementService) (*descope.UserResponse, error) {
+		return m.User().UpdateEmailByUserID(context.Background(), "abc", "a@b.c", true)
+	})
 }
 
 func TestUserUpdateEmailBadInput(t *testing.T) {
@@ -965,11 +975,17 @@ func TestUserUpdateEmailBadInput(t *testing.T) {
 	res, err := m.User().UpdateEmail(context.Background(), "", "a@b.c", true)
 	require.Error(t, err)
 	require.Nil(t, res)
+	res, err = m.User().UpdateEmailByUserID(context.Background(), "", "a@b.c", true)
+	require.Error(t, err)
+	require.Nil(t, res)
 }
 
 func TestUserUpdateEmailError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
 	res, err := m.User().UpdateEmail(context.Background(), "abc", "a@b.c", true)
+	require.Error(t, err)
+	require.Nil(t, res)
+	res, err = m.User().UpdateEmailByUserID(context.Background(), "abc", "a@b.c", true)
 	require.Error(t, err)
 	require.Nil(t, res)
 }

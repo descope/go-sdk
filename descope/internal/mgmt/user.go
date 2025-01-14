@@ -38,6 +38,24 @@ type createUserRequest struct {
 	ssoAppIDs          []string
 }
 
+type idType struct {
+	name     string
+	jsonName string
+}
+
+var idTypes = struct {
+	loginID idType
+	userID  idType
+}{
+	loginID: idType{
+		name:     "loginID",
+		jsonName: "loginId",
+	},
+	userID: idType{
+		name:     "loginID",
+		jsonName: "loginId",
+	}}
+
 func (u *user) Create(ctx context.Context, loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
 	if user == nil {
 		user = &descope.UserRequest{}
@@ -324,22 +342,19 @@ func (u *user) UpdateLoginID(ctx context.Context, loginID, newLoginID string) (*
 }
 
 func (u *user) UpdateEmail(ctx context.Context, loginID, email string, isVerified bool) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
-	}
-	req := map[string]any{"loginId": loginID, "email": email, "verified": isVerified}
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateEmail(), req, nil, u.conf.ManagementKey)
-	if err != nil {
-		return nil, err
-	}
-	return unmarshalUserResponse(res)
+	return u.updateEmail(ctx, idTypes.loginID, loginID, email, isVerified)
 }
 
 func (u *user) UpdateEmailByUserID(ctx context.Context, userID, email string, isVerified bool) (*descope.UserResponse, error) {
-	if userID == "" {
-		return nil, utils.NewInvalidArgumentError("userID")
+	return u.updateEmail(ctx, idTypes.userID, userID, email, isVerified)
+}
+
+func (u *user) updateEmail(ctx context.Context, idType idType, id, email string, isVerified bool) (*descope.UserResponse, error) {
+	if id == "" {
+		return nil, utils.NewInvalidArgumentError(idType.name)
 	}
-	req := map[string]any{"userId": userID, "email": email, "verified": isVerified}
+	req := map[string]any{"email": email, "verified": isVerified}
+	req[idType.jsonName] = id
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateEmail(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
