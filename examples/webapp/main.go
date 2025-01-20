@@ -96,6 +96,7 @@ func main() {
 	router.HandleFunc("/stepup/stepup/verify", handleStepupStepupVerify).Methods(http.MethodGet)
 
 	router.HandleFunc("/mgmt/audit/search", handleAuditSearch).Methods(http.MethodGet)
+	router.HandleFunc("/mgmt/user/load", handleUserLoad).Methods(http.MethodGet)
 
 	authRouter := router.Methods(http.MethodGet).Subrouter()
 	authRouter.Use(sdk.AuthenticationMiddleware(descopeClient.Auth, func(w http.ResponseWriter, r *http.Request, err error) {
@@ -158,6 +159,7 @@ func help(w http.ResponseWriter, r *http.Request) {
 	helpTxt += "See that you are actually logged in go to: /private \n\n"
 	helpTxt += "---------------------------------------------------------\n\n"
 	helpTxt += "Run a management audit search go to: /mgmt/audit/search \n\n"
+	helpTxt += "Load a user using the management API search go to: /mgmt/user/load?identifier= \n\n"
 	setResponse(w, http.StatusOK, helpTxt)
 }
 
@@ -571,6 +573,19 @@ func handleAuditSearch(w http.ResponseWriter, r *http.Request) {
 	} else {
 		helpTxt := fmt.Sprintf("Audit Search Results (%d Results Returned, %d Total):\n", len(auditSearchRes), total)
 		mr, _ := json.MarshalIndent(auditSearchRes, "", "\t")
+		helpTxt += string(mr) + "\n"
+		setResponse(w, http.StatusOK, helpTxt)
+	}
+}
+
+func handleUserLoad(w http.ResponseWriter, r *http.Request) {
+	identifier := getQuery(r, "identifier")
+	loadRes, err := descopeClient.Management.User().Load(context.TODO(), identifier)
+	if err != nil {
+		setError(w, err.Error())
+	} else {
+		helpTxt := "Load User Results :\n"
+		mr, _ := json.MarshalIndent(loadRes, "", "\t")
 		helpTxt += string(mr) + "\n"
 		setResponse(w, http.StatusOK, helpTxt)
 	}
