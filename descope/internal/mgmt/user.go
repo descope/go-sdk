@@ -129,15 +129,15 @@ func (u *user) createBatch(ctx context.Context, users []*descope.BatchUser, opti
 	return unmarshalUserBatchResponse(res)
 }
 
-func (u *user) Update(ctx context.Context, loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
+func (u *user) Update(ctx context.Context, loginIDOrUserID string, user *descope.UserRequest) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
 	req := makeUpdateUserRequest(&createUserRequest{
-		loginID:            loginID,
+		loginID:            loginIDOrUserID,
 		email:              user.Email,
 		phone:              user.Phone,
 		name:               user.Name,
@@ -160,14 +160,14 @@ func (u *user) Update(ctx context.Context, loginID string, user *descope.UserReq
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) Patch(ctx context.Context, loginID string, user *descope.PatchUserRequest) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
+func (u *user) Patch(ctx context.Context, loginIDOrUserID string, user *descope.PatchUserRequest) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
 	if user == nil {
 		return nil, utils.NewInvalidArgumentError("user")
 	}
-	req := makePatchUserRequest(loginID, user)
+	req := makePatchUserRequest(loginIDOrUserID, user)
 	res, err := u.client.DoPatchRequest(ctx, api.Routes.ManagementUserPatch(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -175,13 +175,14 @@ func (u *user) Patch(ctx context.Context, loginID string, user *descope.PatchUse
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) Delete(ctx context.Context, loginID string) error {
-	if loginID == "" {
-		return utils.NewInvalidArgumentError("loginID")
+func (u *user) Delete(ctx context.Context, loginIDOrUserID string) error {
+	if loginIDOrUserID == "" {
+		return utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
-	return u.delete(ctx, loginID, "")
+	return u.delete(ctx, loginIDOrUserID, "")
 }
 
+// Deprecated
 func (u *user) DeleteByUserID(ctx context.Context, userID string) error {
 	if userID == "" {
 		return utils.NewInvalidArgumentError("userID")
@@ -221,13 +222,14 @@ func (u *user) Import(ctx context.Context, source string, users, hashes []byte, 
 	return unmarshalUserImportResponse(res)
 }
 
-func (u *user) Load(ctx context.Context, loginID string) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
+func (u *user) Load(ctx context.Context, loginIDOrUserID string) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
-	return u.load(ctx, loginID, "")
+	return u.load(ctx, loginIDOrUserID, "")
 }
 
+// Deprecated
 func (u *user) LoadByUserID(ctx context.Context, userID string) (*descope.UserResponse, error) {
 	if userID == "" {
 		return nil, utils.NewInvalidArgumentError("userID")
@@ -291,19 +293,19 @@ func (u *user) searchAll(ctx context.Context, options *descope.UserSearchOptions
 	return unmarshalUserSearchAllResponse(res)
 }
 
-func (u *user) Activate(ctx context.Context, loginID string) (*descope.UserResponse, error) {
-	return u.updateStatus(ctx, loginID, "enabled")
+func (u *user) Activate(ctx context.Context, loginIDOrUserID string) (*descope.UserResponse, error) {
+	return u.updateStatus(ctx, loginIDOrUserID, "enabled")
 }
 
-func (u *user) Deactivate(ctx context.Context, loginID string) (*descope.UserResponse, error) {
-	return u.updateStatus(ctx, loginID, "disabled")
+func (u *user) Deactivate(ctx context.Context, loginIDOrUserID string) (*descope.UserResponse, error) {
+	return u.updateStatus(ctx, loginIDOrUserID, "disabled")
 }
 
-func (u *user) updateStatus(ctx context.Context, loginID string, status string) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
+func (u *user) updateStatus(ctx context.Context, loginIDOrUserID string, status string) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
-	req := map[string]any{"loginId": loginID, "status": status}
+	req := map[string]any{"loginId": loginIDOrUserID, "status": status}
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateStatus(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -323,11 +325,11 @@ func (u *user) UpdateLoginID(ctx context.Context, loginID, newLoginID string) (*
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) UpdateEmail(ctx context.Context, loginID, email string, isVerified bool) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
+func (u *user) UpdateEmail(ctx context.Context, loginIDOrUserID, email string, isVerified bool) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
-	req := map[string]any{"loginId": loginID, "email": email, "verified": isVerified}
+	req := map[string]any{"loginId": loginIDOrUserID, "email": email, "verified": isVerified}
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateEmail(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -335,11 +337,11 @@ func (u *user) UpdateEmail(ctx context.Context, loginID, email string, isVerifie
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) UpdatePhone(ctx context.Context, loginID, phone string, isVerified bool) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
+func (u *user) UpdatePhone(ctx context.Context, loginIDOrUserID, phone string, isVerified bool) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
-	req := map[string]any{"loginId": loginID, "phone": phone, "verified": isVerified}
+	req := map[string]any{"loginId": loginIDOrUserID, "phone": phone, "verified": isVerified}
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdatePhone(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -347,11 +349,11 @@ func (u *user) UpdatePhone(ctx context.Context, loginID, phone string, isVerifie
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) UpdateDisplayName(ctx context.Context, loginID, displayName string) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
+func (u *user) UpdateDisplayName(ctx context.Context, loginIDOrUserID, displayName string) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
-	req := map[string]any{"loginId": loginID, "displayName": displayName}
+	req := map[string]any{"loginId": loginIDOrUserID, "displayName": displayName}
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateDisplayName(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -359,11 +361,11 @@ func (u *user) UpdateDisplayName(ctx context.Context, loginID, displayName strin
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) UpdateUserNames(ctx context.Context, loginID, givenName, middleName, familyName string) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
+func (u *user) UpdateUserNames(ctx context.Context, loginIDOrUserID, givenName, middleName, familyName string) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
-	req := map[string]any{"loginId": loginID, "givenName": givenName, "middleName": middleName, "familyName": familyName}
+	req := map[string]any{"loginId": loginIDOrUserID, "givenName": givenName, "middleName": middleName, "familyName": familyName}
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateDisplayName(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -371,11 +373,11 @@ func (u *user) UpdateUserNames(ctx context.Context, loginID, givenName, middleNa
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) UpdatePicture(ctx context.Context, loginID, picture string) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
+func (u *user) UpdatePicture(ctx context.Context, loginIDOrUserID, picture string) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
-	req := map[string]any{"loginId": loginID, "picture": picture}
+	req := map[string]any{"loginId": loginIDOrUserID, "picture": picture}
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdatePicture(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -383,14 +385,14 @@ func (u *user) UpdatePicture(ctx context.Context, loginID, picture string) (*des
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) UpdateCustomAttribute(ctx context.Context, loginID, key string, value any) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
+func (u *user) UpdateCustomAttribute(ctx context.Context, loginIDOrUserID, key string, value any) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
 	if key == "" {
 		return nil, utils.NewInvalidArgumentError("key")
 	}
-	req := map[string]any{"loginId": loginID, "attributeKey": key, "attributeValue": value}
+	req := map[string]any{"loginId": loginIDOrUserID, "attributeKey": key, "attributeValue": value}
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateCustomAttribute(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -398,11 +400,11 @@ func (u *user) UpdateCustomAttribute(ctx context.Context, loginID, key string, v
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) SetRoles(ctx context.Context, loginID string, roles []string) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
+func (u *user) SetRoles(ctx context.Context, loginIDOrUserID string, roles []string) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
-	req := makeUpdateUserRolesRequest(loginID, "", roles)
+	req := makeUpdateUserRolesRequest(loginIDOrUserID, "", roles)
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetRole(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -410,11 +412,11 @@ func (u *user) SetRoles(ctx context.Context, loginID string, roles []string) (*d
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) AddRoles(ctx context.Context, loginID string, roles []string) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
+func (u *user) AddRoles(ctx context.Context, loginIDOrUserID string, roles []string) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
-	req := makeUpdateUserRolesRequest(loginID, "", roles)
+	req := makeUpdateUserRolesRequest(loginIDOrUserID, "", roles)
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserAddRole(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -422,11 +424,11 @@ func (u *user) AddRoles(ctx context.Context, loginID string, roles []string) (*d
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) RemoveRoles(ctx context.Context, loginID string, roles []string) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
+func (u *user) RemoveRoles(ctx context.Context, loginIDOrUserID string, roles []string) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
-	req := makeUpdateUserRolesRequest(loginID, "", roles)
+	req := makeUpdateUserRolesRequest(loginIDOrUserID, "", roles)
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveRole(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -434,11 +436,11 @@ func (u *user) RemoveRoles(ctx context.Context, loginID string, roles []string) 
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) AddSSOApps(ctx context.Context, loginID string, ssoAppIDs []string) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
+func (u *user) AddSSOApps(ctx context.Context, loginIDOrUserID string, ssoAppIDs []string) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
-	req := makeUpdateUserSSOAppsRequest(loginID, ssoAppIDs)
+	req := makeUpdateUserSSOAppsRequest(loginIDOrUserID, ssoAppIDs)
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserAddSSOApps(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -446,11 +448,11 @@ func (u *user) AddSSOApps(ctx context.Context, loginID string, ssoAppIDs []strin
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) SetSSOApps(ctx context.Context, loginID string, ssoAppIDs []string) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
+func (u *user) SetSSOApps(ctx context.Context, loginIDOrUserID string, ssoAppIDs []string) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
-	req := makeUpdateUserSSOAppsRequest(loginID, ssoAppIDs)
+	req := makeUpdateUserSSOAppsRequest(loginIDOrUserID, ssoAppIDs)
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetSSOApps(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -458,11 +460,11 @@ func (u *user) SetSSOApps(ctx context.Context, loginID string, ssoAppIDs []strin
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) RemoveSSOApps(ctx context.Context, loginID string, ssoAppIDs []string) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
+func (u *user) RemoveSSOApps(ctx context.Context, loginIDOrUserID string, ssoAppIDs []string) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
-	req := makeUpdateUserSSOAppsRequest(loginID, ssoAppIDs)
+	req := makeUpdateUserSSOAppsRequest(loginIDOrUserID, ssoAppIDs)
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveSSOApps(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -470,11 +472,11 @@ func (u *user) RemoveSSOApps(ctx context.Context, loginID string, ssoAppIDs []st
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) AddTenant(ctx context.Context, loginID string, tenantID string) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
+func (u *user) AddTenant(ctx context.Context, loginIDOrUserID string, tenantID string) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
-	req := makeUpdateUserTenantRequest(loginID, tenantID)
+	req := makeUpdateUserTenantRequest(loginIDOrUserID, tenantID)
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserAddTenant(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -482,11 +484,11 @@ func (u *user) AddTenant(ctx context.Context, loginID string, tenantID string) (
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) RemoveTenant(ctx context.Context, loginID string, tenantID string) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
+func (u *user) RemoveTenant(ctx context.Context, loginIDOrUserID string, tenantID string) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
-	req := makeUpdateUserTenantRequest(loginID, tenantID)
+	req := makeUpdateUserTenantRequest(loginIDOrUserID, tenantID)
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveTenant(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -494,11 +496,11 @@ func (u *user) RemoveTenant(ctx context.Context, loginID string, tenantID string
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) SetTenantRoles(ctx context.Context, loginID string, tenantID string, roles []string) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
+func (u *user) SetTenantRoles(ctx context.Context, loginIDOrUserID string, tenantID string, roles []string) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
-	req := makeUpdateUserRolesRequest(loginID, tenantID, roles)
+	req := makeUpdateUserRolesRequest(loginIDOrUserID, tenantID, roles)
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetRole(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -506,11 +508,11 @@ func (u *user) SetTenantRoles(ctx context.Context, loginID string, tenantID stri
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) AddTenantRoles(ctx context.Context, loginID string, tenantID string, roles []string) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
+func (u *user) AddTenantRoles(ctx context.Context, loginIDOrUserID string, tenantID string, roles []string) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
-	req := makeUpdateUserRolesRequest(loginID, tenantID, roles)
+	req := makeUpdateUserRolesRequest(loginIDOrUserID, tenantID, roles)
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserAddRole(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
@@ -518,11 +520,11 @@ func (u *user) AddTenantRoles(ctx context.Context, loginID string, tenantID stri
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) RemoveTenantRoles(ctx context.Context, loginID string, tenantID string, roles []string) (*descope.UserResponse, error) {
-	if loginID == "" {
-		return nil, utils.NewInvalidArgumentError("loginID")
+func (u *user) RemoveTenantRoles(ctx context.Context, loginIDOrUserID string, tenantID string, roles []string) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
-	req := makeUpdateUserRolesRequest(loginID, tenantID, roles)
+	req := makeUpdateUserRolesRequest(loginIDOrUserID, tenantID, roles)
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveRole(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
