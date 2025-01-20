@@ -861,32 +861,43 @@ userReqUpdate.Tenants = []*descope.AssociatedTenant{
 }
 userReqUpdate.SSOAppIDs = []string{"appId3"}
 err := descopeClient.Management.User().Update(context.Background(), "desmond@descope.com", userReqUpdate)
+// If needed, users can be updated using their ID as well
+err := descopeClient.Management.User().Update(context.Background(), "<user-id>", userReqUpdate)
 
 // On the other hand, the patch functionality will only change selected fields as is. Use carefully.
 userReqPath := &descope.UserRequest{}
 userReqPatch.Name = "Desmond Copeland Jr."
 err := descopeClient.Management.User().Patch(context.Background(), "desmond@descope.com", userReqPatch)
+// If needed, users can be patched using their ID as well
+err := descopeClient.Management.User().Patch(context.Background(), "<user-id>", userReqPatch)
 
 // Update loginID of a user, or remove a login ID (last login ID cannot be removed)
 err := descopeClient.Management.User().UpdateLoginID(context.Background(), "desmond@descope.com", "bane@descope.com")
 
 // Associate SSO application for a user.
 user, err := descopeClient.Management.User().AddSSOApps(context.Background(), "desmond@descope.com",[]string{"appId1"})
+// If needed, can be using the user ID as well
+user, err := descopeClient.Management.User().AddSSOApps(context.Background(), "<user-id>",[]string{"appId1"})
 
 // Set (associate) SSO application for a user.
 user, err := descopeClient.Management.User().SetSSOApps(context.Background(), "desmond@descope.com",[]string{"appId1", "appId2"})
+// If needed, can be using the user ID as well
+user, err := descopeClient.Management.User().SetSSOApps(context.Background(), "<user-id>",[]string{"appId1", "appId2"})
 
 // Remove SSO application association from a user.
 user, err := descopeClient.Management.User().RemoveSSOApps(context.Background(), "desmond@descope.com",[]string{"appId2"})
+// If needed, can be using the user ID as well
+user, err := descopeClient.Management.User().RemoveSSOApps(context.Background(), "<user-id>",[]string{"appId2"})
 
 // User deletion cannot be undone. Use carefully.
 err := descopeClient.Management.User().Delete(context.Background(), "desmond@descope.com")
+// If needed, users can be loaded using their ID as well
+err := descopeClient.Management.User().Delete(context.Background(), "<user-id>")
 
 // Load specific user
 userRes, err := descopeClient.Management.User().Load(context.Background(), "desmond@descope.com")
-
 // If needed, users can be loaded using their ID as well
-userRes, err := descopeClient.Management.User().LoadByUserID(context.Background(), "<user-id>")
+userRes, err := descopeClient.Management.User().Load(context.Background(), "<user-id>")
 
 // Search all users, optionally according to tenant and/or role filter
 // Results can be paginated using the limit and page parameters
