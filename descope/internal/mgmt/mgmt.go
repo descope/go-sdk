@@ -20,21 +20,22 @@ type managementBase struct {
 type managementService struct {
 	managementBase
 
-	tenant         sdk.Tenant
-	ssoApplication sdk.SSOApplication
-	user           sdk.User
-	accessKey      sdk.AccessKey
-	sso            sdk.SSO
-	password       sdk.PasswordManagement
-	jwt            sdk.JWT
-	permission     sdk.Permission
-	role           sdk.Role
-	group          sdk.Group
-	flow           sdk.Flow
-	project        sdk.Project
-	audit          sdk.Audit
-	authz          sdk.Authz
-	fga            sdk.FGA
+	tenant                sdk.Tenant
+	ssoApplication        sdk.SSOApplication
+	user                  sdk.User
+	accessKey             sdk.AccessKey
+	sso                   sdk.SSO
+	password              sdk.PasswordManagement
+	jwt                   sdk.JWT
+	permission            sdk.Permission
+	role                  sdk.Role
+	group                 sdk.Group
+	flow                  sdk.Flow
+	project               sdk.Project
+	audit                 sdk.Audit
+	authz                 sdk.Authz
+	fga                   sdk.FGA
+	thirdPartyApplication sdk.ThirdPartyApplication
 }
 
 func NewManagement(conf ManagementParams, c *api.Client) *managementService {
@@ -42,6 +43,7 @@ func NewManagement(conf ManagementParams, c *api.Client) *managementService {
 	service := &managementService{managementBase: base}
 	service.tenant = &tenant{managementBase: base}
 	service.ssoApplication = &ssoApplication{managementBase: base}
+	service.thirdPartyApplication = &thirdPartyApplication{managementBase: base}
 	service.user = &user{managementBase: base}
 	service.accessKey = &accessKey{managementBase: base}
 	service.sso = &sso{managementBase: base}
@@ -131,6 +133,11 @@ func (mgmt *managementService) Authz() sdk.Authz {
 func (mgmt *managementService) FGA() sdk.FGA {
 	mgmt.ensureManagementKey()
 	return mgmt.fga
+}
+
+func (mgmt *managementService) ThirdPartyApplication() sdk.ThirdPartyApplication {
+	mgmt.ensureManagementKey()
+	return mgmt.thirdPartyApplication
 }
 
 func (mgmt *managementService) ensureManagementKey() {
