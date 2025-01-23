@@ -825,6 +825,46 @@ type FGA interface {
 	Check(ctx context.Context, relations []*descope.FGARelation) ([]*descope.FGACheck, error)
 }
 
+// Provides functions for managing third party applications in a project.
+type ThirdPartyApplication interface {
+	// Create a new third party application with the given name.
+	//
+	// ThirdPartyApplicationRequest fields:
+	// Name: The third party application's name.
+	// Description: Optional third party application description.
+	// Logo: Optional third party application logo.
+	// LoginPageURL: The URL where login page is hosted.
+	// ApprovedCallbackUrls: List of approved callback URLs.
+	// PermissionsScopes: List of permissions scopes.
+	// AttributesScopes: List of attributes scopes.
+	//
+	// The argument appRequest.Name must be unique per project.
+	CreateApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) (id string, secret string, err error)
+
+	// Update an existing third party application.
+	//
+	// IMPORTANT: All parameters are required and will override whatever value is currently
+	// set in the existing sso application. Use carefully.
+	UpdateApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) error
+
+	// Delete an existing third party application.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteApplication(ctx context.Context, id string) error
+
+	// Load a project third party application by id
+	LoadApplication(ctx context.Context, id string) (*descope.ThirdPartyApplication, error)
+
+	// Load all project third party applications
+	LoadAllApplications(ctx context.Context) ([]*descope.ThirdPartyApplication, error)
+
+	// Delete a consent for a third party application.
+	DeleteConsents(ctx context.Context, options *descope.ThirdPartyApplicationConsentDeleteOptions) error
+
+	// Search consents for a third party application.
+	SearchConsents(ctx context.Context, options *descope.ThirdPartyApplicationConsentSearchOptions) ([]*descope.ThirdPartyApplicationConsent, int, error)
+}
+
 // Provides various APIs for managing a Descope project programmatically. A management key must
 // be provided in the DecopeClient configuration or by setting the DESCOPE_MANAGEMENT_KEY
 // environment variable. Management keys can be generated in the Descope console.
@@ -873,4 +913,7 @@ type Management interface {
 
 	// Provides functions for FGA authz management
 	FGA() FGA
+
+	// Provides functions for managing third party applications in a project.
+	ThirdPartyApplication() ThirdPartyApplication
 }
