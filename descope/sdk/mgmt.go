@@ -554,8 +554,10 @@ type PasswordManagement interface {
 // Provide functions for manipulating valid JWT
 type JWT interface {
 	// Update a valid JWT with the custom claims provided
+	// Also the expiration of the jwt can be set by providing a duration in seconds
+	// providing 0, will leave the expiration as is
 	// The new JWT will be returned
-	UpdateJWTWithCustomClaims(ctx context.Context, jwt string, customClaims map[string]any) (string, error)
+	UpdateJWTWithCustomClaims(ctx context.Context, jwt string, customClaims map[string]any, refreshDuration int32) (string, error)
 
 	// Impersonate another user
 	// The impersonator user must have `impersonation` permission in order for this request to work
