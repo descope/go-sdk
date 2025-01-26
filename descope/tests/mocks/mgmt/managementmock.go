@@ -94,7 +94,7 @@ func (m *MockManagement) ThirdPartyApplication() sdk.ThirdPartyApplication {
 // Mock JWT
 
 type MockJWT struct {
-	UpdateJWTWithCustomClaimsAssert   func(jwt string, customClaims map[string]any)
+	UpdateJWTWithCustomClaimsAssert   func(jwt string, customClaims map[string]any, refreshDuration int32)
 	UpdateJWTWithCustomClaimsResponse string
 	UpdateJWTWithCustomClaimsError    error
 
@@ -103,9 +103,9 @@ type MockJWT struct {
 	ImpersonateError    error
 }
 
-func (m *MockJWT) UpdateJWTWithCustomClaims(_ context.Context, jwt string, customClaims map[string]any) (string, error) {
+func (m *MockJWT) UpdateJWTWithCustomClaims(_ context.Context, jwt string, customClaims map[string]any, refreshDuration int32) (string, error) {
 	if m.UpdateJWTWithCustomClaimsAssert != nil {
-		m.UpdateJWTWithCustomClaimsAssert(jwt, customClaims)
+		m.UpdateJWTWithCustomClaimsAssert(jwt, customClaims, refreshDuration)
 	}
 	return m.UpdateJWTWithCustomClaimsResponse, m.UpdateJWTWithCustomClaimsError
 }
