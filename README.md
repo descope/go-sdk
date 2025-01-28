@@ -23,7 +23,7 @@ A Descope `Project ID` is required to initialize the SDK. Find it on the
 [project page in the Descope Console](https://app.descope.com/settings/project).
 
 ```go
-import "github.com/descope/go-sdk/descope/client"
+import "github.com/descope/go-sdk/v2/descope/client"
 
 // Initialized after setting the DESCOPE_PROJECT_ID env var
 descopeClient, err := client.New()
@@ -547,7 +547,7 @@ instead of using the ValidateSessions function. This middleware will automatical
 request and save the current user ID in the context for further usage. On failure, it will respond with `401 Unauthorized`.
 
 ```go
-import "github.com/descope/go-sdk/descope/sdk"
+import "github.com/descope/go-sdk/v2/descope/sdk"
 
 // ...
 
@@ -690,7 +690,7 @@ To use the management API you'll need a `Management Key` along with your `Projec
 Create one in the [Descope Console](https://app.descope.com/settings/company/managementkeys).
 
 ```go
-import "github.com/descope/go-sdk/descope/client"
+import "github.com/descope/go-sdk/v2/descope/client"
 
 // Initialized after setting the DESCOPE_PROJECT_ID and the DESCOPE_MANAGEMENT_KEY env vars
 descopeClient, err := client.New()
