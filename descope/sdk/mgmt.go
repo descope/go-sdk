@@ -190,17 +190,17 @@ type User interface {
 	// IMPORTANT: All parameters will override whatever values are currently set
 	// in the existing user. Use carefully.
 	// Instead, use Patch if you don't want to pass all parameters.
-	Update(ctx context.Context, loginID string, user *descope.UserRequest) (*descope.UserResponse, error)
+	Update(ctx context.Context, loginIDOrUserID string, user *descope.UserRequest) (*descope.UserResponse, error)
 
 	// Patches an existing user.
 	//
 	// Only the fields that are set in the request will be updated.
-	Patch(ctx context.Context, loginID string, user *descope.PatchUserRequest) (*descope.UserResponse, error)
+	Patch(ctx context.Context, loginIDOrUserID string, user *descope.PatchUserRequest) (*descope.UserResponse, error)
 
 	// Delete an existing user.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
-	Delete(ctx context.Context, loginID string) error
+	Delete(ctx context.Context, loginIDOrUserID string) error
 
 	// Delete an existing user by User ID. The user ID can be found
 	// on the user's JWT.
@@ -224,8 +224,8 @@ type User interface {
 
 	// Load an existing user.
 	//
-	// The loginID is required and the user will be fetched according to it.
-	Load(ctx context.Context, loginID string) (*descope.UserResponse, error)
+	// The loginIDOrUserID parameter is required and the user will be fetched according to it.
+	Load(ctx context.Context, loginIDOrUserID string) (*descope.UserResponse, error)
 
 	// Load an existing user by User ID. The user ID can be found
 	// on the user's JWT.
@@ -250,10 +250,10 @@ type User interface {
 	SearchAllTestUsers(ctx context.Context, options *descope.UserSearchOptions) ([]*descope.UserResponse, int, error)
 
 	// Activate an existing user.
-	Activate(ctx context.Context, loginID string) (*descope.UserResponse, error)
+	Activate(ctx context.Context, loginIDOrUserID string) (*descope.UserResponse, error)
 
 	// Deactivate an existing user.
-	Deactivate(ctx context.Context, loginID string) (*descope.UserResponse, error)
+	Deactivate(ctx context.Context, loginIDOrUserID string) (*descope.UserResponse, error)
 
 	// Logout given user from all their devices, by login ID
 	LogoutUser(ctx context.Context, loginID string) error
@@ -272,7 +272,7 @@ type User interface {
 	//
 	// The isVerified flag must be true for the user to be able to login with
 	// the email address.
-	UpdateEmail(ctx context.Context, loginID, email string, isVerified bool) (*descope.UserResponse, error)
+	UpdateEmail(ctx context.Context, loginIDOrUserID, email string, isVerified bool) (*descope.UserResponse, error)
 
 	// Update the phone number for an existing user.
 	//
@@ -280,64 +280,64 @@ type User interface {
 	//
 	// The isVerified flag must be true for the user to be able to login with
 	// the phone number.
-	UpdatePhone(ctx context.Context, loginID, phone string, isVerified bool) (*descope.UserResponse, error)
+	UpdatePhone(ctx context.Context, loginIDOrUserID, phone string, isVerified bool) (*descope.UserResponse, error)
 
 	// Update an existing user's display name (i.e., their full name).
 	//
 	// The displayName parameter can be empty in which case the name will be removed.
-	UpdateDisplayName(ctx context.Context, loginID, displayName string) (*descope.UserResponse, error)
+	UpdateDisplayName(ctx context.Context, loginIDOrUserID, displayName string) (*descope.UserResponse, error)
 
 	// Update an existing user's first/last/middle name.
 	//
 	// An empty parameter, means that this value will be removed.
-	UpdateUserNames(ctx context.Context, loginID, givenName, middleName, familyName string) (*descope.UserResponse, error)
+	UpdateUserNames(ctx context.Context, loginIDOrUserID, givenName, middleName, familyName string) (*descope.UserResponse, error)
 
 	// Update an existing user's picture (i.e., url to the avatar).
 	//
 	// The picture parameter can be empty in which case the picture will be removed.
-	UpdatePicture(ctx context.Context, loginID, picture string) (*descope.UserResponse, error)
+	UpdatePicture(ctx context.Context, loginIDOrUserID, picture string) (*descope.UserResponse, error)
 
 	// Update an existing user's custom attribute.
 	//
 	// key should be a custom attribute that was already declared in the Descope console app.
 	// value should match the type of the declared attribute
-	UpdateCustomAttribute(ctx context.Context, loginID, key string, value any) (*descope.UserResponse, error)
+	UpdateCustomAttribute(ctx context.Context, loginIDOrUserID, key string, value any) (*descope.UserResponse, error)
 
 	// Set roles for a user without tenant association. Use SetTenantRoles for users
 	// that are part of a multi-tenant project.
-	SetRoles(ctx context.Context, loginID string, roles []string) (*descope.UserResponse, error)
+	SetRoles(ctx context.Context, loginIDOrUserID string, roles []string) (*descope.UserResponse, error)
 
 	// Add roles for a user without tenant association. Use AddTenantRoles for users
 	// that are part of a multi-tenant project.
-	AddRoles(ctx context.Context, loginID string, roles []string) (*descope.UserResponse, error)
+	AddRoles(ctx context.Context, loginIDOrUserID string, roles []string) (*descope.UserResponse, error)
 
 	// Remove roles from a user without tenant association. Use RemoveTenantRoles for
 	// users that are part of a multi-tenant project.
-	RemoveRoles(ctx context.Context, loginID string, roles []string) (*descope.UserResponse, error)
+	RemoveRoles(ctx context.Context, loginIDOrUserID string, roles []string) (*descope.UserResponse, error)
 
 	// Associate SSO application for a user.
-	AddSSOApps(ctx context.Context, loginID string, ssoAppIDs []string) (*descope.UserResponse, error)
+	AddSSOApps(ctx context.Context, loginIDOrUserID string, ssoAppIDs []string) (*descope.UserResponse, error)
 
 	// Set (associate) SSO applications for a user.
-	SetSSOApps(ctx context.Context, loginID string, ssoAppIDs []string) (*descope.UserResponse, error)
+	SetSSOApps(ctx context.Context, loginIDOrUserID string, ssoAppIDs []string) (*descope.UserResponse, error)
 
 	// Remove SSO application association from a user.
-	RemoveSSOApps(ctx context.Context, loginID string, ssoAppIDs []string) (*descope.UserResponse, error)
+	RemoveSSOApps(ctx context.Context, loginIDOrUserID string, ssoAppIDs []string) (*descope.UserResponse, error)
 
 	// Add a tenant association for an existing user.
-	AddTenant(ctx context.Context, loginID string, tenantID string) (*descope.UserResponse, error)
+	AddTenant(ctx context.Context, loginIDOrUserID string, tenantID string) (*descope.UserResponse, error)
 
 	// Remove a tenant association from an existing user.
-	RemoveTenant(ctx context.Context, loginID string, tenantID string) (*descope.UserResponse, error)
+	RemoveTenant(ctx context.Context, loginIDOrUserID string, tenantID string) (*descope.UserResponse, error)
 
 	// Set roles for a user in a specific tenant.
-	SetTenantRoles(ctx context.Context, loginID string, tenantID string, roles []string) (*descope.UserResponse, error)
+	SetTenantRoles(ctx context.Context, loginIDOrUserID string, tenantID string, roles []string) (*descope.UserResponse, error)
 
 	// Add roles for a user in a specific tenant.
-	AddTenantRoles(ctx context.Context, loginID string, tenantID string, roles []string) (*descope.UserResponse, error)
+	AddTenantRoles(ctx context.Context, loginIDOrUserID string, tenantID string, roles []string) (*descope.UserResponse, error)
 
 	// Remove roles from a user in a specific tenant.
-	RemoveTenantRoles(ctx context.Context, loginID string, tenantID string, roles []string) (*descope.UserResponse, error)
+	RemoveTenantRoles(ctx context.Context, loginIDOrUserID string, tenantID string, roles []string) (*descope.UserResponse, error)
 
 	// Set a temporary password for the given login ID.
 	// Note: The password will automatically be set as expired.
@@ -554,13 +554,15 @@ type PasswordManagement interface {
 // Provide functions for manipulating valid JWT
 type JWT interface {
 	// Update a valid JWT with the custom claims provided
+	// Also the expiration of the jwt can be set by providing a duration in seconds
+	// providing 0, will leave the expiration as is
 	// The new JWT will be returned
-	UpdateJWTWithCustomClaims(ctx context.Context, jwt string, customClaims map[string]any) (string, error)
+	UpdateJWTWithCustomClaims(ctx context.Context, jwt string, customClaims map[string]any, refreshDuration int32) (string, error)
 
 	// Impersonate another user
 	// The impersonator user must have `impersonation` permission in order for this request to work
 	// The response would be a refresh JWT of the impersonated user
-	Impersonate(ctx context.Context, impersonatorID string, loginID string, validateConcent bool) (string, error)
+	Impersonate(ctx context.Context, impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string) (string, error)
 }
 
 // Provides functions for managing permissions in a project.
@@ -742,7 +744,8 @@ type Project interface {
 
 // Provides search project audit trail
 type Audit interface {
-	Search(ctx context.Context, options *descope.AuditSearchOptions) ([]*descope.AuditRecord, error)
+	Search(ctx context.Context, options *descope.AuditSearchOptions) ([]*descope.AuditRecord, error) // Deprecated: replaced by Audit.SearchAll
+	SearchAll(ctx context.Context, options *descope.AuditSearchOptions) ([]*descope.AuditRecord, int, error)
 	CreateEvent(ctx context.Context, options *descope.AuditCreateOptions) error
 }
 
@@ -824,6 +827,46 @@ type FGA interface {
 	Check(ctx context.Context, relations []*descope.FGARelation) ([]*descope.FGACheck, error)
 }
 
+// Provides functions for managing third party applications in a project.
+type ThirdPartyApplication interface {
+	// Create a new third party application with the given name.
+	//
+	// ThirdPartyApplicationRequest fields:
+	// Name: The third party application's name.
+	// Description: Optional third party application description.
+	// Logo: Optional third party application logo.
+	// LoginPageURL: The URL where login page is hosted.
+	// ApprovedCallbackUrls: List of approved callback URLs.
+	// PermissionsScopes: List of permissions scopes.
+	// AttributesScopes: List of attributes scopes.
+	//
+	// The argument appRequest.Name must be unique per project.
+	CreateApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) (id string, secret string, err error)
+
+	// Update an existing third party application.
+	//
+	// IMPORTANT: All parameters are required and will override whatever value is currently
+	// set in the existing sso application. Use carefully.
+	UpdateApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) error
+
+	// Delete an existing third party application.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteApplication(ctx context.Context, id string) error
+
+	// Load a project third party application by id
+	LoadApplication(ctx context.Context, id string) (*descope.ThirdPartyApplication, error)
+
+	// Load all project third party applications
+	LoadAllApplications(ctx context.Context) ([]*descope.ThirdPartyApplication, error)
+
+	// Delete a consent for a third party application.
+	DeleteConsents(ctx context.Context, options *descope.ThirdPartyApplicationConsentDeleteOptions) error
+
+	// Search consents for a third party application.
+	SearchConsents(ctx context.Context, options *descope.ThirdPartyApplicationConsentSearchOptions) ([]*descope.ThirdPartyApplicationConsent, int, error)
+}
+
 // Provides various APIs for managing a Descope project programmatically. A management key must
 // be provided in the DecopeClient configuration or by setting the DESCOPE_MANAGEMENT_KEY
 // environment variable. Management keys can be generated in the Descope console.
@@ -872,4 +915,7 @@ type Management interface {
 
 	// Provides functions for FGA authz management
 	FGA() FGA
+
+	// Provides functions for managing third party applications in a project.
+	ThirdPartyApplication() ThirdPartyApplication
 }

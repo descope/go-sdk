@@ -42,7 +42,9 @@ func TestAuditSearch(t *testing.T) {
 			Tenants:       []string{"t1"},
 			Data:          map[string]interface{}{"x": "y1", "z": 2},
 		},
-	}}
+	},
+		Total: 2,
+	}
 	searchOptions := &descope.AuditSearchOptions{
 		UserIDs:         []string{"u1", "u2"},
 		Actions:         []string{"a1", "a2"},
@@ -56,6 +58,8 @@ func TestAuditSearch(t *testing.T) {
 		Tenants:         []string{"t1"},
 		NoTenants:       true,
 		Text:            "kuku",
+		Limit:           10,
+		Page:            1,
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		called = true
@@ -75,22 +79,32 @@ func TestAuditSearch(t *testing.T) {
 		require.EqualValues(t, []interface{}{searchOptions.Tenants[0]}, req["tenants"])
 		require.EqualValues(t, searchOptions.NoTenants, req["noTenants"])
 		require.EqualValues(t, searchOptions.Text, req["text"])
+		require.EqualValues(t, searchOptions.Limit, req["size"])
+		require.EqualValues(t, searchOptions.Page, req["page"])
 	}, response))
+	doAsserts := func(res []*descope.AuditRecord, err error) {
+		require.NoError(t, err)
+		require.Len(t, res, 2)
+		assert.Equal(t, response.Audits[0].ProjectID, res[0].ProjectID)
+		assert.Equal(t, response.Audits[0].UserID, res[0].UserID)
+		assert.Equal(t, response.Audits[0].Action, res[0].Action)
+		assert.Equal(t, response.Audits[0].Occurred, strconv.FormatInt(res[0].Occurred.UnixMilli(), 10))
+		assert.Equal(t, response.Audits[0].Device, res[0].Device)
+		assert.Equal(t, response.Audits[0].Method, res[0].Method)
+		assert.Equal(t, response.Audits[0].Geo, res[0].Geo)
+		assert.Equal(t, response.Audits[0].RemoteAddress, res[0].RemoteAddress)
+		assert.EqualValues(t, response.Audits[0].ExternalIDs, res[0].LoginIDs)
+		assert.EqualValues(t, response.Audits[0].Tenants, res[0].Tenants)
+		assert.EqualValues(t, response.Audits[0].Data["x"], res[0].Data["x"])
+		assert.True(t, called)
+	}
+	//run test for Deprecated Search API
 	res, err := mgmt.Audit().Search(context.Background(), searchOptions)
-	require.NoError(t, err)
-	require.Len(t, res, 2)
-	assert.Equal(t, response.Audits[0].ProjectID, res[0].ProjectID)
-	assert.Equal(t, response.Audits[0].UserID, res[0].UserID)
-	assert.Equal(t, response.Audits[0].Action, res[0].Action)
-	assert.Equal(t, response.Audits[0].Occurred, strconv.FormatInt(res[0].Occurred.UnixMilli(), 10))
-	assert.Equal(t, response.Audits[0].Device, res[0].Device)
-	assert.Equal(t, response.Audits[0].Method, res[0].Method)
-	assert.Equal(t, response.Audits[0].Geo, res[0].Geo)
-	assert.Equal(t, response.Audits[0].RemoteAddress, res[0].RemoteAddress)
-	assert.EqualValues(t, response.Audits[0].ExternalIDs, res[0].LoginIDs)
-	assert.EqualValues(t, response.Audits[0].Tenants, res[0].Tenants)
-	assert.EqualValues(t, response.Audits[0].Data["x"], res[0].Data["x"])
-	assert.True(t, called)
+	doAsserts(res, err)
+	//run test for SearchAll API, and also assert the value of the "total" return value
+	res, total, err := mgmt.Audit().SearchAll(context.Background(), searchOptions)
+	doAsserts(res, err)
+	assert.Equal(t, 2, total)
 }
 
 func TestAuditCreate(t *testing.T) {

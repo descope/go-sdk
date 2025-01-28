@@ -861,32 +861,43 @@ userReqUpdate.Tenants = []*descope.AssociatedTenant{
 }
 userReqUpdate.SSOAppIDs = []string{"appId3"}
 err := descopeClient.Management.User().Update(context.Background(), "desmond@descope.com", userReqUpdate)
+// If needed, users can be updated using their ID as well
+err := descopeClient.Management.User().Update(context.Background(), "<user-id>", userReqUpdate)
 
 // On the other hand, the patch functionality will only change selected fields as is. Use carefully.
 userReqPath := &descope.UserRequest{}
 userReqPatch.Name = "Desmond Copeland Jr."
 err := descopeClient.Management.User().Patch(context.Background(), "desmond@descope.com", userReqPatch)
+// If needed, users can be patched using their ID as well
+err := descopeClient.Management.User().Patch(context.Background(), "<user-id>", userReqPatch)
 
 // Update loginID of a user, or remove a login ID (last login ID cannot be removed)
 err := descopeClient.Management.User().UpdateLoginID(context.Background(), "desmond@descope.com", "bane@descope.com")
 
 // Associate SSO application for a user.
 user, err := descopeClient.Management.User().AddSSOApps(context.Background(), "desmond@descope.com",[]string{"appId1"})
+// If needed, can be using the user ID as well
+user, err := descopeClient.Management.User().AddSSOApps(context.Background(), "<user-id>",[]string{"appId1"})
 
 // Set (associate) SSO application for a user.
 user, err := descopeClient.Management.User().SetSSOApps(context.Background(), "desmond@descope.com",[]string{"appId1", "appId2"})
+// If needed, can be using the user ID as well
+user, err := descopeClient.Management.User().SetSSOApps(context.Background(), "<user-id>",[]string{"appId1", "appId2"})
 
 // Remove SSO application association from a user.
 user, err := descopeClient.Management.User().RemoveSSOApps(context.Background(), "desmond@descope.com",[]string{"appId2"})
+// If needed, can be using the user ID as well
+user, err := descopeClient.Management.User().RemoveSSOApps(context.Background(), "<user-id>",[]string{"appId2"})
 
 // User deletion cannot be undone. Use carefully.
 err := descopeClient.Management.User().Delete(context.Background(), "desmond@descope.com")
+// If needed, users can be loaded using their ID as well
+err := descopeClient.Management.User().Delete(context.Background(), "<user-id>")
 
 // Load specific user
 userRes, err := descopeClient.Management.User().Load(context.Background(), "desmond@descope.com")
-
 // If needed, users can be loaded using their ID as well
-userRes, err := descopeClient.Management.User().LoadByUserID(context.Background(), "<user-id>")
+userRes, err := descopeClient.Management.User().Load(context.Background(), "<user-id>")
 
 // Search all users, optionally according to tenant and/or role filter
 // Results can be paginated using the limit and page parameters
@@ -1262,7 +1273,7 @@ You can add custom claims to a valid JWT.
 updatedJWT, err := descopeClient.Management.JWT().UpdateJWTWithCustomClaims(context.Background(), "original-jwt", map[string]any{
     "custom-key1": "custom-value1",
     "custom-key2": "custom-value2",
-})
+}, 60*9)
 if err != nil {
     // handle error
 }
@@ -1273,9 +1284,10 @@ if err != nil {
 You can impersonate to another user
 The impersonator user must have the `impersonation` permission in order for this request to work.
 The response would be a refresh JWT of the impersonated user
-
+TenantID would be the tenant to set as DCT claim, in case set
+customClaims - would be extra claims that are needed on the JWT
 ```go
-refreshJWT, err := descopeClient.Management.JWT().Impersonate(context.Background(), "impersonator id", "login id", true)
+refreshJWT, err := descopeClient.Management.JWT().Impersonate(context.Background(), "impersonator id", "login id", true, map[string]any{"k1":"v1"}, "T1")
 if err != nil {
     // handle error
 }
@@ -1513,6 +1525,51 @@ apps, err = tc.DescopeClient().Management.SSOApplication().LoadAll(context.Backg
 
 // SSO application deletion cannot be undone. Use carefully.
 descopeClient.DescopeClient().Management.SSOApplication().Delete(context.Background(), "appId")
+```
+
+### Manage Third Party Applications
+
+You can create, update, delete or load third party applications, while also search and delete existing consents related to any third party application:
+
+```go
+// Create third party application
+req := &descope.ThirdPartyApplicationRequest{
+	Name: "My OIDC App",
+	Logo: "data:image/jpeg;base64...",
+	LoginPageURL: "http://dummy.com",
+	PermissionsScopes: []*descope.ThirdPartyApplicationScope{
+		{Name: "read", Description: "Read all", Values: []string{"Support"}},
+	},
+	AttributesScopes: []*descope.ThirdPartyApplicationScope{
+		{Name: "base", Description: "Basic attribute requirements", Values: []string{"email", "phone"}},
+	},
+}
+appID, secret, err = descopeClient.Management.ThirdPartyApplication().CreateApplication(context.Background(), req)
+
+// Update a third party application by id
+// Update will override all fields as is. Use carefully.
+err = tc.DescopeClient().Management.ThirdPartyApplication().UpdateApplication(context.TODO(), &descope.ThirdPartyApplicationRequest{ID: "my-id", Name: "my new name"})
+
+// Load third party application by id
+app, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadApplication(context.Background(), "appId")
+
+// Load all third party applications
+apps, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadAllApplications(context.Background())
+
+// Delete a third party application.
+// Deletion cannot be undone. Use carefully.
+err = descopeClient.DescopeClient().Management.ThirdPartyApplication().DeleteApplication(context.Background(), "appId")
+
+// Search third party applications consents by pages using a filter options, such as application id, user id, etc.
+consents, total, err = descopeClient.DescopeClient().Management.ThirdPartyApplication().SearchConsents(context.Background(), &descope.ThirdPartyApplicationConsentSearchOptions{
+	AppID: "appId"
+})
+
+// Delete third party applications consents by filter options, such as application id, consent ids or user ids.
+err = descopeClient.DescopeClient().Management.ThirdPartyApplication().DeleteConsents(context.Background(),  &descope.ThirdPartyApplicationConsentDeleteOptions{
+	UserIDs: string{"my-user"}
+})
+
 ```
 
 ## Code Examples

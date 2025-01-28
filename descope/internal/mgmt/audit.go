@@ -17,7 +17,7 @@ type audit struct {
 
 var _ sdk.Audit = &audit{}
 
-func (a *audit) Search(ctx context.Context, options *descope.AuditSearchOptions) ([]*descope.AuditRecord, error) {
+func (a *audit) SearchAll(ctx context.Context, options *descope.AuditSearchOptions) ([]*descope.AuditRecord, int, error) {
 	body := map[string]any{
 		"userIds":         options.UserIDs,
 		"actions":         options.Actions,
@@ -32,12 +32,20 @@ func (a *audit) Search(ctx context.Context, options *descope.AuditSearchOptions)
 		"tenants":         options.Tenants,
 		"noTenants":       options.NoTenants,
 		"text":            options.Text,
+		"size":            options.Limit,
+		"page":            options.Page,
 	}
 	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuditSearch(), body, nil, a.conf.ManagementKey)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	return unmarshalAuditRecords(res)
+}
+
+// Deprecated: replaced by audit.SearchAll
+func (a *audit) Search(ctx context.Context, options *descope.AuditSearchOptions) ([]*descope.AuditRecord, error) {
+	records, _, err := a.SearchAll(ctx, options)
+	return records, err
 }
 
 func (a *audit) CreateEvent(ctx context.Context, options *descope.AuditCreateOptions) error {
@@ -86,20 +94,21 @@ type apiAuditRecord struct {
 
 type apiSearchAuditResponse struct {
 	Audits []*apiAuditRecord
+	Total  int
 }
 
-func unmarshalAuditRecords(res *api.HTTPResponse) ([]*descope.AuditRecord, error) {
+func unmarshalAuditRecords(res *api.HTTPResponse) ([]*descope.AuditRecord, int, error) {
 	var auditRes *apiSearchAuditResponse
 	err := utils.Unmarshal([]byte(res.BodyStr), &auditRes)
 	if err != nil {
 		// notest
-		return nil, err
+		return nil, 0, err
 	}
 	var records []*descope.AuditRecord
 	for _, rec := range auditRes.Audits {
 		occurred, err := strconv.ParseInt(rec.Occurred, 10, 64)
 		if err != nil {
-			return nil, err
+			return nil, 0, err
 		}
 		records = append(records, &descope.AuditRecord{
 			ProjectID:     rec.ProjectID,
@@ -117,5 +126,5 @@ func unmarshalAuditRecords(res *api.HTTPResponse) ([]*descope.AuditRecord, error
 			Type:          rec.Type,
 		})
 	}
-	return records, nil
+	return records, auditRes.Total, nil
 }

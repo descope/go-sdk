@@ -24,6 +24,7 @@ type MockManagement struct {
 	*MockAudit
 	*MockAuthz
 	*MockFGA
+	*MockThirdPartyApplication
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -86,28 +87,32 @@ func (m *MockManagement) FGA() sdk.FGA {
 	return m.MockFGA
 }
 
+func (m *MockManagement) ThirdPartyApplication() sdk.ThirdPartyApplication {
+	return m.MockThirdPartyApplication
+}
+
 // Mock JWT
 
 type MockJWT struct {
-	UpdateJWTWithCustomClaimsAssert   func(jwt string, customClaims map[string]any)
+	UpdateJWTWithCustomClaimsAssert   func(jwt string, customClaims map[string]any, refreshDuration int32)
 	UpdateJWTWithCustomClaimsResponse string
 	UpdateJWTWithCustomClaimsError    error
 
-	ImpersonateAssert   func(impersonatorID string, loginID string, validateConcent bool)
+	ImpersonateAssert   func(impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string)
 	ImpersonateResponse string
 	ImpersonateError    error
 }
 
-func (m *MockJWT) UpdateJWTWithCustomClaims(_ context.Context, jwt string, customClaims map[string]any) (string, error) {
+func (m *MockJWT) UpdateJWTWithCustomClaims(_ context.Context, jwt string, customClaims map[string]any, refreshDuration int32) (string, error) {
 	if m.UpdateJWTWithCustomClaimsAssert != nil {
-		m.UpdateJWTWithCustomClaimsAssert(jwt, customClaims)
+		m.UpdateJWTWithCustomClaimsAssert(jwt, customClaims, refreshDuration)
 	}
 	return m.UpdateJWTWithCustomClaimsResponse, m.UpdateJWTWithCustomClaimsError
 }
 
-func (m *MockJWT) Impersonate(_ context.Context, impersonatorID string, loginID string, validateConcent bool) (string, error) {
+func (m *MockJWT) Impersonate(_ context.Context, impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string) (string, error) {
 	if m.ImpersonateAssert != nil {
-		m.ImpersonateAssert(impersonatorID, loginID, validateConcent)
+		m.ImpersonateAssert(impersonatorID, loginID, validateConcent, customClaims, tenantID)
 	}
 	return m.ImpersonateResponse, m.ImpersonateError
 }
@@ -1290,6 +1295,7 @@ func (m *MockProject) ListProjects(_ context.Context) ([]*descope.Project, error
 type MockAudit struct {
 	SearchAssert   func(*descope.AuditSearchOptions)
 	SearchResponse []*descope.AuditRecord
+	SearchTotal    int
 	SearchError    error
 
 	CreateEventAssert func(*descope.AuditCreateOptions)
@@ -1301,6 +1307,13 @@ func (m *MockAudit) Search(_ context.Context, options *descope.AuditSearchOption
 		m.SearchAssert(options)
 	}
 	return m.SearchResponse, m.SearchError
+}
+
+func (m *MockAudit) SearchAll(_ context.Context, options *descope.AuditSearchOptions) ([]*descope.AuditRecord, int, error) {
+	if m.SearchAssert != nil {
+		m.SearchAssert(options)
+	}
+	return m.SearchResponse, m.SearchTotal, m.SearchError
 }
 
 func (m *MockAudit) CreateEvent(_ context.Context, options *descope.AuditCreateOptions) error {
@@ -1523,4 +1536,79 @@ func (m *MockFGA) Check(_ context.Context, relations []*descope.FGARelation) ([]
 		m.CheckAssert(relations)
 	}
 	return m.CheckResponse, m.CheckError
+}
+
+// Mock Third Party Application
+type MockThirdPartyApplication struct {
+	UpdateAssert func(*descope.ThirdPartyApplicationRequest)
+	UpdateError  error
+
+	CreateApplicationAssert         func(*descope.ThirdPartyApplicationRequest)
+	CreateApplicationIDResponse     string
+	CreateApplicationSecretResponse string
+	CreateApplicationError          error
+
+	DeleteApplicationAssert func(id string)
+	DeleteApplicationError  error
+
+	LoadApplicationAssert   func(id string)
+	LoadApplicationResponse *descope.ThirdPartyApplication
+	LoadApplicationError    error
+
+	LoadAllApplicationsResponse []*descope.ThirdPartyApplication
+	LoadAllApplicationsError    error
+
+	DeleteConsentsAssert func(*descope.ThirdPartyApplicationConsentDeleteOptions)
+	DeleteConsentsError  error
+
+	SearchConsentsAssert        func(*descope.ThirdPartyApplicationConsentSearchOptions)
+	SearchConsentsResponse      []*descope.ThirdPartyApplicationConsent
+	SearchConsentsTotalResponse int
+	SearchConsentsError         error
+}
+
+func (m *MockThirdPartyApplication) CreateApplication(_ context.Context, app *descope.ThirdPartyApplicationRequest) (string, string, error) {
+	if m.CreateApplicationAssert != nil {
+		m.CreateApplicationAssert(app)
+	}
+	return m.CreateApplicationIDResponse, m.CreateApplicationSecretResponse, m.CreateApplicationError
+}
+
+func (m *MockThirdPartyApplication) UpdateApplication(_ context.Context, app *descope.ThirdPartyApplicationRequest) error {
+	if m.UpdateAssert != nil {
+		m.UpdateAssert(app)
+	}
+	return m.UpdateError
+}
+
+func (m *MockThirdPartyApplication) DeleteApplication(_ context.Context, id string) error {
+	if m.DeleteApplicationAssert != nil {
+		m.DeleteApplicationAssert(id)
+	}
+	return m.DeleteApplicationError
+}
+
+func (m *MockThirdPartyApplication) LoadApplication(_ context.Context, id string) (*descope.ThirdPartyApplication, error) {
+	if m.LoadApplicationAssert != nil {
+		m.LoadApplicationAssert(id)
+	}
+	return m.LoadApplicationResponse, m.LoadApplicationError
+}
+
+func (m *MockThirdPartyApplication) LoadAllApplications(_ context.Context) ([]*descope.ThirdPartyApplication, error) {
+	return m.LoadAllApplicationsResponse, m.LoadAllApplicationsError
+}
+
+func (m *MockThirdPartyApplication) DeleteConsents(_ context.Context, options *descope.ThirdPartyApplicationConsentDeleteOptions) error {
+	if m.DeleteConsentsAssert != nil {
+		m.DeleteConsentsAssert(options)
+	}
+	return m.DeleteConsentsError
+}
+
+func (m *MockThirdPartyApplication) SearchConsents(_ context.Context, options *descope.ThirdPartyApplicationConsentSearchOptions) ([]*descope.ThirdPartyApplicationConsent, int, error) {
+	if m.SearchConsentsAssert != nil {
+		m.SearchConsentsAssert(options)
+	}
+	return m.SearchConsentsResponse, m.SearchConsentsTotalResponse, m.SearchConsentsError
 }

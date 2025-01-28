@@ -18,14 +18,15 @@ type jwtRes struct {
 	JWT string `json:"jwt,omitempty"`
 }
 
-func (j *jwt) UpdateJWTWithCustomClaims(ctx context.Context, jwt string, customClaims map[string]any) (string, error) {
+func (j *jwt) UpdateJWTWithCustomClaims(ctx context.Context, jwt string, customClaims map[string]any, refreshDuration int32) (string, error) {
 	if jwt == "" {
 		return "", utils.NewInvalidArgumentError("jwt")
 	}
 	// customClaims can be nil, it will mean that this JWT will be validated, and updated authz data will be set
 	req := map[string]any{
-		"jwt":          jwt,
-		"customClaims": customClaims,
+		"jwt":             jwt,
+		"customClaims":    customClaims,
+		"refreshDuration": refreshDuration,
 	}
 	res, err := j.client.DoPostRequest(ctx, api.Routes.ManagementUpdateJWT(), req, nil, j.conf.ManagementKey)
 	if err != nil {
@@ -39,7 +40,7 @@ func (j *jwt) UpdateJWTWithCustomClaims(ctx context.Context, jwt string, customC
 	return jRes.JWT, nil
 }
 
-func (j *jwt) Impersonate(ctx context.Context, impersonatorID string, loginID string, validateConcent bool) (string, error) {
+func (j *jwt) Impersonate(ctx context.Context, impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string) (string, error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
@@ -50,6 +51,8 @@ func (j *jwt) Impersonate(ctx context.Context, impersonatorID string, loginID st
 		"loginId":         loginID,
 		"impersonatorId":  impersonatorID,
 		"validateConsent": validateConcent,
+		"customClaims":    customClaims,
+		"selectedTenant":  tenantID,
 	}
 	res, err := j.client.DoPostRequest(ctx, api.Routes.ManagementImpersonate(), req, nil, j.conf.ManagementKey)
 	if err != nil {

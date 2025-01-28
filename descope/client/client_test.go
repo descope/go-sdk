@@ -101,7 +101,7 @@ func TestDescopeSDKMock(t *testing.T) {
 		Management: &mocksmgmt.MockManagement{
 			MockJWT: &mocksmgmt.MockJWT{
 				UpdateJWTWithCustomClaimsResponse: updateJWTWithCustomClaimsResponse,
-				UpdateJWTWithCustomClaimsAssert: func(jwt string, _ map[string]any) {
+				UpdateJWTWithCustomClaimsAssert: func(jwt string, _ map[string]any, _ int32) {
 					updateJWTWithCustomClaimsCalled = true
 					assert.EqualValues(t, "some jwt", jwt)
 				},
@@ -115,7 +115,7 @@ func TestDescopeSDKMock(t *testing.T) {
 	assert.EqualValues(t, validateSessionResponse, info.JWT)
 	assert.ErrorIs(t, err, descope.ErrPublicKey)
 
-	res, err := api.Management.JWT().UpdateJWTWithCustomClaims(ctx, "some jwt", nil)
+	res, err := api.Management.JWT().UpdateJWTWithCustomClaims(ctx, "some jwt", nil, 0)
 	require.NoError(t, err)
 	assert.True(t, updateJWTWithCustomClaimsCalled)
 	assert.EqualValues(t, updateJWTWithCustomClaimsResponse, res)
