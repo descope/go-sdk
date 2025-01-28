@@ -3,8 +3,8 @@ package gin
 import (
 	"net/http"
 
-	"github.com/descope/go-sdk/descope"
-	"github.com/descope/go-sdk/descope/sdk"
+	"github.com/descope/go-sdk/v2/descope"
+	"github.com/descope/go-sdk/v2/descope/sdk"
 	"github.com/gin-gonic/gin"
 )
 

@@ -1,10 +1,10 @@
-module github.com/descope/go-sdk/examples/importusers
+module github.com/descope/go-sdk/v2/examples/importusers
 
 go 1.20
 
-replace github.com/descope/go-sdk => ../../
+replace github.com/descope/go-sdk/v2 => ../../
 
-require github.com/descope/go-sdk v0.0.0-00010101000000-000000000000
+require github.com/descope/go-sdk/v2 v2.0.0-00010101000000-000000000000
 
 require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.3.0 // indirect

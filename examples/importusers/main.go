@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/descope/go-sdk/descope"
-	"github.com/descope/go-sdk/descope/client"
+	"github.com/descope/go-sdk/v2/descope"
+	"github.com/descope/go-sdk/v2/descope/client"
 )
 
 var descopeClient *client.DescopeClient

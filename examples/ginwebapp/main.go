@@ -15,9 +15,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/descope/go-sdk/descope"
-	"github.com/descope/go-sdk/descope/client"
-	descopegin "github.com/descope/go-sdk/descope/gin"
+	"github.com/descope/go-sdk/v2/descope"
+	"github.com/descope/go-sdk/v2/descope/client"
+	descopegin "github.com/descope/go-sdk/v2/descope/gin"
 	"github.com/gin-gonic/gin"
 )
 

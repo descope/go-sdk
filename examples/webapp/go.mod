@@ -1,11 +1,11 @@
-module github.com/descope/go-sdk/examples/webapp
+module github.com/descope/go-sdk/v2/examples/webapp
 
 go 1.20
 
-replace github.com/descope/go-sdk => ../../
+replace github.com/descope/go-sdk/v2 => ../../
 
 require (
-	github.com/descope/go-sdk v0.0.0-00010101000000-000000000000
+	github.com/descope/go-sdk/v2 v2.0.0-00010101000000-000000000000
 	github.com/gorilla/mux v1.8.1
 )
 
