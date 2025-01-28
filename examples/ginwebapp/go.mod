@@ -3,6 +3,7 @@ module github.com/descope/go-sdk/examples/ginwebapp
 go 1.20
 
 replace github.com/descope/go-sdk => ../../
+
 replace github.com/descope/go-sdk/descope/gin => ../../descope/gin
 
 require (
@@ -42,7 +43,7 @@ require (
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/crypto v0.31.0 // indirect
 	golang.org/x/exp v0.0.0-20220921023135-46d9e7742f1e // indirect
-	golang.org/x/net v0.25.0 // indirect
+	golang.org/x/net v0.33.0 // indirect
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect
