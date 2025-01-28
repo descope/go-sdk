@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/descope/go-sdk/descope"
-	"github.com/descope/go-sdk/descope/internal/utils"
-	"github.com/descope/go-sdk/descope/tests/helpers"
+	"github.com/descope/go-sdk/v2/descope"
+	"github.com/descope/go-sdk/v2/descope/internal/utils"
+	"github.com/descope/go-sdk/v2/descope/tests/helpers"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

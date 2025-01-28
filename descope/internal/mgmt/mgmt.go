@@ -1,10 +1,10 @@
 package mgmt
 
 import (
-	"github.com/descope/go-sdk/descope"
-	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/logger"
-	"github.com/descope/go-sdk/descope/sdk"
+	"github.com/descope/go-sdk/v2/descope"
+	"github.com/descope/go-sdk/v2/descope/api"
+	"github.com/descope/go-sdk/v2/descope/logger"
+	"github.com/descope/go-sdk/v2/descope/sdk"
 )
 
 type ManagementParams struct {

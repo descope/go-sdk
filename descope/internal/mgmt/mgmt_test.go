@@ -1,8 +1,8 @@
 package mgmt
 
 import (
-	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/tests/mocks"
+	"github.com/descope/go-sdk/v2/descope/api"
+	"github.com/descope/go-sdk/v2/descope/tests/mocks"
 )
 
 func newTestMgmt(clientParams *api.ClientParams, callback mocks.Do) *managementService {

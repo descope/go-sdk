@@ -7,7 +7,7 @@ for a backend written in Go. You can read more on the [Descope Website](https://
 
 ## Requirements
 
-The SDK supports Go version 1.18 and above.
+The SDK supports Go version 1.20 and above.
 
 ## Installing the SDK
 
@@ -1286,6 +1286,7 @@ The impersonator user must have the `impersonation` permission in order for this
 The response would be a refresh JWT of the impersonated user
 TenantID would be the tenant to set as DCT claim, in case set
 customClaims - would be extra claims that are needed on the JWT
+
 ```go
 refreshJWT, err := descopeClient.Management.JWT().Impersonate(context.Background(), "impersonator id", "login id", true, map[string]any{"k1":"v1"}, "T1")
 if err != nil {
@@ -1350,8 +1351,8 @@ type org
 type folder
   relation parent: folder
   relation owner: user | org#member
-  relation editor: user 
-  relation viewer: user 
+  relation editor: user
+  relation viewer: user
 
   permission can_create: owner | parent.owner
   permission can_edit: editor | can_create
@@ -1360,14 +1361,13 @@ type folder
 type doc
   relation parent: folder
   relation owner: user | org#member
-  relation editor: user 
-  relation viewer: user 
+  relation editor: user
+  relation viewer: user
 
   permission can_create: owner | parent.owner
   permission can_edit: editor | can_create
   permission can_view: viewer | can_edit
-```  
-
+```
 
 Descope SDK allows you to fully manage the schema and relations as well as perform simple (and not so simple) checks regarding the existence of relations.
 
@@ -1377,11 +1377,11 @@ err := descopeClient.Management.FGA().SaveSchema(context.Background(), schema)
 
 // Create a relation between a resource and user
 err := descopeClient.Management.FGA().CreateRelations(context.Background(), []*descope.FGARelation {
-    {   
-		Resource: "some-doc", 
-		ResourceType: "doc", 
-		Relation: "owner", 
-		Target: "u1", 
+    {
+		Resource: "some-doc",
+		ResourceType: "doc",
+		Relation: "owner",
+		Target: "u1",
 		TargetType: "user"
     },
 })
@@ -1390,15 +1390,14 @@ err := descopeClient.Management.FGA().CreateRelations(context.Background(), []*d
 // The answer should be true because an owner can also view
 relations, err := descopeClient.Management.FGA().Check(context.Background(), []*descope.FGARelation{
     {
-		Resource: "some-doc", 
-		ResourceType: "doc", 
-		Relation: "can_view", 
-		Target: "u1", 
+		Resource: "some-doc",
+		ResourceType: "doc",
+		Relation: "can_view",
+		Target: "u1",
 		TargetType: "user"
     }
 })
 ```
-
 
 ### Manage Project
 

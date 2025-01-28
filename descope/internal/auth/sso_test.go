@@ -11,9 +11,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/descope/go-sdk/descope"
-	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/internal/utils"
+	"github.com/descope/go-sdk/v2/descope"
+	"github.com/descope/go-sdk/v2/descope/api"
+	"github.com/descope/go-sdk/v2/descope/internal/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

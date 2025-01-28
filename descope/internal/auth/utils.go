@@ -3,7 +3,7 @@ package auth
 import (
 	"regexp"
 
-	"github.com/descope/go-sdk/descope"
+	"github.com/descope/go-sdk/v2/descope"
 )
 
 type authenticationRequestBody struct {

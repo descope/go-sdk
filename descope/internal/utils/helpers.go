@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"os"
 
-	"github.com/descope/go-sdk/descope"
+	"github.com/descope/go-sdk/v2/descope"
 )
 
 // Marshal - any given object into json

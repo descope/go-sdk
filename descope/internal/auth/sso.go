@@ -4,10 +4,10 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/descope/go-sdk/descope"
-	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/internal/utils"
-	"github.com/descope/go-sdk/descope/logger"
+	"github.com/descope/go-sdk/v2/descope"
+	"github.com/descope/go-sdk/v2/descope/api"
+	"github.com/descope/go-sdk/v2/descope/internal/utils"
+	"github.com/descope/go-sdk/v2/descope/logger"
 )
 
 type sso struct {

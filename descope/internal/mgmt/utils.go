@@ -1,6 +1,6 @@
 package mgmt
 
-import "github.com/descope/go-sdk/descope"
+import "github.com/descope/go-sdk/v2/descope"
 
 func makeAssociatedTenantList(tenants []*descope.AssociatedTenant) []map[string]any {
 	res := []map[string]any{}

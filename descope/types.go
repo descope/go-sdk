@@ -4,7 +4,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/descope/go-sdk/descope/logger"
+	"github.com/descope/go-sdk/v2/descope/logger"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 	"golang.org/x/exp/maps"
 )

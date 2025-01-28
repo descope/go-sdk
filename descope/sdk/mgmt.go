@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/descope/go-sdk/descope"
+	"github.com/descope/go-sdk/v2/descope"
 )
 
 // Provides functions for managing tenants in a project.

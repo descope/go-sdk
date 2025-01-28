@@ -4,8 +4,8 @@ import (
 	"context"
 	"testing"
 
-	"github.com/descope/go-sdk/descope"
-	"github.com/descope/go-sdk/descope/client"
+	"github.com/descope/go-sdk/v2/descope"
+	"github.com/descope/go-sdk/v2/descope/client"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

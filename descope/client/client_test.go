@@ -5,10 +5,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/descope/go-sdk/descope"
-	"github.com/descope/go-sdk/descope/logger"
-	mocksauth "github.com/descope/go-sdk/descope/tests/mocks/auth"
-	mocksmgmt "github.com/descope/go-sdk/descope/tests/mocks/mgmt"
+	"github.com/descope/go-sdk/v2/descope"
+	"github.com/descope/go-sdk/v2/descope/logger"
+	mocksauth "github.com/descope/go-sdk/v2/descope/tests/mocks/auth"
+	mocksmgmt "github.com/descope/go-sdk/v2/descope/tests/mocks/mgmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

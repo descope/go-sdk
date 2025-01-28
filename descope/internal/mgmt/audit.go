@@ -5,10 +5,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/descope/go-sdk/descope"
-	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/internal/utils"
-	"github.com/descope/go-sdk/descope/sdk"
+	"github.com/descope/go-sdk/v2/descope"
+	"github.com/descope/go-sdk/v2/descope/api"
+	"github.com/descope/go-sdk/v2/descope/internal/utils"
+	"github.com/descope/go-sdk/v2/descope/sdk"
 )
 
 type audit struct {

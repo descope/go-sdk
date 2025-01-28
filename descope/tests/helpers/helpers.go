@@ -6,8 +6,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/descope/go-sdk/descope/internal/utils"
-	"github.com/descope/go-sdk/descope/tests/mocks"
+	"github.com/descope/go-sdk/v2/descope/internal/utils"
+	"github.com/descope/go-sdk/v2/descope/tests/mocks"
 )
 
 func ReadBody(r *http.Request, m interface{}) (err error) {

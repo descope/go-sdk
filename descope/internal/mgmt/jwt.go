@@ -3,9 +3,9 @@ package mgmt
 import (
 	"context"
 
-	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/internal/utils"
-	"github.com/descope/go-sdk/descope/sdk"
+	"github.com/descope/go-sdk/v2/descope/api"
+	"github.com/descope/go-sdk/v2/descope/internal/utils"
+	"github.com/descope/go-sdk/v2/descope/sdk"
 )
 
 type jwt struct {

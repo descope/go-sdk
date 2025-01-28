@@ -4,9 +4,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/descope/go-sdk/descope/api"
-	"github.com/descope/go-sdk/descope/internal/utils"
-	"github.com/descope/go-sdk/descope/logger"
+	"github.com/descope/go-sdk/v2/descope/api"
+	"github.com/descope/go-sdk/v2/descope/internal/utils"
+	"github.com/descope/go-sdk/v2/descope/logger"
 )
 
 // Conf - Configuration struct describes the configurational data for the authentication methods.

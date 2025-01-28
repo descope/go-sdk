@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/descope/go-sdk/descope"
-	"github.com/descope/go-sdk/descope/sdk"
+	"github.com/descope/go-sdk/v2/descope"
+	"github.com/descope/go-sdk/v2/descope/sdk"
 )
 
 type MockManagement struct {

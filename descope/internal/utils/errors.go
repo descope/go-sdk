@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/descope/go-sdk/descope"
+	"github.com/descope/go-sdk/v2/descope"
 )
 
 func NewInvalidArgumentError(arg string) *descope.Error {

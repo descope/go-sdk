@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/descope/go-sdk/descope"
+	"github.com/descope/go-sdk/v2/descope"
 )
 
 type MagicLink interface {
