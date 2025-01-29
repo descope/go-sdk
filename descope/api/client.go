@@ -693,7 +693,7 @@ func (e *endpoints) ManagementTenantSettings() string {
 }
 
 func (e *endpoints) ManagementTenantGenerateSSOConfigurationLink() string {
-	return path.Join(e.version, e.mgmt.tenantGenerateSSOConfigurationLink)
+	return path.Join(e.versionV2, e.mgmt.tenantGenerateSSOConfigurationLink)
 }
 
 func (e *endpoints) ManagementSSOApplicationOIDCCreate() string {
