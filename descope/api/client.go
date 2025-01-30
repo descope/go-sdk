@@ -206,9 +206,12 @@ var (
 			fgaCheck:                            "mgmt/fga/check",
 			thirdPartyApplicationCreate:         "mgmt/thirdparty/app/create",
 			thirdPartyApplicationUpdate:         "mgmt/thirdparty/app/update",
+			thirdPartyApplicationPatch:          "mgmt/thirdparty/app/patch",
 			thirdPartyApplicationDelete:         "mgmt/thirdparty/app/delete",
 			thirdPartyApplicationLoad:           "mgmt/thirdparty/app/load",
 			thirdPartyApplicationLoadAll:        "mgmt/thirdparty/apps/load",
+			thidPartyApplicationSecret:          "mgmt/thirdparty/app/secret",
+			thirdPartyApplicationRotate:         "mgmt/thirdparty/app/rotate",
 			thirdPartyApplicationConsentDelete:  "mgmt/thirdparty/consents/delete",
 			thirdPartyApplicationConsentsSearch: "mgmt/thirdparty/consents/search",
 		},
@@ -431,9 +434,12 @@ type mgmtEndpoints struct {
 
 	thirdPartyApplicationCreate         string
 	thirdPartyApplicationUpdate         string
+	thirdPartyApplicationPatch          string
 	thirdPartyApplicationDelete         string
 	thirdPartyApplicationLoad           string
 	thirdPartyApplicationLoadAll        string
+	thidPartyApplicationSecret          string
+	thirdPartyApplicationRotate         string
 	thirdPartyApplicationConsentDelete  string
 	thirdPartyApplicationConsentsSearch string
 }
@@ -1160,6 +1166,18 @@ func (e *endpoints) ManagementThirdPartyApplicationLoad() string {
 
 func (e *endpoints) ManagementThirdPartyApplicationLoadAll() string {
 	return path.Join(e.version, e.mgmt.thirdPartyApplicationLoadAll)
+}
+
+func (e *endpoints) ManagementThirdPartyApplicationPatch() string {
+	return path.Join(e.version, e.mgmt.thirdPartyApplicationPatch)
+}
+
+func (e *endpoints) ManagementThirdPartyApplicationSecret() string {
+	return path.Join(e.version, e.mgmt.thidPartyApplicationSecret)
+}
+
+func (e *endpoints) ManagementThirdPartyApplicationRotate() string {
+	return path.Join(e.version, e.mgmt.thirdPartyApplicationRotate)
 }
 
 func (e *endpoints) ManagementThirdPartyApplicationDeleteConsent() string {

@@ -1540,8 +1540,8 @@ func (m *MockFGA) Check(_ context.Context, relations []*descope.FGARelation) ([]
 
 // Mock Third Party Application
 type MockThirdPartyApplication struct {
-	UpdateAssert func(*descope.ThirdPartyApplicationRequest)
-	UpdateError  error
+	UpdateApplicationAssert func(*descope.ThirdPartyApplicationRequest)
+	UpdateApplicationError  error
 
 	CreateApplicationAssert         func(*descope.ThirdPartyApplicationRequest)
 	CreateApplicationIDResponse     string
@@ -1554,6 +1554,17 @@ type MockThirdPartyApplication struct {
 	LoadApplicationAssert   func(id string)
 	LoadApplicationResponse *descope.ThirdPartyApplication
 	LoadApplicationError    error
+
+	PatchApplicationAssert func(*descope.ThirdPartyApplicationRequest)
+	PatchApplicationError  error
+
+	GetApplicationSecretAssert   func(id string)
+	GetApplicationSecretResponse string
+	GetApplicationSecretError    error
+
+	RotateApplicationSecretAssert   func(id string)
+	RotateApplicationSecretResponse string
+	RotateApplicationSecretError    error
 
 	LoadAllApplicationsResponse []*descope.ThirdPartyApplication
 	LoadAllApplicationsError    error
@@ -1575,10 +1586,10 @@ func (m *MockThirdPartyApplication) CreateApplication(_ context.Context, app *de
 }
 
 func (m *MockThirdPartyApplication) UpdateApplication(_ context.Context, app *descope.ThirdPartyApplicationRequest) error {
-	if m.UpdateAssert != nil {
-		m.UpdateAssert(app)
+	if m.UpdateApplicationAssert != nil {
+		m.UpdateApplicationAssert(app)
 	}
-	return m.UpdateError
+	return m.UpdateApplicationError
 }
 
 func (m *MockThirdPartyApplication) DeleteApplication(_ context.Context, id string) error {
@@ -1597,6 +1608,27 @@ func (m *MockThirdPartyApplication) LoadApplication(_ context.Context, id string
 
 func (m *MockThirdPartyApplication) LoadAllApplications(_ context.Context) ([]*descope.ThirdPartyApplication, error) {
 	return m.LoadAllApplicationsResponse, m.LoadAllApplicationsError
+}
+
+func (m *MockThirdPartyApplication) PatchApplication(_ context.Context, app *descope.ThirdPartyApplicationRequest) error {
+	if m.PatchApplicationAssert != nil {
+		m.PatchApplicationAssert(app)
+	}
+	return m.PatchApplicationError
+}
+
+func (m *MockThirdPartyApplication) GetApplicationSecret(_ context.Context, id string) (string, error) {
+	if m.GetApplicationSecretAssert != nil {
+		m.GetApplicationSecretAssert(id)
+	}
+	return m.GetApplicationSecretResponse, m.GetApplicationSecretError
+}
+
+func (m *MockThirdPartyApplication) RotateApplicationSecret(_ context.Context, id string) (string, error) {
+	if m.RotateApplicationSecretAssert != nil {
+		m.RotateApplicationSecretAssert(id)
+	}
+	return m.RotateApplicationSecretResponse, m.RotateApplicationSecretError
 }
 
 func (m *MockThirdPartyApplication) DeleteConsents(_ context.Context, options *descope.ThirdPartyApplicationConsentDeleteOptions) error {

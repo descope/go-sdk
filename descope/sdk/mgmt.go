@@ -849,15 +849,26 @@ type ThirdPartyApplication interface {
 	// set in the existing sso application. Use carefully.
 	UpdateApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) error
 
+	// Patch an existing third party application.
+	//
+	// ID is required to identify the application to be patched.
+	PatchApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) error
+
 	// Delete an existing third party application.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	DeleteApplication(ctx context.Context, id string) error
 
-	// Load a project third party application by id
+	// Load a third party application by id.
 	LoadApplication(ctx context.Context, id string) (*descope.ThirdPartyApplication, error)
 
-	// Load all project third party applications
+	// Get a third party application by the application id.
+	GetApplicationSecret(ctx context.Context, id string) (string, error)
+
+	// Rotate the application secret for a third party application by the application id.
+	RotateApplicationSecret(ctx context.Context, id string) (string, error)
+
+	// Load all project third party applications.
 	LoadAllApplications(ctx context.Context) ([]*descope.ThirdPartyApplication, error)
 
 	// Delete a consent for a third party application.
