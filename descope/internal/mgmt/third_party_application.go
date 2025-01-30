@@ -54,6 +54,19 @@ func (s *thirdPartyApplication) UpdateApplication(ctx context.Context, appReques
 	return err
 }
 
+func (s *thirdPartyApplication) PatchApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) error {
+	if appRequest == nil {
+		return utils.NewInvalidArgumentError("appRequest")
+	}
+	if appRequest.ID == "" {
+		return utils.NewInvalidArgumentError("appRequest.id")
+	}
+
+	req := makeCreateUpdateThirdPartyApplicationRequest(appRequest)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationPatch(), req, nil, s.conf.ManagementKey)
+	return err
+}
+
 func (s *thirdPartyApplication) DeleteApplication(ctx context.Context, id string) error {
 	if id == "" {
 		return utils.NewInvalidArgumentError("id")
@@ -83,6 +96,44 @@ func (s *thirdPartyApplication) LoadAllApplications(ctx context.Context) ([]*des
 		return nil, err
 	}
 	return unmarshalLoadAllThirdPartyApplicationsResponse(res)
+}
+
+func (s *thirdPartyApplication) GetApplicationSecret(ctx context.Context, id string) (string, error) {
+	if id == "" {
+		return "", utils.NewInvalidArgumentError("id")
+	}
+	req := &api.HTTPRequest{
+		QueryParams: map[string]string{"id": id},
+	}
+	httpRes, err := s.client.DoGetRequest(ctx, api.Routes.ManagementThirdPartyApplicationSecret(), req, s.conf.ManagementKey)
+	if err != nil {
+		return "", err
+	}
+	res := struct {
+		Cleartext string `json:"cleartext"`
+	}{}
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), &res); err != nil {
+		return "", err
+	}
+	return res.Cleartext, nil
+}
+
+func (s *thirdPartyApplication) RotateApplicationSecret(ctx context.Context, id string) (string, error) {
+	if id == "" {
+		return "", utils.NewInvalidArgumentError("id")
+	}
+	req := map[string]any{"id": id}
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationRotate(), req, nil, s.conf.ManagementKey)
+	if err != nil {
+		return "", err
+	}
+	res := struct {
+		Cleartext string `json:"cleartext"`
+	}{}
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), &res); err != nil {
+		return "", err
+	}
+	return res.Cleartext, nil
 }
 
 func (s *thirdPartyApplication) DeleteConsents(ctx context.Context, consentRequest *descope.ThirdPartyApplicationConsentDeleteOptions) error {
