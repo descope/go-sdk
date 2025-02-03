@@ -3,6 +3,7 @@ package mgmt
 import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
+	"github.com/descope/go-sdk/descope/internal/auth"
 	"github.com/descope/go-sdk/descope/logger"
 	"github.com/descope/go-sdk/descope/sdk"
 )
@@ -38,7 +39,7 @@ type managementService struct {
 	thirdPartyApplication sdk.ThirdPartyApplication
 }
 
-func NewManagement(conf ManagementParams, c *api.Client) *managementService {
+func NewManagement(conf ManagementParams, provider *auth.Provider, c *api.Client) *managementService {
 	base := managementBase{conf: &conf, client: c}
 	service := &managementService{managementBase: base}
 	service.tenant = &tenant{managementBase: base}
@@ -47,7 +48,7 @@ func NewManagement(conf ManagementParams, c *api.Client) *managementService {
 	service.user = &user{managementBase: base}
 	service.accessKey = &accessKey{managementBase: base}
 	service.sso = &sso{managementBase: base}
-	service.jwt = &jwt{managementBase: base}
+	service.jwt = &jwt{managementBase: base, provider: provider}
 	service.permission = &permission{managementBase: base}
 	service.role = &role{managementBase: base}
 	service.group = &group{managementBase: base}

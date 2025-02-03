@@ -31,7 +31,7 @@ type AuthParams struct {
 type authenticationsBase struct {
 	client             *api.Client
 	conf               *AuthParams
-	publicKeysProvider *provider
+	publicKeysProvider *Provider
 }
 
 type authenticationService struct {
@@ -50,8 +50,12 @@ type authenticationService struct {
 }
 
 func NewAuth(conf AuthParams, c *api.Client) (*authenticationService, error) {
+	return NewAuthWithProvider(conf, NewProvider(c, &conf), c)
+}
+
+func NewAuthWithProvider(conf AuthParams, provider *Provider, c *api.Client) (*authenticationService, error) {
 	base := authenticationsBase{conf: &conf, client: c}
-	base.publicKeysProvider = newProvider(c, base.conf)
+	base.publicKeysProvider = provider
 	authenticationService := &authenticationService{authenticationsBase: base}
 	authenticationService.otp = &otp{authenticationsBase: base}
 	authenticationService.magicLink = &magicLink{authenticationsBase: base}
@@ -624,11 +628,11 @@ func (auth *authenticationsBase) extractTokens(jRes *descope.JWTResponse) ([]*de
 	return tokens, nil
 }
 
-func (auth *authenticationsBase) validateJWT(JWT string) (*descope.Token, error) {
-	token, err := jwt.Parse([]byte(JWT), jwt.WithKeyProvider(auth.publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true), jwt.WithAcceptableSkew(SKEW))
+func ValidateJWT(JWT string, publicKeysProvider *Provider) (*descope.Token, error) {
+	token, err := jwt.Parse([]byte(JWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true), jwt.WithAcceptableSkew(SKEW))
 	if err != nil {
 		var parseErr error
-		token, parseErr = jwt.Parse([]byte(JWT), jwt.WithKeyProvider(auth.publicKeysProvider), jwt.WithVerify(false), jwt.WithValidate(false), jwt.WithAcceptableSkew(SKEW))
+		token, parseErr = jwt.Parse([]byte(JWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(false), jwt.WithValidate(false), jwt.WithAcceptableSkew(SKEW))
 		if parseErr != nil {
 			err = parseErr
 		}
@@ -639,7 +643,7 @@ func (auth *authenticationsBase) validateJWT(JWT string) (*descope.Token, error)
 	// just about the token being invalid that would usually just mean that fetching
 	// the public key failed because of something important, and we should include
 	// the reason in the returned error
-	if !auth.publicKeysProvider.publicKeyExists() {
+	if !publicKeysProvider.publicKeyExists() {
 		logger.LogInfo("Cannot validate or refresh session, no public key available")
 		if descope.ErrInvalidToken.Is(err) {
 			err = descope.ErrPublicKey
@@ -649,6 +653,10 @@ func (auth *authenticationsBase) validateJWT(JWT string) (*descope.Token, error)
 	}
 
 	return descope.NewToken(JWT, token), err
+}
+
+func (auth *authenticationsBase) validateJWT(JWT string) (*descope.Token, error) {
+	return ValidateJWT(JWT, auth.publicKeysProvider)
 }
 
 func (*authenticationsBase) verifyDeliveryMethod(method descope.DeliveryMethod, loginID string, user *descope.User) *descope.Error {

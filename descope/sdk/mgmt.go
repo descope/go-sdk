@@ -563,6 +563,13 @@ type JWT interface {
 	// The impersonator user must have `impersonation` permission in order for this request to work
 	// The response would be a refresh JWT of the impersonated user
 	Impersonate(ctx context.Context, impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string) (string, error)
+
+	// Generate a JWT for a user, simulating a signin request
+	SignIn(ctx context.Context, loginID string, loginOptions *descope.MgmLoginOptions) (*descope.AuthenticationInfo, error)
+	// Generate a JWT for a user, simulating a signup request
+	SignUp(ctx context.Context, loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.MgmSignUpOptions) (*descope.AuthenticationInfo, error)
+	// Generate a JWT for a user, simulating a signup or in request
+	SignUpOrIn(ctx context.Context, loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.MgmSignUpOptions) (*descope.AuthenticationInfo, error)
 }
 
 // Provides functions for managing permissions in a project.
