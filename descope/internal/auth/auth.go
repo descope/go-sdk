@@ -22,6 +22,7 @@ const SKEW = time.Second * 5
 type AuthParams struct {
 	ProjectID           string
 	PublicKey           string
+	AuthManagementKey   string
 	SessionJWTViaCookie bool
 	CookieDomain        string
 	CookieSameSite      http.SameSite

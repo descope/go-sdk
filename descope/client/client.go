@@ -48,10 +48,12 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 		logger.LogInfo("Provided public key is set, forcing only provided public key validation")
 	}
 	config.setManagementKey()
+	config.setAuthManagementKey()
 
 	c := api.NewClient(api.ClientParams{
 		ProjectID:            config.ProjectID,
 		BaseURL:              config.DescopeBaseURL,
+		AuthManagementKey:    config.AuthManagementKey,
 		DefaultClient:        config.DefaultClient,
 		CustomDefaultHeaders: config.CustomDefaultHeaders,
 		CertificateVerify:    config.CertificateVerify,

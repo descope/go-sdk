@@ -1213,6 +1213,7 @@ const (
 type ClientParams struct {
 	ProjectID            string
 	BaseURL              string
+	AuthManagementKey    string
 	DefaultClient        IHttpClient
 	CustomDefaultHeaders map[string]string
 	CertificateVerify    CertificateVerifyMode
@@ -1398,6 +1399,11 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 	bearer := c.conf.ProjectID
 	if len(pswd) > 0 {
 		bearer = fmt.Sprintf("%s:%s", bearer, pswd)
+	}
+	// append auth management key if available
+	authKey := c.conf.AuthManagementKey
+	if len(authKey) > 0 {
+		bearer = fmt.Sprintf("%s:%s", bearer, authKey)
 	}
 	req.Header.Set(AuthorizationHeaderName, BearerAuthorizationPrefix+bearer)
 	c.addDescopeHeaders(req)
