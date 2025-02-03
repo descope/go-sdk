@@ -155,6 +155,9 @@ var (
 			passwordSettings:                    "mgmt/password/settings",
 			updateJWT:                           "mgmt/jwt/update",
 			impersonate:                         "mgmt/impersonate",
+			mgmtSignIn:                          "mgmt/auth/signin",
+			mgmtSignUp:                          "mgmt/auth/signup",
+			mgmtSignUpOrIn:                      "mgmt/auth/signup-in",
 			permissionCreate:                    "mgmt/permission/create",
 			permissionUpdate:                    "mgmt/permission/update",
 			permissionDelete:                    "mgmt/permission/delete",
@@ -372,6 +375,9 @@ type mgmtEndpoints struct {
 	ssoOIDCSettings           string
 	updateJWT                 string
 	impersonate               string
+	mgmtSignIn                string
+	mgmtSignUp                string
+	mgmtSignUpOrIn            string
 
 	passwordSettings string
 
@@ -946,6 +952,18 @@ func (e *endpoints) ManagementUpdateJWT() string {
 
 func (e *endpoints) ManagementImpersonate() string {
 	return path.Join(e.version, e.mgmt.impersonate)
+}
+
+func (e *endpoints) ManagementSignIn() string {
+	return path.Join(e.version, e.mgmt.mgmtSignIn)
+}
+
+func (e *endpoints) ManagementSignUp() string {
+	return path.Join(e.version, e.mgmt.mgmtSignUp)
+}
+
+func (e *endpoints) ManagementSignUpOrIn() string {
+	return path.Join(e.version, e.mgmt.mgmtSignUpOrIn)
 }
 
 func (e *endpoints) ManagementGenerateEmbeddedLink() string {

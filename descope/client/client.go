@@ -59,19 +59,20 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 		CertificateVerify:    config.CertificateVerify,
 		RequestTimeout:       config.RequestTimeout,
 	})
-
-	authService, err := auth.NewAuth(auth.AuthParams{
+	conf := &auth.AuthParams{
 		ProjectID:           config.ProjectID,
 		PublicKey:           config.PublicKey,
 		SessionJWTViaCookie: config.SessionJWTViaCookie,
 		CookieDomain:        config.SessionJWTCookieDomain,
 		CookieSameSite:      config.SessionJWTCookieSameSite,
-	}, c)
+	}
+	provider := auth.NewProvider(c, conf)
+	authService, err := auth.NewAuthWithProvider(*conf, provider, c)
 	if err != nil {
 		return nil, err
 	}
 
-	managementService := mgmt.NewManagement(mgmt.ManagementParams{ProjectID: config.ProjectID, ManagementKey: config.ManagementKey}, c)
+	managementService := mgmt.NewManagement(mgmt.ManagementParams{ProjectID: config.ProjectID, ManagementKey: config.ManagementKey}, provider, c)
 
 	return &DescopeClient{Auth: authService, Management: managementService, config: config}, nil
 }

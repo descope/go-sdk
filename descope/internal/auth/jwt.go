@@ -14,28 +14,28 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jws"
 )
 
-type provider struct {
+type Provider struct {
 	client      *api.Client
 	conf        *AuthParams
 	providedKey jwk.Key
 	keySet      atomic.Value
 }
 
-func newProvider(client *api.Client, conf *AuthParams) *provider {
+func NewProvider(client *api.Client, conf *AuthParams) *Provider {
 	ks := atomic.Value{}
 	ks.Store(map[string]jwk.Key{})
-	return &provider{client: client, conf: conf, keySet: ks}
+	return &Provider{client: client, conf: conf, keySet: ks}
 }
 
-func (p *provider) keySetMap() map[string]jwk.Key {
+func (p *Provider) keySetMap() map[string]jwk.Key {
 	return p.keySet.Load().(map[string]jwk.Key)
 }
 
-func (p *provider) publicKeyExists() bool {
+func (p *Provider) publicKeyExists() bool {
 	return len(p.keySetMap()) > 0 || p.providedKey != nil
 }
 
-func (p *provider) selectKey(sink jws.KeySink, key jwk.Key) error {
+func (p *Provider) selectKey(sink jws.KeySink, key jwk.Key) error {
 	if usage := key.KeyUsage(); usage != "" && usage != jwk.ForSignature.String() {
 		return nil // notest
 	}
@@ -53,7 +53,7 @@ func (p *provider) selectKey(sink jws.KeySink, key jwk.Key) error {
 	return descope.ErrPublicKey.WithMessage("Algorithm in the message does not match") // notest
 }
 
-func (p *provider) requestKeys() error {
+func (p *Provider) requestKeys() error {
 	projectID := p.conf.ProjectID
 	keysWrapper := map[string][]map[string]interface{}{}
 	_, err := p.client.DoGetRequest(context.Background(), path.Join(api.Routes.GetKeys(), projectID), &api.HTTPRequest{ResBodyObj: &keysWrapper}, "")
@@ -89,7 +89,7 @@ func (p *provider) requestKeys() error {
 	return nil
 }
 
-func (p *provider) providedPublicKey() (jwk.Key, error) {
+func (p *Provider) providedPublicKey() (jwk.Key, error) {
 	if p.providedKey != nil {
 		return p.providedKey, nil
 	}
@@ -106,7 +106,7 @@ func (p *provider) providedPublicKey() (jwk.Key, error) {
 	return nil, nil
 }
 
-func (p *provider) findKey(kid string) (jwk.Key, error) {
+func (p *Provider) findKey(kid string) (jwk.Key, error) {
 	key, err := p.providedPublicKey()
 	if err != nil {
 		return nil, err
@@ -135,7 +135,7 @@ func (p *provider) findKey(kid string) (jwk.Key, error) {
 	return key, nil
 }
 
-func (p *provider) FetchKeys(_ context.Context, sink jws.KeySink, sig *jws.Signature, _ *jws.Message) error {
+func (p *Provider) FetchKeys(_ context.Context, sink jws.KeySink, sig *jws.Signature, _ *jws.Message) error {
 	wantedKid := sig.ProtectedHeaders().KeyID()
 	v, ok := p.keySetMap()[wantedKid]
 	if !ok {

@@ -101,6 +101,18 @@ type MockJWT struct {
 	ImpersonateAssert   func(impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string)
 	ImpersonateResponse string
 	ImpersonateError    error
+
+	SignInAssert   func(loginID string, loginOptions *descope.MgmLoginOptions)
+	SignInResponse *descope.AuthenticationInfo
+	SignInError    error
+
+	SignUpAssert   func(loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.MgmSignUpOptions)
+	SignUpResponse *descope.AuthenticationInfo
+	SignUpError    error
+
+	SignUpOrInAssert   func(loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.MgmSignUpOptions)
+	SignUpOrInResponse *descope.AuthenticationInfo
+	SignUpOrInError    error
 }
 
 func (m *MockJWT) UpdateJWTWithCustomClaims(_ context.Context, jwt string, customClaims map[string]any, refreshDuration int32) (string, error) {
@@ -115,6 +127,25 @@ func (m *MockJWT) Impersonate(_ context.Context, impersonatorID string, loginID 
 		m.ImpersonateAssert(impersonatorID, loginID, validateConcent, customClaims, tenantID)
 	}
 	return m.ImpersonateResponse, m.ImpersonateError
+}
+
+func (m *MockJWT) SignIn(_ context.Context, loginID string, loginOptions *descope.MgmLoginOptions) (*descope.AuthenticationInfo, error) {
+	if m.SignInAssert != nil {
+		m.SignInAssert(loginID, loginOptions)
+	}
+	return m.SignInResponse, m.SignInError
+}
+func (m *MockJWT) SignUp(_ context.Context, loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.MgmSignUpOptions) (*descope.AuthenticationInfo, error) {
+	if m.SignUpAssert != nil {
+		m.SignUpAssert(loginID, user, signUpOptions)
+	}
+	return m.SignUpResponse, m.SignUpError
+}
+func (m *MockJWT) SignUpOrIn(_ context.Context, loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.MgmSignUpOptions) (*descope.AuthenticationInfo, error) {
+	if m.SignUpOrInAssert != nil {
+		m.SignUpOrInAssert(loginID, user, signUpOptions)
+	}
+	return m.SignUpOrInResponse, m.SignUpOrInError
 }
 
 // Mock SSO

@@ -1063,3 +1063,25 @@ type ThirdPartyApplicationConsentSearchOptions struct {
 func (c *ThirdPartyApplicationConsent) GetCreatedTime() time.Time {
 	return time.Unix(int64(c.CreatedTime), 0)
 }
+
+type MgmSignUpOptions struct {
+	CustomClaims map[string]interface{} `json:"customClaims,omitempty"`
+}
+type MgmLoginOptions struct {
+	Stepup              bool                   `json:"stepup,omitempty"`
+	MFA                 bool                   `json:"mfa,omitempty"`
+	RevokeOtherSessions bool                   `json:"revokeOtherSessions,omitempty"`
+	CustomClaims        map[string]interface{} `json:"customClaims,omitempty"`
+	JWT                 string                 `json:"jwt,omitempty"`
+}
+
+func (mlo *MgmLoginOptions) IsJWTRequired() bool {
+	return mlo != nil && (mlo.Stepup || mlo.MFA)
+}
+
+type MgmtUserRequest struct {
+	User          `json:",inline"`
+	EmailVerified bool   `json:"emailVerified"`
+	PhoneVerified bool   `json:"phoneVerified"`
+	SsoAppID      string `json:"ssoAppId"`
+}
