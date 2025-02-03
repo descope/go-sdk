@@ -15,9 +15,14 @@ type Config struct {
 	ProjectID string
 	// ManagementKey (optional, "") - used to provide a management key that's required
 	// for using any of the Management APIs. If empty, this value is retrieved
-	// from the DESCOPE_MANAGEMENT_KEY environement variable instead. If neither
+	// from the DESCOPE_MANAGEMENT_KEY environment variable instead. If neither
 	// values are set then any Management API call with fail.
 	ManagementKey string
+	// AuthManagementKey (optional, "") - used to provide a management key to use
+	// with Authentication APIs whose public access has been disabled.
+	// If empty, this value is retrieved from the DESCOPE_AUTH_MANAGEMENT_KEY environment variable instead.
+	// If neither values are set then any disabled authentication methods API calls with fail.
+	AuthManagementKey string
 	// PublicKey (optional, "") - used to override or implicitly use a dedicated public key in order to decrypt and validate the JWT tokens
 	// during ValidateSessionRequest(). If empty, will attempt to fetch all public keys from the specified project id.
 	PublicKey string
@@ -78,4 +83,15 @@ func (c *Config) setManagementKey() string {
 		}
 	}
 	return c.ManagementKey
+}
+
+func (c *Config) setAuthManagementKey() string {
+	if c.AuthManagementKey == "" {
+		if authKey := utils.GetAuthManagementKeyEnvVariable(); authKey != "" {
+			c.AuthManagementKey = authKey
+		} else {
+			return ""
+		}
+	}
+	return c.AuthManagementKey
 }

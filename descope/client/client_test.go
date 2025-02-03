@@ -58,6 +58,21 @@ func TestEnvVariableManagementKey(t *testing.T) {
 	assert.NotNil(t, a.Management)
 }
 
+func TestEnvVariableAuthManagementKey(t *testing.T) {
+	expectedManagementKey := "test"
+	err := os.Setenv(descope.EnvironmentVariableAuthManagementKey, expectedManagementKey)
+	defer func() {
+		err = os.Setenv(descope.EnvironmentVariableAuthManagementKey, "")
+		require.NoError(t, err)
+	}()
+	require.NoError(t, err)
+	a, err := NewWithConfig(&Config{ProjectID: "a"})
+	require.NoError(t, err)
+	assert.EqualValues(t, expectedManagementKey, a.config.AuthManagementKey)
+	assert.NotNil(t, a.Auth)
+	assert.NotNil(t, a.Management)
+}
+
 func TestConcurrentClients(t *testing.T) {
 	// This test should be run with the 'race' flag, to ensure that
 	// creating two client in a concurrent manner is safe

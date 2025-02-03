@@ -985,10 +985,11 @@ const (
 	ClaimAuthorizedGlobalPermissions            = "permissions"
 	ClaimDescopeCurrentTenant                   = "dct"
 
-	EnvironmentVariableProjectID     = "DESCOPE_PROJECT_ID"
-	EnvironmentVariablePublicKey     = "DESCOPE_PUBLIC_KEY"
-	EnvironmentVariableManagementKey = "DESCOPE_MANAGEMENT_KEY"
-	EnvironmentVariableBaseURL       = "DESCOPE_BASE_URL"
+	EnvironmentVariableProjectID         = "DESCOPE_PROJECT_ID"
+	EnvironmentVariablePublicKey         = "DESCOPE_PUBLIC_KEY"
+	EnvironmentVariableManagementKey     = "DESCOPE_MANAGEMENT_KEY"
+	EnvironmentVariableAuthManagementKey = "DESCOPE_AUTH_MANAGEMENT_KEY"
+	EnvironmentVariableBaseURL           = "DESCOPE_BASE_URL"
 )
 
 type ThirdPartyApplicationScope struct {
