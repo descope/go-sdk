@@ -1603,6 +1603,9 @@ type MockThirdPartyApplication struct {
 	DeleteConsentsAssert func(*descope.ThirdPartyApplicationConsentDeleteOptions)
 	DeleteConsentsError  error
 
+	DeleteTenantConsentsAssert func(*descope.ThirdPartyApplicationTenantConsentDeleteOptions)
+	DeleteTenantConsentsError  error
+
 	SearchConsentsAssert        func(*descope.ThirdPartyApplicationConsentSearchOptions)
 	SearchConsentsResponse      []*descope.ThirdPartyApplicationConsent
 	SearchConsentsTotalResponse int
@@ -1667,6 +1670,13 @@ func (m *MockThirdPartyApplication) DeleteConsents(_ context.Context, options *d
 		m.DeleteConsentsAssert(options)
 	}
 	return m.DeleteConsentsError
+}
+
+func (m *MockThirdPartyApplication) DeleteTenantConsents(_ context.Context, options *descope.ThirdPartyApplicationTenantConsentDeleteOptions) error {
+	if m.DeleteTenantConsentsAssert != nil {
+		m.DeleteTenantConsentsAssert(options)
+	}
+	return m.DeleteTenantConsentsError
 }
 
 func (m *MockThirdPartyApplication) SearchConsents(_ context.Context, options *descope.ThirdPartyApplicationConsentSearchOptions) ([]*descope.ThirdPartyApplicationConsent, int, error) {

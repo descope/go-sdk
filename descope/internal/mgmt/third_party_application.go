@@ -145,8 +145,26 @@ func (s *thirdPartyApplication) DeleteConsents(ctx context.Context, consentReque
 		"consentIds": consentRequest.ConsentIDs,
 		"appId":      consentRequest.AppID,
 		"userIds":    consentRequest.UserIDs,
+		"tenantId":   consentRequest.TenantID,
 	}
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationDeleteConsent(), req, nil, s.conf.ManagementKey)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *thirdPartyApplication) DeleteTenantConsents(ctx context.Context, consentRequest *descope.ThirdPartyApplicationTenantConsentDeleteOptions) error {
+	if consentRequest == nil {
+		return utils.NewInvalidArgumentError("consentRequest")
+	}
+
+	req := map[string]any{
+		"consentIds": consentRequest.ConsentIDs,
+		"appId":      consentRequest.AppID,
+		"tenantId":   consentRequest.TenantID,
+	}
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationDeleteTenantConsent(), req, nil, s.conf.ManagementKey)
 	if err != nil {
 		return err
 	}
@@ -163,6 +181,7 @@ func (s *thirdPartyApplication) SearchConsents(ctx context.Context, consentReque
 		"appId":     consentRequest.AppID,
 		"userId":    consentRequest.UserID,
 		"page":      consentRequest.Page,
+		"tenantId":  consentRequest.TenantID,
 	}
 	res, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationSearchConsents(), req, nil, s.conf.ManagementKey)
 	if err != nil {

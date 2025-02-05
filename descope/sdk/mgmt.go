@@ -879,7 +879,11 @@ type ThirdPartyApplication interface {
 	LoadAllApplications(ctx context.Context) ([]*descope.ThirdPartyApplication, error)
 
 	// Delete a consent for a third party application.
+	// (Note: this will not delete tenant level consents)
 	DeleteConsents(ctx context.Context, options *descope.ThirdPartyApplicationConsentDeleteOptions) error
+
+	// Delete a tenant level consent for a third party application.
+	DeleteTenantConsents(ctx context.Context, options *descope.ThirdPartyApplicationTenantConsentDeleteOptions) error
 
 	// Search consents for a third party application.
 	SearchConsents(ctx context.Context, options *descope.ThirdPartyApplicationConsentSearchOptions) ([]*descope.ThirdPartyApplicationConsent, int, error)

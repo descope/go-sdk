@@ -1034,17 +1034,32 @@ type ThirdPartyApplicationConsent struct {
 	GrantedBy string `json:"grantedBy"`
 	// The time the consent was granted in milliseconds since epoch
 	CreatedTime int32 `json:"createdTime"`
+	// The tenant id the consent was granted for
+	TenantID string `json:"tenantId"`
 }
 
 // Options for deleting third party application consents. At least one of ConsentIDs, AppID or UserIDs must be provided.
 //
+// ConsentIDs - allows to delete any consents by their given id.
 // AppID - allows to delete all consents by a given third party application id.
 // UserID - allows to delete all consents of a given user by user id.
-// ConsentIDs - allows to delete any consents by their given id.
+// TenantID - allows to delete all consents of a given tenant by tenant id.
 type ThirdPartyApplicationConsentDeleteOptions struct {
 	ConsentIDs []string `json:"consentIds"`
 	AppID      string   `json:"appId"`
 	UserIDs    []string `json:"userIds"`
+	TenantID   string   `json:"tenantId"`
+}
+
+// Options for deleting third party application tenant level consents. At least one of ConsentIDs, AppID must be provided.
+//
+// ConsentIDs - allows to delete any consents by their given id.
+// AppID - allows to delete all consents by a given third party application id.
+// TenantID - allows to delete all consents of a given tenant by tenant id.
+type ThirdPartyApplicationTenantConsentDeleteOptions struct {
+	ConsentIDs []string `json:"consentIds"`
+	AppID      string   `json:"appId"`
+	TenantID   string   `json:"tenantId"`
 }
 
 // Options for searching and filtering third party application consents
@@ -1053,11 +1068,13 @@ type ThirdPartyApplicationConsentDeleteOptions struct {
 // UserID - allows to filter by a given user id.
 // ConsentID - search a specific consent by id.
 // Page - allows to paginate over the results. Pages start at 0 and must non-negative.
+// TenantID - allows to filter by a given tenant id.
 type ThirdPartyApplicationConsentSearchOptions struct {
 	AppID     string `json:"appId"`
 	UserID    string `json:"userId"`
 	ConsentID string `json:"consentId"`
 	Page      int32  `json:"page"`
+	TenantID  string `json:"tenantId"`
 }
 
 func (c *ThirdPartyApplicationConsent) GetCreatedTime() time.Time {
