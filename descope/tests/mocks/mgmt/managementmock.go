@@ -94,18 +94,30 @@ func (m *MockManagement) ThirdPartyApplication() sdk.ThirdPartyApplication {
 // Mock JWT
 
 type MockJWT struct {
-	UpdateJWTWithCustomClaimsAssert   func(jwt string, customClaims map[string]any)
+	UpdateJWTWithCustomClaimsAssert   func(jwt string, customClaims map[string]any, refreshDuration int32)
 	UpdateJWTWithCustomClaimsResponse string
 	UpdateJWTWithCustomClaimsError    error
 
 	ImpersonateAssert   func(impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string)
 	ImpersonateResponse string
 	ImpersonateError    error
+
+	SignInAssert   func(loginID string, loginOptions *descope.MgmLoginOptions)
+	SignInResponse *descope.AuthenticationInfo
+	SignInError    error
+
+	SignUpAssert   func(loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.MgmSignUpOptions)
+	SignUpResponse *descope.AuthenticationInfo
+	SignUpError    error
+
+	SignUpOrInAssert   func(loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.MgmSignUpOptions)
+	SignUpOrInResponse *descope.AuthenticationInfo
+	SignUpOrInError    error
 }
 
-func (m *MockJWT) UpdateJWTWithCustomClaims(_ context.Context, jwt string, customClaims map[string]any) (string, error) {
+func (m *MockJWT) UpdateJWTWithCustomClaims(_ context.Context, jwt string, customClaims map[string]any, refreshDuration int32) (string, error) {
 	if m.UpdateJWTWithCustomClaimsAssert != nil {
-		m.UpdateJWTWithCustomClaimsAssert(jwt, customClaims)
+		m.UpdateJWTWithCustomClaimsAssert(jwt, customClaims, refreshDuration)
 	}
 	return m.UpdateJWTWithCustomClaimsResponse, m.UpdateJWTWithCustomClaimsError
 }
@@ -115,6 +127,25 @@ func (m *MockJWT) Impersonate(_ context.Context, impersonatorID string, loginID 
 		m.ImpersonateAssert(impersonatorID, loginID, validateConcent, customClaims, tenantID)
 	}
 	return m.ImpersonateResponse, m.ImpersonateError
+}
+
+func (m *MockJWT) SignIn(_ context.Context, loginID string, loginOptions *descope.MgmLoginOptions) (*descope.AuthenticationInfo, error) {
+	if m.SignInAssert != nil {
+		m.SignInAssert(loginID, loginOptions)
+	}
+	return m.SignInResponse, m.SignInError
+}
+func (m *MockJWT) SignUp(_ context.Context, loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.MgmSignUpOptions) (*descope.AuthenticationInfo, error) {
+	if m.SignUpAssert != nil {
+		m.SignUpAssert(loginID, user, signUpOptions)
+	}
+	return m.SignUpResponse, m.SignUpError
+}
+func (m *MockJWT) SignUpOrIn(_ context.Context, loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.MgmSignUpOptions) (*descope.AuthenticationInfo, error) {
+	if m.SignUpOrInAssert != nil {
+		m.SignUpOrInAssert(loginID, user, signUpOptions)
+	}
+	return m.SignUpOrInResponse, m.SignUpOrInError
 }
 
 // Mock SSO
@@ -1540,8 +1571,8 @@ func (m *MockFGA) Check(_ context.Context, relations []*descope.FGARelation) ([]
 
 // Mock Third Party Application
 type MockThirdPartyApplication struct {
-	UpdateAssert func(*descope.ThirdPartyApplicationRequest)
-	UpdateError  error
+	UpdateApplicationAssert func(*descope.ThirdPartyApplicationRequest)
+	UpdateApplicationError  error
 
 	CreateApplicationAssert         func(*descope.ThirdPartyApplicationRequest)
 	CreateApplicationIDResponse     string
@@ -1555,11 +1586,25 @@ type MockThirdPartyApplication struct {
 	LoadApplicationResponse *descope.ThirdPartyApplication
 	LoadApplicationError    error
 
+	PatchApplicationAssert func(*descope.ThirdPartyApplicationRequest)
+	PatchApplicationError  error
+
+	GetApplicationSecretAssert   func(id string)
+	GetApplicationSecretResponse string
+	GetApplicationSecretError    error
+
+	RotateApplicationSecretAssert   func(id string)
+	RotateApplicationSecretResponse string
+	RotateApplicationSecretError    error
+
 	LoadAllApplicationsResponse []*descope.ThirdPartyApplication
 	LoadAllApplicationsError    error
 
 	DeleteConsentsAssert func(*descope.ThirdPartyApplicationConsentDeleteOptions)
 	DeleteConsentsError  error
+
+	DeleteTenantConsentsAssert func(*descope.ThirdPartyApplicationTenantConsentDeleteOptions)
+	DeleteTenantConsentsError  error
 
 	SearchConsentsAssert        func(*descope.ThirdPartyApplicationConsentSearchOptions)
 	SearchConsentsResponse      []*descope.ThirdPartyApplicationConsent
@@ -1575,10 +1620,10 @@ func (m *MockThirdPartyApplication) CreateApplication(_ context.Context, app *de
 }
 
 func (m *MockThirdPartyApplication) UpdateApplication(_ context.Context, app *descope.ThirdPartyApplicationRequest) error {
-	if m.UpdateAssert != nil {
-		m.UpdateAssert(app)
+	if m.UpdateApplicationAssert != nil {
+		m.UpdateApplicationAssert(app)
 	}
-	return m.UpdateError
+	return m.UpdateApplicationError
 }
 
 func (m *MockThirdPartyApplication) DeleteApplication(_ context.Context, id string) error {
@@ -1599,11 +1644,39 @@ func (m *MockThirdPartyApplication) LoadAllApplications(_ context.Context) ([]*d
 	return m.LoadAllApplicationsResponse, m.LoadAllApplicationsError
 }
 
+func (m *MockThirdPartyApplication) PatchApplication(_ context.Context, app *descope.ThirdPartyApplicationRequest) error {
+	if m.PatchApplicationAssert != nil {
+		m.PatchApplicationAssert(app)
+	}
+	return m.PatchApplicationError
+}
+
+func (m *MockThirdPartyApplication) GetApplicationSecret(_ context.Context, id string) (string, error) {
+	if m.GetApplicationSecretAssert != nil {
+		m.GetApplicationSecretAssert(id)
+	}
+	return m.GetApplicationSecretResponse, m.GetApplicationSecretError
+}
+
+func (m *MockThirdPartyApplication) RotateApplicationSecret(_ context.Context, id string) (string, error) {
+	if m.RotateApplicationSecretAssert != nil {
+		m.RotateApplicationSecretAssert(id)
+	}
+	return m.RotateApplicationSecretResponse, m.RotateApplicationSecretError
+}
+
 func (m *MockThirdPartyApplication) DeleteConsents(_ context.Context, options *descope.ThirdPartyApplicationConsentDeleteOptions) error {
 	if m.DeleteConsentsAssert != nil {
 		m.DeleteConsentsAssert(options)
 	}
 	return m.DeleteConsentsError
+}
+
+func (m *MockThirdPartyApplication) DeleteTenantConsents(_ context.Context, options *descope.ThirdPartyApplicationTenantConsentDeleteOptions) error {
+	if m.DeleteTenantConsentsAssert != nil {
+		m.DeleteTenantConsentsAssert(options)
+	}
+	return m.DeleteTenantConsentsError
 }
 
 func (m *MockThirdPartyApplication) SearchConsents(_ context.Context, options *descope.ThirdPartyApplicationConsentSearchOptions) ([]*descope.ThirdPartyApplicationConsent, int, error) {

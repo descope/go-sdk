@@ -58,6 +58,21 @@ func TestEnvVariableManagementKey(t *testing.T) {
 	assert.NotNil(t, a.Management)
 }
 
+func TestEnvVariableAuthManagementKey(t *testing.T) {
+	expectedManagementKey := "test"
+	err := os.Setenv(descope.EnvironmentVariableAuthManagementKey, expectedManagementKey)
+	defer func() {
+		err = os.Setenv(descope.EnvironmentVariableAuthManagementKey, "")
+		require.NoError(t, err)
+	}()
+	require.NoError(t, err)
+	a, err := NewWithConfig(&Config{ProjectID: "a"})
+	require.NoError(t, err)
+	assert.EqualValues(t, expectedManagementKey, a.config.AuthManagementKey)
+	assert.NotNil(t, a.Auth)
+	assert.NotNil(t, a.Management)
+}
+
 func TestConcurrentClients(t *testing.T) {
 	// This test should be run with the 'race' flag, to ensure that
 	// creating two client in a concurrent manner is safe
@@ -101,7 +116,7 @@ func TestDescopeSDKMock(t *testing.T) {
 		Management: &mocksmgmt.MockManagement{
 			MockJWT: &mocksmgmt.MockJWT{
 				UpdateJWTWithCustomClaimsResponse: updateJWTWithCustomClaimsResponse,
-				UpdateJWTWithCustomClaimsAssert: func(jwt string, _ map[string]any) {
+				UpdateJWTWithCustomClaimsAssert: func(jwt string, _ map[string]any, _ int32) {
 					updateJWTWithCustomClaimsCalled = true
 					assert.EqualValues(t, "some jwt", jwt)
 				},
@@ -115,7 +130,7 @@ func TestDescopeSDKMock(t *testing.T) {
 	assert.EqualValues(t, validateSessionResponse, info.JWT)
 	assert.ErrorIs(t, err, descope.ErrPublicKey)
 
-	res, err := api.Management.JWT().UpdateJWTWithCustomClaims(ctx, "some jwt", nil)
+	res, err := api.Management.JWT().UpdateJWTWithCustomClaims(ctx, "some jwt", nil, 0)
 	require.NoError(t, err)
 	assert.True(t, updateJWTWithCustomClaimsCalled)
 	assert.EqualValues(t, updateJWTWithCustomClaimsResponse, res)

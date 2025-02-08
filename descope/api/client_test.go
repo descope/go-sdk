@@ -17,18 +17,25 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func getProjectAndJwt(r *http.Request) (string, string) {
-	var projectID, jwt string
+func parseAuthorizationHeader(r *http.Request) (projectID, jwt, accessKey string) {
 	reqToken := r.Header.Get(AuthorizationHeaderName)
 	if splitToken := strings.Split(reqToken, BearerAuthorizationPrefix); len(splitToken) == 2 {
 		bearer := splitToken[1]
 		bearers := strings.Split(bearer, ":")
 		projectID = bearers[0]
-		if len(bearers) > 1 {
+		if len(bearers) == 2 {
+			if strings.Contains(bearers[1], ".") {
+				jwt = bearers[1]
+			} else {
+				accessKey = bearers[1]
+			}
+		}
+		if len(bearers) > 2 {
 			jwt = bearers[1]
+			accessKey = bearers[2]
 		}
 	}
-	return projectID, jwt
+	return
 }
 
 func TestClient(t *testing.T) {
@@ -58,7 +65,7 @@ func TestGetRequest(t *testing.T) {
 		assert.Nil(t, r.Body)
 		assert.EqualValues(t, "/path", r.URL.Path)
 		assert.EqualValues(t, "test=1", r.URL.RawQuery)
-		actualProject, _ := getProjectAndJwt(r)
+		actualProject, _, _ := parseAuthorizationHeader(r)
 		assert.EqualValues(t, projectID, actualProject)
 		return &http.Response{Body: io.NopCloser(strings.NewReader(expectedResponse)), StatusCode: http.StatusOK}, nil
 	})})
@@ -75,13 +82,15 @@ func TestPutRequest(t *testing.T) {
 	expectedOutput := &dummy{Test: "test"}
 	expectedHeaders := map[string]string{"header1": "value1"}
 	projectID := "test"
+	accesskey := "accessKey"
 	outputBytes, err := utils.Marshal(expectedOutput)
 	require.NoError(t, err)
-	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+	c := NewClient(ClientParams{ProjectID: projectID, AuthManagementKey: accesskey, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
 		assert.NotNil(t, r.Body)
-		actualProject, _ := getProjectAndJwt(r)
+		actualProject, _, actualAccessKey := parseAuthorizationHeader(r)
 		assert.EqualValues(t, http.MethodPut, r.Method)
 		assert.EqualValues(t, projectID, actualProject)
+		assert.EqualValues(t, accesskey, actualAccessKey)
 		assert.EqualValues(t, expectedHeaders["header1"], r.Header.Get("header1"))
 		return &http.Response{Body: io.NopCloser(bytes.NewReader(outputBytes)), StatusCode: http.StatusOK}, nil
 	})})
@@ -101,19 +110,23 @@ func TestPostRequest(t *testing.T) {
 	expectedOutput := &dummy{Test: "test"}
 	expectedHeaders := map[string]string{"header1": "value1"}
 	projectID := "test"
+	accesskey := "accessKey"
+	jwtStr := "eyJhbGciOiJFUzM4NCIsImtpZCI6IjI4eVRTeDZRMGNpSzU4QWRDU3ZLZkNKcEJJTiIsInR5cCI6IkpXVCJ9.eyJleHAiOi01Njk3NzcxNjg2LCJpc3MiOiIyOHlUU3g2UTBjaUs1OEFkQ1N2S2ZDSnBCSU4iLCJzdWIiOiIyOHlldzQ3NTVLdElSNnhmMk1rV2lITDRYSnEifQ.fm5h2AlyOzUCVMIezSQf8wddE6xhcfqnSAzpG4SoOy6HK387T8hxcpbmCc7qbFOQfaPDdhVhqS7JkX7wessaTznbiK_xiDac6CkENgzrl_V8eMXEHt1HcyCW1s6IQd5D"
 	outputBytes, err := utils.Marshal(expectedOutput)
 	require.NoError(t, err)
-	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+	c := NewClient(ClientParams{ProjectID: projectID, AuthManagementKey: accesskey, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
 		assert.NotNil(t, r.Body)
-		actualProject, _ := getProjectAndJwt(r)
+		actualProject, actualJwt, actualAccessKey := parseAuthorizationHeader(r)
 		assert.EqualValues(t, http.MethodPost, r.Method)
 		assert.EqualValues(t, projectID, actualProject)
+		assert.EqualValues(t, accesskey, actualAccessKey)
+		assert.EqualValues(t, jwtStr, actualJwt)
 		assert.EqualValues(t, expectedHeaders["header1"], r.Header.Get("header1"))
 		return &http.Response{Body: io.NopCloser(bytes.NewReader(outputBytes)), StatusCode: http.StatusOK}, nil
 	})})
 
 	actualOutput := &dummy{}
-	res, err := c.DoPostRequest(context.Background(), "path", strings.NewReader("test"), &HTTPRequest{ResBodyObj: actualOutput, Headers: expectedHeaders}, "")
+	res, err := c.DoPostRequest(context.Background(), "path", strings.NewReader("test"), &HTTPRequest{ResBodyObj: actualOutput, Headers: expectedHeaders}, jwtStr)
 	require.NoError(t, err)
 	assert.EqualValues(t, string(outputBytes), res.BodyStr)
 	assert.EqualValues(t, expectedOutput, actualOutput)

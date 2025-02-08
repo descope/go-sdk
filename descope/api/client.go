@@ -86,132 +86,139 @@ var (
 			exchangeAccessKey:            "auth/accesskey/exchange",
 		},
 		mgmt: mgmtEndpoints{
-			tenantCreate:                        "mgmt/tenant/create",
-			tenantUpdate:                        "mgmt/tenant/update",
-			tenantDelete:                        "mgmt/tenant/delete",
-			tenantLoad:                          "mgmt/tenant",
-			tenantLoadAll:                       "mgmt/tenant/all",
-			tenantSearchAll:                     "mgmt/tenant/search",
-			tenantSettings:                      "mgmt/tenant/settings",
-			tenantGenerateSSOConfigurationLink:  "mgmt/tenant/adminlinks/sso/generate",
-			ssoApplicationOIDCCreate:            "mgmt/sso/idp/app/oidc/create",
-			ssoApplicationSAMLCreate:            "mgmt/sso/idp/app/saml/create",
-			ssoApplicationOIDCUpdate:            "mgmt/sso/idp/app/oidc/update",
-			ssoApplicationSAMLUpdate:            "mgmt/sso/idp/app/saml/update",
-			ssoApplicationDelete:                "mgmt/sso/idp/app/delete",
-			ssoApplicationLoad:                  "mgmt/sso/idp/app/load",
-			ssoApplicationLoadAll:               "mgmt/sso/idp/apps/load",
-			userCreate:                          "mgmt/user/create",
-			testUserCreate:                      "mgmt/user/create/test",
-			userCreateBatch:                     "mgmt/user/create/batch",
-			userUpdate:                          "mgmt/user/update",
-			userPatch:                           "mgmt/user/patch",
-			userDelete:                          "mgmt/user/delete",
-			userDeleteAllTestUsers:              "mgmt/user/test/delete/all",
-			userImport:                          "mgmt/user/import",
-			userLoad:                            "mgmt/user",
-			userSearchAll:                       "mgmt/user/search",
-			testUserSearchAll:                   "mgmt/user/search/test",
-			userUpdateStatus:                    "mgmt/user/update/status",
-			userUpdateLoginID:                   "mgmt/user/update/loginid",
-			userUpdateEmail:                     "mgmt/user/update/email",
-			userUpdatePhone:                     "mgmt/user/update/phone",
-			userUpdateName:                      "mgmt/user/update/name",
-			userUpdatePicture:                   "mgmt/user/update/picture",
-			userUpdateCustomAttribute:           "mgmt/user/update/customAttribute",
-			userAddTenant:                       "mgmt/user/update/tenant/add",
-			userRemoveTenant:                    "mgmt/user/update/tenant/remove",
-			userSetRole:                         "mgmt/user/update/role/set",
-			userAddRole:                         "mgmt/user/update/role/add",
-			userRemoveRole:                      "mgmt/user/update/role/remove",
-			userAddSsoApps:                      "mgmt/user/update/ssoapp/add",
-			userSetSsoApps:                      "mgmt/user/update/ssoapp/set",
-			userRemoveSsoApps:                   "mgmt/user/update/ssoapp/remove",
-			userSetPassword:                     "mgmt/user/password/set",
-			userSetTemporaryPassword:            "mgmt/user/password/set/temporary",
-			userSetActivePassword:               "mgmt/user/password/set/active",
-			userExpirePassword:                  "mgmt/user/password/expire",
-			userRemoveAllPasskeys:               "mgmt/user/passkeys/delete",
-			userGetProviderToken:                "mgmt/user/provider/token",
-			userLogoutAllDevices:                "mgmt/user/logout",
-			userGenerateOTPForTest:              "mgmt/tests/generate/otp",
-			userGenerateMagicLinkForTest:        "mgmt/tests/generate/magiclink",
-			userGenerateEnchantedLinkForTest:    "mgmt/tests/generate/enchantedlink",
-			userCreateEmbeddedLink:              "mgmt/user/signin/embeddedlink",
-			userHistory:                         "mgmt/user/history",
-			accessKeyCreate:                     "mgmt/accesskey/create",
-			accessKeyLoad:                       "mgmt/accesskey",
-			accessKeySearchAll:                  "mgmt/accesskey/search",
-			accessKeyUpdate:                     "mgmt/accesskey/update",
-			accessKeyDeactivate:                 "mgmt/accesskey/deactivate",
-			accessKeyActivate:                   "mgmt/accesskey/activate",
-			accessKeyDelete:                     "mgmt/accesskey/delete",
-			ssoSettings:                         "mgmt/sso/settings",
-			ssoLoadSettings:                     "mgmt/sso/settings", // v2 only
-			ssoSAMLSettings:                     "mgmt/sso/saml",
-			ssoSAMLSettingsByMetadata:           "mgmt/sso/saml/metadata",
-			ssoOIDCSettings:                     "mgmt/sso/oidc",
-			ssoMetadata:                         "mgmt/sso/metadata",
-			ssoMapping:                          "mgmt/sso/mapping",
-			passwordSettings:                    "mgmt/password/settings",
-			updateJWT:                           "mgmt/jwt/update",
-			impersonate:                         "mgmt/impersonate",
-			permissionCreate:                    "mgmt/permission/create",
-			permissionUpdate:                    "mgmt/permission/update",
-			permissionDelete:                    "mgmt/permission/delete",
-			permissionLoadAll:                   "mgmt/permission/all",
-			roleCreate:                          "mgmt/role/create",
-			roleUpdate:                          "mgmt/role/update",
-			roleDelete:                          "mgmt/role/delete",
-			roleLoadAll:                         "mgmt/role/all",
-			roleSearch:                          "mgmt/role/search",
-			groupLoadAllGroups:                  "mgmt/group/all",
-			groupLoadAllGroupsForMember:         "mgmt/group/member/all",
-			groupLoadAllGroupMembers:            "mgmt/group/members",
-			listFlows:                           "mgmt/flow/list",
-			deleteFlows:                         "mgmt/flow/delete",
-			flowExport:                          "mgmt/flow/export",
-			flowImport:                          "mgmt/flow/import",
-			themeExport:                         "mgmt/theme/export",
-			themeImport:                         "mgmt/theme/import",
-			projectsList:                        "mgmt/projects/list",
-			projectClone:                        "mgmt/project/clone",
-			projectUpdateName:                   "mgmt/project/update/name",
-			projectUpdateTags:                   "mgmt/project/update/tags",
-			projectDelete:                       "mgmt/project/delete",
-			projectExportSnapshot:               "mgmt/project/snapshot/export",
-			projectImportSnapshot:               "mgmt/project/snapshot/import",
-			projectValidateSnapshot:             "mgmt/project/snapshot/validate",
-			auditSearch:                         "mgmt/audit/search",
-			auditCreate:                         "mgmt/audit/event",
-			authzSchemaSave:                     "mgmt/authz/schema/save",
-			authzSchemaDelete:                   "mgmt/authz/schema/delete",
-			authzSchemaLoad:                     "mgmt/authz/schema/load",
-			authzNSSave:                         "mgmt/authz/ns/save",
-			authzNSDelete:                       "mgmt/authz/ns/delete",
-			authzRDSave:                         "mgmt/authz/rd/save",
-			authzRDDelete:                       "mgmt/authz/rd/delete",
-			authzRECreate:                       "mgmt/authz/re/create",
-			authzREDelete:                       "mgmt/authz/re/delete",
-			authzREDeleteResources:              "mgmt/authz/re/deleteresources",
-			authzREHasRelations:                 "mgmt/authz/re/has",
-			authzREWho:                          "mgmt/authz/re/who",
-			authzREResource:                     "mgmt/authz/re/resource",
-			authzRETargets:                      "mgmt/authz/re/targets",
-			authzRETargetAll:                    "mgmt/authz/re/targetall",
-			authzRETargetWithRelation:           "mgmt/authz/re/targetwithrelation",
-			authzGetModified:                    "mgmt/authz/getmodified",
-			fgaSaveSchema:                       "mgmt/fga/schema",
-			fgaCreateRelations:                  "mgmt/fga/relations",
-			fgaDeleteRelations:                  "mgmt/fga/relations/delete",
-			fgaCheck:                            "mgmt/fga/check",
-			thirdPartyApplicationCreate:         "mgmt/thirdparty/app/create",
-			thirdPartyApplicationUpdate:         "mgmt/thirdparty/app/update",
-			thirdPartyApplicationDelete:         "mgmt/thirdparty/app/delete",
-			thirdPartyApplicationLoad:           "mgmt/thirdparty/app/load",
-			thirdPartyApplicationLoadAll:        "mgmt/thirdparty/apps/load",
-			thirdPartyApplicationConsentDelete:  "mgmt/thirdparty/consents/delete",
-			thirdPartyApplicationConsentsSearch: "mgmt/thirdparty/consents/search",
+			tenantCreate:                             "mgmt/tenant/create",
+			tenantUpdate:                             "mgmt/tenant/update",
+			tenantDelete:                             "mgmt/tenant/delete",
+			tenantLoad:                               "mgmt/tenant",
+			tenantLoadAll:                            "mgmt/tenant/all",
+			tenantSearchAll:                          "mgmt/tenant/search",
+			tenantSettings:                           "mgmt/tenant/settings",
+			tenantGenerateSSOConfigurationLink:       "mgmt/tenant/adminlinks/sso/generate",
+			ssoApplicationOIDCCreate:                 "mgmt/sso/idp/app/oidc/create",
+			ssoApplicationSAMLCreate:                 "mgmt/sso/idp/app/saml/create",
+			ssoApplicationOIDCUpdate:                 "mgmt/sso/idp/app/oidc/update",
+			ssoApplicationSAMLUpdate:                 "mgmt/sso/idp/app/saml/update",
+			ssoApplicationDelete:                     "mgmt/sso/idp/app/delete",
+			ssoApplicationLoad:                       "mgmt/sso/idp/app/load",
+			ssoApplicationLoadAll:                    "mgmt/sso/idp/apps/load",
+			userCreate:                               "mgmt/user/create",
+			testUserCreate:                           "mgmt/user/create/test",
+			userCreateBatch:                          "mgmt/user/create/batch",
+			userUpdate:                               "mgmt/user/update",
+			userPatch:                                "mgmt/user/patch",
+			userDelete:                               "mgmt/user/delete",
+			userDeleteAllTestUsers:                   "mgmt/user/test/delete/all",
+			userImport:                               "mgmt/user/import",
+			userLoad:                                 "mgmt/user",
+			userSearchAll:                            "mgmt/user/search",
+			testUserSearchAll:                        "mgmt/user/search/test",
+			userUpdateStatus:                         "mgmt/user/update/status",
+			userUpdateLoginID:                        "mgmt/user/update/loginid",
+			userUpdateEmail:                          "mgmt/user/update/email",
+			userUpdatePhone:                          "mgmt/user/update/phone",
+			userUpdateName:                           "mgmt/user/update/name",
+			userUpdatePicture:                        "mgmt/user/update/picture",
+			userUpdateCustomAttribute:                "mgmt/user/update/customAttribute",
+			userAddTenant:                            "mgmt/user/update/tenant/add",
+			userRemoveTenant:                         "mgmt/user/update/tenant/remove",
+			userSetRole:                              "mgmt/user/update/role/set",
+			userAddRole:                              "mgmt/user/update/role/add",
+			userRemoveRole:                           "mgmt/user/update/role/remove",
+			userAddSsoApps:                           "mgmt/user/update/ssoapp/add",
+			userSetSsoApps:                           "mgmt/user/update/ssoapp/set",
+			userRemoveSsoApps:                        "mgmt/user/update/ssoapp/remove",
+			userSetPassword:                          "mgmt/user/password/set",
+			userSetTemporaryPassword:                 "mgmt/user/password/set/temporary",
+			userSetActivePassword:                    "mgmt/user/password/set/active",
+			userExpirePassword:                       "mgmt/user/password/expire",
+			userRemoveAllPasskeys:                    "mgmt/user/passkeys/delete",
+			userGetProviderToken:                     "mgmt/user/provider/token",
+			userLogoutAllDevices:                     "mgmt/user/logout",
+			userGenerateOTPForTest:                   "mgmt/tests/generate/otp",
+			userGenerateMagicLinkForTest:             "mgmt/tests/generate/magiclink",
+			userGenerateEnchantedLinkForTest:         "mgmt/tests/generate/enchantedlink",
+			userCreateEmbeddedLink:                   "mgmt/user/signin/embeddedlink",
+			userHistory:                              "mgmt/user/history",
+			accessKeyCreate:                          "mgmt/accesskey/create",
+			accessKeyLoad:                            "mgmt/accesskey",
+			accessKeySearchAll:                       "mgmt/accesskey/search",
+			accessKeyUpdate:                          "mgmt/accesskey/update",
+			accessKeyDeactivate:                      "mgmt/accesskey/deactivate",
+			accessKeyActivate:                        "mgmt/accesskey/activate",
+			accessKeyDelete:                          "mgmt/accesskey/delete",
+			ssoSettings:                              "mgmt/sso/settings",
+			ssoLoadSettings:                          "mgmt/sso/settings", // v2 only
+			ssoSAMLSettings:                          "mgmt/sso/saml",
+			ssoSAMLSettingsByMetadata:                "mgmt/sso/saml/metadata",
+			ssoOIDCSettings:                          "mgmt/sso/oidc",
+			ssoMetadata:                              "mgmt/sso/metadata",
+			ssoMapping:                               "mgmt/sso/mapping",
+			passwordSettings:                         "mgmt/password/settings",
+			updateJWT:                                "mgmt/jwt/update",
+			impersonate:                              "mgmt/impersonate",
+			mgmtSignIn:                               "mgmt/auth/signin",
+			mgmtSignUp:                               "mgmt/auth/signup",
+			mgmtSignUpOrIn:                           "mgmt/auth/signup-in",
+			permissionCreate:                         "mgmt/permission/create",
+			permissionUpdate:                         "mgmt/permission/update",
+			permissionDelete:                         "mgmt/permission/delete",
+			permissionLoadAll:                        "mgmt/permission/all",
+			roleCreate:                               "mgmt/role/create",
+			roleUpdate:                               "mgmt/role/update",
+			roleDelete:                               "mgmt/role/delete",
+			roleLoadAll:                              "mgmt/role/all",
+			roleSearch:                               "mgmt/role/search",
+			groupLoadAllGroups:                       "mgmt/group/all",
+			groupLoadAllGroupsForMember:              "mgmt/group/member/all",
+			groupLoadAllGroupMembers:                 "mgmt/group/members",
+			listFlows:                                "mgmt/flow/list",
+			deleteFlows:                              "mgmt/flow/delete",
+			flowExport:                               "mgmt/flow/export",
+			flowImport:                               "mgmt/flow/import",
+			themeExport:                              "mgmt/theme/export",
+			themeImport:                              "mgmt/theme/import",
+			projectsList:                             "mgmt/projects/list",
+			projectClone:                             "mgmt/project/clone",
+			projectUpdateName:                        "mgmt/project/update/name",
+			projectUpdateTags:                        "mgmt/project/update/tags",
+			projectDelete:                            "mgmt/project/delete",
+			projectExportSnapshot:                    "mgmt/project/snapshot/export",
+			projectImportSnapshot:                    "mgmt/project/snapshot/import",
+			projectValidateSnapshot:                  "mgmt/project/snapshot/validate",
+			auditSearch:                              "mgmt/audit/search",
+			auditCreate:                              "mgmt/audit/event",
+			authzSchemaSave:                          "mgmt/authz/schema/save",
+			authzSchemaDelete:                        "mgmt/authz/schema/delete",
+			authzSchemaLoad:                          "mgmt/authz/schema/load",
+			authzNSSave:                              "mgmt/authz/ns/save",
+			authzNSDelete:                            "mgmt/authz/ns/delete",
+			authzRDSave:                              "mgmt/authz/rd/save",
+			authzRDDelete:                            "mgmt/authz/rd/delete",
+			authzRECreate:                            "mgmt/authz/re/create",
+			authzREDelete:                            "mgmt/authz/re/delete",
+			authzREDeleteResources:                   "mgmt/authz/re/deleteresources",
+			authzREHasRelations:                      "mgmt/authz/re/has",
+			authzREWho:                               "mgmt/authz/re/who",
+			authzREResource:                          "mgmt/authz/re/resource",
+			authzRETargets:                           "mgmt/authz/re/targets",
+			authzRETargetAll:                         "mgmt/authz/re/targetall",
+			authzRETargetWithRelation:                "mgmt/authz/re/targetwithrelation",
+			authzGetModified:                         "mgmt/authz/getmodified",
+			fgaSaveSchema:                            "mgmt/fga/schema",
+			fgaCreateRelations:                       "mgmt/fga/relations",
+			fgaDeleteRelations:                       "mgmt/fga/relations/delete",
+			fgaCheck:                                 "mgmt/fga/check",
+			thirdPartyApplicationCreate:              "mgmt/thirdparty/app/create",
+			thirdPartyApplicationUpdate:              "mgmt/thirdparty/app/update",
+			thirdPartyApplicationPatch:               "mgmt/thirdparty/app/patch",
+			thirdPartyApplicationDelete:              "mgmt/thirdparty/app/delete",
+			thirdPartyApplicationLoad:                "mgmt/thirdparty/app/load",
+			thirdPartyApplicationLoadAll:             "mgmt/thirdparty/apps/load",
+			thidPartyApplicationSecret:               "mgmt/thirdparty/app/secret",
+			thirdPartyApplicationRotate:              "mgmt/thirdparty/app/rotate",
+			thirdPartyApplicationConsentDelete:       "mgmt/thirdparty/consents/delete",
+			thirdPartyApplicationTenantConsentDelete: "mgmt/thirdparty/consents/delete/tenant",
+			thirdPartyApplicationConsentsSearch:      "mgmt/thirdparty/consents/search",
 		},
 		logout:       "auth/logout",
 		logoutAll:    "auth/logoutall",
@@ -372,6 +379,9 @@ type mgmtEndpoints struct {
 	ssoOIDCSettings           string
 	updateJWT                 string
 	impersonate               string
+	mgmtSignIn                string
+	mgmtSignUp                string
+	mgmtSignUpOrIn            string
 
 	passwordSettings string
 
@@ -432,13 +442,17 @@ type mgmtEndpoints struct {
 	fgaDeleteRelations string
 	fgaCheck           string
 
-	thirdPartyApplicationCreate         string
-	thirdPartyApplicationUpdate         string
-	thirdPartyApplicationDelete         string
-	thirdPartyApplicationLoad           string
-	thirdPartyApplicationLoadAll        string
-	thirdPartyApplicationConsentDelete  string
-	thirdPartyApplicationConsentsSearch string
+	thirdPartyApplicationCreate              string
+	thirdPartyApplicationUpdate              string
+	thirdPartyApplicationPatch               string
+	thirdPartyApplicationDelete              string
+	thirdPartyApplicationLoad                string
+	thirdPartyApplicationLoadAll             string
+	thidPartyApplicationSecret               string
+	thirdPartyApplicationRotate              string
+	thirdPartyApplicationConsentDelete       string
+	thirdPartyApplicationTenantConsentDelete string
+	thirdPartyApplicationConsentsSearch      string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -696,7 +710,7 @@ func (e *endpoints) ManagementTenantSettings() string {
 }
 
 func (e *endpoints) ManagementTenantGenerateSSOConfigurationLink() string {
-	return path.Join(e.version, e.mgmt.tenantGenerateSSOConfigurationLink)
+	return path.Join(e.versionV2, e.mgmt.tenantGenerateSSOConfigurationLink)
 }
 
 func (e *endpoints) ManagementSSOApplicationOIDCCreate() string {
@@ -945,6 +959,18 @@ func (e *endpoints) ManagementImpersonate() string {
 	return path.Join(e.version, e.mgmt.impersonate)
 }
 
+func (e *endpoints) ManagementSignIn() string {
+	return path.Join(e.version, e.mgmt.mgmtSignIn)
+}
+
+func (e *endpoints) ManagementSignUp() string {
+	return path.Join(e.version, e.mgmt.mgmtSignUp)
+}
+
+func (e *endpoints) ManagementSignUpOrIn() string {
+	return path.Join(e.version, e.mgmt.mgmtSignUpOrIn)
+}
+
 func (e *endpoints) ManagementGenerateEmbeddedLink() string {
 	return path.Join(e.version, e.mgmt.userCreateEmbeddedLink)
 }
@@ -1165,8 +1191,24 @@ func (e *endpoints) ManagementThirdPartyApplicationLoadAll() string {
 	return path.Join(e.version, e.mgmt.thirdPartyApplicationLoadAll)
 }
 
+func (e *endpoints) ManagementThirdPartyApplicationPatch() string {
+	return path.Join(e.version, e.mgmt.thirdPartyApplicationPatch)
+}
+
+func (e *endpoints) ManagementThirdPartyApplicationSecret() string {
+	return path.Join(e.version, e.mgmt.thidPartyApplicationSecret)
+}
+
+func (e *endpoints) ManagementThirdPartyApplicationRotate() string {
+	return path.Join(e.version, e.mgmt.thirdPartyApplicationRotate)
+}
+
 func (e *endpoints) ManagementThirdPartyApplicationDeleteConsent() string {
 	return path.Join(e.version, e.mgmt.thirdPartyApplicationConsentDelete)
+}
+
+func (e *endpoints) ManagementThirdPartyApplicationDeleteTenantConsent() string {
+	return path.Join(e.version, e.mgmt.thirdPartyApplicationTenantConsentDelete)
 }
 
 func (e *endpoints) ManagementThirdPartyApplicationSearchConsents() string {
@@ -1198,6 +1240,7 @@ const (
 type ClientParams struct {
 	ProjectID            string
 	BaseURL              string
+	AuthManagementKey    string
 	DefaultClient        IHttpClient
 	CustomDefaultHeaders map[string]string
 	CertificateVerify    CertificateVerifyMode
@@ -1383,6 +1426,11 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 	bearer := c.conf.ProjectID
 	if len(pswd) > 0 {
 		bearer = fmt.Sprintf("%s:%s", bearer, pswd)
+	}
+	// append auth management key if available
+	authKey := c.conf.AuthManagementKey
+	if len(authKey) > 0 {
+		bearer = fmt.Sprintf("%s:%s", bearer, authKey)
 	}
 	req.Header.Set(AuthorizationHeaderName, BearerAuthorizationPrefix+bearer)
 	c.addDescopeHeaders(req)

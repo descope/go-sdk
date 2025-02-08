@@ -48,28 +48,31 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 		logger.LogInfo("Provided public key is set, forcing only provided public key validation")
 	}
 	config.setManagementKey()
+	config.setAuthManagementKey()
 
 	c := api.NewClient(api.ClientParams{
 		ProjectID:            config.ProjectID,
 		BaseURL:              config.DescopeBaseURL,
+		AuthManagementKey:    config.AuthManagementKey,
 		DefaultClient:        config.DefaultClient,
 		CustomDefaultHeaders: config.CustomDefaultHeaders,
 		CertificateVerify:    config.CertificateVerify,
 		RequestTimeout:       config.RequestTimeout,
 	})
-
-	authService, err := auth.NewAuth(auth.AuthParams{
+	conf := &auth.AuthParams{
 		ProjectID:           config.ProjectID,
 		PublicKey:           config.PublicKey,
 		SessionJWTViaCookie: config.SessionJWTViaCookie,
 		CookieDomain:        config.SessionJWTCookieDomain,
 		CookieSameSite:      config.SessionJWTCookieSameSite,
-	}, c)
+	}
+	provider := auth.NewProvider(c, conf)
+	authService, err := auth.NewAuthWithProvider(*conf, provider, c)
 	if err != nil {
 		return nil, err
 	}
 
-	managementService := mgmt.NewManagement(mgmt.ManagementParams{ProjectID: config.ProjectID, ManagementKey: config.ManagementKey, FGACacheURL: config.FGACacheURL}, c)
+	managementService := mgmt.NewManagement(mgmt.ManagementParams{ProjectID: config.ProjectID, ManagementKey: config.ManagementKey, FGACacheURL: config.FGACacheURL}, provider, c)
 
 	return &DescopeClient{Auth: authService, Management: managementService, config: config}, nil
 }

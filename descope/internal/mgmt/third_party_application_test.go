@@ -97,6 +97,93 @@ func TestThirdPartyApplicationUpdateError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestThirdPartyApplicationPatchSuccess(t *testing.T) {
+	response := map[string]any{"id": "qux"}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "id1", req["id"])
+		require.Equal(t, "desc", req["description"])
+		require.Equal(t, []any{"http://dummy.com/callback"}, req["approvedCallbackUrls"])
+		require.Equal(t, []any{map[string]any{"name": "scope2", "description": "desc2", "values": []any{"v2"}}}, req["attributesScopes"])
+	}, response))
+
+	err := mgmt.ThirdPartyApplication().PatchApplication(context.Background(), &descope.ThirdPartyApplicationRequest{
+		ID:                   "id1",
+		Description:          "desc",
+		ApprovedCallbackUrls: []string{"http://dummy.com/callback"},
+		AttributesScopes:     []*descope.ThirdPartyApplicationScope{{Name: "scope2", Description: "desc2", Values: []string{"v2"}}},
+	})
+	require.NoError(t, err)
+}
+
+func TestThirdPartyApplicationPatchError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+
+	// Empty application
+	err := mgmt.ThirdPartyApplication().PatchApplication(context.Background(), nil)
+	require.Error(t, err)
+
+	// Empty application ID
+	err = mgmt.ThirdPartyApplication().PatchApplication(context.Background(), &descope.ThirdPartyApplicationRequest{})
+	require.Error(t, err)
+}
+
+func TestThirdPartyApplicationGetSecretSuccess(t *testing.T) {
+	response := map[string]any{
+		"cleartext": "11",
+	}
+
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+	}, response))
+	res, err := mgmt.ThirdPartyApplication().GetApplicationSecret(context.Background(), "id1")
+	require.NoError(t, err)
+	require.Equal(t, "11", res)
+}
+
+func TestThirdPartyApplicationGetSecretErrorEmpty(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.ThirdPartyApplication().GetApplicationSecret(context.Background(), "")
+	require.Error(t, err)
+	require.Empty(t, res)
+}
+
+func TestThirdPartyApplicationGetSecretError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := mgmt.ThirdPartyApplication().GetApplicationSecret(context.Background(), "test")
+	require.Error(t, err)
+	require.Empty(t, res)
+}
+
+func TestThirdPartyApplicationRotateSecretSuccess(t *testing.T) {
+	response := map[string]any{
+		"cleartext": "11",
+	}
+
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+	}, response))
+	res, err := mgmt.ThirdPartyApplication().RotateApplicationSecret(context.Background(), "id1")
+	require.NoError(t, err)
+	require.Equal(t, "11", res)
+}
+
+func TestThirdPartyApplicationRotateSecretErrorEmpty(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.ThirdPartyApplication().RotateApplicationSecret(context.Background(), "")
+	require.Error(t, err)
+	require.Empty(t, res)
+}
+
+func TestThirdPartyApplicationRotateSecretError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := mgmt.ThirdPartyApplication().RotateApplicationSecret(context.Background(), "test")
+	require.Error(t, err)
+	require.Empty(t, res)
+}
+
 func TestThirdPartyApplicationDeleteSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -299,6 +386,30 @@ func TestDeleteThirdPartyApplicationConsentsEmptyError(t *testing.T) {
 func TestDeleteThirdPartyApplicationConsentsError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
 	err := mgmt.ThirdPartyApplication().DeleteConsents(context.Background(), &descope.ThirdPartyApplicationConsentDeleteOptions{
+		ConsentIDs: []string{"id1"},
+	})
+	require.Error(t, err)
+}
+
+func TestDeleteThirdPartyApplicationTenantConsents(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+	}))
+	err := mgmt.ThirdPartyApplication().DeleteTenantConsents(context.Background(), &descope.ThirdPartyApplicationTenantConsentDeleteOptions{
+		AppID: "app1",
+	})
+	require.NoError(t, err)
+}
+
+func TestDeleteThirdPartyApplicationTenantConsentsEmptyError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.ThirdPartyApplication().DeleteTenantConsents(context.Background(), nil)
+	require.Error(t, err)
+}
+
+func TestDeleteThirdPartyApplicationTenantConsentsError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	err := mgmt.ThirdPartyApplication().DeleteTenantConsents(context.Background(), &descope.ThirdPartyApplicationTenantConsentDeleteOptions{
 		ConsentIDs: []string{"id1"},
 	})
 	require.Error(t, err)

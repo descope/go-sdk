@@ -1273,7 +1273,7 @@ You can add custom claims to a valid JWT.
 updatedJWT, err := descopeClient.Management.JWT().UpdateJWTWithCustomClaims(context.Background(), "original-jwt", map[string]any{
     "custom-key1": "custom-value1",
     "custom-key2": "custom-value2",
-})
+}, 60*9)
 if err != nil {
     // handle error
 }

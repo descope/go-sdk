@@ -554,13 +554,22 @@ type PasswordManagement interface {
 // Provide functions for manipulating valid JWT
 type JWT interface {
 	// Update a valid JWT with the custom claims provided
+	// Also the expiration of the jwt can be set by providing a duration in seconds
+	// providing 0, will leave the expiration as is
 	// The new JWT will be returned
-	UpdateJWTWithCustomClaims(ctx context.Context, jwt string, customClaims map[string]any) (string, error)
+	UpdateJWTWithCustomClaims(ctx context.Context, jwt string, customClaims map[string]any, refreshDuration int32) (string, error)
 
 	// Impersonate another user
 	// The impersonator user must have `impersonation` permission in order for this request to work
 	// The response would be a refresh JWT of the impersonated user
 	Impersonate(ctx context.Context, impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string) (string, error)
+
+	// Generate a JWT for a user, simulating a signin request
+	SignIn(ctx context.Context, loginID string, loginOptions *descope.MgmLoginOptions) (*descope.AuthenticationInfo, error)
+	// Generate a JWT for a user, simulating a signup request
+	SignUp(ctx context.Context, loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.MgmSignUpOptions) (*descope.AuthenticationInfo, error)
+	// Generate a JWT for a user, simulating a signup or in request
+	SignUpOrIn(ctx context.Context, loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.MgmSignUpOptions) (*descope.AuthenticationInfo, error)
 }
 
 // Provides functions for managing permissions in a project.
@@ -847,19 +856,34 @@ type ThirdPartyApplication interface {
 	// set in the existing sso application. Use carefully.
 	UpdateApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) error
 
+	// Patch an existing third party application.
+	//
+	// ID is required to identify the application to be patched.
+	PatchApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) error
+
 	// Delete an existing third party application.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	DeleteApplication(ctx context.Context, id string) error
 
-	// Load a project third party application by id
+	// Load a third party application by id.
 	LoadApplication(ctx context.Context, id string) (*descope.ThirdPartyApplication, error)
 
-	// Load all project third party applications
+	// Get a third party application by the application id.
+	GetApplicationSecret(ctx context.Context, id string) (string, error)
+
+	// Rotate the application secret for a third party application by the application id.
+	RotateApplicationSecret(ctx context.Context, id string) (string, error)
+
+	// Load all project third party applications.
 	LoadAllApplications(ctx context.Context) ([]*descope.ThirdPartyApplication, error)
 
 	// Delete a consent for a third party application.
+	// (Note: this will not delete tenant level consents)
 	DeleteConsents(ctx context.Context, options *descope.ThirdPartyApplicationConsentDeleteOptions) error
+
+	// Delete a tenant level consent for a third party application.
+	DeleteTenantConsents(ctx context.Context, options *descope.ThirdPartyApplicationTenantConsentDeleteOptions) error
 
 	// Search consents for a third party application.
 	SearchConsents(ctx context.Context, options *descope.ThirdPartyApplicationConsentSearchOptions) ([]*descope.ThirdPartyApplicationConsent, int, error)
