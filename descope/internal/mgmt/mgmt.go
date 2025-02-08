@@ -10,6 +10,7 @@ import (
 type ManagementParams struct {
 	ProjectID     string
 	ManagementKey string
+	FGACacheURL   string
 }
 
 type managementBase struct {
@@ -56,7 +57,7 @@ func NewManagement(conf ManagementParams, c *api.Client) *managementService {
 	service.audit = &audit{managementBase: base}
 	service.authz = &authz{managementBase: base}
 	service.password = &passwordManagement{managementBase: base}
-	service.fga = &fga{managementBase: base}
+	service.fga = &fga{managementBase: base, fgaCacheURL: conf.FGACacheURL}
 	return service
 }
 

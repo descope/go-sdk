@@ -3,6 +3,7 @@ package mgmt
 import (
 	"context"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/descope/go-sdk/descope"
@@ -10,6 +11,38 @@ import (
 	"github.com/descope/go-sdk/descope/tests/helpers"
 	"github.com/stretchr/testify/require"
 )
+
+func TestFGACacheURL(t *testing.T) {
+	mgmtWithFGACache := newTestMgmtConf(&ManagementParams{FGACacheURL: "https://my.auth"}, nil, helpers.DoOk(func(r *http.Request) {
+		require.True(t, strings.HasPrefix(r.URL.String(), "https://my.auth"))
+	}))
+	mgmtWithoutFGACache := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.True(t, strings.HasPrefix(r.URL.String(), "https://api.descope.co"))
+	}))
+
+	tt := []struct {
+		name string
+		mgmt *managementService
+	}{
+		{"WithFGACacheURL", mgmtWithFGACache},
+		{"WithoutFGACacheURL", mgmtWithoutFGACache},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			err := tc.mgmt.FGA().SaveSchema(context.Background(), &descope.FGASchema{Schema: "some schema"})
+			require.NoError(t, err)
+			err = tc.mgmt.FGA().CreateRelations(context.Background(), []*descope.FGARelation{{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"}})
+			require.NoError(t, err)
+			err = tc.mgmt.FGA().DeleteRelations(context.Background(), []*descope.FGARelation{{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"}})
+			require.NoError(t, err)
+			_, err = tc.mgmt.FGA().Check(context.Background(), []*descope.FGARelation{
+				{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"},
+			})
+			require.NoError(t, err)
+		})
+	}
+
+}
 
 func TestSaveFGASchemaSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
@@ -82,6 +115,7 @@ func TestCheckFGARelationsSuccess(t *testing.T) {
 			{
 				Allowed:  true,
 				Relation: &descope.FGARelation{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"},
+				Direct:   true,
 			},
 		}}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -103,6 +137,7 @@ func TestCheckFGARelationsSuccess(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, checks, 1)
 	require.True(t, checks[0].Allowed)
+	require.True(t, checks[0].Direct)
 }
 
 func TestCheckFGARelationsMissingTuples(t *testing.T) {

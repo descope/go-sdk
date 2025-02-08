@@ -69,7 +69,7 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 		return nil, err
 	}
 
-	managementService := mgmt.NewManagement(mgmt.ManagementParams{ProjectID: config.ProjectID, ManagementKey: config.ManagementKey}, c)
+	managementService := mgmt.NewManagement(mgmt.ManagementParams{ProjectID: config.ProjectID, ManagementKey: config.ManagementKey, FGACacheURL: config.FGACacheURL}, c)
 
 	return &DescopeClient{Auth: authService, Management: managementService, config: config}, nil
 }

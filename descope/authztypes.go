@@ -111,4 +111,5 @@ type FGARelation struct {
 type FGACheck struct {
 	Allowed  bool         `json:"allowed"`
 	Relation *FGARelation `json:"relation"`
+	Direct   bool         `json:"direct"`
 }

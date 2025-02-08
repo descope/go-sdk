@@ -12,6 +12,7 @@ import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/tests/mocks"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -267,11 +268,18 @@ func TestDoRequestDefault(t *testing.T) {
 	projectID := "test"
 	c := NewClient(ClientParams{ProjectID: projectID, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
 		assert.Nil(t, r.Body)
+		assert.True(t, strings.HasPrefix(r.URL.String(), defaultURL), "BaseURL should be defaultURL")
+		assertValidUUIDHeader(t, r)
 		return &http.Response{StatusCode: http.StatusOK}, nil
 	})})
 
 	_, err := c.DoRequest(context.Background(), http.MethodGet, "path", nil, nil, "")
 	require.NoError(t, err)
+}
+
+func assertValidUUIDHeader(t *testing.T, r *http.Request) {
+	_, err := uuid.Parse(r.Header.Get("x-descope-sdk-uuid"))
+	require.NoError(t, err, "uuid header should be a valid uuid")
 }
 
 func TestRoutesSignInOTP(t *testing.T) {
