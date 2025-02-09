@@ -28,7 +28,7 @@ type Config struct {
 	PublicKey string
 	// DescopeBaseURL (optional, "https://api.descope.com") - override the default base URL used to communicate with descope services.
 	DescopeBaseURL string
-	// FGACacheURL (optional, "https://api.descope.com") - pass FGA calls through a cache service, if set.
+	// FGACacheURL (optional, "") - pass FGA calls through a cache service, if set.
 	FGACacheURL string
 	// DefaultClient (optional, http.DefaultClient) - override the default client used to Do the actual http request.
 	DefaultClient api.IHttpClient

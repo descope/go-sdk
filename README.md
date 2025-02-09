@@ -1399,6 +1399,16 @@ relations, err := descopeClient.Management.FGA().Check(context.Background(), []*
 })
 ```
 
+Response times of repeated FGA `Check` calls, especially in high volume scenarios, can be reduced to sub-millisecond scales by re-directing the calls to a Descope FGA Cache Proxy running in the same backend cluster as your application.
+After setting up the proxy server via the Descope provided Docker image, set the `FGACacheURL` config property to be equal to the proxy URL to enable its use in the SDK, as shown in the example below:
+```
+	descopeClient, err := client.NewWithConfig(&client.Config{
+		...
+		FGACacheURL:         "https://10.0.0.4", // example FGA Cache Proxy URL, running inside the same backend cluster
+		...
+	})
+```
+
 
 ### Manage Project
 
