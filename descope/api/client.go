@@ -19,6 +19,7 @@ import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/logger"
+	"github.com/google/uuid"
 )
 
 const (
@@ -228,6 +229,8 @@ var (
 		meTenants:    "auth/me/tenants",
 		history:      "auth/me/history",
 	}
+
+	instanceUUID = uuid.New().String()
 )
 
 type endpoints struct {
@@ -1517,6 +1520,7 @@ func (c *Client) addDescopeHeaders(req *http.Request) {
 	req.Header.Set("x-descope-sdk-go-version", c.sdkInfo.goVersion)
 	req.Header.Set("x-descope-sdk-version", c.sdkInfo.version)
 	req.Header.Set("x-descope-sdk-sha", c.sdkInfo.sha)
+	req.Header.Set("x-descope-sdk-uuid", instanceUUID)
 }
 
 func getSDKInfo() *sdkInfo {

@@ -90,6 +90,8 @@ func TestGetCreatedTime(t *testing.T) {
 	assert.True(t, u.GetCreatedTime().Equal(now))
 	r := Role{CreatedTime: int32(ct)}
 	assert.True(t, r.GetCreatedTime().Equal(now))
+	c := ThirdPartyApplicationConsent{CreatedTime: int32(ct)}
+	assert.True(t, c.GetCreatedTime().Equal(now))
 }
 
 func TestIsPermittedPerTenantFromTenantsClaim(t *testing.T) {
