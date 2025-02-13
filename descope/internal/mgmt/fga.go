@@ -16,18 +16,35 @@ type fga struct {
 
 var _ sdk.FGA = &fga{} // Ensure that the fga struct implements the sdk.FGA interface
 
+type DSLSchema struct {
+	DSL string `json:"dsl"`
+}
+
 func (f *fga) SaveSchema(ctx context.Context, schema *descope.FGASchema) error {
 	if schema == nil {
 		return utils.NewInvalidArgumentError("schema")
 	}
-	body := map[string]any{
-		"dsl": schema.Schema,
+	body := &DSLSchema{
+		DSL: schema.Schema,
 	}
 
 	options := &api.HTTPRequest{}
 	options.BaseURL = f.fgaCacheURL
 	_, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGASaveSchema(), body, options, f.conf.ManagementKey)
 	return err
+}
+
+func (f *fga) LoadSchema(ctx context.Context) (*descope.FGASchema, error) {
+	res, err := f.client.DoGetRequest(ctx, api.Routes.ManagementFGALoadSchema(), nil, f.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	var dslSchema *DSLSchema
+	err = utils.Unmarshal([]byte(res.BodyStr), &dslSchema)
+	if err != nil {
+		return nil, err // notest
+	}
+	return &descope.FGASchema{Schema: dslSchema.DSL}, nil
 }
 
 func (f *fga) CreateRelations(ctx context.Context, relations []*descope.FGARelation) error {
