@@ -1530,6 +1530,9 @@ type MockFGA struct {
 	SaveSchemaAssert func(schema *descope.FGASchema) error
 	SaveSchemaError  error
 
+	LoadSchemaResponse *descope.FGASchema
+	LoadSchemaError    error
+
 	CreateRelationsAssert func(relations []*descope.FGARelation) error
 	CreateRelationsError  error
 
@@ -1546,6 +1549,10 @@ func (m *MockFGA) SaveSchema(_ context.Context, schema *descope.FGASchema) error
 		m.SaveSchemaAssert(schema)
 	}
 	return m.SaveSchemaError
+}
+
+func (m *MockFGA) LoadSchema(_ context.Context) (*descope.FGASchema, error) {
+	return m.LoadSchemaResponse, m.LoadSchemaError
 }
 
 func (m *MockFGA) CreateRelations(_ context.Context, relations []*descope.FGARelation) error {

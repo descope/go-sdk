@@ -63,6 +63,22 @@ func TestSaveFGASchemaMissingSchema(t *testing.T) {
 	require.ErrorContains(t, err, utils.NewInvalidArgumentError("schema").Message)
 }
 
+func TestLoadFGASchemaSuccess(t *testing.T) {
+	response := map[string]any{"dsl": "some schema"}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+	}, response))
+	schema, err := mgmt.FGA().LoadSchema(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, "some schema", schema.Schema)
+}
+
+func TestLoadFGASchemaError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	_, err := mgmt.FGA().LoadSchema(context.Background())
+	require.Error(t, err)
+}
+
 func TestCreateFGARelationsSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")

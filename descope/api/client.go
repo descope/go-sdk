@@ -205,6 +205,7 @@ var (
 			authzRETargetWithRelation:                "mgmt/authz/re/targetwithrelation",
 			authzGetModified:                         "mgmt/authz/getmodified",
 			fgaSaveSchema:                            "mgmt/fga/schema",
+			fgaLoadSchema:                            "mgmt/fga/schema",
 			fgaCreateRelations:                       "mgmt/fga/relations",
 			fgaDeleteRelations:                       "mgmt/fga/relations/delete",
 			fgaCheck:                                 "mgmt/fga/check",
@@ -438,6 +439,7 @@ type mgmtEndpoints struct {
 	authzGetModified          string
 
 	fgaSaveSchema      string
+	fgaLoadSchema      string
 	fgaCreateRelations string
 	fgaDeleteRelations string
 	fgaCheck           string
@@ -1157,6 +1159,10 @@ func (e *endpoints) ManagementAuthzGetModified() string {
 
 func (e *endpoints) ManagementFGASaveSchema() string {
 	return path.Join(e.version, e.mgmt.fgaSaveSchema)
+}
+
+func (e *endpoints) ManagementFGALoadSchema() string {
+	return path.Join(e.version, e.mgmt.fgaLoadSchema)
 }
 
 func (e *endpoints) ManagementFGACreateRelations() string {
