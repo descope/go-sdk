@@ -109,7 +109,13 @@ type FGARelation struct {
 
 // FGACheck holds the result of a check
 type FGACheck struct {
-	Allowed  bool         `json:"allowed"`
-	Relation *FGARelation `json:"relation"`
-	Direct   bool         `json:"direct"`
+	Allowed  bool          `json:"allowed"`
+	Relation *FGARelation  `json:"relation"`
+	Info     *FGACheckInfo `json:"info"`
+}
+
+type FGACheckInfo struct {
+	// A relation is considered "direct" if, based solely on the schema, its "allowed" state can only be
+	// changed by creating or deleting relations involving its resource, its target, or both (including itself)
+	Direct bool `json:"direct,omitempty"`
 }

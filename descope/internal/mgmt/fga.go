@@ -61,9 +61,9 @@ func (f *fga) DeleteRelations(ctx context.Context, relations []*descope.FGARelat
 }
 
 type CheckResponseTuple struct {
-	Allowed bool                 `json:"allowed"`
-	Tuple   *descope.FGARelation `json:"tuple"`
-	Direct  bool                 `json:"direct"`
+	Allowed bool                  `json:"allowed"`
+	Tuple   *descope.FGARelation  `json:"tuple"`
+	Info    *descope.FGACheckInfo `json:"info"`
 }
 
 type checkResponse struct {
@@ -94,10 +94,14 @@ func (f *fga) Check(ctx context.Context, relations []*descope.FGARelation) ([]*d
 
 	checks := make([]*descope.FGACheck, len(response.CheckResponseTuple))
 	for i, tuple := range response.CheckResponseTuple {
+		var direct bool
+		if tuple.Info != nil {
+			direct = tuple.Info.Direct
+		}
 		checks[i] = &descope.FGACheck{
 			Relation: tuple.Tuple,
 			Allowed:  tuple.Allowed,
-			Direct:   tuple.Direct,
+			Info:     &descope.FGACheckInfo{Direct: direct},
 		}
 	}
 

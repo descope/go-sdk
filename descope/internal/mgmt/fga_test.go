@@ -110,34 +110,50 @@ func TestDeleteFGARelationsMissingTuples(t *testing.T) {
 }
 
 func TestCheckFGARelationsSuccess(t *testing.T) {
-	response := map[string]any{
-		"tuples": []*descope.FGACheck{
-			{
-				Allowed:  true,
-				Relation: &descope.FGARelation{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"},
-				Direct:   true,
-			},
-		}}
-	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
-		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
-		req := map[string]any{}
-		require.NoError(t, helpers.ReadBody(r, &req))
-		require.NotNil(t, req["tuples"])
-		relation := req["tuples"].([]any)[0].(map[string]any)
-		require.NotNil(t, relation)
-		require.Equal(t, "g1", relation["resource"])
-		require.Equal(t, "group", relation["resourceType"])
-		require.Equal(t, "member", relation["relation"])
-		require.Equal(t, "u1", relation["target"])
-		require.Equal(t, "user", relation["targetType"])
-	}, response))
-	checks, err := mgmt.FGA().Check(context.Background(), []*descope.FGARelation{
-		{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"},
-	})
-	require.NoError(t, err)
-	require.Len(t, checks, 1)
-	require.True(t, checks[0].Allowed)
-	require.True(t, checks[0].Direct)
+	// init table test
+	tt := []struct {
+		name string
+		info *descope.FGACheckInfo
+	}{
+		{"WithInfo", &descope.FGACheckInfo{Direct: true}},
+		{"WithoutInfo", nil},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			response := map[string]any{
+				"tuples": []*descope.FGACheck{
+					{
+						Allowed:  true,
+						Relation: &descope.FGARelation{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"},
+						Info:     tc.info,
+					},
+				}}
+			mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+				require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+				req := map[string]any{}
+				require.NoError(t, helpers.ReadBody(r, &req))
+				require.NotNil(t, req["tuples"])
+				relation := req["tuples"].([]any)[0].(map[string]any)
+				require.NotNil(t, relation)
+				require.Equal(t, "g1", relation["resource"])
+				require.Equal(t, "group", relation["resourceType"])
+				require.Equal(t, "member", relation["relation"])
+				require.Equal(t, "u1", relation["target"])
+				require.Equal(t, "user", relation["targetType"])
+			}, response))
+			checks, err := mgmt.FGA().Check(context.Background(), []*descope.FGARelation{
+				{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"},
+			})
+			require.NoError(t, err)
+			require.Len(t, checks, 1)
+			require.True(t, checks[0].Allowed)
+			if tc.info != nil {
+				require.True(t, checks[0].Info.Direct)
+			} else {
+				require.False(t, checks[0].Info.Direct) // backwards compatibility - should be false if not present, and not panic
+			}
+		})
+	}
 }
 
 func TestCheckFGARelationsMissingTuples(t *testing.T) {
