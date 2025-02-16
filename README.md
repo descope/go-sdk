@@ -1446,7 +1446,7 @@ You can manage your project's settings and configurations by exporting a snapsho
 
 ```go
 // Exports the current state of the project
-exportRes, err := descopeClient.Management.Project().ExportSnapshot(context.Background())
+exportRes, err := descopeClient.Management.Project().ExportSnapshot(context.Background(), nil)
 if err != nil {
 	// unexpected failure
 }
