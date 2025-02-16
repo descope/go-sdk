@@ -883,6 +883,11 @@ type AuditCreateOptions struct {
 	TenantID string                 `json:"tenantId,omitempty"`
 }
 
+type ExportSnapshotRequest struct {
+	// An optional string to set the output format (leave empty for default)
+	Format string `json:"format"`
+}
+
 type ExportSnapshotResponse struct {
 	// All project settings and configurations represented as JSON files
 	Files map[string]any `json:"files"`
