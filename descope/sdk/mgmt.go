@@ -824,6 +824,9 @@ type FGA interface {
 	// SaveSchema creates a new schema for the project.
 	SaveSchema(ctx context.Context, schema *descope.FGASchema) error
 
+	// LoadSchema loads the schema for the project.
+	LoadSchema(ctx context.Context) (*descope.FGASchema, error)
+
 	// CreateRelation creates new relations for the project.
 	CreateRelations(ctx context.Context, relations []*descope.FGARelation) error
 

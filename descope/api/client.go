@@ -19,6 +19,7 @@ import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/logger"
+	"github.com/google/uuid"
 )
 
 const (
@@ -204,6 +205,7 @@ var (
 			authzRETargetWithRelation:                "mgmt/authz/re/targetwithrelation",
 			authzGetModified:                         "mgmt/authz/getmodified",
 			fgaSaveSchema:                            "mgmt/fga/schema",
+			fgaLoadSchema:                            "mgmt/fga/schema",
 			fgaCreateRelations:                       "mgmt/fga/relations",
 			fgaDeleteRelations:                       "mgmt/fga/relations/delete",
 			fgaCheck:                                 "mgmt/fga/check",
@@ -228,6 +230,8 @@ var (
 		meTenants:    "auth/me/tenants",
 		history:      "auth/me/history",
 	}
+
+	instanceUUID = uuid.New().String()
 )
 
 type endpoints struct {
@@ -435,6 +439,7 @@ type mgmtEndpoints struct {
 	authzGetModified          string
 
 	fgaSaveSchema      string
+	fgaLoadSchema      string
 	fgaCreateRelations string
 	fgaDeleteRelations string
 	fgaCheck           string
@@ -1156,6 +1161,10 @@ func (e *endpoints) ManagementFGASaveSchema() string {
 	return path.Join(e.version, e.mgmt.fgaSaveSchema)
 }
 
+func (e *endpoints) ManagementFGALoadSchema() string {
+	return path.Join(e.version, e.mgmt.fgaLoadSchema)
+}
+
 func (e *endpoints) ManagementFGACreateRelations() string {
 	return path.Join(e.version, e.mgmt.fgaCreateRelations)
 }
@@ -1517,6 +1526,7 @@ func (c *Client) addDescopeHeaders(req *http.Request) {
 	req.Header.Set("x-descope-sdk-go-version", c.sdkInfo.goVersion)
 	req.Header.Set("x-descope-sdk-version", c.sdkInfo.version)
 	req.Header.Set("x-descope-sdk-sha", c.sdkInfo.sha)
+	req.Header.Set("x-descope-sdk-uuid", instanceUUID)
 }
 
 func getSDKInfo() *sdkInfo {
