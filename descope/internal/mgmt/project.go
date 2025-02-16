@@ -69,8 +69,14 @@ func (p *project) ListProjects(ctx context.Context) ([]*descope.Project, error) 
 	return response.Projects, nil
 }
 
-func (p *project) ExportSnapshot(ctx context.Context) (*descope.ExportSnapshotResponse, error) {
+func (p *project) ExportSnapshot(ctx context.Context, req *descope.ExportSnapshotRequest) (*descope.ExportSnapshotResponse, error) {
 	body := map[string]any{}
+	if req == nil {
+		req = &descope.ExportSnapshotRequest{} // notest
+	}
+	if req.Format != "" {
+		body["format"] = req.Format
+	}
 	res, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectExportSnapshot(), body, nil, p.conf.ManagementKey)
 	if err != nil {
 		return nil, err

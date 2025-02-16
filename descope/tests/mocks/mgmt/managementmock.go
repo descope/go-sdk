@@ -1241,6 +1241,7 @@ func (m *MockFlow) ImportTheme(_ context.Context, theme map[string]any) error {
 // Mock Project
 
 type MockProject struct {
+	ExportSnapshotAssert   func(req *descope.ExportSnapshotRequest)
 	ExportSnapshotResponse *descope.ExportSnapshotResponse
 	ExportSnapshotError    error
 
@@ -1269,7 +1270,10 @@ type MockProject struct {
 	ListProjectsError    error
 }
 
-func (m *MockProject) ExportSnapshot(_ context.Context) (*descope.ExportSnapshotResponse, error) {
+func (m *MockProject) ExportSnapshot(_ context.Context, req *descope.ExportSnapshotRequest) (*descope.ExportSnapshotResponse, error) {
+	if m.ExportSnapshotAssert != nil {
+		m.ExportSnapshotAssert(req)
+	}
 	return m.ExportSnapshotResponse, m.ExportSnapshotError
 }
 

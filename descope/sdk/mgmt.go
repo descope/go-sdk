@@ -711,7 +711,7 @@ type Project interface {
 	//
 	// This API is meant to be used via the 'descopecli' command line tool that can be
 	// found at https://github.com/descope/descopecli
-	ExportSnapshot(ctx context.Context) (*descope.ExportSnapshotResponse, error)
+	ExportSnapshot(ctx context.Context, req *descope.ExportSnapshotRequest) (*descope.ExportSnapshotResponse, error)
 
 	// Imports a snapshot of all settings and configurations into a project, overriding any
 	// current configuration.
