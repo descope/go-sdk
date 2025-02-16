@@ -15,8 +15,9 @@ func TestProjectExport(t *testing.T) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
+		require.EqualValues(t, "split", req["format"])
 	}, map[string]any{"files": map[string]any{"foo": "bar"}}))
-	m, err := mgmt.Project().ExportSnapshot(context.Background())
+	m, err := mgmt.Project().ExportSnapshot(context.Background(), &descope.ExportSnapshotRequest{Format: "split"})
 	require.NoError(t, err)
 	require.NotNil(t, m)
 	require.Equal(t, "bar", m.Files["foo"])
