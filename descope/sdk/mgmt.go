@@ -60,7 +60,8 @@ type Tenant interface {
 
 	// Generate tenant admin self service SSO configuration link
 	// The expireDuration parameter indicates the link expiration duration in seconds
-	GenerateSSOConfigurationLink(ctx context.Context, tenantID string, expireDuration int64) (string, error)
+	// ssoID can be provided for a specific sso configuration
+	GenerateSSOConfigurationLink(ctx context.Context, tenantID string, expireDuration int64, ssoID string) (string, error)
 }
 
 // Provides functions for managing SSO applications in a project.

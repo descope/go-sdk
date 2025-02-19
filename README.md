@@ -325,7 +325,7 @@ Users can authenticate to a specific tenant using SAML or OIDC. Configure your S
 // If configured globally, the return URL is optional. If provided however, it will be used
 // instead of any global configuration.
 // Redirect the user to the returned URL to start the SSO SAML/OIDC redirect chain
-url, err := descopeClient.Auth.SSO().Start("my-tenant-ID", "https://my-app.com/handle-saml", nil, nil, w)
+url, err := descopeClient.Auth.SSO().Start("my-tenant-ID", "https://my-app.com/handle-saml", "", "", nil, nil, w)
 if err != nil {
     // handle error
 }
@@ -770,7 +770,8 @@ settingsRequest.InactivityTimeUnit = "days"
 err := descopeClient.Management.Tenant().ConfigureSettings(context.Background(), "My Tenant", settingsRequest)
 
 // Generate tenant admin self service link for SSO configuration (valid for 24 hours)
-link, err := descopeClient.Management.Tenant().GenerateSSOConfigurationLink(context.Background(), "My Tenant", 60 * 60 * 24)
+// sso id can be provided for a specific sso configuration
+link, err := descopeClient.Management.Tenant().GenerateSSOConfigurationLink(context.Background(), "My Tenant", 60 * 60 * 24, "")
 
 ```
 
