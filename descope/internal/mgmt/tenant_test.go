@@ -328,7 +328,7 @@ func TestTenantGenerateSSOConfigurationLinkError(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "tenant", req["tenantId"])
-		require.Equal(t, "ssoId", "")
+		require.Equal(t, "", req["ssoId"])
 		require.Equal(t, float64(60*60*24), req["expireTime"])
 	}))
 	link, err := mgmt.Tenant().GenerateSSOConfigurationLink(context.Background(), "tenant", 60*60*24, "")
