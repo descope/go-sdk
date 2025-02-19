@@ -297,7 +297,7 @@ func TestTenantGenerateSSOConfigurationLinkSuccess(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "tenant", req["tenantId"])
-		require.Equal(t, "ssoId", "")
+		require.Equal(t, "", req["ssoId"])
 		require.Equal(t, float64(60*60*24), req["expireTime"])
 	}, response))
 	link, err := mgmt.Tenant().GenerateSSOConfigurationLink(context.Background(), "tenant", 60*60*24, "")
@@ -314,7 +314,7 @@ func TestTenantGenerateSSOConfigurationLinkSuccessWithSSOID(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "tenant", req["tenantId"])
-		require.Equal(t, "ssoId", req["ssoId"])
+		require.Equal(t, "bla", req["ssoId"])
 		require.Equal(t, float64(60*60*24), req["expireTime"])
 	}, response))
 	link, err := mgmt.Tenant().GenerateSSOConfigurationLink(context.Background(), "tenant", 60*60*24, "bla")
