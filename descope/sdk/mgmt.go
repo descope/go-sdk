@@ -59,9 +59,11 @@ type Tenant interface {
 	ConfigureSettings(ctx context.Context, tenantID string, settings *descope.TenantSettings) error
 
 	// Generate tenant admin self service SSO configuration link
-	// The expireDuration parameter indicates the link expiration duration in seconds
-	// ssoID can be provided for a specific sso configuration
-	GenerateSSOConfigurationLink(ctx context.Context, tenantID string, expireDuration int64, ssoID string) (string, error)
+	// expireDuration - indicates the link expiration duration in seconds
+	// ssoID - Optional, in case provided, the specified sso configuration will be used
+	// email - Optional, in case provided, email will be sent according to the given email
+	// templateID - Optional, in case provided, the specified email's template will be used
+	GenerateSSOConfigurationLink(ctx context.Context, tenantID string, expireDuration int64, ssoID string, email string, templateID string) (string, error)
 }
 
 // Provides functions for managing SSO applications in a project.
