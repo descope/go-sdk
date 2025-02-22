@@ -720,7 +720,7 @@ tenantRequest.CustomAttributes = map[string]any{"mycustomattribute": "Test"}
 err := descopeClient.Management.Tenant().Create(context.Background(), "My Tenant", tenantRequest)
 
 // You can optionally set your own ID when creating a tenant
-err := descopeClient.Management.Tenant().CreateWithID(context.Background(), "my-custom-id", "My Tenant", tenantRequest)
+err := descopeClient.Management.Tenant().CreateWithID(context.Background(), "my-custom-id", tenantRequest)
 
 // Update will override all fields as is. Use carefully.
 err := descopeClient.Management.Tenant().Update(context.Background(), "my-custom-id", "My Tenant", tenantRequest)
