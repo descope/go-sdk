@@ -920,6 +920,10 @@ func makeSearchAllRequest(options *descope.UserSearchOptions) map[string]any {
 		"emails":           options.Emails,
 		"phones":           options.Phones,
 		"ssoAppIds":        options.SSOAppIDs,
+		"fromCreatedTime":  options.FromCreatedTime,
+		"toCreatedTime":    options.ToCreatedTime,
+		"fromModifiedTime": options.FromModifiedTime,
+		"toModifiedTime":   options.ToModifiedTime,
 	}
 }
 

@@ -789,6 +789,10 @@ type UserSearchOptions struct {
 	WithTestUsers    bool
 	TestUsersOnly    bool
 	LoginIDs         []string
+	FromCreatedTime  int64
+	ToCreatedTime    int64
+	FromModifiedTime int64
+	ToModifiedTime   int64
 }
 
 type UserSearchSort struct {
