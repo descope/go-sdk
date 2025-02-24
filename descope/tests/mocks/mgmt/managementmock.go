@@ -413,6 +413,9 @@ type MockUser struct {
 	RemoveAllPasskeysAssert func(loginID string)
 	RemoveAllPasskeysError  error
 
+	RemoveTOTPSeedAssert func(loginID string)
+	RemoveTOTPSeedError  error
+
 	GetProviderTokenWithOptionsAssert   func(loginID, provider string, options *descope.ProviderTokenOptions)
 	GetProviderTokenWithOptionsResponse *descope.ProviderTokenResponse
 	GetProviderTokenWithOptionsError    error
@@ -739,6 +742,13 @@ func (m *MockUser) RemoveAllPasskeys(_ context.Context, loginID string) error {
 		m.RemoveAllPasskeysAssert(loginID)
 	}
 	return m.RemoveAllPasskeysError
+}
+
+func (m *MockUser) RemoveTOTPSeed(_ context.Context, loginID string) error {
+	if m.RemoveTOTPSeedAssert != nil {
+		m.RemoveTOTPSeedAssert(loginID)
+	}
+	return m.RemoveTOTPSeedError
 }
 
 func (m *MockUser) GetProviderToken(_ context.Context, loginID, provider string) (*descope.ProviderTokenResponse, error) {
