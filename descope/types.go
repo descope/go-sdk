@@ -30,6 +30,11 @@ type AuthenticationInfo struct {
 	FirstSeen    bool          `json:"firstSeen,omitempty"`
 }
 
+type AnonymousAuthenticationInfo struct {
+	SessionToken *Token `json:"token,omitempty"`
+	RefreshToken *Token `json:"refreshToken,omitempty"`
+}
+
 type WebAuthnTransactionResponse struct {
 	TransactionID string `json:"transactionId,omitempty"`
 	Options       string `json:"options,omitempty"`

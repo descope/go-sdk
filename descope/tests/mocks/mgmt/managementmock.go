@@ -113,6 +113,10 @@ type MockJWT struct {
 	SignUpOrInAssert   func(loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.MgmSignUpOptions)
 	SignUpOrInResponse *descope.AuthenticationInfo
 	SignUpOrInError    error
+
+	AnonymousAssert   func(customClaims map[string]any, selectedTenant string)
+	AnonymousResponse *descope.AnonymousAuthenticationInfo
+	AnonymousError    error
 }
 
 func (m *MockJWT) UpdateJWTWithCustomClaims(_ context.Context, jwt string, customClaims map[string]any, refreshDuration int32) (string, error) {
@@ -146,6 +150,13 @@ func (m *MockJWT) SignUpOrIn(_ context.Context, loginID string, user *descope.Mg
 		m.SignUpOrInAssert(loginID, user, signUpOptions)
 	}
 	return m.SignUpOrInResponse, m.SignUpOrInError
+}
+
+func (m *MockJWT) Anonymous(_ context.Context, customClaims map[string]any, selectedTenant string) (*descope.AnonymousAuthenticationInfo, error) {
+	if m.AnonymousAssert != nil {
+		m.AnonymousAssert(customClaims, selectedTenant)
+	}
+	return m.AnonymousResponse, m.AnonymousError
 }
 
 // Mock SSO
