@@ -578,6 +578,8 @@ type JWT interface {
 	SignUp(ctx context.Context, loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.MgmSignUpOptions) (*descope.AuthenticationInfo, error)
 	// Generate a JWT for a user, simulating a signup or in request
 	SignUpOrIn(ctx context.Context, loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.MgmSignUpOptions) (*descope.AuthenticationInfo, error)
+	// Generate a JWT for a user, this user will be an anonymous user
+	Anonymous(ctx context.Context, customClaims map[string]any, selectedTenant string) (*descope.AnonymousAuthenticationInfo, error)
 }
 
 // Provides functions for managing permissions in a project.

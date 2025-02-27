@@ -160,6 +160,7 @@ var (
 			mgmtSignIn:                               "mgmt/auth/signin",
 			mgmtSignUp:                               "mgmt/auth/signup",
 			mgmtSignUpOrIn:                           "mgmt/auth/signup-in",
+			anonymous:                                "mgmt/auth/anonymous",
 			permissionCreate:                         "mgmt/permission/create",
 			permissionUpdate:                         "mgmt/permission/update",
 			permissionDelete:                         "mgmt/permission/delete",
@@ -385,6 +386,7 @@ type mgmtEndpoints struct {
 	mgmtSignIn                string
 	mgmtSignUp                string
 	mgmtSignUpOrIn            string
+	anonymous                 string
 
 	passwordSettings string
 
@@ -977,6 +979,10 @@ func (e *endpoints) ManagementSignUp() string {
 
 func (e *endpoints) ManagementSignUpOrIn() string {
 	return path.Join(e.version, e.mgmt.mgmtSignUpOrIn)
+}
+
+func (e *endpoints) Anonymous() string {
+	return path.Join(e.version, e.mgmt.anonymous)
 }
 
 func (e *endpoints) ManagementGenerateEmbeddedLink() string {
