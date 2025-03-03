@@ -369,6 +369,11 @@ type User interface {
 	// methods or a verified email/phone.
 	RemoveAllPasskeys(ctx context.Context, loginID string) error
 
+	// Removes TOTP seed for the user with the given login ID.
+	// Note: The user might not be able to login anymore if they have no other authentication
+	// methods or a verified email/phone.
+	RemoveTOTPSeed(ctx context.Context, loginID string) error
+
 	// Get the provider token for the given login ID.
 	// Only users that sign-in using social providers will have token.
 	// Note: The 'Manage tokens from provider' setting must be enabled.
@@ -573,6 +578,8 @@ type JWT interface {
 	SignUp(ctx context.Context, loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.MgmSignUpOptions) (*descope.AuthenticationInfo, error)
 	// Generate a JWT for a user, simulating a signup or in request
 	SignUpOrIn(ctx context.Context, loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.MgmSignUpOptions) (*descope.AuthenticationInfo, error)
+	// Generate a JWT for a user, this user will be an anonymous user
+	Anonymous(ctx context.Context, customClaims map[string]any, selectedTenant string) (*descope.AnonymousAuthenticationInfo, error)
 }
 
 // Provides functions for managing permissions in a project.

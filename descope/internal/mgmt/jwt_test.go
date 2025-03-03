@@ -258,3 +258,31 @@ func TestSignUpOrIn(t *testing.T) {
 	require.EqualValues(t, jwtRTokenValid, jwtRes.RefreshToken.JWT)
 	require.True(t, checked)
 }
+
+func TestAnonymous(t *testing.T) {
+	checked := false
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/v1/mgmt/auth/anonymous") {
+			checked = true
+			require.Equal(t, "Bearer a:key", r.Header.Get("Authorization"))
+			req := map[string]any{}
+			require.NoError(t, helpers.ReadBody(r, &req))
+			require.EqualValues(t, map[string]any{"k1": "v1"}, req["customClaims"])
+			require.EqualValues(t, "st", req["selectedTenant"])
+		}
+	}, &descope.JWTResponse{
+		RefreshJwt: jwtRTokenValid,
+		SessionJwt: jwtTokenValid,
+		User: &descope.UserResponse{
+			User: descope.User{
+				Name:  "name",
+				Phone: "phone",
+			},
+		},
+		FirstSeen: true,
+	}))
+	jwtRes, err := mgmt.JWT().Anonymous(context.Background(), map[string]any{"k1": "v1"}, "st")
+	require.NoError(t, err)
+	require.EqualValues(t, jwtRTokenValid, jwtRes.RefreshToken.JWT)
+	require.True(t, checked)
+}

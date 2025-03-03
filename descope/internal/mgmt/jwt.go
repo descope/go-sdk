@@ -172,3 +172,30 @@ func (j *jwt) signUp(ctx context.Context, endpoint string, loginID string, user 
 func (j *jwt) SignUpOrIn(ctx context.Context, loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.MgmSignUpOptions) (*descope.AuthenticationInfo, error) {
 	return j.signUp(ctx, api.Routes.ManagementSignUpOrIn(), loginID, user, signUpOptions)
 }
+
+func (j *jwt) Anonymous(ctx context.Context, customClaims map[string]any, selectedTenant string) (*descope.AnonymousAuthenticationInfo, error) {
+	arb := map[string]any{
+		"selectedTenant": selectedTenant,
+		"customClaims":   customClaims,
+	}
+	httpResponse, err := j.client.DoPostRequest(ctx, api.Routes.Anonymous(), arb, nil, j.conf.ManagementKey)
+	if err != nil {
+		// notest
+		return nil, err
+	}
+	jRes := &descope.JWTResponse{}
+	err = utils.Unmarshal([]byte(httpResponse.BodyStr), jRes)
+	if err != nil {
+		// notest
+		logger.LogError("Unable to parse jwt response", err)
+		return nil, err
+	}
+	ai, err := j.parseJWT(jRes)
+	if err != nil {
+		return nil, err
+	}
+	return &descope.AnonymousAuthenticationInfo{
+		SessionToken: ai.SessionToken,
+		RefreshToken: ai.RefreshToken,
+	}, nil
+}

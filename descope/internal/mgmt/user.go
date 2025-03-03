@@ -591,6 +591,16 @@ func (u *user) RemoveAllPasskeys(ctx context.Context, loginID string) error {
 	return err
 }
 
+func (u *user) RemoveTOTPSeed(ctx context.Context, loginID string) error {
+	if loginID == "" {
+		return utils.NewInvalidArgumentError("loginID")
+	}
+
+	req := map[string]any{"loginId": loginID}
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveTOTPSeed(), req, nil, u.conf.ManagementKey)
+	return err
+}
+
 func (u *user) GetProviderToken(ctx context.Context, loginID, provider string) (*descope.ProviderTokenResponse, error) {
 	return u.GetProviderTokenWithOptions(ctx, loginID, provider, nil)
 }

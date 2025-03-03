@@ -132,6 +132,7 @@ var (
 			userSetActivePassword:                    "mgmt/user/password/set/active",
 			userExpirePassword:                       "mgmt/user/password/expire",
 			userRemoveAllPasskeys:                    "mgmt/user/passkeys/delete",
+			userRemoveTOTPSeed:                       "mgmt/user/totp/delete",
 			userGetProviderToken:                     "mgmt/user/provider/token",
 			userLogoutAllDevices:                     "mgmt/user/logout",
 			userGenerateOTPForTest:                   "mgmt/tests/generate/otp",
@@ -159,6 +160,7 @@ var (
 			mgmtSignIn:                               "mgmt/auth/signin",
 			mgmtSignUp:                               "mgmt/auth/signup",
 			mgmtSignUpOrIn:                           "mgmt/auth/signup-in",
+			anonymous:                                "mgmt/auth/anonymous",
 			permissionCreate:                         "mgmt/permission/create",
 			permissionUpdate:                         "mgmt/permission/update",
 			permissionDelete:                         "mgmt/permission/delete",
@@ -347,6 +349,7 @@ type mgmtEndpoints struct {
 	userSetActivePassword     string
 	userExpirePassword        string
 	userRemoveAllPasskeys     string
+	userRemoveTOTPSeed        string
 	userGetProviderToken      string
 	userLogoutAllDevices      string
 	userAddSsoApps            string
@@ -383,6 +386,7 @@ type mgmtEndpoints struct {
 	mgmtSignIn                string
 	mgmtSignUp                string
 	mgmtSignUpOrIn            string
+	anonymous                 string
 
 	passwordSettings string
 
@@ -868,6 +872,10 @@ func (e *endpoints) ManagementUserRemoveAllPasskeys() string {
 	return path.Join(e.version, e.mgmt.userRemoveAllPasskeys)
 }
 
+func (e *endpoints) ManagementUserRemoveTOTPSeed() string {
+	return path.Join(e.version, e.mgmt.userRemoveTOTPSeed)
+}
+
 func (e *endpoints) ManagementUserGetProviderToken() string {
 	return path.Join(e.version, e.mgmt.userGetProviderToken)
 }
@@ -971,6 +979,10 @@ func (e *endpoints) ManagementSignUp() string {
 
 func (e *endpoints) ManagementSignUpOrIn() string {
 	return path.Join(e.version, e.mgmt.mgmtSignUpOrIn)
+}
+
+func (e *endpoints) Anonymous() string {
+	return path.Join(e.version, e.mgmt.anonymous)
 }
 
 func (e *endpoints) ManagementGenerateEmbeddedLink() string {

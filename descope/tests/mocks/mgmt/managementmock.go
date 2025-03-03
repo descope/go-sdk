@@ -113,6 +113,10 @@ type MockJWT struct {
 	SignUpOrInAssert   func(loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.MgmSignUpOptions)
 	SignUpOrInResponse *descope.AuthenticationInfo
 	SignUpOrInError    error
+
+	AnonymousAssert   func(customClaims map[string]any, selectedTenant string)
+	AnonymousResponse *descope.AnonymousAuthenticationInfo
+	AnonymousError    error
 }
 
 func (m *MockJWT) UpdateJWTWithCustomClaims(_ context.Context, jwt string, customClaims map[string]any, refreshDuration int32) (string, error) {
@@ -146,6 +150,13 @@ func (m *MockJWT) SignUpOrIn(_ context.Context, loginID string, user *descope.Mg
 		m.SignUpOrInAssert(loginID, user, signUpOptions)
 	}
 	return m.SignUpOrInResponse, m.SignUpOrInError
+}
+
+func (m *MockJWT) Anonymous(_ context.Context, customClaims map[string]any, selectedTenant string) (*descope.AnonymousAuthenticationInfo, error) {
+	if m.AnonymousAssert != nil {
+		m.AnonymousAssert(customClaims, selectedTenant)
+	}
+	return m.AnonymousResponse, m.AnonymousError
 }
 
 // Mock SSO
@@ -412,6 +423,9 @@ type MockUser struct {
 
 	RemoveAllPasskeysAssert func(loginID string)
 	RemoveAllPasskeysError  error
+
+	RemoveTOTPSeedAssert func(loginID string)
+	RemoveTOTPSeedError  error
 
 	GetProviderTokenWithOptionsAssert   func(loginID, provider string, options *descope.ProviderTokenOptions)
 	GetProviderTokenWithOptionsResponse *descope.ProviderTokenResponse
@@ -739,6 +753,13 @@ func (m *MockUser) RemoveAllPasskeys(_ context.Context, loginID string) error {
 		m.RemoveAllPasskeysAssert(loginID)
 	}
 	return m.RemoveAllPasskeysError
+}
+
+func (m *MockUser) RemoveTOTPSeed(_ context.Context, loginID string) error {
+	if m.RemoveTOTPSeedAssert != nil {
+		m.RemoveTOTPSeedAssert(loginID)
+	}
+	return m.RemoveTOTPSeedError
 }
 
 func (m *MockUser) GetProviderToken(_ context.Context, loginID, provider string) (*descope.ProviderTokenResponse, error) {
