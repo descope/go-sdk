@@ -61,11 +61,21 @@ func TestValidateProjectImport(t *testing.T) {
 		require.True(t, ok)
 		require.Equal(t, "i", conn["id"])
 		require.Equal(t, "v", conn["value"])
+
+		outboundApps, ok := secrets["outboundApps"].([]any)
+		require.True(t, ok)
+		require.Len(t, outboundApps, 1)
+		app, ok := outboundApps[0].(map[string]any)
+		require.True(t, ok)
+		require.Equal(t, "outbnd1", app["id"])
+		require.Equal(t, "v", app["value"])
+		require.Equal(t, "clientSecret", app["type"])
 	}, resbody))
 	req := &descope.ValidateSnapshotRequest{
 		Files: map[string]any{"foo": "bar"},
 		InputSecrets: &descope.SnapshotSecrets{
-			Connectors: []*descope.SnapshotSecret{{ID: "i", Name: "n", Type: "t", Value: "v"}},
+			Connectors:   []*descope.SnapshotSecret{{ID: "i", Name: "n", Type: "t", Value: "v"}},
+			OutboundApps: []*descope.SnapshotSecret{{ID: "outbnd1", Name: "n", Type: "clientSecret", Value: "v"}},
 		},
 	}
 	res, err := mgmt.Project().ValidateSnapshot(context.Background(), req)

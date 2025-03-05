@@ -933,6 +933,8 @@ type SnapshotSecrets struct {
 	Connectors []*SnapshotSecret `json:"connectors,omitempty"`
 	// Any missing or input secrets for OAuth providers in a snapshot
 	OAuthProviders []*SnapshotSecret `json:"oauthProviders,omitempty"`
+	// Any missing or input secrets for outbound applications in a snapshot
+	OutboundApps []*SnapshotSecret `json:"outboundApps,omitempty"`
 }
 
 type SnapshotSecret struct {
