@@ -450,6 +450,7 @@ type BatchUserPasswordHashed struct {
 	Django   *BatchUserPasswordDjango   `json:"django,omitempty"`
 	Phpass   *BatchUserPasswordPhpass   `json:"phpass,omitempty"`
 	Md5      *BatchUserPasswordMd5      `json:"md5,omitempty"`
+	Argon2   *BatchUserPasswordArgon2   `json:"argon2,omitempty"`
 }
 
 type BatchUserPasswordBcrypt struct {
@@ -485,6 +486,14 @@ type BatchUserPasswordPhpass struct {
 
 type BatchUserPasswordMd5 struct {
 	Hash string `json:"hash"` // the md5 hash in plaintext format, for example "68f724c9ad..."
+}
+
+type BatchUserPasswordArgon2 struct {
+	Hash       []byte `json:"hash"`       // the hash in raw bytes (base64 strings should be decoded first)
+	Salt       []byte `json:"salt"`       // the salt in raw bytes (base64 strings should be decoded first)
+	Iterations int    `json:"iterations"` // the memory cost value (usually between 1 to 10)
+	Memory     int    `json:"memory"`     // the memory cost value in kilobytes (usually between 1,000 to 1,000,000)
+	Threads    int    `json:"threads"`    // the threads cost value (usually between 1 to 10)
 }
 
 type UserResponse struct {
