@@ -1020,14 +1020,15 @@ You can manage SSO (SAML or OIDC) settings for a specific tenant.
 
 ```go
 // Load all tenant SSO settings
+// You can pass ssoID in case using multi SSO and you want to load specific SSO configuration
 ssoSettings, err := descopeClient.Management.SSO().LoadSettings(context.Background(), "tenant-id")
 
-//* Deprecated (use LoadSettings(..) instead) *//
-ssoSettings, err := descopeClient.Management.SSO().GetSettings(context.Background(), "tenant-id")
+// You can get all configured SSO settings for a specific tenant ID (for multi SSO usage)
+allSSOSettings, err := descopeClient.Management.SSO().LoadAllSettings(context.Background(), "tenant-id");
 
 // Configure tenant SSO by OIDC settings
-
-oidcSettings := &descope.SSOOIDCSettings{..}
+oidcSettings := &descope.SSOOIDCSettings{}
+// You can pass ssoID in case using multi SSO and you want to configure specific SSO configuration
 err = descopeClient.Management.SSO().ConfigureOIDCSettings("tenant-id", oidcSettings, "")
 // OR
 // Load all tenant SSO settings and use them to configure OIDC settings
@@ -1052,10 +1053,8 @@ samlSettings := &descope.SSOSAMLSettings{
 	AttributeMapping: &descope.AttributeMapping{Email: "myEmail", ..},
 	RoleMappings: []*RoleMapping{{..}},
 }
+// You can pass ssoID in case using multi SSO and you want to configure specific SSO configuration
 err = descopeClient.Management.SSO().ConfigureSAMLSettings(context.Background(), tenantID, samlSettings, redirectURL, domain)
-
-//* Deprecated (use ConfigureSAMLSettings(..) instead) *//
-err := descopeClient.Management.SSO().ConfigureSettings(context.Background(), tenantID, idpURL, entityID, idpCert, redirectURL, domain)
 
 // Alternatively, configure using an SSO SAML metadata URL
 samlSettings := &descope.SSOSAMLSettingsByMetadata{
@@ -1063,24 +1062,16 @@ samlSettings := &descope.SSOSAMLSettingsByMetadata{
 	AttributeMapping: &descope.AttributeMapping{Email: "myEmail", ..},
 	RoleMappings: []*RoleMapping{{..}},
 }
+// You can pass ssoID in case using multi SSO and you want to configure specific SSO configuration
 err = descopeClient.Management.SSO().ConfigureSAMLSettingsByMetadata(context.Background(), tenantID, samlSettings, redirectURL, domain)
 
-//* Deprecated (use ConfigureSAMLSettingsByMetadata(..) instead) *//
-err := descopeClient.Management.SSO().ConfigureMetadata(tenantID, "https://idp.com/my-idp-metadata", redirectURL, domain)
-
-//* Deprecated (use Management.SSO().ConfigureSAMLSettings(..) or Management.SSO().ConfigureSAMLSettingsByMetadata(..) instead) *//
-// Map IDP groups to Descope roles, or map user attributes.
-// This function overrides any previous mapping (even when empty). Use carefully.
-roleMapping := []*descope.RoleMapping{
-    {Groups: []string{"IDP_ADMIN"}, Role: "Tenant Admin"},
-}
-attributeMapping := &descope.AttributeMapping {
-    Name: "IDP_NAME",
-    PhoneNumber: "IDP_PHONE",
-}
-err := descopeClient.Management.SSO().ConfigureMapping(context.Background(), tenantID, roleMapping, attributeMapping)
+// You can create new SSO configuration (aka multi SSO)
+ssoID := "my-new-additional-sso-id"
+displayName := "My additional SSO configuration"
+createdSSOSettings, err := descopeClient.Management.SSO().NewSettings(context.Background(), "tenant-id", ssoID, displayName)
 
 // To delete SSO settings, call the following method
+// You can pass ssoID in case using multi SSO and you want to delete specific SSO configuration
 err := descopeClient.Management.SSO().DeleteSettings(context.Background(), "tenant-id")
 ```
 

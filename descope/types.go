@@ -167,6 +167,7 @@ type SSOTenantSettingsResponse struct {
 	Tenant *Tenant                  `json:"tenant,omitempty"`
 	Saml   *SSOSAMLSettingsResponse `json:"saml,omitempty"`
 	Oidc   *SSOOIDCSettings         `json:"oidc,omitempty"`
+	SSOID  string                   `json:"ssoId,omitempty"`
 }
 
 type GenerateSSOConfigurationLinkResponse struct {
