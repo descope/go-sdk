@@ -220,6 +220,20 @@ func TestNewSSOSettingsError(t *testing.T) {
 	assert.Nil(t, res)
 }
 
+func TestNewSettingsErrorMissingTenantID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(_ *http.Request) {}))
+	res, err := mgmt.SSO().NewSettings(context.Background(), "", "", "")
+	require.ErrorIs(t, err, utils.NewInvalidArgumentError("tenantID"))
+	assert.Nil(t, res)
+}
+
+func TestNewSettingsErrorMissingDisplayName(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(_ *http.Request) {}))
+	res, err := mgmt.SSO().NewSettings(context.Background(), "aaa", "", "")
+	require.ErrorIs(t, err, utils.NewInvalidArgumentError("displayName"))
+	assert.Nil(t, res)
+}
+
 func TestGetSSOSettingsError(t *testing.T) {
 	tenantID := "abc"
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
@@ -619,6 +633,13 @@ func TestLoadAllSettingsError(t *testing.T) {
 	resAll, err := mgmt.SSO().LoadAllSettings(context.Background(), tenantID)
 	require.Error(t, err)
 	require.Nil(t, resAll)
+}
+
+func TestLoadAllSettingsErrorMissingTenantID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(_ *http.Request) {}))
+	res, err := mgmt.SSO().LoadAllSettings(context.Background(), "")
+	require.ErrorIs(t, err, utils.NewInvalidArgumentError("tenantID"))
+	assert.Nil(t, res)
 }
 
 func TestLoadSettingsErrorMissingTenantID(t *testing.T) {
