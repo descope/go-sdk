@@ -1068,7 +1068,6 @@ err = descopeClient.Management.SSO().ConfigureSAMLSettingsByMetadata(context.Bac
 // You can create new SSO configuration (aka multi SSO)
 ssoID := "my-new-additional-sso-id"
 displayName := "My additional SSO configuration"
-await descopeClient.management.sso.newSettings(tenantID, ssoID, displayName);
 createdSSOSettings, err := descopeClient.Management.SSO().NewSettings(context.Background(), "tenant-id", ssoID, displayName)
 
 // To delete SSO settings, call the following method
