@@ -170,6 +170,10 @@ type SSOTenantSettingsResponse struct {
 	SSOID  string                   `json:"ssoId,omitempty"`
 }
 
+type SSOTenantAllSettingsResponse struct {
+	SSOSettings []*SSOTenantSettingsResponse `json:"SSOSettings,omitempty"`
+}
+
 type GenerateSSOConfigurationLinkResponse struct {
 	AdminSSOConfigurationLink string `json:"adminSSOConfigurationLink,omitempty"`
 }
