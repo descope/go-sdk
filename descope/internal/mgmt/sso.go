@@ -296,10 +296,10 @@ func unmarshalSSOTenantSettingsResponse(res *api.HTTPResponse) (*descope.SSOTena
 }
 
 func unmarshalSSOTenantAllSettingsResponse(res *api.HTTPResponse) ([]*descope.SSOTenantSettingsResponse, error) {
-	var ssoAllSettingsRes []*descope.SSOTenantSettingsResponse
+	var ssoAllSettingsRes *descope.SSOTenantAllSettingsResponse
 	err := utils.Unmarshal([]byte(res.BodyStr), &ssoAllSettingsRes)
 	if err != nil {
 		return nil, err
 	}
-	return ssoAllSettingsRes, err
+	return ssoAllSettingsRes.SSOSettings, err
 }

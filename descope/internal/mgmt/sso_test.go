@@ -535,52 +535,54 @@ func TestLoadSettingsError(t *testing.T) {
 func TestLoadAllSettingsSuccess(t *testing.T) {
 	tenantID := "abc"
 	ssoID := "somessoid"
-	response := []map[string]any{{
-		"tenant": map[string]any{
-			"id":       tenantID,
-			"name":     "T1",
-			"authType": "saml",
-			"domains":  []string{"lulu"},
-		},
-		"saml": map[string]any{
-			"tenantID":       tenantID,
-			"idpEntityID":    "idpEntityID",
-			"idpSSOURL":      "idpSSOURL",
-			"idpCertificate": "idpCertificate",
-			"idpMetadataURL": "idpMetadataURL",
-			"spEntityId":     "spEntityId",
-			"spACSUrl":       "spACSUrl",
-			"spCertificate":  "spCertificate",
-			"attributeMapping": map[string]string{
-				"name":        "name",
-				"email":       "email",
-				"username":    "username",
-				"phoneNumber": "phoneNumber",
-				"group":       "group",
+	response := map[string]any{
+		"SSOSettings": []map[string]any{{
+			"tenant": map[string]any{
+				"id":       tenantID,
+				"name":     "T1",
+				"authType": "saml",
+				"domains":  []string{"lulu"},
 			},
-			"groupsMapping": []map[string]any{
-				{
-					"role": map[string]string{
-						"id":   "role.id",
-						"name": "role.name",
+			"saml": map[string]any{
+				"tenantID":       tenantID,
+				"idpEntityID":    "idpEntityID",
+				"idpSSOURL":      "idpSSOURL",
+				"idpCertificate": "idpCertificate",
+				"idpMetadataURL": "idpMetadataURL",
+				"spEntityId":     "spEntityId",
+				"spACSUrl":       "spACSUrl",
+				"spCertificate":  "spCertificate",
+				"attributeMapping": map[string]string{
+					"name":        "name",
+					"email":       "email",
+					"username":    "username",
+					"phoneNumber": "phoneNumber",
+					"group":       "group",
+				},
+				"groupsMapping": []map[string]any{
+					{
+						"role": map[string]string{
+							"id":   "role.id",
+							"name": "role.name",
+						},
+						"groups": []string{"group1"},
 					},
-					"groups": []string{"group1"},
+				},
+				"redirectURL": "redirectURL",
+			},
+			"oidc": map[string]any{
+				"name":        "myName",
+				"clientId":    "abcdef",
+				"authUrl":     "http://dummy.com",
+				"tokenUrl":    "http://dummy.com",
+				"userDataUrl": "http://dummy.com",
+				"userAttrMapping": map[string]any{
+					"givenName": "myGivenName",
 				},
 			},
-			"redirectURL": "redirectURL",
-		},
-		"oidc": map[string]any{
-			"name":        "myName",
-			"clientId":    "abcdef",
-			"authUrl":     "http://dummy.com",
-			"tokenUrl":    "http://dummy.com",
-			"userDataUrl": "http://dummy.com",
-			"userAttrMapping": map[string]any{
-				"givenName": "myGivenName",
-			},
-		},
-		"ssoId": ssoID,
-	}}
+			"ssoId": ssoID,
+		}},
+	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		params := helpers.ReadParams(r)
