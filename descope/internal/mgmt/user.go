@@ -934,6 +934,7 @@ func makeSearchAllRequest(options *descope.UserSearchOptions) map[string]any {
 		"toCreatedTime":    options.ToCreatedTime,
 		"fromModifiedTime": options.FromModifiedTime,
 		"toModifiedTime":   options.ToModifiedTime,
+		"userIds":          options.UserIDs,
 	}
 }
 
