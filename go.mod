@@ -1,6 +1,6 @@
 module github.com/descope/go-sdk
 
-go 1.20
+go 1.23
 
 require (
 	github.com/google/uuid v1.6.0
