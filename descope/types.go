@@ -808,6 +808,7 @@ type UserSearchOptions struct {
 	WithTestUsers    bool
 	TestUsersOnly    bool
 	LoginIDs         []string
+	UserIDs          []string
 	FromCreatedTime  int64
 	ToCreatedTime    int64
 	FromModifiedTime int64
