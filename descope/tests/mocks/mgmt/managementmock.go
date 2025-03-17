@@ -176,7 +176,7 @@ type MockSSO struct {
 	ConfigureSAMLSettingsByMetadataAssert func(tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domains []string, ssoID string)
 	ConfigureSAMLSettingsByMetadataError  error
 
-	ConfigureOIDCSettingsAssert func(tenantID string, settings *descope.SSOOIDCSettings, domains []string, ssoID string) error
+	ConfigureOIDCSettingsAssert func(tenantID string, settings *descope.SSOOIDCSettings, domains []string, ssoID string)
 	ConfigureOIDCSettingsError  error
 
 	NewSettingsAssert   func(tenantID string, ssoID string, displayName string)
@@ -950,7 +950,7 @@ type MockTenant struct {
 	ConfigureSettingsResponse *descope.TenantSettings
 	ConfigureSettingsError    error
 
-	GenerateSSOConfigurationLinkAssert   func(tenantID string, expireDuration int64, ssoID string, email string, templateID string) error
+	GenerateSSOConfigurationLinkAssert   func(tenantID string, expireDuration int64, ssoID string, email string, templateID string)
 	GenerateSSOConfigurationLinkResponse string
 	GenerateSSOConfigurationLinkError    error
 }
@@ -1574,16 +1574,16 @@ func (m *MockAuthz) GetModified(_ context.Context, since time.Time) (*descope.Au
 }
 
 type MockFGA struct {
-	SaveSchemaAssert func(schema *descope.FGASchema) error
+	SaveSchemaAssert func(schema *descope.FGASchema)
 	SaveSchemaError  error
 
 	LoadSchemaResponse *descope.FGASchema
 	LoadSchemaError    error
 
-	CreateRelationsAssert func(relations []*descope.FGARelation) error
+	CreateRelationsAssert func(relations []*descope.FGARelation)
 	CreateRelationsError  error
 
-	DeleteRelationsAssert func(relations []*descope.FGARelation) error
+	DeleteRelationsAssert func(relations []*descope.FGARelation)
 	DeleteRelationsError  error
 
 	CheckAssert   func(relations []*descope.FGARelation)

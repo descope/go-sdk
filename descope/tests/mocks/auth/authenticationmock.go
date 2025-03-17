@@ -74,7 +74,7 @@ type MockMagicLink struct {
 	SignUpOrInAssert func(method descope.DeliveryMethod, loginID string, URI string, signUpOptions *descope.SignUpOptions)
 	SignUpOrInError  error
 
-	VerifyAssert   func(token string, w http.ResponseWriter) (*descope.AuthenticationInfo, error)
+	VerifyAssert   func(token string, w http.ResponseWriter)
 	VerifyError    error
 	VerifyResponse *descope.AuthenticationInfo
 
@@ -146,7 +146,7 @@ type MockEnchantedLink struct {
 	GetSessionResponse *descope.AuthenticationInfo
 	GetSessionError    error
 
-	VerifyAssert func(token string) (*descope.AuthenticationInfo, error)
+	VerifyAssert func(token string)
 	VerifyError  error
 
 	UpdateUserEmailAssert   func(loginID, email, URI string, updateOptions *descope.UpdateOptions, r *http.Request)

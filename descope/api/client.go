@@ -1477,7 +1477,7 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 	}
 
 	if response.Body != nil {
-		defer response.Body.Close()
+		defer func() { _ = response.Body.Close() }()
 	}
 	if !isResponseOK(response) {
 		err = c.parseDescopeError(response).WithInfo(descope.ErrorInfoKeys.HTTPResponseStatusCode, response.StatusCode)

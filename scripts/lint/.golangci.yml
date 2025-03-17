@@ -50,7 +50,7 @@ linters:
     - godox
     - depguard
     - forbidigo
-  disable-all: true
+    - gosec
 
 issues:
   # Excluding configuration per-path, per-linter, per-text and per-source

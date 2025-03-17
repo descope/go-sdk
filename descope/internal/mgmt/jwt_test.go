@@ -25,7 +25,8 @@ func TestUpdateJwt(t *testing.T) {
 		require.EqualValues(t, refreshDuration, req["refreshDuration"])
 
 	}, map[string]interface{}{"jwt": expectedJWT}))
-	jwtRes, err := mgmt.JWT().UpdateJWTWithCustomClaims(context.Background(), orgJwt, customClaims, int32(refreshDuration))
+	jwtRes, err := mgmt.JWT().UpdateJWTWithCustomClaims(context.Background(), orgJwt, customClaims,
+		int32(refreshDuration)) // nolint:gosec
 	require.NoError(t, err)
 	require.EqualValues(t, expectedJWT, jwtRes)
 }
@@ -94,8 +95,8 @@ func TestImpersonateMissingImpersonator(t *testing.T) {
 	require.Empty(t, jwtRes)
 }
 
-const jwtTokenValid = `eyJhbGciOiJFUzM4NCIsImtpZCI6InRlc3RrZXkiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOlsidGVzdCJdLCJkcm4iOiJEUyIsImV4cCI6MzY1OTU2MTQzMCwiaWF0IjoxNjU5NTYxNDMwLCJpc3MiOiJ0ZXN0Iiwic3ViIjoic29tZXVzZXIiLCJ0ZXN0IjoidGVzdCJ9.tE6hXIuH74drymm6DSAs4FkaQSzf3MQ0D7pjC-9SaBRnqHoRuDOIJd3mIRsxzfb2nS6NX_tk6H1na6kFEKsJdMsUG-LbCqqib98z9tHtq-Jh6Axl5Qe9RITfIOwzOssw`
-const jwtRTokenValid = `eyJhbGciOiJFUzM4NCIsImtpZCI6InRlc3RrZXkiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOlsidGVzdCJdLCJkcm4iOiJEU1IiLCJleHAiOjM2NTk1NjE0MzAsImlhdCI6MTY1OTU2MTQzMCwiaXNzIjoidGVzdCIsInN1YiI6InNvbWV1c2VyIiwidGVzdCI6InRlc3QifQ.zKbJKuGo9Q9NsvI_SdrH1pDH8uuTRnTcT4eMJe237Lr6ZrtRGbw2a0U0aEwgNrox2RXupkmD3vfQtZiD3AiU9xHY8X3xwTGsDwA497eT6RrA13zNufrhSMNjF6V5-xVl`
+const jwtTokenValid = `eyJhbGciOiJFUzM4NCIsImtpZCI6InRlc3RrZXkiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOlsidGVzdCJdLCJkcm4iOiJEUyIsImV4cCI6MzY1OTU2MTQzMCwiaWF0IjoxNjU5NTYxNDMwLCJpc3MiOiJ0ZXN0Iiwic3ViIjoic29tZXVzZXIiLCJ0ZXN0IjoidGVzdCJ9.tE6hXIuH74drymm6DSAs4FkaQSzf3MQ0D7pjC-9SaBRnqHoRuDOIJd3mIRsxzfb2nS6NX_tk6H1na6kFEKsJdMsUG-LbCqqib98z9tHtq-Jh6Axl5Qe9RITfIOwzOssw`    // nolint:gosec
+const jwtRTokenValid = `eyJhbGciOiJFUzM4NCIsImtpZCI6InRlc3RrZXkiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOlsidGVzdCJdLCJkcm4iOiJEU1IiLCJleHAiOjM2NTk1NjE0MzAsImlhdCI6MTY1OTU2MTQzMCwiaXNzIjoidGVzdCIsInN1YiI6InNvbWV1c2VyIiwidGVzdCI6InRlc3QifQ.zKbJKuGo9Q9NsvI_SdrH1pDH8uuTRnTcT4eMJe237Lr6ZrtRGbw2a0U0aEwgNrox2RXupkmD3vfQtZiD3AiU9xHY8X3xwTGsDwA497eT6RrA13zNufrhSMNjF6V5-xVl` // nolint:gosec
 
 func TestSignIn(t *testing.T) {
 	loginID := "id2"
