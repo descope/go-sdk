@@ -148,7 +148,9 @@ var (
 			accessKeyActivate:                        "mgmt/accesskey/activate",
 			accessKeyDelete:                          "mgmt/accesskey/delete",
 			ssoSettings:                              "mgmt/sso/settings",
-			ssoLoadSettings:                          "mgmt/sso/settings", // v2 only
+			ssoLoadSettings:                          "mgmt/sso/settings",     // v2 only
+			ssoLoadAllSettings:                       "mgmt/sso/settings/all", // v2 only
+			ssoSettingsNew:                           "mgmt/sso/settings/new",
 			ssoSAMLSettings:                          "mgmt/sso/saml",
 			ssoSAMLSettingsByMetadata:                "mgmt/sso/saml/metadata",
 			ssoOIDCSettings:                          "mgmt/sso/oidc",
@@ -378,6 +380,8 @@ type mgmtEndpoints struct {
 	///////////////////
 
 	ssoLoadSettings           string
+	ssoLoadAllSettings        string
+	ssoSettingsNew            string
 	ssoSAMLSettings           string
 	ssoSAMLSettingsByMetadata string
 	ssoOIDCSettings           string
@@ -930,6 +934,14 @@ func (e *endpoints) ManagementAccessKeyDelete() string {
 
 func (e *endpoints) ManagementSSOLoadSettings() string {
 	return path.Join(e.versionV2, e.mgmt.ssoLoadSettings)
+}
+
+func (e *endpoints) ManagementSSOLoadAllSettings() string {
+	return path.Join(e.versionV2, e.mgmt.ssoLoadAllSettings)
+}
+
+func (e *endpoints) ManagementNewSSOSettings() string {
+	return path.Join(e.version, e.mgmt.ssoSettingsNew)
 }
 
 func (e *endpoints) ManagementSSOSAMLSettings() string {
