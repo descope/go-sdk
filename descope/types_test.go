@@ -47,9 +47,9 @@ func TestNewToken(t *testing.T) {
 	subject := "subj"
 	expiration := time.Now()
 
-	token.Set(jwt.IssuerKey, issuer)
-	token.Set(jwt.SubjectKey, subject)
-	token.Set(jwt.ExpirationKey, expiration)
+	_ = token.Set(jwt.IssuerKey, issuer)
+	_ = token.Set(jwt.SubjectKey, subject)
+	_ = token.Set(jwt.ExpirationKey, expiration)
 
 	resToken := NewToken(jwtStr, token)
 
@@ -69,9 +69,9 @@ func TestNewTokenWithProjectID(t *testing.T) {
 	subject := "subj"
 	expiration := time.Now()
 
-	token.Set(jwt.IssuerKey, issuer)
-	token.Set(jwt.SubjectKey, subject)
-	token.Set(jwt.ExpirationKey, expiration)
+	_ = token.Set(jwt.IssuerKey, issuer)
+	_ = token.Set(jwt.SubjectKey, subject)
+	_ = token.Set(jwt.ExpirationKey, expiration)
 
 	resToken := NewToken(jwtStr, token)
 
@@ -86,11 +86,12 @@ func TestGetCreatedTime(t *testing.T) {
 	now := time.Now()
 	ct := now.Unix()
 	now = time.Unix(ct, 0)
-	u := UserResponse{CreatedTime: int32(ct)}
+	u := UserResponse{CreatedTime: int32(ct)} // nolint:gosec
 	assert.True(t, u.GetCreatedTime().Equal(now))
-	r := Role{CreatedTime: int32(ct)}
+	r := Role{CreatedTime: int32(ct)} // nolint:gosec
 	assert.True(t, r.GetCreatedTime().Equal(now))
-	c := ThirdPartyApplicationConsent{CreatedTime: int32(ct)}
+
+	c := ThirdPartyApplicationConsent{CreatedTime: int32(ct)} // nolint:gosec
 	assert.True(t, c.GetCreatedTime().Equal(now))
 }
 
