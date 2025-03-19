@@ -432,6 +432,7 @@ type PatchUserRequest struct {
 	VerifiedEmail    *bool                `json:"verifiedEmail,omitempty"`
 	VerifiedPhone    *bool                `json:"verifiedPhone,omitempty"`
 	SSOAppIDs        *[]string            `json:"ssoAppIds,omitempty"`
+	SCIM             *bool                `json:"scim,omitempty"`
 }
 
 type BatchUser struct {
@@ -518,6 +519,7 @@ type UserResponse struct {
 	WebAuthn         bool                `json:"webauthn,omitempty"`
 	Password         bool                `json:"password,omitempty"`
 	SAML             bool                `json:"saml,omitempty"`
+	SCIM             bool                `json:"scim,omitempty"`
 	OAuth            map[string]bool     `json:"oauth,omitempty"`
 	SSOAppIDs        []string            `json:"ssoAppIds,omitempty"`
 }
