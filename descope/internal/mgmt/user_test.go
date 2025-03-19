@@ -387,6 +387,7 @@ func TestUserPatchSuccess(t *testing.T) {
 			"verifiedPhone": true,
 			"picture":       "https://test.com",
 			"roleNames":     []string{"foo", "bar"},
+			"scim":          true,
 		}}
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -402,7 +403,8 @@ func TestUserPatchSuccess(t *testing.T) {
 		require.Equal(t, "https://test.com", req["picture"])
 		roles := req["roleNames"].([]any)
 		require.EqualValues(t, []any{"foo", "bar"}, roles)
-
+		scim := req["scim"].(bool)
+		require.True(t, scim)
 		_, ok := req["givenName"]
 		require.False(t, ok)
 		_, ok = req["familyName"]
@@ -425,12 +427,14 @@ func TestUserPatchSuccess(t *testing.T) {
 	patchedVerifiedPhone := true
 	patchedPicture := "https://test.com"
 	patchedRoles := []string{"foo", "bar"}
+	patchedSCIM := true
 	user.Name = &patchedName
 	user.MiddleName = &patchedMiddleName
 	user.Phone = &patchedPhone
 	user.VerifiedPhone = &patchedVerifiedPhone
 	user.Picture = &patchedPicture
 	user.Roles = &patchedRoles
+	user.SCIM = &patchedSCIM
 	res, err := m.User().Patch(context.Background(), "abc", user)
 	require.NoError(t, err)
 	require.NotNil(t, res)
@@ -440,6 +444,7 @@ func TestUserPatchSuccess(t *testing.T) {
 	require.True(t, res.VerifiedPhone)
 	require.Equal(t, "https://test.com", res.Picture)
 	require.EqualValues(t, patchedRoles, res.RoleNames)
+	require.True(t, res.SCIM)
 }
 
 func TestUserPatchSuccess2(t *testing.T) {
