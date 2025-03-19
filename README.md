@@ -414,6 +414,14 @@ if err != nil {
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
 
+#### Deleting the TOTP Seed
+
+Pass the loginId to the function to remove the user's TOTP seed.
+
+```go
+totpResponse, err := descopeClient.Management.User().RemoveTOTPSeed(context.Background(), loginID)
+```
+
 ### Passwords
 
 The user can also authenticate with a password, though it's recommended to
@@ -727,7 +735,7 @@ err := descopeClient.Management.Tenant().Update(context.Background(), "my-custom
 
 // Tenant deletion cannot be undone. Use carefully.
 // Pass true to cascade value, in case you want to delete all users/keys associated only with this tenant
-err := descopeClient.Management.Tenant().Delete(context.Background(), "my-custom-id", false)
+err := descopeClient.Management.Tenant().Delete(context.Background(), "my-custom-id", true)
 
 // Load tenant by id
 tenant, err := descopeClient.Management.Tenant().Load(context.Background(), "my-custom-id")
