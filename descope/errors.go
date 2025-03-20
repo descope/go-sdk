@@ -62,13 +62,13 @@ type Error struct {
 	// A non-empty code for the specific error condition
 	Code string `json:"errorCode,omitempty"`
 
-	// a non-empty description of the error condition.
+	// A non-empty description of the error condition.
 	Description string `json:"errorDescription,omitempty"`
 
-	// an optional message with more specific details about the error.
+	// An optional message with more specific details about the error.
 	Message string `json:"errorMessage,omitempty"`
 
-	// an optional map with additional metadata about the error.
+	// An optional map with additional metadata about the error.
 	Info map[string]any `json:"-"`
 }
 
