@@ -32,7 +32,9 @@ descopeClient, err := client.New()
 descopeClient, err := client.NewWithConfig(&client.Config{ProjectID: projectID})
 ```
 
-## Authentication Functions
+## Usage
+
+### Authentication Functions
 
 These sections show how to use the SDK to perform various authentication/authorization functions:
 
@@ -51,7 +53,7 @@ These sections show how to use the SDK to perform various authentication/authori
 13. [History](#history)
 14. [My Tenants](#my-tenants)
 
-## Management Functions
+### Management Functions
 
 These sections show how to use the SDK to perform API management functions. Before using any of them, you will need to create a Management Key. The instructions for this can be found under [Setup](#setup-1).
 
@@ -73,11 +75,38 @@ These sections show how to use the SDK to perform API management functions. Befo
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
-If you're developing unit tests, see how you can use our mocks package underneath the [Unit Testing and Data Mocks](#unit-testing-and-data-mocks) section.
+If you're developing unit tests, see how you can use our `mocks` package in the [Unit Testing and Data Mocks](#unit-testing-and-data-mocks) section.
 
 If you're performing end-to-end testing, check out the [Utils for your end to end (e2e) tests and integration tests](#utils-for-your-end-to-end-e2e-tests-and-integration-tests) section. You will need to use the `descopeClient` object created under [Setup](#setup-1) guide.
 
-For rate limiting information, please confer to the [API Rate Limits](#api-rate-limits) section.
+For rate limiting information, please refer to the [API Rate Limits](#api-rate-limits) section.
+
+### Error Handling
+
+Every SDK function that performs a network request or calls the Descope servers might fail, and in such cases they
+return an `error` value with information about what went wrong. Usually the concrete type of the error value will
+be a `*descope.Error`.
+
+A typical case of error handling might look something like this:
+
+```go
+result, err := descopeClient.Auth.OTP().VerifyCode(ctx, descope.MethodEmail, "desmond@descope.com", "123456", nil)
+if descope.IsError(err, "E061102") {
+	// check for a Descope error with a specific error code
+}
+if errors.Is(err, descope.ErrInvalidOneTimeCode) {
+	// for common error codes, you can use golang's errors.Is function instead
+}
+if descope.IsUnauthorizedError(err) {
+	// check for a Descope error with a generic 401 status code, rather than a specific error code
+}
+if descopeErr := descope.AsError(err); descopeErr != nil {
+	// access the Code or Description fields directly to handle the error or write it to a logger
+}
+if err != nil {
+    // handle other error cases
+}
+```
 
 ---
 
@@ -114,10 +143,13 @@ The user will receive a code using the selected delivery method. Verify that cod
 authInfo, err := descopeClient.Auth.OTP().VerifyCode(context.Background(), descope.MethodEmail, loginID, code, w)
 if err != nil {
     if errors.Is(err, descope.ErrInvalidOneTimeCode) {
-        // the code was invalid
+        // the code was invalid, ask user to try again
     }
+	if descope.IsError(err, "E061103") {
+		// too many wrong otp attempts
+	}
     if descope.IsUnauthorizedError(err) {
-        // login failed for some other reason
+        // login was not allowed for some other reason
     }
     // handle other error cases
 }
