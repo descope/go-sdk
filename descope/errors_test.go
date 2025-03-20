@@ -2,6 +2,7 @@ package descope
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,6 +21,16 @@ func TestErrorsIs(t *testing.T) {
 	require.False(t, errors.Is(ErrManagementUserNotFound, ErrBadRequest))
 
 	require.False(t, errors.Is(nil, ErrBadRequest))
+}
+
+func TestErrorsAs(t *testing.T) {
+	var de *Error
+	require.False(t, errors.As(nil, &de))
+	require.False(t, errors.As(errors.New("Some error"), &de))
+	require.True(t, errors.As(ErrBadRequest, &de))
+	require.Equal(t, ErrBadRequest.Code, de.Code)
+	require.True(t, errors.As(fmt.Errorf("Some wrapped error: %w", ErrBadRequest), &de))
+	require.Equal(t, ErrBadRequest.Code, de.Code)
 }
 
 func TestAssertError(t *testing.T) {
@@ -53,6 +64,27 @@ func TestDescopeIs(t *testing.T) {
 	require.False(t, de.Is(err))
 }
 
+func TestIsError(t *testing.T) {
+	require.True(t, IsError(ErrManagementUserNotFound))
+	require.True(t, IsError(ErrManagementUserNotFound, "E112102"))
+	require.True(t, IsError(ErrManagementUserNotFound, "E112102", "E123456"))
+	require.False(t, IsError(ErrManagementUserNotFound, "E123456"))
+	require.False(t, IsError(nil))
+	require.False(t, IsError(nil, "E112102"))
+	require.False(t, IsError(errors.New("foo")))
+}
+
+func TestAsError(t *testing.T) {
+	require.NotNil(t, AsError(ErrManagementUserNotFound))
+	require.NotNil(t, AsError(ErrManagementUserNotFound, "E112102"))
+	require.NotNil(t, AsError(ErrManagementUserNotFound, "E112102", "E123456"))
+	require.NotNil(t, AsError(fmt.Errorf("Some wrapped error: %w", ErrManagementUserNotFound)), "E112102")
+	require.Nil(t, AsError(ErrManagementUserNotFound, "E123456"))
+	require.Nil(t, AsError(nil))
+	require.Nil(t, AsError(nil, "E112102"))
+	require.Nil(t, AsError(errors.New("foo")))
+}
+
 func TestErrorPrint(t *testing.T) {
 	err := &Error{Code: "foo"}
 	require.Equal(t, "[foo]", err.Error())
@@ -81,15 +113,25 @@ func TestWithArg(t *testing.T) {
 }
 
 func TestStatusCode(t *testing.T) {
-	unauth := newServerError("E123").WithInfo(ErrorInfoKeys.HTTPResponseStatusCode, 401)
-	notfound := newServerError("E234").WithInfo(ErrorInfoKeys.HTTPResponseStatusCode, 404)
-	other := newServerError("E345").WithInfo(ErrorInfoKeys.HTTPResponseStatusCode, 500)
+	badreq := newServerError("E123").WithInfo(ErrorInfoKeys.HTTPResponseStatusCode, 400)
+	unauth := newServerError("E234").WithInfo(ErrorInfoKeys.HTTPResponseStatusCode, 401)
+	forb := newServerError("E345").WithInfo(ErrorInfoKeys.HTTPResponseStatusCode, 403)
+	notfound := newServerError("E456").WithInfo(ErrorInfoKeys.HTTPResponseStatusCode, 404)
+	other := newServerError("E567").WithInfo(ErrorInfoKeys.HTTPResponseStatusCode, 500)
+	require.True(t, IsBadRequestError(badreq))
 	require.True(t, IsUnauthorizedError(unauth))
+	require.True(t, IsForbidden(forb))
 	require.True(t, IsNotFoundError(notfound))
+	require.False(t, IsBadRequestError(nil))
 	require.False(t, IsUnauthorizedError(nil))
+	require.False(t, IsForbidden(nil))
 	require.False(t, IsNotFoundError(nil))
+	require.False(t, IsBadRequestError(other))
 	require.False(t, IsUnauthorizedError(other))
+	require.False(t, IsForbidden(other))
 	require.False(t, IsNotFoundError(other))
+	require.False(t, IsBadRequestError(assert.AnError))
 	require.False(t, IsUnauthorizedError(assert.AnError))
+	require.False(t, IsForbidden(assert.AnError))
 	require.False(t, IsNotFoundError(assert.AnError))
 }
