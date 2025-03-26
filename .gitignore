@@ -48,3 +48,4 @@ __debug_bin
 *.pem
 
 !.vscode/launch.json.default
+**/__debug_bin*

@@ -168,7 +168,7 @@ func (t *tenant) GenerateSSOConfigurationLink(ctx context.Context, tenantID stri
 }
 
 func makeCreateUpdateTenantRequest(id string, tenantRequest *descope.TenantRequest) map[string]any {
-	return map[string]any{"id": id, "name": tenantRequest.Name, "selfProvisioningDomains": tenantRequest.SelfProvisioningDomains, "customAttributes": tenantRequest.CustomAttributes}
+	return map[string]any{"id": id, "name": tenantRequest.Name, "selfProvisioningDomains": tenantRequest.SelfProvisioningDomains, "customAttributes": tenantRequest.CustomAttributes, "enforceSSO": tenantRequest.EnforceSSO, "disabled": tenantRequest.Disabled}
 }
 
 func unmarshalLoadTenantResponse(res *api.HTTPResponse) (*descope.Tenant, error) {
