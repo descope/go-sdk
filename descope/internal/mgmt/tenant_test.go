@@ -52,10 +52,14 @@ func TestTenantCreateWithIDSuccess(t *testing.T) {
 		require.Len(t, selfProvisioningDomains, 2)
 		require.Equal(t, "foo", selfProvisioningDomains[0])
 		require.Equal(t, "bar", selfProvisioningDomains[1])
+		reqEnforceSSO := req["enforceSSO"].(bool)
+		reqDisabled := req["disabled"].(bool)
+		require.True(t, reqEnforceSSO)
+		require.True(t, reqDisabled)
 		customAttributes := req["customAttributes"].(map[string]any)
 		assert.EqualValues(t, map[string]any{"k1": "v1"}, customAttributes)
 	}, response))
-	err := mgmt.Tenant().CreateWithID(context.Background(), "123", &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}})
+	err := mgmt.Tenant().CreateWithID(context.Background(), "123", &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}, EnforceSSO: true, Disabled: true})
 	require.NoError(t, err)
 }
 
