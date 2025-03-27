@@ -106,6 +106,7 @@ type SSOSAMLSettingsResponse struct {
 	SpCertificate    string            `json:"spCertificate,omitempty"`
 	AttributeMapping *AttributeMapping `json:"attributeMapping,omitempty"`
 	GroupsMapping    []*GroupsMapping  `json:"groupsMapping,omitempty"`
+	DefaultSSORoles  []string          `json:"defaultSSORoles,omitempty"`
 	RedirectURL      string            `json:"redirectUrl,omitempty"`
 }
 
@@ -115,6 +116,7 @@ type SSOSAMLSettings struct {
 	IdpCert          string            `json:"idpCert,omitempty"`
 	AttributeMapping *AttributeMapping `json:"attributeMapping,omitempty"`
 	RoleMappings     []*RoleMapping    `json:"roleMappings,omitempty"`
+	DefaultSSORoles  []string          `json:"defaultSSORoles,omitempty"` // roles names
 
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
 	SpACSUrl   string `json:"spACSUrl,omitempty"`
@@ -125,6 +127,7 @@ type SSOSAMLSettingsByMetadata struct {
 	IdpMetadataURL   string            `json:"idpMetadataUrl,omitempty"`
 	AttributeMapping *AttributeMapping `json:"attributeMapping,omitempty"`
 	RoleMappings     []*RoleMapping    `json:"roleMappings,omitempty"`
+	DefaultSSORoles  []string          `json:"defaultSSORoles,omitempty"` // roles names
 
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
 	SpACSUrl   string `json:"spACSUrl,omitempty"`

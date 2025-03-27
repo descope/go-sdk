@@ -145,7 +145,8 @@ func TestNewSSOSettingsSuccess(t *testing.T) {
 					"groups": []string{"group1"},
 				},
 			},
-			"redirectURL": "redirectURL",
+			"redirectURL":     "redirectURL",
+			"defaultSSORoles": []string{"defrole1", "defrole2"},
 		},
 		"oidc": map[string]any{
 			"name":        "myName",
@@ -190,6 +191,7 @@ func TestNewSSOSettingsSuccess(t *testing.T) {
 	assert.EqualValues(t, "role.id", res.Saml.GroupsMapping[0].Role.ID)
 	assert.EqualValues(t, "role.name", res.Saml.GroupsMapping[0].Role.Name)
 	assert.EqualValues(t, "redirectURL", res.Saml.RedirectURL)
+	assert.EqualValues(t, []string{"defrole1", "defrole2"}, res.Saml.DefaultSSORoles)
 
 	require.NotNil(t, res.Oidc)
 	assert.EqualValues(t, "myName", res.Oidc.Name)
@@ -375,7 +377,8 @@ func TestLoadSettingsSuccess(t *testing.T) {
 					"groups": []string{"group1"},
 				},
 			},
-			"redirectURL": "redirectURL",
+			"redirectURL":     "redirectURL",
+			"defaultSSORoles": []string{"defrole1", "defrole2"},
 		},
 		"oidc": map[string]any{
 			"name":        "myName",
@@ -417,6 +420,7 @@ func TestLoadSettingsSuccess(t *testing.T) {
 	assert.EqualValues(t, "role.id", res.Saml.GroupsMapping[0].Role.ID)
 	assert.EqualValues(t, "role.name", res.Saml.GroupsMapping[0].Role.Name)
 	assert.EqualValues(t, "redirectURL", res.Saml.RedirectURL)
+	assert.EqualValues(t, []string{"defrole1", "defrole2"}, res.Saml.DefaultSSORoles)
 
 	require.NotNil(t, res.Oidc)
 	assert.EqualValues(t, "myName", res.Oidc.Name)
@@ -668,8 +672,9 @@ func TestSSOConfigureSAMLSettingsSuccess(t *testing.T) {
 				Role:   "role1",
 			},
 		},
-		SpACSUrl:   "https://spacsurl.com",
-		SpEntityID: "spentityid",
+		SpACSUrl:        "https://spacsurl.com",
+		SpEntityID:      "spentityid",
+		DefaultSSORoles: []string{"defrole1", "defrole2"},
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -690,6 +695,7 @@ func TestSSOConfigureSAMLSettingsSuccess(t *testing.T) {
 		require.Equal(t, "http://idpURL", sett["idpUrl"])
 		require.Equal(t, "mycert", sett["idpCert"])
 		require.Equal(t, "entity", sett["entityId"])
+		require.Equal(t, []any{"defrole1", "defrole2"}, sett["defaultSSORoles"])
 
 		require.Equal(t, "https://spacsurl.com", sett["spACSUrl"])
 		require.Equal(t, "spentityid", sett["spEntityId"])
@@ -813,8 +819,9 @@ func TestSSOConfigureSAMLSettingsByMetadataSuccess(t *testing.T) {
 				Role:   "role1",
 			},
 		},
-		SpACSUrl:   "https://spacsurl.com",
-		SpEntityID: "spentityid",
+		SpACSUrl:        "https://spacsurl.com",
+		SpEntityID:      "spentityid",
+		DefaultSSORoles: []string{"defrole1", "defrole2"},
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -836,6 +843,7 @@ func TestSSOConfigureSAMLSettingsByMetadataSuccess(t *testing.T) {
 
 		require.Equal(t, "https://spacsurl.com", sett["spACSUrl"])
 		require.Equal(t, "spentityid", sett["spEntityId"])
+		require.Equal(t, []any{"defrole1", "defrole2"}, sett["defaultSSORoles"])
 
 		userAttrMappingMap, found := sett["attributeMapping"]
 		require.True(t, found)
