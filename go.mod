@@ -2,8 +2,6 @@ module github.com/descope/go-sdk
 
 go 1.23.0
 
-toolchain go1.24.1
-
 require (
 	github.com/google/uuid v1.6.0
 	github.com/lestrrat-go/jwx/v2 v2.1.4
