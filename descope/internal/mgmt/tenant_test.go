@@ -26,9 +26,11 @@ func TestTenantCreateSuccess(t *testing.T) {
 		require.Equal(t, "bar", selfProvisioningDomains[1])
 		customAttributes := req["customAttributes"].(map[string]any)
 		assert.EqualValues(t, map[string]any{"k1": "v1"}, customAttributes)
+		require.True(t, req["enforceSSO"].(bool))
+		require.True(t, req["disabled"].(bool))
 	}, response))
 
-	id, err := mgmt.Tenant().Create(context.Background(), &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}})
+	id, err := mgmt.Tenant().Create(context.Background(), &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}, Disabled: true, EnforceSSO: true})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)
 }
@@ -80,8 +82,10 @@ func TestTenantUpdateSuccess(t *testing.T) {
 		require.Equal(t, "bar", selfProvisioningDomains[1])
 		customAttributes := req["customAttributes"].(map[string]any)
 		assert.EqualValues(t, map[string]any{"k1": "v1"}, customAttributes)
+		require.True(t, req["enforceSSO"].(bool))
+		require.True(t, req["disabled"].(bool))
 	}))
-	err := mgmt.Tenant().Update(context.Background(), "123", &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}})
+	err := mgmt.Tenant().Update(context.Background(), "123", &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}, Disabled: true, EnforceSSO: true})
 	require.NoError(t, err)
 }
 
@@ -118,6 +122,8 @@ func TestAllTenantsLoadSuccess(t *testing.T) {
 			"name":                    "abc",
 			"selfProvisioningDomains": []string{"domain.com"},
 			"createdTime":             int32(1726067547),
+			"disabled":                true,
+			"enforceSSO":              true,
 		}}}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -131,6 +137,8 @@ func TestAllTenantsLoadSuccess(t *testing.T) {
 	require.Len(t, res[0].SelfProvisioningDomains, 1)
 	require.Equal(t, "domain.com", res[0].SelfProvisioningDomains[0])
 	require.Equal(t, int32(1726067547), res[0].CreatedTime)
+	require.True(t, res[0].Disabled)
+	require.True(t, res[0].EnforceSSO)
 
 }
 
@@ -148,6 +156,7 @@ func TestSearchTenantsSuccess(t *testing.T) {
 			"id":                      "t1",
 			"name":                    "abc",
 			"selfProvisioningDomains": []string{"domain.com"},
+			"enforceSSO":              true,
 		}}}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -167,6 +176,8 @@ func TestSearchTenantsSuccess(t *testing.T) {
 	require.Equal(t, "abc", res[0].Name)
 	require.Len(t, res[0].SelfProvisioningDomains, 1)
 	require.Equal(t, "domain.com", res[0].SelfProvisioningDomains[0])
+	require.False(t, res[0].Disabled)
+	require.True(t, res[0].EnforceSSO)
 }
 
 func TestSearchTenantsLoadError(t *testing.T) {

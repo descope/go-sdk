@@ -632,12 +632,16 @@ type Tenant struct {
 	AuthType                string         `json:"authType,omitempty"`
 	Domains                 []string       `json:"domains,omitempty"`
 	CreatedTime             int32          `json:"createdTime,omitempty"`
+	EnforceSSO              bool           `json:"enforceSSO,omitempty"`
+	Disabled                bool           `json:"disabled,omitempty"`
 }
 
 type TenantRequest struct {
 	Name                    string         `json:"name"`
 	SelfProvisioningDomains []string       `json:"selfProvisioningDomains"`
 	CustomAttributes        map[string]any `json:"customAttributes,omitempty"`
+	EnforceSSO              bool           `json:"enforceSSO,omitempty"`
+	Disabled                bool           `json:"disabled,omitempty"`
 }
 
 type TenantSearchOptions struct {
