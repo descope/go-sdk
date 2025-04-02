@@ -106,6 +106,7 @@ type SSOSAMLSettingsResponse struct {
 	SpCertificate    string            `json:"spCertificate,omitempty"`
 	AttributeMapping *AttributeMapping `json:"attributeMapping,omitempty"`
 	GroupsMapping    []*GroupsMapping  `json:"groupsMapping,omitempty"`
+	DefaultSSORoles  []string          `json:"defaultSSORoles,omitempty"`
 	RedirectURL      string            `json:"redirectUrl,omitempty"`
 }
 
@@ -115,6 +116,7 @@ type SSOSAMLSettings struct {
 	IdpCert          string            `json:"idpCert,omitempty"`
 	AttributeMapping *AttributeMapping `json:"attributeMapping,omitempty"`
 	RoleMappings     []*RoleMapping    `json:"roleMappings,omitempty"`
+	DefaultSSORoles  []string          `json:"defaultSSORoles,omitempty"` // roles names
 
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
 	SpACSUrl   string `json:"spACSUrl,omitempty"`
@@ -125,6 +127,7 @@ type SSOSAMLSettingsByMetadata struct {
 	IdpMetadataURL   string            `json:"idpMetadataUrl,omitempty"`
 	AttributeMapping *AttributeMapping `json:"attributeMapping,omitempty"`
 	RoleMappings     []*RoleMapping    `json:"roleMappings,omitempty"`
+	DefaultSSORoles  []string          `json:"defaultSSORoles,omitempty"` // roles names
 
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
 	SpACSUrl   string `json:"spACSUrl,omitempty"`
@@ -167,6 +170,11 @@ type SSOTenantSettingsResponse struct {
 	Tenant *Tenant                  `json:"tenant,omitempty"`
 	Saml   *SSOSAMLSettingsResponse `json:"saml,omitempty"`
 	Oidc   *SSOOIDCSettings         `json:"oidc,omitempty"`
+	SSOID  string                   `json:"ssoId,omitempty"`
+}
+
+type SSOTenantAllSettingsResponse struct {
+	SSOSettings []*SSOTenantSettingsResponse `json:"SSOSettings,omitempty"`
 }
 
 type GenerateSSOConfigurationLinkResponse struct {
@@ -427,6 +435,7 @@ type PatchUserRequest struct {
 	VerifiedEmail    *bool                `json:"verifiedEmail,omitempty"`
 	VerifiedPhone    *bool                `json:"verifiedPhone,omitempty"`
 	SSOAppIDs        *[]string            `json:"ssoAppIds,omitempty"`
+	SCIM             *bool                `json:"scim,omitempty"`
 }
 
 type BatchUser struct {
@@ -450,6 +459,7 @@ type BatchUserPasswordHashed struct {
 	Django   *BatchUserPasswordDjango   `json:"django,omitempty"`
 	Phpass   *BatchUserPasswordPhpass   `json:"phpass,omitempty"`
 	Md5      *BatchUserPasswordMd5      `json:"md5,omitempty"`
+	Argon2   *BatchUserPasswordArgon2   `json:"argon2,omitempty"`
 }
 
 type BatchUserPasswordBcrypt struct {
@@ -487,6 +497,14 @@ type BatchUserPasswordMd5 struct {
 	Hash string `json:"hash"` // the md5 hash in plaintext format, for example "68f724c9ad..."
 }
 
+type BatchUserPasswordArgon2 struct {
+	Hash       []byte `json:"hash"`       // the hash in raw bytes (base64 strings should be decoded first)
+	Salt       []byte `json:"salt"`       // the salt in raw bytes (base64 strings should be decoded first)
+	Iterations int    `json:"iterations"` // the memory cost value (usually between 1 to 10)
+	Memory     int    `json:"memory"`     // the memory cost value in kilobytes (usually between 1,000 to 1,000,000)
+	Threads    int    `json:"threads"`    // the threads cost value (usually between 1 to 10)
+}
+
 type UserResponse struct {
 	User             `json:",inline"`
 	UserID           string              `json:"userId,omitempty"`
@@ -504,6 +522,7 @@ type UserResponse struct {
 	WebAuthn         bool                `json:"webauthn,omitempty"`
 	Password         bool                `json:"password,omitempty"`
 	SAML             bool                `json:"saml,omitempty"`
+	SCIM             bool                `json:"scim,omitempty"`
 	OAuth            map[string]bool     `json:"oauth,omitempty"`
 	SSOAppIDs        []string            `json:"ssoAppIds,omitempty"`
 }
@@ -794,6 +813,7 @@ type UserSearchOptions struct {
 	WithTestUsers    bool
 	TestUsersOnly    bool
 	LoginIDs         []string
+	UserIDs          []string
 	FromCreatedTime  int64
 	ToCreatedTime    int64
 	FromModifiedTime int64
@@ -1004,7 +1024,7 @@ const (
 	EnvironmentVariableProjectID         = "DESCOPE_PROJECT_ID"
 	EnvironmentVariablePublicKey         = "DESCOPE_PUBLIC_KEY"
 	EnvironmentVariableManagementKey     = "DESCOPE_MANAGEMENT_KEY"
-	EnvironmentVariableAuthManagementKey = "DESCOPE_AUTH_MANAGEMENT_KEY"
+	EnvironmentVariableAuthManagementKey = "DESCOPE_AUTH_MANAGEMENT_KEY" // gitleaks:allow
 	EnvironmentVariableBaseURL           = "DESCOPE_BASE_URL"
 )
 

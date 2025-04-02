@@ -477,10 +477,16 @@ type AccessKey interface {
 
 // Provides functions for configuring SSO for a project.
 type SSO interface {
-	// Load all tenant SSO setting.
+	// Load tenant SSO setting.
 	//
 	// tenantID is required.
-	LoadSettings(ctx context.Context, tenantID string) (*descope.SSOTenantSettingsResponse, error)
+	// ssoID (optional) - you can pass ssoID in case using multi SSO and you want to load specific SSO configuration
+	LoadSettings(ctx context.Context, tenantID string, ssoID string) (*descope.SSOTenantSettingsResponse, error)
+
+	// Load all tenant SSO setting (for multi SSO usage).
+	//
+	// tenantID is required.
+	LoadAllSettings(ctx context.Context, tenantID string) ([]*descope.SSOTenantSettingsResponse, error)
 
 	// Configure SSO SAML settings for a tenant manually.
 	//
@@ -490,7 +496,8 @@ type SSO interface {
 	// domains is optional, it is used to map users to this tenant when authenticating via SSO.
 	//
 	// Both optional values will override whatever is currently set even if left empty.
-	ConfigureSAMLSettings(ctx context.Context, tenantID string, settings *descope.SSOSAMLSettings, redirectURL string, domains []string) error
+	// ssoID (optional) - you can pass ssoID in case using multi SSO and you want to configure specific SSO configuration
+	ConfigureSAMLSettings(ctx context.Context, tenantID string, settings *descope.SSOSAMLSettings, redirectURL string, domains []string, ssoID string) error
 
 	// Configure SSO SAML settings for a tenant by fetching them from an IDP metadata URL.
 	//
@@ -500,7 +507,8 @@ type SSO interface {
 	// domains is optional, it is used to map users to this tenant when authenticating via SSO.
 	//
 	// Both optional values will override whatever is currently set even if left empty.
-	ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domains []string) error
+	// ssoID (optional) - you can pass ssoID in case using multi SSO and you want to configure specific SSO configuration
+	ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domains []string, ssoID string) error
 
 	// Configure SSO OIDC settings for a tenant manually.
 	//
@@ -509,10 +517,18 @@ type SSO interface {
 	// domains is optional, it is used to map users to this tenant when authenticating via SSO.
 	//
 	// Optional value will override whatever is currently set even if left empty.
-	ConfigureOIDCSettings(ctx context.Context, tenantID string, settings *descope.SSOOIDCSettings, domains []string) error
+	// ssoID (optional) - you can pass ssoID in case using multi SSO and you want to configure specific SSO configuration
+	ConfigureOIDCSettings(ctx context.Context, tenantID string, settings *descope.SSOOIDCSettings, domains []string, ssoID string) error
+
+	// Create new SSO configuration (aka multi SSO)
+	// tenantID is required.
+	// ssoID (optional) - the desired SSO configuration id - if not provided, default sso ID id will be generated
+	// displayName - the desired SSO configuration display name
+	NewSettings(ctx context.Context, tenantID string, ssoID string, displayName string) (*descope.SSOTenantSettingsResponse, error)
 
 	// tenantID is required.
-	DeleteSettings(ctx context.Context, tenantID string) error
+	// ssoID (optional) - you can pass ssoID in case using multi SSO and you want to delete specific SSO configuration
+	DeleteSettings(ctx context.Context, tenantID string, ssoID string) error
 
 	// *** Deprecated ***
 

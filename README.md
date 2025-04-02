@@ -32,7 +32,9 @@ descopeClient, err := client.New()
 descopeClient, err := client.NewWithConfig(&client.Config{ProjectID: projectID})
 ```
 
-## Authentication Functions
+## Usage
+
+### Authentication Functions
 
 These sections show how to use the SDK to perform various authentication/authorization functions:
 
@@ -51,7 +53,7 @@ These sections show how to use the SDK to perform various authentication/authori
 13. [History](#history)
 14. [My Tenants](#my-tenants)
 
-## Management Functions
+### Management Functions
 
 These sections show how to use the SDK to perform API management functions. Before using any of them, you will need to create a Management Key. The instructions for this can be found under [Setup](#setup-1).
 
@@ -73,11 +75,38 @@ These sections show how to use the SDK to perform API management functions. Befo
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
-If you're developing unit tests, see how you can use our mocks package underneath the [Unit Testing and Data Mocks](#unit-testing-and-data-mocks) section.
+If you're developing unit tests, see how you can use our `mocks` package in the [Unit Testing and Data Mocks](#unit-testing-and-data-mocks) section.
 
 If you're performing end-to-end testing, check out the [Utils for your end to end (e2e) tests and integration tests](#utils-for-your-end-to-end-e2e-tests-and-integration-tests) section. You will need to use the `descopeClient` object created under [Setup](#setup-1) guide.
 
-For rate limiting information, please confer to the [API Rate Limits](#api-rate-limits) section.
+For rate limiting information, please refer to the [API Rate Limits](#api-rate-limits) section.
+
+### Error Handling
+
+Every SDK function that performs a network request or calls the Descope servers might fail, and in such cases they
+return an `error` value with information about what went wrong. Usually the concrete type of the error value will
+be a `*descope.Error`.
+
+A typical case of error handling might look something like this:
+
+```go
+result, err := descopeClient.Auth.OTP().VerifyCode(ctx, descope.MethodEmail, "desmond@descope.com", "123456", nil)
+if descope.IsError(err, "E061102") {
+	// check for a Descope error with a specific error code
+}
+if errors.Is(err, descope.ErrInvalidOneTimeCode) {
+	// for common error codes, you can use golang's errors.Is function instead
+}
+if descope.IsUnauthorizedError(err) {
+	// check for a Descope error with a generic 401 status code, rather than a specific error code
+}
+if descopeErr := descope.AsError(err); descopeErr != nil {
+	// access the Code or Description fields directly to handle the error or write it to a logger
+}
+if err != nil {
+    // handle other error cases
+}
+```
 
 ---
 
@@ -114,10 +143,13 @@ The user will receive a code using the selected delivery method. Verify that cod
 authInfo, err := descopeClient.Auth.OTP().VerifyCode(context.Background(), descope.MethodEmail, loginID, code, w)
 if err != nil {
     if errors.Is(err, descope.ErrInvalidOneTimeCode) {
-        // the code was invalid
+        // the code was invalid, ask user to try again
     }
+	if descope.IsError(err, "E061103") {
+		// too many wrong otp attempts
+	}
     if descope.IsUnauthorizedError(err) {
-        // login failed for some other reason
+        // login was not allowed for some other reason
     }
     // handle other error cases
 }
@@ -413,6 +445,14 @@ if err != nil {
 ```
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
+
+#### Deleting the TOTP Seed
+
+Pass the loginId to the function to remove the user's TOTP seed.
+
+```go
+totpResponse, err := descopeClient.Management.User().RemoveTOTPSeed(context.Background(), loginID)
+```
 
 ### Passwords
 
@@ -727,7 +767,7 @@ err := descopeClient.Management.Tenant().Update(context.Background(), "my-custom
 
 // Tenant deletion cannot be undone. Use carefully.
 // Pass true to cascade value, in case you want to delete all users/keys associated only with this tenant
-err := descopeClient.Management.Tenant().Delete(context.Background(), "my-custom-id", false)
+err := descopeClient.Management.Tenant().Delete(context.Background(), "my-custom-id", true)
 
 // Load tenant by id
 tenant, err := descopeClient.Management.Tenant().Load(context.Background(), "my-custom-id")
@@ -1020,14 +1060,15 @@ You can manage SSO (SAML or OIDC) settings for a specific tenant.
 
 ```go
 // Load all tenant SSO settings
+// You can pass ssoID in case using multi SSO and you want to load specific SSO configuration
 ssoSettings, err := descopeClient.Management.SSO().LoadSettings(context.Background(), "tenant-id")
 
-//* Deprecated (use LoadSettings(..) instead) *//
-ssoSettings, err := descopeClient.Management.SSO().GetSettings(context.Background(), "tenant-id")
+// You can get all configured SSO settings for a specific tenant ID (for multi SSO usage)
+allSSOSettings, err := descopeClient.Management.SSO().LoadAllSettings(context.Background(), "tenant-id");
 
 // Configure tenant SSO by OIDC settings
-
-oidcSettings := &descope.SSOOIDCSettings{..}
+oidcSettings := &descope.SSOOIDCSettings{}
+// You can pass ssoID in case using multi SSO and you want to configure specific SSO configuration
 err = descopeClient.Management.SSO().ConfigureOIDCSettings("tenant-id", oidcSettings, "")
 // OR
 // Load all tenant SSO settings and use them to configure OIDC settings
@@ -1052,10 +1093,8 @@ samlSettings := &descope.SSOSAMLSettings{
 	AttributeMapping: &descope.AttributeMapping{Email: "myEmail", ..},
 	RoleMappings: []*RoleMapping{{..}},
 }
+// You can pass ssoID in case using multi SSO and you want to configure specific SSO configuration
 err = descopeClient.Management.SSO().ConfigureSAMLSettings(context.Background(), tenantID, samlSettings, redirectURL, domain)
-
-//* Deprecated (use ConfigureSAMLSettings(..) instead) *//
-err := descopeClient.Management.SSO().ConfigureSettings(context.Background(), tenantID, idpURL, entityID, idpCert, redirectURL, domain)
 
 // Alternatively, configure using an SSO SAML metadata URL
 samlSettings := &descope.SSOSAMLSettingsByMetadata{
@@ -1063,24 +1102,16 @@ samlSettings := &descope.SSOSAMLSettingsByMetadata{
 	AttributeMapping: &descope.AttributeMapping{Email: "myEmail", ..},
 	RoleMappings: []*RoleMapping{{..}},
 }
+// You can pass ssoID in case using multi SSO and you want to configure specific SSO configuration
 err = descopeClient.Management.SSO().ConfigureSAMLSettingsByMetadata(context.Background(), tenantID, samlSettings, redirectURL, domain)
 
-//* Deprecated (use ConfigureSAMLSettingsByMetadata(..) instead) *//
-err := descopeClient.Management.SSO().ConfigureMetadata(tenantID, "https://idp.com/my-idp-metadata", redirectURL, domain)
-
-//* Deprecated (use Management.SSO().ConfigureSAMLSettings(..) or Management.SSO().ConfigureSAMLSettingsByMetadata(..) instead) *//
-// Map IDP groups to Descope roles, or map user attributes.
-// This function overrides any previous mapping (even when empty). Use carefully.
-roleMapping := []*descope.RoleMapping{
-    {Groups: []string{"IDP_ADMIN"}, Role: "Tenant Admin"},
-}
-attributeMapping := &descope.AttributeMapping {
-    Name: "IDP_NAME",
-    PhoneNumber: "IDP_PHONE",
-}
-err := descopeClient.Management.SSO().ConfigureMapping(context.Background(), tenantID, roleMapping, attributeMapping)
+// You can create new SSO configuration (aka multi SSO)
+ssoID := "my-new-additional-sso-id"
+displayName := "My additional SSO configuration"
+createdSSOSettings, err := descopeClient.Management.SSO().NewSettings(context.Background(), "tenant-id", ssoID, displayName)
 
 // To delete SSO settings, call the following method
+// You can pass ssoID in case using multi SSO and you want to delete specific SSO configuration
 err := descopeClient.Management.SSO().DeleteSettings(context.Background(), "tenant-id")
 ```
 

@@ -881,6 +881,9 @@ func makePatchUserRequest(loginID string, req *descope.PatchUserRequest) map[str
 	if req.SSOAppIDs != nil {
 		res["ssoAppIds"] = *req.SSOAppIDs
 	}
+	if req.SCIM != nil {
+		res["scim"] = *req.SCIM
+	}
 	return res
 }
 
@@ -934,6 +937,7 @@ func makeSearchAllRequest(options *descope.UserSearchOptions) map[string]any {
 		"toCreatedTime":    options.ToCreatedTime,
 		"fromModifiedTime": options.FromModifiedTime,
 		"toModifiedTime":   options.ToModifiedTime,
+		"userIds":          options.UserIDs,
 	}
 }
 
