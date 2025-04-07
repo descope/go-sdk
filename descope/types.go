@@ -459,6 +459,7 @@ type BatchUserPasswordHashed struct {
 	Django   *BatchUserPasswordDjango   `json:"django,omitempty"`
 	Phpass   *BatchUserPasswordPhpass   `json:"phpass,omitempty"`
 	Md5      *BatchUserPasswordMd5      `json:"md5,omitempty"`
+	Sha      *BatchUserPasswordSha      `json:"sha,omitempty"`
 	Argon2   *BatchUserPasswordArgon2   `json:"argon2,omitempty"`
 }
 
@@ -494,7 +495,12 @@ type BatchUserPasswordPhpass struct {
 }
 
 type BatchUserPasswordMd5 struct {
-	Hash string `json:"hash"` // the md5 hash in plaintext format, for example "68f724c9ad..."
+	Hash string `json:"hash"` // the md5 hash in hex format, for example "68f724c9ad..."
+}
+
+type BatchUserPasswordSha struct {
+	Hash string `json:"hash"` // the SHA hash in hex format, for example "68f724c9ad..."
+	Type string `json:"type"` // the type of SHA hash (sha1, sha256, sha512)
 }
 
 type BatchUserPasswordArgon2 struct {
