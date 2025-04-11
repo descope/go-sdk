@@ -76,6 +76,7 @@ func (s *sso) ConfigureSAMLSettings(ctx context.Context, tenantID string, settin
 			"roleName": settings.RoleMappings[i].Role,
 		})
 	}
+	fgaMappings := parseFgaMappings(settings.FgaMappings)
 
 	req := map[string]any{
 		"tenantId": tenantID,
@@ -95,9 +96,13 @@ func (s *sso) ConfigureSAMLSettings(ctx context.Context, tenantID string, settin
 	if len(ssoID) > 0 {
 		req["ssoId"] = ssoID
 	}
+	if len(fgaMappings) > 0 {
+		req["settings"].(map[string]any)["fgaMappings"] = fgaMappings
+	}
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSAMLSettings(), req, nil, s.conf.ManagementKey)
 	return err
 }
+
 func (s *sso) ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domains []string, ssoID string) error {
 	if tenantID == "" {
 		return utils.NewInvalidArgumentError("tenantID")
@@ -118,6 +123,7 @@ func (s *sso) ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID stri
 			"roleName": settings.RoleMappings[i].Role,
 		})
 	}
+	fgaMappings := parseFgaMappings(settings.FgaMappings)
 
 	req := map[string]any{
 		"tenantId": tenantID,
@@ -134,6 +140,9 @@ func (s *sso) ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID stri
 	}
 	if len(ssoID) > 0 {
 		req["ssoId"] = ssoID
+	}
+	if len(fgaMappings) > 0 {
+		req["settings"].(map[string]any)["fgaMappings"] = fgaMappings
 	}
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSAMLSettingsByMetadata(), req, nil, s.conf.ManagementKey)
 	return err
@@ -304,4 +313,24 @@ func unmarshalSSOTenantAllSettingsResponse(res *api.HTTPResponse) ([]*descope.SS
 		return nil, err
 	}
 	return ssoAllSettingsRes.SSOSettings, err
+}
+
+func parseFgaMappings(fgaMappings map[string]*descope.FGAGroupMapping) map[string]any {
+	res := map[string]any{}
+	for g, groupMappings := range fgaMappings {
+		relations := []map[string]any{}
+		for _, relation := range groupMappings.Relations {
+			relations = append(relations, map[string]any{
+				"resource":           relation.Resource,
+				"relationDefinition": relation.RelationDefinition,
+				"namespace":          relation.Namespace,
+			})
+		}
+		if len(relations) > 0 {
+			res[g] = map[string]any{
+				"relations": relations,
+			}
+		}
+	}
+	return res
 }
