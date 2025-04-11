@@ -379,6 +379,31 @@ func TestLoadSettingsSuccess(t *testing.T) {
 			},
 			"redirectURL":     "redirectURL",
 			"defaultSSORoles": []string{"defrole1", "defrole2"},
+			"fgaMappings": map[string]any{
+				"group1": map[string]any{
+					"relations": []map[string]any{
+						{
+							"resource":           "res1",
+							"relationDefinition": "rd1",
+							"namespace":          "ns1",
+						},
+						{
+							"resource":           "res2",
+							"relationDefinition": "rd2",
+							"namespace":          "ns2",
+						},
+					},
+				},
+				"group2": map[string]any{
+					"relations": []map[string]any{
+						{
+							"resource":           "res3",
+							"relationDefinition": "rd3",
+							"namespace":          "ns3",
+						},
+					},
+				},
+			},
 		},
 		"oidc": map[string]any{
 			"name":        "myName",
@@ -421,6 +446,18 @@ func TestLoadSettingsSuccess(t *testing.T) {
 	assert.EqualValues(t, "role.name", res.Saml.GroupsMapping[0].Role.Name)
 	assert.EqualValues(t, "redirectURL", res.Saml.RedirectURL)
 	assert.EqualValues(t, []string{"defrole1", "defrole2"}, res.Saml.DefaultSSORoles)
+	assert.EqualValues(t, 2, len(res.Saml.FgaMappings))
+	assert.EqualValues(t, 2, len(res.Saml.FgaMappings["group1"].Relations))
+	assert.EqualValues(t, 1, len(res.Saml.FgaMappings["group2"].Relations))
+	assert.EqualValues(t, "res1", res.Saml.FgaMappings["group1"].Relations[0].Resource)
+	assert.EqualValues(t, "rd1", res.Saml.FgaMappings["group1"].Relations[0].RelationDefinition)
+	assert.EqualValues(t, "ns1", res.Saml.FgaMappings["group1"].Relations[0].Namespace)
+	assert.EqualValues(t, "res2", res.Saml.FgaMappings["group1"].Relations[1].Resource)
+	assert.EqualValues(t, "rd2", res.Saml.FgaMappings["group1"].Relations[1].RelationDefinition)
+	assert.EqualValues(t, "ns2", res.Saml.FgaMappings["group1"].Relations[1].Namespace)
+	assert.EqualValues(t, "res3", res.Saml.FgaMappings["group2"].Relations[0].Resource)
+	assert.EqualValues(t, "rd3", res.Saml.FgaMappings["group2"].Relations[0].RelationDefinition)
+	assert.EqualValues(t, "ns3", res.Saml.FgaMappings["group2"].Relations[0].Namespace)
 
 	require.NotNil(t, res.Oidc)
 	assert.EqualValues(t, "myName", res.Oidc.Name)
@@ -511,6 +548,7 @@ func TestLoadSettingsWithSSOIDSuccess(t *testing.T) {
 	assert.EqualValues(t, "role.id", res.Saml.GroupsMapping[0].Role.ID)
 	assert.EqualValues(t, "role.name", res.Saml.GroupsMapping[0].Role.Name)
 	assert.EqualValues(t, "redirectURL", res.Saml.RedirectURL)
+	assert.Nil(t, res.Saml.FgaMappings)
 
 	require.NotNil(t, res.Oidc)
 	assert.EqualValues(t, "myName", res.Oidc.Name)
@@ -573,6 +611,17 @@ func TestLoadAllSettingsSuccess(t *testing.T) {
 					},
 				},
 				"redirectURL": "redirectURL",
+				"fgaMappings": map[string]any{
+					"group1": map[string]any{
+						"relations": []map[string]any{
+							{
+								"resource":           "res1",
+								"relationDefinition": "rd1",
+								"namespace":          "ns1",
+							},
+						},
+					},
+				},
 			},
 			"oidc": map[string]any{
 				"name":        "myName",
@@ -617,6 +666,11 @@ func TestLoadAllSettingsSuccess(t *testing.T) {
 	assert.EqualValues(t, "role.id", res.Saml.GroupsMapping[0].Role.ID)
 	assert.EqualValues(t, "role.name", res.Saml.GroupsMapping[0].Role.Name)
 	assert.EqualValues(t, "redirectURL", res.Saml.RedirectURL)
+	assert.EqualValues(t, 1, len(res.Saml.FgaMappings))
+	assert.EqualValues(t, 1, len(res.Saml.FgaMappings["group1"].Relations))
+	assert.EqualValues(t, "res1", res.Saml.FgaMappings["group1"].Relations[0].Resource)
+	assert.EqualValues(t, "rd1", res.Saml.FgaMappings["group1"].Relations[0].RelationDefinition)
+	assert.EqualValues(t, "ns1", res.Saml.FgaMappings["group1"].Relations[0].Namespace)
 
 	require.NotNil(t, res.Oidc)
 	assert.EqualValues(t, "myName", res.Oidc.Name)
@@ -675,6 +729,31 @@ func TestSSOConfigureSAMLSettingsSuccess(t *testing.T) {
 		SpACSUrl:        "https://spacsurl.com",
 		SpEntityID:      "spentityid",
 		DefaultSSORoles: []string{"defrole1", "defrole2"},
+		FgaMappings: map[string]*descope.FGAGroupMapping{
+			"group1": {
+				Relations: []*descope.FGAGroupMappingRelation{
+					{
+						Resource:           "res1",
+						RelationDefinition: "rd1",
+						Namespace:          "ns1",
+					},
+					{
+						Resource:           "res2",
+						RelationDefinition: "rd2",
+						Namespace:          "ns2",
+					},
+				},
+			},
+			"group2": {
+				Relations: []*descope.FGAGroupMappingRelation{
+					{
+						Resource:           "res3",
+						RelationDefinition: "rd3",
+						Namespace:          "ns3",
+					},
+				},
+			},
+		},
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -715,6 +794,36 @@ func TestSSOConfigureSAMLSettingsSuccess(t *testing.T) {
 		require.True(t, ok)
 		require.Equal(t, []any{"grp1", "grp2"}, mappingMap["groups"])
 		require.Equal(t, "role1", mappingMap["roleName"])
+
+		fgaMappings, found := sett["fgaMappings"]
+		require.True(t, found)
+		fgaMappingsMap, ok := fgaMappings.(map[string]any)
+		require.True(t, ok)
+		require.Equal(t, 2, len(fgaMappingsMap))
+		// Assert group1 mappings
+		group1Map, ok := fgaMappingsMap["group1"].(map[string]any)
+		require.True(t, ok)
+		group1Relations, ok := group1Map["relations"].([]any)
+		require.True(t, ok)
+		require.Len(t, group1Relations, 2)
+		relation1 := group1Relations[0].(map[string]any)
+		require.Equal(t, "res1", relation1["resource"])
+		require.Equal(t, "rd1", relation1["relationDefinition"])
+		require.Equal(t, "ns1", relation1["namespace"])
+		relation2 := group1Relations[1].(map[string]any)
+		require.Equal(t, "res2", relation2["resource"])
+		require.Equal(t, "rd2", relation2["relationDefinition"])
+		require.Equal(t, "ns2", relation2["namespace"])
+		// Assert group2 mappings
+		group2Map, ok := fgaMappingsMap["group2"].(map[string]any)
+		require.True(t, ok)
+		group2Relations, ok := group2Map["relations"].([]any)
+		require.True(t, ok)
+		require.Len(t, group2Relations, 1)
+		relation3 := group2Relations[0].(map[string]any)
+		require.Equal(t, "res3", relation3["resource"])
+		require.Equal(t, "rd3", relation3["relationDefinition"])
+		require.Equal(t, "ns3", relation3["namespace"])
 	}))
 	err := mgmt.SSO().ConfigureSAMLSettings(context.Background(), "abc", settings, "https://redirect", []string{"domain.com"}, "")
 	require.NoError(t, err)
@@ -779,6 +888,9 @@ func TestSSOConfigureSAMLSettingsWithSSOIDSuccess(t *testing.T) {
 		require.True(t, ok)
 		require.Equal(t, []any{"grp1", "grp2"}, mappingMap["groups"])
 		require.Equal(t, "role1", mappingMap["roleName"])
+
+		_, found = sett["fgaMappings"]
+		require.False(t, found)
 	}))
 	err := mgmt.SSO().ConfigureSAMLSettings(context.Background(), "abc", settings, "https://redirect", []string{"domain.com"}, ssoID)
 	require.NoError(t, err)
@@ -822,6 +934,17 @@ func TestSSOConfigureSAMLSettingsByMetadataSuccess(t *testing.T) {
 		SpACSUrl:        "https://spacsurl.com",
 		SpEntityID:      "spentityid",
 		DefaultSSORoles: []string{"defrole1", "defrole2"},
+		FgaMappings: map[string]*descope.FGAGroupMapping{
+			"group1": {
+				Relations: []*descope.FGAGroupMappingRelation{
+					{
+						Resource:           "res1",
+						RelationDefinition: "rd1",
+						Namespace:          "ns1",
+					},
+				},
+			},
+		},
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -860,6 +983,21 @@ func TestSSOConfigureSAMLSettingsByMetadataSuccess(t *testing.T) {
 		require.True(t, ok)
 		require.Equal(t, []any{"grp1", "grp2"}, mappingMap["groups"])
 		require.Equal(t, "role1", mappingMap["roleName"])
+
+		fgaMappings, found := sett["fgaMappings"]
+		require.True(t, found)
+		fgaMappingsMap, ok := fgaMappings.(map[string]any)
+		require.True(t, ok)
+		require.Equal(t, 1, len(fgaMappingsMap))
+		group1Map, ok := fgaMappingsMap["group1"].(map[string]any)
+		require.True(t, ok)
+		group1Relations, ok := group1Map["relations"].([]any)
+		require.True(t, ok)
+		require.Len(t, group1Relations, 1)
+		relation1 := group1Relations[0].(map[string]any)
+		require.Equal(t, "res1", relation1["resource"])
+		require.Equal(t, "rd1", relation1["relationDefinition"])
+		require.Equal(t, "ns1", relation1["namespace"])
 	}))
 	err := mgmt.SSO().ConfigureSAMLSettingsByMetadata(context.Background(), "abc", settings, "https://redirect", []string{"domain.com"}, "")
 	require.NoError(t, err)
@@ -920,6 +1058,9 @@ func TestSSOConfigureSAMLSettingsByMetadataWithSSOIDSuccess(t *testing.T) {
 		require.True(t, ok)
 		require.Equal(t, []any{"grp1", "grp2"}, mappingMap["groups"])
 		require.Equal(t, "role1", mappingMap["roleName"])
+
+		_, found = sett["fgaMappings"]
+		require.False(t, found)
 	}))
 	err := mgmt.SSO().ConfigureSAMLSettingsByMetadata(context.Background(), "abc", settings, "https://redirect", []string{"domain.com"}, ssoID)
 	require.NoError(t, err)
