@@ -1091,7 +1091,21 @@ samlSettings := &descope.SSOSAMLSettings{
 	IdpEntityID: entityID,
 	IdpCert: idpCert,
 	AttributeMapping: &descope.AttributeMapping{Email: "myEmail", ..},
-	RoleMappings: []*RoleMapping{{..}},
+	RoleMappings: []*descope.RoleMapping{{..}},
+	DefaultSSORoles: []string{"role1", "role2"},
+	FgaMappings: map[string]*descope.FGAGroupMapping{
+		"idp-group1": {
+			Relations: []*descope.FGAGroupMappingRelation{
+				{Resource: "resource1", RelationDefinition: "relation1", Namespace: "namespace1"},
+				{Resource: "resource2", RelationDefinition: "relation2", Namespace: "namespace1"},
+			},
+		},
+		"idp-group2": {
+			Relations: []*descope.FGAGroupMappingRelation{
+				{Resource: "resource3", RelationDefinition: "relation3", Namespace: "namespace3"},
+			},
+		},
+	},
 }
 // You can pass ssoID in case using multi SSO and you want to configure specific SSO configuration
 err = descopeClient.Management.SSO().ConfigureSAMLSettings(context.Background(), tenantID, samlSettings, redirectURL, domain)
@@ -1100,7 +1114,15 @@ err = descopeClient.Management.SSO().ConfigureSAMLSettings(context.Background(),
 samlSettings := &descope.SSOSAMLSettingsByMetadata{
 	IdpMetadataURL: "https://idp.com/my-idp-metadata",
 	AttributeMapping: &descope.AttributeMapping{Email: "myEmail", ..},
-	RoleMappings: []*RoleMapping{{..}},
+	RoleMappings: []*descope.RoleMapping{{..}},
+	DefaultSSORoles: []string{"role1", "role2"},
+	FgaMappings: map[string]*descope.FGAGroupMapping{
+		"group1": {
+			Relations: []*descope.FGAGroupMappingRelation{
+				{Resource: "resource1", RelationDefinition: "relation1", Namespace: "namespace1"},
+			},
+		},
+	},
 }
 // You can pass ssoID in case using multi SSO and you want to configure specific SSO configuration
 err = descopeClient.Management.SSO().ConfigureSAMLSettingsByMetadata(context.Background(), tenantID, samlSettings, redirectURL, domain)
@@ -1319,6 +1341,7 @@ The impersonator user must have the `impersonation` permission in order for this
 The response would be a refresh JWT of the impersonated user
 TenantID would be the tenant to set as DCT claim, in case set
 customClaims - would be extra claims that are needed on the JWT
+
 ```go
 refreshJWT, err := descopeClient.Management.JWT().Impersonate(context.Background(), "impersonator id", "login id", true, map[string]any{"k1":"v1"}, "T1")
 if err != nil {
@@ -1383,8 +1406,8 @@ type org
 type folder
   relation parent: folder
   relation owner: user | org#member
-  relation editor: user 
-  relation viewer: user 
+  relation editor: user
+  relation viewer: user
 
   permission can_create: owner | parent.owner
   permission can_edit: editor | can_create
@@ -1393,14 +1416,13 @@ type folder
 type doc
   relation parent: folder
   relation owner: user | org#member
-  relation editor: user 
-  relation viewer: user 
+  relation editor: user
+  relation viewer: user
 
   permission can_create: owner | parent.owner
   permission can_edit: editor | can_create
   permission can_view: viewer | can_edit
-```  
-
+```
 
 Descope SDK allows you to fully manage the schema and relations as well as perform simple (and not so simple) checks regarding the existence of relations.
 
@@ -1410,11 +1432,11 @@ err := descopeClient.Management.FGA().SaveSchema(context.Background(), schema)
 
 // Create a relation between a resource and user
 err := descopeClient.Management.FGA().CreateRelations(context.Background(), []*descope.FGARelation {
-    {   
-		Resource: "some-doc", 
-		ResourceType: "doc", 
-		Relation: "owner", 
-		Target: "u1", 
+    {
+		Resource: "some-doc",
+		ResourceType: "doc",
+		Relation: "owner",
+		Target: "u1",
 		TargetType: "user"
     },
 })
@@ -1423,10 +1445,10 @@ err := descopeClient.Management.FGA().CreateRelations(context.Background(), []*d
 // The answer should be true because an owner can also view
 relations, err := descopeClient.Management.FGA().Check(context.Background(), []*descope.FGARelation{
     {
-		Resource: "some-doc", 
-		ResourceType: "doc", 
-		Relation: "can_view", 
-		Target: "u1", 
+		Resource: "some-doc",
+		ResourceType: "doc",
+		Relation: "can_view",
+		Target: "u1",
 		TargetType: "user"
     }
 })
@@ -1434,6 +1456,7 @@ relations, err := descopeClient.Management.FGA().Check(context.Background(), []*
 
 Response times of repeated FGA `Check` calls, especially in high volume scenarios, can be reduced to sub-millisecond scales by re-directing the calls to a Descope FGA Cache Proxy running in the same backend cluster as your application.
 After setting up the proxy server via the Descope provided Docker image, set the `FGACacheURL` config property to be equal to the proxy URL to enable its use in the SDK, as shown in the example below:
+
 ```
 	descopeClient, err := client.NewWithConfig(&client.Config{
 		...
@@ -1441,7 +1464,6 @@ After setting up the proxy server via the Descope provided Docker image, set the
 		...
 	})
 ```
-
 
 ### Manage Project
 
