@@ -222,11 +222,16 @@ type resourcesResponse struct {
 }
 
 func (a *authz) ResourceRelations(ctx context.Context, resource string) ([]*descope.AuthzRelation, error) {
+	return a.ResourceRelationsWithTargetSetsFilter(ctx, resource, true)
+}
+
+func (a *authz) ResourceRelationsWithTargetSetsFilter(ctx context.Context, resource string, includeTargetSetRelations bool) ([]*descope.AuthzRelation, error) {
 	if resource == "" {
 		return nil, utils.NewInvalidArgumentError("resource")
 	}
 	body := map[string]any{
-		"resource": resource,
+		"resource":                 resource,
+		"ignoreTargetSetRelations": !includeTargetSetRelations,
 	}
 	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzREResource(), body, nil, a.conf.ManagementKey)
 	if err != nil {
@@ -243,11 +248,16 @@ func (a *authz) ResourceRelations(ctx context.Context, resource string) ([]*desc
 }
 
 func (a *authz) TargetsRelations(ctx context.Context, targets []string) ([]*descope.AuthzRelation, error) {
+	return a.TargetsRelationsWithTargetSetsFilter(ctx, targets, false)
+}
+
+func (a *authz) TargetsRelationsWithTargetSetsFilter(ctx context.Context, targets []string, includeTargetSetRelations bool) ([]*descope.AuthzRelation, error) {
 	if len(targets) == 0 {
 		return nil, utils.NewInvalidArgumentError("targets")
 	}
 	body := map[string]any{
-		"targets": targets,
+		"targets":                   targets,
+		"includeTargetSetRelations": includeTargetSetRelations,
 	}
 	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRETargets(), body, nil, a.conf.ManagementKey)
 	if err != nil {

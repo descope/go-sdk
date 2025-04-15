@@ -829,11 +829,17 @@ type Authz interface {
 	// WhoCanAccess the given resource returns the list of targets with the given relation definition
 	WhoCanAccess(ctx context.Context, resource, relationDefinition, namespace string) ([]string, error)
 
-	// ResourceRelations returns the list of all defined relations (not recursive) on the given resource.
+	// ResourceRelations returns the list of all defined relations (not recursive) on the given resource, including target sets relations
 	ResourceRelations(ctx context.Context, resource string) ([]*descope.AuthzRelation, error)
 
-	// TargetRelations returns the list of all defined relations (not recursive) for the given targets.
+	// TargetRelations returns the list of all defined relations (not recursive) for the given targets, excluding target sets relations
 	TargetsRelations(ctx context.Context, targets []string) ([]*descope.AuthzRelation, error)
+
+	// ResourceRelations returns the list of all defined relations (not recursive) on the given resource, with an option to include target set relations or not
+	ResourceRelationsWithTargetSetsFilter(ctx context.Context, resource string, includeTargetSetRelations bool) ([]*descope.AuthzRelation, error)
+
+	// TargetRelations returns the list of all defined relations (not recursive) for the given targets, with an option to include target set relations or not
+	TargetsRelationsWithTargetSetsFilter(ctx context.Context, targets []string, includeTargetSetRelations bool) ([]*descope.AuthzRelation, error)
 
 	// WhatCanTargetAccess returns the list of all relations for the given target including derived relations from the schema tree.
 	WhatCanTargetAccess(ctx context.Context, target string) ([]*descope.AuthzRelation, error)
