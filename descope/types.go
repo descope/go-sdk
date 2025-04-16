@@ -597,6 +597,8 @@ type UpdateOptions struct {
 	AddToLoginIDs      bool              `json:"addToLoginIDs,omitempty"`
 	OnMergeUseExisting bool              `json:"onMergeUseExisting,omitempty"`
 	TemplateOptions    map[string]string `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
+	TemplateID         string            `json:"templateId,omitempty"`
+	ProviderID         string            `json:"providerId,omitempty"`
 }
 
 type AccessKeyResponse struct {
@@ -804,10 +806,11 @@ func (r *Role) GetCreatedTime() time.Time {
 }
 
 type RoleSearchOptions struct {
-	TenantIDs       []string `json:"tenantIds,omitempty"`
-	RoleNames       []string `json:"roleNames,omitempty"`
-	RoleNameLike    string   `json:"roleNameLike,omitempty"`
-	PermissionNames []string `json:"permissionNames,omitempty"`
+	TenantIDs           []string `json:"tenantIds,omitempty"`
+	RoleNames           []string `json:"roleNames,omitempty"`
+	RoleNameLike        string   `json:"roleNameLike,omitempty"`
+	PermissionNames     []string `json:"permissionNames,omitempty"`
+	IncludeProjectRoles *bool    `json:"includeProjectRoles,omitempty"`
 }
 
 // Options for searching and filtering users
