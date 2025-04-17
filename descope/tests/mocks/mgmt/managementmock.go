@@ -1538,11 +1538,19 @@ func (m *MockAuthz) WhoCanAccess(_ context.Context, resource, relationDefinition
 	return m.WhoCanAccessResponse, m.WhoCanAccessError
 }
 
+func (m *MockAuthz) ResourceRelationsWithTargetSetsFilter(ctx context.Context, resource string, _ bool) ([]*descope.AuthzRelation, error) {
+	return m.ResourceRelations(ctx, resource)
+}
+
 func (m *MockAuthz) ResourceRelations(_ context.Context, resource string) ([]*descope.AuthzRelation, error) {
 	if m.ResourceRelationsAssert != nil {
 		m.ResourceRelationsAssert(resource)
 	}
 	return m.ResourceRelationsResponse, m.ResourceRelationsError
+}
+
+func (m *MockAuthz) TargetsRelationsWithTargetSetsFilter(ctx context.Context, targets []string, _ bool) ([]*descope.AuthzRelation, error) {
+	return m.TargetsRelations(ctx, targets)
 }
 
 func (m *MockAuthz) TargetsRelations(_ context.Context, targets []string) ([]*descope.AuthzRelation, error) {
