@@ -1465,6 +1465,24 @@ After setting up the proxy server via the Descope provided Docker image, set the
 	})
 ```
 
+If you are implementing SSO mappings with FGA, you can use the following functions to retrieve the mappable schema and search for specific resources:
+
+```go
+// Load the mappable schema for a specific tenant, used for SSO FGA mappings.
+// This schema describes which resource types and relations can be mapped from IDP groups. Note not all the possible
+// resources are returned in this call since the list is capped. Use `SearchMappableResources` to find more resources.
+options := &descope.FGAMappableResourcesOptions{ResourcesLimit: 100} // optional limit for resources
+mappableSchema, err := descopeClient.Management.FGA().LoadMappableSchema(context.Background(), "my-tenant-id", options)
+
+// Search for specific resources that can be mapped for FGA SSO mappings based on the provided queries.
+resourcesQueries := []*descope.FGAMappableResourcesQuery{
+	{Type: "folder", Queries: []string{"f-"}},
+	{Type: "doc", Queries: []string{"doc1", "doc2"}},
+}
+options := &descope.FGAMappableResourcesOptions{ResourcesLimit: 50} // optional limit for resources
+mappableResources, err := descopeClient.Management.FGA().SearchMappableResources(context.Background(), "my-tenant-id", resourcesQueries, options)
+```
+
 ### Manage Project
 
 You can update a project's name, as well as clone the current project to create a new one:

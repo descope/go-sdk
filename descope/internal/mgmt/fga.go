@@ -2,6 +2,7 @@ package mgmt
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
@@ -123,4 +124,63 @@ func (f *fga) Check(ctx context.Context, relations []*descope.FGARelation) ([]*d
 	}
 
 	return checks, nil
+}
+
+func (f *fga) LoadMappableSchema(ctx context.Context, tenantID string, options *descope.FGAMappableResourcesOptions) (*descope.FGAMappableSchema, error) {
+	if tenantID == "" {
+		return nil, utils.NewInvalidArgumentError("tenantID")
+	}
+
+	params := map[string]string{"tenantId": tenantID}
+	if options != nil && options.ResourcesLimit > 0 {
+		params["resourcesLimit"] = strconv.Itoa(int(options.ResourcesLimit))
+	}
+	req := &api.HTTPRequest{
+		QueryParams: params,
+	}
+	res, err := f.client.DoGetRequest(ctx, api.Routes.ManagementFGALoadMappableSchema(), req, f.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+
+	var mappableSchema *descope.FGAMappableSchema
+	err = utils.Unmarshal([]byte(res.BodyStr), &mappableSchema)
+	if err != nil {
+		return nil, err // notest
+	}
+	return mappableSchema, nil
+}
+
+type mappableResourcesResponse struct {
+	FGAMappableResources []*descope.FGAMappableResources `json:"mappableResources"`
+}
+
+func (f *fga) SearchMappableResources(ctx context.Context, tenantID string, resourcesQueries []*descope.FGAMappableResourcesQuery, options *descope.FGAMappableResourcesOptions) ([]*descope.FGAMappableResources, error) {
+	if tenantID == "" {
+		return nil, utils.NewInvalidArgumentError("tenantID")
+	}
+
+	if len(resourcesQueries) == 0 {
+		return nil, utils.NewInvalidArgumentError("resourcesQueries")
+	}
+
+	body := map[string]any{
+		"tenantId":         tenantID,
+		"resourcesQueries": resourcesQueries,
+	}
+	if options != nil && options.ResourcesLimit > 0 {
+		body["resourcesLimit"] = strconv.Itoa(int(options.ResourcesLimit))
+	}
+
+	res, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGASearchMappableResources(), body, nil, f.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	var mappableResources *mappableResourcesResponse
+	err = utils.Unmarshal([]byte(res.BodyStr), &mappableResources)
+	if err != nil {
+		return nil, err // notest
+	}
+
+	return mappableResources.FGAMappableResources, nil
 }
