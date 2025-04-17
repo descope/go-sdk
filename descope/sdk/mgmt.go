@@ -861,6 +861,12 @@ type FGA interface {
 
 	// Check checks if the given relations are satisfied.
 	Check(ctx context.Context, relations []*descope.FGARelation) ([]*descope.FGACheck, error)
+
+	// LoadMappableSchema loads the mappable schema for the project (only listing the RDs for a Namespace), along with a list of mappable resources.
+	LoadMappableSchema(ctx context.Context, tenantID string, options *descope.FGAMappableResourcesOptions) (*descope.FGAMappableSchema, error)
+
+	// SearchMappableResources searches for mappable resources based on the given queries.
+	SearchMappableResources(ctx context.Context, tenantID string, resourcesQueries []*descope.FGAMappableResourcesQuery, options *descope.FGAMappableResourcesOptions) ([]*descope.FGAMappableResources, error)
 }
 
 // Provides functions for managing third party applications in a project.

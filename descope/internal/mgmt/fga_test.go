@@ -178,3 +178,184 @@ func TestCheckFGARelationsMissingTuples(t *testing.T) {
 	require.Error(t, err)
 	require.ErrorContains(t, err, utils.NewInvalidArgumentError("relations").Message)
 }
+
+func TestLoadMappableSchemaSuccess(t *testing.T) {
+	response := &descope.FGAMappableSchema{
+		Schema: &descope.AuthzSchema{
+			Name: "testSchema",
+		},
+		MappableResources: []*descope.FGAMappableResources{
+			{
+				Type: "type1",
+				Resources: []*descope.FGAMappableResource{
+					{Resource: "res1"},
+					{Resource: "res2"},
+				},
+			},
+			{
+				Type: "type2",
+				Resources: []*descope.FGAMappableResource{
+					{Resource: "res3"},
+				},
+			},
+		},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.Equal(t, "t1", r.URL.Query().Get("tenantId"))
+		require.Empty(t, r.URL.Query().Get("resourcesLimit"))
+	}, response))
+	schema, err := mgmt.FGA().LoadMappableSchema(context.Background(), "t1", nil)
+	require.NoError(t, err)
+	require.NotNil(t, schema.Schema)
+	require.Equal(t, response.Schema.Name, schema.Schema.Name)
+	require.Len(t, schema.MappableResources, 2)
+	require.Equal(t, "type1", schema.MappableResources[0].Type)
+	require.Len(t, schema.MappableResources[0].Resources, 2)
+	require.Equal(t, "res1", schema.MappableResources[0].Resources[0].Resource)
+	require.Equal(t, "res2", schema.MappableResources[0].Resources[1].Resource)
+	require.Equal(t, "type2", schema.MappableResources[1].Type)
+	require.Len(t, schema.MappableResources[1].Resources, 1)
+	require.Equal(t, "res3", schema.MappableResources[1].Resources[0].Resource)
+}
+
+func TestLoadMappableSchemaSuccessWithOptions(t *testing.T) {
+	response := &descope.FGAMappableSchema{
+		Schema: &descope.AuthzSchema{
+			Name: "testSchema",
+		},
+		MappableResources: []*descope.FGAMappableResources{
+			{
+				Type: "type1",
+				Resources: []*descope.FGAMappableResource{
+					{Resource: "res1"},
+				},
+			},
+		},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.Equal(t, "t1", r.URL.Query().Get("tenantId"))
+		require.Equal(t, "10", r.URL.Query().Get("resourcesLimit"))
+	}, response))
+	options := &descope.FGAMappableResourcesOptions{ResourcesLimit: 10}
+	schema, err := mgmt.FGA().LoadMappableSchema(context.Background(), "t1", options)
+	require.NoError(t, err)
+	require.NotNil(t, schema.Schema)
+	require.Equal(t, response.Schema.Name, schema.Schema.Name)
+	require.Len(t, schema.MappableResources, 1)
+	require.Equal(t, "type1", schema.MappableResources[0].Type)
+	require.Len(t, schema.MappableResources[0].Resources, 1)
+	require.Equal(t, "res1", schema.MappableResources[0].Resources[0].Resource)
+}
+
+func TestLoadMappableSchemaMissingTenantID(t *testing.T) {
+	mgmt := newTestMgmt(nil, nil)
+	_, err := mgmt.FGA().LoadMappableSchema(context.Background(), "", nil)
+	require.Error(t, err)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("tenantID").Message)
+}
+
+func TestLoadMappableSchemaError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	_, err := mgmt.FGA().LoadMappableSchema(context.Background(), "t1", nil)
+	require.Error(t, err)
+}
+
+func TestSearchMappableResourcesSuccess(t *testing.T) {
+	response := &mappableResourcesResponse{
+		FGAMappableResources: []*descope.FGAMappableResources{
+			{
+				Type: "type1",
+				Resources: []*descope.FGAMappableResource{
+					{Resource: "id1"},
+					{Resource: "id2"},
+				},
+			},
+		},
+	}
+	queries := []*descope.FGAMappableResourcesQuery{
+		{Type: "type1", Queries: []string{"id1", "id2"}},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "t1", req["tenantId"])
+		require.Len(t, req["resourcesQueries"], 1)
+		query := req["resourcesQueries"].([]any)[0].(map[string]any)
+		require.Equal(t, "type1", query["type"])
+		require.EqualValues(t, []interface{}{"id1", "id2"}, query["queries"])
+		_, hasLimit := req["resourcesLimit"]
+		require.False(t, hasLimit)
+	}, response))
+	resources, err := mgmt.FGA().SearchMappableResources(context.Background(), "t1", queries, nil)
+	require.NoError(t, err)
+	require.Len(t, resources, 1)
+	require.Equal(t, "type1", resources[0].Type)
+	require.Len(t, resources[0].Resources, 2)
+	require.Equal(t, "id1", resources[0].Resources[0].Resource)
+	require.Equal(t, "id2", resources[0].Resources[1].Resource)
+}
+
+func TestSearchMappableResourcesSuccessWithOptions(t *testing.T) {
+	response := &mappableResourcesResponse{
+		FGAMappableResources: []*descope.FGAMappableResources{
+			{
+				Type: "type1",
+				Resources: []*descope.FGAMappableResource{
+					{Resource: "id1"},
+					{Resource: "id2"},
+				},
+			},
+		},
+	}
+	queries := []*descope.FGAMappableResourcesQuery{
+		{Type: "type1", Queries: []string{"id"}},
+	}
+	options := &descope.FGAMappableResourcesOptions{ResourcesLimit: 5}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "t1", req["tenantId"])
+		require.Len(t, req["resourcesQueries"], 1)
+		query := req["resourcesQueries"].([]any)[0].(map[string]any)
+		require.Equal(t, "type1", query["type"])
+		require.EqualValues(t, []interface{}{"id"}, query["queries"])
+		require.Equal(t, "5", req["resourcesLimit"])
+	}, response))
+	resources, err := mgmt.FGA().SearchMappableResources(context.Background(), "t1", queries, options)
+	require.NoError(t, err)
+	require.Len(t, resources, 1)
+	require.Equal(t, "type1", resources[0].Type)
+	require.Len(t, resources[0].Resources, 2)
+	require.Equal(t, "id1", resources[0].Resources[0].Resource)
+	require.Equal(t, "id2", resources[0].Resources[1].Resource)
+}
+
+func TestSearchMappableResourcesMissingTenantID(t *testing.T) {
+	mgmt := newTestMgmt(nil, nil)
+	queries := []*descope.FGAMappableResourcesQuery{{Type: "type1"}}
+	_, err := mgmt.FGA().SearchMappableResources(context.Background(), "", queries, nil)
+	require.Error(t, err)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("tenantID").Message)
+}
+
+func TestSearchMappableResourcesMissingQueries(t *testing.T) {
+	mgmt := newTestMgmt(nil, nil)
+	_, err := mgmt.FGA().SearchMappableResources(context.Background(), "t1", nil, nil)
+	require.Error(t, err)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("resourcesQueries").Message)
+
+	_, err = mgmt.FGA().SearchMappableResources(context.Background(), "t1", []*descope.FGAMappableResourcesQuery{}, nil)
+	require.Error(t, err)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("resourcesQueries").Message)
+}
+
+func TestSearchMappableResourcesError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	queries := []*descope.FGAMappableResourcesQuery{{Type: "type1"}}
+	_, err := mgmt.FGA().SearchMappableResources(context.Background(), "t1", queries, nil)
+	require.Error(t, err)
+}

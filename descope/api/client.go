@@ -213,6 +213,8 @@ var (
 			fgaCreateRelations:                       "mgmt/fga/relations",
 			fgaDeleteRelations:                       "mgmt/fga/relations/delete",
 			fgaCheck:                                 "mgmt/fga/check",
+			fgaLoadMappableSchema:                    "mgmt/fga/mappable/schema",
+			fgaSearchMappableResources:               "mgmt/fga/mappable/resources",
 			thirdPartyApplicationCreate:              "mgmt/thirdparty/app/create",
 			thirdPartyApplicationUpdate:              "mgmt/thirdparty/app/update",
 			thirdPartyApplicationPatch:               "mgmt/thirdparty/app/patch",
@@ -446,11 +448,13 @@ type mgmtEndpoints struct {
 	authzRETargetWithRelation string
 	authzGetModified          string
 
-	fgaSaveSchema      string
-	fgaLoadSchema      string
-	fgaCreateRelations string
-	fgaDeleteRelations string
-	fgaCheck           string
+	fgaSaveSchema              string
+	fgaLoadSchema              string
+	fgaCreateRelations         string
+	fgaDeleteRelations         string
+	fgaCheck                   string
+	fgaLoadMappableSchema      string
+	fgaSearchMappableResources string
 
 	thirdPartyApplicationCreate              string
 	thirdPartyApplicationUpdate              string
@@ -1195,6 +1199,14 @@ func (e *endpoints) ManagementFGACreateRelations() string {
 
 func (e *endpoints) ManagementFGADeleteRelations() string {
 	return path.Join(e.version, e.mgmt.fgaDeleteRelations)
+}
+
+func (e *endpoints) ManagementFGALoadMappableSchema() string {
+	return path.Join(e.version, e.mgmt.fgaLoadMappableSchema)
+}
+
+func (e *endpoints) ManagementFGASearchMappableResources() string {
+	return path.Join(e.version, e.mgmt.fgaSearchMappableResources)
 }
 
 func (e *endpoints) ManagementFGACheck() string {
