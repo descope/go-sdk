@@ -1032,6 +1032,9 @@ const (
 	OAuthMicrosoft OAuthProvider = "microsoft"
 	OAuthGitlab    OAuthProvider = "gitlab"
 	OAuthApple     OAuthProvider = "apple"
+	OAuthSlack     OAuthProvider = "slack"
+	OAuthDiscord   OAuthProvider = "discord"
+	OAuthLinkedIn  OAuthProvider = "linkedin"
 
 	ProjectEnvironmentNone       ProjectEnvironment = ""
 	ProjectEnvironmentProduction ProjectEnvironment = "production"
