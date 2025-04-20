@@ -119,3 +119,26 @@ type FGACheckInfo struct {
 	// changed by creating or deleting relations involving its resource, its target, or both (including itself)
 	Direct bool `json:"direct,omitempty"`
 }
+
+type FGAMappableResourcesOptions struct {
+	ResourcesLimit int32
+}
+
+type FGAMappableSchema struct {
+	Schema            *AuthzSchema            `json:"schema,omitempty"`
+	MappableResources []*FGAMappableResources `json:"mappableResources,omitempty"`
+}
+
+type FGAMappableResource struct {
+	Resource string `json:"resource"`
+}
+
+type FGAMappableResources struct {
+	Type      string                 `json:"type"`
+	Resources []*FGAMappableResource `json:"resources"`
+}
+
+type FGAMappableResourcesQuery struct {
+	Type    string   `json:"type"`
+	Queries []string `json:"queries"`
+}
