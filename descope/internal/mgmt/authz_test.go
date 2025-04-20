@@ -294,8 +294,12 @@ func TestResourceRelationsSuccess(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "r", req["resource"])
+		require.Equal(t, false, req["ignoreTargetSetRelations"])
 	}, map[string]any{"relations": response}))
 	res, err := mgmt.Authz().ResourceRelations(context.Background(), "r")
+	require.NoError(t, err)
+	assert.EqualValues(t, response, res)
+	res, err = mgmt.Authz().ResourceRelationsWithTargetSetsFilter(context.Background(), "r", true)
 	require.NoError(t, err)
 	assert.EqualValues(t, response, res)
 }
@@ -320,8 +324,12 @@ func TestTargetsRelationsSuccess(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "u1", req["targets"].([]any)[0])
+		require.Equal(t, false, req["includeTargetSetRelations"])
 	}, map[string]any{"relations": response}))
 	res, err := mgmt.Authz().TargetsRelations(context.Background(), []string{"u1"})
+	require.NoError(t, err)
+	assert.EqualValues(t, response, res)
+	res, err = mgmt.Authz().TargetsRelationsWithTargetSetsFilter(context.Background(), []string{"u1"}, false)
 	require.NoError(t, err)
 	assert.EqualValues(t, response, res)
 }
