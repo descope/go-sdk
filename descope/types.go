@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/descope/go-sdk/descope/logger"
-	"github.com/lestrrat-go/jwx/v3/jwt"
+	"github.com/lestrrat-go/jwx/v2/jwt"
 	"golang.org/x/exp/maps"
 )
 
