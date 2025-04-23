@@ -455,6 +455,7 @@ type BatchUser struct {
 	LoginID     string             `json:"loginId,omitempty"`
 	Password    *BatchUserPassword `json:"password,omitempty"`
 	Seed        *string            `json:"seed,omitempty"`
+	Status      UserStatus         `json:"status,omitempty"`
 	UserRequest `json:",inline"`
 }
 
