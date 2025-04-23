@@ -792,6 +792,9 @@ func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.In
 		if u.Seed != nil {
 			user["seed"] = u.Seed
 		}
+		if u.Status != "" {
+			user["status"] = u.Status
+		}
 		usersReq = append(usersReq, user)
 	}
 	req := map[string]any{

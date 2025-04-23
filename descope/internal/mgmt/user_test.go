@@ -133,6 +133,7 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 	u1.CustomAttributes = ca
 	u1.Password = &descope.BatchUserPassword{Cleartext: "foo"}
 	u1.Seed = &u1Seed
+	u1.Status = descope.UserStatusDisabled
 
 	u2 := &descope.BatchUser{}
 	u2.LoginID = "two"
@@ -181,6 +182,7 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 		require.Equal(t, u1.Email, userRes1["email"])
 		assert.EqualValues(t, ca, userRes1["customAttributes"])
 		require.Equal(t, "foo", userRes1["password"])
+		require.Equal(t, string(descope.UserStatusDisabled), userRes1["status"])
 		roleNames := userRes1["roleNames"].([]any)
 		require.Len(t, roleNames, 1)
 		require.Equal(t, u1.Roles[0], roleNames[0])
@@ -189,6 +191,8 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 		require.Equal(t, u2.LoginID, userRes2["loginId"])
 		require.Equal(t, u2.Email, userRes2["email"])
 		assert.Nil(t, userRes2["customAttributes"])
+		_, ok := userRes2["status"]
+		assert.False(t, ok)
 		pass2, _ := userRes2["hashedPassword"].(map[string]any)
 		require.NotNil(t, pass2)
 		pbkdf2, _ := pass2["pbkdf2"].(map[string]any)
