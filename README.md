@@ -1334,6 +1334,33 @@ if err != nil {
 }
 ```
 
+Generate a JWT for a user, simulating a signin request.
+
+```go
+const res, err := updatedJWT, err := descopeClient.Management.JWT().SignIn(context.Background(), "dummy");
+if err != nil {
+    // handle error
+}
+```
+
+Generate a JWT for a user, simulating a signup request.
+
+```go
+const res, err := updatedJWT, err := descopeClient.Management.JWT().SignUp(context.Background(), "dummy");
+if err != nil {
+    // handle error
+}
+```
+
+Generate a JWT for a user, simulating a signup or in request.
+
+```go
+const res, err := updatedJWT, err := descopeClient.Management.JWT().SignUpOrIn(context.Background(), "dummy");
+if err != nil {
+    // handle error
+}
+```
+
 ### Impersonate
 
 You can impersonate to another user
