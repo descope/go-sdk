@@ -1563,6 +1563,7 @@ func (c *Client) addDescopeHeaders(req *http.Request) {
 	req.Header.Set("x-descope-sdk-version", c.sdkInfo.version)
 	req.Header.Set("x-descope-sdk-sha", c.sdkInfo.sha)
 	req.Header.Set("x-descope-sdk-uuid", instanceUUID)
+	req.Header.Set("x-descope-project-id", c.conf.ProjectID)
 }
 
 func getSDKInfo() *sdkInfo {

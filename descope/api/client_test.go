@@ -50,6 +50,7 @@ func TestRequestWithDescopeHeaders(t *testing.T) {
 		assert.Nil(t, r.Body)
 		assert.EqualValues(t, "golang", r.Header.Get("X-Descope-Sdk-Name"))
 		assert.True(t, strings.HasPrefix(r.Header.Get("X-Descope-Sdk-Go-Version"), "go"))
+		assert.Equal(t, projectID, r.Header.Get("x-descope-project-id"))
 		// cannot test sdk-version since build info does not work in tests
 		return &http.Response{StatusCode: http.StatusOK}, nil
 	})})
