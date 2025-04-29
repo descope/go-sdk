@@ -795,6 +795,7 @@ type Permission struct {
 }
 
 type Role struct {
+	ID              string   `json:"id"`
 	Name            string   `json:"name"`
 	Description     string   `json:"description,omitempty"`
 	PermissionNames []string `json:"permissionNames,omitempty"`
