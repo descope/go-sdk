@@ -1150,7 +1150,8 @@ func (c *ThirdPartyApplicationConsent) GetCreatedTime() time.Time {
 }
 
 type MgmSignUpOptions struct {
-	CustomClaims map[string]interface{} `json:"customClaims,omitempty"`
+	CustomClaims    map[string]interface{} `json:"customClaims,omitempty"`
+	RefreshDuration int32                  `json:"refreshDuration,omitempty"`
 }
 type MgmLoginOptions struct {
 	Stepup              bool                   `json:"stepup,omitempty"`
@@ -1158,6 +1159,7 @@ type MgmLoginOptions struct {
 	RevokeOtherSessions bool                   `json:"revokeOtherSessions,omitempty"`
 	CustomClaims        map[string]interface{} `json:"customClaims,omitempty"`
 	JWT                 string                 `json:"jwt,omitempty"`
+	RefreshDuration     int32                  `json:"refreshDuration,omitempty"`
 }
 
 func (mlo *MgmLoginOptions) IsJWTRequired() bool {

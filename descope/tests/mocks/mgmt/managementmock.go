@@ -98,7 +98,7 @@ type MockJWT struct {
 	UpdateJWTWithCustomClaimsResponse string
 	UpdateJWTWithCustomClaimsError    error
 
-	ImpersonateAssert   func(impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string)
+	ImpersonateAssert   func(impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string, refreshDuration int32)
 	ImpersonateResponse string
 	ImpersonateError    error
 
@@ -114,7 +114,7 @@ type MockJWT struct {
 	SignUpOrInResponse *descope.AuthenticationInfo
 	SignUpOrInError    error
 
-	AnonymousAssert   func(customClaims map[string]any, selectedTenant string)
+	AnonymousAssert   func(customClaims map[string]any, selectedTenant string, refreshDuration int32)
 	AnonymousResponse *descope.AnonymousAuthenticationInfo
 	AnonymousError    error
 }
@@ -126,9 +126,9 @@ func (m *MockJWT) UpdateJWTWithCustomClaims(_ context.Context, jwt string, custo
 	return m.UpdateJWTWithCustomClaimsResponse, m.UpdateJWTWithCustomClaimsError
 }
 
-func (m *MockJWT) Impersonate(_ context.Context, impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string) (string, error) {
+func (m *MockJWT) Impersonate(_ context.Context, impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string, refreshDuration int32) (string, error) {
 	if m.ImpersonateAssert != nil {
-		m.ImpersonateAssert(impersonatorID, loginID, validateConcent, customClaims, tenantID)
+		m.ImpersonateAssert(impersonatorID, loginID, validateConcent, customClaims, tenantID, refreshDuration)
 	}
 	return m.ImpersonateResponse, m.ImpersonateError
 }
@@ -152,9 +152,9 @@ func (m *MockJWT) SignUpOrIn(_ context.Context, loginID string, user *descope.Mg
 	return m.SignUpOrInResponse, m.SignUpOrInError
 }
 
-func (m *MockJWT) Anonymous(_ context.Context, customClaims map[string]any, selectedTenant string) (*descope.AnonymousAuthenticationInfo, error) {
+func (m *MockJWT) Anonymous(_ context.Context, customClaims map[string]any, selectedTenant string, refreshDuration int32) (*descope.AnonymousAuthenticationInfo, error) {
 	if m.AnonymousAssert != nil {
-		m.AnonymousAssert(customClaims, selectedTenant)
+		m.AnonymousAssert(customClaims, selectedTenant, refreshDuration)
 	}
 	return m.AnonymousResponse, m.AnonymousError
 }

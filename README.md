@@ -1335,27 +1335,27 @@ if err != nil {
 ```
 
 Generate a JWT for a user, simulating a signin request.
-
+refreshDuration - a custom refresh duration in seconds for the impersonation JWT, 0 will use project configuration
 ```go
-const res, err := updatedJWT, err := descopeClient.Management.JWT().SignIn(context.Background(), "dummy");
+const res, err := updatedJWT, err := descopeClient.Management.JWT().SignIn(context.Background(), "dummy"), 0;
 if err != nil {
     // handle error
 }
 ```
 
 Generate a JWT for a user, simulating a signup request.
-
+refreshDuration - a custom refresh duration in seconds for the impersonation JWT, 0 will use project configuration
 ```go
-const res, err := updatedJWT, err := descopeClient.Management.JWT().SignUp(context.Background(), "dummy");
+const res, err := updatedJWT, err := descopeClient.Management.JWT().SignUp(context.Background(), "dummy", 0);
 if err != nil {
     // handle error
 }
 ```
 
 Generate a JWT for a user, simulating a signup or in request.
-
+refreshDuration - a custom refresh duration in seconds for the impersonation JWT, 0 will use project configuration
 ```go
-const res, err := updatedJWT, err := descopeClient.Management.JWT().SignUpOrIn(context.Background(), "dummy");
+const res, err := updatedJWT, err := descopeClient.Management.JWT().SignUpOrIn(context.Background(), "dummy", 0);
 if err != nil {
     // handle error
 }
@@ -1368,9 +1368,10 @@ The impersonator user must have the `impersonation` permission in order for this
 The response would be a refresh JWT of the impersonated user
 TenantID would be the tenant to set as DCT claim, in case set
 customClaims - would be extra claims that are needed on the JWT
+refreshDuration - a custom refresh duration in seconds for the impersonation JWT, 0 will use project configuration
 
 ```go
-refreshJWT, err := descopeClient.Management.JWT().Impersonate(context.Background(), "impersonator id", "login id", true, map[string]any{"k1":"v1"}, "T1")
+refreshJWT, err := descopeClient.Management.JWT().Impersonate(context.Background(), "impersonator id", "login id", true, map[string]any{"k1":"v1"}, "T1", 0)
 if err != nil {
     // handle error
 }

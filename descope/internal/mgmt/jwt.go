@@ -44,7 +44,7 @@ func (j *jwt) UpdateJWTWithCustomClaims(ctx context.Context, jwt string, customC
 	return jRes.JWT, nil
 }
 
-func (j *jwt) Impersonate(ctx context.Context, impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string) (string, error) {
+func (j *jwt) Impersonate(ctx context.Context, impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string, refreshDuration int32) (string, error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
@@ -57,6 +57,7 @@ func (j *jwt) Impersonate(ctx context.Context, impersonatorID string, loginID st
 		"validateConsent": validateConcent,
 		"customClaims":    customClaims,
 		"selectedTenant":  tenantID,
+		"refreshDuration": refreshDuration,
 	}
 	res, err := j.client.DoPostRequest(ctx, api.Routes.ManagementImpersonate(), req, nil, j.conf.ManagementKey)
 	if err != nil {
@@ -90,15 +91,17 @@ type authenticationRequestBody struct {
 	RevokeOtherSessions bool                   `json:"revokeOtherSessions,omitempty"`
 	CustomClaims        map[string]interface{} `json:"customClaims,omitempty"`
 	JWT                 string                 `json:"jwt,omitempty"`
+	RefreshDuration     int32                  `json:"refreshDuration,omitempty"`
 }
 
 type authenticationSignUpRequestBody struct {
-	LoginID       string                 `json:"loginId,omitempty"`
-	User          *descope.User          `json:"user,omitempty"`
-	EmailVerified bool                   `json:"emailVerified,omitempty"`
-	PhoneVerified bool                   `json:"phoneVerified,omitempty"`
-	SsoAppID      string                 `json:"ssoAppId,omitempty"`
-	CustomClaims  map[string]interface{} `json:"customClaims,omitempty"`
+	LoginID         string                 `json:"loginId,omitempty"`
+	User            *descope.User          `json:"user,omitempty"`
+	EmailVerified   bool                   `json:"emailVerified,omitempty"`
+	PhoneVerified   bool                   `json:"phoneVerified,omitempty"`
+	SsoAppID        string                 `json:"ssoAppId,omitempty"`
+	CustomClaims    map[string]interface{} `json:"customClaims,omitempty"`
+	RefreshDuration int32                  `json:"refreshDuration,omitempty"`
 }
 
 func (j *jwt) SignIn(ctx context.Context, loginID string, loginOptions *descope.MgmLoginOptions) (*descope.AuthenticationInfo, error) {
@@ -119,6 +122,7 @@ func (j *jwt) SignIn(ctx context.Context, loginID string, loginOptions *descope.
 		RevokeOtherSessions: loginOptions.RevokeOtherSessions,
 		CustomClaims:        loginOptions.CustomClaims,
 		JWT:                 loginOptions.JWT,
+		RefreshDuration:     loginOptions.RefreshDuration,
 	}
 	httpResponse, err := j.client.DoPostRequest(ctx, api.Routes.ManagementSignIn(), arb, nil, j.conf.ManagementKey)
 	if err != nil {
@@ -149,12 +153,13 @@ func (j *jwt) signUp(ctx context.Context, endpoint string, loginID string, user 
 	}
 
 	arb := &authenticationSignUpRequestBody{
-		LoginID:       loginID,
-		User:          &user.User,
-		EmailVerified: user.EmailVerified,
-		PhoneVerified: user.PhoneVerified,
-		SsoAppID:      user.SsoAppID,
-		CustomClaims:  signUpOptions.CustomClaims,
+		LoginID:         loginID,
+		User:            &user.User,
+		EmailVerified:   user.EmailVerified,
+		PhoneVerified:   user.PhoneVerified,
+		SsoAppID:        user.SsoAppID,
+		CustomClaims:    signUpOptions.CustomClaims,
+		RefreshDuration: signUpOptions.RefreshDuration,
 	}
 	httpResponse, err := j.client.DoPostRequest(ctx, endpoint, arb, nil, j.conf.ManagementKey)
 	if err != nil {
@@ -173,10 +178,11 @@ func (j *jwt) SignUpOrIn(ctx context.Context, loginID string, user *descope.Mgmt
 	return j.signUp(ctx, api.Routes.ManagementSignUpOrIn(), loginID, user, signUpOptions)
 }
 
-func (j *jwt) Anonymous(ctx context.Context, customClaims map[string]any, selectedTenant string) (*descope.AnonymousAuthenticationInfo, error) {
+func (j *jwt) Anonymous(ctx context.Context, customClaims map[string]any, selectedTenant string, refreshDuration int32) (*descope.AnonymousAuthenticationInfo, error) {
 	arb := map[string]any{
-		"selectedTenant": selectedTenant,
-		"customClaims":   customClaims,
+		"selectedTenant":  selectedTenant,
+		"customClaims":    customClaims,
+		"refreshDuration": refreshDuration,
 	}
 	httpResponse, err := j.client.DoPostRequest(ctx, api.Routes.Anonymous(), arb, nil, j.conf.ManagementKey)
 	if err != nil {

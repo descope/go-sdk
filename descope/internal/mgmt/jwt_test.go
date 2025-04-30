@@ -68,7 +68,7 @@ func TestImpersonate(t *testing.T) {
 		require.EqualValues(t, map[string]any{"k1": "v1"}, req["customClaims"])
 
 	}, map[string]interface{}{"jwt": expectedJWT}))
-	jwtRes, err := mgmt.JWT().Impersonate(context.Background(), impID, loginID, true, map[string]any{"k1": "v1"}, "t1")
+	jwtRes, err := mgmt.JWT().Impersonate(context.Background(), impID, loginID, true, map[string]any{"k1": "v1"}, "t1", 0)
 	require.NoError(t, err)
 	require.EqualValues(t, expectedJWT, jwtRes)
 }
@@ -78,7 +78,7 @@ func TestImpersonateMissingLoginID(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
 		called = true
 	}))
-	jwtRes, err := mgmt.JWT().Impersonate(context.Background(), "test", "", true, map[string]any{"k1": "v1"}, "t1")
+	jwtRes, err := mgmt.JWT().Impersonate(context.Background(), "test", "", true, map[string]any{"k1": "v1"}, "t1", 0)
 	require.Error(t, err)
 	require.False(t, called)
 	require.Empty(t, jwtRes)
@@ -89,7 +89,7 @@ func TestImpersonateMissingImpersonator(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
 		called = true
 	}))
-	jwtRes, err := mgmt.JWT().Impersonate(context.Background(), "", "test", true, map[string]any{"k1": "v1"}, "t1")
+	jwtRes, err := mgmt.JWT().Impersonate(context.Background(), "", "test", true, map[string]any{"k1": "v1"}, "t1", 0)
 	require.Error(t, err)
 	require.False(t, called)
 	require.Empty(t, jwtRes)
@@ -282,7 +282,7 @@ func TestAnonymous(t *testing.T) {
 		},
 		FirstSeen: true,
 	}))
-	jwtRes, err := mgmt.JWT().Anonymous(context.Background(), map[string]any{"k1": "v1"}, "st")
+	jwtRes, err := mgmt.JWT().Anonymous(context.Background(), map[string]any{"k1": "v1"}, "st", 0)
 	require.NoError(t, err)
 	require.EqualValues(t, jwtRTokenValid, jwtRes.RefreshToken.JWT)
 	require.True(t, checked)
