@@ -215,6 +215,8 @@ var (
 			fgaCheck:                                 "mgmt/fga/check",
 			fgaLoadMappableSchema:                    "mgmt/fga/mappable/schema",
 			fgaSearchMappableResources:               "mgmt/fga/mappable/resources",
+			fgaResourcesLoad:                         "mgmt/fga/resources/load",
+			fgaResourcesSave:                         "mgmt/fga/resources/save",
 			thirdPartyApplicationCreate:              "mgmt/thirdparty/app/create",
 			thirdPartyApplicationUpdate:              "mgmt/thirdparty/app/update",
 			thirdPartyApplicationPatch:               "mgmt/thirdparty/app/patch",
@@ -455,6 +457,8 @@ type mgmtEndpoints struct {
 	fgaCheck                   string
 	fgaLoadMappableSchema      string
 	fgaSearchMappableResources string
+	fgaResourcesLoad           string
+	fgaResourcesSave           string
 
 	thirdPartyApplicationCreate              string
 	thirdPartyApplicationUpdate              string
@@ -1211,6 +1215,14 @@ func (e *endpoints) ManagementFGASearchMappableResources() string {
 
 func (e *endpoints) ManagementFGACheck() string {
 	return path.Join(e.version, e.mgmt.fgaCheck)
+}
+
+func (e *endpoints) ManagementFGAResourcesLoad() string {
+	return path.Join(e.version, e.mgmt.fgaResourcesLoad)
+}
+
+func (e *endpoints) ManagementFGAResourcesSave() string {
+	return path.Join(e.version, e.mgmt.fgaResourcesSave)
 }
 
 func (e *endpoints) ManagementThirdPartyApplicationCreate() string {
