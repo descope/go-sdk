@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/descope/go-sdk/descope"
+	"github.com/descope/go-sdk/descope/internal/utils"
 )
 
 type notp struct {
@@ -63,4 +64,24 @@ func (auth *notp) GetSession(ctx context.Context, pendingRef string, w http.Resp
 		return nil, err
 	}
 	return auth.generateAuthenticationInfo(httpResponse, w)
+}
+
+func (auth *notp) UpdateUser(ctx context.Context, loginID, phone string, updateOptions *descope.NOTPUpdateOptions, r *http.Request) (*descope.NOTPResponse, error) {
+	if loginID == "" {
+		return nil, utils.NewInvalidArgumentError("loginID")
+	}
+
+	pswd, err := getValidRefreshToken(r)
+	if err != nil {
+		return nil, err
+	}
+	if updateOptions == nil {
+		updateOptions = &descope.NOTPUpdateOptions{}
+	}
+
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeNOTPUpdateUserURL(), newNOTPUpdateUserRequestBody(loginID, phone, updateOptions), nil, pswd)
+	if err != nil {
+		return nil, err
+	}
+	return getNOTPResponse(httpResponse)
 }

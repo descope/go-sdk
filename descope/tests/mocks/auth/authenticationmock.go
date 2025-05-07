@@ -316,6 +316,10 @@ type MockNOTP struct {
 	GetSessionAssert   func(pendingRef string, w http.ResponseWriter)
 	GetSessionResponse *descope.AuthenticationInfo
 	GetSessionError    error
+
+	UpdateUserAssert   func(loginID, phone string, updateOptions *descope.NOTPUpdateOptions, r *http.Request)
+	UpdateUserError    error
+	UpdateUserResponse *descope.NOTPResponse
 }
 
 func (m *MockNOTP) SignIn(_ context.Context, loginID string, r *http.Request, loginOptions *descope.LoginOptions) (*descope.NOTPResponse, error) {
@@ -344,6 +348,13 @@ func (m *MockNOTP) GetSession(_ context.Context, pendingRef string, w http.Respo
 		m.GetSessionAssert(pendingRef, w)
 	}
 	return m.GetSessionResponse, m.GetSessionError
+}
+
+func (m *MockNOTP) UpdateUser(_ context.Context, loginID, phone string, updateOptions *descope.NOTPUpdateOptions, r *http.Request) (*descope.NOTPResponse, error) {
+	if m.UpdateUserAssert != nil {
+		m.UpdateUserAssert(loginID, phone, updateOptions, r)
+	}
+	return m.UpdateUserResponse, m.UpdateUserError
 }
 
 // Mock Password

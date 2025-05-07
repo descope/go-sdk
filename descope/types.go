@@ -602,6 +602,21 @@ type UpdateOptions struct {
 	ProviderID         string            `json:"providerId,omitempty"`
 }
 
+type NOTPTemplates struct {
+	VerifyTemplateID  string `json:"verifyTemplateId,omitempty"`
+	SuccessTemplateID string `json:"successTemplateId,omitempty"`
+	ErrorTemplateID   string `json:"errorTemplateId,omitempty"`
+}
+
+type NOTPUpdateOptions struct {
+	AddToLoginIDs      bool              `json:"addToLoginIDs,omitempty"`
+	OnMergeUseExisting bool              `json:"onMergeUseExisting,omitempty"`
+	TemplateOptions    map[string]string `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
+	ProviderID         string            `json:"providerId,omitempty"`
+	Templates          *NOTPTemplates    `json:"templates,omitempty"`
+	Locale             string            `json:"locale,omitempty"` // locale for the message
+}
+
 type AccessKeyResponse struct {
 	ID           string              `json:"id,omitempty"`
 	Name         string              `json:"name,omitempty"`
