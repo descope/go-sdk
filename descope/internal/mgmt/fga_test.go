@@ -359,3 +359,83 @@ func TestSearchMappableResourcesError(t *testing.T) {
 	_, err := mgmt.FGA().SearchMappableResources(context.Background(), "t1", queries, nil)
 	require.Error(t, err)
 }
+
+func TestLoadResourcesDetailsMissingResourceIdentifiers(t *testing.T) {
+	mgmt := newTestMgmt(nil, nil)
+	_, err := mgmt.FGA().LoadResourcesDetails(context.Background(), nil)
+	require.Error(t, err)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("resourceIdentifiers").Message)
+}
+
+func TestLoadResourcesDetailsSuccess(t *testing.T) {
+	response := resourcesDetailsResponse{
+		ResourcesDetails: []*descope.ResourceDetails{
+			{ResourceID: "r1", ResourceType: "type1", DisplayName: "Name1"},
+			{ResourceID: "r2", ResourceType: "type2", DisplayName: "Name2"},
+		},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Len(t, req["resourceIdentifiers"].([]any), 2)
+		first := req["resourceIdentifiers"].([]any)[0].(map[string]any)
+		require.Equal(t, "r1", first["resourceId"])
+		require.Equal(t, "type1", first["resourceType"])
+	}, response))
+	ids := []*descope.ResourceIdentifier{
+		{ResourceID: "r1", ResourceType: "type1"},
+		{ResourceID: "r2", ResourceType: "type2"},
+	}
+	details, err := mgmt.FGA().LoadResourcesDetails(context.Background(), ids)
+	require.NoError(t, err)
+	require.Len(t, details, 2)
+	require.Equal(t, "r1", details[0].ResourceID)
+	require.Equal(t, "Name1", details[0].DisplayName)
+	require.Equal(t, "type1", details[0].ResourceType)
+	require.Equal(t, "r2", details[1].ResourceID)
+	require.Equal(t, "Name2", details[1].DisplayName)
+	require.Equal(t, "type2", details[1].ResourceType)
+}
+
+func TestLoadResourcesDetailsError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	_, err := mgmt.FGA().LoadResourcesDetails(context.Background(), []*descope.ResourceIdentifier{
+		{ResourceID: "r1", ResourceType: "type1"},
+	})
+	require.Error(t, err)
+}
+
+func TestSaveResourcesDetailsMissingResourcesDetails(t *testing.T) {
+	mgmt := newTestMgmt(nil, nil)
+	err := mgmt.FGA().SaveResourcesDetails(context.Background(), nil)
+	require.Error(t, err)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("resourcesDetails").Message)
+}
+
+func TestSaveResourcesDetailsSuccess(t *testing.T) {
+	details := []*descope.ResourceDetails{
+		{ResourceID: "r1", ResourceType: "type1", DisplayName: "Name1"},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		arr := req["resourcesDetails"].([]any)
+		m := arr[0].(map[string]any)
+		require.Equal(t, "r1", m["resourceId"])
+		require.Equal(t, "type1", m["resourceType"])
+		require.Equal(t, "Name1", m["displayName"])
+	}))
+	err := mgmt.FGA().SaveResourcesDetails(context.Background(), details)
+	require.NoError(t, err)
+}
+
+func TestSaveResourcesDetailsError(t *testing.T) {
+	details := []*descope.ResourceDetails{
+		{ResourceID: "r1", ResourceType: "type1", DisplayName: "Name1"},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	err := mgmt.FGA().SaveResourcesDetails(context.Background(), details)
+	require.Error(t, err)
+}

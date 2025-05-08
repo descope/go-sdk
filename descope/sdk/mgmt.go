@@ -873,6 +873,12 @@ type FGA interface {
 
 	// SearchMappableResources searches for mappable resources based on the given queries.
 	SearchMappableResources(ctx context.Context, tenantID string, resourcesQueries []*descope.FGAMappableResourcesQuery, options *descope.FGAMappableResourcesOptions) ([]*descope.FGAMappableResources, error)
+
+	// SaveResourcesDetails saves details for resources
+	SaveResourcesDetails(ctx context.Context, resourcesDetails []*descope.ResourceDetails) error
+
+	// LoadResourcesDetails loads details for given resource identifiers
+	LoadResourcesDetails(ctx context.Context, resourceIdentifiers []*descope.ResourceIdentifier) ([]*descope.ResourceDetails, error)
 }
 
 // Provides functions for managing third party applications in a project.

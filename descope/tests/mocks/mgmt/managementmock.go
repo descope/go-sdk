@@ -1605,6 +1605,13 @@ type MockFGA struct {
 	SearchMappableResourcesAssert   func(tenantID string, resourcesQueries []*descope.FGAMappableResourcesQuery, options *descope.FGAMappableResourcesOptions)
 	SearchMappableResourcesResponse []*descope.FGAMappableResources
 	SearchMappableResourcesError    error
+
+	LoadResourcesDetailsAssert   func(resourceIdentifiers []*descope.ResourceIdentifier)
+	LoadResourcesDetailsResponse []*descope.ResourceDetails
+	LoadResourcesDetailsError    error
+
+	SaveResourcesDetailsAssert func(resourcesDetails []*descope.ResourceDetails)
+	SaveResourcesDetailsError  error
 }
 
 func (m *MockFGA) SaveSchema(_ context.Context, schema *descope.FGASchema) error {
@@ -1651,6 +1658,22 @@ func (m *MockFGA) SearchMappableResources(_ context.Context, tenantID string, re
 		m.SearchMappableResourcesAssert(tenantID, resourcesQueries, options)
 	}
 	return m.SearchMappableResourcesResponse, m.SearchMappableResourcesError
+}
+
+// Mock LoadResourcesDetails calls
+func (m *MockFGA) LoadResourcesDetails(_ context.Context, resourceIdentifiers []*descope.ResourceIdentifier) ([]*descope.ResourceDetails, error) {
+	if m.LoadResourcesDetailsAssert != nil {
+		m.LoadResourcesDetailsAssert(resourceIdentifiers)
+	}
+	return m.LoadResourcesDetailsResponse, m.LoadResourcesDetailsError
+}
+
+// Mock SaveResourcesDetails calls
+func (m *MockFGA) SaveResourcesDetails(_ context.Context, resourcesDetails []*descope.ResourceDetails) error {
+	if m.SaveResourcesDetailsAssert != nil {
+		m.SaveResourcesDetailsAssert(resourcesDetails)
+	}
+	return m.SaveResourcesDetailsError
 }
 
 // Mock Third Party Application

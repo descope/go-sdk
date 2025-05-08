@@ -142,3 +142,14 @@ type FGAMappableResourcesQuery struct {
 	Type    string   `json:"type"`
 	Queries []string `json:"queries"`
 }
+
+type ResourceIdentifier struct {
+	ResourceID   string `json:"resourceId"`
+	ResourceType string `json:"resourceType"`
+}
+
+type ResourceDetails struct {
+	ResourceID   string `json:"resourceId"`
+	ResourceType string `json:"resourceType"`
+	DisplayName  string `json:"displayName"`
+}
