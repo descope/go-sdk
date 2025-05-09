@@ -12,6 +12,7 @@ import (
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
+	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -313,6 +314,7 @@ func TestSignUpNOTPNoUser(t *testing.T) {
 	_, err = a.NOTP().SignUp(context.Background(), phone, nil, nil)
 	require.NoError(t, err)
 }
+
 func TestSignUpOrInNOTPNoLoginID(t *testing.T) {
 	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{
@@ -322,5 +324,95 @@ func TestSignUpOrInNOTPNoLoginID(t *testing.T) {
 	})
 	require.NoError(t, err)
 	_, err = a.NOTP().SignUpOrIn(context.Background(), "", nil)
+	require.NoError(t, err)
+}
+
+func TestUpdateUserNOTPEmptyLoginID(t *testing.T) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
+		return nil, nil
+	})
+	require.NoError(t, err)
+	_, err = a.NOTP().UpdateUser(context.Background(), "", "", nil, nil)
+	require.Error(t, err)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("loginID").Message)
+}
+
+func TestUpdateUserNOTPMissingRefreshToken(t *testing.T) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
+		return nil, nil
+	})
+	require.NoError(t, err)
+	_, err = a.NOTP().UpdateUser(context.Background(), "login-id", "", nil, nil)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, descope.ErrRefreshToken)
+}
+
+func TestUpdateUserNOTPWithoutOptions(t *testing.T) {
+	loginID := "943248329844"
+	phone := "+111111111111"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeNOTPUpdateUserURL(), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, loginID, body["loginId"])
+		assert.EqualValues(t, phone, body["phone"])
+		assert.Nil(t, body["addToLoginIDs"])
+		assert.Nil(t, body["onMergeUseExisting"])
+		assert.Nil(t, body["templateOptions"])
+		u, p := getProjectAndJwt(r)
+		assert.NotEmpty(t, u)
+		assert.NotEmpty(t, p)
+		resp := descope.NOTPResponse{}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	_, err = a.NOTP().UpdateUser(context.Background(), loginID, phone, nil, r)
+	require.NoError(t, err)
+}
+
+func TestUpdateUserNOTPWithOptions(t *testing.T) {
+	loginID := "943248329844"
+	phone := "+111111111111"
+	options := &descope.NOTPUpdateOptions{
+		AddToLoginIDs:      true,
+		OnMergeUseExisting: true,
+		ProviderID:         "provider-id",
+		TemplateOptions: map[string]string{
+			"key1": "value1",
+		},
+		Templates: &descope.NOTPTemplates{
+			VerifyTemplateID:  "verify-template-id",
+			SuccessTemplateID: "success-template-id",
+			ErrorTemplateID:   "error-template-id",
+		},
+	}
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeNOTPUpdateUserURL(), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, loginID, body["loginId"])
+		assert.EqualValues(t, phone, body["phone"])
+		assert.EqualValues(t, true, body["addToLoginIDs"])
+		assert.EqualValues(t, true, body["onMergeUseExisting"])
+		assert.NotEmpty(t, body["templates"])
+		assert.NotEmpty(t, body["templateOptions"])
+		u, p := getProjectAndJwt(r)
+		assert.NotEmpty(t, u)
+		assert.NotEmpty(t, p)
+		resp := descope.NOTPResponse{}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	_, err = a.NOTP().UpdateUser(context.Background(), loginID, phone, options, r)
 	require.NoError(t, err)
 }
