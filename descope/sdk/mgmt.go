@@ -589,7 +589,7 @@ type JWT interface {
 	Impersonate(ctx context.Context, impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string, refreshDuration int32) (string, error)
 	// Stop impersonation
 	// Provide an impersonation JWT, and get back a refresh JWT of the actor
-	StopImpersonation(ctx context.Context, jwt string, customClaims map[string]any, tenantID string) (string, error)
+	StopImpersonation(ctx context.Context, jwt string, customClaims map[string]any, tenantID string, refreshDuration int32) (string, error)
 
 	// Generate a JWT for a user, simulating a signin request
 	SignIn(ctx context.Context, loginID string, loginOptions *descope.MgmLoginOptions) (*descope.AuthenticationInfo, error)

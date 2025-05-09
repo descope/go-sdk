@@ -71,14 +71,15 @@ func (j *jwt) Impersonate(ctx context.Context, impersonatorID string, loginID st
 	return jRes.JWT, nil
 }
 
-func (j *jwt) StopImpersonation(ctx context.Context, jwt string, customClaims map[string]any, tenantID string) (string, error) {
+func (j *jwt) StopImpersonation(ctx context.Context, jwt string, customClaims map[string]any, tenantID string, refreshDuration int32) (string, error) {
 	if jwt == "" {
 		return "", utils.NewInvalidArgumentError("jwt")
 	}
 	req := map[string]any{
-		"jwt":            jwt,
-		"customClaims":   customClaims,
-		"selectedTenant": tenantID,
+		"jwt":             jwt,
+		"customClaims":    customClaims,
+		"selectedTenant":  tenantID,
+		"refreshDuration": refreshDuration,
 	}
 	res, err := j.client.DoPostRequest(ctx, api.Routes.ManagementStopImpersonation(), req, nil, j.conf.ManagementKey)
 	if err != nil {

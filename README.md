@@ -1384,7 +1384,7 @@ customClaims - would be extra claims that are needed on the JWT
 refreshDuration - a custom refresh duration in seconds for the impersonation JWT, 0 will use project configuration
 
 ```go
-refreshJWT, err := descopeClient.Management.JWT().StopImpersonate(context.Background(), jwt, map[string]any{"k1":"v1"}, "T1", 0)
+refreshJWT, err := descopeClient.Management.JWT().StopImpersonation(context.Background(), jwt, map[string]any{"k1":"v1"}, "T1", 0)
 if err != nil {
     // handle error
 }
