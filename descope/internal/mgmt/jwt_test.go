@@ -84,6 +84,33 @@ func TestImpersonateMissingLoginID(t *testing.T) {
 	require.Empty(t, jwtRes)
 }
 
+func TestStopImpersonation(t *testing.T) {
+	expectedJWT := "res"
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.EqualValues(t, "jwtstr", req["jwt"])
+		require.EqualValues(t, "t1", req["selectedTenant"])
+		require.EqualValues(t, map[string]any{"k1": "v1"}, req["customClaims"])
+
+	}, map[string]any{"jwt": expectedJWT}))
+	jwtRes, err := mgmt.JWT().StopImpersonation(context.Background(), "jwtstr", map[string]any{"k1": "v1"}, "t1")
+	require.NoError(t, err)
+	require.EqualValues(t, expectedJWT, jwtRes)
+}
+
+func TestStopImpersonationMissingJwt(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+	jwtRes, err := mgmt.JWT().StopImpersonation(context.Background(), "", map[string]any{"k1": "v1"}, "t1")
+	require.Error(t, err)
+	require.False(t, called)
+	require.Empty(t, jwtRes)
+}
+
 func TestImpersonateMissingImpersonator(t *testing.T) {
 	called := false
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {

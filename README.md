@@ -1377,6 +1377,19 @@ if err != nil {
 }
 ```
 
+After impersonation is done, you can call `StopImpersonation`, and get a jwt of the original actor
+jwt - impersonation jwt
+TenantID would be the tenant to set as DCT claim, in case set
+customClaims - would be extra claims that are needed on the JWT
+refreshDuration - a custom refresh duration in seconds for the impersonation JWT, 0 will use project configuration
+
+```go
+refreshJWT, err := descopeClient.Management.JWT().StopImpersonate(context.Background(), jwt, map[string]any{"k1":"v1"}, "T1", 0)
+if err != nil {
+    // handle error
+}
+```
+
 ### Embedded links
 
 ```go

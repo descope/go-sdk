@@ -159,6 +159,7 @@ var (
 			passwordSettings:                         "mgmt/password/settings",
 			updateJWT:                                "mgmt/jwt/update",
 			impersonate:                              "mgmt/impersonate",
+			stopImpersonation:                        "mgmt/stop/impersonation",
 			mgmtSignIn:                               "mgmt/auth/signin",
 			mgmtSignUp:                               "mgmt/auth/signup",
 			mgmtSignUpOrIn:                           "mgmt/auth/signup-in",
@@ -391,6 +392,7 @@ type mgmtEndpoints struct {
 	ssoOIDCSettings           string
 	updateJWT                 string
 	impersonate               string
+	stopImpersonation         string
 	mgmtSignIn                string
 	mgmtSignUp                string
 	mgmtSignUpOrIn            string
@@ -987,6 +989,10 @@ func (e *endpoints) ManagementUpdateJWT() string {
 
 func (e *endpoints) ManagementImpersonate() string {
 	return path.Join(e.version, e.mgmt.impersonate)
+}
+
+func (e *endpoints) ManagementStopImpersonation() string {
+	return path.Join(e.version, e.mgmt.stopImpersonation)
 }
 
 func (e *endpoints) ManagementSignIn() string {
