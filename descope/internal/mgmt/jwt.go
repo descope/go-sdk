@@ -71,6 +71,28 @@ func (j *jwt) Impersonate(ctx context.Context, impersonatorID string, loginID st
 	return jRes.JWT, nil
 }
 
+func (j *jwt) StopImpersonation(ctx context.Context, jwt string, customClaims map[string]any, tenantID string, refreshDuration int32) (string, error) {
+	if jwt == "" {
+		return "", utils.NewInvalidArgumentError("jwt")
+	}
+	req := map[string]any{
+		"jwt":             jwt,
+		"customClaims":    customClaims,
+		"selectedTenant":  tenantID,
+		"refreshDuration": refreshDuration,
+	}
+	res, err := j.client.DoPostRequest(ctx, api.Routes.ManagementStopImpersonation(), req, nil, j.conf.ManagementKey)
+	if err != nil {
+		return "", err
+	}
+	jRes := &jwtRes{}
+	err = utils.Unmarshal([]byte(res.BodyStr), jRes)
+	if err != nil {
+		return "", err //notest
+	}
+	return jRes.JWT, nil
+}
+
 func (j *jwt) parseJWT(jwtResponse *descope.JWTResponse) (*descope.AuthenticationInfo, error) {
 	dsr, err := auth.ValidateJWT(jwtResponse.RefreshJwt, j.provider)
 	if err != nil {
