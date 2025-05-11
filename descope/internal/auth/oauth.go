@@ -23,7 +23,7 @@ func (auth *oauth) startAuth(ctx context.Context, provider descope.OAuthProvider
 	m := generateOAuthRequestParams(ctx, provider, redirectURL)
 	var pswd string
 	if loginOptions.IsJWTRequired() {
-		pswd, err = getValidRefreshToken(r)
+		pswd, err = auth.getValidRefreshToken(r)
 		if err != nil {
 			return "", descope.ErrInvalidStepUpJWT
 		}
@@ -37,7 +37,7 @@ func (auth *oauth) startUpdate(ctx context.Context, provider descope.OAuthProvid
 	if allowAllMerge {
 		m["allowAllMerge"] = strconv.FormatBool(allowAllMerge)
 	}
-	pswd, err := getValidRefreshToken(r)
+	pswd, err := auth.getValidRefreshToken(r)
 	if err != nil {
 		return "", descope.ErrRefreshToken
 	}
