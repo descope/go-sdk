@@ -1104,6 +1104,8 @@ type ThirdPartyApplicationConsent struct {
 	TenantID string `json:"tenantId"`
 	// The consent expiry time
 	ExpireTime int32 `json:"expireTime,omitempty"`
+	// The consent modified time in milliseconds since epoch
+	ModifiedTime int32 `json:"modifiedTime,omitempty"`
 }
 
 // Options for deleting third party application consents. At least one of ConsentIDs, AppID or UserIDs must be provided.
@@ -1142,6 +1144,7 @@ type ThirdPartyApplicationConsentSearchOptions struct {
 	UserID    string `json:"userId"`
 	ConsentID string `json:"consentId"`
 	Page      int32  `json:"page"`
+	Limit     int32  `json:"limit"`
 	TenantID  string `json:"tenantId"`
 }
 
