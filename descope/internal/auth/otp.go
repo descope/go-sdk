@@ -20,7 +20,7 @@ func (auth *otp) SignIn(ctx context.Context, method descope.DeliveryMethod, logi
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
 	if loginOptions.IsJWTRequired() {
-		pswd, err = getValidRefreshToken(r)
+		pswd, err = auth.getValidRefreshToken(r)
 		if err != nil {
 			return "", descope.ErrInvalidStepUpJWT
 		}
@@ -97,7 +97,7 @@ func (auth *otp) UpdateUserEmail(ctx context.Context, loginID, email string, upd
 	if !emailRegex.MatchString(email) {
 		return "", utils.NewInvalidArgumentError("email")
 	}
-	pswd, err := getValidRefreshToken(r)
+	pswd, err := auth.getValidRefreshToken(r)
 	if err != nil {
 		return "", err
 	}
@@ -123,7 +123,7 @@ func (auth *otp) UpdateUserPhone(ctx context.Context, method descope.DeliveryMet
 	if method != descope.MethodSMS && method != descope.MethodVoice && method != descope.MethodWhatsApp {
 		return "", utils.NewInvalidArgumentError("method")
 	}
-	pswd, err := getValidRefreshToken(r)
+	pswd, err := auth.getValidRefreshToken(r)
 	if err != nil {
 		return "", err
 	}
