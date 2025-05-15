@@ -107,13 +107,14 @@ func (j *jwt) parseJWT(jwtResponse *descope.JWTResponse) (*descope.Authenticatio
 }
 
 type authenticationRequestBody struct {
-	LoginID             string                 `json:"loginId,omitempty"`
-	Stepup              bool                   `json:"stepup,omitempty"`
-	MFA                 bool                   `json:"mfa,omitempty"`
-	RevokeOtherSessions bool                   `json:"revokeOtherSessions,omitempty"`
-	CustomClaims        map[string]interface{} `json:"customClaims,omitempty"`
-	JWT                 string                 `json:"jwt,omitempty"`
-	RefreshDuration     int32                  `json:"refreshDuration,omitempty"`
+	LoginID                  string                 `json:"loginId,omitempty"`
+	Stepup                   bool                   `json:"stepup,omitempty"`
+	MFA                      bool                   `json:"mfa,omitempty"`
+	RevokeOtherSessions      bool                   `json:"revokeOtherSessions,omitempty"`
+	RevokeOtherSessionsTypes []string               `json:"revokeOtherSessionsTypes,omitempty"`
+	CustomClaims             map[string]interface{} `json:"customClaims,omitempty"`
+	JWT                      string                 `json:"jwt,omitempty"`
+	RefreshDuration          int32                  `json:"refreshDuration,omitempty"`
 }
 
 type authenticationSignUpRequestBody struct {
@@ -138,13 +139,14 @@ func (j *jwt) SignIn(ctx context.Context, loginID string, loginOptions *descope.
 	}
 
 	arb := &authenticationRequestBody{
-		LoginID:             loginID,
-		Stepup:              loginOptions.Stepup,
-		MFA:                 loginOptions.MFA,
-		RevokeOtherSessions: loginOptions.RevokeOtherSessions,
-		CustomClaims:        loginOptions.CustomClaims,
-		JWT:                 loginOptions.JWT,
-		RefreshDuration:     loginOptions.RefreshDuration,
+		LoginID:                  loginID,
+		Stepup:                   loginOptions.Stepup,
+		MFA:                      loginOptions.MFA,
+		RevokeOtherSessions:      loginOptions.RevokeOtherSessions,
+		RevokeOtherSessionsTypes: loginOptions.RevokeOtherSessionsTypes,
+		CustomClaims:             loginOptions.CustomClaims,
+		JWT:                      loginOptions.JWT,
+		RefreshDuration:          loginOptions.RefreshDuration,
 	}
 	httpResponse, err := j.client.DoPostRequest(ctx, api.Routes.ManagementSignIn(), arb, nil, j.conf.ManagementKey)
 	if err != nil {

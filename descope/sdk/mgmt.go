@@ -259,10 +259,10 @@ type User interface {
 	Deactivate(ctx context.Context, loginIDOrUserID string) (*descope.UserResponse, error)
 
 	// Logout given user from all their devices, by login ID
-	LogoutUser(ctx context.Context, loginID string) error
+	LogoutUser(ctx context.Context, loginID string, sessionTypes ...string) error
 
 	// Logout given user from all their devices, by user ID
-	LogoutUserByUserID(ctx context.Context, userID string) error
+	LogoutUserByUserID(ctx context.Context, userID string, sessionTypes ...string) error
 
 	// Change current loginID to new one
 	// Leave empty to remove the current login ID

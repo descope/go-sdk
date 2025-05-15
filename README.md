@@ -951,9 +951,13 @@ if err == nil {
 }
 
 // Logout given user from all its devices, by login ID
+// Session types (optional string array) can be added to logout request
+// Which will cause only session that were marked with this specific type to be revoked
 err := descopeClient.Management.User().LogoutUser(context.Background(), "<login id>")
 
 // Logout given user from all its devices, by user ID
+// Session types (optional string array) can be added to logout request
+// Which will cause only session that were marked with this specific type to be revoked
 err := descopeClient.Management.User().LogoutUserByUserID(context.Background(), "<user id>")
 
 // Get users' authentication history

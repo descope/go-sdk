@@ -701,8 +701,9 @@ func TestUserLogoutUserByUserIDSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		assert.EqualValues(t, "abc", req["userId"])
 		assert.EqualValues(t, "", req["loginId"])
+		assert.EqualValues(t, []any{"web"}, req["sessionTypes"])
 	}, nil))
-	err := m.User().LogoutUserByUserID(context.Background(), "abc")
+	err := m.User().LogoutUserByUserID(context.Background(), "abc", "web")
 	require.NoError(t, err)
 }
 

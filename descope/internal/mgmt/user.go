@@ -631,22 +631,22 @@ func (u *user) GetProviderTokenWithOptions(ctx context.Context, loginID, provide
 	return unmarshalProviderTokenResponse(res)
 }
 
-func (u *user) LogoutUser(ctx context.Context, loginID string) error {
+func (u *user) LogoutUser(ctx context.Context, loginID string, sessionTypes ...string) error {
 	if len(loginID) == 0 {
 		return utils.NewInvalidArgumentError("loginID")
 	}
-	return u.logoutUser(ctx, "", loginID)
+	return u.logoutUser(ctx, "", loginID, sessionTypes...)
 }
 
-func (u *user) LogoutUserByUserID(ctx context.Context, userID string) error {
+func (u *user) LogoutUserByUserID(ctx context.Context, userID string, sessionTypes ...string) error {
 	if len(userID) == 0 {
 		return utils.NewInvalidArgumentError("userID")
 	}
-	return u.logoutUser(ctx, userID, "")
+	return u.logoutUser(ctx, userID, "", sessionTypes...)
 }
 
-func (u *user) logoutUser(ctx context.Context, userID string, loginID string) error {
-	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserLogoutAllDevices(), map[string]any{"userId": userID, "loginId": loginID}, nil, u.conf.ManagementKey)
+func (u *user) logoutUser(ctx context.Context, userID string, loginID string, sessionTypes ...string) error {
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserLogoutAllDevices(), map[string]any{"userId": userID, "loginId": loginID, "sessionTypes": sessionTypes}, nil, u.conf.ManagementKey)
 	return err
 }
 

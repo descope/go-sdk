@@ -485,7 +485,7 @@ type MockUser struct {
 	GenerateEmbeddedLinkResponse string
 	GenerateEmbeddedLinkError    error
 
-	LogoutAssert func(id string)
+	LogoutAssert func(id string, sessionTypes ...string)
 	LogoutError  error
 
 	HistoryAssert   func(userIDs []string)
@@ -584,16 +584,16 @@ func (m *MockUser) LoadByUserID(_ context.Context, userID string) (*descope.User
 	return m.LoadResponse, m.LoadError
 }
 
-func (m *MockUser) LogoutUser(_ context.Context, loginID string) error {
+func (m *MockUser) LogoutUser(_ context.Context, loginID string, sessionTypes ...string) error {
 	if m.LogoutAssert != nil {
-		m.LogoutAssert(loginID)
+		m.LogoutAssert(loginID, sessionTypes...)
 	}
 	return m.LogoutError
 }
 
-func (m *MockUser) LogoutUserByUserID(_ context.Context, userID string) error {
+func (m *MockUser) LogoutUserByUserID(_ context.Context, userID string, sessionTypes ...string) error {
 	if m.LogoutAssert != nil {
-		m.LogoutAssert(userID)
+		m.LogoutAssert(userID, sessionTypes...)
 	}
 	return m.LogoutError
 }
