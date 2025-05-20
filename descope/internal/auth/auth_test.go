@@ -478,6 +478,25 @@ func TestValidateAndRefreshSessionWithRequest(t *testing.T) {
 	require.True(t, ok)
 }
 
+func TestValidateAndRefreshSessionWithRefreshCookieName(t *testing.T) {
+	refreshCookieName := "DSR_CUSTOM_NAME"
+	a, err := newTestAuthConf(&AuthParams{
+		PublicKey:         publicKey,
+		ProjectID:         "a",
+		RefreshCookieName: refreshCookieName,
+	}, nil, DoOk(nil))
+	require.NoError(t, err)
+
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: descope.SessionCookieName, Value: jwtTokenValid})
+	request.AddCookie(&http.Cookie{Name: refreshCookieName, Value: jwtRTokenValid})
+	response := httptest.NewRecorder()
+	ok, _, err := a.ValidateAndRefreshSessionWithRequest(request, response)
+	strictCookies(t, response)
+	require.NoError(t, err)
+	require.True(t, ok)
+}
+
 func TestValidateAndRefreshSessionWithRequestInvalidInput(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
