@@ -21,13 +21,14 @@ import (
 func TestOAuthStartForwardResponse(t *testing.T) {
 	uri := "http://test.me"
 	landingURL := "https://test.com"
+	loginHint := "aaaa@bb.com"
 	provider := descope.OAuthGithub
 	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {
-		assert.EqualValues(t, fmt.Sprintf("%s?provider=%s&redirectURL=%s", composeOAuthSignUpOrInURL(), provider, url.QueryEscape(landingURL)), r.URL.RequestURI())
+		assert.EqualValues(t, fmt.Sprintf("%s?provider=%s&redirectURL=%s&loginHint=%s", composeOAuthSignUpOrInURL(), provider, url.QueryEscape(landingURL), url.QueryEscape(loginHint)), r.URL.RequestURI())
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	urlStr, err := a.OAuth().Start(context.Background(), provider, landingURL, nil, nil, w)
+	urlStr, err := a.OAuth().Start(context.Background(), provider, landingURL, loginHint, nil, nil, w)
 	require.NoError(t, err)
 	assert.EqualValues(t, uri, urlStr)
 	assert.EqualValues(t, urlStr, w.Result().Header.Get(descope.RedirectLocationCookieName))
@@ -37,13 +38,14 @@ func TestOAuthStartForwardResponse(t *testing.T) {
 func TestOAuthSignInForwardResponse(t *testing.T) {
 	uri := "http://test.me"
 	landingURL := "https://test.com"
+	loginHint := "aaaa@bb.com"
 	provider := descope.OAuthGithub
 	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {
-		assert.EqualValues(t, fmt.Sprintf("%s?provider=%s&redirectURL=%s", composeOAuthSignInURL(), provider, url.QueryEscape(landingURL)), r.URL.RequestURI())
+		assert.EqualValues(t, fmt.Sprintf("%s?provider=%s&redirectURL=%s&loginHint=%s", composeOAuthSignUpOrInURL(), provider, url.QueryEscape(landingURL), url.QueryEscape(loginHint)), r.URL.RequestURI())
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	urlStr, err := a.OAuth().SignIn(context.Background(), provider, landingURL, nil, nil, w)
+	urlStr, err := a.OAuth().SignIn(context.Background(), provider, landingURL, loginHint, nil, nil, w)
 	require.NoError(t, err)
 	assert.EqualValues(t, uri, urlStr)
 	assert.EqualValues(t, urlStr, w.Result().Header.Get(descope.RedirectLocationCookieName))
@@ -53,13 +55,14 @@ func TestOAuthSignInForwardResponse(t *testing.T) {
 func TestOAuthSignUpForwardResponse(t *testing.T) {
 	uri := "http://test.me"
 	landingURL := "https://test.com"
+	loginHint := "aaaa@bb.com"
 	provider := descope.OAuthGithub
 	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {
-		assert.EqualValues(t, fmt.Sprintf("%s?provider=%s&redirectURL=%s", composeOAuthSignUpURL(), provider, url.QueryEscape(landingURL)), r.URL.RequestURI())
+		assert.EqualValues(t, fmt.Sprintf("%s?provider=%s&redirectURL=%s&loginHint=%s", composeOAuthSignUpOrInURL(), provider, url.QueryEscape(landingURL), url.QueryEscape(loginHint)), r.URL.RequestURI())
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	urlStr, err := a.OAuth().SignUp(context.Background(), provider, landingURL, nil, nil, w)
+	urlStr, err := a.OAuth().SignUp(context.Background(), provider, landingURL, loginHint, nil, nil, w)
 	require.NoError(t, err)
 	assert.EqualValues(t, uri, urlStr)
 	assert.EqualValues(t, urlStr, w.Result().Header.Get(descope.RedirectLocationCookieName))
@@ -69,13 +72,14 @@ func TestOAuthSignUpForwardResponse(t *testing.T) {
 func TestOAuthUpdateUserForwardResponse(t *testing.T) {
 	uri := "http://test.me"
 	landingURL := "https://test.com"
+	loginHint := "aaaa@bb.com"
 	provider := descope.OAuthGithub
 	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {
-		assert.EqualValues(t, fmt.Sprintf("%s?allowAllMerge=%s&provider=%s&redirectURL=%s", composeOAuthUpdateUserURL(), "true", provider, url.QueryEscape(landingURL)), r.URL.RequestURI())
+		assert.EqualValues(t, fmt.Sprintf("%s?allowAllMerge=%s&provider=%s&redirectURL=%s&loginHint=%s", composeOAuthUpdateUserURL(), "true", provider, url.QueryEscape(landingURL), url.QueryEscape(loginHint)), r.URL.RequestURI())
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	urlStr, err := a.OAuth().UpdateUser(context.Background(), provider, landingURL, true, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, nil, w)
+	urlStr, err := a.OAuth().UpdateUser(context.Background(), provider, landingURL, loginHint, true, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, nil, w)
 	require.NoError(t, err)
 	assert.EqualValues(t, uri, urlStr)
 	assert.EqualValues(t, urlStr, w.Result().Header.Get(descope.RedirectLocationCookieName))
@@ -89,7 +93,7 @@ func TestOAuthUpdateUserForwardResponsepNoJWT(t *testing.T) {
 	a, err := newTestAuth(nil, DoRedirect(uri, func(_ *http.Request) {}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	_, err = a.OAuth().UpdateUser(context.Background(), provider, landingURL, true, nil, nil, w)
+	_, err = a.OAuth().UpdateUser(context.Background(), provider, landingURL, "", true, nil, nil, w)
 	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }
 
@@ -112,7 +116,7 @@ func TestOAuthStartForwardResponseStepup(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	urlStr, err := a.OAuth().Start(context.Background(), provider, landingURL, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, w)
+	urlStr, err := a.OAuth().Start(context.Background(), provider, landingURL, "", &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, w)
 	require.NoError(t, err)
 	assert.EqualValues(t, uri, urlStr)
 	assert.EqualValues(t, urlStr, w.Result().Header.Get(descope.RedirectLocationCookieName))
@@ -126,7 +130,7 @@ func TestOAuthStartForwardResponseStepupNoJWT(t *testing.T) {
 	a, err := newTestAuth(nil, DoRedirect(uri, func(_ *http.Request) {}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	_, err = a.OAuth().Start(context.Background(), provider, landingURL, nil, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, w)
+	_, err = a.OAuth().Start(context.Background(), provider, landingURL, "", nil, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, w)
 	assert.ErrorIs(t, err, descope.ErrInvalidStepUpJWT)
 }
 
@@ -137,7 +141,7 @@ func TestOAuthStartInvalidForwardResponse(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	urlStr, err := a.OAuth().Start(context.Background(), provider, "", nil, nil, w)
+	urlStr, err := a.OAuth().Start(context.Background(), provider, "", "", nil, nil, w)
 	require.Error(t, err)
 	assert.Empty(t, urlStr)
 }
