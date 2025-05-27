@@ -263,7 +263,7 @@ Users can authenticate using their social logins, using the OAuth protocol. Conf
 // If configured globally, the return URL is optional. If provided however, it will be used
 // instead of any global configuration.
 // Redirect the user to the returned URL to start the OAuth redirect chain
-url, err := descopeClient.Auth.OAuth().SignUpOrIn(context.Background(), "google", "https://my-app.com/handle-oauth", nil, nil, w)
+url, err := descopeClient.Auth.OAuth().SignUpOrIn(context.Background(), "google", "https://my-app.com/handle-oauth", "", nil, nil, w)
 if err != nil {
     // handle error
 }
@@ -285,7 +285,7 @@ Users can also connect the social login account to their existing user:
 ```go
 // A valid Refresh Token of the existing user is required and will be taken from the request header or cookies automatically.
 // If allowAllMerge is 'true' the users will be merged also if there is no common identifier between the social provider and the existing user (like email).
-url, err := descopeClient.Auth.OAuth().UpdateUser(context.Background(), "google", "https://my-app.com/handle-oauth", true, nil, nil, w)
+url, err := descopeClient.Auth.OAuth().UpdateUser(context.Background(), "google", "https://my-app.com/handle-oauth", "", true, nil, nil, w)
 if err != nil {
     // handle error
 }
@@ -357,7 +357,7 @@ Users can authenticate to a specific tenant using SAML or OIDC. Configure your S
 // If configured globally, the return URL is optional. If provided however, it will be used
 // instead of any global configuration.
 // Redirect the user to the returned URL to start the SSO SAML/OIDC redirect chain
-url, err := descopeClient.Auth.SSO().Start("my-tenant-ID", "https://my-app.com/handle-saml", "", "", nil, nil, w)
+url, err := descopeClient.Auth.SSO().Start("my-tenant-ID", "https://my-app.com/handle-saml", "", "", "", nil, nil, w)
 if err != nil {
     // handle error
 }
@@ -370,7 +370,7 @@ if err != nil {
 // If configured globally, the return URL is optional. If provided however, it will be used
 // instead of any global configuration.
 // Redirect the user to the returned URL to start the SSO/SAML redirect chain
-url, err := descopeClient.Auth.SAML().Start(context.Background(), "my-tenant-ID", "https://my-app.com/handle-saml", nil, nil, w)
+url, err := descopeClient.Auth.SAML().Start(context.Background(), "my-tenant-ID", "https://my-app.com/handle-saml", "", nil, nil, w)
 if err != nil {
     // handle error
 }
