@@ -413,23 +413,23 @@ func (m *MockPassword) GetPasswordPolicy(_ context.Context) (*descope.PasswordPo
 // Mock OAuth
 
 type MockOAuth struct {
-	StartAssert   func(provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
+	StartAssert   func(provider descope.OAuthProvider, redirectURL string, loginHint string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
 	StartError    error
 	StartResponse string
 
-	SignUpOrInAssert   func(provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
+	SignUpOrInAssert   func(provider descope.OAuthProvider, redirectURL string, loginHint string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
 	SignUpOrInError    error
 	SignUpOrInResponse string
 
-	SignInAssert   func(provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
+	SignInAssert   func(provider descope.OAuthProvider, redirectURL string, loginHint string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
 	SignInError    error
 	SignInResponse string
 
-	SignUpAssert   func(provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
+	SignUpAssert   func(provider descope.OAuthProvider, redirectURL string, loginHint string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
 	SignUpError    error
 	SignUpResponse string
 
-	UpdateUserAssert   func(provider descope.OAuthProvider, redirectURL string, allowAllMerge bool, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
+	UpdateUserAssert   func(provider descope.OAuthProvider, redirectURL string, loginHint string, allowAllMerge bool, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
 	UpdateUserError    error
 	UpdateUserResponse string
 
@@ -438,37 +438,37 @@ type MockOAuth struct {
 	ExchangeTokenResponse *descope.AuthenticationInfo
 }
 
-func (m *MockOAuth) Start(_ context.Context, provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
+func (m *MockOAuth) Start(_ context.Context, provider descope.OAuthProvider, redirectURL string, loginHint string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
 	if m.StartAssert != nil {
-		m.StartAssert(provider, redirectURL, r, loginOptions, w)
+		m.StartAssert(provider, redirectURL, loginHint, r, loginOptions, w)
 	}
 	return m.StartResponse, m.StartError
 }
 
-func (m *MockOAuth) SignUpOrIn(_ context.Context, provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
+func (m *MockOAuth) SignUpOrIn(_ context.Context, provider descope.OAuthProvider, redirectURL string, loginHint string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
 	if m.SignUpOrInAssert != nil {
-		m.SignUpOrInAssert(provider, redirectURL, r, loginOptions, w)
+		m.SignUpOrInAssert(provider, redirectURL, loginHint, r, loginOptions, w)
 	}
 	return m.SignUpOrInResponse, m.SignUpOrInError
 }
 
-func (m *MockOAuth) SignIn(_ context.Context, provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
+func (m *MockOAuth) SignIn(_ context.Context, provider descope.OAuthProvider, redirectURL string, loginHint string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
 	if m.SignInAssert != nil {
-		m.SignInAssert(provider, redirectURL, r, loginOptions, w)
+		m.SignInAssert(provider, redirectURL, loginHint, r, loginOptions, w)
 	}
 	return m.SignInResponse, m.SignInError
 }
 
-func (m *MockOAuth) SignUp(_ context.Context, provider descope.OAuthProvider, redirectURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
+func (m *MockOAuth) SignUp(_ context.Context, provider descope.OAuthProvider, redirectURL string, loginHint string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
 	if m.SignUpAssert != nil {
-		m.SignUpAssert(provider, redirectURL, r, loginOptions, w)
+		m.SignUpAssert(provider, redirectURL, loginHint, r, loginOptions, w)
 	}
 	return m.SignUpResponse, m.SignUpError
 }
 
-func (m *MockOAuth) UpdateUser(_ context.Context, provider descope.OAuthProvider, redirectURL string, allowAllMerge bool, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
+func (m *MockOAuth) UpdateUser(_ context.Context, provider descope.OAuthProvider, redirectURL string, loginHint string, allowAllMerge bool, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
 	if m.UpdateUserAssert != nil {
-		m.UpdateUserAssert(provider, redirectURL, allowAllMerge, r, loginOptions, w)
+		m.UpdateUserAssert(provider, redirectURL, loginHint, allowAllMerge, r, loginOptions, w)
 	}
 	return m.UpdateUserResponse, m.UpdateUserError
 }
@@ -509,7 +509,7 @@ func (m *MockSAML) ExchangeToken(_ context.Context, code string, w http.Response
 // Mock SSO
 
 type MockSSO struct {
-	StartAssert   func(tenant string, redirectURL string, prompt string, ssoID string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
+	StartAssert   func(tenant string, redirectURL string, prompt string, ssoID string, loginHint string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter)
 	StartError    error
 	StartResponse string
 
@@ -518,9 +518,9 @@ type MockSSO struct {
 	ExchangeTokenResponse *descope.AuthenticationInfo
 }
 
-func (m *MockSSO) Start(_ context.Context, tenant string, redirectURL string, prompt string, ssoID string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
+func (m *MockSSO) Start(_ context.Context, tenant string, redirectURL string, prompt string, ssoID string, loginHint string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error) {
 	if m.StartAssert != nil {
-		m.StartAssert(tenant, redirectURL, prompt, ssoID, r, loginOptions, w)
+		m.StartAssert(tenant, redirectURL, prompt, ssoID, loginHint, r, loginOptions, w)
 	}
 	return m.StartResponse, m.StartError
 }

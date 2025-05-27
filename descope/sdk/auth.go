@@ -209,32 +209,32 @@ type OAuth interface {
 	// returns an error upon failure and a string represent the redirect URL upon success.
 	// Uses the response writer to automatically redirect the client to the provider url for authentication.
 	// A successful authentication will result in a callback to the url defined in the current project settings.
-	Start(ctx context.Context, provider descope.OAuthProvider, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error)
+	Start(ctx context.Context, provider descope.OAuthProvider, returnURL string, loginHint string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error)
 
 	// SignUpOrIn - Use to start an OAuth authentication using the given OAuthProvider.
 	// returns an error upon failure and a string represent the redirect URL upon success.
 	// Uses the response writer to automatically redirect the client to the provider url for authentication.
 	// A successful authentication will result in a callback to the url defined in the current project settings.
-	SignUpOrIn(ctx context.Context, provider descope.OAuthProvider, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error)
+	SignUpOrIn(ctx context.Context, provider descope.OAuthProvider, returnURL string, loginHint string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error)
 
 	// SignUp - Use to start an OAuth authentication using the given OAuthProvider to create a new user.
 	// returns an error upon failure and a string represent the redirect URL upon success.
 	// Uses the response writer to automatically redirect the client to the provider url for authentication.
 	// A successful authentication will result in a callback to the url defined in the current project settings.
-	SignUp(ctx context.Context, provider descope.OAuthProvider, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error)
+	SignUp(ctx context.Context, provider descope.OAuthProvider, returnURL string, loginHint string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error)
 
 	// SignIn - Use to start an OAuth authentication using the given OAuthProvider to sign in an existing user.
 	// returns an error upon failure and a string represent the redirect URL upon success.
 	// Uses the response writer to automatically redirect the client to the provider url for authentication.
 	// A successful authentication will result in a callback to the url defined in the current project settings.
-	SignIn(ctx context.Context, provider descope.OAuthProvider, returnURL string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error)
+	SignIn(ctx context.Context, provider descope.OAuthProvider, returnURL string, loginHint string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error)
 
 	// UserUpdate - Use to start an OAuth authentication using the given OAuthProvider to enable an existing user to sign in also with OAuth method.
 	// returns an error upon failure and a string represent the redirect URL upon success.
 	// Uses the response writer to automatically redirect the client to the provider url for authentication.
 	// A successful authentication will result in a callback to the url defined in the current project settings.
 	// allowAllMerge - allow updating the existing user also if there is no common identifier between the OAuth and the existing user (like email)
-	UpdateUser(ctx context.Context, provider descope.OAuthProvider, returnURL string, allowAllMerge bool, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error)
+	UpdateUser(ctx context.Context, provider descope.OAuthProvider, returnURL string, loginHint string, allowAllMerge bool, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (string, error)
 
 	// ExchangeToken - Finalize OAuth
 	// code should be extracted from the redirect URL of OAth/SAML authentication flow
@@ -262,7 +262,8 @@ type SSOServiceProvider interface {
 	// and finalize with the ExchangeToken call
 	// prompt argument relevant only in case tenant configured with AuthType OIDC
 	// ssoID can be used for providing the relevant SSO configuration (when having multiple SSO configurations per tenant)
-	Start(ctx context.Context, tenant string, returnURL string, prompt string, ssoID string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (redirectURL string, err error)
+	// loginHint Optional login hint sent to the IdP as a query parameter (e.g., pre-fill username)
+	Start(ctx context.Context, tenant string, returnURL string, prompt string, ssoID string, loginHint string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (redirectURL string, err error)
 
 	// ExchangeToken - Finalize tenant login authentication
 	// code should be extracted from the redirect URL of SAML/OIDC authentication flow
