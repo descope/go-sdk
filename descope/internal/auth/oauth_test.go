@@ -24,7 +24,7 @@ func TestOAuthStartForwardResponse(t *testing.T) {
 	loginHint := "aaaa@bb.com"
 	provider := descope.OAuthGithub
 	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {
-		assert.EqualValues(t, fmt.Sprintf("%s?provider=%s&redirectURL=%s&loginHint=%s", composeOAuthSignUpOrInURL(), provider, url.QueryEscape(landingURL), url.QueryEscape(loginHint)), r.URL.RequestURI())
+		assert.EqualValues(t, fmt.Sprintf("%s?loginHint=%s&provider=%s&redirectURL=%s", composeOAuthSignUpOrInURL(), url.QueryEscape(loginHint), provider, url.QueryEscape(landingURL)), r.URL.RequestURI())
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
@@ -41,7 +41,7 @@ func TestOAuthSignInForwardResponse(t *testing.T) {
 	loginHint := "aaaa@bb.com"
 	provider := descope.OAuthGithub
 	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {
-		assert.EqualValues(t, fmt.Sprintf("%s?provider=%s&redirectURL=%s&loginHint=%s", composeOAuthSignUpOrInURL(), provider, url.QueryEscape(landingURL), url.QueryEscape(loginHint)), r.URL.RequestURI())
+		assert.EqualValues(t, fmt.Sprintf("%s?loginHint=%s&provider=%s&redirectURL=%s", composeOAuthSignInURL(), url.QueryEscape(loginHint), provider, url.QueryEscape(landingURL)), r.URL.RequestURI())
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
@@ -58,7 +58,7 @@ func TestOAuthSignUpForwardResponse(t *testing.T) {
 	loginHint := "aaaa@bb.com"
 	provider := descope.OAuthGithub
 	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {
-		assert.EqualValues(t, fmt.Sprintf("%s?provider=%s&redirectURL=%s&loginHint=%s", composeOAuthSignUpOrInURL(), provider, url.QueryEscape(landingURL), url.QueryEscape(loginHint)), r.URL.RequestURI())
+		assert.EqualValues(t, fmt.Sprintf("%s?loginHint=%s&provider=%s&redirectURL=%s", composeOAuthSignUpURL(), url.QueryEscape(loginHint), provider, url.QueryEscape(landingURL)), r.URL.RequestURI())
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
@@ -75,7 +75,7 @@ func TestOAuthUpdateUserForwardResponse(t *testing.T) {
 	loginHint := "aaaa@bb.com"
 	provider := descope.OAuthGithub
 	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {
-		assert.EqualValues(t, fmt.Sprintf("%s?allowAllMerge=%s&provider=%s&redirectURL=%s&loginHint=%s", composeOAuthUpdateUserURL(), "true", provider, url.QueryEscape(landingURL), url.QueryEscape(loginHint)), r.URL.RequestURI())
+		assert.EqualValues(t, fmt.Sprintf("%s?allowAllMerge=%s&loginHint=%s&provider=%s&redirectURL=%s", composeOAuthUpdateUserURL(), "true", url.QueryEscape(loginHint), provider, url.QueryEscape(landingURL)), r.URL.RequestURI())
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()

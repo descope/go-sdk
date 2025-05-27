@@ -44,7 +44,7 @@ func TestSSOStartWithSSOID(t *testing.T) {
 	ssoID := "lu lu"
 	loginHint := "bu lu"
 	a, err := newTestAuth(nil, DoRedirect(uri, func(r *http.Request) {
-		assert.EqualValues(t, fmt.Sprintf("%s?prompt=%s&redirectURL=%s&ssoId=%s&tenant=%s&loginHint=%s", composeSSOStartURL(), prompt, url.QueryEscape(landingURL), url.QueryEscape(ssoID), url.QueryEscape(loginHint), tenant), r.URL.RequestURI())
+		assert.EqualValues(t, fmt.Sprintf("%s?loginHint=%s&prompt=%s&redirectURL=%s&ssoId=%s&tenant=%s", composeSSOStartURL(), url.QueryEscape(loginHint), prompt, url.QueryEscape(landingURL), url.QueryEscape(ssoID), tenant), r.URL.RequestURI())
 		assert.Nil(t, r.Body)
 	}))
 	require.NoError(t, err)
