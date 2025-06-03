@@ -355,6 +355,11 @@ type SignUpOptions struct {
 	TemplateOptions map[string]string      `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 }
 
+type EmbeddedLinkLoginOptions struct {
+	LoginOptions
+	Timeout int64 `json:"timeout,omitempty"` // timeout in seconds for the embedded link to be valid, default is 60 seconds
+}
+
 type JWTResponse struct {
 	SessionJwt       string        `json:"sessionJwt,omitempty"`
 	RefreshJwt       string        `json:"refreshJwt,omitempty"`

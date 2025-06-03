@@ -691,14 +691,48 @@ type embeddedLinkRes struct {
 	Token string `json:"token"`
 }
 
-func (u *user) GenerateEmbeddedLink(ctx context.Context, loginID string, customClaims map[string]any) (string, error) {
+func (u *user) GenerateEmbeddedLink(ctx context.Context, loginID string, customClaims map[string]any, timeout int64) (string, error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementGenerateEmbeddedLink(), map[string]any{
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementGenerateSigninEmbeddedLink(), map[string]any{
 		"loginId":      loginID,
 		"customClaims": customClaims,
+		"timeout":      timeout,
 	}, nil, u.conf.ManagementKey)
+	if err != nil {
+		return "", err
+	}
+	tRes := &embeddedLinkRes{}
+	err = utils.Unmarshal([]byte(res.BodyStr), tRes)
+	if err != nil {
+		return "", err //notest
+	}
+	return tRes.Token, nil
+}
+
+func (u *user) GenerateEmbeddedLinkSignUp(ctx context.Context, loginID string, user *descope.MgmtUserRequest, loginOptions *descope.EmbeddedLinkLoginOptions) (string, error) {
+	if loginID == "" {
+		return "", utils.NewInvalidArgumentError("loginID")
+	}
+
+	if loginOptions == nil {
+		loginOptions = &descope.EmbeddedLinkLoginOptions{}
+	}
+
+	if user == nil {
+		user = &descope.MgmtUserRequest{}
+	}
+
+	arb := &map[string]any{
+		"loginId":       loginID,
+		"user":          &user.User,
+		"emailVerified": user.EmailVerified,
+		"phoneVerified": user.PhoneVerified,
+		"loginOptions":  loginOptions.LoginOptions,
+		"timeout":       loginOptions.Timeout,
+	}
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementGenerateSignUpEmbeddedLink(), arb, nil, u.conf.ManagementKey)
 	if err != nil {
 		return "", err
 	}
