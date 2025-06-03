@@ -481,9 +481,13 @@ type MockUser struct {
 	GenerateEnchantedLinkForTestUserResponsePendingRef string
 	GenerateEnchantedLinkForTestUserError              error
 
-	GenerateEmbeddedLinkAssert   func(loginID string, customClaims map[string]any)
+	GenerateEmbeddedLinkAssert   func(loginID string, customClaims map[string]any, timeout int64)
 	GenerateEmbeddedLinkResponse string
 	GenerateEmbeddedLinkError    error
+
+	GenerateEmbeddedLinkSignUpAssert   func(loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.EmbeddedLinkLoginOptions)
+	GenerateEmbeddedLinkSignUpResponse string
+	GenerateEmbeddedLinkSignUpError    error
 
 	LogoutAssert func(id string, sessionTypes ...string)
 	LogoutError  error
@@ -830,11 +834,18 @@ func (m *MockUser) GenerateEnchantedLinkForTestUser(_ context.Context, loginID, 
 	return m.GenerateEnchantedLinkForTestUserResponseLink, m.GenerateEnchantedLinkForTestUserResponsePendingRef, m.GenerateEnchantedLinkForTestUserError
 }
 
-func (m *MockUser) GenerateEmbeddedLink(_ context.Context, loginID string, customClaims map[string]any) (string, error) {
+func (m *MockUser) GenerateEmbeddedLink(_ context.Context, loginID string, customClaims map[string]any, timeout int64) (string, error) {
 	if m.GenerateEmbeddedLinkAssert != nil {
-		m.GenerateEmbeddedLinkAssert(loginID, customClaims)
+		m.GenerateEmbeddedLinkAssert(loginID, customClaims, timeout)
 	}
 	return m.GenerateEmbeddedLinkResponse, m.GenerateEmbeddedLinkError
+}
+
+func (m *MockUser) GenerateEmbeddedLinkSignUp(_ context.Context, loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.EmbeddedLinkLoginOptions) (string, error) {
+	if m.GenerateEmbeddedLinkSignUpAssert != nil {
+		m.GenerateEmbeddedLinkSignUpAssert(loginID, user, signUpOptions)
+	}
+	return m.GenerateEmbeddedLinkSignUpResponse, m.GenerateEmbeddedLinkSignUpError
 }
 
 func (m *MockUser) History(_ context.Context, userIDs []string) ([]*descope.UserHistoryResponse, error) {

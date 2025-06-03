@@ -138,7 +138,8 @@ var (
 			userGenerateOTPForTest:                   "mgmt/tests/generate/otp",
 			userGenerateMagicLinkForTest:             "mgmt/tests/generate/magiclink",
 			userGenerateEnchantedLinkForTest:         "mgmt/tests/generate/enchantedlink",
-			userCreateEmbeddedLink:                   "mgmt/user/signin/embeddedlink",
+			userCreateSigninEmbeddedLink:             "mgmt/user/signin/embeddedlink",
+			userCreateSignUpEmbeddedLink:             "mgmt/user/signup/embeddedlink",
 			userHistory:                              "mgmt/user/history",
 			accessKeyCreate:                          "mgmt/accesskey/create",
 			accessKeyLoad:                            "mgmt/accesskey",
@@ -366,7 +367,8 @@ type mgmtEndpoints struct {
 	userGenerateOTPForTest           string
 	userGenerateMagicLinkForTest     string
 	userGenerateEnchantedLinkForTest string
-	userCreateEmbeddedLink           string
+	userCreateSigninEmbeddedLink     string
+	userCreateSignUpEmbeddedLink     string
 
 	userHistory string
 
@@ -1011,8 +1013,12 @@ func (e *endpoints) Anonymous() string {
 	return path.Join(e.version, e.mgmt.anonymous)
 }
 
-func (e *endpoints) ManagementGenerateEmbeddedLink() string {
-	return path.Join(e.version, e.mgmt.userCreateEmbeddedLink)
+func (e *endpoints) ManagementGenerateSigninEmbeddedLink() string {
+	return path.Join(e.version, e.mgmt.userCreateSigninEmbeddedLink)
+}
+
+func (e *endpoints) ManagementGenerateSignUpEmbeddedLink() string {
+	return path.Join(e.version, e.mgmt.userCreateSignUpEmbeddedLink)
 }
 
 func (e *endpoints) ManagementPermissionCreate() string {

@@ -1982,9 +1982,10 @@ func TestGenerateEmbeddedLink(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.EqualValues(t, loginID, req["loginId"])
 		require.NotEmpty(t, req["customClaims"])
+		assert.EqualValues(t, 44, req["timeout"])
 
 	}, map[string]interface{}{"token": readyToken}))
-	token, err := mgmt.User().GenerateEmbeddedLink(context.Background(), loginID, map[string]any{"ak": "av"})
+	token, err := mgmt.User().GenerateEmbeddedLink(context.Background(), loginID, map[string]any{"ak": "av"}, 44)
 	require.NoError(t, err)
 	require.EqualValues(t, readyToken, token)
 }
@@ -1995,7 +1996,7 @@ func TestGenerateEmbeddedLinkMissingLoginID(t *testing.T) {
 		called = true
 
 	}))
-	token, err := mgmt.User().GenerateEmbeddedLink(context.Background(), "", map[string]any{"ak": "av"})
+	token, err := mgmt.User().GenerateEmbeddedLink(context.Background(), "", map[string]any{"ak": "av"}, 0)
 	require.Error(t, err)
 	require.False(t, called)
 	require.Empty(t, token)
@@ -2006,7 +2007,52 @@ func TestGenerateEmbeddedLinkHTTPError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(_ *http.Request) {
 		called = true
 	}))
-	token, err := mgmt.User().GenerateEmbeddedLink(context.Background(), "test", map[string]any{"ak": "av"})
+	token, err := mgmt.User().GenerateEmbeddedLink(context.Background(), "test", map[string]any{"ak": "av"}, 13)
+	require.Error(t, err)
+	require.True(t, called)
+	require.Empty(t, token)
+}
+
+func TestGenerateEmbeddedLinkSignUp(t *testing.T) {
+	readyToken := "orgjwt"
+	loginID := "sometext"
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.EqualValues(t, loginID, req["loginId"])
+		require.NotEmpty(t, req["loginOptions"])
+		assert.EqualValues(t, 44, req["timeout"])
+
+	}, map[string]any{"token": readyToken}))
+	token, err := mgmt.User().GenerateEmbeddedLinkSignUp(context.Background(), loginID, &descope.MgmtUserRequest{}, &descope.EmbeddedLinkLoginOptions{
+		LoginOptions: descope.LoginOptions{
+			CustomClaims: map[string]any{"ak": "av"},
+		},
+		Timeout: 44,
+	})
+	require.NoError(t, err)
+	require.EqualValues(t, readyToken, token)
+}
+
+func TestGenerateEmbeddedLinkSignUpMissingLoginID(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+
+	}))
+	token, err := mgmt.User().GenerateEmbeddedLinkSignUp(context.Background(), "", nil, nil)
+	require.Error(t, err)
+	require.False(t, called)
+	require.Empty(t, token)
+}
+
+func TestGenerateEmbeddedLinkSignUpHTTPError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(_ *http.Request) {
+		called = true
+	}))
+	token, err := mgmt.User().GenerateEmbeddedLinkSignUp(context.Background(), "test", nil, nil)
 	require.Error(t, err)
 	require.True(t, called)
 	require.Empty(t, token)

@@ -1399,7 +1399,7 @@ if err != nil {
 ```go
 // Embedded links can be created to directly receive a verifiable token without sending it.
 // This token can then be verified using the magic link 'verify' function, either directly or through a flow.
-token, err := descopeClient.Management.User().GenerateEmbeddedLink(context.Background(), "desmond@descope.com", map[string]any{"key1":"value1"})
+token, err := descopeClient.Management.User().GenerateEmbeddedLink(context.Background(), "desmond@descope.com", map[string]any{"key1":"value1"}, timeout int64)
 ```
 
 ### Audit
