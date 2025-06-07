@@ -1047,7 +1047,7 @@ const (
 	ProjectEnvironmentProduction ProjectEnvironment = "production"
 
 	SessionCookieName = "DS"
-	RefreshCookieName = "DSR"
+	RefreshCookieName = "DSR" // default refresh cookie name, but it can be configured if needed
 
 	RedirectLocationCookieName = "Location"
 
