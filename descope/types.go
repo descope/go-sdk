@@ -806,6 +806,7 @@ type Role struct {
 	PermissionNames []string `json:"permissionNames,omitempty"`
 	CreatedTime     int32    `json:"createdTime,omitempty"`
 	TenantID        string   `json:"tenantId,omitempty"`
+	Default         bool     `json:"default,omitempty"`
 }
 
 func (r *Role) GetCreatedTime() time.Time {
