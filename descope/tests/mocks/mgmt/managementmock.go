@@ -975,6 +975,9 @@ type MockTenant struct {
 	GenerateSSOConfigurationLinkAssert   func(tenantID string, expireDuration int64, ssoID string, email string, templateID string)
 	GenerateSSOConfigurationLinkResponse string
 	GenerateSSOConfigurationLinkError    error
+
+	RevokeSSOConfigurationLinkAssert func(tenantID string, ssoID string)
+	RevokeSSOConfigurationLinkError  error
 }
 
 func (m *MockTenant) Create(_ context.Context, tenantRequest *descope.TenantRequest) (id string, err error) {
@@ -1039,6 +1042,13 @@ func (m *MockTenant) GenerateSSOConfigurationLink(_ context.Context, tenantID st
 		m.GenerateSSOConfigurationLinkAssert(tenantID, expireDuration, ssoID, email, templateID)
 	}
 	return m.GenerateSSOConfigurationLinkResponse, m.GenerateSSOConfigurationLinkError
+}
+
+func (m *MockTenant) RevokeSSOConfigurationLink(_ context.Context, tenantID string, ssoID string) error {
+	if m.RevokeSSOConfigurationLinkAssert != nil {
+		m.RevokeSSOConfigurationLinkAssert(tenantID, ssoID)
+	}
+	return m.RevokeSSOConfigurationLinkError
 }
 
 // Mock SSOApplication

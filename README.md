@@ -814,6 +814,9 @@ err := descopeClient.Management.Tenant().ConfigureSettings(context.Background(),
 // email can be provided to send the link to (email's templateID can be provided as well)
 link, err := descopeClient.Management.Tenant().GenerateSSOConfigurationLink(context.Background(), "My Tenant", 60 * 60 * 24, "", "", "")
 
+// Revoke tenant admin self service link for SSO Suite
+// sso id can be provided for a specific sso configuration
+err := descopeClient.Management.Tenant().RevokeSSOConfigurationLink(context.Background(), "My Tenant", "")
 ```
 
 ### Manage Users
