@@ -94,6 +94,7 @@ var (
 			tenantSearchAll:                          "mgmt/tenant/search",
 			tenantSettings:                           "mgmt/tenant/settings",
 			tenantGenerateSSOConfigurationLink:       "mgmt/tenant/adminlinks/sso/generate",
+			tenantRevokeSSOConfigurationLink:         "mgmt/tenant/adminlinks/sso/revoke",
 			ssoApplicationOIDCCreate:                 "mgmt/sso/idp/app/oidc/create",
 			ssoApplicationSAMLCreate:                 "mgmt/sso/idp/app/saml/create",
 			ssoApplicationOIDCUpdate:                 "mgmt/sso/idp/app/oidc/update",
@@ -320,6 +321,7 @@ type mgmtEndpoints struct {
 	tenantSettings  string
 
 	tenantGenerateSSOConfigurationLink string
+	tenantRevokeSSOConfigurationLink   string
 
 	ssoApplicationOIDCCreate string
 	ssoApplicationSAMLCreate string
@@ -733,6 +735,10 @@ func (e *endpoints) ManagementTenantSettings() string {
 
 func (e *endpoints) ManagementTenantGenerateSSOConfigurationLink() string {
 	return path.Join(e.versionV2, e.mgmt.tenantGenerateSSOConfigurationLink)
+}
+
+func (e *endpoints) ManagementTenantRevokeSSOConfigurationLink() string {
+	return path.Join(e.version, e.mgmt.tenantRevokeSSOConfigurationLink)
 }
 
 func (e *endpoints) ManagementSSOApplicationOIDCCreate() string {

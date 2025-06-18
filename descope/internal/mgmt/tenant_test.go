@@ -362,3 +362,53 @@ func TestTenantGenerateSSOConfigurationLinkNoTenantID(t *testing.T) {
 	require.ErrorIs(t, err, utils.NewInvalidArgumentError("tenantId"))
 	assert.Empty(t, link)
 }
+
+func TestTenantRevokeSSOConfigurationLinkSuccess(t *testing.T) {
+	response := map[string]any{}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "tenant", req["tenantId"])
+		require.Equal(t, "", req["ssoId"])
+	}, response))
+	err := mgmt.Tenant().RevokeSSOConfigurationLink(context.Background(), "tenant", "")
+	require.NoError(t, err)
+}
+
+func TestTenantRevokeSSOConfigurationLinkSuccessWithSSOID(t *testing.T) {
+	response := map[string]any{}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "tenant", req["tenantId"])
+		require.Equal(t, "bla", req["ssoId"])
+	}, response))
+	err := mgmt.Tenant().RevokeSSOConfigurationLink(context.Background(), "tenant", "bla")
+	require.NoError(t, err)
+}
+
+func TestTenantRevokeSSOConfigurationLinkError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "tenant", req["tenantId"])
+		require.Equal(t, "", req["ssoId"])
+	}))
+	err := mgmt.Tenant().RevokeSSOConfigurationLink(context.Background(), "tenant", "")
+	require.Error(t, err)
+}
+
+func TestTenantRevokeSSOConfigurationLinkNoTenantID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "tenant", req["tenantId"])
+		require.Equal(t, "ssoId", "")
+	}))
+	err := mgmt.Tenant().RevokeSSOConfigurationLink(context.Background(), "", "")
+	require.ErrorIs(t, err, utils.NewInvalidArgumentError("tenantId"))
+}

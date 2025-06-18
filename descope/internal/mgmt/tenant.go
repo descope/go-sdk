@@ -167,6 +167,20 @@ func (t *tenant) GenerateSSOConfigurationLink(ctx context.Context, tenantID stri
 	return unmarshalGenerateSSOConfigurationLinkResponse(res)
 }
 
+func (t *tenant) RevokeSSOConfigurationLink(ctx context.Context, tenantID string, ssoID string) error {
+	if tenantID == "" {
+		return utils.NewInvalidArgumentError("tenantID")
+	}
+
+	req := map[string]any{
+		"tenantId": tenantID,
+		"ssoId":    ssoID,
+	}
+
+	_, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantRevokeSSOConfigurationLink(), req, nil, t.conf.ManagementKey)
+	return err
+}
+
 func makeCreateUpdateTenantRequest(id string, tenantRequest *descope.TenantRequest) map[string]any {
 	return map[string]any{"id": id, "name": tenantRequest.Name, "selfProvisioningDomains": tenantRequest.SelfProvisioningDomains, "customAttributes": tenantRequest.CustomAttributes, "enforceSSO": tenantRequest.EnforceSSO, "disabled": tenantRequest.Disabled}
 }
