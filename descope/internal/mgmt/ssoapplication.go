@@ -124,13 +124,15 @@ func (s *ssoApplication) LoadAll(ctx context.Context) ([]*descope.SSOApplication
 
 func makeCreateUpdateOIDCApplicationRequest(appRequest *descope.OIDCApplicationRequest) map[string]any {
 	return map[string]any{
-		"id":                  appRequest.ID,
-		"name":                appRequest.Name,
-		"description":         appRequest.Description,
-		"enabled":             appRequest.Enabled,
-		"logo":                appRequest.Logo,
-		"loginPageUrl":        appRequest.LoginPageURL,
-		"forceAuthentication": appRequest.ForceAuthentication,
+		"id":                   appRequest.ID,
+		"name":                 appRequest.Name,
+		"description":          appRequest.Description,
+		"enabled":              appRequest.Enabled,
+		"logo":                 appRequest.Logo,
+		"loginPageUrl":         appRequest.LoginPageURL,
+		"forceAuthentication":  appRequest.ForceAuthentication,
+		"jwtBearerSettings":    appRequest.JWTBearerSettings,
+		"backChannelLogoutUrl": appRequest.BackChannelLogoutURL,
 	}
 }
 

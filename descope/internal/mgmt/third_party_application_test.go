@@ -22,6 +22,15 @@ func TestThirdPartyApplicationCreateSuccess(t *testing.T) {
 		require.Equal(t, "desc", req["description"])
 		require.Equal(t, "logo", req["logo"])
 		require.Equal(t, "http://dummy.com", req["loginPageUrl"])
+		d, ok := req["jwtBearerSettings"].(map[string]any)
+		require.True(t, ok)
+		d, ok = d["issuers"].(map[string]any)
+		require.True(t, ok)
+		require.Len(t, d, 1)
+		require.EqualValues(t, "http://dummy.com/jwks", d["issuer1"].(map[string]any)["jwksUri"])
+		require.EqualValues(t, "RS256", d["issuer1"].(map[string]any)["signAlgorithm"])
+		require.EqualValues(t, "http://dummy.com/userinfo", d["issuer1"].(map[string]any)["userInfoUri"])
+		require.EqualValues(t, "sub", d["issuer1"].(map[string]any)["externalIdFieldName"])
 	}, response))
 
 	id, secret, err := mgmt.ThirdPartyApplication().CreateApplication(context.Background(), &descope.ThirdPartyApplicationRequest{
@@ -30,6 +39,16 @@ func TestThirdPartyApplicationCreateSuccess(t *testing.T) {
 		Description:  "desc",
 		Logo:         "logo",
 		LoginPageURL: "http://dummy.com",
+		JWTBearerSettings: &descope.JWTBearerSettings{
+			Issuers: map[string]descope.IssuerSettings{
+				"issuer1": {
+					JWKsURI:             "http://dummy.com/jwks",
+					SignAlgorithm:       "RS256",
+					UserInfoURI:         "http://dummy.com/userinfo",
+					ExternalIDFieldName: "sub",
+				},
+			},
+		},
 	})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)
@@ -66,6 +85,15 @@ func TestThirdPartyApplicationUpdateSuccess(t *testing.T) {
 		require.Equal(t, []any{"http://dummy.com/callback"}, req["approvedCallbackUrls"])
 		require.Equal(t, []any{map[string]any{"name": "scope1", "description": "desc1", "values": []any{"v1"}}}, req["permissionsScopes"])
 		require.Equal(t, []any{map[string]any{"name": "scope2", "description": "desc2", "values": []any{"v2"}}}, req["attributesScopes"])
+		d, ok := req["jwtBearerSettings"].(map[string]any)
+		require.True(t, ok)
+		d, ok = d["issuers"].(map[string]any)
+		require.True(t, ok)
+		require.Len(t, d, 1)
+		require.EqualValues(t, "http://dummy.com/jwks", d["issuer1"].(map[string]any)["jwksUri"])
+		require.EqualValues(t, "RS256", d["issuer1"].(map[string]any)["signAlgorithm"])
+		require.EqualValues(t, "http://dummy.com/userinfo", d["issuer1"].(map[string]any)["userInfoUri"])
+		require.EqualValues(t, "sub", d["issuer1"].(map[string]any)["externalIdFieldName"])
 	}, response))
 
 	err := mgmt.ThirdPartyApplication().UpdateApplication(context.Background(), &descope.ThirdPartyApplicationRequest{
@@ -77,6 +105,16 @@ func TestThirdPartyApplicationUpdateSuccess(t *testing.T) {
 		ApprovedCallbackUrls: []string{"http://dummy.com/callback"},
 		PermissionsScopes:    []*descope.ThirdPartyApplicationScope{{Name: "scope1", Description: "desc1", Values: []string{"v1"}}},
 		AttributesScopes:     []*descope.ThirdPartyApplicationScope{{Name: "scope2", Description: "desc2", Values: []string{"v2"}}},
+		JWTBearerSettings: &descope.JWTBearerSettings{
+			Issuers: map[string]descope.IssuerSettings{
+				"issuer1": {
+					JWKsURI:             "http://dummy.com/jwks",
+					SignAlgorithm:       "RS256",
+					UserInfoURI:         "http://dummy.com/userinfo",
+					ExternalIDFieldName: "sub",
+				},
+			},
+		},
 	})
 	require.NoError(t, err)
 }
@@ -214,6 +252,16 @@ func TestThirdPartyApplicationLoadSuccess(t *testing.T) {
 		"attributesScopes": []map[string]any{
 			{"name": "scope2", "description": "desc2"},
 		},
+		"jwtBearerSettings": map[string]any{
+			"issuers": map[string]any{
+				"issuer1": map[string]any{
+					"jwksUri":             "http://dummy.com/jwks",
+					"signAlgorithm":       "RS256",
+					"userInfoUri":         "http://dummy.com/userinfo",
+					"externalIdFieldName": "sub",
+				},
+			},
+		},
 	}
 
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -233,6 +281,11 @@ func TestThirdPartyApplicationLoadSuccess(t *testing.T) {
 	require.Len(t, res.AttributesScopes, 1)
 	require.Equal(t, "scope2", res.AttributesScopes[0].Name)
 	require.Equal(t, "desc2", res.AttributesScopes[0].Description)
+	require.Len(t, res.JWTBearerSettings.Issuers, 1)
+	require.EqualValues(t, "http://dummy.com/jwks", res.JWTBearerSettings.Issuers["issuer1"].JWKsURI)
+	require.EqualValues(t, "RS256", res.JWTBearerSettings.Issuers["issuer1"].SignAlgorithm)
+	require.EqualValues(t, "http://dummy.com/userinfo", res.JWTBearerSettings.Issuers["issuer1"].UserInfoURI)
+	require.EqualValues(t, "sub", res.JWTBearerSettings.Issuers["issuer1"].ExternalIDFieldName)
 }
 
 func TestThirdPartyApplicationLoadError(t *testing.T) {

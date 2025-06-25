@@ -23,16 +23,37 @@ func TestSSOApplicationCreateOIDCApplicationSuccess(t *testing.T) {
 		require.Equal(t, "logo", req["logo"])
 		require.Equal(t, "http://dummy.com", req["loginPageUrl"])
 		require.True(t, req["forceAuthentication"].(bool))
+		require.EqualValues(t, "http://dummy.com/backchannel-logout", req["backChannelLogoutUrl"])
+		d, ok := req["jwtBearerSettings"].(map[string]any)
+		require.True(t, ok)
+		d, ok = d["issuers"].(map[string]any)
+		require.True(t, ok)
+		require.Len(t, d, 1)
+		require.EqualValues(t, "http://dummy.com/jwks", d["issuer1"].(map[string]any)["jwksUri"])
+		require.EqualValues(t, "RS256", d["issuer1"].(map[string]any)["signAlgorithm"])
+		require.EqualValues(t, "http://dummy.com/userinfo", d["issuer1"].(map[string]any)["userInfoUri"])
+		require.EqualValues(t, "sub", d["issuer1"].(map[string]any)["externalIdFieldName"])
 	}, response))
 
 	id, err := mgmt.SSOApplication().CreateOIDCApplication(context.Background(), &descope.OIDCApplicationRequest{
-		ID:                  "id1",
-		Name:                "abc",
-		Description:         "desc",
-		Enabled:             true,
-		Logo:                "logo",
-		LoginPageURL:        "http://dummy.com",
-		ForceAuthentication: true,
+		ID:                   "id1",
+		Name:                 "abc",
+		Description:          "desc",
+		Enabled:              true,
+		Logo:                 "logo",
+		LoginPageURL:         "http://dummy.com",
+		ForceAuthentication:  true,
+		BackChannelLogoutURL: "http://dummy.com/backchannel-logout",
+		JWTBearerSettings: &descope.JWTBearerSettings{
+			Issuers: map[string]descope.IssuerSettings{
+				"issuer1": {
+					JWKsURI:             "http://dummy.com/jwks",
+					SignAlgorithm:       "RS256",
+					UserInfoURI:         "http://dummy.com/userinfo",
+					ExternalIDFieldName: "sub",
+				},
+			},
+		},
 	})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)
@@ -133,16 +154,37 @@ func TestSSOApplicationUpdateOIDCApplicationSuccess(t *testing.T) {
 		require.Equal(t, "logo", req["logo"])
 		require.Equal(t, "http://dummy.com", req["loginPageUrl"])
 		require.True(t, req["forceAuthentication"].(bool))
+		require.EqualValues(t, "http://dummy.com/backchannel-logout", req["backChannelLogoutUrl"])
+		d, ok := req["jwtBearerSettings"].(map[string]any)
+		require.True(t, ok)
+		d, ok = d["issuers"].(map[string]any)
+		require.True(t, ok)
+		require.Len(t, d, 1)
+		require.EqualValues(t, "http://dummy.com/jwks", d["issuer1"].(map[string]any)["jwksUri"])
+		require.EqualValues(t, "RS256", d["issuer1"].(map[string]any)["signAlgorithm"])
+		require.EqualValues(t, "http://dummy.com/userinfo", d["issuer1"].(map[string]any)["userInfoUri"])
+		require.EqualValues(t, "sub", d["issuer1"].(map[string]any)["externalIdFieldName"])
 	}, response))
 
 	err := mgmt.SSOApplication().UpdateOIDCApplication(context.Background(), &descope.OIDCApplicationRequest{
-		ID:                  "id1",
-		Name:                "abc",
-		Description:         "desc",
-		Enabled:             true,
-		Logo:                "logo",
-		LoginPageURL:        "http://dummy.com",
-		ForceAuthentication: true,
+		ID:                   "id1",
+		Name:                 "abc",
+		Description:          "desc",
+		Enabled:              true,
+		Logo:                 "logo",
+		LoginPageURL:         "http://dummy.com",
+		ForceAuthentication:  true,
+		BackChannelLogoutURL: "http://dummy.com/backchannel-logout",
+		JWTBearerSettings: &descope.JWTBearerSettings{
+			Issuers: map[string]descope.IssuerSettings{
+				"issuer1": {
+					JWKsURI:             "http://dummy.com/jwks",
+					SignAlgorithm:       "RS256",
+					UserInfoURI:         "http://dummy.com/userinfo",
+					ExternalIDFieldName: "sub",
+				},
+			},
+		},
 	})
 	require.NoError(t, err)
 }
@@ -262,6 +304,17 @@ func TestSSOApplicationLoadOIDCSuccess(t *testing.T) {
 			"issuer":              "http://dummy.com/P2AAAAA",
 			"discoveryUrl":        "http://dummy.com/P2AAAAA/.well-known/openid-configuration",
 			"forceAuthentication": true,
+			"jwtBearerSettings": map[string]any{
+				"issuers": map[string]any{
+					"issuer1": map[string]any{
+						"jwksUri":             "http://dummy.com/jwks",
+						"signAlgorithm":       "RS256",
+						"userInfoUri":         "http://dummy.com/userinfo",
+						"externalIdFieldName": "sub",
+					},
+				},
+			},
+			"backChannelLogoutUrl": "http://dummy.com/backchannel-logout",
 		},
 	}
 
@@ -282,6 +335,12 @@ func TestSSOApplicationLoadOIDCSuccess(t *testing.T) {
 	require.Equal(t, "http://dummy.com/P2AAAAA", res.OIDCSettings.Issuer)
 	require.Equal(t, "http://dummy.com/P2AAAAA/.well-known/openid-configuration", res.OIDCSettings.DiscoveryURL)
 	require.True(t, res.OIDCSettings.ForceAuthentication)
+	require.EqualValues(t, "http://dummy.com/backchannel-logout", res.OIDCSettings.BackChannelLogoutURL)
+	require.Len(t, res.OIDCSettings.JWTBearerSettings.Issuers, 1)
+	require.EqualValues(t, "http://dummy.com/jwks", res.OIDCSettings.JWTBearerSettings.Issuers["issuer1"].JWKsURI)
+	require.EqualValues(t, "RS256", res.OIDCSettings.JWTBearerSettings.Issuers["issuer1"].SignAlgorithm)
+	require.EqualValues(t, "http://dummy.com/userinfo", res.OIDCSettings.JWTBearerSettings.Issuers["issuer1"].UserInfoURI)
+	require.EqualValues(t, "sub", res.OIDCSettings.JWTBearerSettings.Issuers["issuer1"].ExternalIDFieldName)
 	require.Nil(t, res.SAMLSettings)
 }
 
