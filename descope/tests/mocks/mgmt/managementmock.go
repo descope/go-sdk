@@ -25,6 +25,7 @@ type MockManagement struct {
 	*MockAuthz
 	*MockFGA
 	*MockThirdPartyApplication
+	*MockOutboundApplication
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -89,6 +90,10 @@ func (m *MockManagement) FGA() sdk.FGA {
 
 func (m *MockManagement) ThirdPartyApplication() sdk.ThirdPartyApplication {
 	return m.MockThirdPartyApplication
+}
+
+func (m *MockManagement) OutboundApplication() sdk.OutboundApplication {
+	return m.MockOutboundApplication
 }
 
 // Mock JWT
@@ -1823,4 +1828,57 @@ func (m *MockThirdPartyApplication) SearchConsents(_ context.Context, options *d
 		m.SearchConsentsAssert(options)
 	}
 	return m.SearchConsentsResponse, m.SearchConsentsTotalResponse, m.SearchConsentsError
+}
+
+// Mock Outbound Application
+type MockOutboundApplication struct {
+	UpdateApplicationAssert   func(*descope.OutboundApp, *string)
+	UpdateApplicationError    error
+	UpdateApplicationResponse *descope.OutboundApp
+
+	CreateApplicationAssert   func(*descope.OutboundApp, *string)
+	CreateApplicationError    error
+	CreateApplicationResponse *descope.OutboundApp
+
+	DeleteApplicationAssert func(id string)
+	DeleteApplicationError  error
+
+	LoadApplicationAssert   func(id string)
+	LoadApplicationResponse *descope.OutboundApp
+	LoadApplicationError    error
+
+	LoadAllApplicationsResponse []*descope.OutboundApp
+	LoadAllApplicationsError    error
+}
+
+func (m *MockOutboundApplication) CreateApplication(_ context.Context, appRequest *descope.OutboundApp, clientSecret *string) (app *descope.OutboundApp, err error) {
+	if m.CreateApplicationAssert != nil {
+		m.CreateApplicationAssert(appRequest, clientSecret)
+	}
+	return m.CreateApplicationResponse, m.CreateApplicationError
+}
+
+func (m *MockOutboundApplication) UpdateApplication(_ context.Context, appRequest *descope.OutboundApp, clientSecret *string) (app *descope.OutboundApp, err error) {
+	if m.UpdateApplicationAssert != nil {
+		m.UpdateApplicationAssert(appRequest, clientSecret)
+	}
+	return m.UpdateApplicationResponse, m.UpdateApplicationError
+}
+
+func (m *MockOutboundApplication) DeleteApplication(_ context.Context, id string) error {
+	if m.DeleteApplicationAssert != nil {
+		m.DeleteApplicationAssert(id)
+	}
+	return m.DeleteApplicationError
+}
+
+func (m *MockOutboundApplication) LoadApplication(_ context.Context, id string) (*descope.OutboundApp, error) {
+	if m.LoadApplicationAssert != nil {
+		m.LoadApplicationAssert(id)
+	}
+	return m.LoadApplicationResponse, m.LoadApplicationError
+}
+
+func (m *MockOutboundApplication) LoadAllApplications(_ context.Context) ([]*descope.OutboundApp, error) {
+	return m.LoadAllApplicationsResponse, m.LoadAllApplicationsError
 }

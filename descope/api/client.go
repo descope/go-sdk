@@ -220,13 +220,18 @@ var (
 			fgaSearchMappableResources:               "mgmt/fga/mappable/resources",
 			fgaResourcesLoad:                         "mgmt/fga/resources/load",
 			fgaResourcesSave:                         "mgmt/fga/resources/save",
+			outboundApplicationCreate:                "mgmt/outbound/app/create",
+			outboundApplicationUpdate:                "mgmt/outbound/app/update",
+			outboundApplicationDelete:                "mgmt/outbound/app/delete",
+			outboundApplicationLoad:                  "mgmt/outbound/app",
+			outboundApplicationLoadAll:               "mgmt/outbound/apps",
 			thirdPartyApplicationCreate:              "mgmt/thirdparty/app/create",
 			thirdPartyApplicationUpdate:              "mgmt/thirdparty/app/update",
 			thirdPartyApplicationPatch:               "mgmt/thirdparty/app/patch",
 			thirdPartyApplicationDelete:              "mgmt/thirdparty/app/delete",
 			thirdPartyApplicationLoad:                "mgmt/thirdparty/app/load",
 			thirdPartyApplicationLoadAll:             "mgmt/thirdparty/apps/load",
-			thidPartyApplicationSecret:               "mgmt/thirdparty/app/secret",
+			thirdPartyApplicationSecret:              "mgmt/thirdparty/app/secret",
 			thirdPartyApplicationRotate:              "mgmt/thirdparty/app/rotate",
 			thirdPartyApplicationConsentDelete:       "mgmt/thirdparty/consents/delete",
 			thirdPartyApplicationTenantConsentDelete: "mgmt/thirdparty/consents/delete/tenant",
@@ -466,13 +471,19 @@ type mgmtEndpoints struct {
 	fgaResourcesLoad           string
 	fgaResourcesSave           string
 
+	outboundApplicationCreate  string
+	outboundApplicationUpdate  string
+	outboundApplicationDelete  string
+	outboundApplicationLoad    string
+	outboundApplicationLoadAll string
+
 	thirdPartyApplicationCreate              string
 	thirdPartyApplicationUpdate              string
 	thirdPartyApplicationPatch               string
 	thirdPartyApplicationDelete              string
 	thirdPartyApplicationLoad                string
 	thirdPartyApplicationLoadAll             string
-	thidPartyApplicationSecret               string
+	thirdPartyApplicationSecret              string
 	thirdPartyApplicationRotate              string
 	thirdPartyApplicationConsentDelete       string
 	thirdPartyApplicationTenantConsentDelete string
@@ -1243,6 +1254,26 @@ func (e *endpoints) ManagementFGAResourcesSave() string {
 	return path.Join(e.version, e.mgmt.fgaResourcesSave)
 }
 
+func (e *endpoints) ManagementOutboundApplicationCreate() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationCreate)
+}
+
+func (e *endpoints) ManagementOutboundApplicationUpdate() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationUpdate)
+}
+
+func (e *endpoints) ManagementOutboundApplicationDelete() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationDelete)
+}
+
+func (e *endpoints) ManagementOutboundApplicationLoad() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationLoad)
+}
+
+func (e *endpoints) ManagementOutboundApplicationLoadAll() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationLoadAll)
+}
+
 func (e *endpoints) ManagementThirdPartyApplicationCreate() string {
 	return path.Join(e.version, e.mgmt.thirdPartyApplicationCreate)
 }
@@ -1268,7 +1299,7 @@ func (e *endpoints) ManagementThirdPartyApplicationPatch() string {
 }
 
 func (e *endpoints) ManagementThirdPartyApplicationSecret() string {
-	return path.Join(e.version, e.mgmt.thidPartyApplicationSecret)
+	return path.Join(e.version, e.mgmt.thirdPartyApplicationSecret)
 }
 
 func (e *endpoints) ManagementThirdPartyApplicationRotate() string {

@@ -1065,6 +1065,44 @@ const (
 	EnvironmentVariableBaseURL           = "DESCOPE_BASE_URL"
 )
 
+type AccessType string
+
+const AccessTypeOffline AccessType = "offline"
+const AccessTypeOnline AccessType = "online"
+
+type PromptType string
+
+const PromptTypeNone PromptType = "none"
+const PromptTypeLogin PromptType = "login"
+const PromptTypeConsent PromptType = "consent"
+const PromptTypeSelectAccount PromptType = "select_account"
+
+type URLParam struct {
+	Key   string `json:"key,omitempty"`
+	Value string `json:"value,omitempty"`
+}
+
+type OutboundApp struct {
+	ID                     string       `json:"id,omitempty"`
+	Name                   string       `json:"name,omitempty"`
+	Description            string       `json:"description,omitempty"`
+	TemplateID             string       `json:"templateId,omitempty"`
+	ClientID               string       `json:"clientId,omitempty"`
+	Logo                   string       `json:"logo,omitempty"`
+	DiscoveryURL           string       `json:"discoveryUrl,omitempty"`
+	AuthorizationURL       string       `json:"authorizationUrl,omitempty"`
+	AuthorizationURLParams []URLParam   `json:"authorizationUrlParams,omitempty"`
+	TokenURL               string       `json:"tokenUrl,omitempty"`
+	TokenURLParams         []URLParam   `json:"tokenUrlParams,omitempty"`
+	RevocationURL          string       `json:"revocationUrl,omitempty"`
+	DefaultScopes          []string     `json:"defaultScopes,omitempty"`
+	DefaultRedirectURL     string       `json:"defaultRedirectUrl,omitempty"`
+	CallbackDomain         string       `json:"callbackDomain,omitempty"`
+	Pkce                   bool         `json:"pkce,omitempty"`
+	AccessType             AccessType   `json:"accessType,omitempty"`
+	Prompt                 []PromptType `json:"prompt,omitempty"`
+}
+
 type ThirdPartyApplicationScope struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
