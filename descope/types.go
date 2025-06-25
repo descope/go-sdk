@@ -1103,6 +1103,11 @@ type OutboundApp struct {
 	Prompt                 []PromptType `json:"prompt,omitempty"`
 }
 
+type CreateOutboundAppRequest struct {
+	OutboundApp
+	ClientSecret string `json:"clientSecret,omitempty"`
+}
+
 type ThirdPartyApplicationScope struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`

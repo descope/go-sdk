@@ -15,7 +15,7 @@ type outboundApplication struct {
 
 var _ sdk.OutboundApplication = &outboundApplication{}
 
-func (s *outboundApplication) CreateApplication(ctx context.Context, appRequest *descope.OutboundApp, clientSecret *string) (app *descope.OutboundApp, err error) {
+func (s *outboundApplication) CreateApplication(ctx context.Context, appRequest *descope.CreateOutboundAppRequest) (app *descope.OutboundApp, err error) {
 	if appRequest == nil {
 		return nil, utils.NewInvalidArgumentError("appRequest")
 	}
@@ -23,10 +23,8 @@ func (s *outboundApplication) CreateApplication(ctx context.Context, appRequest 
 		return nil, utils.NewInvalidArgumentError("appRequest.Name")
 	}
 
-	req := makeCreateUpdateOutboundApplicationRequest(appRequest)
-	if clientSecret != nil {
-		req["clientSecret"] = *clientSecret
-	}
+	req := makeCreateUpdateOutboundApplicationRequest(&appRequest.OutboundApp)
+	req["clientSecret"] = appRequest.ClientSecret
 	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementOutboundApplicationCreate(), req, nil, s.conf.ManagementKey)
 	if err != nil {
 		return nil, err

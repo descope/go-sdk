@@ -950,7 +950,7 @@ type ThirdPartyApplication interface {
 // Provides functions for managing third party applications in a project.
 type OutboundApplication interface {
 	// Create a new outbound application with the given name.
-	CreateApplication(ctx context.Context, appRequest *descope.OutboundApp, clientSecret *string) (app *descope.OutboundApp, err error)
+	CreateApplication(ctx context.Context, appRequest *descope.CreateOutboundAppRequest) (app *descope.OutboundApp, err error)
 
 	// Update an existing outbound application.
 	//

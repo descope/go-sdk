@@ -20,10 +20,12 @@ func TestOutboundApplicationCreateSuccess(t *testing.T) {
 		assert.Equal(t, "app1", req["name"])
 		assert.Equal(t, "sec", req["clientSecret"])
 	}, response))
-	secret := "sec"
-	app, err := mgmt.OutboundApplication().CreateApplication(context.Background(), &descope.OutboundApp{
-		Name: "app1",
-	}, &secret)
+	app, err := mgmt.OutboundApplication().CreateApplication(context.Background(), &descope.CreateOutboundAppRequest{
+		OutboundApp: descope.OutboundApp{
+			Name: "app1",
+		},
+		ClientSecret: "sec",
+	})
 	require.NoError(t, err)
 	require.NotNil(t, app)
 	require.Equal(t, "id1", app.ID)
@@ -37,12 +39,12 @@ func TestOutboundApplicationCreateError(t *testing.T) {
 	}))
 
 	// Nil request
-	app, err := mgmt.OutboundApplication().CreateApplication(context.Background(), nil, nil)
+	app, err := mgmt.OutboundApplication().CreateApplication(context.Background(), nil)
 	require.Error(t, err)
 	require.Nil(t, app)
 
 	// Empty Name
-	app, err = mgmt.OutboundApplication().CreateApplication(context.Background(), &descope.OutboundApp{}, nil)
+	app, err = mgmt.OutboundApplication().CreateApplication(context.Background(), &descope.CreateOutboundAppRequest{})
 	require.Error(t, err)
 	require.Nil(t, app)
 	require.False(t, called)

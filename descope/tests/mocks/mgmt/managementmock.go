@@ -1836,7 +1836,7 @@ type MockOutboundApplication struct {
 	UpdateApplicationError    error
 	UpdateApplicationResponse *descope.OutboundApp
 
-	CreateApplicationAssert   func(*descope.OutboundApp, *string)
+	CreateApplicationAssert   func(appRequest *descope.CreateOutboundAppRequest)
 	CreateApplicationError    error
 	CreateApplicationResponse *descope.OutboundApp
 
@@ -1851,9 +1851,9 @@ type MockOutboundApplication struct {
 	LoadAllApplicationsError    error
 }
 
-func (m *MockOutboundApplication) CreateApplication(_ context.Context, appRequest *descope.OutboundApp, clientSecret *string) (app *descope.OutboundApp, err error) {
+func (m *MockOutboundApplication) CreateApplication(_ context.Context, appRequest *descope.CreateOutboundAppRequest) (app *descope.OutboundApp, err error) {
 	if m.CreateApplicationAssert != nil {
-		m.CreateApplicationAssert(appRequest, clientSecret)
+		m.CreateApplicationAssert(appRequest)
 	}
 	return m.CreateApplicationResponse, m.CreateApplicationError
 }

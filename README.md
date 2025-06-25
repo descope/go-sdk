@@ -1703,20 +1703,17 @@ err = descopeClient.DescopeClient().Management.ThirdPartyApplication().DeleteCon
 
 ```
 
-...existing code...
-
 ### Manage Outbound Applications
 
 You can create, update, delete, or load outbound applications:
 
 ```go
 // Create an outbound application
-secret := "client-secret"
 app, err := descopeClient.Management.OutboundApplication().CreateApplication(context.Background(), &descope.OutboundApp{
     Name: "My Outbound App",
     Description: "Description",
     // ... other fields ...
-}, &secret)
+})
 
 // Update an outbound application
 // Leave secret as nil, to not update it
