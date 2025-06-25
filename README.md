@@ -1703,6 +1703,36 @@ err = descopeClient.DescopeClient().Management.ThirdPartyApplication().DeleteCon
 
 ```
 
+### Manage Outbound Applications
+
+You can create, update, delete, or load outbound applications:
+
+```go
+// Create an outbound application
+app, err := descopeClient.Management.OutboundApplication().CreateApplication(context.Background(), &descope.OutboundApp{
+    Name: "My Outbound App",
+    Description: "Description",
+    // ... other fields ...
+})
+
+// Update an outbound application
+// Leave secret as nil, to not update it
+app, err = descopeClient.Management.OutboundApplication().UpdateApplication(context.Background(), &descope.OutboundApp{
+    ID: "app-id",
+    Name: "Updated Name",
+    // ... other fields ...
+}, &secret)
+
+// Delete an outbound application
+err := descopeClient.Management.OutboundApplication().DeleteApplication(context.Background(), "app-id")
+
+// Load an outbound application by id
+app, err := descopeClient.Management.OutboundApplication().LoadApplication(context.Background(), "app-id")
+
+// Load all outbound applications
+apps, err := descopeClient.Management.OutboundApplication().LoadAllApplications(context.Background())
+```
+
 ## Code Examples
 
 You can find various usage examples in the [examples folder](https://github.com/descope/go-sdk/blob/main/examples).
