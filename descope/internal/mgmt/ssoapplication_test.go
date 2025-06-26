@@ -45,7 +45,7 @@ func TestSSOApplicationCreateOIDCApplicationSuccess(t *testing.T) {
 		ForceAuthentication:  true,
 		BackChannelLogoutURL: "http://dummy.com/backchannel-logout",
 		JWTBearerSettings: &descope.JWTBearerSettings{
-			Issuers: map[string]descope.IssuerSettings{
+			Issuers: map[string]*descope.IssuerSettings{
 				"issuer1": {
 					JWKsURI:             "http://dummy.com/jwks",
 					SignAlgorithm:       "RS256",
@@ -176,7 +176,7 @@ func TestSSOApplicationUpdateOIDCApplicationSuccess(t *testing.T) {
 		ForceAuthentication:  true,
 		BackChannelLogoutURL: "http://dummy.com/backchannel-logout",
 		JWTBearerSettings: &descope.JWTBearerSettings{
-			Issuers: map[string]descope.IssuerSettings{
+			Issuers: map[string]*descope.IssuerSettings{
 				"issuer1": {
 					JWKsURI:             "http://dummy.com/jwks",
 					SignAlgorithm:       "RS256",

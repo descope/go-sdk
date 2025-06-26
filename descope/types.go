@@ -1083,7 +1083,7 @@ type IssuerSettings struct {
 }
 
 type JWTBearerSettings struct {
-	Issuers map[string]IssuerSettings `json:"issuers,omitempty"`
+	Issuers map[string]*IssuerSettings `json:"issuers,omitempty"`
 }
 
 type ThirdPartyApplication struct {

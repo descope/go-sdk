@@ -40,7 +40,7 @@ func TestThirdPartyApplicationCreateSuccess(t *testing.T) {
 		Logo:         "logo",
 		LoginPageURL: "http://dummy.com",
 		JWTBearerSettings: &descope.JWTBearerSettings{
-			Issuers: map[string]descope.IssuerSettings{
+			Issuers: map[string]*descope.IssuerSettings{
 				"issuer1": {
 					JWKsURI:             "http://dummy.com/jwks",
 					SignAlgorithm:       "RS256",
@@ -106,7 +106,7 @@ func TestThirdPartyApplicationUpdateSuccess(t *testing.T) {
 		PermissionsScopes:    []*descope.ThirdPartyApplicationScope{{Name: "scope1", Description: "desc1", Values: []string{"v1"}}},
 		AttributesScopes:     []*descope.ThirdPartyApplicationScope{{Name: "scope2", Description: "desc2", Values: []string{"v2"}}},
 		JWTBearerSettings: &descope.JWTBearerSettings{
-			Issuers: map[string]descope.IssuerSettings{
+			Issuers: map[string]*descope.IssuerSettings{
 				"issuer1": {
 					JWKsURI:             "http://dummy.com/jwks",
 					SignAlgorithm:       "RS256",
