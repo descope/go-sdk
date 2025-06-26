@@ -82,6 +82,8 @@ type SSOApplication interface {
 	// Logo: Optional sso application logo.
 	// LoginPageURL: The URL where login page is hosted.
 	// ForceAuthentication: Optional determine if the IdP should force the user to re-authenticate.
+	// JWTBearerSettings: Optional JWT Bearer settings which used to validate external token.
+	// BackChannelLogoutURL: Optional Back-Channel Logout URL (as per CIBA spec)
 	//
 	// The argument appRequest.Id value is optional and will be auto generated if provided with empty value
 	// The argument appRequest.Id and appRequest.Name must be unique per project.
@@ -904,6 +906,7 @@ type ThirdPartyApplication interface {
 	// ApprovedCallbackUrls: List of approved callback URLs.
 	// PermissionsScopes: List of permissions scopes.
 	// AttributesScopes: List of attributes scopes.
+	// JWTBearerSettings: Optional JWT Bearer settings which used to validate external token.
 	//
 	// The argument appRequest.Name must be unique per project.
 	CreateApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) (id string, secret string, err error)
