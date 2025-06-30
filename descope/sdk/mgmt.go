@@ -950,6 +950,30 @@ type ThirdPartyApplication interface {
 	SearchConsents(ctx context.Context, options *descope.ThirdPartyApplicationConsentSearchOptions) ([]*descope.ThirdPartyApplicationConsent, int, error)
 }
 
+// Provides functions for managing third party applications in a project.
+type OutboundApplication interface {
+	// Create a new outbound application with the given name.
+	CreateApplication(ctx context.Context, appRequest *descope.CreateOutboundAppRequest) (app *descope.OutboundApp, err error)
+
+	// Update an existing outbound application.
+	//
+	// IMPORTANT: All parameters are required and will override whatever value is currently
+	// set in the existing sso application. Use carefully.
+	// leave clientSecret as nil if you don't want to update the client secret
+	UpdateApplication(ctx context.Context, appRequest *descope.OutboundApp, clientSecret *string) (app *descope.OutboundApp, err error)
+
+	// Delete an existing outbound application.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteApplication(ctx context.Context, id string) error
+
+	// Load a outbound application by id.
+	LoadApplication(ctx context.Context, id string) (*descope.OutboundApp, error)
+
+	// Load all project outbound applications.
+	LoadAllApplications(ctx context.Context) ([]*descope.OutboundApp, error)
+}
+
 // Provides various APIs for managing a Descope project programmatically. A management key must
 // be provided in the DecopeClient configuration or by setting the DESCOPE_MANAGEMENT_KEY
 // environment variable. Management keys can be generated in the Descope console.
@@ -1001,4 +1025,7 @@ type Management interface {
 
 	// Provides functions for managing third party applications in a project.
 	ThirdPartyApplication() ThirdPartyApplication
+
+	// Provides functions for managing outbound applications in a project.
+	OutboundApplication() OutboundApplication
 }
