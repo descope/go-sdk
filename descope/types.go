@@ -740,10 +740,12 @@ type SSOApplicationSAMLSettings struct {
 }
 
 type SSOApplicationOIDCSettings struct {
-	LoginPageURL        string `json:"loginPageUrl"`
-	Issuer              string `json:"issuer"`
-	DiscoveryURL        string `json:"discoveryUrl"`
-	ForceAuthentication bool   `json:"forceAuthentication"`
+	LoginPageURL         string             `json:"loginPageUrl"`
+	Issuer               string             `json:"issuer"`
+	DiscoveryURL         string             `json:"discoveryUrl"`
+	ForceAuthentication  bool               `json:"forceAuthentication"`
+	JWTBearerSettings    *JWTBearerSettings `json:"jwtBearerSettings,omitempty"`
+	BackChannelLogoutURL string             `json:"backChannelLogoutUrl,omitempty"`
 }
 
 type SSOApplication struct {
@@ -758,13 +760,15 @@ type SSOApplication struct {
 }
 
 type OIDCApplicationRequest struct {
-	ID                  string `json:"id"`
-	Name                string `json:"name"`
-	Description         string `json:"description"`
-	Enabled             bool   `json:"enabled"`
-	Logo                string `json:"logo"`
-	LoginPageURL        string `json:"loginPageUrl"`
-	ForceAuthentication bool   `json:"forceAuthentication"`
+	ID                   string             `json:"id"`
+	Name                 string             `json:"name"`
+	Description          string             `json:"description"`
+	Enabled              bool               `json:"enabled"`
+	Logo                 string             `json:"logo"`
+	LoginPageURL         string             `json:"loginPageUrl"`
+	ForceAuthentication  bool               `json:"forceAuthentication"`
+	JWTBearerSettings    *JWTBearerSettings `json:"jwtBearerSettings,omitempty"`
+	BackChannelLogoutURL string             `json:"backChannelLogoutUrl,omitempty"`
 }
 
 type SAMLApplicationRequest struct {
@@ -1114,6 +1118,17 @@ type ThirdPartyApplicationScope struct {
 	Values      []string `json:"values"`
 }
 
+type IssuerSettings struct {
+	JWKsURI             string `json:"jwksUri,omitempty"`
+	SignAlgorithm       string `json:"signAlgorithm,omitempty"`
+	UserInfoURI         string `json:"userInfoUri,omitempty"`
+	ExternalIDFieldName string `json:"externalIdFieldName,omitempty"`
+}
+
+type JWTBearerSettings struct {
+	Issuers map[string]*IssuerSettings `json:"issuers,omitempty"`
+}
+
 type ThirdPartyApplication struct {
 	ID                   string                        `json:"id"`
 	Name                 string                        `json:"name"`
@@ -1124,6 +1139,7 @@ type ThirdPartyApplication struct {
 	ApprovedCallbackUrls []string                      `json:"approvedCallbackUrls"`
 	PermissionsScopes    []*ThirdPartyApplicationScope `json:"permissionsScopes"`
 	AttributesScopes     []*ThirdPartyApplicationScope `json:"attributesScopes"`
+	JWTBearerSettings    *JWTBearerSettings            `json:"jwtBearerSettings,omitempty"`
 }
 
 type ThirdPartyApplicationRequest struct {
@@ -1135,6 +1151,7 @@ type ThirdPartyApplicationRequest struct {
 	ApprovedCallbackUrls []string                      `json:"approvedCallbackUrls"`
 	PermissionsScopes    []*ThirdPartyApplicationScope `json:"permissionsScopes"`
 	AttributesScopes     []*ThirdPartyApplicationScope `json:"attributesScopes"`
+	JWTBearerSettings    *JWTBearerSettings            `json:"jwtBearerSettings,omitempty"`
 }
 
 type ThirdPartyApplicationConsent struct {
