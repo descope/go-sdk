@@ -311,6 +311,39 @@ func TestSSOConfigureMetadataError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestConfigureSSORedirectURLSuccess(t *testing.T) {
+	url1 := "http://idpURL1"
+	url2 := "http://idpURL2"
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["tenantId"])
+		require.Equal(t, "ssoid", req["ssoId"])
+		require.Equal(t, url1, req["samlRedirectUrl"])
+		require.Equal(t, url2, req["oauthRedirectUrl"])
+	}))
+	err := mgmt.SSO().ConfigureSSORedirectURL(context.Background(), "abc", &url1, &url2, "ssoid")
+	require.NoError(t, err)
+}
+
+func TestConfigureSSORedirectURLError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(_ *http.Request) {
+		called = true
+	}))
+	url := "http://idpURL"
+
+	err := mgmt.SSO().ConfigureSSORedirectURL(context.Background(), "", &url, nil, "")
+	require.Error(t, err)
+	err = mgmt.SSO().ConfigureSSORedirectURL(context.Background(), "abc", nil, nil, "")
+	require.Error(t, err)
+	assert.False(t, called)
+	err = mgmt.SSO().ConfigureSSORedirectURL(context.Background(), "abc", &url, nil, "")
+	require.Error(t, err)
+	assert.True(t, called)
+}
+
 func TestSSOConfigureMappingSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")

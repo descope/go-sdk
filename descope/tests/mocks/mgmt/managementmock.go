@@ -192,6 +192,9 @@ type MockSSO struct {
 	ConfigureSAMLSettingsByMetadataAssert func(tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domains []string, ssoID string)
 	ConfigureSAMLSettingsByMetadataError  error
 
+	ConfigureSSORedirectURLAssert func(tenantID string, samlRedirectURL *string, oauthRedirectURL *string, ssoID string)
+	ConfigureSSORedirectURLError  error
+
 	ConfigureOIDCSettingsAssert func(tenantID string, settings *descope.SSOOIDCSettings, domains []string, ssoID string)
 	ConfigureOIDCSettingsError  error
 
@@ -242,6 +245,13 @@ func (m *MockSSO) ConfigureSAMLSettingsByMetadata(_ context.Context, tenantID st
 		m.ConfigureSAMLSettingsByMetadataAssert(tenantID, settings, redirectURL, domains, ssoID)
 	}
 	return m.ConfigureSAMLSettingsByMetadataError
+}
+
+func (m *MockSSO) ConfigureSSORedirectURL(_ context.Context, tenantID string, samlRedirectURL *string, oauthRedirectURL *string, ssoID string) error {
+	if m.ConfigureSSORedirectURLAssert != nil {
+		m.ConfigureSSORedirectURLAssert(tenantID, samlRedirectURL, oauthRedirectURL, ssoID)
+	}
+	return m.ConfigureSSORedirectURLError
 }
 
 func (m *MockSSO) ConfigureOIDCSettings(_ context.Context, tenantID string, settings *descope.SSOOIDCSettings, domains []string, ssoID string) error {
