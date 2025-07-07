@@ -1148,7 +1148,7 @@ Note: Certificates should have a similar structure to:
 
 ```
 -----BEGIN CERTIFICATE-----
-Certifcate contents
+Certificate contents
 -----END CERTIFICATE-----
 ```
 
@@ -1554,7 +1554,7 @@ if err == nil {
 err := descopeClient.Management.Project().Delete(context.Background())
 ```
 
-With using a company mangement key you can get a list of all the projects in the company:
+With using a company management key you can get a list of all the projects in the company:
 
 ```go
 projects, err := descopeClient.Management.Project().ListProjects(context.Background())
