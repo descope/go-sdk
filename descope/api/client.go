@@ -155,6 +155,7 @@ var (
 			ssoSettingsNew:                           "mgmt/sso/settings/new",
 			ssoSAMLSettings:                          "mgmt/sso/saml",
 			ssoSAMLSettingsByMetadata:                "mgmt/sso/saml/metadata",
+			ssoRedirectURL:                           "mgmt/sso/redirect",
 			ssoOIDCSettings:                          "mgmt/sso/oidc",
 			ssoMetadata:                              "mgmt/sso/metadata",
 			ssoMapping:                               "mgmt/sso/mapping",
@@ -398,6 +399,7 @@ type mgmtEndpoints struct {
 	ssoSettingsNew            string
 	ssoSAMLSettings           string
 	ssoSAMLSettingsByMetadata string
+	ssoRedirectURL            string
 	ssoOIDCSettings           string
 	updateJWT                 string
 	impersonate               string
@@ -979,6 +981,10 @@ func (e *endpoints) ManagementSSOSAMLSettings() string {
 
 func (e *endpoints) ManagementSSOSAMLSettingsByMetadata() string {
 	return path.Join(e.version, e.mgmt.ssoSAMLSettingsByMetadata)
+}
+
+func (e *endpoints) ManagementSSORedirectURL() string {
+	return path.Join(e.version, e.mgmt.ssoRedirectURL)
 }
 
 func (e *endpoints) ManagementSSOOIDCSettings() string {
