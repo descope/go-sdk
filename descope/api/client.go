@@ -1354,6 +1354,7 @@ type ClientParams struct {
 	CustomDefaultHeaders map[string]string
 	CertificateVerify    CertificateVerifyMode
 	RequestTimeout       time.Duration
+	RefreshCookieName    string
 }
 
 type IHttpClient interface {
@@ -1631,6 +1632,7 @@ func (c *Client) addDescopeHeaders(req *http.Request) {
 	req.Header.Set("x-descope-sdk-sha", c.sdkInfo.sha)
 	req.Header.Set("x-descope-sdk-uuid", instanceUUID)
 	req.Header.Set("x-descope-project-id", c.conf.ProjectID)
+	req.Header.Set("x-descope-refresh-cookie-name", c.conf.RefreshCookieName)
 }
 
 func getSDKInfo() *sdkInfo {

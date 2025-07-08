@@ -30,7 +30,7 @@ func (auth *saml) Start(ctx context.Context, tenant string, redirectURL string, 
 	}
 	var pswd string
 	if loginOptions.IsJWTRequired() {
-		pswd, err = getValidRefreshToken(r)
+		pswd, err = auth.getValidRefreshToken(r)
 		if err != nil {
 			return "", descope.ErrInvalidStepUpJWT
 		}

@@ -20,7 +20,7 @@ func (auth *magicLink) SignIn(ctx context.Context, method descope.DeliveryMethod
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
 	if loginOptions.IsJWTRequired() {
-		pswd, err = getValidRefreshToken(r)
+		pswd, err = auth.getValidRefreshToken(r)
 		if err != nil {
 			return "", descope.ErrInvalidStepUpJWT
 		}
@@ -81,7 +81,7 @@ func (auth *magicLink) UpdateUserEmail(ctx context.Context, loginID, email, URI 
 	if !emailRegex.MatchString(email) {
 		return "", utils.NewInvalidArgumentError("email")
 	}
-	pswd, err := getValidRefreshToken(r)
+	pswd, err := auth.getValidRefreshToken(r)
 	if err != nil {
 		return "", err
 	}
@@ -107,7 +107,7 @@ func (auth *magicLink) UpdateUserPhone(ctx context.Context, method descope.Deliv
 	if method != descope.MethodSMS && method != descope.MethodWhatsApp {
 		return "", utils.NewInvalidArgumentError("method")
 	}
-	pswd, err := getValidRefreshToken(r)
+	pswd, err := auth.getValidRefreshToken(r)
 	if err != nil {
 		return "", err
 	}
