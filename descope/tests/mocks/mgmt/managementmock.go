@@ -25,6 +25,7 @@ type MockManagement struct {
 	*MockAuthz
 	*MockFGA
 	*MockThirdPartyApplication
+	*MockOutboundApplication
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -91,6 +92,10 @@ func (m *MockManagement) ThirdPartyApplication() sdk.ThirdPartyApplication {
 	return m.MockThirdPartyApplication
 }
 
+func (m *MockManagement) OutboundApplication() sdk.OutboundApplication {
+	return m.MockOutboundApplication
+}
+
 // Mock JWT
 
 type MockJWT struct {
@@ -101,6 +106,10 @@ type MockJWT struct {
 	ImpersonateAssert   func(impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string, refreshDuration int32)
 	ImpersonateResponse string
 	ImpersonateError    error
+
+	StopImpersonationAssert   func(jwt string, customClaims map[string]any, tenantID string, refreshDuration int32)
+	StopImpersonationResponse string
+	StopImpersonationError    error
 
 	SignInAssert   func(loginID string, loginOptions *descope.MgmLoginOptions)
 	SignInResponse *descope.AuthenticationInfo
@@ -131,6 +140,13 @@ func (m *MockJWT) Impersonate(_ context.Context, impersonatorID string, loginID 
 		m.ImpersonateAssert(impersonatorID, loginID, validateConcent, customClaims, tenantID, refreshDuration)
 	}
 	return m.ImpersonateResponse, m.ImpersonateError
+}
+
+func (m *MockJWT) StopImpersonation(_ context.Context, jwt string, customClaims map[string]any, tenantID string, refreshDuration int32) (string, error) {
+	if m.StopImpersonationAssert != nil {
+		m.StopImpersonationAssert(jwt, customClaims, tenantID, refreshDuration)
+	}
+	return m.StopImpersonationResponse, m.StopImpersonationError
 }
 
 func (m *MockJWT) SignIn(_ context.Context, loginID string, loginOptions *descope.MgmLoginOptions) (*descope.AuthenticationInfo, error) {
@@ -175,6 +191,9 @@ type MockSSO struct {
 
 	ConfigureSAMLSettingsByMetadataAssert func(tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domains []string, ssoID string)
 	ConfigureSAMLSettingsByMetadataError  error
+
+	ConfigureSSORedirectURLAssert func(tenantID string, samlRedirectURL *string, oauthRedirectURL *string, ssoID string)
+	ConfigureSSORedirectURLError  error
 
 	ConfigureOIDCSettingsAssert func(tenantID string, settings *descope.SSOOIDCSettings, domains []string, ssoID string)
 	ConfigureOIDCSettingsError  error
@@ -226,6 +245,13 @@ func (m *MockSSO) ConfigureSAMLSettingsByMetadata(_ context.Context, tenantID st
 		m.ConfigureSAMLSettingsByMetadataAssert(tenantID, settings, redirectURL, domains, ssoID)
 	}
 	return m.ConfigureSAMLSettingsByMetadataError
+}
+
+func (m *MockSSO) ConfigureSSORedirectURL(_ context.Context, tenantID string, samlRedirectURL *string, oauthRedirectURL *string, ssoID string) error {
+	if m.ConfigureSSORedirectURLAssert != nil {
+		m.ConfigureSSORedirectURLAssert(tenantID, samlRedirectURL, oauthRedirectURL, ssoID)
+	}
+	return m.ConfigureSSORedirectURLError
 }
 
 func (m *MockSSO) ConfigureOIDCSettings(_ context.Context, tenantID string, settings *descope.SSOOIDCSettings, domains []string, ssoID string) error {
@@ -470,11 +496,15 @@ type MockUser struct {
 	GenerateEnchantedLinkForTestUserResponsePendingRef string
 	GenerateEnchantedLinkForTestUserError              error
 
-	GenerateEmbeddedLinkAssert   func(loginID string, customClaims map[string]any)
+	GenerateEmbeddedLinkAssert   func(loginID string, customClaims map[string]any, timeout int64)
 	GenerateEmbeddedLinkResponse string
 	GenerateEmbeddedLinkError    error
 
-	LogoutAssert func(id string)
+	GenerateEmbeddedLinkSignUpAssert   func(loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.EmbeddedLinkLoginOptions)
+	GenerateEmbeddedLinkSignUpResponse string
+	GenerateEmbeddedLinkSignUpError    error
+
+	LogoutAssert func(id string, sessionTypes ...string)
 	LogoutError  error
 
 	HistoryAssert   func(userIDs []string)
@@ -573,16 +603,16 @@ func (m *MockUser) LoadByUserID(_ context.Context, userID string) (*descope.User
 	return m.LoadResponse, m.LoadError
 }
 
-func (m *MockUser) LogoutUser(_ context.Context, loginID string) error {
+func (m *MockUser) LogoutUser(_ context.Context, loginID string, sessionTypes ...string) error {
 	if m.LogoutAssert != nil {
-		m.LogoutAssert(loginID)
+		m.LogoutAssert(loginID, sessionTypes...)
 	}
 	return m.LogoutError
 }
 
-func (m *MockUser) LogoutUserByUserID(_ context.Context, userID string) error {
+func (m *MockUser) LogoutUserByUserID(_ context.Context, userID string, sessionTypes ...string) error {
 	if m.LogoutAssert != nil {
-		m.LogoutAssert(userID)
+		m.LogoutAssert(userID, sessionTypes...)
 	}
 	return m.LogoutError
 }
@@ -819,11 +849,18 @@ func (m *MockUser) GenerateEnchantedLinkForTestUser(_ context.Context, loginID, 
 	return m.GenerateEnchantedLinkForTestUserResponseLink, m.GenerateEnchantedLinkForTestUserResponsePendingRef, m.GenerateEnchantedLinkForTestUserError
 }
 
-func (m *MockUser) GenerateEmbeddedLink(_ context.Context, loginID string, customClaims map[string]any) (string, error) {
+func (m *MockUser) GenerateEmbeddedLink(_ context.Context, loginID string, customClaims map[string]any, timeout int64) (string, error) {
 	if m.GenerateEmbeddedLinkAssert != nil {
-		m.GenerateEmbeddedLinkAssert(loginID, customClaims)
+		m.GenerateEmbeddedLinkAssert(loginID, customClaims, timeout)
 	}
 	return m.GenerateEmbeddedLinkResponse, m.GenerateEmbeddedLinkError
+}
+
+func (m *MockUser) GenerateEmbeddedLinkSignUp(_ context.Context, loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.EmbeddedLinkLoginOptions) (string, error) {
+	if m.GenerateEmbeddedLinkSignUpAssert != nil {
+		m.GenerateEmbeddedLinkSignUpAssert(loginID, user, signUpOptions)
+	}
+	return m.GenerateEmbeddedLinkSignUpResponse, m.GenerateEmbeddedLinkSignUpError
 }
 
 func (m *MockUser) History(_ context.Context, userIDs []string) ([]*descope.UserHistoryResponse, error) {
@@ -953,6 +990,9 @@ type MockTenant struct {
 	GenerateSSOConfigurationLinkAssert   func(tenantID string, expireDuration int64, ssoID string, email string, templateID string)
 	GenerateSSOConfigurationLinkResponse string
 	GenerateSSOConfigurationLinkError    error
+
+	RevokeSSOConfigurationLinkAssert func(tenantID string, ssoID string)
+	RevokeSSOConfigurationLinkError  error
 }
 
 func (m *MockTenant) Create(_ context.Context, tenantRequest *descope.TenantRequest) (id string, err error) {
@@ -1017,6 +1057,13 @@ func (m *MockTenant) GenerateSSOConfigurationLink(_ context.Context, tenantID st
 		m.GenerateSSOConfigurationLinkAssert(tenantID, expireDuration, ssoID, email, templateID)
 	}
 	return m.GenerateSSOConfigurationLinkResponse, m.GenerateSSOConfigurationLinkError
+}
+
+func (m *MockTenant) RevokeSSOConfigurationLink(_ context.Context, tenantID string, ssoID string) error {
+	if m.RevokeSSOConfigurationLinkAssert != nil {
+		m.RevokeSSOConfigurationLinkAssert(tenantID, ssoID)
+	}
+	return m.RevokeSSOConfigurationLinkError
 }
 
 // Mock SSOApplication
@@ -1132,10 +1179,10 @@ func (m *MockPermission) LoadAll(_ context.Context) ([]*descope.Permission, erro
 // Mock Role
 
 type MockRole struct {
-	CreateAssert func(name, description string, permissionNames []string, tenantID string)
+	CreateAssert func(name, description string, permissionNames []string, tenantID string, defaultRole bool)
 	CreateError  error
 
-	UpdateAssert func(name, tenantID, newName, description string, permissionNames []string)
+	UpdateAssert func(name, tenantID, newName, description string, permissionNames []string, defaultRole bool)
 	UpdateError  error
 
 	DeleteAssert func(name, tenantID string)
@@ -1148,16 +1195,16 @@ type MockRole struct {
 	SearchError    error
 }
 
-func (m *MockRole) Create(_ context.Context, name, description string, permissionNames []string, tenantID string) error {
+func (m *MockRole) Create(_ context.Context, name, description string, permissionNames []string, tenantID string, defaultRole bool) error {
 	if m.CreateAssert != nil {
-		m.CreateAssert(name, description, permissionNames, tenantID)
+		m.CreateAssert(name, description, permissionNames, tenantID, defaultRole)
 	}
 	return m.CreateError
 }
 
-func (m *MockRole) Update(_ context.Context, name, tenantID string, newName, description string, permissionNames []string) error {
+func (m *MockRole) Update(_ context.Context, name, tenantID string, newName, description string, permissionNames []string, defaultRole bool) error {
 	if m.UpdateAssert != nil {
-		m.UpdateAssert(name, tenantID, newName, description, permissionNames)
+		m.UpdateAssert(name, tenantID, newName, description, permissionNames, defaultRole)
 	}
 	return m.UpdateError
 }
@@ -1605,6 +1652,13 @@ type MockFGA struct {
 	SearchMappableResourcesAssert   func(tenantID string, resourcesQueries []*descope.FGAMappableResourcesQuery, options *descope.FGAMappableResourcesOptions)
 	SearchMappableResourcesResponse []*descope.FGAMappableResources
 	SearchMappableResourcesError    error
+
+	LoadResourcesDetailsAssert   func(resourceIdentifiers []*descope.ResourceIdentifier)
+	LoadResourcesDetailsResponse []*descope.ResourceDetails
+	LoadResourcesDetailsError    error
+
+	SaveResourcesDetailsAssert func(resourcesDetails []*descope.ResourceDetails)
+	SaveResourcesDetailsError  error
 }
 
 func (m *MockFGA) SaveSchema(_ context.Context, schema *descope.FGASchema) error {
@@ -1651,6 +1705,22 @@ func (m *MockFGA) SearchMappableResources(_ context.Context, tenantID string, re
 		m.SearchMappableResourcesAssert(tenantID, resourcesQueries, options)
 	}
 	return m.SearchMappableResourcesResponse, m.SearchMappableResourcesError
+}
+
+// Mock LoadResourcesDetails calls
+func (m *MockFGA) LoadResourcesDetails(_ context.Context, resourceIdentifiers []*descope.ResourceIdentifier) ([]*descope.ResourceDetails, error) {
+	if m.LoadResourcesDetailsAssert != nil {
+		m.LoadResourcesDetailsAssert(resourceIdentifiers)
+	}
+	return m.LoadResourcesDetailsResponse, m.LoadResourcesDetailsError
+}
+
+// Mock SaveResourcesDetails calls
+func (m *MockFGA) SaveResourcesDetails(_ context.Context, resourcesDetails []*descope.ResourceDetails) error {
+	if m.SaveResourcesDetailsAssert != nil {
+		m.SaveResourcesDetailsAssert(resourcesDetails)
+	}
+	return m.SaveResourcesDetailsError
 }
 
 // Mock Third Party Application
@@ -1768,4 +1838,57 @@ func (m *MockThirdPartyApplication) SearchConsents(_ context.Context, options *d
 		m.SearchConsentsAssert(options)
 	}
 	return m.SearchConsentsResponse, m.SearchConsentsTotalResponse, m.SearchConsentsError
+}
+
+// Mock Outbound Application
+type MockOutboundApplication struct {
+	UpdateApplicationAssert   func(*descope.OutboundApp, *string)
+	UpdateApplicationError    error
+	UpdateApplicationResponse *descope.OutboundApp
+
+	CreateApplicationAssert   func(appRequest *descope.CreateOutboundAppRequest)
+	CreateApplicationError    error
+	CreateApplicationResponse *descope.OutboundApp
+
+	DeleteApplicationAssert func(id string)
+	DeleteApplicationError  error
+
+	LoadApplicationAssert   func(id string)
+	LoadApplicationResponse *descope.OutboundApp
+	LoadApplicationError    error
+
+	LoadAllApplicationsResponse []*descope.OutboundApp
+	LoadAllApplicationsError    error
+}
+
+func (m *MockOutboundApplication) CreateApplication(_ context.Context, appRequest *descope.CreateOutboundAppRequest) (app *descope.OutboundApp, err error) {
+	if m.CreateApplicationAssert != nil {
+		m.CreateApplicationAssert(appRequest)
+	}
+	return m.CreateApplicationResponse, m.CreateApplicationError
+}
+
+func (m *MockOutboundApplication) UpdateApplication(_ context.Context, appRequest *descope.OutboundApp, clientSecret *string) (app *descope.OutboundApp, err error) {
+	if m.UpdateApplicationAssert != nil {
+		m.UpdateApplicationAssert(appRequest, clientSecret)
+	}
+	return m.UpdateApplicationResponse, m.UpdateApplicationError
+}
+
+func (m *MockOutboundApplication) DeleteApplication(_ context.Context, id string) error {
+	if m.DeleteApplicationAssert != nil {
+		m.DeleteApplicationAssert(id)
+	}
+	return m.DeleteApplicationError
+}
+
+func (m *MockOutboundApplication) LoadApplication(_ context.Context, id string) (*descope.OutboundApp, error) {
+	if m.LoadApplicationAssert != nil {
+		m.LoadApplicationAssert(id)
+	}
+	return m.LoadApplicationResponse, m.LoadApplicationError
+}
+
+func (m *MockOutboundApplication) LoadAllApplications(_ context.Context) ([]*descope.OutboundApp, error) {
+	return m.LoadAllApplicationsResponse, m.LoadAllApplicationsError
 }

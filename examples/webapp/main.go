@@ -208,7 +208,7 @@ func handleOAuth(w http.ResponseWriter, r *http.Request) {
 	if p, ok := r.URL.Query()["provider"]; ok {
 		provider = descope.OAuthProvider(p[0])
 	}
-	_, err := descopeClient.Auth.OAuth().Start(r.Context(), provider, "https://localhost:8085/oauth/exchange", nil, nil, w)
+	_, err := descopeClient.Auth.OAuth().Start(r.Context(), provider, "https://localhost:8085/oauth/exchange", "", nil, nil, w)
 	if err != nil {
 		setError(w, err.Error())
 	}

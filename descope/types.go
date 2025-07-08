@@ -332,12 +332,13 @@ func (to *Token) IsMFA() bool {
 }
 
 type LoginOptions struct {
-	Stepup              bool                   `json:"stepup,omitempty"`
-	MFA                 bool                   `json:"mfa,omitempty"`
-	RevokeOtherSessions bool                   `json:"revokeOtherSessions,omitempty"`
-	CustomClaims        map[string]interface{} `json:"customClaims,omitempty"`
-	TemplateID          string                 `json:"templateId,omitempty"`      // for overriding the default messaging template
-	TemplateOptions     map[string]string      `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
+	Stepup                   bool                   `json:"stepup,omitempty"`
+	MFA                      bool                   `json:"mfa,omitempty"`
+	RevokeOtherSessions      bool                   `json:"revokeOtherSessions,omitempty"`
+	RevokeOtherSessionsTypes []string               `json:"revokeOtherSessionsTypes,omitempty"`
+	CustomClaims             map[string]interface{} `json:"customClaims,omitempty"`
+	TemplateID               string                 `json:"templateId,omitempty"`      // for overriding the default messaging template
+	TemplateOptions          map[string]string      `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 }
 
 func (lo *LoginOptions) IsJWTRequired() bool {
@@ -352,6 +353,11 @@ type SignUpOptions struct {
 	CustomClaims    map[string]interface{} `json:"customClaims,omitempty"`
 	TemplateID      string                 `json:"templateId,omitempty"`      // for overriding the default messaging template
 	TemplateOptions map[string]string      `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
+}
+
+type EmbeddedLinkLoginOptions struct {
+	LoginOptions
+	Timeout int64 `json:"timeout,omitempty"` // timeout in seconds for the embedded link to be valid, default is 60 seconds
 }
 
 type JWTResponse struct {
@@ -749,10 +755,12 @@ type SSOApplicationSAMLSettings struct {
 }
 
 type SSOApplicationOIDCSettings struct {
-	LoginPageURL        string `json:"loginPageUrl"`
-	Issuer              string `json:"issuer"`
-	DiscoveryURL        string `json:"discoveryUrl"`
-	ForceAuthentication bool   `json:"forceAuthentication"`
+	LoginPageURL         string             `json:"loginPageUrl"`
+	Issuer               string             `json:"issuer"`
+	DiscoveryURL         string             `json:"discoveryUrl"`
+	ForceAuthentication  bool               `json:"forceAuthentication"`
+	JWTBearerSettings    *JWTBearerSettings `json:"jwtBearerSettings,omitempty"`
+	BackChannelLogoutURL string             `json:"backChannelLogoutUrl,omitempty"`
 }
 
 type SSOApplication struct {
@@ -767,13 +775,15 @@ type SSOApplication struct {
 }
 
 type OIDCApplicationRequest struct {
-	ID                  string `json:"id"`
-	Name                string `json:"name"`
-	Description         string `json:"description"`
-	Enabled             bool   `json:"enabled"`
-	Logo                string `json:"logo"`
-	LoginPageURL        string `json:"loginPageUrl"`
-	ForceAuthentication bool   `json:"forceAuthentication"`
+	ID                   string             `json:"id"`
+	Name                 string             `json:"name"`
+	Description          string             `json:"description"`
+	Enabled              bool               `json:"enabled"`
+	Logo                 string             `json:"logo"`
+	LoginPageURL         string             `json:"loginPageUrl"`
+	ForceAuthentication  bool               `json:"forceAuthentication"`
+	JWTBearerSettings    *JWTBearerSettings `json:"jwtBearerSettings,omitempty"`
+	BackChannelLogoutURL string             `json:"backChannelLogoutUrl,omitempty"`
 }
 
 type SAMLApplicationRequest struct {
@@ -815,6 +825,7 @@ type Role struct {
 	PermissionNames []string `json:"permissionNames,omitempty"`
 	CreatedTime     int32    `json:"createdTime,omitempty"`
 	TenantID        string   `json:"tenantId,omitempty"`
+	Default         bool     `json:"default,omitempty"`
 }
 
 func (r *Role) GetCreatedTime() time.Time {
@@ -1073,10 +1084,64 @@ const (
 	EnvironmentVariableBaseURL           = "DESCOPE_BASE_URL"
 )
 
+type AccessType string
+
+const AccessTypeOffline AccessType = "offline"
+const AccessTypeOnline AccessType = "online"
+
+type PromptType string
+
+const PromptTypeNone PromptType = "none"
+const PromptTypeLogin PromptType = "login"
+const PromptTypeConsent PromptType = "consent"
+const PromptTypeSelectAccount PromptType = "select_account"
+
+type URLParam struct {
+	Key   string `json:"key,omitempty"`
+	Value string `json:"value,omitempty"`
+}
+
+type OutboundApp struct {
+	ID                     string       `json:"id,omitempty"`
+	Name                   string       `json:"name,omitempty"`
+	Description            string       `json:"description,omitempty"`
+	TemplateID             string       `json:"templateId,omitempty"`
+	ClientID               string       `json:"clientId,omitempty"`
+	Logo                   string       `json:"logo,omitempty"`
+	DiscoveryURL           string       `json:"discoveryUrl,omitempty"`
+	AuthorizationURL       string       `json:"authorizationUrl,omitempty"`
+	AuthorizationURLParams []URLParam   `json:"authorizationUrlParams,omitempty"`
+	TokenURL               string       `json:"tokenUrl,omitempty"`
+	TokenURLParams         []URLParam   `json:"tokenUrlParams,omitempty"`
+	RevocationURL          string       `json:"revocationUrl,omitempty"`
+	DefaultScopes          []string     `json:"defaultScopes,omitempty"`
+	DefaultRedirectURL     string       `json:"defaultRedirectUrl,omitempty"`
+	CallbackDomain         string       `json:"callbackDomain,omitempty"`
+	Pkce                   bool         `json:"pkce,omitempty"`
+	AccessType             AccessType   `json:"accessType,omitempty"`
+	Prompt                 []PromptType `json:"prompt,omitempty"`
+}
+
+type CreateOutboundAppRequest struct {
+	OutboundApp
+	ClientSecret string `json:"clientSecret,omitempty"`
+}
+
 type ThirdPartyApplicationScope struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
 	Values      []string `json:"values"`
+}
+
+type IssuerSettings struct {
+	JWKsURI             string `json:"jwksUri,omitempty"`
+	SignAlgorithm       string `json:"signAlgorithm,omitempty"`
+	UserInfoURI         string `json:"userInfoUri,omitempty"`
+	ExternalIDFieldName string `json:"externalIdFieldName,omitempty"`
+}
+
+type JWTBearerSettings struct {
+	Issuers map[string]*IssuerSettings `json:"issuers,omitempty"`
 }
 
 type ThirdPartyApplication struct {
@@ -1089,6 +1154,7 @@ type ThirdPartyApplication struct {
 	ApprovedCallbackUrls []string                      `json:"approvedCallbackUrls"`
 	PermissionsScopes    []*ThirdPartyApplicationScope `json:"permissionsScopes"`
 	AttributesScopes     []*ThirdPartyApplicationScope `json:"attributesScopes"`
+	JWTBearerSettings    *JWTBearerSettings            `json:"jwtBearerSettings,omitempty"`
 }
 
 type ThirdPartyApplicationRequest struct {
@@ -1100,6 +1166,7 @@ type ThirdPartyApplicationRequest struct {
 	ApprovedCallbackUrls []string                      `json:"approvedCallbackUrls"`
 	PermissionsScopes    []*ThirdPartyApplicationScope `json:"permissionsScopes"`
 	AttributesScopes     []*ThirdPartyApplicationScope `json:"attributesScopes"`
+	JWTBearerSettings    *JWTBearerSettings            `json:"jwtBearerSettings,omitempty"`
 }
 
 type ThirdPartyApplicationConsent struct {
@@ -1119,6 +1186,8 @@ type ThirdPartyApplicationConsent struct {
 	TenantID string `json:"tenantId"`
 	// The consent expiry time
 	ExpireTime int32 `json:"expireTime,omitempty"`
+	// The consent modified time in milliseconds since epoch
+	ModifiedTime int32 `json:"modifiedTime,omitempty"`
 }
 
 // Options for deleting third party application consents. At least one of ConsentIDs, AppID or UserIDs must be provided.
@@ -1157,6 +1226,7 @@ type ThirdPartyApplicationConsentSearchOptions struct {
 	UserID    string `json:"userId"`
 	ConsentID string `json:"consentId"`
 	Page      int32  `json:"page"`
+	Limit     int32  `json:"limit"`
 	TenantID  string `json:"tenantId"`
 }
 
@@ -1169,12 +1239,13 @@ type MgmSignUpOptions struct {
 	RefreshDuration int32                  `json:"refreshDuration,omitempty"`
 }
 type MgmLoginOptions struct {
-	Stepup              bool                   `json:"stepup,omitempty"`
-	MFA                 bool                   `json:"mfa,omitempty"`
-	RevokeOtherSessions bool                   `json:"revokeOtherSessions,omitempty"`
-	CustomClaims        map[string]interface{} `json:"customClaims,omitempty"`
-	JWT                 string                 `json:"jwt,omitempty"`
-	RefreshDuration     int32                  `json:"refreshDuration,omitempty"`
+	Stepup                   bool                   `json:"stepup,omitempty"`
+	MFA                      bool                   `json:"mfa,omitempty"`
+	RevokeOtherSessions      bool                   `json:"revokeOtherSessions,omitempty"`
+	RevokeOtherSessionsTypes []string               `json:"revokeOtherSessionsTypes,omitempty"`
+	CustomClaims             map[string]interface{} `json:"customClaims,omitempty"`
+	JWT                      string                 `json:"jwt,omitempty"`
+	RefreshDuration          int32                  `json:"refreshDuration,omitempty"`
 }
 
 func (mlo *MgmLoginOptions) IsJWTRequired() bool {

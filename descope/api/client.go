@@ -95,6 +95,7 @@ var (
 			tenantSearchAll:                          "mgmt/tenant/search",
 			tenantSettings:                           "mgmt/tenant/settings",
 			tenantGenerateSSOConfigurationLink:       "mgmt/tenant/adminlinks/sso/generate",
+			tenantRevokeSSOConfigurationLink:         "mgmt/tenant/adminlinks/sso/revoke",
 			ssoApplicationOIDCCreate:                 "mgmt/sso/idp/app/oidc/create",
 			ssoApplicationSAMLCreate:                 "mgmt/sso/idp/app/saml/create",
 			ssoApplicationOIDCUpdate:                 "mgmt/sso/idp/app/oidc/update",
@@ -139,7 +140,8 @@ var (
 			userGenerateOTPForTest:                   "mgmt/tests/generate/otp",
 			userGenerateMagicLinkForTest:             "mgmt/tests/generate/magiclink",
 			userGenerateEnchantedLinkForTest:         "mgmt/tests/generate/enchantedlink",
-			userCreateEmbeddedLink:                   "mgmt/user/signin/embeddedlink",
+			userCreateSigninEmbeddedLink:             "mgmt/user/signin/embeddedlink",
+			userCreateSignUpEmbeddedLink:             "mgmt/user/signup/embeddedlink",
 			userHistory:                              "mgmt/user/history",
 			accessKeyCreate:                          "mgmt/accesskey/create",
 			accessKeyLoad:                            "mgmt/accesskey",
@@ -154,12 +156,14 @@ var (
 			ssoSettingsNew:                           "mgmt/sso/settings/new",
 			ssoSAMLSettings:                          "mgmt/sso/saml",
 			ssoSAMLSettingsByMetadata:                "mgmt/sso/saml/metadata",
+			ssoRedirectURL:                           "mgmt/sso/redirect",
 			ssoOIDCSettings:                          "mgmt/sso/oidc",
 			ssoMetadata:                              "mgmt/sso/metadata",
 			ssoMapping:                               "mgmt/sso/mapping",
 			passwordSettings:                         "mgmt/password/settings",
 			updateJWT:                                "mgmt/jwt/update",
 			impersonate:                              "mgmt/impersonate",
+			stopImpersonation:                        "mgmt/stop/impersonation",
 			mgmtSignIn:                               "mgmt/auth/signin",
 			mgmtSignUp:                               "mgmt/auth/signup",
 			mgmtSignUpOrIn:                           "mgmt/auth/signup-in",
@@ -216,13 +220,20 @@ var (
 			fgaCheck:                                 "mgmt/fga/check",
 			fgaLoadMappableSchema:                    "mgmt/fga/mappable/schema",
 			fgaSearchMappableResources:               "mgmt/fga/mappable/resources",
+			fgaResourcesLoad:                         "mgmt/fga/resources/load",
+			fgaResourcesSave:                         "mgmt/fga/resources/save",
+			outboundApplicationCreate:                "mgmt/outbound/app/create",
+			outboundApplicationUpdate:                "mgmt/outbound/app/update",
+			outboundApplicationDelete:                "mgmt/outbound/app/delete",
+			outboundApplicationLoad:                  "mgmt/outbound/app",
+			outboundApplicationLoadAll:               "mgmt/outbound/apps",
 			thirdPartyApplicationCreate:              "mgmt/thirdparty/app/create",
 			thirdPartyApplicationUpdate:              "mgmt/thirdparty/app/update",
 			thirdPartyApplicationPatch:               "mgmt/thirdparty/app/patch",
 			thirdPartyApplicationDelete:              "mgmt/thirdparty/app/delete",
 			thirdPartyApplicationLoad:                "mgmt/thirdparty/app/load",
 			thirdPartyApplicationLoadAll:             "mgmt/thirdparty/apps/load",
-			thidPartyApplicationSecret:               "mgmt/thirdparty/app/secret",
+			thirdPartyApplicationSecret:              "mgmt/thirdparty/app/secret",
 			thirdPartyApplicationRotate:              "mgmt/thirdparty/app/rotate",
 			thirdPartyApplicationConsentDelete:       "mgmt/thirdparty/consents/delete",
 			thirdPartyApplicationTenantConsentDelete: "mgmt/thirdparty/consents/delete/tenant",
@@ -318,6 +329,7 @@ type mgmtEndpoints struct {
 	tenantSettings  string
 
 	tenantGenerateSSOConfigurationLink string
+	tenantRevokeSSOConfigurationLink   string
 
 	ssoApplicationOIDCCreate string
 	ssoApplicationSAMLCreate string
@@ -365,7 +377,8 @@ type mgmtEndpoints struct {
 	userGenerateOTPForTest           string
 	userGenerateMagicLinkForTest     string
 	userGenerateEnchantedLinkForTest string
-	userCreateEmbeddedLink           string
+	userCreateSigninEmbeddedLink     string
+	userCreateSignUpEmbeddedLink     string
 
 	userHistory string
 
@@ -388,9 +401,11 @@ type mgmtEndpoints struct {
 	ssoSettingsNew            string
 	ssoSAMLSettings           string
 	ssoSAMLSettingsByMetadata string
+	ssoRedirectURL            string
 	ssoOIDCSettings           string
 	updateJWT                 string
 	impersonate               string
+	stopImpersonation         string
 	mgmtSignIn                string
 	mgmtSignUp                string
 	mgmtSignUpOrIn            string
@@ -457,6 +472,14 @@ type mgmtEndpoints struct {
 	fgaCheck                   string
 	fgaLoadMappableSchema      string
 	fgaSearchMappableResources string
+	fgaResourcesLoad           string
+	fgaResourcesSave           string
+
+	outboundApplicationCreate  string
+	outboundApplicationUpdate  string
+	outboundApplicationDelete  string
+	outboundApplicationLoad    string
+	outboundApplicationLoadAll string
 
 	thirdPartyApplicationCreate              string
 	thirdPartyApplicationUpdate              string
@@ -464,7 +487,7 @@ type mgmtEndpoints struct {
 	thirdPartyApplicationDelete              string
 	thirdPartyApplicationLoad                string
 	thirdPartyApplicationLoadAll             string
-	thidPartyApplicationSecret               string
+	thirdPartyApplicationSecret              string
 	thirdPartyApplicationRotate              string
 	thirdPartyApplicationConsentDelete       string
 	thirdPartyApplicationTenantConsentDelete string
@@ -733,6 +756,10 @@ func (e *endpoints) ManagementTenantGenerateSSOConfigurationLink() string {
 	return path.Join(e.versionV2, e.mgmt.tenantGenerateSSOConfigurationLink)
 }
 
+func (e *endpoints) ManagementTenantRevokeSSOConfigurationLink() string {
+	return path.Join(e.version, e.mgmt.tenantRevokeSSOConfigurationLink)
+}
+
 func (e *endpoints) ManagementSSOApplicationOIDCCreate() string {
 	return path.Join(e.version, e.mgmt.ssoApplicationOIDCCreate)
 }
@@ -962,6 +989,10 @@ func (e *endpoints) ManagementSSOSAMLSettingsByMetadata() string {
 	return path.Join(e.version, e.mgmt.ssoSAMLSettingsByMetadata)
 }
 
+func (e *endpoints) ManagementSSORedirectURL() string {
+	return path.Join(e.version, e.mgmt.ssoRedirectURL)
+}
+
 func (e *endpoints) ManagementSSOOIDCSettings() string {
 	return path.Join(e.version, e.mgmt.ssoOIDCSettings)
 }
@@ -991,6 +1022,10 @@ func (e *endpoints) ManagementImpersonate() string {
 	return path.Join(e.version, e.mgmt.impersonate)
 }
 
+func (e *endpoints) ManagementStopImpersonation() string {
+	return path.Join(e.version, e.mgmt.stopImpersonation)
+}
+
 func (e *endpoints) ManagementSignIn() string {
 	return path.Join(e.version, e.mgmt.mgmtSignIn)
 }
@@ -1007,8 +1042,12 @@ func (e *endpoints) Anonymous() string {
 	return path.Join(e.version, e.mgmt.anonymous)
 }
 
-func (e *endpoints) ManagementGenerateEmbeddedLink() string {
-	return path.Join(e.version, e.mgmt.userCreateEmbeddedLink)
+func (e *endpoints) ManagementGenerateSigninEmbeddedLink() string {
+	return path.Join(e.version, e.mgmt.userCreateSigninEmbeddedLink)
+}
+
+func (e *endpoints) ManagementGenerateSignUpEmbeddedLink() string {
+	return path.Join(e.version, e.mgmt.userCreateSignUpEmbeddedLink)
 }
 
 func (e *endpoints) ManagementPermissionCreate() string {
@@ -1219,6 +1258,34 @@ func (e *endpoints) ManagementFGACheck() string {
 	return path.Join(e.version, e.mgmt.fgaCheck)
 }
 
+func (e *endpoints) ManagementFGAResourcesLoad() string {
+	return path.Join(e.version, e.mgmt.fgaResourcesLoad)
+}
+
+func (e *endpoints) ManagementFGAResourcesSave() string {
+	return path.Join(e.version, e.mgmt.fgaResourcesSave)
+}
+
+func (e *endpoints) ManagementOutboundApplicationCreate() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationCreate)
+}
+
+func (e *endpoints) ManagementOutboundApplicationUpdate() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationUpdate)
+}
+
+func (e *endpoints) ManagementOutboundApplicationDelete() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationDelete)
+}
+
+func (e *endpoints) ManagementOutboundApplicationLoad() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationLoad)
+}
+
+func (e *endpoints) ManagementOutboundApplicationLoadAll() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationLoadAll)
+}
+
 func (e *endpoints) ManagementThirdPartyApplicationCreate() string {
 	return path.Join(e.version, e.mgmt.thirdPartyApplicationCreate)
 }
@@ -1244,7 +1311,7 @@ func (e *endpoints) ManagementThirdPartyApplicationPatch() string {
 }
 
 func (e *endpoints) ManagementThirdPartyApplicationSecret() string {
-	return path.Join(e.version, e.mgmt.thidPartyApplicationSecret)
+	return path.Join(e.version, e.mgmt.thirdPartyApplicationSecret)
 }
 
 func (e *endpoints) ManagementThirdPartyApplicationRotate() string {

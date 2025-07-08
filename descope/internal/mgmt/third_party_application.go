@@ -181,6 +181,7 @@ func (s *thirdPartyApplication) SearchConsents(ctx context.Context, consentReque
 		"appId":     consentRequest.AppID,
 		"userId":    consentRequest.UserID,
 		"page":      consentRequest.Page,
+		"limit":     consentRequest.Limit,
 		"tenantId":  consentRequest.TenantID,
 	}
 	res, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationSearchConsents(), req, nil, s.conf.ManagementKey)
@@ -200,6 +201,7 @@ func makeCreateUpdateThirdPartyApplicationRequest(appRequest *descope.ThirdParty
 		"approvedCallbackUrls": appRequest.ApprovedCallbackUrls,
 		"permissionsScopes":    appRequest.PermissionsScopes,
 		"attributesScopes":     appRequest.AttributesScopes,
+		"jwtBearerSettings":    appRequest.JWTBearerSettings,
 	}
 }
 

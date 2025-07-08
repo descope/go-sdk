@@ -184,3 +184,41 @@ func (f *fga) SearchMappableResources(ctx context.Context, tenantID string, reso
 
 	return mappableResources.FGAMappableResources, nil
 }
+
+type resourcesDetailsResponse struct {
+	ResourcesDetails []*descope.ResourceDetails `json:"resourcesDetails"`
+}
+
+func (f *fga) LoadResourcesDetails(ctx context.Context, resourceIdentifiers []*descope.ResourceIdentifier) ([]*descope.ResourceDetails, error) {
+	if len(resourceIdentifiers) == 0 {
+		return nil, utils.NewInvalidArgumentError("resourceIdentifiers")
+	}
+
+	body := map[string]any{
+		"resourceIdentifiers": resourceIdentifiers,
+	}
+
+	res, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGAResourcesLoad(), body, nil, f.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+
+	var resp resourcesDetailsResponse
+	if err := utils.Unmarshal([]byte(res.BodyStr), &resp); err != nil {
+		return nil, err // notest
+	}
+	return resp.ResourcesDetails, nil
+}
+
+func (f *fga) SaveResourcesDetails(ctx context.Context, resourcesDetails []*descope.ResourceDetails) error {
+	if len(resourcesDetails) == 0 {
+		return utils.NewInvalidArgumentError("resourcesDetails")
+	}
+
+	body := map[string]any{
+		"resourcesDetails": resourcesDetails,
+	}
+
+	_, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGAResourcesSave(), body, nil, f.conf.ManagementKey)
+	return err
+}

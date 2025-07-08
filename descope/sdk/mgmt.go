@@ -64,6 +64,10 @@ type Tenant interface {
 	// email - Optional, in case provided, email will be sent according to the given email
 	// templateID - Optional, in case provided, the specified email's template will be used
 	GenerateSSOConfigurationLink(ctx context.Context, tenantID string, expireDuration int64, ssoID string, email string, templateID string) (string, error)
+
+	// Revoke tenant admin self service SSO configuration link
+	// ssoID - Optional, in case provided, the specified sso configuration will be used
+	RevokeSSOConfigurationLink(ctx context.Context, tenantID string, ssoID string) error
 }
 
 // Provides functions for managing SSO applications in a project.
@@ -78,6 +82,8 @@ type SSOApplication interface {
 	// Logo: Optional sso application logo.
 	// LoginPageURL: The URL where login page is hosted.
 	// ForceAuthentication: Optional determine if the IdP should force the user to re-authenticate.
+	// JWTBearerSettings: Optional JWT Bearer settings which used to validate external token.
+	// BackChannelLogoutURL: Optional Back-Channel Logout URL (as per CIBA spec)
 	//
 	// The argument appRequest.Id value is optional and will be auto generated if provided with empty value
 	// The argument appRequest.Id and appRequest.Name must be unique per project.
@@ -259,10 +265,10 @@ type User interface {
 	Deactivate(ctx context.Context, loginIDOrUserID string) (*descope.UserResponse, error)
 
 	// Logout given user from all their devices, by login ID
-	LogoutUser(ctx context.Context, loginID string) error
+	LogoutUser(ctx context.Context, loginID string, sessionTypes ...string) error
 
 	// Logout given user from all their devices, by user ID
-	LogoutUserByUserID(ctx context.Context, userID string) error
+	LogoutUserByUserID(ctx context.Context, userID string, sessionTypes ...string) error
 
 	// Change current loginID to new one
 	// Leave empty to remove the current login ID
@@ -409,7 +415,11 @@ type User interface {
 
 	// Generate an embedded link token, later can be used to authenticate via magiclink verify method
 	// or via flow verify step
-	GenerateEmbeddedLink(ctx context.Context, loginID string, customClaims map[string]any) (string, error)
+	GenerateEmbeddedLink(ctx context.Context, loginID string, customClaims map[string]any, timeout int64) (string, error)
+
+	// Generate an embedded link sign-up token, later can be used to authenticate via magiclink verify method
+	// or via flow verify step
+	GenerateEmbeddedLinkSignUp(ctx context.Context, loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.EmbeddedLinkLoginOptions) (string, error)
 
 	// Use to retrieve users' authentication history, by the given user's ids.
 	// returns slice of users' authentication history.
@@ -510,6 +520,10 @@ type SSO interface {
 	// ssoID (optional) - you can pass ssoID in case using multi SSO and you want to configure specific SSO configuration
 	ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domains []string, ssoID string) error
 
+	// Configure SSO redirect URLs for a tenant.
+	// This will override the existing redirect URLs for the tenant. and will not affect any other SSO setting
+	ConfigureSSORedirectURL(ctx context.Context, tenantID string, samlRedirectURL *string, oauthRedirectURL *string, ssoID string) error
+
 	// Configure SSO OIDC settings for a tenant manually.
 	//
 	// tenantID, settings are required.
@@ -587,6 +601,9 @@ type JWT interface {
 	// The impersonator user must have `impersonation` permission in order for this request to work
 	// The response would be a refresh JWT of the impersonated user
 	Impersonate(ctx context.Context, impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string, refreshDuration int32) (string, error)
+	// Stop impersonation
+	// Provide an impersonation JWT, and get back a refresh JWT of the actor
+	StopImpersonation(ctx context.Context, jwt string, customClaims map[string]any, tenantID string, refreshDuration int32) (string, error)
 
 	// Generate a JWT for a user, simulating a signin request
 	SignIn(ctx context.Context, loginID string, loginOptions *descope.MgmLoginOptions) (*descope.AuthenticationInfo, error)
@@ -637,7 +654,7 @@ type Role interface {
 	// what this role allows.
 	// The permissionNames parameter denotes which permissions are included in this role.
 	// tenantID is an optional field to tie this role to a specific tenant
-	Create(ctx context.Context, name, description string, permissionNames []string, tenantID string) error
+	Create(ctx context.Context, name, description string, permissionNames []string, tenantID string, defaultRole bool) error
 
 	// Update an existing role.
 	//
@@ -647,7 +664,7 @@ type Role interface {
 	//
 	// IMPORTANT: All parameters will override whatever values are currently set
 	// in the existing role. Use carefully.
-	Update(ctx context.Context, name, tenantID, newName, description string, permissionNames []string) error
+	Update(ctx context.Context, name, tenantID, newName, description string, permissionNames []string, defaultRole bool) error
 
 	// Delete an existing role.
 	//
@@ -873,6 +890,12 @@ type FGA interface {
 
 	// SearchMappableResources searches for mappable resources based on the given queries.
 	SearchMappableResources(ctx context.Context, tenantID string, resourcesQueries []*descope.FGAMappableResourcesQuery, options *descope.FGAMappableResourcesOptions) ([]*descope.FGAMappableResources, error)
+
+	// SaveResourcesDetails saves details for resources
+	SaveResourcesDetails(ctx context.Context, resourcesDetails []*descope.ResourceDetails) error
+
+	// LoadResourcesDetails loads details for given resource identifiers
+	LoadResourcesDetails(ctx context.Context, resourceIdentifiers []*descope.ResourceIdentifier) ([]*descope.ResourceDetails, error)
 }
 
 // Provides functions for managing third party applications in a project.
@@ -887,6 +910,7 @@ type ThirdPartyApplication interface {
 	// ApprovedCallbackUrls: List of approved callback URLs.
 	// PermissionsScopes: List of permissions scopes.
 	// AttributesScopes: List of attributes scopes.
+	// JWTBearerSettings: Optional JWT Bearer settings which used to validate external token.
 	//
 	// The argument appRequest.Name must be unique per project.
 	CreateApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) (id string, secret string, err error)
@@ -928,6 +952,30 @@ type ThirdPartyApplication interface {
 
 	// Search consents for a third party application.
 	SearchConsents(ctx context.Context, options *descope.ThirdPartyApplicationConsentSearchOptions) ([]*descope.ThirdPartyApplicationConsent, int, error)
+}
+
+// Provides functions for managing third party applications in a project.
+type OutboundApplication interface {
+	// Create a new outbound application with the given name.
+	CreateApplication(ctx context.Context, appRequest *descope.CreateOutboundAppRequest) (app *descope.OutboundApp, err error)
+
+	// Update an existing outbound application.
+	//
+	// IMPORTANT: All parameters are required and will override whatever value is currently
+	// set in the existing sso application. Use carefully.
+	// leave clientSecret as nil if you don't want to update the client secret
+	UpdateApplication(ctx context.Context, appRequest *descope.OutboundApp, clientSecret *string) (app *descope.OutboundApp, err error)
+
+	// Delete an existing outbound application.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteApplication(ctx context.Context, id string) error
+
+	// Load a outbound application by id.
+	LoadApplication(ctx context.Context, id string) (*descope.OutboundApp, error)
+
+	// Load all project outbound applications.
+	LoadAllApplications(ctx context.Context) ([]*descope.OutboundApp, error)
 }
 
 // Provides various APIs for managing a Descope project programmatically. A management key must
@@ -981,4 +1029,7 @@ type Management interface {
 
 	// Provides functions for managing third party applications in a project.
 	ThirdPartyApplication() ThirdPartyApplication
+
+	// Provides functions for managing outbound applications in a project.
+	OutboundApplication() OutboundApplication
 }

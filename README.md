@@ -263,7 +263,7 @@ Users can authenticate using their social logins, using the OAuth protocol. Conf
 // If configured globally, the return URL is optional. If provided however, it will be used
 // instead of any global configuration.
 // Redirect the user to the returned URL to start the OAuth redirect chain
-url, err := descopeClient.Auth.OAuth().SignUpOrIn(context.Background(), "google", "https://my-app.com/handle-oauth", nil, nil, w)
+url, err := descopeClient.Auth.OAuth().SignUpOrIn(context.Background(), "google", "https://my-app.com/handle-oauth", "", nil, nil, w)
 if err != nil {
     // handle error
 }
@@ -285,7 +285,7 @@ Users can also connect the social login account to their existing user:
 ```go
 // A valid Refresh Token of the existing user is required and will be taken from the request header or cookies automatically.
 // If allowAllMerge is 'true' the users will be merged also if there is no common identifier between the social provider and the existing user (like email).
-url, err := descopeClient.Auth.OAuth().UpdateUser(context.Background(), "google", "https://my-app.com/handle-oauth", true, nil, nil, w)
+url, err := descopeClient.Auth.OAuth().UpdateUser(context.Background(), "google", "https://my-app.com/handle-oauth", "", true, nil, nil, w)
 if err != nil {
     // handle error
 }
@@ -357,7 +357,7 @@ Users can authenticate to a specific tenant using SAML or OIDC. Configure your S
 // If configured globally, the return URL is optional. If provided however, it will be used
 // instead of any global configuration.
 // Redirect the user to the returned URL to start the SSO SAML/OIDC redirect chain
-url, err := descopeClient.Auth.SSO().Start("my-tenant-ID", "https://my-app.com/handle-saml", "", "", nil, nil, w)
+url, err := descopeClient.Auth.SSO().Start("my-tenant-ID", "https://my-app.com/handle-saml", "", "", "", nil, nil, w)
 if err != nil {
     // handle error
 }
@@ -370,7 +370,7 @@ if err != nil {
 // If configured globally, the return URL is optional. If provided however, it will be used
 // instead of any global configuration.
 // Redirect the user to the returned URL to start the SSO/SAML redirect chain
-url, err := descopeClient.Auth.SAML().Start(context.Background(), "my-tenant-ID", "https://my-app.com/handle-saml", nil, nil, w)
+url, err := descopeClient.Auth.SAML().Start(context.Background(), "my-tenant-ID", "https://my-app.com/handle-saml", "", nil, nil, w)
 if err != nil {
     // handle error
 }
@@ -814,6 +814,9 @@ err := descopeClient.Management.Tenant().ConfigureSettings(context.Background(),
 // email can be provided to send the link to (email's templateID can be provided as well)
 link, err := descopeClient.Management.Tenant().GenerateSSOConfigurationLink(context.Background(), "My Tenant", 60 * 60 * 24, "", "", "")
 
+// Revoke tenant admin self service link for SSO Suite
+// sso id can be provided for a specific sso configuration
+err := descopeClient.Management.Tenant().RevokeSSOConfigurationLink(context.Background(), "My Tenant", "")
 ```
 
 ### Manage Users
@@ -951,9 +954,13 @@ if err == nil {
 }
 
 // Logout given user from all its devices, by login ID
+// Session types (optional string array) can be added to logout request
+// Which will cause only session that were marked with this specific type to be revoked
 err := descopeClient.Management.User().LogoutUser(context.Background(), "<login id>")
 
 // Logout given user from all its devices, by user ID
+// Session types (optional string array) can be added to logout request
+// Which will cause only session that were marked with this specific type to be revoked
 err := descopeClient.Management.User().LogoutUserByUserID(context.Background(), "<user id>")
 
 // Get users' authentication history
@@ -1141,7 +1148,7 @@ Note: Certificates should have a similar structure to:
 
 ```
 -----BEGIN CERTIFICATE-----
-Certifcate contents
+Certificate contents
 -----END CERTIFICATE-----
 ```
 
@@ -1377,12 +1384,25 @@ if err != nil {
 }
 ```
 
+After impersonation is done, you can call `StopImpersonation`, and get a jwt of the original actor
+jwt - impersonation jwt
+TenantID would be the tenant to set as DCT claim, in case set
+customClaims - would be extra claims that are needed on the JWT
+refreshDuration - a custom refresh duration in seconds for the impersonation JWT, 0 will use project configuration
+
+```go
+refreshJWT, err := descopeClient.Management.JWT().StopImpersonation(context.Background(), jwt, map[string]any{"k1":"v1"}, "T1", 0)
+if err != nil {
+    // handle error
+}
+```
+
 ### Embedded links
 
 ```go
 // Embedded links can be created to directly receive a verifiable token without sending it.
 // This token can then be verified using the magic link 'verify' function, either directly or through a flow.
-token, err := descopeClient.Management.User().GenerateEmbeddedLink(context.Background(), "desmond@descope.com", map[string]any{"key1":"value1"})
+token, err := descopeClient.Management.User().GenerateEmbeddedLink(context.Background(), "desmond@descope.com", map[string]any{"key1":"value1"}, timeout int64)
 ```
 
 ### Audit
@@ -1534,7 +1554,7 @@ if err == nil {
 err := descopeClient.Management.Project().Delete(context.Background())
 ```
 
-With using a company mangement key you can get a list of all the projects in the company:
+With using a company management key you can get a list of all the projects in the company:
 
 ```go
 projects, err := descopeClient.Management.Project().ListProjects(context.Background())
@@ -1681,6 +1701,36 @@ err = descopeClient.DescopeClient().Management.ThirdPartyApplication().DeleteCon
 	UserIDs: string{"my-user"}
 })
 
+```
+
+### Manage Outbound Applications
+
+You can create, update, delete, or load outbound applications:
+
+```go
+// Create an outbound application
+app, err := descopeClient.Management.OutboundApplication().CreateApplication(context.Background(), &descope.OutboundApp{
+    Name: "My Outbound App",
+    Description: "Description",
+    // ... other fields ...
+})
+
+// Update an outbound application
+// Leave secret as nil, to not update it
+app, err = descopeClient.Management.OutboundApplication().UpdateApplication(context.Background(), &descope.OutboundApp{
+    ID: "app-id",
+    Name: "Updated Name",
+    // ... other fields ...
+}, &secret)
+
+// Delete an outbound application
+err := descopeClient.Management.OutboundApplication().DeleteApplication(context.Background(), "app-id")
+
+// Load an outbound application by id
+app, err := descopeClient.Management.OutboundApplication().LoadApplication(context.Background(), "app-id")
+
+// Load all outbound applications
+apps, err := descopeClient.Management.OutboundApplication().LoadAllApplications(context.Background())
 ```
 
 ## Code Examples

@@ -18,7 +18,7 @@ func TestMockAuthentication(t *testing.T) {
 	descopeClient := client.DescopeClient{
 		Auth: &MockAuthentication{
 			MockOAuth: &MockOAuth{
-				StartAssert: func(provider descope.OAuthProvider, _ string, _ *http.Request, _ *descope.LoginOptions, _ http.ResponseWriter) {
+				StartAssert: func(provider descope.OAuthProvider, _ string, _ string, _ *http.Request, _ *descope.LoginOptions, _ http.ResponseWriter) {
 					called = true
 					assert.EqualValues(t, descope.OAuthApple, provider)
 				},
@@ -27,7 +27,7 @@ func TestMockAuthentication(t *testing.T) {
 		},
 	}
 	assert.NotNil(t, descopeClient.Auth)
-	startResponse, err := descopeClient.Auth.OAuth().Start(context.Background(), descope.OAuthApple, "", nil, nil, nil)
+	startResponse, err := descopeClient.Auth.OAuth().Start(context.Background(), descope.OAuthApple, "", "", nil, nil, nil)
 	require.NoError(t, err)
 	assert.True(t, called)
 	assert.EqualValues(t, startResponse, expectedStartResponse)

@@ -148,6 +148,31 @@ func (s *sso) ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID stri
 	return err
 }
 
+func (s *sso) ConfigureSSORedirectURL(ctx context.Context, tenantID string, samlRedirectURL *string, oauthRedirectURL *string, ssoID string) error {
+	if tenantID == "" {
+		return utils.NewInvalidArgumentError("tenantID")
+	}
+
+	if samlRedirectURL == nil && oauthRedirectURL == nil {
+		return utils.NewInvalidArgumentError("samlRedirectURL or oauthRedirectURL")
+	}
+	req := map[string]any{
+		"tenantId": tenantID,
+	}
+	if samlRedirectURL != nil {
+		req["samlRedirectUrl"] = *samlRedirectURL
+	}
+	if oauthRedirectURL != nil {
+		req["oauthRedirectUrl"] = *oauthRedirectURL
+	}
+	if len(ssoID) > 0 {
+		req["ssoId"] = ssoID
+	}
+
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSORedirectURL(), req, nil, s.conf.ManagementKey)
+	return err
+}
+
 func (s *sso) ConfigureOIDCSettings(ctx context.Context, tenantID string, settings *descope.SSOOIDCSettings, domains []string, ssoID string) error {
 	if tenantID == "" {
 		return utils.NewInvalidArgumentError("tenantID")

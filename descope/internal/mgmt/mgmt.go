@@ -38,6 +38,7 @@ type managementService struct {
 	authz                 sdk.Authz
 	fga                   sdk.FGA
 	thirdPartyApplication sdk.ThirdPartyApplication
+	outboundApplication   sdk.OutboundApplication
 }
 
 func NewManagement(conf ManagementParams, provider *auth.Provider, c *api.Client) *managementService {
@@ -46,6 +47,7 @@ func NewManagement(conf ManagementParams, provider *auth.Provider, c *api.Client
 	service.tenant = &tenant{managementBase: base}
 	service.ssoApplication = &ssoApplication{managementBase: base}
 	service.thirdPartyApplication = &thirdPartyApplication{managementBase: base}
+	service.outboundApplication = &outboundApplication{managementBase: base}
 	service.user = &user{managementBase: base}
 	service.accessKey = &accessKey{managementBase: base}
 	service.sso = &sso{managementBase: base}
@@ -140,6 +142,11 @@ func (mgmt *managementService) FGA() sdk.FGA {
 func (mgmt *managementService) ThirdPartyApplication() sdk.ThirdPartyApplication {
 	mgmt.ensureManagementKey()
 	return mgmt.thirdPartyApplication
+}
+
+func (mgmt *managementService) OutboundApplication() sdk.OutboundApplication {
+	mgmt.ensureManagementKey()
+	return mgmt.outboundApplication
 }
 
 func (mgmt *managementService) ensureManagementKey() {

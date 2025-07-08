@@ -18,7 +18,7 @@ type ssoStartResponse struct {
 	URL string `json:"url"`
 }
 
-func (auth *sso) Start(ctx context.Context, tenant string, redirectURL string, prompt string, ssoID string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (url string, err error) {
+func (auth *sso) Start(ctx context.Context, tenant string, redirectURL string, prompt string, ssoID string, loginHint string, r *http.Request, loginOptions *descope.LoginOptions, w http.ResponseWriter) (url string, err error) {
 	if tenant == "" {
 		return "", utils.NewInvalidArgumentError("tenant")
 	}
@@ -33,6 +33,9 @@ func (auth *sso) Start(ctx context.Context, tenant string, redirectURL string, p
 	}
 	if len(ssoID) > 0 {
 		m["ssoId"] = ssoID
+	}
+	if len(loginHint) > 0 {
+		m["loginHint"] = loginHint
 	}
 
 	var pswd string
