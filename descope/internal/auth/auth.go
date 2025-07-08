@@ -962,6 +962,10 @@ func composeNOTPSignUpOrInURL() string {
 	return api.Routes.SignUpOrInNOTP()
 }
 
+func composeNOTPUpdateUserURL() string {
+	return api.Routes.UpdateUserNOTP()
+}
+
 func composeNOTPGetSession() string {
 	return api.Routes.GetNOTPSession()
 }
