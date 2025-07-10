@@ -35,6 +35,7 @@ type managementService struct {
 	flow                  sdk.Flow
 	project               sdk.Project
 	audit                 sdk.Audit
+	analytics             sdk.Analytics
 	authz                 sdk.Authz
 	fga                   sdk.FGA
 	thirdPartyApplication sdk.ThirdPartyApplication
@@ -61,6 +62,7 @@ func NewManagement(conf ManagementParams, provider *auth.Provider, c *api.Client
 	service.authz = &authz{managementBase: base}
 	service.password = &passwordManagement{managementBase: base}
 	service.fga = &fga{managementBase: base, fgaCacheURL: conf.FGACacheURL}
+	service.analytics = &analytics{managementBase: base}
 	return service
 }
 
@@ -127,6 +129,11 @@ func (mgmt *managementService) Project() sdk.Project {
 func (mgmt *managementService) Audit() sdk.Audit {
 	mgmt.ensureManagementKey()
 	return mgmt.audit
+}
+
+func (mgmt *managementService) Analytics() sdk.Analytics {
+	mgmt.ensureManagementKey()
+	return mgmt.analytics
 }
 
 func (mgmt *managementService) Authz() sdk.Authz {

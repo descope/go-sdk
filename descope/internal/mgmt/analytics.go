@@ -51,7 +51,7 @@ type apiAnalyticsRecord struct {
 	Geo       string `json:"geo,omitempty"`
 	Tenant    string `json:"tenant,omitempty"`
 	Referrer  string `json:"referrer,omitempty"`
-	Cnt       int64  `json:"cnt,omitempty"`
+	Cnt       string `json:"cnt,omitempty"`
 }
 
 type apiSearchAnalyticsResponse struct {
@@ -71,6 +71,10 @@ func unmarshalAnalyticsRecords(res *api.HTTPResponse) ([]*descope.AnalyticRecord
 		if err != nil {
 			return nil, err
 		}
+		cnt, err := strconv.ParseInt(rec.Cnt, 10, 64)
+		if err != nil {
+			return nil, err
+		}
 		records = append(records, &descope.AnalyticRecord{
 			ProjectID: rec.ProjectID,
 			Action:    rec.Action,
@@ -80,7 +84,7 @@ func unmarshalAnalyticsRecords(res *api.HTTPResponse) ([]*descope.AnalyticRecord
 			Geo:       rec.Geo,
 			Tenant:    rec.Tenant,
 			Referrer:  rec.Referrer,
-			Cnt:       int(rec.Cnt),
+			Cnt:       int(cnt),
 		})
 	}
 	return records, nil
