@@ -45,6 +45,7 @@ var (
 			signUpNOTP:                   "auth/notp/whatsapp/signup",
 			signInNOTP:                   "auth/notp/whatsapp/signin",
 			signUpOrInNOTP:               "auth/notp/whatsapp/signup-in",
+			updateUserNOTP:               "auth/notp/whatsapp/update",
 			getNOTPSession:               "auth/notp/pending-session",
 			verifyCode:                   "auth/otp/verify",
 			signUpPassword:               "auth/password/signup",
@@ -155,6 +156,7 @@ var (
 			ssoSettingsNew:                           "mgmt/sso/settings/new",
 			ssoSAMLSettings:                          "mgmt/sso/saml",
 			ssoSAMLSettingsByMetadata:                "mgmt/sso/saml/metadata",
+			ssoRedirectURL:                           "mgmt/sso/redirect",
 			ssoOIDCSettings:                          "mgmt/sso/oidc",
 			ssoMetadata:                              "mgmt/sso/metadata",
 			ssoMapping:                               "mgmt/sso/mapping",
@@ -276,6 +278,7 @@ type authEndpoints struct {
 	signUpNOTP                   string
 	signInNOTP                   string
 	signUpOrInNOTP               string
+	updateUserNOTP               string
 	getNOTPSession               string
 	verifyCode                   string
 	signUpPassword               string
@@ -399,6 +402,7 @@ type mgmtEndpoints struct {
 	ssoSettingsNew            string
 	ssoSAMLSettings           string
 	ssoSAMLSettingsByMetadata string
+	ssoRedirectURL            string
 	ssoOIDCSettings           string
 	updateJWT                 string
 	impersonate               string
@@ -522,6 +526,10 @@ func (e *endpoints) SignInNOTP() string {
 
 func (e *endpoints) SignUpOrInNOTP() string {
 	return path.Join(e.version, e.auth.signUpOrInNOTP)
+}
+
+func (e *endpoints) UpdateUserNOTP() string {
+	return path.Join(e.version, e.auth.updateUserNOTP)
 }
 
 func (e *endpoints) GetNOTPSession() string {
@@ -981,6 +989,10 @@ func (e *endpoints) ManagementSSOSAMLSettings() string {
 
 func (e *endpoints) ManagementSSOSAMLSettingsByMetadata() string {
 	return path.Join(e.version, e.mgmt.ssoSAMLSettingsByMetadata)
+}
+
+func (e *endpoints) ManagementSSORedirectURL() string {
+	return path.Join(e.version, e.mgmt.ssoRedirectURL)
 }
 
 func (e *endpoints) ManagementSSOOIDCSettings() string {

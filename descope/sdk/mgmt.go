@@ -520,6 +520,10 @@ type SSO interface {
 	// ssoID (optional) - you can pass ssoID in case using multi SSO and you want to configure specific SSO configuration
 	ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID string, settings *descope.SSOSAMLSettingsByMetadata, redirectURL string, domains []string, ssoID string) error
 
+	// Configure SSO redirect URLs for a tenant.
+	// This will override the existing redirect URLs for the tenant. and will not affect any other SSO setting
+	ConfigureSSORedirectURL(ctx context.Context, tenantID string, samlRedirectURL *string, oauthRedirectURL *string, ssoID string) error
+
 	// Configure SSO OIDC settings for a tenant manually.
 	//
 	// tenantID, settings are required.

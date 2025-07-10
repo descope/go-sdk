@@ -85,6 +85,17 @@ type notpAuthenticationRequestBody struct {
 	LoginOptions               *descope.LoginOptions `json:"loginOptions,omitempty"`
 }
 
+type notpUpdateUserRequestBody struct {
+	LoginID            string                 `json:"loginId,omitempty"`
+	Phone              string                 `json:"phone,omitempty"`
+	AddToLoginIDs      bool                   `json:"addToLoginIDs,omitempty"`
+	OnMergeUseExisting bool                   `json:"onMergeUseExisting,omitempty"`
+	ProviderID         string                 `json:"providerId,omitempty"`
+	Templates          *descope.NOTPTemplates `json:"templates,omitempty"`
+	TemplateOptions    map[string]string      `json:"templateOptions,omitempty"`
+	Locale             string                 `json:"locale,omitempty"`
+}
+
 type otpUpdateEmailRequestBody struct {
 	*descope.UpdateOptions `json:",inline"`
 	LoginID                string `json:"loginId,omitempty"`
@@ -179,6 +190,19 @@ func newNOTPAuthenticationSignUpRequestBody(loginID string, user *descope.User, 
 		TemplateOptions: signUpOptions.TemplateOptions,
 	}
 	return res
+}
+
+func newNOTPUpdateUserRequestBody(loginID string, phone string, options *descope.NOTPUpdateOptions) *notpUpdateUserRequestBody {
+	return &notpUpdateUserRequestBody{
+		LoginID:            loginID,
+		Phone:              phone,
+		AddToLoginIDs:      options.AddToLoginIDs,
+		OnMergeUseExisting: options.OnMergeUseExisting,
+		ProviderID:         options.ProviderID,
+		Templates:          options.Templates,
+		TemplateOptions:    options.TemplateOptions,
+		Locale:             options.Locale,
+	}
 }
 
 func newOTPUpdatePhoneRequestBody(loginID, phone string, updateOptions *descope.UpdateOptions) *otpUpdatePhoneRequestBody {
