@@ -926,7 +926,7 @@ type AuditRecord struct {
 type AuditSearchOptions struct {
 	UserIDs         []string  `json:"userIds,omitempty"`         // List of user IDs to filter by
 	Actions         []string  `json:"actions,omitempty"`         // List of actions to filter by
-	ExcludedActions []string  `json:"excludedActions"`           // List of actions to exclude
+	ExcludedActions []string  `json:"excludedActions,omitempty"` // List of actions to exclude
 	From            time.Time `json:"from,omitempty"`            // Retrieve records newer than given time. Limited to no older than 30 days.
 	To              time.Time `json:"to,omitempty"`              // Retrieve records older than given time.
 	Devices         []string  `json:"devices,omitempty"`         // List of devices to filter by. Current devices supported are "Bot"/"Mobile"/"Desktop"/"Tablet"/"Unknown"
@@ -934,9 +934,9 @@ type AuditSearchOptions struct {
 	Geos            []string  `json:"geos,omitempty"`            // List of geos to filter by. Geo is currently country code like "US", "IL", etc.
 	RemoteAddresses []string  `json:"remoteAddresses,omitempty"` // List of remote addresses to filter by
 	LoginIDs        []string  `json:"loginIds,omitempty"`        // List of login IDs to filter by
-	Tenants         []string  `json:"tenants"`                   // List of tenants to filter by
+	Tenants         []string  `json:"tenants,omitempty"`         // List of tenants to filter by
 	NoTenants       bool      `json:"noTenants"`                 // Should audits without any tenants always be included
-	Text            string    `json:"text"`                      // Free text search across all fields
+	Text            string    `json:"text,omitempty"`            // Free text search across all fields
 	Limit           int32     `json:"limit,omitempty"`           // Number of results to include per retrieved page. Current default, and max value, is 1000
 	Page            int32     `json:"page,omitempty"`            // Page number of results to retrieve, zero-based. Default is 0.
 }
@@ -948,6 +948,39 @@ type AuditCreateOptions struct {
 	ActorID  string                 `json:"actorId,omitempty"`
 	Data     map[string]interface{} `json:"data,omitempty"`
 	TenantID string                 `json:"tenantId,omitempty"`
+}
+
+type AnalyticRecord struct {
+	ProjectID string    `json:"projectId,omitempty"`
+	Action    string    `json:"action,omitempty"`
+	Created   time.Time `json:"created,omitempty"`
+	Device    string    `json:"device,omitempty"`
+	Method    string    `json:"method,omitempty"`
+	Geo       string    `json:"geo,omitempty"`
+	Tenant    string    `json:"tenant,omitempty"`
+	Referrer  string    `json:"referrer,omitempty"`
+	Cnt       int       `json:"cnt,omitempty"`
+}
+
+// AnalyticsSearchOptions to filter which analytics we should retrieve.
+// All parameters are optional.
+// `From` is currently limited up to 12 months
+type AnalyticsSearchOptions struct {
+	Actions         []string  `json:"actions,omitempty"`         // List of actions to filter by
+	ExcludedActions []string  `json:"excludedActions,omitempty"` // List of actions to exclude
+	From            time.Time `json:"from,omitempty"`            // Retrieve analytics newer than given time. Limited to no older than 12 months.
+	To              time.Time `json:"to,omitempty"`              // Retrieve records older than given time.
+	Devices         []string  `json:"devices,omitempty"`         // List of devices to filter by. Current devices supported are "Bot"/"Mobile"/"Desktop"/"Tablet"/"Unknown"
+	Methods         []string  `json:"methods,omitempty"`         // List of methods to filter by. Current auth methods are "otp"/"totp"/"magiclink"/"oauth"/"saml"/"password"
+	Geos            []string  `json:"geos,omitempty"`            // List of geos to filter by. Geo is currently country code like "US", "IL", etc.
+	Tenants         []string  `json:"tenants,omitempty"`         // List of tenants to filter by
+	GroupByAction   bool      `json:"groupByAction"`             // Should we group summarized results by action
+	GroupByDevice   bool      `json:"groupByDevice"`             // Should we group summarized results by device
+	GroupByMethod   bool      `json:"groupByMethod"`             // Should we group summarized results by method
+	GroupByGeo      bool      `json:"groupByGeo"`                // Should we group summarized results by geo
+	GroupByTenant   bool      `json:"groupByTenant"`             // Should we group summarized results by tenant
+	GroupByReferrer bool      `json:"groupByReferrer"`           // Should we group summarized results by referrer
+	GroupByCreated  string    `json:"groupByCreated,omitempty"`  // How should we group the dates. Possible values are "h" for hour, "d" for day, "w" for week, "m" for month and "q" for quarter
 }
 
 type ExportSnapshotRequest struct {
