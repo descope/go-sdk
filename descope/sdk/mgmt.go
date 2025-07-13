@@ -694,6 +694,13 @@ type Group interface {
 
 // Provides functions for flow and theme management including export and import by ID.
 type Flow interface {
+	// Run a management flow by its flow ID.
+	//
+	// The flowID parameter specifies the ID of the management flow to run.
+	// The options parameter allows passing input data and preview mode for the flow.
+	// Returns the result of the flow execution as a map or an error if the operation fails.
+	RunManagementFlow(ctx context.Context, flowID string, options *descope.MgmtFlowOptions) (map[string]any, error)
+
 	// Returns metadata of all project flows
 	ListFlows(ctx context.Context) (*descope.FlowList, error)
 

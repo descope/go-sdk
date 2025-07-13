@@ -15,6 +15,17 @@ type flow struct {
 
 var _ sdk.Flow = &flow{}
 
+func (r *flow) RunManagementFlow(ctx context.Context, flowID string, options *descope.MgmtFlowOptions) (map[string]any, error) {
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRunManagementFlow(), map[string]any{
+		"flowId":  flowID,
+		"options": options,
+	}, nil, r.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalManagementFlowResponse(res)
+}
+
 func (r *flow) ListFlows(ctx context.Context) (*descope.FlowList, error) {
 	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementListFlows(), nil, nil, r.conf.ManagementKey)
 	if err != nil {
@@ -108,4 +119,16 @@ func unmarshalTheme(res *api.HTTPResponse) (map[string]any, error) {
 		return nil, err
 	}
 	return a.Theme, nil
+}
+
+func unmarshalManagementFlowResponse(res *api.HTTPResponse) (map[string]any, error) {
+	type mgmtFlowResponse struct {
+		Output map[string]any `json:"output"`
+	}
+	var a *mgmtFlowResponse
+	err := utils.Unmarshal([]byte(res.BodyStr), &a)
+	if err != nil { // notest
+		return nil, err
+	}
+	return a.Output, nil
 }
