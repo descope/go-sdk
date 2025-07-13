@@ -1332,7 +1332,7 @@ func (m *MockFlow) ImportTheme(_ context.Context, theme map[string]any) error {
 	return m.ImportThemeError
 }
 
-func (m *MockFlow) RunManagementFlow(ctx context.Context, flowID string, options *descope.MgmtFlowOptions) (map[string]any, error) {
+func (m *MockFlow) RunManagementFlow(_ context.Context, flowID string, options *descope.MgmtFlowOptions) (map[string]any, error) {
 	if m.RunManagementFlowAssert != nil {
 		m.RunManagementFlowAssert(flowID, options)
 	}
