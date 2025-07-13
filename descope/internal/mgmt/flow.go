@@ -125,10 +125,10 @@ func unmarshalManagementFlowResponse(res *api.HTTPResponse) (map[string]any, err
 	type mgmtFlowResponse struct {
 		Output map[string]any `json:"output"`
 	}
-	var a *mgmtFlowResponse
-	err := utils.Unmarshal([]byte(res.BodyStr), &a)
+	var resp mgmtFlowResponse
+	err := utils.Unmarshal([]byte(res.BodyStr), &resp)
 	if err != nil { // notest
 		return nil, err
 	}
-	return a.Output, nil
+	return resp.Output, nil
 }
