@@ -876,6 +876,9 @@ type FGA interface {
 	// LoadSchema loads the schema for the project.
 	LoadSchema(ctx context.Context) (*descope.FGASchema, error)
 
+	// DryRunSchema validates a schema without saving it and returns what would be deleted from the current schema.
+	DryRunSchema(ctx context.Context, schema *descope.FGASchema) (*descope.FGASchemaDryRunResponse, error)
+
 	// CreateRelation creates new relations for the project.
 	CreateRelations(ctx context.Context, relations []*descope.FGARelation) error
 
