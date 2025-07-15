@@ -760,6 +760,8 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 		require.EqualValues(t, []any{"+11111111"}, req["phones"])
 		require.EqualValues(t, "blue", req["text"])
 		require.EqualValues(t, []interface{}([]interface{}{map[string]interface{}{"Desc": true, "Field": "nono"}, map[string]interface{}{"Desc": false, "Field": "lolo"}}), req["sort"])
+		require.EqualValues(t, map[string]any{"tenant1": map[string]any{"values": []any{"id1", "id2"}}}, req["tenantRoleIds"])
+		require.EqualValues(t, map[string]any{"tenant2": map[string]any{"values": []any{"name1", "name2"}}}, req["tenantRoleNames"])
 	}, response))
 	res, total, err := m.User().SearchAll(context.Background(), &descope.UserSearchOptions{
 		Statuses:         []descope.UserStatus{descope.UserStatusDisabled},
@@ -774,6 +776,8 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 			{Field: "nono", Desc: true},
 			{Field: "lolo", Desc: false},
 		},
+		TenantRoleIDs:   map[string][]string{"tenant1": {"id1", "id2"}},
+		TenantRoleNames: map[string][]string{"tenant2": {"name1", "name2"}},
 	})
 	require.NoError(t, err)
 	require.NotNil(t, res)
@@ -790,7 +794,6 @@ func TestSearchAllTestUsersSuccess(t *testing.T) {
 		}},
 		"total": 85,
 	}
-
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		require.NotNil(t, r.URL)
@@ -800,9 +803,13 @@ func TestSearchAllTestUsersSuccess(t *testing.T) {
 		require.EqualValues(t, true, req["testUsersOnly"].(bool))
 		require.EqualValues(t, true, req["withTestUser"].(bool))
 		require.EqualValues(t, []any{"a@b.com"}, req["emails"])
+		require.EqualValues(t, map[string]any{"tenant1": map[string]any{"values": []any{"id1", "id2"}}}, req["tenantRoleIds"])
+		require.EqualValues(t, map[string]any{"tenant2": map[string]any{"values": []any{"name1", "name2"}}}, req["tenantRoleNames"])
 	}, response))
 	res, _, err := m.User().SearchAllTestUsers(context.Background(), &descope.UserSearchOptions{
-		Emails: []string{"a@b.com"},
+		Emails:          []string{"a@b.com"},
+		TenantRoleIDs:   map[string][]string{"tenant1": {"id1", "id2"}},
+		TenantRoleNames: map[string][]string{"tenant2": {"name1", "name2"}},
 	})
 	require.NoError(t, err)
 	require.NotNil(t, res)
