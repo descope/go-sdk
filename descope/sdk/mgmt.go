@@ -799,6 +799,10 @@ type Audit interface {
 	CreateEvent(ctx context.Context, options *descope.AuditCreateOptions) error
 }
 
+type Analytics interface {
+	Search(ctx context.Context, options *descope.AnalyticsSearchOptions) ([]*descope.AnalyticRecord, error)
+}
+
 // Provides authorization ReBAC capabilities
 type Authz interface {
 	// SaveSchema creating or updating it.
@@ -1017,6 +1021,9 @@ type Management interface {
 
 	// Provides functions for managing audit
 	Audit() Audit
+
+	// Provides functions for searching analytics
+	Analytics() Analytics
 
 	// Provide functions for managing projects
 	Project() Project

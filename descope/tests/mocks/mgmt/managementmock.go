@@ -22,6 +22,7 @@ type MockManagement struct {
 	*MockFlow
 	*MockProject
 	*MockAudit
+	*MockAnalytics
 	*MockAuthz
 	*MockFGA
 	*MockThirdPartyApplication
@@ -74,6 +75,10 @@ func (m *MockManagement) Project() sdk.Project {
 
 func (m *MockManagement) Audit() sdk.Audit {
 	return m.MockAudit
+}
+
+func (m *MockManagement) Analytics() sdk.Analytics {
+	return m.MockAnalytics
 }
 
 func (m *MockManagement) Authz() sdk.Authz {
@@ -1446,6 +1451,19 @@ func (m *MockAudit) CreateEvent(_ context.Context, options *descope.AuditCreateO
 		m.CreateEventAssert(options)
 	}
 	return m.CreateEventError
+}
+
+type MockAnalytics struct {
+	SearchAssert   func(*descope.AnalyticsSearchOptions)
+	SearchResponse []*descope.AnalyticRecord
+	SearchError    error
+}
+
+func (m *MockAnalytics) Search(_ context.Context, options *descope.AnalyticsSearchOptions) ([]*descope.AnalyticRecord, error) {
+	if m.SearchAssert != nil {
+		m.SearchAssert(options)
+	}
+	return m.SearchResponse, m.SearchError
 }
 
 type MockAuthz struct {
