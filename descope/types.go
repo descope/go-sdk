@@ -871,6 +871,8 @@ type UserSearchOptions struct {
 	ToCreatedTime    int64
 	FromModifiedTime int64
 	ToModifiedTime   int64
+	TenantRoleIDs    map[string][]string
+	TenantRoleNames  map[string][]string
 }
 
 type UserSearchSort struct {
