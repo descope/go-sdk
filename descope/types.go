@@ -1293,3 +1293,8 @@ type MgmtUserRequest struct {
 	PhoneVerified bool   `json:"phoneVerified"`
 	SsoAppID      string `json:"ssoAppId"`
 }
+
+type MgmtFlowOptions struct {
+	Input   map[string]any `json:"input,omitempty"`
+	Preview bool           `json:"preview,omitempty"`
+}

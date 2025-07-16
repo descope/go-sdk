@@ -129,3 +129,68 @@ func TestImportThemeMissingArgument(t *testing.T) {
 	err := mgmt.Flow().ImportTheme(context.Background(), nil)
 	require.ErrorContains(t, err, utils.NewInvalidArgumentError("theme").Message)
 }
+
+func TestRunManagementFlowSuccess(t *testing.T) {
+	flowID := "test-flow"
+	options := &descope.MgmtFlowOptions{
+		Input: map[string]any{"key": "value"},
+	}
+	output := map[string]any{
+		"result": "success",
+		"data":   map[string]any{"foo": "bar"},
+	}
+	body := map[string]any{
+		"output": output,
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, flowID, req["flowId"])
+		require.NotNil(t, req["options"])
+		optionsMap := req["options"].(map[string]any)
+		require.Equal(t, map[string]any{"key": "value"}, optionsMap["input"])
+	}, body))
+	res, err := mgmt.Flow().RunManagementFlow(context.Background(), flowID, options)
+	require.NoError(t, err)
+	assert.EqualValues(t, output, res)
+}
+
+func TestRunManagementFlowSuccessWithNilOptions(t *testing.T) {
+	flowID := "test-flow"
+	output := map[string]any{
+		"result": "success",
+	}
+	body := map[string]any{
+		"output": output,
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, flowID, req["flowId"])
+		require.Nil(t, req["options"])
+	}, body))
+	res, err := mgmt.Flow().RunManagementFlow(context.Background(), flowID, nil)
+	require.NoError(t, err)
+	assert.EqualValues(t, output, res)
+}
+
+func TestRunManagementFlowFailure(t *testing.T) {
+	flowID := "test-flow"
+	options := &descope.MgmtFlowOptions{
+		Input: map[string]any{"key": "value"},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, flowID, req["flowId"])
+		require.NotNil(t, req["options"])
+		optionsMap := req["options"].(map[string]any)
+		require.Equal(t, map[string]any{"key": "value"}, optionsMap["input"])
+	}))
+	res, err := mgmt.Flow().RunManagementFlow(context.Background(), flowID, options)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}

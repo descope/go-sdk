@@ -1289,6 +1289,10 @@ type MockFlow struct {
 
 	ImportThemeAssert func(theme map[string]any)
 	ImportThemeError  error
+
+	RunManagementFlowAssert   func(flowID string, option *descope.MgmtFlowOptions)
+	RunManagementFlowResponse map[string]any
+	RunManagementFlowError    error
 }
 
 func (m *MockFlow) ListFlows(_ context.Context) (*descope.FlowList, error) {
@@ -1331,6 +1335,13 @@ func (m *MockFlow) ImportTheme(_ context.Context, theme map[string]any) error {
 		m.ImportThemeAssert(theme)
 	}
 	return m.ImportThemeError
+}
+
+func (m *MockFlow) RunManagementFlow(_ context.Context, flowID string, options *descope.MgmtFlowOptions) (map[string]any, error) {
+	if m.RunManagementFlowAssert != nil {
+		m.RunManagementFlowAssert(flowID, options)
+	}
+	return m.RunManagementFlowResponse, m.RunManagementFlowError
 }
 
 // Mock Project
