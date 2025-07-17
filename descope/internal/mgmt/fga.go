@@ -21,6 +21,28 @@ type DSLSchema struct {
 	DSL string `json:"dsl"`
 }
 
+func (f *fga) DryRunSchema(ctx context.Context, schema *descope.FGASchema) (*descope.FGASchemaDryRunResponse, error) {
+	if schema == nil {
+		return nil, utils.NewInvalidArgumentError("schema")
+	}
+	body := &DSLSchema{
+		DSL: schema.Schema,
+	}
+
+	options := &api.HTTPRequest{}
+	res, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGASchemaDryRun(), body, options, f.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+
+	var dryRunResponse *descope.FGASchemaDryRunResponse
+	err = utils.Unmarshal([]byte(res.BodyStr), &dryRunResponse)
+	if err != nil {
+		return nil, err // notest
+	}
+	return dryRunResponse, nil
+}
+
 func (f *fga) SaveSchema(ctx context.Context, schema *descope.FGASchema) error {
 	if schema == nil {
 		return utils.NewInvalidArgumentError("schema")
