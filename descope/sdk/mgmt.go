@@ -694,6 +694,13 @@ type Group interface {
 
 // Provides functions for flow and theme management including export and import by ID.
 type Flow interface {
+	// Run a management flow by its flow ID.
+	//
+	// The flowID parameter specifies the ID of the management flow to run.
+	// The options parameter allows passing input data and preview mode for the flow.
+	// Returns the result of the flow execution as a map or an error if the operation fails.
+	RunManagementFlow(ctx context.Context, flowID string, options *descope.MgmtFlowOptions) (map[string]any, error)
+
 	// Returns metadata of all project flows
 	ListFlows(ctx context.Context) (*descope.FlowList, error)
 
@@ -797,6 +804,10 @@ type Audit interface {
 	Search(ctx context.Context, options *descope.AuditSearchOptions) ([]*descope.AuditRecord, error) // Deprecated: replaced by Audit.SearchAll
 	SearchAll(ctx context.Context, options *descope.AuditSearchOptions) ([]*descope.AuditRecord, int, error)
 	CreateEvent(ctx context.Context, options *descope.AuditCreateOptions) error
+}
+
+type Analytics interface {
+	Search(ctx context.Context, options *descope.AnalyticsSearchOptions) ([]*descope.AnalyticRecord, error)
 }
 
 // Provides authorization ReBAC capabilities
@@ -1020,6 +1031,9 @@ type Management interface {
 
 	// Provides functions for managing audit
 	Audit() Audit
+
+	// Provides functions for searching analytics
+	Analytics() Analytics
 
 	// Provide functions for managing projects
 	Project() Project

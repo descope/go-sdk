@@ -180,6 +180,7 @@ var (
 			groupLoadAllGroups:                       "mgmt/group/all",
 			groupLoadAllGroupsForMember:              "mgmt/group/member/all",
 			groupLoadAllGroupMembers:                 "mgmt/group/members",
+			runManagementFlow:                        "mgmt/flow/run",
 			listFlows:                                "mgmt/flow/list",
 			deleteFlows:                              "mgmt/flow/delete",
 			flowExport:                               "mgmt/flow/export",
@@ -196,6 +197,7 @@ var (
 			projectValidateSnapshot:                  "mgmt/project/snapshot/validate",
 			auditSearch:                              "mgmt/audit/search",
 			auditCreate:                              "mgmt/audit/event",
+			analyticsSearch:                          "mgmt/analytics/search",
 			authzSchemaSave:                          "mgmt/authz/schema/save",
 			authzSchemaDelete:                        "mgmt/authz/schema/delete",
 			authzSchemaLoad:                          "mgmt/authz/schema/load",
@@ -429,12 +431,13 @@ type mgmtEndpoints struct {
 	groupLoadAllGroupsForMember string
 	groupLoadAllGroupMembers    string
 
-	listFlows   string
-	deleteFlows string
-	flowExport  string
-	flowImport  string
-	themeExport string
-	themeImport string
+	runManagementFlow string
+	listFlows         string
+	deleteFlows       string
+	flowExport        string
+	flowImport        string
+	themeExport       string
+	themeImport       string
 
 	projectsList            string
 	projectClone            string
@@ -445,8 +448,9 @@ type mgmtEndpoints struct {
 	projectImportSnapshot   string
 	projectValidateSnapshot string
 
-	auditSearch string
-	auditCreate string
+	auditSearch     string
+	auditCreate     string
+	analyticsSearch string
 
 	authzSchemaSave           string
 	authzSchemaDelete         string
@@ -1100,6 +1104,10 @@ func (e *endpoints) ManagementGroupLoadAllGroupMembers() string {
 	return path.Join(e.version, e.mgmt.groupLoadAllGroupMembers)
 }
 
+func (e *endpoints) ManagementRunManagementFlow() string {
+	return path.Join(e.version, e.mgmt.runManagementFlow)
+}
+
 func (e *endpoints) ManagementListFlows() string {
 	return path.Join(e.version, e.mgmt.listFlows)
 }
@@ -1162,6 +1170,10 @@ func (e *endpoints) ManagementAuditSearch() string {
 
 func (e *endpoints) ManagementAuditCreate() string {
 	return path.Join(e.version, e.mgmt.auditCreate)
+}
+
+func (e *endpoints) ManagementAnalyticsSearch() string {
+	return path.Join(e.version, e.mgmt.analyticsSearch)
 }
 
 func (e *endpoints) ManagementAuthzSchemaSave() string {

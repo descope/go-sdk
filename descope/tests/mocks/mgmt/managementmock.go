@@ -22,6 +22,7 @@ type MockManagement struct {
 	*MockFlow
 	*MockProject
 	*MockAudit
+	*MockAnalytics
 	*MockAuthz
 	*MockFGA
 	*MockThirdPartyApplication
@@ -74,6 +75,10 @@ func (m *MockManagement) Project() sdk.Project {
 
 func (m *MockManagement) Audit() sdk.Audit {
 	return m.MockAudit
+}
+
+func (m *MockManagement) Analytics() sdk.Analytics {
+	return m.MockAnalytics
 }
 
 func (m *MockManagement) Authz() sdk.Authz {
@@ -1284,6 +1289,10 @@ type MockFlow struct {
 
 	ImportThemeAssert func(theme map[string]any)
 	ImportThemeError  error
+
+	RunManagementFlowAssert   func(flowID string, option *descope.MgmtFlowOptions)
+	RunManagementFlowResponse map[string]any
+	RunManagementFlowError    error
 }
 
 func (m *MockFlow) ListFlows(_ context.Context) (*descope.FlowList, error) {
@@ -1326,6 +1335,13 @@ func (m *MockFlow) ImportTheme(_ context.Context, theme map[string]any) error {
 		m.ImportThemeAssert(theme)
 	}
 	return m.ImportThemeError
+}
+
+func (m *MockFlow) RunManagementFlow(_ context.Context, flowID string, options *descope.MgmtFlowOptions) (map[string]any, error) {
+	if m.RunManagementFlowAssert != nil {
+		m.RunManagementFlowAssert(flowID, options)
+	}
+	return m.RunManagementFlowResponse, m.RunManagementFlowError
 }
 
 // Mock Project
@@ -1446,6 +1462,19 @@ func (m *MockAudit) CreateEvent(_ context.Context, options *descope.AuditCreateO
 		m.CreateEventAssert(options)
 	}
 	return m.CreateEventError
+}
+
+type MockAnalytics struct {
+	SearchAssert   func(*descope.AnalyticsSearchOptions)
+	SearchResponse []*descope.AnalyticRecord
+	SearchError    error
+}
+
+func (m *MockAnalytics) Search(_ context.Context, options *descope.AnalyticsSearchOptions) ([]*descope.AnalyticRecord, error) {
+	if m.SearchAssert != nil {
+		m.SearchAssert(options)
+	}
+	return m.SearchResponse, m.SearchError
 }
 
 type MockAuthz struct {
