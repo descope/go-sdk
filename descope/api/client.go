@@ -215,6 +215,7 @@ var (
 			authzRETargetAll:                         "mgmt/authz/re/targetall",
 			authzRETargetWithRelation:                "mgmt/authz/re/targetwithrelation",
 			authzGetModified:                         "mgmt/authz/getmodified",
+			fgaSchemaDryRun:                          "mgmt/fga/schema/dryrun",
 			fgaSaveSchema:                            "mgmt/fga/schema",
 			fgaLoadSchema:                            "mgmt/fga/schema",
 			fgaCreateRelations:                       "mgmt/fga/relations",
@@ -470,6 +471,7 @@ type mgmtEndpoints struct {
 	authzGetModified          string
 
 	fgaSaveSchema              string
+	fgaSchemaDryRun            string
 	fgaLoadSchema              string
 	fgaCreateRelations         string
 	fgaDeleteRelations         string
@@ -1244,6 +1246,10 @@ func (e *endpoints) ManagementAuthzGetModified() string {
 
 func (e *endpoints) ManagementFGASaveSchema() string {
 	return path.Join(e.version, e.mgmt.fgaSaveSchema)
+}
+
+func (e *endpoints) ManagementFGASchemaDryRun() string {
+	return path.Join(e.version, e.mgmt.fgaSchemaDryRun)
 }
 
 func (e *endpoints) ManagementFGALoadSchema() string {

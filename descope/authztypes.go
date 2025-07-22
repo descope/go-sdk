@@ -153,3 +153,13 @@ type ResourceDetails struct {
 	ResourceType string `json:"resourceType"`
 	DisplayName  string `json:"displayName"`
 }
+
+type FGASchemaDryRunResponse struct {
+	DeletesPreview *FGASchemaDryDeletes `json:"deletesPreview,omitempty"`
+}
+
+type FGASchemaDryDeletes struct {
+	HasDeletes bool     `json:"hasDeletes"`
+	Relations  []string `json:"relations,omitempty"`
+	Types      []string `json:"types,omitempty"`
+}
