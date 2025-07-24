@@ -198,6 +198,7 @@ var (
 			auditSearch:                              "mgmt/audit/search",
 			auditCreate:                              "mgmt/audit/event",
 			analyticsSearch:                          "mgmt/analytics/search",
+			auditWebhookCreate:                       "mgmt/connector/audit/web/set",
 			authzSchemaSave:                          "mgmt/authz/schema/save",
 			authzSchemaDelete:                        "mgmt/authz/schema/delete",
 			authzSchemaLoad:                          "mgmt/authz/schema/load",
@@ -447,9 +448,10 @@ type mgmtEndpoints struct {
 	projectImportSnapshot   string
 	projectValidateSnapshot string
 
-	auditSearch     string
-	auditCreate     string
-	analyticsSearch string
+	auditSearch        string
+	auditCreate        string
+	analyticsSearch    string
+	auditWebhookCreate string
 
 	authzSchemaSave           string
 	authzSchemaDelete         string
@@ -1168,6 +1170,10 @@ func (e *endpoints) ManagementAuditSearch() string {
 
 func (e *endpoints) ManagementAuditCreate() string {
 	return path.Join(e.version, e.mgmt.auditCreate)
+}
+
+func (e *endpoints) ManagementAuditWebhookCreate() string {
+	return path.Join(e.version, e.mgmt.auditWebhookCreate)
 }
 
 func (e *endpoints) ManagementAnalyticsSearch() string {
