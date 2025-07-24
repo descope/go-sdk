@@ -128,3 +128,17 @@ func unmarshalAuditRecords(res *api.HTTPResponse) ([]*descope.AuditRecord, int, 
 	}
 	return records, auditRes.Total, nil
 }
+
+func (a *audit) CreateAuditWebhook(ctx context.Context, options *descope.AuditWebhook) error {
+	if options == nil {
+		return utils.NewInvalidArgumentError("AuditWebhook")
+	}
+	if options.Name == "" {
+		return utils.NewInvalidArgumentError("AuditWebhook.Name")
+	}
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuditWebhookCreate(), options, nil, a.conf.ManagementKey)
+	if err != nil {
+		return err
+	}
+	return nil
+}

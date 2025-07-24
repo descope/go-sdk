@@ -273,3 +273,28 @@ func TestAuditCreateMissingArgumentTenantID(t *testing.T) {
 	require.Contains(t, err.Error(), "TenantID")
 	assert.False(t, called)
 }
+
+func TestCreateAuditWebhookConnector(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		called = true
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, "name", req["name"])
+	}, nil))
+	err := mgmt.Audit().CreateAuditWebhook(context.Background(), &descope.AuditWebhook{
+		Name: "name",
+	})
+	require.NoError(t, err)
+	assert.True(t, called)
+	called = false
+	err = mgmt.Audit().CreateAuditWebhook(context.Background(), nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Contains(t, err.Error(), "AuditWebhook")
+	assert.False(t, called)
+	err = mgmt.Audit().CreateAuditWebhook(context.Background(), &descope.AuditWebhook{})
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Contains(t, err.Error(), "AuditWebhook.Name")
+	assert.False(t, called)
+}

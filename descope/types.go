@@ -1000,6 +1000,51 @@ type AnalyticsSearchOptions struct {
 	GroupByCreated  string    `json:"groupByCreated,omitempty"`  // How should we group the dates. Possible values are "h" for hour, "d" for day, "w" for week, "m" for month and "q" for quarter
 }
 
+type AuditWebhook struct {
+	Name           string                       `json:"name,omitempty"`
+	Description    string                       `json:"description,omitempty"`
+	URL            string                       `json:"url,omitempty"`
+	Authentication *ConnectorHTTPAuthentication `json:"authentication,omitempty"`
+	HmacSecret     string                       `json:"hmacSecret,omitempty"`
+	Headers        map[string]string            `json:"headers,omitempty"`
+	Insecure       bool                         `json:"insecure,omitempty"`
+	Filters        *AuditFilters                `json:"filters,omitempty"`
+}
+
+type ConnectorHTTPAuthentication struct {
+	BearerToken string                             `json:"bearerToken,omitempty"`
+	Basic       *ConnectorHTTPBasicAuthentication  `json:"basic,omitempty"`
+	APIKey      *ConnectorHTTPAPIKeyAuthentication `json:"apiKey,omitempty"`
+}
+
+type ConnectorHTTPBasicAuthentication struct {
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+}
+
+type ConnectorHTTPAPIKeyAuthentication struct {
+	Key   string `json:"key,omitempty"`
+	Token string `json:"token,omitempty"`
+}
+
+type FilterType string
+
+const FilterTypeAll FilterType = "all"
+const FilterTypeActions FilterType = "actions"
+const FilterTypeTenants FilterType = "tenants"
+
+type Operator string
+
+const OperatorIncludes Operator = "includes"
+const OperatorExcludes Operator = "excludes"
+
+type AuditFilters struct {
+	FilterType FilterType `json:"filterType,omitempty"`
+	Operator   Operator   `json:"operator,omitempty"`
+	Tenants    []string   `json:"tenants,omitempty"`
+	EventType  []string   `json:"eventType,omitempty"`
+}
+
 type ExportSnapshotRequest struct {
 	// An optional string to set the output format (leave empty for default)
 	Format string `json:"format"`
