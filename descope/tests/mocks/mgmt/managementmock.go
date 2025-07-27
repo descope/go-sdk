@@ -1441,6 +1441,9 @@ type MockAudit struct {
 
 	CreateEventAssert func(*descope.AuditCreateOptions)
 	CreateEventError  error
+
+	CreateAuditWebhookAssert func(*descope.AuditWebhook)
+	CreateAuditWebhookError  error
 }
 
 func (m *MockAudit) Search(_ context.Context, options *descope.AuditSearchOptions) ([]*descope.AuditRecord, error) {
@@ -1462,6 +1465,13 @@ func (m *MockAudit) CreateEvent(_ context.Context, options *descope.AuditCreateO
 		m.CreateEventAssert(options)
 	}
 	return m.CreateEventError
+}
+
+func (m *MockAudit) CreateAuditWebhook(_ context.Context, options *descope.AuditWebhook) error {
+	if m.CreateAuditWebhookAssert != nil {
+		m.CreateAuditWebhookAssert(options)
+	}
+	return m.CreateAuditWebhookError
 }
 
 type MockAnalytics struct {

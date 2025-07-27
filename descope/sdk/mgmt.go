@@ -804,6 +804,7 @@ type Audit interface {
 	Search(ctx context.Context, options *descope.AuditSearchOptions) ([]*descope.AuditRecord, error) // Deprecated: replaced by Audit.SearchAll
 	SearchAll(ctx context.Context, options *descope.AuditSearchOptions) ([]*descope.AuditRecord, int, error)
 	CreateEvent(ctx context.Context, options *descope.AuditCreateOptions) error
+	CreateAuditWebhook(ctx context.Context, options *descope.AuditWebhook) error
 }
 
 type Analytics interface {
