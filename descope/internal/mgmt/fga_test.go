@@ -79,6 +79,43 @@ func TestLoadFGASchemaError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestDryRunFGASchemaSuccess(t *testing.T) {
+	response := &descope.FGASchemaDryRunResponse{
+		DeletesPreview: &descope.FGASchemaDryDeletes{
+			HasDeletes: true,
+			Relations:  []string{"group#member"},
+			Types:      []string{"group"},
+		},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.NotNil(t, req["dsl"])
+		require.Equal(t, "some schema", req["dsl"])
+	}, response))
+	dryRunResponse, err := mgmt.FGA().DryRunSchema(context.Background(), &descope.FGASchema{Schema: "some schema"})
+	require.NoError(t, err)
+	require.NotNil(t, dryRunResponse)
+	require.NotNil(t, dryRunResponse.DeletesPreview)
+	require.True(t, dryRunResponse.DeletesPreview.HasDeletes)
+	require.Equal(t, []string{"group#member"}, dryRunResponse.DeletesPreview.Relations)
+	require.Equal(t, []string{"group"}, dryRunResponse.DeletesPreview.Types)
+}
+
+func TestDryRunFGASchemaMissingSchema(t *testing.T) {
+	mgmt := newTestMgmt(nil, nil)
+	_, err := mgmt.FGA().DryRunSchema(context.Background(), nil)
+	require.Error(t, err)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("schema").Message)
+}
+
+func TestDryRunFGASchemaError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	_, err := mgmt.FGA().DryRunSchema(context.Background(), &descope.FGASchema{Schema: "some schema"})
+	require.Error(t, err)
+}
+
 func TestCreateFGARelationsSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
