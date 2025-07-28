@@ -194,3 +194,96 @@ func TestRunManagementFlowFailure(t *testing.T) {
 	require.Error(t, err)
 	assert.Nil(t, res)
 }
+
+func TestRunManagementFlowAsyncSuccess(t *testing.T) {
+	flowID := "test-flow"
+	options := &descope.MgmtFlowOptions{
+		Input: map[string]any{"key": "value"},
+	}
+	executionID := "exec-123"
+	body := map[string]any{
+		"executionId": executionID,
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, flowID, req["flowId"])
+		require.NotNil(t, req["options"])
+		optionsMap := req["options"].(map[string]any)
+		require.Equal(t, map[string]any{"key": "value"}, optionsMap["input"])
+	}, body))
+	res, err := mgmt.Flow().RunManagementFlowAsync(context.Background(), flowID, options)
+	require.NoError(t, err)
+	assert.Equal(t, executionID, res)
+}
+
+func TestRunManagementFlowAsyncSuccessWithNilOptions(t *testing.T) {
+	flowID := "test-flow"
+	executionID := "exec-456"
+	body := map[string]any{
+		"executionId": executionID,
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, flowID, req["flowId"])
+		require.Nil(t, req["options"])
+	}, body))
+	res, err := mgmt.Flow().RunManagementFlowAsync(context.Background(), flowID, nil)
+	require.NoError(t, err)
+	assert.Equal(t, executionID, res)
+}
+
+func TestRunManagementFlowAsyncFailure(t *testing.T) {
+	flowID := "test-flow"
+	options := &descope.MgmtFlowOptions{
+		Input: map[string]any{"key": "value"},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, flowID, req["flowId"])
+		require.NotNil(t, req["options"])
+		optionsMap := req["options"].(map[string]any)
+		require.Equal(t, map[string]any{"key": "value"}, optionsMap["input"])
+	}))
+	res, err := mgmt.Flow().RunManagementFlowAsync(context.Background(), flowID, options)
+	require.Error(t, err)
+	assert.Equal(t, "", res)
+}
+
+func TestGetManagementFlowAsyncResultSuccess(t *testing.T) {
+	executionID := "exec-789"
+	output := map[string]any{
+		"result": "success",
+		"data":   map[string]any{"foo": "bar"},
+	}
+	body := map[string]any{
+		"output": output,
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, executionID, req["executionId"])
+	}, body))
+	res, err := mgmt.Flow().GetManagementFlowAsyncResult(context.Background(), executionID)
+	require.NoError(t, err)
+	assert.EqualValues(t, output, res)
+}
+
+func TestGetManagementFlowAsyncResultFailure(t *testing.T) {
+	executionID := "exec-invalid"
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, executionID, req["executionId"])
+	}))
+	res, err := mgmt.Flow().GetManagementFlowAsyncResult(context.Background(), executionID)
+	require.Error(t, err)
+	assert.Nil(t, res)
+}

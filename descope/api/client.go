@@ -181,6 +181,8 @@ var (
 			groupLoadAllGroupsForMember:              "mgmt/group/member/all",
 			groupLoadAllGroupMembers:                 "mgmt/group/members",
 			runManagementFlow:                        "mgmt/flow/run",
+			runManagementFlowAsync:                   "mgmt/flow/async/run",
+			getManagementFlowAsyncResult:             "mgmt/flow/async/result",
 			listFlows:                                "mgmt/flow/list",
 			deleteFlows:                              "mgmt/flow/delete",
 			flowExport:                               "mgmt/flow/export",
@@ -432,13 +434,15 @@ type mgmtEndpoints struct {
 	groupLoadAllGroupsForMember string
 	groupLoadAllGroupMembers    string
 
-	runManagementFlow string
-	listFlows         string
-	deleteFlows       string
-	flowExport        string
-	flowImport        string
-	themeExport       string
-	themeImport       string
+	runManagementFlow            string
+	runManagementFlowAsync       string
+	getManagementFlowAsyncResult string
+	listFlows                    string
+	deleteFlows                  string
+	flowExport                   string
+	flowImport                   string
+	themeExport                  string
+	themeImport                  string
 
 	projectsList            string
 	projectClone            string
@@ -1108,6 +1112,14 @@ func (e *endpoints) ManagementGroupLoadAllGroupMembers() string {
 
 func (e *endpoints) ManagementRunManagementFlow() string {
 	return path.Join(e.version, e.mgmt.runManagementFlow)
+}
+
+func (e *endpoints) ManagementRunManagementFlowAsync() string {
+	return path.Join(e.version, e.mgmt.runManagementFlowAsync)
+}
+
+func (e *endpoints) ManagementGetManagementFlowAsyncResult() string {
+	return path.Join(e.version, e.mgmt.getManagementFlowAsyncResult)
 }
 
 func (e *endpoints) ManagementListFlows() string {

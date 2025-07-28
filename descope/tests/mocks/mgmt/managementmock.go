@@ -1293,6 +1293,14 @@ type MockFlow struct {
 	RunManagementFlowAssert   func(flowID string, option *descope.MgmtFlowOptions)
 	RunManagementFlowResponse map[string]any
 	RunManagementFlowError    error
+
+	RunManagementFlowAsyncAssert   func(flowID string, option *descope.MgmtFlowOptions)
+	RunManagementFlowAsyncResponse string
+	RunManagementFlowAsyncError    error
+
+	GetManagementFlowAsyncResultAssert   func(executionID string)
+	GetManagementFlowAsyncResultResponse map[string]any
+	GetManagementFlowAsyncResultError    error
 }
 
 func (m *MockFlow) ListFlows(_ context.Context) (*descope.FlowList, error) {
@@ -1342,6 +1350,20 @@ func (m *MockFlow) RunManagementFlow(_ context.Context, flowID string, options *
 		m.RunManagementFlowAssert(flowID, options)
 	}
 	return m.RunManagementFlowResponse, m.RunManagementFlowError
+}
+
+func (m *MockFlow) RunManagementFlowAsync(_ context.Context, flowID string, options *descope.MgmtFlowOptions) (string, error) {
+	if m.RunManagementFlowAsyncAssert != nil {
+		m.RunManagementFlowAsyncAssert(flowID, options)
+	}
+	return m.RunManagementFlowAsyncResponse, m.RunManagementFlowAsyncError
+}
+
+func (m *MockFlow) GetManagementFlowAsyncResult(_ context.Context, executionID string) (map[string]any, error) {
+	if m.GetManagementFlowAsyncResultAssert != nil {
+		m.GetManagementFlowAsyncResultAssert(executionID)
+	}
+	return m.GetManagementFlowAsyncResultResponse, m.GetManagementFlowAsyncResultError
 }
 
 // Mock Project

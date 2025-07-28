@@ -701,6 +701,19 @@ type Flow interface {
 	// Returns the result of the flow execution as a map or an error if the operation fails.
 	RunManagementFlow(ctx context.Context, flowID string, options *descope.MgmtFlowOptions) (map[string]any, error)
 
+	// Run a management flow asynchronously by its flow ID.
+	//
+	// Similar to RunManagementFlow, but intended for asynchronous execution.
+	// Instead of returning the result immediately, it returns an execution ID that can be used to
+	// retrieve the result later using GetManagementFlowAsyncResult.
+	RunManagementFlowAsync(ctx context.Context, flowID string, options *descope.MgmtFlowOptions) (string, error)
+
+	// Get the result of an asynchronous management flow execution by its execution ID.
+	//
+	// The executionID parameter is the result of a previous RunManagementFlowAsync call.
+	// Returns the result of the flow execution, same as the synchronous version, as a map or an error if the operation fails
+	GetManagementFlowAsyncResult(ctx context.Context, executionID string) (map[string]any, error)
+
 	// Returns metadata of all project flows
 	ListFlows(ctx context.Context) (*descope.FlowList, error)
 
