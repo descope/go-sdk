@@ -26,6 +26,27 @@ func (r *flow) RunManagementFlow(ctx context.Context, flowID string, options *de
 	return unmarshalManagementFlowResponse(res)
 }
 
+func (r *flow) RunManagementFlowAsync(ctx context.Context, flowID string, options *descope.MgmtFlowOptions) (string, error) {
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRunManagementFlowAsync(), map[string]any{
+		"flowId":  flowID,
+		"options": options,
+	}, nil, r.conf.ManagementKey)
+	if err != nil {
+		return "", err
+	}
+	return unmarshalManagementFlowAsyncResponse(res)
+}
+
+func (r *flow) GetManagementFlowAsyncResult(ctx context.Context, executionID string) (map[string]any, error) {
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementGetManagementFlowAsyncResult(), map[string]any{
+		"executionId": executionID,
+	}, nil, r.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalManagementFlowResponse(res)
+}
+
 func (r *flow) ListFlows(ctx context.Context) (*descope.FlowList, error) {
 	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementListFlows(), nil, nil, r.conf.ManagementKey)
 	if err != nil {
@@ -131,4 +152,16 @@ func unmarshalManagementFlowResponse(res *api.HTTPResponse) (map[string]any, err
 		return nil, err
 	}
 	return resp.Output, nil
+}
+
+func unmarshalManagementFlowAsyncResponse(res *api.HTTPResponse) (string, error) {
+	type mgmtFlowAsyncResponse struct {
+		ExecutionID string `json:"executionId"`
+	}
+	var resp mgmtFlowAsyncResponse
+	err := utils.Unmarshal([]byte(res.BodyStr), &resp)
+	if err != nil { // notest
+		return "", err
+	}
+	return resp.ExecutionID, nil
 }
