@@ -1,6 +1,7 @@
 package client
 
 import (
+	"context"
 	"net/http"
 	"time"
 
@@ -38,6 +39,8 @@ type Config struct {
 	RequestTimeout time.Duration
 	// CustomDefaultHeaders (optional, nil) - add custom headers to all requests used to communicate with descope services.
 	CustomDefaultHeaders map[string]string
+	// ExternalRequestID (optional, nil) - External request ID, it will appear in audit logs, for tracking full path of a request.
+	ExternalRequestID func(context.Context) string
 	// LogLevel (optional, LogNone) - set a log level (Debug/Info/None) for the sdk to use when logging.
 	// Note that this attribute will be used to init a global logger once, in a goroutine safe manner
 	LogLevel logger.LogLevel
