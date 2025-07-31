@@ -136,11 +136,14 @@ func TestPostRequest(t *testing.T) {
 func TestPostCustomHeaders(t *testing.T) {
 	projectID := "test"
 	headers := map[string]string{"test": "a", "test2": "b"}
-	c := NewClient(ClientParams{ProjectID: projectID, CustomDefaultHeaders: headers, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+	c := NewClient(ClientParams{ProjectID: projectID, CustomDefaultHeaders: headers, ExternalRequestID: func(_ context.Context) string {
+		return "test-me"
+	}, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
 		assert.Nil(t, r.Body)
 		for k, v := range headers {
 			assert.EqualValues(t, v, r.Header.Get(k))
 		}
+		assert.EqualValues(t, "test-me", r.Header.Get("x-external-rid"))
 		return &http.Response{StatusCode: http.StatusOK}, nil
 	})})
 
