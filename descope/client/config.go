@@ -22,7 +22,7 @@ type Config struct {
 	// AuthManagementKey (optional, "") - used to provide a management key to use
 	// with Authentication APIs whose public access has been disabled.
 	// If empty, this value is retrieved from the DESCOPE_AUTH_MANAGEMENT_KEY environment variable instead.
-	// If neither values are set then any disabled authentication methods API calls with fail.
+	// If neither values are set then any disabled authentication methods API calls will fail.
 	AuthManagementKey string
 	// PublicKey (optional, "") - used to override or implicitly use a dedicated public key in order to decrypt and validate the JWT tokens
 	// during ValidateSessionRequest(). If empty, will attempt to fetch all public keys from the specified project id.
