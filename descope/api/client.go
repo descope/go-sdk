@@ -1394,6 +1394,7 @@ type ClientParams struct {
 	AuthManagementKey    string
 	DefaultClient        IHttpClient
 	CustomDefaultHeaders map[string]string
+	ExternalRequestID    func(context.Context) string
 	CertificateVerify    CertificateVerifyMode
 	RequestTimeout       time.Duration
 }
@@ -1403,11 +1404,12 @@ type IHttpClient interface {
 }
 
 type Client struct {
-	httpClient IHttpClient
-	uri        string
-	headers    map[string]string
-	conf       ClientParams
-	sdkInfo    *sdkInfo
+	httpClient        IHttpClient
+	uri               string
+	headers           map[string]string
+	externalRequestID func(context.Context) string
+	conf              ClientParams
+	sdkInfo           *sdkInfo
 }
 type HTTPResponse struct {
 	Req     *http.Request
@@ -1471,11 +1473,12 @@ func NewClient(conf ClientParams) *Client {
 	}
 
 	return &Client{
-		uri:        conf.BaseURL,
-		httpClient: httpClient,
-		headers:    defaultHeaders,
-		conf:       conf,
-		sdkInfo:    getSDKInfo(),
+		uri:               conf.BaseURL,
+		httpClient:        httpClient,
+		headers:           defaultHeaders,
+		externalRequestID: conf.ExternalRequestID,
+		conf:              conf,
+		sdkInfo:           getSDKInfo(),
 	}
 }
 
@@ -1566,6 +1569,10 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 
 	for key, value := range c.headers {
 		req.Header.Add(key, value)
+	}
+
+	if c.externalRequestID != nil {
+		req.Header.Add("x-external-rid", c.externalRequestID(ctx))
 	}
 
 	for key, value := range options.Headers {

@@ -56,6 +56,7 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 		AuthManagementKey:    config.AuthManagementKey,
 		DefaultClient:        config.DefaultClient,
 		CustomDefaultHeaders: config.CustomDefaultHeaders,
+		ExternalRequestID:    config.ExternalRequestID,
 		CertificateVerify:    config.CertificateVerify,
 		RequestTimeout:       config.RequestTimeout,
 	})
