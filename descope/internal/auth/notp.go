@@ -16,7 +16,7 @@ func (auth *notp) SignIn(ctx context.Context, loginID string, r *http.Request, l
 	var pswd string
 	var err error
 	if loginOptions.IsJWTRequired() {
-		pswd, err = getValidRefreshToken(r)
+		pswd, err = auth.getValidRefreshToken(r)
 		if err != nil {
 			return nil, descope.ErrInvalidStepUpJWT
 		}

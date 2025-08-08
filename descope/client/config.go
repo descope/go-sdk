@@ -55,6 +55,8 @@ type Config struct {
 	SessionJWTCookieDomain string
 	// When using cookies, set the cookie same site here. Default is SameSiteStrictMode, In production make sure to use SameSiteStrictMode, for security purposes.
 	SessionJWTCookieSameSite http.SameSite
+	// Custom refresh cookie name, (default is "DSR")
+	RefreshCookieName string
 }
 
 func (c *Config) setProjectID() string {

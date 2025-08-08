@@ -19,7 +19,7 @@ func (auth *enchantedLink) SignIn(ctx context.Context, loginID, URI string, r *h
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	if loginOptions.IsJWTRequired() {
-		pswd, err = getValidRefreshToken(r)
+		pswd, err = auth.getValidRefreshToken(r)
 		if err != nil {
 			return nil, descope.ErrInvalidStepUpJWT
 		}
@@ -94,7 +94,7 @@ func (auth *enchantedLink) UpdateUserEmail(ctx context.Context, loginID, email, 
 	if !emailRegex.MatchString(email) {
 		return nil, utils.NewInvalidArgumentError("email")
 	}
-	pswd, err := getValidRefreshToken(r)
+	pswd, err := auth.getValidRefreshToken(r)
 	if err != nil {
 		return nil, err
 	}

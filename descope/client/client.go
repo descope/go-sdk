@@ -66,6 +66,7 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 		SessionJWTViaCookie: config.SessionJWTViaCookie,
 		CookieDomain:        config.SessionJWTCookieDomain,
 		CookieSameSite:      config.SessionJWTCookieSameSite,
+		RefreshCookieName:   config.RefreshCookieName,
 	}
 	provider := auth.NewProvider(c, conf)
 	authService, err := auth.NewAuthWithProvider(*conf, provider, c)
