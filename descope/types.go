@@ -401,10 +401,17 @@ func NewToken(JWT string, token jwt.Token) *Token {
 
 	parts := strings.Split(token.Issuer(), "/")
 	projectID := parts[len(parts)-1]
-
+	sub := token.Subject()
+	subRaw, ok := token.PrivateClaims()["dsub"]
+	if ok {
+		subStr, ok := subRaw.(string)
+		if ok {
+			sub = subStr
+		}
+	}
 	return &Token{
 		JWT:        JWT,
-		ID:         token.Subject(),
+		ID:         sub,
 		ProjectID:  projectID,
 		Expiration: token.Expiration().Unix(),
 		Claims:     token.PrivateClaims(),
@@ -1041,8 +1048,7 @@ const OperatorExcludes Operator = "excludes"
 type AuditFilters struct {
 	FilterType FilterType `json:"filterType,omitempty"`
 	Operator   Operator   `json:"operator,omitempty"`
-	Tenants    []string   `json:"tenants,omitempty"`
-	EventType  []string   `json:"eventType,omitempty"`
+	Values     []string   `json:"values,omitempty"`
 }
 
 type ExportSnapshotRequest struct {

@@ -60,6 +60,29 @@ func TestNewToken(t *testing.T) {
 	assert.EqualValues(t, expiration.Unix(), resToken.Expiration)
 }
 
+func TestNewTokenCustomSubject(t *testing.T) {
+	jwtStr := "jwtttt"
+	token := jwt.New()
+
+	projectID := "123456"
+	issuer := fmt.Sprintf("https://jame.com/%s", projectID)
+	subject := "subj"
+	expiration := time.Now()
+
+	_ = token.Set(jwt.IssuerKey, issuer)
+	_ = token.Set(jwt.SubjectKey, subject+"none")
+	_ = token.Set(jwt.ExpirationKey, expiration)
+	_ = token.Set("dsub", subject)
+
+	resToken := NewToken(jwtStr, token)
+
+	assert.EqualValues(t, jwtStr, resToken.JWT)
+	assert.EqualValues(t, subject, resToken.ID)
+	assert.EqualValues(t, projectID, resToken.ProjectID)
+	assert.EqualValues(t, 0, resToken.RefreshExpiration)
+	assert.EqualValues(t, expiration.Unix(), resToken.Expiration)
+}
+
 func TestNewTokenWithProjectID(t *testing.T) {
 	jwtStr := "jwtttt"
 	token := jwt.New()
