@@ -2,11 +2,16 @@ package client
 
 import (
 	"context"
+	"fmt"
+	"io"
+	"net/http"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/logger"
+	"github.com/descope/go-sdk/descope/tests/mocks"
 	mocksauth "github.com/descope/go-sdk/descope/tests/mocks/auth"
 	mocksmgmt "github.com/descope/go-sdk/descope/tests/mocks/mgmt"
 	"github.com/stretchr/testify/assert"
@@ -71,6 +76,61 @@ func TestEnvVariableAuthManagementKey(t *testing.T) {
 	assert.EqualValues(t, expectedManagementKey, a.config.AuthManagementKey)
 	assert.NotNil(t, a.Auth)
 	assert.NotNil(t, a.Management)
+}
+
+func TestManagementKeys(t *testing.T) {
+	expectedManagementKey := "management-key"
+	expectedAuthManagementKey := "auth-management-key"
+	projectID := "test-project"
+
+	// Capture the last request
+	var lastRequest *http.Request
+	mockClient := mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+		lastRequest = r
+		return &http.Response{
+			StatusCode: 200,
+			Body:       io.NopCloser(strings.NewReader(`{}`)),
+			Header:     make(http.Header),
+		}, nil
+	})
+
+	// Create client with both management keys
+	client, err := NewWithConfig(&Config{
+		ProjectID:         projectID,
+		ManagementKey:     expectedManagementKey,
+		AuthManagementKey: expectedAuthManagementKey,
+		DefaultClient:     mockClient,
+	})
+	require.NoError(t, err)
+	assert.EqualValues(t, expectedManagementKey, client.config.ManagementKey)
+	assert.EqualValues(t, expectedAuthManagementKey, client.config.AuthManagementKey)
+
+	ctx := context.Background()
+
+	// Test 1: Management API should use ManagementKey
+	_, _ = client.Management.User().Load(ctx, "test-user")
+	require.NotNil(t, lastRequest)
+	authHeader := lastRequest.Header.Get("Authorization")
+	expectedMgmtBearer := fmt.Sprintf("Bearer %s:%s", projectID, expectedManagementKey)
+	assert.Equal(t, expectedMgmtBearer, authHeader)
+
+	// Test 2: Auth API should use AuthManagementKey
+	_, _ = client.Auth.OTP().SignIn(ctx, descope.MethodEmail, "test@example.com", nil, nil)
+	require.NotNil(t, lastRequest)
+	authHeader = lastRequest.Header.Get("Authorization")
+	expectedAuthBearer := fmt.Sprintf("Bearer %s:%s", projectID, expectedAuthManagementKey)
+	assert.Equal(t, expectedAuthBearer, authHeader)
+
+	// Test 3: Auth API with a refresh JWT and a management key
+	refreshJWT := "test-refresh-jwt"
+	cookie := &http.Cookie{Name: descope.RefreshCookieName, Value: refreshJWT}
+	_, _ = client.Auth.OTP().UpdateUserEmail(ctx, "test@example.com", "test@example.com", nil, &http.Request{
+		Header: http.Header{"Cookie": []string{cookie.String()}},
+	})
+	require.NotNil(t, lastRequest)
+	authHeader = lastRequest.Header.Get("Authorization")
+	expectedAuthBearer = fmt.Sprintf("Bearer %s:%s:%s", projectID, refreshJWT, expectedAuthManagementKey)
+	assert.Equal(t, expectedAuthBearer, authHeader)
 }
 
 func TestConcurrentClients(t *testing.T) {

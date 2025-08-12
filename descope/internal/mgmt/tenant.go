@@ -38,7 +38,7 @@ func (t *tenant) createWithID(ctx context.Context, id string, tenantRequest *des
 		return "", utils.NewInvalidArgumentError("name")
 	}
 	req := makeCreateUpdateTenantRequest(id, tenantRequest)
-	httpRes, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantCreate(), req, nil, t.conf.ManagementKey)
+	httpRes, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantCreate(), req, nil, "")
 	if err != nil {
 		return "", err
 	}
@@ -59,7 +59,7 @@ func (t *tenant) Update(ctx context.Context, id string, tenantRequest *descope.T
 		return utils.NewInvalidArgumentError("name")
 	}
 	req := makeCreateUpdateTenantRequest(id, tenantRequest)
-	_, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantUpdate(), req, nil, t.conf.ManagementKey)
+	_, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantUpdate(), req, nil, "")
 	return err
 }
 
@@ -68,7 +68,7 @@ func (t *tenant) Delete(ctx context.Context, id string, cascade bool) error {
 		return utils.NewInvalidArgumentError("id")
 	}
 	req := map[string]any{"id": id, "cascade": cascade}
-	_, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantDelete(), req, nil, t.conf.ManagementKey)
+	_, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantDelete(), req, nil, "")
 	return err
 }
 
@@ -79,7 +79,7 @@ func (t *tenant) Load(ctx context.Context, id string) (*descope.Tenant, error) {
 	req := &api.HTTPRequest{
 		QueryParams: map[string]string{"id": id},
 	}
-	res, err := t.client.DoGetRequest(ctx, api.Routes.ManagementTenantLoad(), req, t.conf.ManagementKey)
+	res, err := t.client.DoGetRequest(ctx, api.Routes.ManagementTenantLoad(), req, "")
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func (t *tenant) Load(ctx context.Context, id string) (*descope.Tenant, error) {
 }
 
 func (t *tenant) LoadAll(ctx context.Context) ([]*descope.Tenant, error) {
-	res, err := t.client.DoGetRequest(ctx, api.Routes.ManagementTenantLoadAll(), nil, t.conf.ManagementKey)
+	res, err := t.client.DoGetRequest(ctx, api.Routes.ManagementTenantLoadAll(), nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func (t *tenant) SearchAll(ctx context.Context, options *descope.TenantSearchOpt
 	}
 
 	req := makeSearchTenantRequest(options)
-	res, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantSearchAll(), req, nil, t.conf.ManagementKey)
+	res, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantSearchAll(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (t *tenant) GetSettings(ctx context.Context, tenantID string) (*descope.Ten
 	req := &api.HTTPRequest{
 		QueryParams: map[string]string{"id": tenantID},
 	}
-	res, err := t.client.DoGetRequest(ctx, api.Routes.ManagementTenantSettings(), req, t.conf.ManagementKey)
+	res, err := t.client.DoGetRequest(ctx, api.Routes.ManagementTenantSettings(), req, "")
 	if err != nil {
 		return nil, err
 	}
@@ -143,7 +143,7 @@ func (t *tenant) ConfigureSettings(ctx context.Context, tenantID string, setting
 		"domains":                    settings.Domains,
 		"JITDisabled":                settings.JITDisabled,
 	}
-	_, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantSettings(), req, nil, t.conf.ManagementKey)
+	_, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantSettings(), req, nil, "")
 	return err
 }
 
@@ -160,7 +160,7 @@ func (t *tenant) GenerateSSOConfigurationLink(ctx context.Context, tenantID stri
 		"templateId": templateID,
 	}
 
-	res, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantGenerateSSOConfigurationLink(), req, nil, t.conf.ManagementKey)
+	res, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantGenerateSSOConfigurationLink(), req, nil, "")
 	if err != nil {
 		return "", err
 	}
@@ -177,7 +177,7 @@ func (t *tenant) RevokeSSOConfigurationLink(ctx context.Context, tenantID string
 		"ssoId":    ssoID,
 	}
 
-	_, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantRevokeSSOConfigurationLink(), req, nil, t.conf.ManagementKey)
+	_, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantRevokeSSOConfigurationLink(), req, nil, "")
 	return err
 }
 

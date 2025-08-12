@@ -50,10 +50,11 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 	config.setManagementKey()
 	config.setAuthManagementKey()
 
-	c := api.NewClient(api.ClientParams{
+	// Auth initialzes a client with the auth management key if provided
+	authClient := api.NewClient(api.ClientParams{
 		ProjectID:            config.ProjectID,
 		BaseURL:              config.DescopeBaseURL,
-		AuthManagementKey:    config.AuthManagementKey,
+		ManagementKey:        config.AuthManagementKey,
 		DefaultClient:        config.DefaultClient,
 		CustomDefaultHeaders: config.CustomDefaultHeaders,
 		ExternalRequestID:    config.ExternalRequestID,
@@ -67,13 +68,24 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 		CookieDomain:        config.SessionJWTCookieDomain,
 		CookieSameSite:      config.SessionJWTCookieSameSite,
 	}
-	provider := auth.NewProvider(c, conf)
-	authService, err := auth.NewAuthWithProvider(*conf, provider, c)
+	provider := auth.NewProvider(authClient, conf)
+	authService, err := auth.NewAuthWithProvider(*conf, provider, authClient)
 	if err != nil {
 		return nil, err
 	}
 
-	managementService := mgmt.NewManagement(mgmt.ManagementParams{ProjectID: config.ProjectID, ManagementKey: config.ManagementKey, FGACacheURL: config.FGACacheURL}, provider, c)
+	// Managament initializes its own client with the management key
+	mgmtClient := api.NewClient(api.ClientParams{
+		ProjectID:            config.ProjectID,
+		BaseURL:              config.DescopeBaseURL,
+		ManagementKey:        config.ManagementKey,
+		DefaultClient:        config.DefaultClient,
+		CustomDefaultHeaders: config.CustomDefaultHeaders,
+		ExternalRequestID:    config.ExternalRequestID,
+		CertificateVerify:    config.CertificateVerify,
+		RequestTimeout:       config.RequestTimeout,
+	})
+	managementService := mgmt.NewManagement(mgmt.ManagementParams{ProjectID: config.ProjectID, FGACacheURL: config.FGACacheURL}, provider, mgmtClient)
 
 	return &DescopeClient{Auth: authService, Management: managementService, config: config}, nil
 }
