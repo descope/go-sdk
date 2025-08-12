@@ -30,7 +30,7 @@ func (f *fga) DryRunSchema(ctx context.Context, schema *descope.FGASchema) (*des
 	}
 
 	options := &api.HTTPRequest{}
-	res, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGASchemaDryRun(), body, options, f.conf.ManagementKey)
+	res, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGASchemaDryRun(), body, options, "")
 	if err != nil {
 		return nil, err
 	}
@@ -53,12 +53,12 @@ func (f *fga) SaveSchema(ctx context.Context, schema *descope.FGASchema) error {
 
 	options := &api.HTTPRequest{}
 	options.BaseURL = f.fgaCacheURL
-	_, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGASaveSchema(), body, options, f.conf.ManagementKey)
+	_, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGASaveSchema(), body, options, "")
 	return err
 }
 
 func (f *fga) LoadSchema(ctx context.Context) (*descope.FGASchema, error) {
-	res, err := f.client.DoGetRequest(ctx, api.Routes.ManagementFGALoadSchema(), nil, f.conf.ManagementKey)
+	res, err := f.client.DoGetRequest(ctx, api.Routes.ManagementFGALoadSchema(), nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (f *fga) CreateRelations(ctx context.Context, relations []*descope.FGARelat
 
 	options := &api.HTTPRequest{}
 	options.BaseURL = f.fgaCacheURL
-	_, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGACreateRelations(), body, options, f.conf.ManagementKey)
+	_, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGACreateRelations(), body, options, "")
 	return err
 }
 
@@ -96,7 +96,7 @@ func (f *fga) DeleteRelations(ctx context.Context, relations []*descope.FGARelat
 
 	options := &api.HTTPRequest{}
 	options.BaseURL = f.fgaCacheURL
-	_, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGADeleteRelations(), body, options, f.conf.ManagementKey)
+	_, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGADeleteRelations(), body, options, "")
 	return err
 }
 
@@ -121,7 +121,7 @@ func (f *fga) Check(ctx context.Context, relations []*descope.FGARelation) ([]*d
 
 	options := &api.HTTPRequest{}
 	options.BaseURL = f.fgaCacheURL
-	res, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGACheck(), body, options, f.conf.ManagementKey)
+	res, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGACheck(), body, options, "")
 	if err != nil {
 		return nil, err
 	}
@@ -160,7 +160,7 @@ func (f *fga) LoadMappableSchema(ctx context.Context, tenantID string, options *
 	req := &api.HTTPRequest{
 		QueryParams: params,
 	}
-	res, err := f.client.DoGetRequest(ctx, api.Routes.ManagementFGALoadMappableSchema(), req, f.conf.ManagementKey)
+	res, err := f.client.DoGetRequest(ctx, api.Routes.ManagementFGALoadMappableSchema(), req, "")
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +194,7 @@ func (f *fga) SearchMappableResources(ctx context.Context, tenantID string, reso
 		body["resourcesLimit"] = strconv.Itoa(int(options.ResourcesLimit))
 	}
 
-	res, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGASearchMappableResources(), body, nil, f.conf.ManagementKey)
+	res, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGASearchMappableResources(), body, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -220,7 +220,7 @@ func (f *fga) LoadResourcesDetails(ctx context.Context, resourceIdentifiers []*d
 		"resourceIdentifiers": resourceIdentifiers,
 	}
 
-	res, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGAResourcesLoad(), body, nil, f.conf.ManagementKey)
+	res, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGAResourcesLoad(), body, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -241,6 +241,6 @@ func (f *fga) SaveResourcesDetails(ctx context.Context, resourcesDetails []*desc
 		"resourcesDetails": resourcesDetails,
 	}
 
-	_, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGAResourcesSave(), body, nil, f.conf.ManagementKey)
+	_, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGAResourcesSave(), body, nil, "")
 	return err
 }

@@ -35,7 +35,7 @@ func (a *audit) SearchAll(ctx context.Context, options *descope.AuditSearchOptio
 		"size":            options.Limit,
 		"page":            options.Page,
 	}
-	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuditSearch(), body, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuditSearch(), body, nil, "")
 	if err != nil {
 		return nil, 0, err
 	}
@@ -69,7 +69,7 @@ func (a *audit) CreateEvent(ctx context.Context, options *descope.AuditCreateOpt
 		"data":     options.Data,
 		"tenantId": options.TenantID,
 	}
-	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuditCreate(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuditCreate(), body, nil, "")
 	if err != nil {
 		return err
 	}
@@ -136,7 +136,7 @@ func (a *audit) CreateAuditWebhook(ctx context.Context, options *descope.AuditWe
 	if options.Name == "" {
 		return utils.NewInvalidArgumentError("AuditWebhook.Name")
 	}
-	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuditWebhookCreate(), options, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuditWebhookCreate(), options, nil, "")
 	if err != nil {
 		return err
 	}

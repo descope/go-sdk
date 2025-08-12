@@ -32,7 +32,7 @@ func (j *jwt) UpdateJWTWithCustomClaims(ctx context.Context, jwt string, customC
 		"customClaims":    customClaims,
 		"refreshDuration": refreshDuration,
 	}
-	res, err := j.client.DoPostRequest(ctx, api.Routes.ManagementUpdateJWT(), req, nil, j.conf.ManagementKey)
+	res, err := j.client.DoPostRequest(ctx, api.Routes.ManagementUpdateJWT(), req, nil, "")
 	if err != nil {
 		return "", err
 	}
@@ -59,7 +59,7 @@ func (j *jwt) Impersonate(ctx context.Context, impersonatorID string, loginID st
 		"selectedTenant":  tenantID,
 		"refreshDuration": refreshDuration,
 	}
-	res, err := j.client.DoPostRequest(ctx, api.Routes.ManagementImpersonate(), req, nil, j.conf.ManagementKey)
+	res, err := j.client.DoPostRequest(ctx, api.Routes.ManagementImpersonate(), req, nil, "")
 	if err != nil {
 		return "", err
 	}
@@ -81,7 +81,7 @@ func (j *jwt) StopImpersonation(ctx context.Context, jwt string, customClaims ma
 		"selectedTenant":  tenantID,
 		"refreshDuration": refreshDuration,
 	}
-	res, err := j.client.DoPostRequest(ctx, api.Routes.ManagementStopImpersonation(), req, nil, j.conf.ManagementKey)
+	res, err := j.client.DoPostRequest(ctx, api.Routes.ManagementStopImpersonation(), req, nil, "")
 	if err != nil {
 		return "", err
 	}
@@ -148,7 +148,7 @@ func (j *jwt) SignIn(ctx context.Context, loginID string, loginOptions *descope.
 		JWT:                      loginOptions.JWT,
 		RefreshDuration:          loginOptions.RefreshDuration,
 	}
-	httpResponse, err := j.client.DoPostRequest(ctx, api.Routes.ManagementSignIn(), arb, nil, j.conf.ManagementKey)
+	httpResponse, err := j.client.DoPostRequest(ctx, api.Routes.ManagementSignIn(), arb, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -185,7 +185,7 @@ func (j *jwt) signUp(ctx context.Context, endpoint string, loginID string, user 
 		CustomClaims:    signUpOptions.CustomClaims,
 		RefreshDuration: signUpOptions.RefreshDuration,
 	}
-	httpResponse, err := j.client.DoPostRequest(ctx, endpoint, arb, nil, j.conf.ManagementKey)
+	httpResponse, err := j.client.DoPostRequest(ctx, endpoint, arb, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -208,7 +208,7 @@ func (j *jwt) Anonymous(ctx context.Context, customClaims map[string]any, select
 		"customClaims":    customClaims,
 		"refreshDuration": refreshDuration,
 	}
-	httpResponse, err := j.client.DoPostRequest(ctx, api.Routes.Anonymous(), arb, nil, j.conf.ManagementKey)
+	httpResponse, err := j.client.DoPostRequest(ctx, api.Routes.Anonymous(), arb, nil, "")
 	if err != nil {
 		// notest
 		return nil, err

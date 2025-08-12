@@ -22,7 +22,7 @@ func (r *group) LoadAllGroups(ctx context.Context, tenantID string) ([]*descope.
 	body := map[string]any{
 		"tenantId": tenantID,
 	}
-	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementGroupLoadAllGroups(), body, nil, r.conf.ManagementKey)
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementGroupLoadAllGroups(), body, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (r *group) LoadAllGroupsForMembers(ctx context.Context, tenantID string, us
 		"loginIds": loginIDs,
 		"userIds":  userIDs,
 	}
-	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementGroupLoadAllGroupsForMember(), body, nil, r.conf.ManagementKey)
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementGroupLoadAllGroupsForMember(), body, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (r *group) LoadAllGroupMembers(ctx context.Context, tenantID, groupID strin
 		"tenantId": tenantID,
 		"groupId":  groupID,
 	}
-	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementGroupLoadAllGroupMembers(), body, nil, r.conf.ManagementKey)
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementGroupLoadAllGroupMembers(), body, nil, "")
 	if err != nil {
 		return nil, err
 	}

@@ -25,7 +25,7 @@ func (s *outboundApplication) CreateApplication(ctx context.Context, appRequest 
 
 	req := makeCreateUpdateOutboundApplicationRequest(&appRequest.OutboundApp)
 	req["clientSecret"] = appRequest.ClientSecret
-	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementOutboundApplicationCreate(), req, nil, s.conf.ManagementKey)
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementOutboundApplicationCreate(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -49,7 +49,7 @@ func (s *outboundApplication) UpdateApplication(ctx context.Context, appRequest 
 	}
 	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementOutboundApplicationUpdate(), map[string]any{
 		"app": req,
-	}, nil, s.conf.ManagementKey)
+	}, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +61,7 @@ func (s *outboundApplication) DeleteApplication(ctx context.Context, id string) 
 		return utils.NewInvalidArgumentError("id")
 	}
 	req := map[string]any{"id": id}
-	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementOutboundApplicationDelete(), req, nil, s.conf.ManagementKey)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementOutboundApplicationDelete(), req, nil, "")
 	return err
 }
 
@@ -69,7 +69,7 @@ func (s *outboundApplication) LoadApplication(ctx context.Context, id string) (*
 	if id == "" {
 		return nil, utils.NewInvalidArgumentError("id")
 	}
-	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementOutboundApplicationLoad()+"/"+id, nil, s.conf.ManagementKey)
+	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementOutboundApplicationLoad()+"/"+id, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (s *outboundApplication) LoadApplication(ctx context.Context, id string) (*
 }
 
 func (s *outboundApplication) LoadAllApplications(ctx context.Context) ([]*descope.OutboundApp, error) {
-	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementOutboundApplicationLoadAll(), nil, s.conf.ManagementKey)
+	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementOutboundApplicationLoadAll(), nil, "")
 	if err != nil {
 		return nil, err
 	}

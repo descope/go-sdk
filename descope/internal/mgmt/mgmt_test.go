@@ -14,10 +14,10 @@ func newTestMgmt(clientParams *api.ClientParams, callback mocks.Do) *managementS
 
 func newTestMgmtConf(mgmtParams *ManagementParams, clientParams *api.ClientParams, callback mocks.Do) *managementService {
 	if clientParams == nil {
-		clientParams = &api.ClientParams{ProjectID: "a"}
+		clientParams = &api.ClientParams{ProjectID: "a", ManagementKey: "key"}
 	}
 	if mgmtParams == nil {
-		mgmtParams = &ManagementParams{ProjectID: "a", ManagementKey: "key"}
+		mgmtParams = &ManagementParams{ProjectID: "a"}
 	}
 	clientParams.DefaultClient = mocks.NewTestClient(callback)
 	client := api.NewClient(*clientParams)

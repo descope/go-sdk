@@ -26,7 +26,7 @@ func (r *role) Create(ctx context.Context, name, description string, permissionN
 		"tenantId":        tenantID,
 		"default":         defaultRole,
 	}
-	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleCreate(), body, nil, r.conf.ManagementKey)
+	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleCreate(), body, nil, "")
 	return err
 }
 
@@ -45,7 +45,7 @@ func (r *role) Update(ctx context.Context, name, tenantID, newName, description 
 		"tenantId":        tenantID,
 		"default":         defaultRole,
 	}
-	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleUpdate(), body, nil, r.conf.ManagementKey)
+	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleUpdate(), body, nil, "")
 	return err
 }
 
@@ -57,12 +57,12 @@ func (r *role) Delete(ctx context.Context, name, tenantID string) error {
 		"name":     name,
 		"tenantId": tenantID,
 	}
-	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleDelete(), body, nil, r.conf.ManagementKey)
+	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleDelete(), body, nil, "")
 	return err
 }
 
 func (r *role) LoadAll(ctx context.Context) ([]*descope.Role, error) {
-	res, err := r.client.DoGetRequest(ctx, api.Routes.ManagementRoleLoadAll(), nil, r.conf.ManagementKey)
+	res, err := r.client.DoGetRequest(ctx, api.Routes.ManagementRoleLoadAll(), nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func (r *role) LoadAll(ctx context.Context) ([]*descope.Role, error) {
 }
 
 func (r *role) Search(ctx context.Context, options *descope.RoleSearchOptions) ([]*descope.Role, error) {
-	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleSearch(), options, nil, r.conf.ManagementKey)
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleSearch(), options, nil, "")
 	if err != nil {
 		return nil, err
 	}

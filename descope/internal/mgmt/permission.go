@@ -23,7 +23,7 @@ func (p *permission) Create(ctx context.Context, name, description string) error
 		"name":        name,
 		"description": description,
 	}
-	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementPermissionCreate(), body, nil, p.conf.ManagementKey)
+	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementPermissionCreate(), body, nil, "")
 	return err
 }
 
@@ -39,7 +39,7 @@ func (p *permission) Update(ctx context.Context, name, newName, description stri
 		"newName":     newName,
 		"description": description,
 	}
-	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementPermissionUpdate(), body, nil, p.conf.ManagementKey)
+	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementPermissionUpdate(), body, nil, "")
 	return err
 }
 
@@ -48,12 +48,12 @@ func (p *permission) Delete(ctx context.Context, name string) error {
 		return utils.NewInvalidArgumentError("name")
 	}
 	body := map[string]any{"name": name}
-	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementPermissionDelete(), body, nil, p.conf.ManagementKey)
+	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementPermissionDelete(), body, nil, "")
 	return err
 }
 
 func (p *permission) LoadAll(ctx context.Context) ([]*descope.Permission, error) {
-	res, err := p.client.DoGetRequest(ctx, api.Routes.ManagementPermissionLoadAll(), nil, p.conf.ManagementKey)
+	res, err := p.client.DoGetRequest(ctx, api.Routes.ManagementPermissionLoadAll(), nil, "")
 	if err != nil {
 		return nil, err
 	}
