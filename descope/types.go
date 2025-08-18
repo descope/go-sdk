@@ -833,6 +833,7 @@ type Role struct {
 	CreatedTime     int32    `json:"createdTime,omitempty"`
 	TenantID        string   `json:"tenantId,omitempty"`
 	Default         bool     `json:"default,omitempty"`
+	Private         bool     `json:"private,omitempty"`
 }
 
 func (r *Role) GetCreatedTime() time.Time {

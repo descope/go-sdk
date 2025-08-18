@@ -22,14 +22,15 @@ func TestRoleCreateSuccess(t *testing.T) {
 		require.Equal(t, "foo", roleNames[0])
 		require.Equal(t, "t1", req["tenantId"])
 		require.Equal(t, true, req["default"])
+		require.Equal(t, true, req["private"])
 	}))
-	err := mgmt.Role().Create(context.Background(), "abc", "description", []string{"foo"}, "t1", true)
+	err := mgmt.Role().Create(context.Background(), "abc", "description", []string{"foo"}, "t1", true, true)
 	require.NoError(t, err)
 }
 
 func TestRoleCreateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.Role().Create(context.Background(), "", "description", []string{"foo"}, "", false)
+	err := mgmt.Role().Create(context.Background(), "", "description", []string{"foo"}, "", false, true)
 	require.Error(t, err)
 }
 
@@ -46,16 +47,17 @@ func TestRoleUpdateSuccess(t *testing.T) {
 		require.Equal(t, "foo", roleNames[0])
 		require.Equal(t, "t1", req["tenantId"])
 		require.Equal(t, true, req["default"])
+		require.Equal(t, true, req["private"])
 	}))
-	err := mgmt.Role().Update(context.Background(), "abc", "t1", "def", "description", []string{"foo"}, true)
+	err := mgmt.Role().Update(context.Background(), "abc", "t1", "def", "description", []string{"foo"}, true, true)
 	require.NoError(t, err)
 }
 
 func TestRoleUpdateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.Role().Update(context.Background(), "", "", "def", "description", []string{"foo"}, false)
+	err := mgmt.Role().Update(context.Background(), "", "", "def", "description", []string{"foo"}, false, true)
 	require.Error(t, err)
-	err = mgmt.Role().Update(context.Background(), "abc", "", "", "description", []string{"foo"}, false)
+	err = mgmt.Role().Update(context.Background(), "abc", "", "", "description", []string{"foo"}, false, true)
 	require.Error(t, err)
 }
 
