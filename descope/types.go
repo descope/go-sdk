@@ -879,13 +879,18 @@ type UserSearchOptions struct {
 	ToCreatedTime    int64
 	FromModifiedTime int64
 	ToModifiedTime   int64
-	TenantRoleIDs    map[string][]string
-	TenantRoleNames  map[string][]string
+	TenantRoleIDs    map[string]*RoleList
+	TenantRoleNames  map[string]*RoleList
 }
 
 type UserSearchSort struct {
 	Field string
 	Desc  bool
+}
+
+type RoleList struct {
+	Values []string `json:"values,omitempty"`
+	And    bool     `json:"and,omitempty"`
 }
 
 type UserStatus string

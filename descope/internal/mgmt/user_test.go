@@ -776,8 +776,8 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 			{Field: "nono", Desc: true},
 			{Field: "lolo", Desc: false},
 		},
-		TenantRoleIDs:   map[string][]string{"tenant1": {"id1", "id2"}},
-		TenantRoleNames: map[string][]string{"tenant2": {"name1", "name2"}},
+		TenantRoleIDs:   map[string]*descope.RoleList{"tenant1": {Values: []string{"id1", "id2"}}},
+		TenantRoleNames: map[string]*descope.RoleList{"tenant2": {Values: []string{"name1", "name2"}}},
 	})
 	require.NoError(t, err)
 	require.NotNil(t, res)
@@ -808,8 +808,8 @@ func TestSearchAllTestUsersSuccess(t *testing.T) {
 	}, response))
 	res, _, err := m.User().SearchAllTestUsers(context.Background(), &descope.UserSearchOptions{
 		Emails:          []string{"a@b.com"},
-		TenantRoleIDs:   map[string][]string{"tenant1": {"id1", "id2"}},
-		TenantRoleNames: map[string][]string{"tenant2": {"name1", "name2"}},
+		TenantRoleIDs:   map[string]*descope.RoleList{"tenant1": {Values: []string{"id1", "id2"}}},
+		TenantRoleNames: map[string]*descope.RoleList{"tenant2": {Values: []string{"name1", "name2"}}},
 	})
 	require.NoError(t, err)
 	require.NotNil(t, res)
