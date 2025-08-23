@@ -610,7 +610,6 @@ func (u *user) ListTrustedDevices(ctx context.Context, loginIDOrUserID string) (
 	if err != nil {
 		return nil, err
 	}
-	// Response envelope: { devices: [...] }
 	out := struct {
 		Devices []*descope.UserTrustedDevice `json:"devices"`
 	}{}
