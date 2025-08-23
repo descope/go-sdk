@@ -35,6 +35,16 @@ type AnonymousAuthenticationInfo struct {
 	RefreshToken *Token `json:"refreshToken,omitempty"`
 }
 
+// UserTrustedDevice represents a device trusted for a user (i.e. remembered device for MFA bypass).
+type UserTrustedDevice struct {
+	ID             string `json:"id,omitempty"`
+	Name           string `json:"name,omitempty"`
+	DeviceType     string `json:"deviceType,omitempty"`
+	LastLoginTime  int64  `json:"lastLoginTime,omitempty"`
+	ExpirationTime int64  `json:"expirationTime,omitempty"`
+	LastLocation   string `json:"lastLocation,omitempty"`
+}
+
 type WebAuthnTransactionResponse struct {
 	TransactionID string `json:"transactionId,omitempty"`
 	Options       string `json:"options,omitempty"`

@@ -601,6 +601,40 @@ func (u *user) RemoveTOTPSeed(ctx context.Context, loginID string) error {
 	return err
 }
 
+func (u *user) ListTrustedDevices(ctx context.Context, loginIDOrUserID string) ([]*descope.UserTrustedDevice, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
+	}
+	req := map[string]any{"loginId": loginIDOrUserID}
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserListTrustedDevices(), req, nil, u.conf.ManagementKey)
+	if err != nil {
+		return nil, err
+	}
+	// Response envelope: { devices: [...] }
+	out := struct {
+		Devices []*descope.UserTrustedDevice `json:"devices"`
+	}{}
+	if err := utils.Unmarshal([]byte(res.BodyStr), &out); err != nil {
+		return nil, err
+	}
+	return out.Devices, nil
+}
+
+func (u *user) RemoveTrustedDevices(ctx context.Context, loginIDOrUserID string, deviceIDs []string) error {
+	if loginIDOrUserID == "" {
+		return utils.NewInvalidArgumentError("loginIDOrUserID")
+	}
+	if len(deviceIDs) == 0 {
+		return utils.NewInvalidArgumentError("deviceIDs")
+	}
+	req := map[string]any{
+		"loginId": loginIDOrUserID,
+		"ids":     deviceIDs,
+	}
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveTrustedDevices(), req, nil, u.conf.ManagementKey)
+	return err
+}
+
 func (u *user) GetProviderToken(ctx context.Context, loginID, provider string) (*descope.ProviderTokenResponse, error) {
 	return u.GetProviderTokenWithOptions(ctx, loginID, provider, nil)
 }
