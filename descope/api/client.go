@@ -135,6 +135,8 @@ var (
 			userExpirePassword:                       "mgmt/user/password/expire",
 			userRemoveAllPasskeys:                    "mgmt/user/passkeys/delete",
 			userRemoveTOTPSeed:                       "mgmt/user/totp/delete",
+			userListTrustedDevices:                   "mgmt/user/trusteddevices/list",
+			userRemoveTrustedDevices:                 "mgmt/user/update/trusteddevices/remove",
 			userGetProviderToken:                     "mgmt/user/provider/token",
 			userLogoutAllDevices:                     "mgmt/user/logout",
 			userGenerateOTPForTest:                   "mgmt/tests/generate/otp",
@@ -379,6 +381,8 @@ type mgmtEndpoints struct {
 	userAddSsoApps            string
 	userSetSsoApps            string
 	userRemoveSsoApps         string
+	userListTrustedDevices    string
+	userRemoveTrustedDevices  string
 
 	userGenerateOTPForTest           string
 	userGenerateMagicLinkForTest     string
@@ -927,6 +931,14 @@ func (e *endpoints) ManagementUserRemoveAllPasskeys() string {
 
 func (e *endpoints) ManagementUserRemoveTOTPSeed() string {
 	return path.Join(e.version, e.mgmt.userRemoveTOTPSeed)
+}
+
+func (e *endpoints) ManagementUserListTrustedDevices() string {
+	return path.Join(e.version, e.mgmt.userListTrustedDevices)
+}
+
+func (e *endpoints) ManagementUserRemoveTrustedDevices() string {
+	return path.Join(e.version, e.mgmt.userRemoveTrustedDevices)
 }
 
 func (e *endpoints) ManagementUserGetProviderToken() string {
