@@ -37,12 +37,12 @@ type AnonymousAuthenticationInfo struct {
 
 // UserTrustedDevice represents a device trusted for a user (i.e. remembered device for MFA bypass).
 type UserTrustedDevice struct {
-	ID                    string `json:"id,omitempty"`
-	Name                  string `json:"name,omitempty"`
-	DeviceType            string `json:"deviceType,omitempty"`
-	LastLoginUnixTimeUTC  int64  `json:"lastLoginTime,omitempty"`  // UTC Unix time format, i.e. the number of seconds elapsed since January 1, 1970 UTC until the last login
-	ExpirationUnixTimeUTC int64  `json:"expirationTime,omitempty"` // UTC Unix time format, i.e. the number of seconds elapsed since January 1, 1970 UTC until the expiration
-	LastLocation          string `json:"lastLocation,omitempty"`
+	ID             string    `json:"id,omitempty"`
+	Name           string    `json:"name,omitempty"`
+	DeviceType     string    `json:"deviceType,omitempty"`
+	LastLoginTime  time.Time `json:"lastLoginTime,omitempty"`
+	ExpirationTime time.Time `json:"expirationTime,omitempty"`
+	LastLocation   string    `json:"lastLocation,omitempty"`
 }
 
 type WebAuthnTransactionResponse struct {

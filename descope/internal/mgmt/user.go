@@ -3,6 +3,7 @@ package mgmt
 import (
 	"context"
 	"strconv"
+	"time"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
@@ -601,22 +602,46 @@ func (u *user) RemoveTOTPSeed(ctx context.Context, loginID string) error {
 	return err
 }
 
+type userTrustedDeviceRaw struct {
+	ID                    string `json:"id,omitempty"`
+	Name                  string `json:"name,omitempty"`
+	DeviceType            string `json:"deviceType,omitempty"`
+	LastLoginUnixTimeUTC  int64  `json:"lastLoginTime,omitempty"`  // UTC Unix time format, i.e. the number of seconds elapsed since January 1, 1970 UTC until the last login
+	ExpirationUnixTimeUTC int64  `json:"expirationTime,omitempty"` // UTC Unix time format, i.e. the number of seconds elapsed since January 1, 1970 UTC until the expiration
+	LastLocation          string `json:"lastLocation,omitempty"`
+}
+
 func (u *user) ListTrustedDevices(ctx context.Context, loginIDOrUserID string) ([]*descope.UserTrustedDevice, error) {
+	// Validate input
 	if loginIDOrUserID == "" {
 		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
+	// Make request
 	req := map[string]any{"loginId": loginIDOrUserID}
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserListTrustedDevices(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
 	}
-	out := struct {
-		Devices []*descope.UserTrustedDevice `json:"devices"`
+	// Unmarshal response
+	outRaw := struct {
+		Devices []*userTrustedDeviceRaw `json:"devices"`
 	}{}
-	if err := utils.Unmarshal([]byte(res.BodyStr), &out); err != nil {
+	if err := utils.Unmarshal([]byte(res.BodyStr), &outRaw); err != nil {
 		return nil, err
 	}
-	return out.Devices, nil
+	// Convert from raw timestamps to time.Time
+	out := make([]*descope.UserTrustedDevice, len(outRaw.Devices))
+	for i, d := range outRaw.Devices {
+		out[i] = &descope.UserTrustedDevice{
+			ID:             d.ID,
+			Name:           d.Name,
+			DeviceType:     d.DeviceType,
+			LastLoginTime:  time.Unix(d.LastLoginUnixTimeUTC, 0).UTC(),
+			ExpirationTime: time.Unix(d.ExpirationUnixTimeUTC, 0).UTC(),
+			LastLocation:   d.LastLocation,
+		}
+	}
+	return out, nil
 }
 
 func (u *user) RemoveTrustedDevices(ctx context.Context, loginIDOrUserID string, deviceIDs []string) error {

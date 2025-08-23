@@ -2220,14 +2220,14 @@ func TestUserListTrustedDevicesSuccess(t *testing.T) {
 	assert.Equal(t, "TD1", res[0].ID)
 	assert.Equal(t, "MacBook Pro", res[0].Name)
 	assert.Equal(t, "desktop", res[0].DeviceType)
-	assert.Equal(t, int64(1724411111), res[0].LastLoginUnixTimeUTC)
-	assert.Equal(t, int64(1727411111), res[0].ExpirationUnixTimeUTC)
+	assert.Equal(t, int64(1724411111), res[0].LastLoginTime.Unix())
+	assert.Equal(t, int64(1727411111), res[0].ExpirationTime.Unix())
 	assert.Equal(t, "US", res[0].LastLocation)
 	assert.Equal(t, "TD2", res[1].ID)
 	assert.Equal(t, "iPhone", res[1].Name)
 	assert.Equal(t, "mobile", res[1].DeviceType)
-	assert.Equal(t, int64(1724412222), res[1].LastLoginUnixTimeUTC)
-	assert.Equal(t, int64(1727412222), res[1].ExpirationUnixTimeUTC)
+	assert.Equal(t, int64(1724412222), res[1].LastLoginTime.Unix())
+	assert.Equal(t, int64(1727412222), res[1].ExpirationTime.Unix())
 	assert.Equal(t, "IL", res[1].LastLocation)
 }
 
