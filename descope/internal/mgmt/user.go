@@ -606,8 +606,8 @@ type userTrustedDeviceRaw struct {
 	ID                    string `json:"id,omitempty"`
 	Name                  string `json:"name,omitempty"`
 	DeviceType            string `json:"deviceType,omitempty"`
-	LastLoginUnixTimeUTC  int64  `json:"lastLoginTime,omitempty"`  // UTC Unix time format, i.e. the number of seconds elapsed since January 1, 1970 UTC until the last login
-	ExpirationUnixTimeUTC int64  `json:"expirationTime,omitempty"` // UTC Unix time format, i.e. the number of seconds elapsed since January 1, 1970 UTC until the expiration
+	LastLoginUnixTimeUTC  string `json:"lastLoginTime,omitempty"`  // UTC Unix time format, i.e. the number of seconds elapsed since January 1, 1970 UTC until the last login
+	ExpirationUnixTimeUTC string `json:"expirationTime,omitempty"` // UTC Unix time format, i.e. the number of seconds elapsed since January 1, 1970 UTC until the expiration
 	LastLocation          string `json:"lastLocation,omitempty"`
 }
 
@@ -632,12 +632,22 @@ func (u *user) ListTrustedDevices(ctx context.Context, loginIDOrUserID string) (
 	// Convert from raw timestamps to time.Time
 	out := make([]*descope.UserTrustedDevice, len(outRaw.Devices))
 	for i, d := range outRaw.Devices {
+		lastLoginTimeInt, err := strconv.Atoi(d.LastLoginUnixTimeUTC)
+		if err != nil {
+			// notest
+			return nil, err
+		}
+		expirationTimeInt, err := strconv.Atoi(d.ExpirationUnixTimeUTC)
+		if err != nil {
+			// notest
+			return nil, err
+		}
 		out[i] = &descope.UserTrustedDevice{
 			ID:             d.ID,
 			Name:           d.Name,
 			DeviceType:     d.DeviceType,
-			LastLoginTime:  time.Unix(d.LastLoginUnixTimeUTC, 0).UTC(),
-			ExpirationTime: time.Unix(d.ExpirationUnixTimeUTC, 0).UTC(),
+			LastLoginTime:  time.Unix(int64(lastLoginTimeInt), 0).UTC(),
+			ExpirationTime: time.Unix(int64(expirationTimeInt), 0).UTC(),
 			LastLocation:   d.LastLocation,
 		}
 	}
