@@ -627,6 +627,11 @@ func (u *user) RemoveTrustedDevices(ctx context.Context, loginIDOrUserID string,
 	if len(deviceIDs) == 0 {
 		return utils.NewInvalidArgumentError("deviceIDs")
 	}
+	for i, id := range deviceIDs {
+		if id == "" {
+			return utils.NewInvalidArgumentError("deviceIDs[" + strconv.Itoa(i) + "] is empty")
+		}
+	}
 	req := map[string]any{
 		"loginId": loginIDOrUserID,
 		"ids":     deviceIDs,
