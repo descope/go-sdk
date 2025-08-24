@@ -10,19 +10,6 @@ import (
 	"github.com/descope/go-sdk/descope/sdk"
 )
 
-func mapToValuesObject(inputMap map[string][]string) map[string]map[string][]string {
-	if len(inputMap) == 0 {
-		return nil
-	}
-	result := make(map[string]map[string][]string)
-	for k, v := range inputMap {
-		result[k] = map[string][]string{
-			"values": v,
-		}
-	}
-	return result
-}
-
 type user struct {
 	managementBase
 }
@@ -988,8 +975,8 @@ func makeSearchAllRequest(options *descope.UserSearchOptions) map[string]any {
 		"fromModifiedTime": options.FromModifiedTime,
 		"toModifiedTime":   options.ToModifiedTime,
 		"userIds":          options.UserIDs,
-		"tenantRoleIds":    mapToValuesObject(options.TenantRoleIDs),
-		"tenantRoleNames":  mapToValuesObject(options.TenantRoleNames),
+		"tenantRoleIds":    options.TenantRoleIDs,
+		"tenantRoleNames":  options.TenantRoleNames,
 	}
 }
 
