@@ -1123,6 +1123,21 @@ func TestSSOConfigureOIDCSettingsSuccess(t *testing.T) {
 		AttributeMapping: &descope.OIDCAttributeMapping{
 			GivenName: "myGivenName",
 		},
+		GroupsMapping: []*descope.GroupsMapping{
+			{
+				Role: &descope.RoleItem{
+					ID:   "role.id",
+					Name: "role.name",
+				},
+				Groups: []string{"grp1", "grp2"},
+			},
+		},
+		DefaultSSORoles: []string{"defrole1", "defrole2"},
+		FgaMappings: map[string]*descope.FGAGroupMapping{
+			"aa": {
+				Relations: []*descope.FGAGroupMappingRelation{},
+			},
+		},
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -1150,6 +1165,9 @@ func TestSSOConfigureOIDCSettingsSuccess(t *testing.T) {
 		require.True(t, found)
 		userAttrMapping, _ := userAttrMappingInt.(map[string]any)
 		require.Equal(t, "myGivenName", userAttrMapping["givenName"])
+		require.Equal(t, []any{"defrole1", "defrole2"}, sett["defaultSSORoles"])
+		require.Equal(t, []any{map[string]any{"groups": []any{"grp1", "grp2"}, "role": map[string]any{"id": "role.id", "name": "role.name"}}}, sett["groupsMapping"])
+		require.Equal(t, map[string]any(map[string]any{"aa": map[string]any{}}), sett["fgaMappings"])
 	}))
 	err := mgmt.SSO().ConfigureOIDCSettings(context.Background(), "abc", oidcSettings, []string{"domain.com"}, "")
 	require.NoError(t, err)
