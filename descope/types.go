@@ -162,21 +162,24 @@ type OIDCAttributeMapping struct {
 }
 
 type SSOOIDCSettings struct {
-	Name                 string                `json:"name,omitempty"`
-	ClientID             string                `json:"clientId,omitempty"`
-	ClientSecret         string                `json:"clientSecret,omitempty"` // will be empty on response
-	RedirectURL          string                `json:"redirectUrl,omitempty"`
-	AuthURL              string                `json:"authUrl,omitempty"`
-	TokenURL             string                `json:"tokenUrl,omitempty"`
-	UserDataURL          string                `json:"userDataUrl,omitempty"`
-	Scope                []string              `json:"scope,omitempty"`
-	JWKsURL              string                `json:"JWKsUrl,omitempty"`
-	AttributeMapping     *OIDCAttributeMapping `json:"userAttrMapping,omitempty"`
-	ManageProviderTokens bool                  `json:"manageProviderTokens,omitempty"`
-	CallbackDomain       string                `json:"callbackDomain,omitempty"`
-	Prompt               []string              `json:"prompt,omitempty"`
-	GrantType            string                `json:"grantType,omitempty"`
-	Issuer               string                `json:"issuer,omitempty"`
+	Name                 string                      `json:"name,omitempty"`
+	ClientID             string                      `json:"clientId,omitempty"`
+	ClientSecret         string                      `json:"clientSecret,omitempty"` // will be empty on response
+	RedirectURL          string                      `json:"redirectUrl,omitempty"`
+	AuthURL              string                      `json:"authUrl,omitempty"`
+	TokenURL             string                      `json:"tokenUrl,omitempty"`
+	UserDataURL          string                      `json:"userDataUrl,omitempty"`
+	Scope                []string                    `json:"scope,omitempty"`
+	JWKsURL              string                      `json:"JWKsUrl,omitempty"`
+	AttributeMapping     *OIDCAttributeMapping       `json:"userAttrMapping,omitempty"`
+	ManageProviderTokens bool                        `json:"manageProviderTokens,omitempty"`
+	CallbackDomain       string                      `json:"callbackDomain,omitempty"`
+	Prompt               []string                    `json:"prompt,omitempty"`
+	GrantType            string                      `json:"grantType,omitempty"`
+	Issuer               string                      `json:"issuer,omitempty"`
+	GroupsMapping        []*GroupsMapping            `json:"groupsMapping,omitempty"`
+	DefaultSSORoles      []string                    `json:"defaultSSORoles,omitempty"`
+	FgaMappings          map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 }
 
 type SSOTenantSettingsResponse struct {
