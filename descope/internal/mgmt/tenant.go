@@ -37,7 +37,7 @@ func (t *tenant) createWithID(ctx context.Context, id string, tenantRequest *des
 	if tenantRequest.Name == "" {
 		return "", utils.NewInvalidArgumentError("name")
 	}
-	req := makeCreateUpdateTenantRequest(id, tenantRequest)
+	req := makeCreateUpdateTenantRequest(id, tenantRequest, true)
 	httpRes, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantCreate(), req, nil, t.conf.ManagementKey)
 	if err != nil {
 		return "", err
@@ -58,7 +58,7 @@ func (t *tenant) Update(ctx context.Context, id string, tenantRequest *descope.T
 	if tenantRequest.Name == "" {
 		return utils.NewInvalidArgumentError("name")
 	}
-	req := makeCreateUpdateTenantRequest(id, tenantRequest)
+	req := makeCreateUpdateTenantRequest(id, tenantRequest, false)
 	_, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantUpdate(), req, nil, t.conf.ManagementKey)
 	return err
 }
@@ -181,8 +181,19 @@ func (t *tenant) RevokeSSOConfigurationLink(ctx context.Context, tenantID string
 	return err
 }
 
-func makeCreateUpdateTenantRequest(id string, tenantRequest *descope.TenantRequest) map[string]any {
-	return map[string]any{"id": id, "name": tenantRequest.Name, "selfProvisioningDomains": tenantRequest.SelfProvisioningDomains, "customAttributes": tenantRequest.CustomAttributes, "enforceSSO": tenantRequest.EnforceSSO, "disabled": tenantRequest.Disabled}
+func makeCreateUpdateTenantRequest(id string, tenantRequest *descope.TenantRequest, includeSubTenants bool) map[string]any {
+	res := map[string]any{
+		"id":                      id,
+		"name":                    tenantRequest.Name,
+		"selfProvisioningDomains": tenantRequest.SelfProvisioningDomains,
+		"customAttributes":        tenantRequest.CustomAttributes,
+		"enforceSSO":              tenantRequest.EnforceSSO,
+		"disabled":                tenantRequest.Disabled,
+	}
+	if includeSubTenants && len(tenantRequest.ParentID) > 0 {
+		res["parent"] = tenantRequest.ParentID
+	}
+	return res
 }
 
 func unmarshalLoadTenantResponse(res *api.HTTPResponse) (*descope.Tenant, error) {

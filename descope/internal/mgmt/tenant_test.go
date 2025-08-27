@@ -24,13 +24,14 @@ func TestTenantCreateSuccess(t *testing.T) {
 		require.Len(t, selfProvisioningDomains, 2)
 		require.Equal(t, "foo", selfProvisioningDomains[0])
 		require.Equal(t, "bar", selfProvisioningDomains[1])
+		require.Equal(t, "pid", req["parent"])
 		customAttributes := req["customAttributes"].(map[string]any)
 		assert.EqualValues(t, map[string]any{"k1": "v1"}, customAttributes)
 		require.True(t, req["enforceSSO"].(bool))
 		require.True(t, req["disabled"].(bool))
 	}, response))
 
-	id, err := mgmt.Tenant().Create(context.Background(), &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}, Disabled: true, EnforceSSO: true})
+	id, err := mgmt.Tenant().Create(context.Background(), &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}, Disabled: true, EnforceSSO: true, ParentID: "pid"})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)
 }

@@ -695,6 +695,7 @@ type TenantRequest struct {
 	CustomAttributes        map[string]any `json:"customAttributes,omitempty"`
 	EnforceSSO              bool           `json:"enforceSSO,omitempty"`
 	Disabled                bool           `json:"disabled,omitempty"`
+	ParentID                string         `json:"parentId,omitempty"` // applicable only for creation request
 }
 
 type TenantSearchOptions struct {
@@ -863,27 +864,28 @@ type RoleSearchOptions struct {
 // where the keys are the attribute names and the values are either a value we are searching for or list of these values in a slice.
 // We currently support string, int and bool values
 type UserSearchOptions struct {
-	Page             int32
-	Limit            int32
-	Sort             []UserSearchSort
-	Text             string
-	Emails           []string
-	Phones           []string
-	Statuses         []UserStatus
-	Roles            []string
-	TenantIDs        []string
-	SSOAppIDs        []string
-	CustomAttributes map[string]any
-	WithTestUsers    bool
-	TestUsersOnly    bool
-	LoginIDs         []string
-	UserIDs          []string
-	FromCreatedTime  int64
-	ToCreatedTime    int64
-	FromModifiedTime int64
-	ToModifiedTime   int64
-	TenantRoleIDs    map[string]*RoleList
-	TenantRoleNames  map[string]*RoleList
+	Page              int32
+	Limit             int32
+	Sort              []UserSearchSort
+	Text              string
+	Emails            []string
+	Phones            []string
+	Statuses          []UserStatus
+	Roles             []string
+	TenantIDs         []string
+	SSOAppIDs         []string
+	CustomAttributes  map[string]any
+	WithTestUsers     bool
+	TestUsersOnly     bool
+	LoginIDs          []string
+	UserIDs           []string
+	FromCreatedTime   int64
+	ToCreatedTime     int64
+	FromModifiedTime  int64
+	ToModifiedTime    int64
+	TenantRoleIDs     map[string]*RoleList
+	TenantRoleNames   map[string]*RoleList
+	IncludeSubTenants bool
 }
 
 type UserSearchSort struct {
