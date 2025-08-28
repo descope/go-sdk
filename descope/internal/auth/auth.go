@@ -26,6 +26,24 @@ type AuthParams struct {
 	SessionJWTViaCookie bool
 	CookieDomain        string
 	CookieSameSite      http.SameSite
+	SessionCookieName   string
+	RefreshCookieName   string
+}
+
+func (ap *AuthParams) GetRefreshCookieName() string {
+	if ap.RefreshCookieName != "" {
+		// notest
+		return ap.RefreshCookieName
+	}
+	return descope.RefreshCookieName
+}
+
+func (ap *AuthParams) GetSessionCookieName() string {
+	if ap.SessionCookieName != "" {
+		// notest
+		return ap.SessionCookieName
+	}
+	return descope.SessionCookieName
 }
 
 type authenticationsBase struct {
@@ -116,7 +134,7 @@ func (auth *authenticationService) Logout(request *http.Request, w http.Response
 
 func (auth *authenticationService) LogoutWithToken(refreshToken string, w http.ResponseWriter) error {
 	request := &http.Request{Header: http.Header{}}
-	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: refreshToken})
+	request.AddCookie(&http.Cookie{Name: auth.conf.GetRefreshCookieName(), Value: refreshToken})
 	return auth.logout(request, w)
 }
 
@@ -125,7 +143,7 @@ func (auth *authenticationService) logout(request *http.Request, w http.Response
 		return utils.NewInvalidArgumentError("request")
 	}
 
-	_, refreshToken := provideTokens(request)
+	_, refreshToken := auth.provideTokens(request)
 	if refreshToken == "" {
 		logger.LogDebug("Unable to find tokens from cookies")
 		return descope.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
@@ -163,10 +181,10 @@ func (auth *authenticationService) logout(request *http.Request, w http.Response
 	// delete cookies by not specifying max-age (e.i. max-age=0)
 	cookies = append(cookies, auth.createCookie(&descope.Token{
 		JWT:    "",
-		Claims: map[string]interface{}{claimAttributeName: descope.SessionCookieName},
+		Claims: map[string]interface{}{claimAttributeName: auth.conf.GetSessionCookieName()},
 	}, jwtResponse))
 	cookies = append(cookies, auth.createCookie(&descope.Token{JWT: "",
-		Claims: map[string]interface{}{claimAttributeName: descope.RefreshCookieName},
+		Claims: map[string]interface{}{claimAttributeName: auth.conf.GetRefreshCookieName()},
 	}, jwtResponse))
 
 	setCookies(cookies, w)
@@ -179,7 +197,7 @@ func (auth *authenticationService) LogoutAll(request *http.Request, w http.Respo
 
 func (auth *authenticationService) LogoutAllWithToken(refreshToken string, w http.ResponseWriter) error {
 	request := &http.Request{Header: http.Header{}}
-	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: refreshToken})
+	request.AddCookie(&http.Cookie{Name: auth.conf.GetRefreshCookieName(), Value: refreshToken})
 	return auth.logoutAll(request, w)
 }
 
@@ -188,7 +206,7 @@ func (auth *authenticationService) logoutAll(request *http.Request, w http.Respo
 		return utils.NewInvalidArgumentError("request")
 	}
 
-	_, refreshToken := provideTokens(request)
+	_, refreshToken := auth.provideTokens(request)
 	if refreshToken == "" {
 		logger.LogDebug("Unable to find tokens from cookies")
 		return descope.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
@@ -226,10 +244,10 @@ func (auth *authenticationService) logoutAll(request *http.Request, w http.Respo
 	// delete cookies by not specifying max-age (e.i. max-age=0)
 	cookies = append(cookies, auth.createCookie(&descope.Token{
 		JWT:    "",
-		Claims: map[string]interface{}{claimAttributeName: descope.SessionCookieName},
+		Claims: map[string]interface{}{claimAttributeName: auth.conf.GetSessionCookieName()},
 	}, jwtResponse))
 	cookies = append(cookies, auth.createCookie(&descope.Token{JWT: "",
-		Claims: map[string]interface{}{claimAttributeName: descope.RefreshCookieName},
+		Claims: map[string]interface{}{claimAttributeName: auth.conf.GetRefreshCookieName()},
 	}, jwtResponse))
 
 	setCookies(cookies, w)
@@ -241,7 +259,7 @@ func (auth *authenticationService) Me(request *http.Request) (*descope.UserRespo
 		return nil, utils.NewInvalidArgumentError("request")
 	}
 
-	_, refreshToken := provideTokens(request)
+	_, refreshToken := auth.provideTokens(request)
 	if refreshToken == "" {
 		logger.LogDebug("Unable to find tokens from cookies")
 		return nil, descope.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
@@ -269,7 +287,7 @@ func (auth *authenticationService) MyTenants(ctx context.Context, request *http.
 		return nil, utils.NewInvalidArgumentError("Only one of dct or tenant ids should be provided")
 	}
 
-	_, refreshToken := provideTokens(request)
+	_, refreshToken := auth.provideTokens(request)
 	if refreshToken == "" {
 		logger.LogDebug("Unable to find tokens from cookies")
 		return nil, descope.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
@@ -299,7 +317,7 @@ func (auth *authenticationService) History(request *http.Request) ([]*descope.Us
 		return nil, utils.NewInvalidArgumentError("request")
 	}
 
-	_, refreshToken := provideTokens(request)
+	_, refreshToken := auth.provideTokens(request)
 	if refreshToken == "" {
 		logger.LogDebug("Unable to find tokens from cookies")
 		return nil, descope.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
@@ -324,7 +342,7 @@ func (auth *authenticationService) ValidateSessionWithRequest(request *http.Requ
 	if request == nil {
 		return false, nil, utils.NewInvalidArgumentError("request")
 	}
-	sessionToken, _ := provideTokens(request)
+	sessionToken, _ := auth.provideTokens(request)
 	if sessionToken == "" {
 		return false, nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain session token")
 	}
@@ -352,7 +370,7 @@ func (auth *authenticationService) RefreshSessionWithRequest(request *http.Reque
 	if request == nil {
 		return false, nil, utils.NewInvalidArgumentError("request")
 	}
-	_, refreshToken := provideTokens(request)
+	_, refreshToken := auth.provideTokens(request)
 	if refreshToken == "" {
 		return false, nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain refresh token")
 	}
@@ -392,7 +410,7 @@ func (auth *authenticationService) ValidateAndRefreshSessionWithRequest(request 
 	if request == nil {
 		return false, nil, utils.NewInvalidArgumentError("request")
 	}
-	sessionToken, refreshToken := provideTokens(request)
+	sessionToken, refreshToken := auth.provideTokens(request)
 	return auth.validateAndRefreshSessionWithTokens(request.Context(), sessionToken, refreshToken, w)
 }
 
@@ -521,7 +539,7 @@ func (auth *authenticationService) SelectTenantWithRequest(ctx context.Context, 
 	if request == nil {
 		return nil, utils.NewInvalidArgumentError("request")
 	}
-	_, refreshToken := provideTokens(request)
+	_, refreshToken := auth.provideTokens(request)
 	if refreshToken == "" {
 		return nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain refresh token")
 	}
@@ -737,13 +755,13 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 	var sToken *descope.Token
 	for i := range tokens {
 		addToCookie := true
-		if tokens[i].Claims[claimAttributeName] == descope.SessionCookieName {
+		if tokens[i].Claims[claimAttributeName] == auth.conf.GetSessionCookieName() {
 			sToken = tokens[i]
 			if !auth.conf.SessionJWTViaCookie {
 				addToCookie = false
 			}
 		}
-		if tokens[i].Claims[claimAttributeName] == descope.RefreshCookieName {
+		if tokens[i].Claims[claimAttributeName] == auth.conf.GetRefreshCookieName() {
 			refreshToken = tokens[i]
 		}
 		if addToCookie {
@@ -756,7 +774,7 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 
 	if refreshToken == nil || refreshToken.JWT == "" {
 		for i := range cookies {
-			if cookies[i].Name == descope.RefreshCookieName {
+			if cookies[i].Name == auth.conf.GetRefreshCookieName() {
 				refreshToken, err = auth.validateJWT(cookies[i].Value)
 				if err != nil {
 					logger.LogDebug("Validation of refresh token failed: %s", err.Error())
@@ -770,8 +788,8 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 	return descope.NewAuthenticationInfo(jwtResponse, sToken, refreshToken), err
 }
 
-func getValidRefreshToken(r *http.Request) (string, error) {
-	_, refreshToken := provideTokens(r)
+func (auth *authenticationsBase) getValidRefreshToken(r *http.Request) (string, error) {
+	_, refreshToken := auth.provideTokens(r)
 	if refreshToken == "" {
 		logger.LogDebug("Unable to find tokens from cookies")
 		return "", descope.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
@@ -812,7 +830,7 @@ func (auth *authenticationsBase) createCookie(token *descope.Token, jwtRes *desc
 	}
 }
 
-func provideTokens(r *http.Request) (string, string) {
+func (auth *authenticationsBase) provideTokens(r *http.Request) (string, string) {
 	if r == nil {
 		return "", ""
 	}
@@ -825,12 +843,12 @@ func provideTokens(r *http.Request) (string, string) {
 	}
 
 	if sessionToken == "" {
-		if sessionCookie, _ := r.Cookie(descope.SessionCookieName); sessionCookie != nil {
+		if sessionCookie, _ := r.Cookie(auth.conf.GetSessionCookieName()); sessionCookie != nil {
 			sessionToken = sessionCookie.Value
 		}
 	}
 
-	refreshCookie, err := r.Cookie(descope.RefreshCookieName)
+	refreshCookie, err := r.Cookie(auth.conf.GetRefreshCookieName())
 	if err != nil {
 		return sessionToken, ""
 	}
