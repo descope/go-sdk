@@ -31,7 +31,7 @@ func TestTenantCreateSuccess(t *testing.T) {
 		require.True(t, req["disabled"].(bool))
 	}, response))
 
-	id, err := mgmt.Tenant().Create(context.Background(), &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}, Disabled: true, EnforceSSO: true, ParentID: "pid"})
+	id, err := mgmt.Tenant().Create(context.Background(), &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}, Disabled: true, EnforceSSO: true, ParentTenantID: "pid"})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)
 }

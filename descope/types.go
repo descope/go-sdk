@@ -695,7 +695,7 @@ type TenantRequest struct {
 	CustomAttributes        map[string]any `json:"customAttributes,omitempty"`
 	EnforceSSO              bool           `json:"enforceSSO,omitempty"`
 	Disabled                bool           `json:"disabled,omitempty"`
-	ParentID                string         `json:"parentId,omitempty"` // applicable only for creation request
+	ParentTenantID          string         `json:"parentId,omitempty"` // applicable only for creation request
 }
 
 type TenantSearchOptions struct {
