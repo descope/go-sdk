@@ -32,6 +32,7 @@ type AuthParams struct {
 
 func (ap *AuthParams) GetRefreshCookieName() string {
 	if ap.RefreshCookieName != "" {
+		// notest
 		return ap.RefreshCookieName
 	}
 	return descope.RefreshCookieName
@@ -39,6 +40,7 @@ func (ap *AuthParams) GetRefreshCookieName() string {
 
 func (ap *AuthParams) GetSessionCookieName() string {
 	if ap.SessionCookieName != "" {
+		// notest
 		return ap.SessionCookieName
 	}
 	return descope.SessionCookieName
