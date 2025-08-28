@@ -42,7 +42,7 @@ func (auth *webAuthn) SignInStart(ctx context.Context, loginID string, origin st
 	var pswd string
 	var err error
 	if loginOptions.IsJWTRequired() {
-		pswd, err = getValidRefreshToken(r)
+		pswd, err = auth.getValidRefreshToken(r)
 		if err != nil {
 			return nil, descope.ErrInvalidStepUpJWT
 		}
@@ -87,7 +87,7 @@ func (auth *webAuthn) UpdateUserDeviceStart(ctx context.Context, loginID string,
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 
-	pswd, err := getValidRefreshToken(r)
+	pswd, err := auth.getValidRefreshToken(r)
 	if err != nil {
 		return nil, err
 	}
