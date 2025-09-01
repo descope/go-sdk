@@ -2211,10 +2211,13 @@ func TestUserListTrustedDevicesSuccess(t *testing.T) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		require.Equal(t, "abc", req["loginId"])
+		ids, ok := req["loginIds"].([]any)
+		require.True(t, ok)
+		require.Len(t, ids, 1)
+		assert.Equal(t, "abc", ids[0])
 	}, response))
 
-	res, err := m.User().ListTrustedDevices(context.Background(), "abc")
+	res, err := m.User().ListTrustedDevices(context.Background(), []string{"abc"})
 	require.NoError(t, err)
 	require.Len(t, res, 2)
 	assert.Equal(t, "TD1", res[0].ID)
@@ -2233,14 +2236,19 @@ func TestUserListTrustedDevicesSuccess(t *testing.T) {
 
 func TestUserListTrustedDevicesBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().ListTrustedDevices(context.Background(), "")
+	// nil login IDs
+	res, err := m.User().ListTrustedDevices(context.Background(), nil)
+	require.Error(t, err)
+	require.Nil(t, res)
+	// empty login ID
+	res, err = m.User().ListTrustedDevices(context.Background(), []string{""})
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestUserListTrustedDevicesError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().ListTrustedDevices(context.Background(), "abc")
+	res, err := m.User().ListTrustedDevices(context.Background(), []string{"abc"})
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -2257,7 +2265,7 @@ func TestUserListTrustedDevicesUnmarshallingError(t *testing.T) {
 
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {}, response))
 
-	_, err := m.User().ListTrustedDevices(context.Background(), "abc")
+	_, err := m.User().ListTrustedDevices(context.Background(), []string{"abc"})
 	require.Error(t, err)
 }
 

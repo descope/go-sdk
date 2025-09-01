@@ -611,13 +611,18 @@ type userTrustedDeviceRaw struct {
 	LastLocation          string `json:"lastLocation,omitempty"`
 }
 
-func (u *user) ListTrustedDevices(ctx context.Context, loginIDOrUserID string) ([]*descope.UserTrustedDevice, error) {
+func (u *user) ListTrustedDevices(ctx context.Context, loginIDsOrUserIDs []string) ([]*descope.UserTrustedDevice, error) {
 	// Validate input
-	if loginIDOrUserID == "" {
-		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
+	if len(loginIDsOrUserIDs) == 0 {
+		return nil, utils.NewInvalidArgumentError("loginIDsOrUserIDs")
+	}
+	for i, id := range loginIDsOrUserIDs {
+		if id == "" {
+			return nil, utils.NewInvalidArgumentError("loginIDsOrUserIDs[" + strconv.Itoa(i) + "] is empty")
+		}
 	}
 	// Make request
-	req := map[string]any{"loginId": loginIDOrUserID}
+	req := map[string]any{"loginIds": loginIDsOrUserIDs}
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserListTrustedDevices(), req, nil, u.conf.ManagementKey)
 	if err != nil {
 		return nil, err
