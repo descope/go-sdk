@@ -22,7 +22,6 @@ const SKEW = time.Second * 5
 type AuthParams struct {
 	ProjectID           string
 	PublicKey           string
-	AuthManagementKey   string
 	SessionJWTViaCookie bool
 	CookieDomain        string
 	CookieSameSite      http.SameSite
@@ -181,10 +180,10 @@ func (auth *authenticationService) logout(request *http.Request, w http.Response
 	// delete cookies by not specifying max-age (e.i. max-age=0)
 	cookies = append(cookies, auth.createCookie(&descope.Token{
 		JWT:    "",
-		Claims: map[string]interface{}{claimAttributeName: auth.conf.GetSessionCookieName()},
+		Claims: map[string]any{claimAttributeName: auth.conf.GetSessionCookieName()},
 	}, jwtResponse))
 	cookies = append(cookies, auth.createCookie(&descope.Token{JWT: "",
-		Claims: map[string]interface{}{claimAttributeName: auth.conf.GetRefreshCookieName()},
+		Claims: map[string]any{claimAttributeName: auth.conf.GetRefreshCookieName()},
 	}, jwtResponse))
 
 	setCookies(cookies, w)
@@ -244,10 +243,10 @@ func (auth *authenticationService) logoutAll(request *http.Request, w http.Respo
 	// delete cookies by not specifying max-age (e.i. max-age=0)
 	cookies = append(cookies, auth.createCookie(&descope.Token{
 		JWT:    "",
-		Claims: map[string]interface{}{claimAttributeName: auth.conf.GetSessionCookieName()},
+		Claims: map[string]any{claimAttributeName: auth.conf.GetSessionCookieName()},
 	}, jwtResponse))
 	cookies = append(cookies, auth.createCookie(&descope.Token{JWT: "",
-		Claims: map[string]interface{}{claimAttributeName: auth.conf.GetRefreshCookieName()},
+		Claims: map[string]any{claimAttributeName: auth.conf.GetRefreshCookieName()},
 	}, jwtResponse))
 
 	setCookies(cookies, w)
@@ -887,7 +886,7 @@ func getAuthorizationClaimItems(token *descope.Token, tenant string, claim strin
 
 	// look for the granted claim list in the appropriate place
 	if tenant == "" {
-		if v, ok := token.Claims[claim].([]interface{}); ok {
+		if v, ok := token.Claims[claim].([]any); ok {
 			for i := range v {
 				if item, ok := v[i].(string); ok {
 					items = append(items, item)
@@ -895,14 +894,14 @@ func getAuthorizationClaimItems(token *descope.Token, tenant string, claim strin
 			}
 		}
 	} else {
-		var claimValue []interface{}
-		if v, ok := token.GetTenantValue(tenant, claim).([]interface{}); ok {
+		var claimValue []any
+		if v, ok := token.GetTenantValue(tenant, claim).([]any); ok {
 			claimValue = v
 		} else if token.Claims[descope.ClaimDescopeCurrentTenant] == tenant && token.Claims[descope.ClaimAuthorizedTenants] == nil {
 			// The token may have the current tenant in the "dct" claim and without the "tenants" claim
 			// Note: We also must ensure that the tenants claim is not present because in the if "tenants" claim exists,
 			// the top level claim represents for the project level roles/permissions
-			if v, ok := token.Claims[claim].([]interface{}); ok {
+			if v, ok := token.Claims[claim].([]any); ok {
 				claimValue = v
 			}
 		}

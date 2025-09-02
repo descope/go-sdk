@@ -31,7 +31,7 @@ type cloneProjectBody struct {
 
 func (p *project) Clone(ctx context.Context, name string, environment descope.ProjectEnvironment, tags []string) (*descope.CloneProjectResponse, error) {
 	body := cloneProjectBody{Name: name, Environment: string(environment), Tags: tags}
-	res, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectClone(), body, nil, p.conf.ManagementKey)
+	res, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectClone(), body, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -40,23 +40,23 @@ func (p *project) Clone(ctx context.Context, name string, environment descope.Pr
 
 func (p *project) UpdateName(ctx context.Context, name string) error {
 	body := updateProjectBody{Name: name}
-	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectUpdateName(), body, nil, p.conf.ManagementKey)
+	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectUpdateName(), body, nil, "")
 	return err
 }
 
 func (p *project) UpdateTags(ctx context.Context, tags []string) error {
 	body := setProjectTagsBody{Tags: tags}
-	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectUpdateTags(), body, nil, p.conf.ManagementKey)
+	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectUpdateTags(), body, nil, "")
 	return err
 }
 
 func (p *project) Delete(ctx context.Context) error {
-	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectDelete(), nil, nil, p.conf.ManagementKey)
+	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectDelete(), nil, nil, "")
 	return err
 }
 
 func (p *project) ListProjects(ctx context.Context) ([]*descope.Project, error) {
-	res, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectsList(), nil, nil, p.conf.ManagementKey)
+	res, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectsList(), nil, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (p *project) ExportSnapshot(ctx context.Context, req *descope.ExportSnapsho
 	if req.Format != "" {
 		body["format"] = req.Format
 	}
-	res, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectExportSnapshot(), body, nil, p.conf.ManagementKey)
+	res, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectExportSnapshot(), body, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -89,12 +89,12 @@ func (p *project) ExportSnapshot(ctx context.Context, req *descope.ExportSnapsho
 }
 
 func (p *project) ImportSnapshot(ctx context.Context, req *descope.ImportSnapshotRequest) error {
-	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectImportSnapshot(), req, nil, p.conf.ManagementKey)
+	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectImportSnapshot(), req, nil, "")
 	return err
 }
 
 func (p *project) ValidateSnapshot(ctx context.Context, req *descope.ValidateSnapshotRequest) (*descope.ValidateSnapshotResponse, error) {
-	res, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectValidateSnapshot(), req, nil, p.conf.ManagementKey)
+	res, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectValidateSnapshot(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}

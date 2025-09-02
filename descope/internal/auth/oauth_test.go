@@ -105,7 +105,7 @@ func TestOAuthStartForwardResponseStepup(t *testing.T) {
 		assert.EqualValues(t, fmt.Sprintf("%s?provider=%s&redirectURL=%s", composeOAuthSignUpOrInURL(), provider, url.QueryEscape(landingURL)), r.URL.RequestURI())
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, map[string]interface{}{"stepup": true, "customClaims": map[string]interface{}{"k1": "v1"}}, body)
+		assert.EqualValues(t, map[string]any{"stepup": true, "customClaims": map[string]any{"k1": "v1"}}, body)
 		reqToken := r.Header.Get(api.AuthorizationHeaderName)
 		splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix)
 		require.Len(t, splitToken, 2)
@@ -116,7 +116,7 @@ func TestOAuthStartForwardResponseStepup(t *testing.T) {
 	}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	urlStr, err := a.OAuth().Start(context.Background(), provider, landingURL, "", &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, w)
+	urlStr, err := a.OAuth().Start(context.Background(), provider, landingURL, "", &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]any{"k1": "v1"}}, w)
 	require.NoError(t, err)
 	assert.EqualValues(t, uri, urlStr)
 	assert.EqualValues(t, urlStr, w.Result().Header.Get(descope.RedirectLocationCookieName))
@@ -130,7 +130,7 @@ func TestOAuthStartForwardResponseStepupNoJWT(t *testing.T) {
 	a, err := newTestAuth(nil, DoRedirect(uri, func(_ *http.Request) {}))
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	_, err = a.OAuth().Start(context.Background(), provider, landingURL, "", nil, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, w)
+	_, err = a.OAuth().Start(context.Background(), provider, landingURL, "", nil, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]any{"k1": "v1"}}, w)
 	assert.ErrorIs(t, err, descope.ErrInvalidStepUpJWT)
 }
 

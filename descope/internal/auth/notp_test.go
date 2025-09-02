@@ -76,7 +76,7 @@ func TestSignInNOTPStepup(t *testing.T) {
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, m["loginId"])
-		assert.EqualValues(t, map[string]interface{}{"stepup": true, "customClaims": map[string]interface{}{"k1": "v1"}}, m["loginOptions"])
+		assert.EqualValues(t, map[string]any{"stepup": true, "customClaims": map[string]any{"k1": "v1"}}, m["loginOptions"])
 		reqToken := r.Header.Get(api.AuthorizationHeaderName)
 		splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix)
 		require.Len(t, splitToken, 2)
@@ -90,7 +90,7 @@ func TestSignInNOTPStepup(t *testing.T) {
 		}, nil
 	})
 	require.NoError(t, err)
-	response, err := a.NOTP().SignIn(context.Background(), phone, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
+	response, err := a.NOTP().SignIn(context.Background(), phone, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]any{"k1": "v1"}})
 	require.NoError(t, err)
 	require.EqualValues(t, pendingRefResponse, response.PendingRef)
 	require.EqualValues(t, image, response.Image)
@@ -120,7 +120,7 @@ func TestSignUpNOTP(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, m["phone"])
 		assert.EqualValues(t, phone, m["loginId"])
-		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
+		assert.EqualValues(t, "test", m["user"].(map[string]any)["name"])
 		return &http.Response{
 			StatusCode: http.StatusOK,
 			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","image": "%s"}`, pendingRefResponse, image))),
@@ -143,8 +143,8 @@ func TestSignUpNOTPWithSignUpOptions(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, m["phone"])
 		assert.EqualValues(t, phone, m["loginId"])
-		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
-		assert.EqualValues(t, map[string]interface{}{"customClaims": map[string]interface{}{"aa": "bb"}, "templateOptions": map[string]interface{}{"cc": "dd"}}, m["loginOptions"])
+		assert.EqualValues(t, "test", m["user"].(map[string]any)["name"])
+		assert.EqualValues(t, map[string]any{"customClaims": map[string]any{"aa": "bb"}, "templateOptions": map[string]any{"cc": "dd"}}, m["loginOptions"])
 		return &http.Response{
 			StatusCode: http.StatusOK,
 			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","image": "%s"}`, pendingRefResponse, image))),
@@ -152,7 +152,7 @@ func TestSignUpNOTPWithSignUpOptions(t *testing.T) {
 	})
 	require.NoError(t, err)
 	response, err := a.NOTP().SignUp(context.Background(), phone, &descope.User{Name: "test"}, &descope.SignUpOptions{
-		CustomClaims:    map[string]interface{}{"aa": "bb"},
+		CustomClaims:    map[string]any{"aa": "bb"},
 		TemplateOptions: map[string]string{"cc": "dd"},
 	})
 	require.NoError(t, err)
@@ -190,7 +190,7 @@ func TestSignUpOrInNOTPWithLoginOptions(t *testing.T) {
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, m["loginId"])
-		assert.EqualValues(t, map[string]interface{}{"customClaims": map[string]interface{}{"aa": "bb"}, "templateOptions": map[string]interface{}{"cc": "dd"}}, m["loginOptions"])
+		assert.EqualValues(t, map[string]any{"customClaims": map[string]any{"aa": "bb"}, "templateOptions": map[string]any{"cc": "dd"}}, m["loginOptions"])
 		return &http.Response{
 			StatusCode: http.StatusOK,
 			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s", "image": "%s"}`, pendingRefResponse, image))),
@@ -198,7 +198,7 @@ func TestSignUpOrInNOTPWithLoginOptions(t *testing.T) {
 	})
 	require.NoError(t, err)
 	response, err := a.NOTP().SignUpOrIn(context.Background(), phone, &descope.SignUpOptions{
-		CustomClaims:    map[string]interface{}{"aa": "bb"},
+		CustomClaims:    map[string]any{"aa": "bb"},
 		TemplateOptions: map[string]string{"cc": "dd"},
 	})
 	require.NoError(t, err)
@@ -308,7 +308,7 @@ func TestSignUpNOTPNoUser(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, m["phone"])
 		assert.EqualValues(t, phone, m["loginId"])
-		assert.EqualValues(t, phone, m["user"].(map[string]interface{})["phone"])
+		assert.EqualValues(t, phone, m["user"].(map[string]any)["phone"])
 	}))
 	require.NoError(t, err)
 	_, err = a.NOTP().SignUp(context.Background(), phone, nil, nil)

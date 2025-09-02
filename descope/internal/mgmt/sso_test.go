@@ -820,7 +820,7 @@ func TestSSOConfigureSAMLSettingsSuccess(t *testing.T) {
 
 		roleMappingMap, found := sett["roleMappings"]
 		require.True(t, found)
-		roleMappingInt, ok := roleMappingMap.([]interface{})
+		roleMappingInt, ok := roleMappingMap.([]any)
 		require.True(t, ok)
 		require.Len(t, roleMappingInt, 1)
 		mappingMap, ok := roleMappingInt[0].(map[string]any)
@@ -914,7 +914,7 @@ func TestSSOConfigureSAMLSettingsWithSSOIDSuccess(t *testing.T) {
 
 		roleMappingMap, found := sett["roleMappings"]
 		require.True(t, found)
-		roleMappingInt, ok := roleMappingMap.([]interface{})
+		roleMappingInt, ok := roleMappingMap.([]any)
 		require.True(t, ok)
 		require.Len(t, roleMappingInt, 1)
 		mappingMap, ok := roleMappingInt[0].(map[string]any)
@@ -1009,7 +1009,7 @@ func TestSSOConfigureSAMLSettingsByMetadataSuccess(t *testing.T) {
 
 		roleMappingMap, found := sett["roleMappings"]
 		require.True(t, found)
-		roleMappingInt, ok := roleMappingMap.([]interface{})
+		roleMappingInt, ok := roleMappingMap.([]any)
 		require.True(t, ok)
 		require.Len(t, roleMappingInt, 1)
 		mappingMap, ok := roleMappingInt[0].(map[string]any)
@@ -1084,7 +1084,7 @@ func TestSSOConfigureSAMLSettingsByMetadataWithSSOIDSuccess(t *testing.T) {
 
 		roleMappingMap, found := sett["roleMappings"]
 		require.True(t, found)
-		roleMappingInt, ok := roleMappingMap.([]interface{})
+		roleMappingInt, ok := roleMappingMap.([]any)
 		require.True(t, ok)
 		require.Len(t, roleMappingInt, 1)
 		mappingMap, ok := roleMappingInt[0].(map[string]any)

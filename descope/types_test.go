@@ -21,18 +21,18 @@ func TestIsStepup(t *testing.T) {
 func TestAuthFactors(t *testing.T) {
 	to := &Token{}
 	assert.False(t, to.IsMFA())
-	to = &Token{Claims: map[string]interface{}{}}
+	to = &Token{Claims: map[string]any{}}
 	assert.False(t, to.IsMFA())
-	to = &Token{Claims: map[string]interface{}{"amr": []interface{}{string(AuthFactorEmail)}}}
+	to = &Token{Claims: map[string]any{"amr": []any{string(AuthFactorEmail)}}}
 	assert.False(t, to.IsMFA())
-	to = &Token{Claims: map[string]interface{}{"amr": []interface{}{string(AuthFactorEmail), string(AuthFactorWebauthn), string(AuthFactorMFA)}}}
+	to = &Token{Claims: map[string]any{"amr": []any{string(AuthFactorEmail), string(AuthFactorWebauthn), string(AuthFactorMFA)}}}
 	assert.True(t, to.IsMFA())
 }
 
 func TestCustomClaims(t *testing.T) {
-	to := &Token{Claims: map[string]interface{}{}}
+	to := &Token{Claims: map[string]any{}}
 	assert.Nil(t, to.CustomClaim("a"))
-	to = &Token{Claims: map[string]interface{}{"a": "b"}}
+	to = &Token{Claims: map[string]any{"a": "b"}}
 	assert.EqualValues(t, "b", to.CustomClaim("a"))
 	to = &Token{}
 	assert.Nil(t, to.CustomClaim("a"))

@@ -24,12 +24,12 @@ func (a *authz) SaveSchema(ctx context.Context, schema *descope.AuthzSchema, upg
 		"schema":  schema,
 		"upgrade": upgrade,
 	}
-	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzSchemaSave(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzSchemaSave(), body, nil, "")
 	return err
 }
 
 func (a *authz) DeleteSchema(ctx context.Context) error {
-	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzSchemaDelete(), nil, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzSchemaDelete(), nil, nil, "")
 	return err
 }
 
@@ -38,7 +38,7 @@ type loadSchemaResponse struct {
 }
 
 func (a *authz) LoadSchema(ctx context.Context) (*descope.AuthzSchema, error) {
-	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzSchemaLoad(), nil, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzSchemaLoad(), nil, nil, "")
 	if err != nil {
 		// notest
 		return nil, err
@@ -65,7 +65,7 @@ func (a *authz) SaveNamespace(ctx context.Context, namespace *descope.AuthzNames
 	if schemaName != "" {
 		body["schemaName"] = schemaName
 	}
-	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzNSSave(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzNSSave(), body, nil, "")
 	return err
 }
 
@@ -79,7 +79,7 @@ func (a *authz) DeleteNamespace(ctx context.Context, name, schemaName string) er
 	if schemaName != "" {
 		body["schemaName"] = schemaName
 	}
-	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzNSDelete(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzNSDelete(), body, nil, "")
 	return err
 }
 
@@ -100,7 +100,7 @@ func (a *authz) SaveRelationDefinition(ctx context.Context, relationDefinition *
 	if schemaName != "" {
 		body["schemaName"] = schemaName
 	}
-	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRDSave(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRDSave(), body, nil, "")
 	return err
 }
 
@@ -118,7 +118,7 @@ func (a *authz) DeleteRelationDefinition(ctx context.Context, name, namespace, s
 	if schemaName != "" {
 		body["schemaName"] = schemaName
 	}
-	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRDDelete(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRDDelete(), body, nil, "")
 	return err
 }
 
@@ -129,7 +129,7 @@ func (a *authz) CreateRelations(ctx context.Context, relations []*descope.AuthzR
 	body := map[string]any{
 		"relations": relations,
 	}
-	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRECreate(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRECreate(), body, nil, "")
 	return err
 }
 
@@ -140,7 +140,7 @@ func (a *authz) DeleteRelations(ctx context.Context, relations []*descope.AuthzR
 	body := map[string]any{
 		"relations": relations,
 	}
-	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzREDelete(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzREDelete(), body, nil, "")
 	return err
 }
 
@@ -151,7 +151,7 @@ func (a *authz) DeleteRelationsForResources(ctx context.Context, resources []str
 	body := map[string]any{
 		"resources": resources,
 	}
-	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzREDeleteResources(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzREDeleteResources(), body, nil, "")
 	return err
 }
 
@@ -166,7 +166,7 @@ func (a *authz) HasRelations(ctx context.Context, relationQueries []*descope.Aut
 	body := map[string]any{
 		"relationQueries": relationQueries,
 	}
-	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzREHasRelations(), body, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzREHasRelations(), body, nil, "")
 	if err != nil {
 		// notest
 		return nil, err
@@ -199,7 +199,7 @@ func (a *authz) WhoCanAccess(ctx context.Context, resource, relationDefinition, 
 		"relationDefinition": relationDefinition,
 		"namespace":          namespace,
 	}
-	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzREWho(), body, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzREWho(), body, nil, "")
 	if err != nil {
 		// notest
 		return nil, err
@@ -233,7 +233,7 @@ func (a *authz) ResourceRelationsWithTargetSetsFilter(ctx context.Context, resou
 		"resource":                 resource,
 		"ignoreTargetSetRelations": !includeTargetSetRelations,
 	}
-	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzREResource(), body, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzREResource(), body, nil, "")
 	if err != nil {
 		// notest
 		return nil, err
@@ -259,7 +259,7 @@ func (a *authz) TargetsRelationsWithTargetSetsFilter(ctx context.Context, target
 		"targets":                   targets,
 		"includeTargetSetRelations": includeTargetSetRelations,
 	}
-	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRETargets(), body, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRETargets(), body, nil, "")
 	if err != nil {
 		// notest
 		return nil, err
@@ -280,7 +280,7 @@ func (a *authz) WhatCanTargetAccess(ctx context.Context, target string) ([]*desc
 	body := map[string]any{
 		"target": target,
 	}
-	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRETargetAll(), body, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRETargetAll(), body, nil, "")
 	if err != nil {
 		// notest
 		return nil, err
@@ -309,7 +309,7 @@ func (a *authz) WhatCanTargetAccessWithRelation(ctx context.Context, target, rel
 		"relationDefinition": relationDefinition,
 		"namespace":          namespace,
 	}
-	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRETargetWithRelation(), body, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRETargetWithRelation(), body, nil, "")
 	if err != nil {
 		// notest
 		return nil, err
@@ -342,7 +342,7 @@ func (a *authz) GetModified(ctx context.Context, since time.Time) (*descope.Auth
 		}
 		body["since"] = since.UnixMilli()
 	}
-	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzGetModified(), body, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzGetModified(), body, nil, "")
 	if err != nil {
 		// notest
 		return nil, err

@@ -10,7 +10,7 @@ import (
 	"github.com/descope/go-sdk/descope/tests/mocks"
 )
 
-func ReadBody(r *http.Request, m interface{}) (err error) {
+func ReadBody(r *http.Request, m any) (err error) {
 	reader, err := r.GetBody()
 	if err != nil {
 		return err

@@ -7,7 +7,7 @@ import (
 )
 
 type LoggerInterface interface {
-	Print(v ...interface{})
+	Print(v ...any)
 }
 
 type LogLevel uint
@@ -40,7 +40,7 @@ func Init(LogLevel LogLevel, logger LoggerInterface) {
 	})
 }
 
-func (lw *LoggerWrapper) doLog(l LogLevel, format string, args ...interface{}) { // notest
+func (lw *LoggerWrapper) doLog(l LogLevel, format string, args ...any) { // notest
 	if lw.logLevel < l {
 		return
 	}
@@ -50,14 +50,14 @@ func (lw *LoggerWrapper) doLog(l LogLevel, format string, args ...interface{}) {
 	lw.logger.Print(fmt.Sprintf(format, args...))
 }
 
-func LogDebug(format string, args ...interface{}) {
+func LogDebug(format string, args ...any) {
 	loggerInstance.doLog(LogDebugLevel, format, args...)
 }
 
-func LogError(format string, err error, args ...interface{}) {
-	loggerInstance.doLog(LogInfoLevel, "%s [error: %s]", append([]interface{}{fmt.Sprintf(format, args...)}, err)...)
+func LogError(format string, err error, args ...any) {
+	loggerInstance.doLog(LogInfoLevel, "%s [error: %s]", append([]any{fmt.Sprintf(format, args...)}, err)...)
 }
 
-func LogInfo(format string, args ...interface{}) {
+func LogInfo(format string, args ...any) {
 	loggerInstance.doLog(LogInfoLevel, format, args...)
 }
