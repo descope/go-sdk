@@ -10,19 +10,6 @@ import (
 	"github.com/descope/go-sdk/descope/sdk"
 )
 
-func mapToValuesObject(inputMap map[string][]string) map[string]map[string][]string {
-	if len(inputMap) == 0 {
-		return nil
-	}
-	result := make(map[string]map[string][]string)
-	for k, v := range inputMap {
-		result[k] = map[string][]string{
-			"values": v,
-		}
-	}
-	return result
-}
-
 type user struct {
 	managementBase
 }
@@ -969,27 +956,28 @@ func makeSetPasswordRequest(loginID string, password string, setActive bool) map
 
 func makeSearchAllRequest(options *descope.UserSearchOptions) map[string]any {
 	return map[string]any{
-		"tenantIds":        options.TenantIDs,
-		"roleNames":        options.Roles,
-		"limit":            options.Limit,
-		"page":             options.Page,
-		"sort":             options.Sort,
-		"text":             options.Text,
-		"loginIds":         options.LoginIDs,
-		"testUsersOnly":    options.TestUsersOnly,
-		"withTestUser":     options.WithTestUsers,
-		"customAttributes": options.CustomAttributes,
-		"statuses":         options.Statuses,
-		"emails":           options.Emails,
-		"phones":           options.Phones,
-		"ssoAppIds":        options.SSOAppIDs,
-		"fromCreatedTime":  options.FromCreatedTime,
-		"toCreatedTime":    options.ToCreatedTime,
-		"fromModifiedTime": options.FromModifiedTime,
-		"toModifiedTime":   options.ToModifiedTime,
-		"userIds":          options.UserIDs,
-		"tenantRoleIds":    mapToValuesObject(options.TenantRoleIDs),
-		"tenantRoleNames":  mapToValuesObject(options.TenantRoleNames),
+		"tenantIds":         options.TenantIDs,
+		"roleNames":         options.Roles,
+		"limit":             options.Limit,
+		"page":              options.Page,
+		"sort":              options.Sort,
+		"text":              options.Text,
+		"loginIds":          options.LoginIDs,
+		"testUsersOnly":     options.TestUsersOnly,
+		"withTestUser":      options.WithTestUsers,
+		"customAttributes":  options.CustomAttributes,
+		"statuses":          options.Statuses,
+		"emails":            options.Emails,
+		"phones":            options.Phones,
+		"ssoAppIds":         options.SSOAppIDs,
+		"fromCreatedTime":   options.FromCreatedTime,
+		"toCreatedTime":     options.ToCreatedTime,
+		"fromModifiedTime":  options.FromModifiedTime,
+		"toModifiedTime":    options.ToModifiedTime,
+		"userIds":           options.UserIDs,
+		"tenantRoleIds":     options.TenantRoleIDs,
+		"tenantRoleNames":   options.TenantRoleNames,
+		"includeSubTenants": options.IncludeSubTenants,
 	}
 }
 

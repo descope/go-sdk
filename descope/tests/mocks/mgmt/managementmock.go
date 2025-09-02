@@ -1184,10 +1184,10 @@ func (m *MockPermission) LoadAll(_ context.Context) ([]*descope.Permission, erro
 // Mock Role
 
 type MockRole struct {
-	CreateAssert func(name, description string, permissionNames []string, tenantID string, defaultRole bool)
+	CreateAssert func(name, description string, permissionNames []string, tenantID string, defaultRole bool, private bool)
 	CreateError  error
 
-	UpdateAssert func(name, tenantID, newName, description string, permissionNames []string, defaultRole bool)
+	UpdateAssert func(name, tenantID, newName, description string, permissionNames []string, defaultRole bool, private bool)
 	UpdateError  error
 
 	DeleteAssert func(name, tenantID string)
@@ -1200,16 +1200,16 @@ type MockRole struct {
 	SearchError    error
 }
 
-func (m *MockRole) Create(_ context.Context, name, description string, permissionNames []string, tenantID string, defaultRole bool) error {
+func (m *MockRole) Create(_ context.Context, name, description string, permissionNames []string, tenantID string, defaultRole bool, private bool) error {
 	if m.CreateAssert != nil {
-		m.CreateAssert(name, description, permissionNames, tenantID, defaultRole)
+		m.CreateAssert(name, description, permissionNames, tenantID, defaultRole, private)
 	}
 	return m.CreateError
 }
 
-func (m *MockRole) Update(_ context.Context, name, tenantID string, newName, description string, permissionNames []string, defaultRole bool) error {
+func (m *MockRole) Update(_ context.Context, name, tenantID string, newName, description string, permissionNames []string, defaultRole bool, private bool) error {
 	if m.UpdateAssert != nil {
-		m.UpdateAssert(name, tenantID, newName, description, permissionNames, defaultRole)
+		m.UpdateAssert(name, tenantID, newName, description, permissionNames, defaultRole, private)
 	}
 	return m.UpdateError
 }

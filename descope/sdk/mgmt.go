@@ -654,7 +654,7 @@ type Role interface {
 	// what this role allows.
 	// The permissionNames parameter denotes which permissions are included in this role.
 	// tenantID is an optional field to tie this role to a specific tenant
-	Create(ctx context.Context, name, description string, permissionNames []string, tenantID string, defaultRole bool) error
+	Create(ctx context.Context, name, description string, permissionNames []string, tenantID string, defaultRole bool, private bool) error
 
 	// Update an existing role.
 	//
@@ -664,7 +664,7 @@ type Role interface {
 	//
 	// IMPORTANT: All parameters will override whatever values are currently set
 	// in the existing role. Use carefully.
-	Update(ctx context.Context, name, tenantID, newName, description string, permissionNames []string, defaultRole bool) error
+	Update(ctx context.Context, name, tenantID, newName, description string, permissionNames []string, defaultRole bool, private bool) error
 
 	// Delete an existing role.
 	//
