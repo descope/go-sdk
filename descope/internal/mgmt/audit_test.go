@@ -27,7 +27,7 @@ func TestAuditSearch(t *testing.T) {
 			RemoteAddress: "1.1.1.1",
 			ExternalIDs:   []string{"id1", "id2"},
 			Tenants:       []string{"t1"},
-			Data:          map[string]interface{}{"x": "y", "z": 1},
+			Data:          map[string]any{"x": "y", "z": 1},
 		},
 		{
 			ProjectID:     "p1",
@@ -40,7 +40,7 @@ func TestAuditSearch(t *testing.T) {
 			RemoteAddress: "1.1.1.1",
 			ExternalIDs:   []string{"id3", "id4"},
 			Tenants:       []string{"t1"},
-			Data:          map[string]interface{}{"x": "y1", "z": 2},
+			Data:          map[string]any{"x": "y1", "z": 2},
 		},
 	},
 		Total: 2,
@@ -66,17 +66,17 @@ func TestAuditSearch(t *testing.T) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		require.EqualValues(t, []interface{}{searchOptions.UserIDs[0], searchOptions.UserIDs[1]}, req["userIds"])
-		require.EqualValues(t, []interface{}{searchOptions.Actions[0], searchOptions.Actions[1]}, req["actions"])
-		require.EqualValues(t, []interface{}{searchOptions.ExcludedActions[0]}, req["excludedActions"])
+		require.EqualValues(t, []any{searchOptions.UserIDs[0], searchOptions.UserIDs[1]}, req["userIds"])
+		require.EqualValues(t, []any{searchOptions.Actions[0], searchOptions.Actions[1]}, req["actions"])
+		require.EqualValues(t, []any{searchOptions.ExcludedActions[0]}, req["excludedActions"])
 		require.EqualValues(t, searchOptions.From.UnixMilli(), req["from"])
 		require.True(t, time.UnixMilli(int64(req["to"].(float64))).IsZero())
-		require.EqualValues(t, []interface{}{searchOptions.Devices[0], searchOptions.Devices[1]}, req["devices"])
-		require.EqualValues(t, []interface{}{searchOptions.Methods[0], searchOptions.Methods[1]}, req["methods"])
-		require.EqualValues(t, []interface{}{searchOptions.Geos[0]}, req["geos"])
-		require.EqualValues(t, []interface{}{searchOptions.RemoteAddresses[0]}, req["remoteAddresses"])
-		require.EqualValues(t, []interface{}{searchOptions.LoginIDs[0], searchOptions.LoginIDs[1]}, req["externalIds"])
-		require.EqualValues(t, []interface{}{searchOptions.Tenants[0]}, req["tenants"])
+		require.EqualValues(t, []any{searchOptions.Devices[0], searchOptions.Devices[1]}, req["devices"])
+		require.EqualValues(t, []any{searchOptions.Methods[0], searchOptions.Methods[1]}, req["methods"])
+		require.EqualValues(t, []any{searchOptions.Geos[0]}, req["geos"])
+		require.EqualValues(t, []any{searchOptions.RemoteAddresses[0]}, req["remoteAddresses"])
+		require.EqualValues(t, []any{searchOptions.LoginIDs[0], searchOptions.LoginIDs[1]}, req["externalIds"])
+		require.EqualValues(t, []any{searchOptions.Tenants[0]}, req["tenants"])
 		require.EqualValues(t, searchOptions.NoTenants, req["noTenants"])
 		require.EqualValues(t, searchOptions.Text, req["text"])
 		require.EqualValues(t, searchOptions.Limit, req["size"])
@@ -114,7 +114,7 @@ func TestAuditCreate(t *testing.T) {
 		Action:   "action",
 		Type:     "warn",
 		ActorID:  "actorId",
-		Data:     map[string]interface{}{"aaa": "bbb"},
+		Data:     map[string]any{"aaa": "bbb"},
 		TenantID: "tenantId",
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -141,7 +141,7 @@ func TestAuditCreateMissingArgumentAction(t *testing.T) {
 		Action:   "",
 		Type:     "info",
 		ActorID:  "actorId",
-		Data:     map[string]interface{}{"aaa": "bbb"},
+		Data:     map[string]any{"aaa": "bbb"},
 		TenantID: "tenantId",
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -169,7 +169,7 @@ func TestAuditCreateMissingArgumentType(t *testing.T) {
 		Action:   "action",
 		Type:     "",
 		ActorID:  "actorId",
-		Data:     map[string]interface{}{"aaa": "bbb"},
+		Data:     map[string]any{"aaa": "bbb"},
 		TenantID: "tenantId",
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -197,7 +197,7 @@ func TestAuditCreateInvalidArgumentType(t *testing.T) {
 		Action:   "action",
 		Type:     "lulu",
 		ActorID:  "actorId",
-		Data:     map[string]interface{}{"aaa": "bbb"},
+		Data:     map[string]any{"aaa": "bbb"},
 		TenantID: "tenantId",
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -225,7 +225,7 @@ func TestAuditCreateMissingArgumentActorID(t *testing.T) {
 		Action:   "action",
 		Type:     "error",
 		ActorID:  "",
-		Data:     map[string]interface{}{"aaa": "bbb"},
+		Data:     map[string]any{"aaa": "bbb"},
 		TenantID: "tenantId",
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -253,7 +253,7 @@ func TestAuditCreateMissingArgumentTenantID(t *testing.T) {
 		Action:   "action",
 		Type:     "info",
 		ActorID:  "actor",
-		Data:     map[string]interface{}{"aaa": "bbb"},
+		Data:     map[string]any{"aaa": "bbb"},
 		TenantID: "",
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {

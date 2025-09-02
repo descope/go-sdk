@@ -89,7 +89,7 @@ type apiAuditRecord struct {
 	RemoteAddress string   `json:"remoteAddress,omitempty"`
 	ExternalIDs   []string `json:"externalIds,omitempty"`
 	Tenants       []string
-	Data          map[string]interface{} `json:"data,omitempty"`
+	Data          map[string]any `json:"data,omitempty"`
 }
 
 type apiSearchAuditResponse struct {

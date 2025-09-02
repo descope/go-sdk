@@ -107,24 +107,24 @@ func (j *jwt) parseJWT(jwtResponse *descope.JWTResponse) (*descope.Authenticatio
 }
 
 type authenticationRequestBody struct {
-	LoginID                  string                 `json:"loginId,omitempty"`
-	Stepup                   bool                   `json:"stepup,omitempty"`
-	MFA                      bool                   `json:"mfa,omitempty"`
-	RevokeOtherSessions      bool                   `json:"revokeOtherSessions,omitempty"`
-	RevokeOtherSessionsTypes []string               `json:"revokeOtherSessionsTypes,omitempty"`
-	CustomClaims             map[string]interface{} `json:"customClaims,omitempty"`
-	JWT                      string                 `json:"jwt,omitempty"`
-	RefreshDuration          int32                  `json:"refreshDuration,omitempty"`
+	LoginID                  string         `json:"loginId,omitempty"`
+	Stepup                   bool           `json:"stepup,omitempty"`
+	MFA                      bool           `json:"mfa,omitempty"`
+	RevokeOtherSessions      bool           `json:"revokeOtherSessions,omitempty"`
+	RevokeOtherSessionsTypes []string       `json:"revokeOtherSessionsTypes,omitempty"`
+	CustomClaims             map[string]any `json:"customClaims,omitempty"`
+	JWT                      string         `json:"jwt,omitempty"`
+	RefreshDuration          int32          `json:"refreshDuration,omitempty"`
 }
 
 type authenticationSignUpRequestBody struct {
-	LoginID         string                 `json:"loginId,omitempty"`
-	User            *descope.User          `json:"user,omitempty"`
-	EmailVerified   bool                   `json:"emailVerified,omitempty"`
-	PhoneVerified   bool                   `json:"phoneVerified,omitempty"`
-	SsoAppID        string                 `json:"ssoAppId,omitempty"`
-	CustomClaims    map[string]interface{} `json:"customClaims,omitempty"`
-	RefreshDuration int32                  `json:"refreshDuration,omitempty"`
+	LoginID         string         `json:"loginId,omitempty"`
+	User            *descope.User  `json:"user,omitempty"`
+	EmailVerified   bool           `json:"emailVerified,omitempty"`
+	PhoneVerified   bool           `json:"phoneVerified,omitempty"`
+	SsoAppID        string         `json:"ssoAppId,omitempty"`
+	CustomClaims    map[string]any `json:"customClaims,omitempty"`
+	RefreshDuration int32          `json:"refreshDuration,omitempty"`
 }
 
 func (j *jwt) SignIn(ctx context.Context, loginID string, loginOptions *descope.MgmLoginOptions) (*descope.AuthenticationInfo, error) {

@@ -72,7 +72,7 @@ func TestSignInEnchantedLinkStepup(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, email, m["loginId"])
 		assert.EqualValues(t, uri, m["URI"])
-		assert.EqualValues(t, map[string]interface{}{"stepup": true, "customClaims": map[string]interface{}{"k1": "v1"}}, m["loginOptions"])
+		assert.EqualValues(t, map[string]any{"stepup": true, "customClaims": map[string]any{"k1": "v1"}}, m["loginOptions"])
 		reqToken := r.Header.Get(api.AuthorizationHeaderName)
 		splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix)
 		require.Len(t, splitToken, 2)
@@ -86,7 +86,7 @@ func TestSignInEnchantedLinkStepup(t *testing.T) {
 		}, nil
 	})
 	require.NoError(t, err)
-	response, err := a.EnchantedLink().SignIn(context.Background(), email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
+	response, err := a.EnchantedLink().SignIn(context.Background(), email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]any{"k1": "v1"}})
 	require.NoError(t, err)
 	require.EqualValues(t, pendingRefResponse, response.PendingRef)
 	require.EqualValues(t, loginID, response.LinkID)
@@ -120,7 +120,7 @@ func TestSignUpEnchantedLink(t *testing.T) {
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, uri, m["URI"])
 		assert.EqualValues(t, email, m["loginId"])
-		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
+		assert.EqualValues(t, "test", m["user"].(map[string]any)["name"])
 		return &http.Response{
 			StatusCode: http.StatusOK,
 			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","linkId": "%s"}`, pendingRefResponse, loginID))),
@@ -146,8 +146,8 @@ func TestSignUpEnchantedLinkWithSignUpOptions(t *testing.T) {
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, uri, m["URI"])
 		assert.EqualValues(t, email, m["loginId"])
-		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
-		assert.EqualValues(t, map[string]interface{}{"customClaims": map[string]interface{}{"aa": "bb"}, "templateOptions": map[string]interface{}{"cc": "dd"}, "templateId": "foo"}, m["loginOptions"])
+		assert.EqualValues(t, "test", m["user"].(map[string]any)["name"])
+		assert.EqualValues(t, map[string]any{"customClaims": map[string]any{"aa": "bb"}, "templateOptions": map[string]any{"cc": "dd"}, "templateId": "foo"}, m["loginOptions"])
 		return &http.Response{
 			StatusCode: http.StatusOK,
 			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","linkId": "%s"}`, pendingRefResponse, loginID))),
@@ -155,7 +155,7 @@ func TestSignUpEnchantedLinkWithSignUpOptions(t *testing.T) {
 	})
 	require.NoError(t, err)
 	response, err := a.EnchantedLink().SignUp(context.Background(), email, uri, &descope.User{Name: "test"}, &descope.SignUpOptions{
-		CustomClaims:    map[string]interface{}{"aa": "bb"},
+		CustomClaims:    map[string]any{"aa": "bb"},
 		TemplateOptions: map[string]string{"cc": "dd"},
 		TemplateID:      "foo",
 	})
@@ -200,7 +200,7 @@ func TestSignUpOrInEnchantedLinkWithLoginOptions(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, email, m["loginId"])
 		assert.EqualValues(t, uri, m["URI"])
-		assert.EqualValues(t, map[string]interface{}{"customClaims": map[string]interface{}{"aa": "bb"}, "templateOptions": map[string]interface{}{"cc": "dd"}}, m["loginOptions"])
+		assert.EqualValues(t, map[string]any{"customClaims": map[string]any{"aa": "bb"}, "templateOptions": map[string]any{"cc": "dd"}}, m["loginOptions"])
 		return &http.Response{
 			StatusCode: http.StatusOK,
 			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s", "linkId": "%s"}`, pendingRefResponse, loginID))),
@@ -208,7 +208,7 @@ func TestSignUpOrInEnchantedLinkWithLoginOptions(t *testing.T) {
 	})
 	require.NoError(t, err)
 	response, err := a.EnchantedLink().SignUpOrIn(context.Background(), email, uri, &descope.SignUpOptions{
-		CustomClaims:    map[string]interface{}{"aa": "bb"},
+		CustomClaims:    map[string]any{"aa": "bb"},
 		TemplateOptions: map[string]string{"cc": "dd"},
 	})
 	require.NoError(t, err)
@@ -368,7 +368,7 @@ func TestUpdateUserEmailEnchantedLinkWithTemplateOptions(t *testing.T) {
 		if checkOptions {
 			assert.EqualValues(t, true, body["addToLoginIDs"])
 			assert.EqualValues(t, true, body["onMergeUseExisting"])
-			assert.EqualValues(t, map[string]interface{}{"cc": "dd"}, body["templateOptions"])
+			assert.EqualValues(t, map[string]any{"cc": "dd"}, body["templateOptions"])
 		} else {
 			assert.EqualValues(t, nil, body["addToLoginIDs"])
 			assert.EqualValues(t, nil, body["onMergeUseExisting"])
@@ -416,7 +416,7 @@ func TestSignUpEnchantedLinkEmailNoUser(t *testing.T) {
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, uri, m["URI"])
 		assert.EqualValues(t, email, m["loginId"])
-		assert.EqualValues(t, email, m["user"].(map[string]interface{})["email"])
+		assert.EqualValues(t, email, m["user"].(map[string]any)["email"])
 	}))
 	require.NoError(t, err)
 	_, err = a.EnchantedLink().SignUp(context.Background(), email, uri, nil, nil)

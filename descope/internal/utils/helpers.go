@@ -8,12 +8,12 @@ import (
 )
 
 // Marshal - any given object into json
-func Marshal(obj interface{}) ([]byte, error) {
+func Marshal(obj any) ([]byte, error) {
 	return json.Marshal(obj)
 }
 
 // Unmarshal from json any given object
-func Unmarshal(bs []byte, obj interface{}) error {
+func Unmarshal(bs []byte, obj any) error {
 	return json.Unmarshal(bs, obj)
 }
 

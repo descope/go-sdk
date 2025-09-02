@@ -36,7 +36,7 @@ func TestValidEmailSignInEmailStepup(t *testing.T) {
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, email, body["loginId"])
-		assert.EqualValues(t, map[string]interface{}{"stepup": true, "customClaims": map[string]interface{}{"k1": "v1"}}, body["loginOptions"])
+		assert.EqualValues(t, map[string]any{"stepup": true, "customClaims": map[string]any{"k1": "v1"}}, body["loginOptions"])
 		reqToken := r.Header.Get(api.AuthorizationHeaderName)
 		splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix)
 		require.Len(t, splitToken, 2)
@@ -46,7 +46,7 @@ func TestValidEmailSignInEmailStepup(t *testing.T) {
 		assert.EqualValues(t, "test", bearers[1])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().SignIn(context.Background(), descope.MethodEmail, email, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
+	_, err = a.OTP().SignIn(context.Background(), descope.MethodEmail, email, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]any{"k1": "v1"}})
 	require.NoError(t, err)
 }
 
@@ -60,7 +60,7 @@ func TestSignUpEmail(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, email, m["loginId"])
-		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
+		assert.EqualValues(t, "test", m["user"].(map[string]any)["name"])
 		resp := MaskedEmailRes{MaskedEmail: maskedEmail}
 		respBytes, err := utils.Marshal(resp)
 		require.NoError(t, err)
@@ -82,16 +82,16 @@ func TestSignUpEmailWithSignUpOptions(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, email, m["loginId"])
-		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
+		assert.EqualValues(t, "test", m["user"].(map[string]any)["name"])
 		resp := MaskedEmailRes{MaskedEmail: maskedEmail}
 		respBytes, err := utils.Marshal(resp)
 		require.NoError(t, err)
-		assert.EqualValues(t, map[string]interface{}{"customClaims": map[string]interface{}{"aa": "bb"}, "templateOptions": map[string]interface{}{"cc": "dd"}, "templateId": "foo"}, m["loginOptions"])
+		assert.EqualValues(t, map[string]any{"customClaims": map[string]any{"aa": "bb"}, "templateOptions": map[string]any{"cc": "dd"}, "templateId": "foo"}, m["loginOptions"])
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
 	me, err := a.OTP().SignUp(context.Background(), descope.MethodEmail, email, &descope.User{Name: "test"}, &descope.SignUpOptions{
-		CustomClaims:    map[string]interface{}{"aa": "bb"},
+		CustomClaims:    map[string]any{"aa": "bb"},
 		TemplateOptions: map[string]string{"cc": "dd"},
 		TemplateID:      "foo",
 	})
@@ -109,7 +109,7 @@ func TestSignUpSMS(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["phone"])
 		assert.EqualValues(t, phone, body["loginId"])
-		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
+		assert.EqualValues(t, "test", body["user"].(map[string]any)["name"])
 		resp := MaskedPhoneRes{MaskedPhone: maskedPhone}
 		respBytes, err := utils.Marshal(resp)
 		require.NoError(t, err)
@@ -131,7 +131,7 @@ func TestSignUpVoice(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["phone"])
 		assert.EqualValues(t, phone, body["loginId"])
-		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
+		assert.EqualValues(t, "test", body["user"].(map[string]any)["name"])
 		resp := MaskedPhoneRes{MaskedPhone: maskedPhone}
 		respBytes, err := utils.Marshal(resp)
 		require.NoError(t, err)
@@ -153,7 +153,7 @@ func TestSignUpWhatsApp(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, phone, body["whatsapp"])
 		assert.EqualValues(t, phone, body["loginId"])
-		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
+		assert.EqualValues(t, "test", body["user"].(map[string]any)["name"])
 		resp := MaskedPhoneRes{MaskedPhone: maskedPhone}
 		respBytes, err := utils.Marshal(resp)
 		require.NoError(t, err)
@@ -219,11 +219,11 @@ func TestSignUpOrInSMSWithSignUpOptions(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, loginID, body["loginId"])
 		assert.Nil(t, body["user"])
-		assert.EqualValues(t, map[string]interface{}{"customClaims": map[string]interface{}{"aa": "bb"}, "templateOptions": map[string]interface{}{"cc": "dd"}}, body["loginOptions"])
+		assert.EqualValues(t, map[string]any{"customClaims": map[string]any{"aa": "bb"}, "templateOptions": map[string]any{"cc": "dd"}}, body["loginOptions"])
 	}))
 	require.NoError(t, err)
 	_, err = a.OTP().SignUpOrIn(context.Background(), descope.MethodSMS, loginID, &descope.SignUpOptions{
-		CustomClaims:    map[string]interface{}{"aa": "bb"},
+		CustomClaims:    map[string]any{"aa": "bb"},
 		TemplateOptions: map[string]string{"cc": "dd"},
 	})
 	require.NoError(t, err)
@@ -238,11 +238,11 @@ func TestSignUpOrInVoiceWithSignUpOptions(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, loginID, body["loginId"])
 		assert.Nil(t, body["user"])
-		assert.EqualValues(t, map[string]interface{}{"customClaims": map[string]interface{}{"aa": "bb"}, "templateOptions": map[string]interface{}{"cc": "dd"}}, body["loginOptions"])
+		assert.EqualValues(t, map[string]any{"customClaims": map[string]any{"aa": "bb"}, "templateOptions": map[string]any{"cc": "dd"}}, body["loginOptions"])
 	}))
 	require.NoError(t, err)
 	_, err = a.OTP().SignUpOrIn(context.Background(), descope.MethodVoice, loginID, &descope.SignUpOptions{
-		CustomClaims:    map[string]interface{}{"aa": "bb"},
+		CustomClaims:    map[string]any{"aa": "bb"},
 		TemplateOptions: map[string]string{"cc": "dd"},
 	})
 	require.NoError(t, err)
@@ -541,7 +541,7 @@ func TestUpdateEmailOTPWithTemplateOptions(t *testing.T) {
 		if checkOptions {
 			assert.EqualValues(t, true, body["addToLoginIDs"])
 			assert.EqualValues(t, true, body["onMergeUseExisting"])
-			assert.EqualValues(t, map[string]interface{}{"cc": "dd"}, body["templateOptions"])
+			assert.EqualValues(t, map[string]any{"cc": "dd"}, body["templateOptions"])
 		} else {
 			assert.EqualValues(t, nil, body["addToLoginIDs"])
 			assert.EqualValues(t, nil, body["onMergeUseExisting"])
@@ -686,7 +686,7 @@ func TestUpdatePhoneOTPWithTemplateOptions(t *testing.T) {
 		if checkOptions {
 			assert.EqualValues(t, true, body["addToLoginIDs"])
 			assert.EqualValues(t, true, body["onMergeUseExisting"])
-			assert.EqualValues(t, map[string]interface{}{"cc": "dd"}, body["templateOptions"])
+			assert.EqualValues(t, map[string]any{"cc": "dd"}, body["templateOptions"])
 		} else {
 			assert.EqualValues(t, nil, body["addToLoginIDs"])
 			assert.EqualValues(t, nil, body["onMergeUseExisting"])

@@ -83,7 +83,7 @@ func TestSignInMagicLinkEmailLoginOptions(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, email, body["loginId"])
 		assert.EqualValues(t, uri, body["URI"])
-		assert.EqualValues(t, map[string]interface{}{"stepup": true, "customClaims": map[string]interface{}{"k1": "v1"}}, body["loginOptions"])
+		assert.EqualValues(t, map[string]any{"stepup": true, "customClaims": map[string]any{"k1": "v1"}}, body["loginOptions"])
 		reqToken := r.Header.Get(api.AuthorizationHeaderName)
 		splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix)
 		require.Len(t, splitToken, 2)
@@ -97,7 +97,7 @@ func TestSignInMagicLinkEmailLoginOptions(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	me, err := a.MagicLink().SignIn(context.Background(), descope.MethodEmail, email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
+	me, err := a.MagicLink().SignIn(context.Background(), descope.MethodEmail, email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]any{"k1": "v1"}})
 	require.NoError(t, err)
 	require.EqualValues(t, maskedEmail, me)
 }
@@ -112,7 +112,7 @@ func TestSignInMagicLinkEmailLoginOptionsMFA(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, email, body["loginId"])
 		assert.EqualValues(t, uri, body["URI"])
-		assert.EqualValues(t, map[string]interface{}{"mfa": true, "customClaims": map[string]interface{}{"k1": "v1"}}, body["loginOptions"])
+		assert.EqualValues(t, map[string]any{"mfa": true, "customClaims": map[string]any{"k1": "v1"}}, body["loginOptions"])
 		reqToken := r.Header.Get(api.AuthorizationHeaderName)
 		splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix)
 		require.Len(t, splitToken, 2)
@@ -126,7 +126,7 @@ func TestSignInMagicLinkEmailLoginOptionsMFA(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	_, err = a.MagicLink().SignIn(context.Background(), descope.MethodEmail, email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{MFA: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
+	_, err = a.MagicLink().SignIn(context.Background(), descope.MethodEmail, email, uri, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{MFA: true, CustomClaims: map[string]any{"k1": "v1"}})
 	require.NoError(t, err)
 }
 
@@ -181,7 +181,7 @@ func TestSignUpMagicLinkEmail(t *testing.T) {
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, uri, m["URI"])
 		assert.EqualValues(t, email, m["loginId"])
-		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
+		assert.EqualValues(t, "test", m["user"].(map[string]any)["name"])
 		resp := MaskedEmailRes{MaskedEmail: maskedEmail}
 		respBytes, err := utils.Marshal(resp)
 		require.NoError(t, err)
@@ -205,16 +205,16 @@ func TestSignUpMagicLinkEmailWithSignUpOptions(t *testing.T) {
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, uri, m["URI"])
 		assert.EqualValues(t, email, m["loginId"])
-		assert.EqualValues(t, "test", m["user"].(map[string]interface{})["name"])
+		assert.EqualValues(t, "test", m["user"].(map[string]any)["name"])
 		resp := MaskedEmailRes{MaskedEmail: maskedEmail}
 		respBytes, err := utils.Marshal(resp)
 		require.NoError(t, err)
-		assert.EqualValues(t, map[string]interface{}{"customClaims": map[string]interface{}{"aa": "bb"}, "templateOptions": map[string]interface{}{"cc": "dd"}, "templateId": "foo"}, m["loginOptions"])
+		assert.EqualValues(t, map[string]any{"customClaims": map[string]any{"aa": "bb"}, "templateOptions": map[string]any{"cc": "dd"}, "templateId": "foo"}, m["loginOptions"])
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
 	me, err := a.MagicLink().SignUp(context.Background(), descope.MethodEmail, email, uri, &descope.User{Name: "test"}, &descope.SignUpOptions{
-		CustomClaims:    map[string]interface{}{"aa": "bb"},
+		CustomClaims:    map[string]any{"aa": "bb"},
 		TemplateOptions: map[string]string{"cc": "dd"},
 		TemplateID:      "foo",
 	})
@@ -233,7 +233,7 @@ func TestSignUpMagicLinkEmailNoUser(t *testing.T) {
 		assert.EqualValues(t, email, m["email"])
 		assert.EqualValues(t, uri, m["URI"])
 		assert.EqualValues(t, email, m["loginId"])
-		assert.EqualValues(t, email, m["user"].(map[string]interface{})["email"])
+		assert.EqualValues(t, email, m["user"].(map[string]any)["email"])
 		resp := MaskedEmailRes{MaskedEmail: "t"}
 		respBytes, err := utils.Marshal(resp)
 		require.NoError(t, err)
@@ -282,12 +282,12 @@ func TestSignUpOrInMagicLinkEmailWithLoginOptions(t *testing.T) {
 		resp := MaskedEmailRes{MaskedEmail: maskedEmail}
 		respBytes, err := utils.Marshal(resp)
 		require.NoError(t, err)
-		assert.EqualValues(t, map[string]interface{}{"customClaims": map[string]interface{}{"aa": "bb"}, "templateOptions": map[string]interface{}{"cc": "dd"}}, m["loginOptions"])
+		assert.EqualValues(t, map[string]any{"customClaims": map[string]any{"aa": "bb"}, "templateOptions": map[string]any{"cc": "dd"}}, m["loginOptions"])
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
 	me, err := a.MagicLink().SignUpOrIn(context.Background(), descope.MethodEmail, email, uri, &descope.SignUpOptions{
-		CustomClaims:    map[string]interface{}{"aa": "bb"},
+		CustomClaims:    map[string]any{"aa": "bb"},
 		TemplateOptions: map[string]string{"cc": "dd"},
 	})
 	require.NoError(t, err)
@@ -359,7 +359,7 @@ func TestSignUpMagicLinkSMS(t *testing.T) {
 		assert.EqualValues(t, phone, body["phone"])
 		assert.EqualValues(t, uri, body["URI"])
 		assert.EqualValues(t, phone, body["loginId"])
-		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
+		assert.EqualValues(t, "test", body["user"].(map[string]any)["name"])
 	}))
 	require.NoError(t, err)
 	_, err = a.MagicLink().SignUp(context.Background(), descope.MethodSMS, phone, uri, &descope.User{Name: "test"}, nil)
@@ -377,7 +377,7 @@ func TestSignUpMagicLinkWhatsApp(t *testing.T) {
 		assert.EqualValues(t, phone, body["whatsapp"])
 		assert.EqualValues(t, uri, body["URI"])
 		assert.EqualValues(t, phone, body["loginId"])
-		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
+		assert.EqualValues(t, "test", body["user"].(map[string]any)["name"])
 	}))
 	require.NoError(t, err)
 	_, err = a.MagicLink().SignUp(context.Background(), descope.MethodWhatsApp, phone, uri, &descope.User{Name: "test"}, nil)
@@ -502,7 +502,7 @@ func TestUpdateUserEmailWithTemplateOptions(t *testing.T) {
 		if checkOptions {
 			assert.EqualValues(t, true, body["addToLoginIDs"])
 			assert.EqualValues(t, true, body["onMergeUseExisting"])
-			assert.EqualValues(t, map[string]interface{}{"cc": "dd"}, body["templateOptions"])
+			assert.EqualValues(t, map[string]any{"cc": "dd"}, body["templateOptions"])
 		} else {
 			assert.EqualValues(t, nil, body["addToLoginIDs"])
 			assert.EqualValues(t, nil, body["onMergeUseExisting"])
@@ -605,7 +605,7 @@ func TestUpdateUserPhoneWithTemplateOptions(t *testing.T) {
 		if checkOptions {
 			assert.EqualValues(t, true, body["addToLoginIDs"])
 			assert.EqualValues(t, true, body["onMergeUseExisting"])
-			assert.EqualValues(t, map[string]interface{}{"cc": "dd"}, body["templateOptions"])
+			assert.EqualValues(t, map[string]any{"cc": "dd"}, body["templateOptions"])
 		} else {
 			assert.EqualValues(t, nil, body["addToLoginIDs"])
 			assert.EqualValues(t, nil, body["onMergeUseExisting"])

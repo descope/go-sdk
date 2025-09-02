@@ -876,7 +876,7 @@ func makeUpdateUserRequest(req *createUserRequest) map[string]any {
 }
 
 func makePatchUserRequest(loginID string, req *descope.PatchUserRequest) map[string]any {
-	res := map[string]interface{}{
+	res := map[string]any{
 		"loginId": loginID,
 	}
 	if req.Name != nil {

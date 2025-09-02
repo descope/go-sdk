@@ -24,7 +24,7 @@ func TestUpdateJwt(t *testing.T) {
 		require.EqualValues(t, customClaims, req["customClaims"])
 		require.EqualValues(t, refreshDuration, req["refreshDuration"])
 
-	}, map[string]interface{}{"jwt": expectedJWT}))
+	}, map[string]any{"jwt": expectedJWT}))
 	jwtRes, err := mgmt.JWT().UpdateJWTWithCustomClaims(context.Background(), orgJwt, customClaims,
 		int32(refreshDuration)) // nolint:gosec
 	require.NoError(t, err)
@@ -67,7 +67,7 @@ func TestImpersonate(t *testing.T) {
 		require.EqualValues(t, "t1", req["selectedTenant"])
 		require.EqualValues(t, map[string]any{"k1": "v1"}, req["customClaims"])
 
-	}, map[string]interface{}{"jwt": expectedJWT}))
+	}, map[string]any{"jwt": expectedJWT}))
 	jwtRes, err := mgmt.JWT().Impersonate(context.Background(), impID, loginID, true, map[string]any{"k1": "v1"}, "t1", 0)
 	require.NoError(t, err)
 	require.EqualValues(t, expectedJWT, jwtRes)

@@ -322,7 +322,7 @@ func TestSearchMappableResourcesSuccess(t *testing.T) {
 		require.Len(t, req["resourcesQueries"], 1)
 		query := req["resourcesQueries"].([]any)[0].(map[string]any)
 		require.Equal(t, "type1", query["type"])
-		require.EqualValues(t, []interface{}{"id1", "id2"}, query["queries"])
+		require.EqualValues(t, []any{"id1", "id2"}, query["queries"])
 		_, hasLimit := req["resourcesLimit"]
 		require.False(t, hasLimit)
 	}, response))
@@ -359,7 +359,7 @@ func TestSearchMappableResourcesSuccessWithOptions(t *testing.T) {
 		require.Len(t, req["resourcesQueries"], 1)
 		query := req["resourcesQueries"].([]any)[0].(map[string]any)
 		require.Equal(t, "type1", query["type"])
-		require.EqualValues(t, []interface{}{"id"}, query["queries"])
+		require.EqualValues(t, []any{"id"}, query["queries"])
 		require.Equal(t, "5", req["resourcesLimit"])
 	}, response))
 	resources, err := mgmt.FGA().SearchMappableResources(context.Background(), "t1", queries, options)
