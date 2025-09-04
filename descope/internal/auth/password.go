@@ -55,7 +55,7 @@ func (auth *password) UpdateUserPassword(ctx context.Context, loginID, newPasswo
 	if loginID == "" {
 		return utils.NewInvalidArgumentError("loginID")
 	}
-	pswd, err := getValidRefreshToken(r)
+	pswd, err := auth.getValidRefreshToken(r)
 	if err != nil {
 		return err
 	}
