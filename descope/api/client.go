@@ -136,7 +136,7 @@ var (
 			userRemoveAllPasskeys:                    "mgmt/user/passkeys/delete",
 			userRemoveTOTPSeed:                       "mgmt/user/totp/delete",
 			userListTrustedDevices:                   "mgmt/user/trusteddevices/list",
-			userRemoveTrustedDevices:                 "mgmt/user/update/trusteddevices/remove",
+			userRemoveTrustedDevices:                 "mgmt/user/trusteddevices/remove",
 			userGetProviderToken:                     "mgmt/user/provider/token",
 			userLogoutAllDevices:                     "mgmt/user/logout",
 			userGenerateOTPForTest:                   "mgmt/tests/generate/otp",
