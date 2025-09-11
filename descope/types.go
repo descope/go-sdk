@@ -24,10 +24,11 @@ type NOTPResponse struct {
 }
 
 type AuthenticationInfo struct {
-	SessionToken *Token        `json:"token,omitempty"`
-	RefreshToken *Token        `json:"refreshToken,omitempty"`
-	User         *UserResponse `json:"user,omitempty"`
-	FirstSeen    bool          `json:"firstSeen,omitempty"`
+	SessionToken *Token         `json:"token,omitempty"`
+	RefreshToken *Token         `json:"refreshToken,omitempty"`
+	User         *UserResponse  `json:"user,omitempty"`
+	FirstSeen    bool           `json:"firstSeen,omitempty"`
+	Claims       map[string]any `json:"claims,omitempty"`
 }
 
 type AnonymousAuthenticationInfo struct {
