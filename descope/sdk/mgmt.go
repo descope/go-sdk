@@ -421,6 +421,13 @@ type User interface {
 	// or via flow verify step
 	GenerateEmbeddedLinkSignUp(ctx context.Context, loginID string, user *descope.MgmtUserRequest, signUpOptions *descope.EmbeddedLinkLoginOptions) (string, error)
 
+	// Lists trusted devices for one or more users.
+	ListTrustedDevices(ctx context.Context, loginIDsOrUserIDs []string) ([]*descope.UserTrustedDevice, error)
+
+	// Removes trusted devices by their IDs for the given user.
+	// Provide at least one device ID to remove.
+	RemoveTrustedDevices(ctx context.Context, loginIDOrUserID string, deviceIDs []string) error
+
 	// Use to retrieve users' authentication history, by the given user's ids.
 	// returns slice of users' authentication history.
 	History(ctx context.Context, userIDs []string) ([]*descope.UserHistoryResponse, error)
