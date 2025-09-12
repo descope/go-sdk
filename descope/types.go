@@ -697,6 +697,7 @@ type Tenant struct {
 	CreatedTime             int32          `json:"createdTime,omitempty"`
 	EnforceSSO              bool           `json:"enforceSSO,omitempty"`
 	Disabled                bool           `json:"disabled,omitempty"`
+	EnforceSSOExclusions    []string       `json:"enforceSSOExclusions,omitempty"`
 }
 
 type TenantRequest struct {
@@ -706,6 +707,7 @@ type TenantRequest struct {
 	EnforceSSO              bool           `json:"enforceSSO,omitempty"`
 	Disabled                bool           `json:"disabled,omitempty"`
 	ParentTenantID          string         `json:"parentId,omitempty"` // applicable only for creation request
+	EnforceSSOExclusions    []string       `json:"enforceSSOExclusions,omitempty"`
 }
 
 type TenantSearchOptions struct {
