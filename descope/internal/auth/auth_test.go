@@ -61,8 +61,8 @@ var (
 		"kefar saba", "Israel", "kuku", "1.1.1.1", 32,
 		"eilat", "Israele", "nunu", "1.1.1.2", 23)
 
-	permissions            = []interface{}{"foo", "bar"}
-	roles                  = []interface{}{"abc", "xyz"}
+	permissions            = []any{"foo", "bar"}
+	roles                  = []any{"abc", "xyz"}
 	mockAuthorizationToken = &descope.Token{
 		Claims: map[string]any{
 			claimPermissions: permissions,
@@ -90,8 +90,8 @@ var (
 			claimRoles:       roles,
 			descope.ClaimAuthorizedTenants: map[string]any{
 				"t1": map[string]any{
-					claimPermissions: []interface{}{"t1-perm1", "t1-perm2"},
-					claimRoles:       []interface{}{"t1-role1", "t1-role2"},
+					claimPermissions: []any{"t1-perm1", "t1-perm2"},
+					claimRoles:       []any{"t1-role1", "t1-role2"},
 				},
 				"t2": map[string]any{},
 			},
@@ -99,13 +99,13 @@ var (
 	}
 )
 
-func readBodyMap(r *http.Request) (m map[string]interface{}, err error) {
-	m = map[string]interface{}{}
+func readBodyMap(r *http.Request) (m map[string]any, err error) {
+	m = map[string]any{}
 	err = readBody(r, &m)
 	return m, err
 }
 
-func readBody(r *http.Request, m interface{}) (err error) {
+func readBody(r *http.Request, m any) (err error) {
 	reader, err := r.GetBody()
 	if err != nil {
 		return err
@@ -133,7 +133,7 @@ func DoBadRequest(checks func(*http.Request)) mocks.Do {
 		if checks != nil {
 			checks(r)
 		}
-		b, err := utils.Marshal(map[string]interface{}{"errorCode": "E011001", "errorDescription": "Request is malformed"})
+		b, err := utils.Marshal(map[string]any{"errorCode": "E011001", "errorDescription": "Request is malformed"})
 		if err != nil {
 			return nil, err
 		}
@@ -142,7 +142,7 @@ func DoBadRequest(checks func(*http.Request)) mocks.Do {
 	}
 }
 
-func DoWithBody(statusCode int, checks func(*http.Request), body interface{}) mocks.Do {
+func DoWithBody(statusCode int, checks func(*http.Request), body any) mocks.Do {
 	return func(r *http.Request) (*http.Response, error) {
 		if checks != nil {
 			checks(r)
@@ -157,12 +157,12 @@ func DoWithBody(statusCode int, checks func(*http.Request), body interface{}) mo
 	}
 }
 
-func DoOkWithBody(checks func(*http.Request), body interface{}) mocks.Do {
+func DoOkWithBody(checks func(*http.Request), body any) mocks.Do {
 	return DoWithBody(http.StatusOK, checks, body)
 }
 
 func DoRedirect(url string, checks func(*http.Request)) mocks.Do {
-	return DoOkWithBody(checks, map[string]interface{}{"url": url})
+	return DoOkWithBody(checks, map[string]any{"url": url})
 }
 
 func newTestAuth(clientParams *api.ClientParams, callback mocks.Do) (*authenticationService, error) {
@@ -929,7 +929,7 @@ func TestExtractJwtWithTenants(t *testing.T) {
 	require.True(t, len(tokens) > 0)
 	tenants := tokens[0].GetTenants()
 	assert.Len(t, tenants, 2)
-	m := map[string]interface{}{"t1": true, "t2": true}
+	m := map[string]any{"t1": true, "t2": true}
 	for _, k := range tenants {
 		delete(m, k)
 	}
@@ -1055,7 +1055,7 @@ func TestValidatePermissions(t *testing.T) {
 	require.False(t, a.ValidateTenantPermissions(
 		context.Background(),
 		&descope.Token{Claims: map[string]any{
-			descope.ClaimAuthorizedTenants: map[string]interface{}{"t1": true},
+			descope.ClaimAuthorizedTenants: map[string]any{"t1": true},
 		}},
 		"t1",
 		[]string{"foo"},

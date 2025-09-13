@@ -20,7 +20,7 @@ func (a *accessKey) Create(ctx context.Context, name string, description string,
 		return "", nil, utils.NewInvalidArgumentError("name")
 	}
 	body := makeCreateAccessKeyBody(name, expireTime, roleNames, tenants, userID, customClaims, description, permittedIPs)
-	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyCreate(), body, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyCreate(), body, nil, "")
 	if err != nil {
 		return "", nil, err
 	}
@@ -34,7 +34,7 @@ func (a *accessKey) Load(ctx context.Context, id string) (*descope.AccessKeyResp
 	req := &api.HTTPRequest{
 		QueryParams: map[string]string{"id": id},
 	}
-	res, err := a.client.DoGetRequest(ctx, api.Routes.ManagementAccessKeyLoad(), req, a.conf.ManagementKey)
+	res, err := a.client.DoGetRequest(ctx, api.Routes.ManagementAccessKeyLoad(), req, "")
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (a *accessKey) Load(ctx context.Context, id string) (*descope.AccessKeyResp
 
 func (a *accessKey) SearchAll(ctx context.Context, tenantIDs []string) ([]*descope.AccessKeyResponse, error) {
 	body := map[string]any{"tenantIds": tenantIDs}
-	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeySearchAll(), body, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeySearchAll(), body, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (a *accessKey) Update(ctx context.Context, id, name string, description *st
 	if permittedIPs != nil {
 		body["permittedIps"] = permittedIPs
 	}
-	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyUpdate(), body, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyUpdate(), body, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func (a *accessKey) Deactivate(ctx context.Context, id string) error {
 		return utils.NewInvalidArgumentError("id")
 	}
 	body := map[string]any{"id": id}
-	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyDeactivate(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyDeactivate(), body, nil, "")
 	return err
 }
 
@@ -94,7 +94,7 @@ func (a *accessKey) Activate(ctx context.Context, id string) error {
 		return utils.NewInvalidArgumentError("id")
 	}
 	body := map[string]any{"id": id}
-	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyActivate(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyActivate(), body, nil, "")
 	return err
 }
 
@@ -103,7 +103,7 @@ func (a *accessKey) Delete(ctx context.Context, id string) error {
 		return utils.NewInvalidArgumentError("id")
 	}
 	body := map[string]any{"id": id}
-	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyDelete(), body, nil, a.conf.ManagementKey)
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyDelete(), body, nil, "")
 	return err
 }
 
