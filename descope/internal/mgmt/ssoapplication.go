@@ -24,7 +24,7 @@ func (s *ssoApplication) CreateOIDCApplication(ctx context.Context, appRequest *
 	}
 
 	req := makeCreateUpdateOIDCApplicationRequest(appRequest)
-	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationOIDCCreate(), req, nil, s.conf.ManagementKey)
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationOIDCCreate(), req, nil, "")
 	if err != nil {
 		return "", err
 	}
@@ -46,7 +46,7 @@ func (s *ssoApplication) CreateSAMLApplication(ctx context.Context, appRequest *
 	}
 
 	req := makeCreateUpdateSAMLApplicationRequest(appRequest)
-	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationSAMLCreate(), req, nil, s.conf.ManagementKey)
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationSAMLCreate(), req, nil, "")
 	if err != nil {
 		return "", err
 	}
@@ -71,7 +71,7 @@ func (s *ssoApplication) UpdateOIDCApplication(ctx context.Context, appRequest *
 	}
 
 	req := makeCreateUpdateOIDCApplicationRequest(appRequest)
-	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationOIDCUpdate(), req, nil, s.conf.ManagementKey)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationOIDCUpdate(), req, nil, "")
 	return err
 }
 
@@ -87,7 +87,7 @@ func (s *ssoApplication) UpdateSAMLApplication(ctx context.Context, appRequest *
 	}
 
 	req := makeCreateUpdateSAMLApplicationRequest(appRequest)
-	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationSAMLUpdate(), req, nil, s.conf.ManagementKey)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationSAMLUpdate(), req, nil, "")
 	return err
 }
 
@@ -96,7 +96,7 @@ func (s *ssoApplication) Delete(ctx context.Context, id string) error {
 		return utils.NewInvalidArgumentError("id")
 	}
 	req := map[string]any{"id": id}
-	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationDelete(), req, nil, s.conf.ManagementKey)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationDelete(), req, nil, "")
 	return err
 }
 
@@ -107,7 +107,7 @@ func (s *ssoApplication) Load(ctx context.Context, id string) (*descope.SSOAppli
 	req := &api.HTTPRequest{
 		QueryParams: map[string]string{"id": id},
 	}
-	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementSSOApplicationLoad(), req, s.conf.ManagementKey)
+	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementSSOApplicationLoad(), req, "")
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (s *ssoApplication) Load(ctx context.Context, id string) (*descope.SSOAppli
 }
 
 func (s *ssoApplication) LoadAll(ctx context.Context) ([]*descope.SSOApplication, error) {
-	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementSSOApplicationLoadAll(), nil, s.conf.ManagementKey)
+	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementSSOApplicationLoadAll(), nil, "")
 	if err != nil {
 		return nil, err
 	}

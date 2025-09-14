@@ -86,7 +86,7 @@ func TestPutRequest(t *testing.T) {
 	accesskey := "accessKey"
 	outputBytes, err := utils.Marshal(expectedOutput)
 	require.NoError(t, err)
-	c := NewClient(ClientParams{ProjectID: projectID, AuthManagementKey: accesskey, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+	c := NewClient(ClientParams{ProjectID: projectID, ManagementKey: accesskey, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
 		assert.NotNil(t, r.Body)
 		actualProject, _, actualAccessKey := parseAuthorizationHeader(r)
 		assert.EqualValues(t, http.MethodPut, r.Method)
@@ -115,7 +115,7 @@ func TestPostRequest(t *testing.T) {
 	jwtStr := "eyJhbGciOiJFUzM4NCIsImtpZCI6IjI4eVRTeDZRMGNpSzU4QWRDU3ZLZkNKcEJJTiIsInR5cCI6IkpXVCJ9.eyJleHAiOi01Njk3NzcxNjg2LCJpc3MiOiIyOHlUU3g2UTBjaUs1OEFkQ1N2S2ZDSnBCSU4iLCJzdWIiOiIyOHlldzQ3NTVLdElSNnhmMk1rV2lITDRYSnEifQ.fm5h2AlyOzUCVMIezSQf8wddE6xhcfqnSAzpG4SoOy6HK387T8hxcpbmCc7qbFOQfaPDdhVhqS7JkX7wessaTznbiK_xiDac6CkENgzrl_V8eMXEHt1HcyCW1s6IQd5D"
 	outputBytes, err := utils.Marshal(expectedOutput)
 	require.NoError(t, err)
-	c := NewClient(ClientParams{ProjectID: projectID, AuthManagementKey: accesskey, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+	c := NewClient(ClientParams{ProjectID: projectID, ManagementKey: accesskey, DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
 		assert.NotNil(t, r.Body)
 		actualProject, actualJwt, actualAccessKey := parseAuthorizationHeader(r)
 		assert.EqualValues(t, http.MethodPost, r.Method)

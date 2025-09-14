@@ -19,7 +19,7 @@ func (r *flow) RunManagementFlow(ctx context.Context, flowID string, options *de
 	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRunManagementFlow(), map[string]any{
 		"flowId":  flowID,
 		"options": options,
-	}, nil, r.conf.ManagementKey)
+	}, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func (r *flow) RunManagementFlowAsync(ctx context.Context, flowID string, option
 	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRunManagementFlowAsync(), map[string]any{
 		"flowId":  flowID,
 		"options": options,
-	}, nil, r.conf.ManagementKey)
+	}, nil, "")
 	if err != nil {
 		return "", err
 	}
@@ -40,7 +40,7 @@ func (r *flow) RunManagementFlowAsync(ctx context.Context, flowID string, option
 func (r *flow) GetManagementFlowAsyncResult(ctx context.Context, executionID string) (map[string]any, error) {
 	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementGetManagementFlowAsyncResult(), map[string]any{
 		"executionId": executionID,
-	}, nil, r.conf.ManagementKey)
+	}, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (r *flow) GetManagementFlowAsyncResult(ctx context.Context, executionID str
 }
 
 func (r *flow) ListFlows(ctx context.Context) (*descope.FlowList, error) {
-	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementListFlows(), nil, nil, r.conf.ManagementKey)
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementListFlows(), nil, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (r *flow) DeleteFlows(ctx context.Context, flowIDs []string) error {
 	body := map[string]any{
 		"ids": flowIDs,
 	}
-	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementDeleteFlows(), body, nil, r.conf.ManagementKey)
+	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementDeleteFlows(), body, nil, "")
 	return err
 }
 
@@ -70,7 +70,7 @@ func (r *flow) ExportFlow(ctx context.Context, flowID string) (map[string]any, e
 	body := map[string]any{
 		"flowId": flowID,
 	}
-	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementFlowExport(), body, nil, r.conf.ManagementKey)
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementFlowExport(), body, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -85,12 +85,12 @@ func (r *flow) ImportFlow(ctx context.Context, flowID string, flow map[string]an
 	body := map[string]any{
 		"flow": flow,
 	}
-	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementFlowImport(), body, nil, r.conf.ManagementKey)
+	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementFlowImport(), body, nil, "")
 	return err
 }
 
 func (r *flow) ExportTheme(ctx context.Context) (map[string]any, error) {
-	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementThemeExport(), nil, nil, r.conf.ManagementKey)
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementThemeExport(), nil, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -104,7 +104,7 @@ func (r *flow) ImportTheme(ctx context.Context, theme map[string]any) error {
 	body := map[string]any{
 		"theme": theme,
 	}
-	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementThemeImport(), body, nil, r.conf.ManagementKey)
+	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementThemeImport(), body, nil, "")
 	return err
 }
 

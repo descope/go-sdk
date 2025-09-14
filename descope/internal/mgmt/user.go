@@ -106,9 +106,9 @@ func (u *user) create(ctx context.Context, loginID, email, phone, displayName, g
 	var res *api.HTTPResponse
 	var err error
 	if test {
-		res, err = u.client.DoPostRequest(ctx, api.Routes.ManagementTestUserCreate(), req, nil, u.conf.ManagementKey)
+		res, err = u.client.DoPostRequest(ctx, api.Routes.ManagementTestUserCreate(), req, nil, "")
 	} else {
-		res, err = u.client.DoPostRequest(ctx, api.Routes.ManagementUserCreate(), req, nil, u.conf.ManagementKey)
+		res, err = u.client.DoPostRequest(ctx, api.Routes.ManagementUserCreate(), req, nil, "")
 	}
 
 	if err != nil {
@@ -122,7 +122,7 @@ func (u *user) createBatch(ctx context.Context, users []*descope.BatchUser, opti
 	if err != nil {
 		return nil, err
 	}
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserCreateBatch(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserCreateBatch(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +153,7 @@ func (u *user) Update(ctx context.Context, loginIDOrUserID string, user *descope
 		additionalLoginIDs: user.AdditionalLoginIDs,
 		ssoAppIDs:          user.SSOAppIDs,
 	})
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdate(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdate(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -168,7 +168,7 @@ func (u *user) Patch(ctx context.Context, loginIDOrUserID string, user *descope.
 		return nil, utils.NewInvalidArgumentError("user")
 	}
 	req := makePatchUserRequest(loginIDOrUserID, user)
-	res, err := u.client.DoPatchRequest(ctx, api.Routes.ManagementUserPatch(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPatchRequest(ctx, api.Routes.ManagementUserPatch(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -192,12 +192,12 @@ func (u *user) DeleteByUserID(ctx context.Context, userID string) error {
 
 func (u *user) delete(ctx context.Context, loginID, userID string) error {
 	req := map[string]any{"loginId": loginID, "userId": userID}
-	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserDelete(), req, nil, u.conf.ManagementKey)
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserDelete(), req, nil, "")
 	return err
 }
 
 func (u *user) DeleteAllTestUsers(ctx context.Context) error {
-	_, err := u.client.DoDeleteRequest(ctx, api.Routes.ManagementUserDeleteAllTestUsers(), nil, u.conf.ManagementKey)
+	_, err := u.client.DoDeleteRequest(ctx, api.Routes.ManagementUserDeleteAllTestUsers(), nil, "")
 	return err
 }
 
@@ -215,7 +215,7 @@ func (u *user) Import(ctx context.Context, source string, users, hashes []byte, 
 	if len(hashes) > 0 {
 		req["hashes"] = hashes
 	}
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserImport(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserImport(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +241,7 @@ func (u *user) load(ctx context.Context, loginID, userID string) (*descope.UserR
 	req := &api.HTTPRequest{
 		QueryParams: map[string]string{"loginId": loginID, "userId": userID},
 	}
-	res, err := u.client.DoGetRequest(ctx, api.Routes.ManagementUserLoad(), req, u.conf.ManagementKey)
+	res, err := u.client.DoGetRequest(ctx, api.Routes.ManagementUserLoad(), req, "")
 	if err != nil {
 		return nil, err
 	}
@@ -283,9 +283,9 @@ func (u *user) searchAll(ctx context.Context, options *descope.UserSearchOptions
 	var res *api.HTTPResponse
 	var err error
 	if useTestEndpoint {
-		res, err = u.client.DoPostRequest(ctx, api.Routes.ManagementTestUserSearchAll(), req, nil, u.conf.ManagementKey)
+		res, err = u.client.DoPostRequest(ctx, api.Routes.ManagementTestUserSearchAll(), req, nil, "")
 	} else {
-		res, err = u.client.DoPostRequest(ctx, api.Routes.ManagementUserSearchAll(), req, nil, u.conf.ManagementKey)
+		res, err = u.client.DoPostRequest(ctx, api.Routes.ManagementUserSearchAll(), req, nil, "")
 	}
 	if err != nil {
 		return nil, 0, err
@@ -306,7 +306,7 @@ func (u *user) updateStatus(ctx context.Context, loginIDOrUserID string, status 
 		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
 	req := map[string]any{"loginId": loginIDOrUserID, "status": status}
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateStatus(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateStatus(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +318,7 @@ func (u *user) UpdateLoginID(ctx context.Context, loginID, newLoginID string) (*
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 	req := map[string]any{"loginId": loginID, "newLoginId": newLoginID}
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateLoginID(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateLoginID(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -330,7 +330,7 @@ func (u *user) UpdateEmail(ctx context.Context, loginIDOrUserID, email string, i
 		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
 	req := map[string]any{"loginId": loginIDOrUserID, "email": email, "verified": isVerified}
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateEmail(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateEmail(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -342,7 +342,7 @@ func (u *user) UpdatePhone(ctx context.Context, loginIDOrUserID, phone string, i
 		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
 	req := map[string]any{"loginId": loginIDOrUserID, "phone": phone, "verified": isVerified}
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdatePhone(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdatePhone(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -354,7 +354,7 @@ func (u *user) UpdateDisplayName(ctx context.Context, loginIDOrUserID, displayNa
 		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
 	req := map[string]any{"loginId": loginIDOrUserID, "displayName": displayName}
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateDisplayName(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateDisplayName(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -366,7 +366,7 @@ func (u *user) UpdateUserNames(ctx context.Context, loginIDOrUserID, givenName, 
 		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
 	req := map[string]any{"loginId": loginIDOrUserID, "givenName": givenName, "middleName": middleName, "familyName": familyName}
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateDisplayName(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateDisplayName(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -378,7 +378,7 @@ func (u *user) UpdatePicture(ctx context.Context, loginIDOrUserID, picture strin
 		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
 	req := map[string]any{"loginId": loginIDOrUserID, "picture": picture}
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdatePicture(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdatePicture(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -393,7 +393,7 @@ func (u *user) UpdateCustomAttribute(ctx context.Context, loginIDOrUserID, key s
 		return nil, utils.NewInvalidArgumentError("key")
 	}
 	req := map[string]any{"loginId": loginIDOrUserID, "attributeKey": key, "attributeValue": value}
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateCustomAttribute(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateCustomAttribute(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -405,7 +405,7 @@ func (u *user) SetRoles(ctx context.Context, loginIDOrUserID string, roles []str
 		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
 	req := makeUpdateUserRolesRequest(loginIDOrUserID, "", roles)
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetRole(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetRole(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -417,7 +417,7 @@ func (u *user) AddRoles(ctx context.Context, loginIDOrUserID string, roles []str
 		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
 	req := makeUpdateUserRolesRequest(loginIDOrUserID, "", roles)
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserAddRole(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserAddRole(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -429,7 +429,7 @@ func (u *user) RemoveRoles(ctx context.Context, loginIDOrUserID string, roles []
 		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
 	req := makeUpdateUserRolesRequest(loginIDOrUserID, "", roles)
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveRole(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveRole(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -441,7 +441,7 @@ func (u *user) AddSSOApps(ctx context.Context, loginIDOrUserID string, ssoAppIDs
 		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
 	req := makeUpdateUserSSOAppsRequest(loginIDOrUserID, ssoAppIDs)
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserAddSSOApps(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserAddSSOApps(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -453,7 +453,7 @@ func (u *user) SetSSOApps(ctx context.Context, loginIDOrUserID string, ssoAppIDs
 		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
 	req := makeUpdateUserSSOAppsRequest(loginIDOrUserID, ssoAppIDs)
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetSSOApps(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetSSOApps(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -465,7 +465,7 @@ func (u *user) RemoveSSOApps(ctx context.Context, loginIDOrUserID string, ssoApp
 		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
 	req := makeUpdateUserSSOAppsRequest(loginIDOrUserID, ssoAppIDs)
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveSSOApps(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveSSOApps(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -477,7 +477,7 @@ func (u *user) AddTenant(ctx context.Context, loginIDOrUserID string, tenantID s
 		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
 	req := makeUpdateUserTenantRequest(loginIDOrUserID, tenantID)
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserAddTenant(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserAddTenant(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -489,7 +489,7 @@ func (u *user) RemoveTenant(ctx context.Context, loginIDOrUserID string, tenantI
 		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
 	req := makeUpdateUserTenantRequest(loginIDOrUserID, tenantID)
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveTenant(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveTenant(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -501,7 +501,7 @@ func (u *user) SetTenantRoles(ctx context.Context, loginIDOrUserID string, tenan
 		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
 	req := makeUpdateUserRolesRequest(loginIDOrUserID, tenantID, roles)
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetRole(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetRole(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -513,7 +513,7 @@ func (u *user) AddTenantRoles(ctx context.Context, loginIDOrUserID string, tenan
 		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
 	req := makeUpdateUserRolesRequest(loginIDOrUserID, tenantID, roles)
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserAddRole(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserAddRole(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -525,7 +525,7 @@ func (u *user) RemoveTenantRoles(ctx context.Context, loginIDOrUserID string, te
 		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
 	req := makeUpdateUserRolesRequest(loginIDOrUserID, tenantID, roles)
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveRole(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveRole(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -541,7 +541,7 @@ func (u *user) SetTemporaryPassword(ctx context.Context, loginID string, passwor
 	}
 
 	req := makeSetPasswordRequest(loginID, password, false)
-	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetTemporaryPassword(), req, nil, u.conf.ManagementKey)
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetTemporaryPassword(), req, nil, "")
 	return err
 }
 func (u *user) SetActivePassword(ctx context.Context, loginID string, password string) error {
@@ -553,7 +553,7 @@ func (u *user) SetActivePassword(ctx context.Context, loginID string, password s
 	}
 
 	req := makeSetPasswordRequest(loginID, password, true)
-	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetActivePassword(), req, nil, u.conf.ManagementKey)
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetActivePassword(), req, nil, "")
 	return err
 }
 
@@ -567,7 +567,7 @@ func (u *user) SetPassword(ctx context.Context, loginID string, password string)
 	}
 
 	req := makeSetPasswordRequest(loginID, password, false)
-	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetPassword(), req, nil, u.conf.ManagementKey)
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserSetPassword(), req, nil, "")
 	return err
 }
 
@@ -577,7 +577,7 @@ func (u *user) ExpirePassword(ctx context.Context, loginID string) error {
 	}
 
 	req := map[string]any{"loginId": loginID}
-	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserExpirePassword(), req, nil, u.conf.ManagementKey)
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserExpirePassword(), req, nil, "")
 	return err
 }
 
@@ -587,7 +587,7 @@ func (u *user) RemoveAllPasskeys(ctx context.Context, loginID string) error {
 	}
 
 	req := map[string]any{"loginId": loginID}
-	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveAllPasskeys(), req, nil, u.conf.ManagementKey)
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveAllPasskeys(), req, nil, "")
 	return err
 }
 
@@ -597,7 +597,7 @@ func (u *user) RemoveTOTPSeed(ctx context.Context, loginID string) error {
 	}
 
 	req := map[string]any{"loginId": loginID}
-	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveTOTPSeed(), req, nil, u.conf.ManagementKey)
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveTOTPSeed(), req, nil, "")
 	return err
 }
 
@@ -623,7 +623,7 @@ func (u *user) GetProviderTokenWithOptions(ctx context.Context, loginID, provide
 			"forceRefresh":     strconv.FormatBool(options.ForceRefresh),
 		},
 	}
-	res, err := u.client.DoGetRequest(ctx, api.Routes.ManagementUserGetProviderToken(), req, u.conf.ManagementKey)
+	res, err := u.client.DoGetRequest(ctx, api.Routes.ManagementUserGetProviderToken(), req, "")
 	if err != nil {
 		return nil, err
 	}
@@ -646,7 +646,7 @@ func (u *user) LogoutUserByUserID(ctx context.Context, userID string, sessionTyp
 }
 
 func (u *user) logoutUser(ctx context.Context, userID string, loginID string, sessionTypes ...string) error {
-	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserLogoutAllDevices(), map[string]any{"userId": userID, "loginId": loginID, "sessionTypes": sessionTypes}, nil, u.conf.ManagementKey)
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserLogoutAllDevices(), map[string]any{"userId": userID, "loginId": loginID, "sessionTypes": sessionTypes}, nil, "")
 	return err
 }
 
@@ -655,7 +655,7 @@ func (u *user) GenerateOTPForTestUser(ctx context.Context, method descope.Delive
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
 	req := makeGenerateOTPForTestUserRequestBody(method, loginID, loginOptions)
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserGenerateOTPForTest(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserGenerateOTPForTest(), req, nil, "")
 	if err != nil {
 		return "", err
 	}
@@ -667,7 +667,7 @@ func (u *user) GenerateMagicLinkForTestUser(ctx context.Context, method descope.
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
 	req := makeGenerateMagicLinkForTestUserRequestBody(method, loginID, URI, loginOptions)
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserGenerateMagicLinkForTest(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserGenerateMagicLinkForTest(), req, nil, "")
 	if err != nil {
 		return "", err
 	}
@@ -680,7 +680,7 @@ func (u *user) GenerateEnchantedLinkForTestUser(ctx context.Context, loginID, UR
 		return "", "", utils.NewInvalidArgumentError("loginID")
 	}
 	req := makeGenerateEnchantedLinkForTestUserRequestBody(loginID, URI, loginOptions)
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserGenerateEnchantedLinkForTest(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserGenerateEnchantedLinkForTest(), req, nil, "")
 	if err != nil {
 		return "", "", err
 	}
@@ -699,7 +699,7 @@ func (u *user) GenerateEmbeddedLink(ctx context.Context, loginID string, customC
 		"loginId":      loginID,
 		"customClaims": customClaims,
 		"timeout":      timeout,
-	}, nil, u.conf.ManagementKey)
+	}, nil, "")
 	if err != nil {
 		return "", err
 	}
@@ -732,7 +732,7 @@ func (u *user) GenerateEmbeddedLinkSignUp(ctx context.Context, loginID string, u
 		"loginOptions":  loginOptions.LoginOptions,
 		"timeout":       loginOptions.Timeout,
 	}
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementGenerateSignUpEmbeddedLink(), arb, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementGenerateSignUpEmbeddedLink(), arb, nil, "")
 	if err != nil {
 		return "", err
 	}
@@ -748,7 +748,7 @@ func (u *user) History(ctx context.Context, userIDs []string) ([]*descope.UserHi
 	if userIDs == nil {
 		return nil, utils.NewInvalidArgumentError("userIDs")
 	}
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserHistory(), userIDs, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserHistory(), userIDs, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -876,7 +876,7 @@ func makeUpdateUserRequest(req *createUserRequest) map[string]any {
 }
 
 func makePatchUserRequest(loginID string, req *descope.PatchUserRequest) map[string]any {
-	res := map[string]interface{}{
+	res := map[string]any{
 		"loginId": loginID,
 	}
 	if req.Name != nil {

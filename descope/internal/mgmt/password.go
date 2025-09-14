@@ -19,7 +19,7 @@ func (s *passwordManagement) GetSettings(ctx context.Context, tenantID string) (
 	req := &api.HTTPRequest{
 		QueryParams: map[string]string{"tenantId": tenantID},
 	}
-	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementPasswordSettings(), req, s.conf.ManagementKey)
+	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementPasswordSettings(), req, "")
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (s *passwordManagement) ConfigureSettings(ctx context.Context, tenantID str
 		"lock":            passwordSettings.Lock,
 		"lockAttempts":    passwordSettings.LockAttempts,
 	}
-	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementPasswordSettings(), req, nil, s.conf.ManagementKey)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementPasswordSettings(), req, nil, "")
 	return err
 }
 

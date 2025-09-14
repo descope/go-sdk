@@ -76,7 +76,7 @@ func TestSignInStartStepup(t *testing.T) {
 		assert.EqualValues(t, "a", req.LoginID)
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, map[string]interface{}{"stepup": true, "customClaims": map[string]interface{}{"k1": "v1"}}, body["loginOptions"])
+		assert.EqualValues(t, map[string]any{"stepup": true, "customClaims": map[string]any{"k1": "v1"}}, body["loginOptions"])
 		reqToken := r.Header.Get(api.AuthorizationHeaderName)
 		splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix)
 		require.Len(t, splitToken, 2)
@@ -87,7 +87,7 @@ func TestSignInStartStepup(t *testing.T) {
 
 	}, expectedResponse))
 	require.NoError(t, err)
-	res, err := a.WebAuthn().SignInStart(context.Background(), "a", "https://example.com", &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}})
+	res, err := a.WebAuthn().SignInStart(context.Background(), "a", "https://example.com", &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]any{"k1": "v1"}})
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedResponse.TransactionID, res.TransactionID)
 }

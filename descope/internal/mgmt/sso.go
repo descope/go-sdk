@@ -26,7 +26,7 @@ func (s *sso) LoadSettings(ctx context.Context, tenantID string, ssoID string) (
 	if len(ssoID) > 0 {
 		req.QueryParams["ssoId"] = ssoID
 	}
-	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementSSOLoadSettings(), req, s.conf.ManagementKey)
+	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementSSOLoadSettings(), req, "")
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func (s *sso) LoadAllSettings(ctx context.Context, tenantID string) ([]*descope.
 	req := &api.HTTPRequest{
 		QueryParams: map[string]string{"tenantId": tenantID},
 	}
-	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementSSOLoadAllSettings(), req, s.conf.ManagementKey)
+	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementSSOLoadAllSettings(), req, "")
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func (s *sso) ConfigureSAMLSettings(ctx context.Context, tenantID string, settin
 	if len(fgaMappings) > 0 {
 		req["settings"].(map[string]any)["fgaMappings"] = fgaMappings
 	}
-	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSAMLSettings(), req, nil, s.conf.ManagementKey)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSAMLSettings(), req, nil, "")
 	return err
 }
 
@@ -144,7 +144,7 @@ func (s *sso) ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID stri
 	if len(fgaMappings) > 0 {
 		req["settings"].(map[string]any)["fgaMappings"] = fgaMappings
 	}
-	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSAMLSettingsByMetadata(), req, nil, s.conf.ManagementKey)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSAMLSettingsByMetadata(), req, nil, "")
 	return err
 }
 
@@ -169,7 +169,7 @@ func (s *sso) ConfigureSSORedirectURL(ctx context.Context, tenantID string, saml
 		req["ssoId"] = ssoID
 	}
 
-	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSORedirectURL(), req, nil, s.conf.ManagementKey)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSORedirectURL(), req, nil, "")
 	return err
 }
 
@@ -191,7 +191,7 @@ func (s *sso) ConfigureOIDCSettings(ctx context.Context, tenantID string, settin
 		req["ssoId"] = ssoID
 	}
 
-	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOOIDCSettings(), req, nil, s.conf.ManagementKey)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOOIDCSettings(), req, nil, "")
 	return err
 }
 
@@ -203,7 +203,7 @@ func (s *sso) GetSettings(ctx context.Context, tenantID string) (*descope.SSOSet
 	req := &api.HTTPRequest{
 		QueryParams: map[string]string{"tenantId": tenantID},
 	}
-	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementSSOSettings(), req, s.conf.ManagementKey)
+	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementSSOSettings(), req, "")
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +224,7 @@ func (s *sso) NewSettings(ctx context.Context, tenantID string, ssoID string, di
 		"ssoId":       ssoID,
 		"displayName": displayName,
 	}
-	res, err := s.client.DoPostRequest(ctx, api.Routes.ManagementNewSSOSettings(), req, nil, s.conf.ManagementKey)
+	res, err := s.client.DoPostRequest(ctx, api.Routes.ManagementNewSSOSettings(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -241,7 +241,7 @@ func (s *sso) DeleteSettings(ctx context.Context, tenantID string, ssoID string)
 	if len(ssoID) > 0 {
 		req.QueryParams["ssoId"] = ssoID
 	}
-	_, err := s.client.DoDeleteRequest(ctx, api.Routes.ManagementSSOSettings(), req, s.conf.ManagementKey)
+	_, err := s.client.DoDeleteRequest(ctx, api.Routes.ManagementSSOSettings(), req, "")
 	if err != nil {
 		return err
 	}
@@ -270,7 +270,7 @@ func (s *sso) ConfigureSettings(ctx context.Context, tenantID, idpURL, idpCert, 
 		"redirectURL": redirectURL,
 		"domains":     domains,
 	}
-	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSettings(), req, nil, s.conf.ManagementKey)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSettings(), req, nil, "")
 	return err
 }
 
@@ -288,7 +288,7 @@ func (s *sso) ConfigureMetadata(ctx context.Context, tenantID, idpMetadataURL, r
 		"redirectURL":    redirectURL,
 		"domains":        domains,
 	}
-	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOMetadata(), req, nil, s.conf.ManagementKey)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOMetadata(), req, nil, "")
 	return err
 }
 
@@ -309,7 +309,7 @@ func (s *sso) ConfigureMapping(ctx context.Context, tenantID string, roleMapping
 		"roleMappings":     mappings,
 		"attributeMapping": attributeMapping,
 	}
-	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOMapping(), req, nil, s.conf.ManagementKey)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOMapping(), req, nil, "")
 	return err
 }
 

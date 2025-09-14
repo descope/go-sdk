@@ -55,7 +55,7 @@ func (p *Provider) selectKey(sink jws.KeySink, key jwk.Key) error {
 
 func (p *Provider) requestKeys() error {
 	projectID := p.conf.ProjectID
-	keysWrapper := map[string][]map[string]interface{}{}
+	keysWrapper := map[string][]map[string]any{}
 	_, err := p.client.DoGetRequest(context.Background(), path.Join(api.Routes.GetKeys(), projectID), &api.HTTPRequest{ResBodyObj: &keysWrapper}, "")
 	if err != nil {
 		return err
