@@ -480,6 +480,13 @@ type MockUser struct {
 	RemoveTOTPSeedAssert func(loginID string)
 	RemoveTOTPSeedError  error
 
+	ListTrustedDevicesAssert   func(loginIDsOrUserIDs []string)
+	ListTrustedDevicesResponse []*descope.UserTrustedDevice
+	ListTrustedDevicesError    error
+
+	RemoveTrustedDevicesAssert func(loginIDOrUserID string, deviceIDs []string)
+	RemoveTrustedDevicesError  error
+
 	GetProviderTokenWithOptionsAssert   func(loginID, provider string, options *descope.ProviderTokenOptions)
 	GetProviderTokenWithOptionsResponse *descope.ProviderTokenResponse
 	GetProviderTokenWithOptionsError    error
@@ -817,6 +824,20 @@ func (m *MockUser) RemoveTOTPSeed(_ context.Context, loginID string) error {
 		m.RemoveTOTPSeedAssert(loginID)
 	}
 	return m.RemoveTOTPSeedError
+}
+
+func (m *MockUser) ListTrustedDevices(_ context.Context, loginIDsOrUserIDs []string) ([]*descope.UserTrustedDevice, error) {
+	if m.ListTrustedDevicesAssert != nil {
+		m.ListTrustedDevicesAssert(loginIDsOrUserIDs)
+	}
+	return m.ListTrustedDevicesResponse, m.ListTrustedDevicesError
+}
+
+func (m *MockUser) RemoveTrustedDevices(_ context.Context, loginIDOrUserID string, deviceIDs []string) error {
+	if m.RemoveTrustedDevicesAssert != nil {
+		m.RemoveTrustedDevicesAssert(loginIDOrUserID, deviceIDs)
+	}
+	return m.RemoveTrustedDevicesError
 }
 
 func (m *MockUser) GetProviderToken(_ context.Context, loginID, provider string) (*descope.ProviderTokenResponse, error) {
