@@ -623,7 +623,7 @@ func (u *user) ListTrustedDevices(ctx context.Context, loginIDsOrUserIDs []strin
 	}
 	// Make request
 	req := map[string]any{"identifiers": loginIDsOrUserIDs}
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserListTrustedDevices(), req, nil, u.conf.ManagementKey)
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserListTrustedDevices(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -675,7 +675,7 @@ func (u *user) RemoveTrustedDevices(ctx context.Context, loginIDOrUserID string,
 		"identifier": loginIDOrUserID,
 		"deviceIds":  deviceIDs,
 	}
-	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveTrustedDevices(), req, nil, u.conf.ManagementKey)
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveTrustedDevices(), req, nil, "")
 	return err
 }
 
