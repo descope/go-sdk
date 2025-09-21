@@ -2182,3 +2182,133 @@ func TestHistoryFailure(t *testing.T) {
 	assert.ErrorIs(t, err, descope.ErrInvalidResponse)
 	assert.Nil(t, userHistory)
 }
+
+func TestUserListTrustedDevicesSuccess(t *testing.T) {
+	response := map[string]any{
+		"devices": []any{
+			map[string]any{
+				"id":             "TD1",
+				"name":           "MacBook Pro",
+				"userId":         "abc",
+				"deviceType":     "desktop",
+				"lastLoginTime":  "1724411111",
+				"expirationTime": "1727411111",
+				"lastLocation":   "US",
+			},
+			map[string]any{
+				"id":             "TD2",
+				"name":           "iPhone",
+				"userId":         "abc",
+				"deviceType":     "mobile",
+				"lastLoginTime":  "1724412222",
+				"expirationTime": "1727412222",
+				"lastLocation":   "IL",
+			},
+		},
+	}
+
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		ids, ok := req["identifiers"].([]any)
+		require.True(t, ok)
+		require.Len(t, ids, 1)
+		assert.Equal(t, "abc", ids[0])
+	}, response))
+
+	res, err := m.User().ListTrustedDevices(context.Background(), []string{"abc"})
+	require.NoError(t, err)
+	require.Len(t, res, 2)
+	assert.Equal(t, "TD1", res[0].ID)
+	assert.Equal(t, "MacBook Pro", res[0].Name)
+	assert.Equal(t, "desktop", res[0].DeviceType)
+	assert.Equal(t, int64(1724411111), res[0].LastLoginTime.Unix())
+	assert.Equal(t, int64(1727411111), res[0].ExpirationTime.Unix())
+	assert.Equal(t, "US", res[0].LastLocation)
+	assert.Equal(t, "TD2", res[1].ID)
+	assert.Equal(t, "iPhone", res[1].Name)
+	assert.Equal(t, "mobile", res[1].DeviceType)
+	assert.Equal(t, int64(1724412222), res[1].LastLoginTime.Unix())
+	assert.Equal(t, int64(1727412222), res[1].ExpirationTime.Unix())
+	assert.Equal(t, "IL", res[1].LastLocation)
+}
+
+func TestUserListTrustedDevicesBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	// nil login IDs
+	res, err := m.User().ListTrustedDevices(context.Background(), nil)
+	require.Error(t, err)
+	require.Nil(t, res)
+	// empty login ID
+	res, err = m.User().ListTrustedDevices(context.Background(), []string{""})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserListTrustedDevicesError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := m.User().ListTrustedDevices(context.Background(), []string{"abc"})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserListTrustedDevicesUnmarshallingError(t *testing.T) {
+	response := map[string]any{
+		"devices": []any{
+			map[string]any{
+				"id":   "TD1",
+				"name": 1, // should be string
+			},
+		},
+	}
+
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {}, response))
+
+	_, err := m.User().ListTrustedDevices(context.Background(), []string{"abc"})
+	require.Error(t, err)
+}
+
+func TestUserRemoveTrustedDevicesSuccess(t *testing.T) {
+	visited := false
+	m := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		visited = true
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["identifier"])
+		ids, ok := req["deviceIds"].([]any)
+		require.True(t, ok)
+		require.Len(t, ids, 2)
+		assert.Equal(t, "id1", ids[0])
+		assert.Equal(t, "id2", ids[1])
+	}))
+
+	err := m.User().RemoveTrustedDevices(context.Background(), "abc", []string{"id1", "id2"})
+	require.NoError(t, err)
+	assert.True(t, visited)
+}
+
+func TestUserRemoveTrustedDevicesBadInputEmptyLoginID(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	err := m.User().RemoveTrustedDevices(context.Background(), "", []string{"id1"})
+	require.Error(t, err)
+}
+
+func TestUserRemoveTrustedDevicesBadInputEmptyIDs(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	err := m.User().RemoveTrustedDevices(context.Background(), "abc", nil)
+	require.Error(t, err)
+}
+
+func TestUserRemoveTrustedDevicesBadInputEmptyIDElement(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	err := m.User().RemoveTrustedDevices(context.Background(), "abc", []string{"", "id1"})
+	require.Error(t, err)
+}
+
+func TestUserRemoveTrustedDevicesError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	err := m.User().RemoveTrustedDevices(context.Background(), "abc", []string{"id1"})
+	require.Error(t, err)
+}

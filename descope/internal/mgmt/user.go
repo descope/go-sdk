@@ -3,6 +3,7 @@ package mgmt
 import (
 	"context"
 	"strconv"
+	"time"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
@@ -598,6 +599,83 @@ func (u *user) RemoveTOTPSeed(ctx context.Context, loginID string) error {
 
 	req := map[string]any{"loginId": loginID}
 	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveTOTPSeed(), req, nil, "")
+	return err
+}
+
+type userTrustedDeviceRaw struct {
+	ID                    string `json:"id,omitempty"`
+	Name                  string `json:"name,omitempty"`
+	DeviceType            string `json:"deviceType,omitempty"`
+	LastLoginUnixTimeUTC  string `json:"lastLoginTime,omitempty"`  // UTC Unix time format, i.e. the number of seconds elapsed since January 1, 1970 UTC until the last login
+	ExpirationUnixTimeUTC string `json:"expirationTime,omitempty"` // UTC Unix time format, i.e. the number of seconds elapsed since January 1, 1970 UTC until the expiration
+	LastLocation          string `json:"lastLocation,omitempty"`
+}
+
+func (u *user) ListTrustedDevices(ctx context.Context, loginIDsOrUserIDs []string) ([]*descope.UserTrustedDevice, error) {
+	// Validate input
+	if len(loginIDsOrUserIDs) == 0 {
+		return nil, utils.NewInvalidArgumentError("loginIDsOrUserIDs")
+	}
+	for i, id := range loginIDsOrUserIDs {
+		if id == "" {
+			return nil, utils.NewInvalidArgumentError("loginIDsOrUserIDs[" + strconv.Itoa(i) + "] is empty")
+		}
+	}
+	// Make request
+	req := map[string]any{"identifiers": loginIDsOrUserIDs}
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserListTrustedDevices(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	// Unmarshal response
+	outRaw := struct {
+		Devices []*userTrustedDeviceRaw `json:"devices"`
+	}{}
+	if err := utils.Unmarshal([]byte(res.BodyStr), &outRaw); err != nil {
+		return nil, err
+	}
+	// Convert from raw timestamps to time.Time
+	out := make([]*descope.UserTrustedDevice, len(outRaw.Devices))
+	for i, d := range outRaw.Devices {
+		lastLoginTimeInt, err := strconv.Atoi(d.LastLoginUnixTimeUTC)
+		if err != nil {
+			// notest
+			return nil, err
+		}
+		expirationTimeInt, err := strconv.Atoi(d.ExpirationUnixTimeUTC)
+		if err != nil {
+			// notest
+			return nil, err
+		}
+		out[i] = &descope.UserTrustedDevice{
+			ID:             d.ID,
+			Name:           d.Name,
+			DeviceType:     d.DeviceType,
+			LastLoginTime:  time.Unix(int64(lastLoginTimeInt), 0).UTC(),
+			ExpirationTime: time.Unix(int64(expirationTimeInt), 0).UTC(),
+			LastLocation:   d.LastLocation,
+		}
+	}
+	return out, nil
+}
+
+func (u *user) RemoveTrustedDevices(ctx context.Context, loginIDOrUserID string, deviceIDs []string) error {
+	if loginIDOrUserID == "" {
+		return utils.NewInvalidArgumentError("loginIDOrUserID")
+	}
+	if len(deviceIDs) == 0 {
+		return utils.NewInvalidArgumentError("deviceIDs")
+	}
+	for i, id := range deviceIDs {
+		if id == "" {
+			return utils.NewInvalidArgumentError("deviceIDs[" + strconv.Itoa(i) + "] is empty")
+		}
+	}
+	req := map[string]any{
+		"identifier": loginIDOrUserID,
+		"deviceIds":  deviceIDs,
+	}
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveTrustedDevices(), req, nil, "")
 	return err
 }
 
