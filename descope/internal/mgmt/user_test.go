@@ -2211,7 +2211,7 @@ func TestUserListTrustedDevicesSuccess(t *testing.T) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		ids, ok := req["loginIds"].([]any)
+		ids, ok := req["identifiers"].([]any)
 		require.True(t, ok)
 		require.Len(t, ids, 1)
 		assert.Equal(t, "abc", ids[0])
@@ -2276,8 +2276,8 @@ func TestUserRemoveTrustedDevicesSuccess(t *testing.T) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		require.Equal(t, "abc", req["loginId"])
-		ids, ok := req["ids"].([]any)
+		require.Equal(t, "abc", req["identifier"])
+		ids, ok := req["deviceIds"].([]any)
 		require.True(t, ok)
 		require.Len(t, ids, 2)
 		assert.Equal(t, "id1", ids[0])
