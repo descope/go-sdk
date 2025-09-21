@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"net"
 	"net/http"
 	urlpkg "net/url"
@@ -1403,7 +1404,7 @@ const (
 type ClientParams struct {
 	ProjectID            string
 	BaseURL              string
-	AuthManagementKey    string
+	ManagementKey        string
 	DefaultClient        IHttpClient
 	CustomDefaultHeaders map[string]string
 	ExternalRequestID    func(context.Context) string
@@ -1420,7 +1421,7 @@ type Client struct {
 	uri               string
 	headers           map[string]string
 	externalRequestID func(context.Context) string
-	conf              ClientParams
+	Conf              ClientParams
 	sdkInfo           *sdkInfo
 }
 type HTTPResponse struct {
@@ -1432,7 +1433,7 @@ type HTTPRequest struct {
 	Headers     map[string]string
 	QueryParams map[string]string
 	BaseURL     string
-	ResBodyObj  interface{}
+	ResBodyObj  any
 	Request     *http.Request
 	Cookies     []*http.Cookie
 }
@@ -1476,9 +1477,7 @@ func NewClient(conf ClientParams) *Client {
 	}
 	defaultHeaders := map[string]string{}
 
-	for key, value := range conf.CustomDefaultHeaders {
-		defaultHeaders[key] = value
-	}
+	maps.Copy(defaultHeaders, conf.CustomDefaultHeaders)
 
 	if conf.BaseURL == "" {
 		conf.BaseURL = baseURLForProjectID(conf.ProjectID)
@@ -1489,7 +1488,7 @@ func NewClient(conf ClientParams) *Client {
 		httpClient:        httpClient,
 		headers:           defaultHeaders,
 		externalRequestID: conf.ExternalRequestID,
-		conf:              conf,
+		Conf:              conf,
 		sdkInfo:           getSDKInfo(),
 	}
 }
@@ -1502,19 +1501,19 @@ func (c *Client) DoDeleteRequest(ctx context.Context, uri string, options *HTTPR
 	return c.DoRequest(ctx, http.MethodDelete, uri, nil, options, pswd)
 }
 
-func (c *Client) DoPutRequest(ctx context.Context, uri string, body interface{}, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
+func (c *Client) DoPutRequest(ctx context.Context, uri string, body any, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
 	return c.doRequestWithBody(ctx, http.MethodPut, uri, body, options, pswd)
 }
 
-func (c *Client) DoPostRequest(ctx context.Context, uri string, body interface{}, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
+func (c *Client) DoPostRequest(ctx context.Context, uri string, body any, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
 	return c.doRequestWithBody(ctx, http.MethodPost, uri, body, options, pswd)
 }
 
-func (c *Client) DoPatchRequest(ctx context.Context, uri string, body interface{}, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
+func (c *Client) DoPatchRequest(ctx context.Context, uri string, body any, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
 	return c.doRequestWithBody(ctx, http.MethodPatch, uri, body, options, pswd)
 }
 
-func (c *Client) doRequestWithBody(ctx context.Context, method string, uri string, body interface{}, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
+func (c *Client) doRequestWithBody(ctx context.Context, method string, uri string, body any, options *HTTPRequest, pswd string) (*HTTPResponse, error) {
 	if options == nil {
 		options = &HTTPRequest{}
 	}
@@ -1593,14 +1592,16 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 	for _, cookie := range options.Cookies {
 		req.AddCookie(cookie)
 	}
-	bearer := c.conf.ProjectID
+	bearer := c.Conf.ProjectID
 	if len(pswd) > 0 {
 		bearer = fmt.Sprintf("%s:%s", bearer, pswd)
 	}
-	// append auth management key if available
-	authKey := c.conf.AuthManagementKey
-	if len(authKey) > 0 {
-		bearer = fmt.Sprintf("%s:%s", bearer, authKey)
+	// append a management key if available
+	// this is true for both management and authentication requests
+	// only using the different provided keys in the client initialization
+	mgmtKey := c.Conf.ManagementKey
+	if len(mgmtKey) > 0 {
+		bearer = fmt.Sprintf("%s:%s", bearer, mgmtKey)
 	}
 	req.Header.Set(AuthorizationHeaderName, BearerAuthorizationPrefix+bearer)
 	c.addDescopeHeaders(req)
@@ -1691,7 +1692,7 @@ func (c *Client) addDescopeHeaders(req *http.Request) {
 	req.Header.Set("x-descope-sdk-version", c.sdkInfo.version)
 	req.Header.Set("x-descope-sdk-sha", c.sdkInfo.sha)
 	req.Header.Set("x-descope-sdk-uuid", instanceUUID)
-	req.Header.Set("x-descope-project-id", c.conf.ProjectID)
+	req.Header.Set("x-descope-project-id", c.Conf.ProjectID)
 }
 
 func getSDKInfo() *sdkInfo {

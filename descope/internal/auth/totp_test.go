@@ -23,7 +23,7 @@ func TestTOTPSignUp(t *testing.T) {
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
 		assert.EqualValues(t, loginID, body["loginId"])
-		assert.EqualValues(t, "test", body["user"].(map[string]interface{})["name"])
+		assert.EqualValues(t, "test", body["user"].(map[string]any)["name"])
 
 		resp := &descope.TOTPResponse{
 			ProvisioningURL: "someurl.com",
@@ -139,7 +139,7 @@ func TestTOTPVerifyLoginOptions(t *testing.T) {
 		require.NoError(t, err)
 		assert.EqualValues(t, loginID, body["loginId"])
 		assert.EqualValues(t, code, body["code"])
-		assert.EqualValues(t, map[string]interface{}{"stepup": true, "customClaims": map[string]interface{}{"k1": "v1"}}, body["loginOptions"])
+		assert.EqualValues(t, map[string]any{"stepup": true, "customClaims": map[string]any{"k1": "v1"}}, body["loginOptions"])
 		reqToken := r.Header.Get(api.AuthorizationHeaderName)
 		splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix)
 		require.Len(t, splitToken, 2)
@@ -160,7 +160,7 @@ func TestTOTPVerifyLoginOptions(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
 	})
 	require.NoError(t, err)
-	authInfo, err := a.TOTP().SignInCode(context.Background(), loginID, code, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"k1": "v1"}}, nil)
+	authInfo, err := a.TOTP().SignInCode(context.Background(), loginID, code, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]any{"k1": "v1"}}, nil)
 	require.NoError(t, err)
 	assert.NotNil(t, authInfo)
 	assert.True(t, authInfo.FirstSeen)

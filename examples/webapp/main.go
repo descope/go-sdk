@@ -535,7 +535,7 @@ func handleStepupLoginVerify(w http.ResponseWriter, r *http.Request) {
 
 func handleStepupStepup(w http.ResponseWriter, r *http.Request) {
 	method, loginID := getMethodAndLoginID(r)
-	masked, err := descopeClient.Auth.OTP().SignIn(r.Context(), method, loginID, r, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]interface{}{"demoKey": "demoValue"}})
+	masked, err := descopeClient.Auth.OTP().SignIn(r.Context(), method, loginID, r, &descope.LoginOptions{Stepup: true, CustomClaims: map[string]any{"demoKey": "demoValue"}})
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 	} else {

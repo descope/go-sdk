@@ -234,12 +234,12 @@ const (
 )
 
 type Token struct {
-	RefreshExpiration int64                  `json:"refreshExpiration,omitempty"`
-	Expiration        int64                  `json:"expiration,omitempty"`
-	JWT               string                 `json:"jwt,omitempty"`
-	ID                string                 `json:"id,omitempty"`
-	ProjectID         string                 `json:"projectId,omitempty"`
-	Claims            map[string]interface{} `json:"claims,omitempty"`
+	RefreshExpiration int64          `json:"refreshExpiration,omitempty"`
+	Expiration        int64          `json:"expiration,omitempty"`
+	JWT               string         `json:"jwt,omitempty"`
+	ID                string         `json:"id,omitempty"`
+	ProjectID         string         `json:"projectId,omitempty"`
+	Claims            map[string]any `json:"claims,omitempty"`
 }
 
 func (to *Token) GetTenants() []string {
@@ -308,7 +308,7 @@ func (to *Token) getTenants() map[string]any {
 	return make(map[string]any)
 }
 
-func (to *Token) CustomClaim(value string) interface{} {
+func (to *Token) CustomClaim(value string) any {
 	if to.Claims != nil {
 		return to.Claims[value]
 	}
@@ -322,7 +322,7 @@ func (to *Token) AuthFactors() []AuthFactor {
 	var afs []AuthFactor
 	factors, ok := to.Claims["amr"]
 	if ok {
-		factorsArr, ok := factors.([]interface{})
+		factorsArr, ok := factors.([]any)
 		if ok {
 			for i := range factorsArr {
 				af, ok := factorsArr[i].(string)
@@ -345,13 +345,13 @@ func (to *Token) IsMFA() bool {
 }
 
 type LoginOptions struct {
-	Stepup                   bool                   `json:"stepup,omitempty"`
-	MFA                      bool                   `json:"mfa,omitempty"`
-	RevokeOtherSessions      bool                   `json:"revokeOtherSessions,omitempty"`
-	RevokeOtherSessionsTypes []string               `json:"revokeOtherSessionsTypes,omitempty"`
-	CustomClaims             map[string]interface{} `json:"customClaims,omitempty"`
-	TemplateID               string                 `json:"templateId,omitempty"`      // for overriding the default messaging template
-	TemplateOptions          map[string]string      `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
+	Stepup                   bool              `json:"stepup,omitempty"`
+	MFA                      bool              `json:"mfa,omitempty"`
+	RevokeOtherSessions      bool              `json:"revokeOtherSessions,omitempty"`
+	RevokeOtherSessionsTypes []string          `json:"revokeOtherSessionsTypes,omitempty"`
+	CustomClaims             map[string]any    `json:"customClaims,omitempty"`
+	TemplateID               string            `json:"templateId,omitempty"`      // for overriding the default messaging template
+	TemplateOptions          map[string]string `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 }
 
 func (lo *LoginOptions) IsJWTRequired() bool {
@@ -359,13 +359,13 @@ func (lo *LoginOptions) IsJWTRequired() bool {
 }
 
 type AccessKeyLoginOptions struct {
-	CustomClaims map[string]interface{} `json:"customClaims,omitempty"`
+	CustomClaims map[string]any `json:"customClaims,omitempty"`
 }
 
 type SignUpOptions struct {
-	CustomClaims    map[string]interface{} `json:"customClaims,omitempty"`
-	TemplateID      string                 `json:"templateId,omitempty"`      // for overriding the default messaging template
-	TemplateOptions map[string]string      `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
+	CustomClaims    map[string]any    `json:"customClaims,omitempty"`
+	TemplateID      string            `json:"templateId,omitempty"`      // for overriding the default messaging template
+	TemplateOptions map[string]string `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 }
 
 type EmbeddedLinkLoginOptions struct {
@@ -964,7 +964,7 @@ type AuditRecord struct {
 	RemoteAddress string    `json:"remoteAddress,omitempty"`
 	LoginIDs      []string  `json:"loginIds,omitempty"`
 	Tenants       []string
-	Data          map[string]interface{} `json:"data,omitempty"`
+	Data          map[string]any `json:"data,omitempty"`
 }
 
 // AuditSearchOptions to filter which audits we should retrieve.
@@ -989,12 +989,12 @@ type AuditSearchOptions struct {
 }
 
 type AuditCreateOptions struct {
-	UserID   string                 `json:"userId,omitempty"`
-	Action   string                 `json:"action,omitempty"`
-	Type     string                 `json:"type,omitempty"` // info/warn/error
-	ActorID  string                 `json:"actorId,omitempty"`
-	Data     map[string]interface{} `json:"data,omitempty"`
-	TenantID string                 `json:"tenantId,omitempty"`
+	UserID   string         `json:"userId,omitempty"`
+	Action   string         `json:"action,omitempty"`
+	Type     string         `json:"type,omitempty"` // info/warn/error
+	ActorID  string         `json:"actorId,omitempty"`
+	Data     map[string]any `json:"data,omitempty"`
+	TenantID string         `json:"tenantId,omitempty"`
 }
 
 type AnalyticRecord struct {
@@ -1344,17 +1344,17 @@ func (c *ThirdPartyApplicationConsent) GetCreatedTime() time.Time {
 }
 
 type MgmSignUpOptions struct {
-	CustomClaims    map[string]interface{} `json:"customClaims,omitempty"`
-	RefreshDuration int32                  `json:"refreshDuration,omitempty"`
+	CustomClaims    map[string]any `json:"customClaims,omitempty"`
+	RefreshDuration int32          `json:"refreshDuration,omitempty"`
 }
 type MgmLoginOptions struct {
-	Stepup                   bool                   `json:"stepup,omitempty"`
-	MFA                      bool                   `json:"mfa,omitempty"`
-	RevokeOtherSessions      bool                   `json:"revokeOtherSessions,omitempty"`
-	RevokeOtherSessionsTypes []string               `json:"revokeOtherSessionsTypes,omitempty"`
-	CustomClaims             map[string]interface{} `json:"customClaims,omitempty"`
-	JWT                      string                 `json:"jwt,omitempty"`
-	RefreshDuration          int32                  `json:"refreshDuration,omitempty"`
+	Stepup                   bool           `json:"stepup,omitempty"`
+	MFA                      bool           `json:"mfa,omitempty"`
+	RevokeOtherSessions      bool           `json:"revokeOtherSessions,omitempty"`
+	RevokeOtherSessionsTypes []string       `json:"revokeOtherSessionsTypes,omitempty"`
+	CustomClaims             map[string]any `json:"customClaims,omitempty"`
+	JWT                      string         `json:"jwt,omitempty"`
+	RefreshDuration          int32          `json:"refreshDuration,omitempty"`
 }
 
 func (mlo *MgmLoginOptions) IsJWTRequired() bool {

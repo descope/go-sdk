@@ -32,6 +32,30 @@ descopeClient, err := client.New()
 descopeClient, err := client.NewWithConfig(&client.Config{ProjectID: projectID})
 ```
 
+### Auth Management Key
+
+It is possible to disable public access to any the Descope authentication method APIs via the
+the Descope console. In these cases, private access is still available by using an `Management Key`. This management
+key needs to have the correct access control, either `Authentication` or `Full Access`, for the project
+or the entire company. Create one in the [Descope Console](https://app.descope.com/settings/company/managementkeys),
+and provide it as the `AuthManagementKey` in the Descope client initialization (see below).
+
+**Note**: the authentication management key can, and probably should, be a different management key than
+the one provided for [management API usage](#setup-1).
+
+```go
+import "github.com/descope/go-sdk/descope/client"
+
+// Initialized after setting the DESCOPE_PROJECT_ID and the DESCOPE_AUTH_MANAGEMENT_KEY env vars
+descopeClient, err := client.New()
+
+// ** Or directly **
+descopeClient, err := client.NewWithConfig(&client.Config{
+    ProjectID: "project-ID",
+    AuthManagementKey: "auth-management-key",
+})
+```
+
 ## Usage
 
 ### Authentication Functions
@@ -738,7 +762,14 @@ descopeClient, err := client.New()
 // ** Or directly **
 descopeClient, err := client.NewWithConfig(&client.Config{
     ProjectID: "project-ID",
+
+	// ManagementKey is required to use any of the management functions
+	// It is not used to access authentication methods with disabled public access
     ManagementKey: "management-key",
+
+	// AuthManagementKey is required to access authentication methods with disabled public access
+	// It is not used to access any of the management functions
+	AuthManagementKey: "auth-management-key",
 })
 ```
 

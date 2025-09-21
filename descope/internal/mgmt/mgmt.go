@@ -9,9 +9,8 @@ import (
 )
 
 type ManagementParams struct {
-	ProjectID     string
-	ManagementKey string
-	FGACacheURL   string
+	ProjectID   string
+	FGACacheURL string
 }
 
 type managementBase struct {
@@ -157,7 +156,7 @@ func (mgmt *managementService) OutboundApplication() sdk.OutboundApplication {
 }
 
 func (mgmt *managementService) ensureManagementKey() {
-	if mgmt.conf.ManagementKey == "" {
+	if mgmt.client.Conf.ManagementKey == "" {
 		logger.LogInfo("Management key is missing, make sure to add it in the Config struct or the environment variable \"%s\"", descope.EnvironmentVariableManagementKey) // notest
 	}
 }

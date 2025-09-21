@@ -24,7 +24,7 @@ func (s *thirdPartyApplication) CreateApplication(ctx context.Context, appReques
 	}
 
 	req := makeCreateUpdateThirdPartyApplicationRequest(appRequest)
-	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationCreate(), req, nil, s.conf.ManagementKey)
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationCreate(), req, nil, "")
 	if err != nil {
 		return "", "", err
 	}
@@ -50,7 +50,7 @@ func (s *thirdPartyApplication) UpdateApplication(ctx context.Context, appReques
 	}
 
 	req := makeCreateUpdateThirdPartyApplicationRequest(appRequest)
-	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationUpdate(), req, nil, s.conf.ManagementKey)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationUpdate(), req, nil, "")
 	return err
 }
 
@@ -63,7 +63,7 @@ func (s *thirdPartyApplication) PatchApplication(ctx context.Context, appRequest
 	}
 
 	req := makeCreateUpdateThirdPartyApplicationRequest(appRequest)
-	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationPatch(), req, nil, s.conf.ManagementKey)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationPatch(), req, nil, "")
 	return err
 }
 
@@ -72,7 +72,7 @@ func (s *thirdPartyApplication) DeleteApplication(ctx context.Context, id string
 		return utils.NewInvalidArgumentError("id")
 	}
 	req := map[string]any{"id": id}
-	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationDelete(), req, nil, s.conf.ManagementKey)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationDelete(), req, nil, "")
 	return err
 }
 
@@ -83,7 +83,7 @@ func (s *thirdPartyApplication) LoadApplication(ctx context.Context, id string) 
 	req := &api.HTTPRequest{
 		QueryParams: map[string]string{"id": id},
 	}
-	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementThirdPartyApplicationLoad(), req, s.conf.ManagementKey)
+	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementThirdPartyApplicationLoad(), req, "")
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func (s *thirdPartyApplication) LoadApplication(ctx context.Context, id string) 
 }
 
 func (s *thirdPartyApplication) LoadAllApplications(ctx context.Context) ([]*descope.ThirdPartyApplication, error) {
-	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementThirdPartyApplicationLoadAll(), nil, s.conf.ManagementKey)
+	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementThirdPartyApplicationLoadAll(), nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -105,7 +105,7 @@ func (s *thirdPartyApplication) GetApplicationSecret(ctx context.Context, id str
 	req := &api.HTTPRequest{
 		QueryParams: map[string]string{"id": id},
 	}
-	httpRes, err := s.client.DoGetRequest(ctx, api.Routes.ManagementThirdPartyApplicationSecret(), req, s.conf.ManagementKey)
+	httpRes, err := s.client.DoGetRequest(ctx, api.Routes.ManagementThirdPartyApplicationSecret(), req, "")
 	if err != nil {
 		return "", err
 	}
@@ -123,7 +123,7 @@ func (s *thirdPartyApplication) RotateApplicationSecret(ctx context.Context, id 
 		return "", utils.NewInvalidArgumentError("id")
 	}
 	req := map[string]any{"id": id}
-	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationRotate(), req, nil, s.conf.ManagementKey)
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationRotate(), req, nil, "")
 	if err != nil {
 		return "", err
 	}
@@ -147,7 +147,7 @@ func (s *thirdPartyApplication) DeleteConsents(ctx context.Context, consentReque
 		"userIds":    consentRequest.UserIDs,
 		"tenantId":   consentRequest.TenantID,
 	}
-	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationDeleteConsent(), req, nil, s.conf.ManagementKey)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationDeleteConsent(), req, nil, "")
 	if err != nil {
 		return err
 	}
@@ -164,7 +164,7 @@ func (s *thirdPartyApplication) DeleteTenantConsents(ctx context.Context, consen
 		"appId":      consentRequest.AppID,
 		"tenantId":   consentRequest.TenantID,
 	}
-	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationDeleteTenantConsent(), req, nil, s.conf.ManagementKey)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationDeleteTenantConsent(), req, nil, "")
 	if err != nil {
 		return err
 	}
@@ -184,7 +184,7 @@ func (s *thirdPartyApplication) SearchConsents(ctx context.Context, consentReque
 		"limit":     consentRequest.Limit,
 		"tenantId":  consentRequest.TenantID,
 	}
-	res, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationSearchConsents(), req, nil, s.conf.ManagementKey)
+	res, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationSearchConsents(), req, nil, "")
 	if err != nil {
 		return nil, 0, err
 	}

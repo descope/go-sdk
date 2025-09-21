@@ -458,7 +458,7 @@ func TestUserPatchSuccess2(t *testing.T) {
 			"familyName":    "familyName1",
 			"email":         "foo@bar.com",
 			"verifiedEmail": true,
-			"customAttributes": map[string]interface{}{
+			"customAttributes": map[string]any{
 				"ca1": "cavalue1",
 			},
 			"ssoAppIds": []string{"app1", "app2"},
@@ -474,7 +474,7 @@ func TestUserPatchSuccess2(t *testing.T) {
 		require.Equal(t, "foo@bar.com", req["email"])
 		reqVerifiedEmail := req["verifiedEmail"].(bool)
 		require.True(t, reqVerifiedEmail)
-		require.EqualValues(t, map[string]interface{}{
+		require.EqualValues(t, map[string]any{
 			"ca1": "cavalue1",
 		}, req["customAttributes"])
 		ssoAppIDs := req["ssoAppIds"].([]any)
@@ -514,7 +514,7 @@ func TestUserPatchSuccess2(t *testing.T) {
 	patchedFamilyName := "familyName1"
 	patchedEmail := "foo@bar.com"
 	patchedVerifiedEmail := true
-	patchedCustomAttributes := map[string]interface{}{
+	patchedCustomAttributes := map[string]any{
 		"ca1": "cavalue1",
 	}
 	patchedTenants := []*descope.AssociatedTenant{
@@ -536,7 +536,7 @@ func TestUserPatchSuccess2(t *testing.T) {
 	require.Equal(t, "familyName1", res.FamilyName)
 	require.Equal(t, "foo@bar.com", res.Email)
 	require.True(t, res.VerifiedEmail)
-	require.EqualValues(t, map[string]interface{}{
+	require.EqualValues(t, map[string]any{
 		"ca1": "cavalue1",
 	}, res.CustomAttributes)
 	require.EqualValues(t, []string{"app1", "app2"}, res.SSOAppIDs)
@@ -759,7 +759,7 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 		require.EqualValues(t, []any{"a@b.com"}, req["emails"])
 		require.EqualValues(t, []any{"+11111111"}, req["phones"])
 		require.EqualValues(t, "blue", req["text"])
-		require.EqualValues(t, []interface{}([]interface{}{map[string]interface{}{"Desc": true, "Field": "nono"}, map[string]interface{}{"Desc": false, "Field": "lolo"}}), req["sort"])
+		require.EqualValues(t, []any([]any{map[string]any{"Desc": true, "Field": "nono"}, map[string]any{"Desc": false, "Field": "lolo"}}), req["sort"])
 		require.EqualValues(t, map[string]any{"tenant1": map[string]any{"values": []any{"id1", "id2"}}}, req["tenantRoleIds"])
 		require.EqualValues(t, map[string]any{"tenant2": map[string]any{"values": []any{"name1", "name2"}}}, req["tenantRoleNames"])
 	}, response))
@@ -1991,7 +1991,7 @@ func TestGenerateEmbeddedLink(t *testing.T) {
 		require.NotEmpty(t, req["customClaims"])
 		assert.EqualValues(t, 44, req["timeout"])
 
-	}, map[string]interface{}{"token": readyToken}))
+	}, map[string]any{"token": readyToken}))
 	token, err := mgmt.User().GenerateEmbeddedLink(context.Background(), loginID, map[string]any{"ak": "av"}, 44)
 	require.NoError(t, err)
 	require.EqualValues(t, readyToken, token)

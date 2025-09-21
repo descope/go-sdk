@@ -35,7 +35,7 @@ func (a *analytics) Search(ctx context.Context, options *descope.AnalyticsSearch
 		"groupByReferrer": options.GroupByReferrer,
 		"groupByCreated":  options.GroupByCreated,
 	}
-	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAnalyticsSearch(), body, nil, a.conf.ManagementKey)
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAnalyticsSearch(), body, nil, "")
 	if err != nil {
 		return nil, err
 	}
