@@ -176,6 +176,21 @@ func (u *user) Patch(ctx context.Context, loginIDOrUserID string, user *descope.
 	return unmarshalUserResponse(res)
 }
 
+func (u *user) PatchBatch(ctx context.Context, users []*descope.PatchUserBatchRequest) (*descope.UsersBatchResponse, error) {
+	if users == nil {
+		users = []*descope.PatchUserBatchRequest{} // notest
+	}
+	req, err := makePatchUsersBatchRequest(users)
+	if err != nil {
+		return nil, err
+	}
+	res, err := u.client.DoPatchRequest(ctx, api.Routes.ManagementUserPatchBatch(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalUserBatchResponse(res)
+}
+
 func (u *user) Delete(ctx context.Context, loginIDOrUserID string) error {
 	if loginIDOrUserID == "" {
 		return utils.NewInvalidArgumentError("loginIDOrUserID")
@@ -999,7 +1014,26 @@ func makePatchUserRequest(loginID string, req *descope.PatchUserRequest) map[str
 	if req.SCIM != nil {
 		res["scim"] = *req.SCIM
 	}
+	if req.Status != nil {
+		res["status"] = *req.Status
+	}
 	return res
+}
+
+func makePatchUsersBatchRequest(users []*descope.PatchUserBatchRequest) (map[string]any, error) {
+	usersReq := make([]map[string]any, 0)
+	for _, u := range users {
+		if u.PatchUserRequest == nil {
+			// notest
+			u.PatchUserRequest = &descope.PatchUserRequest{}
+		}
+		user := makePatchUserRequest(u.LoginID, u.PatchUserRequest)
+		usersReq = append(usersReq, user)
+	}
+	req := map[string]any{
+		"users": usersReq,
+	}
+	return req, nil
 }
 
 func makeUpdateUserTenantRequest(loginID, tenantID string) map[string]any {

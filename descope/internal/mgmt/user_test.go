@@ -542,6 +542,362 @@ func TestUserPatchSuccess2(t *testing.T) {
 	require.EqualValues(t, []string{"app1", "app2"}, res.SSOAppIDs)
 }
 
+func TestUserPatchBatchSuccess(t *testing.T) {
+	response := map[string]any{
+		"patchedUsers": []map[string]any{
+			{
+				"name":     "Updated Name 1",
+				"email":    "user1@example.com",
+				"userId":   "user-1-id",
+				"loginIds": []string{"user1@example.com"},
+			},
+			{
+				"name":     "Updated Name 2",
+				"phone":    "+1234567890",
+				"userId":   "user-2-id",
+				"loginIds": []string{"user2@example.com"},
+			},
+		},
+		"failedUsers":      []map[string]any{},
+		"additionalErrors": map[string]any{},
+	}
+
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.NotNil(t, r.URL)
+		require.Equal(t, "/v1/mgmt/user/patch/batch", r.URL.Path)
+		require.Equal(t, http.MethodPatch, r.Method)
+
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+
+		users := req["users"].([]any)
+		require.Len(t, users, 2)
+
+		// Check first user
+		user1 := users[0].(map[string]any)
+		require.Equal(t, "user1@example.com", user1["loginId"])
+		require.Equal(t, "Updated Name 1", user1["name"])
+		require.Equal(t, "user1-updated@example.com", user1["email"])
+
+		// Check second user
+		user2 := users[1].(map[string]any)
+		require.Equal(t, "user2@example.com", user2["loginId"])
+		require.Equal(t, "Updated Name 2", user2["name"])
+		require.Equal(t, "+1234567890", user2["phone"])
+	}, response))
+
+	// Prepare patch requests
+	name1 := "Updated Name 1"
+	email1 := "user1-updated@example.com"
+	name2 := "Updated Name 2"
+	phone2 := "+1234567890"
+
+	users := []*descope.PatchUserBatchRequest{
+		{
+			LoginID: "user1@example.com",
+			PatchUserRequest: &descope.PatchUserRequest{
+				Name:  &name1,
+				Email: &email1,
+			},
+		},
+		{
+			LoginID: "user2@example.com",
+			PatchUserRequest: &descope.PatchUserRequest{
+				Name:  &name2,
+				Phone: &phone2,
+			},
+		},
+	}
+
+	res, err := m.User().PatchBatch(context.Background(), users)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Len(t, res.PatchedUsers, 2)
+	require.Len(t, res.FailedUsers, 0)
+
+	// Check first patched user
+	require.Equal(t, "Updated Name 1", res.PatchedUsers[0].Name)
+	require.Equal(t, "user1@example.com", res.PatchedUsers[0].Email)
+	require.Equal(t, "user-1-id", res.PatchedUsers[0].UserID)
+
+	// Check second patched user
+	require.Equal(t, "Updated Name 2", res.PatchedUsers[1].Name)
+	require.Equal(t, "user-2-id", res.PatchedUsers[1].UserID)
+}
+
+func TestUserPatchBatchWithFailures(t *testing.T) {
+	response := map[string]any{
+		"patchedUsers": []map[string]any{
+			{
+				"name":     "Updated Name 1",
+				"email":    "user1@example.com",
+				"userId":   "user-1-id",
+				"loginIds": []string{"user1@example.com"},
+			},
+		},
+		"failedUsers": []map[string]any{
+			{
+				"failure": "User not found",
+				"user":    nil,
+			},
+		},
+		"additionalErrors": map[string]any{
+			"general": "Some users could not be processed",
+		},
+	}
+
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.Equal(t, "/v1/mgmt/user/patch/batch", r.URL.Path)
+
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+
+		users := req["users"].([]any)
+		require.Len(t, users, 2)
+	}, response))
+
+	// Prepare patch requests
+	name1 := "Updated Name 1"
+	email1 := "user1-updated@example.com"
+	name2 := "Updated Name 2"
+
+	users := []*descope.PatchUserBatchRequest{
+		{
+			LoginID: "user1@example.com",
+			PatchUserRequest: &descope.PatchUserRequest{
+				Name:  &name1,
+				Email: &email1,
+			},
+		},
+		{
+			LoginID: "nonexistent@example.com",
+			PatchUserRequest: &descope.PatchUserRequest{
+				Name: &name2,
+			},
+		},
+	}
+
+	res, err := m.User().PatchBatch(context.Background(), users)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Len(t, res.PatchedUsers, 1)
+	require.Len(t, res.FailedUsers, 1)
+
+	// Check successful user
+	require.Equal(t, "Updated Name 1", res.PatchedUsers[0].Name)
+	require.Equal(t, "user-1-id", res.PatchedUsers[0].UserID)
+
+	// Check failed user
+	require.Equal(t, "User not found", res.FailedUsers[0].Failure)
+	require.Nil(t, res.FailedUsers[0].User)
+
+	// Check additional errors
+	require.Contains(t, res.AdditionalErrors, "general")
+	require.Equal(t, "Some users could not be processed", res.AdditionalErrors["general"])
+}
+
+func TestUserPatchBatchEmptyUsers(t *testing.T) {
+	response := map[string]any{
+		"patchedUsers":     []map[string]any{},
+		"failedUsers":      []map[string]any{},
+		"additionalErrors": map[string]any{},
+	}
+
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.Equal(t, "/v1/mgmt/user/patch/batch", r.URL.Path)
+
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+
+		users := req["users"].([]any)
+		require.Len(t, users, 0)
+	}, response))
+
+	users := []*descope.PatchUserBatchRequest{}
+
+	res, err := m.User().PatchBatch(context.Background(), users)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Len(t, res.PatchedUsers, 0)
+	require.Len(t, res.FailedUsers, 0)
+}
+
+func TestUserPatchBatchNilUsers(t *testing.T) {
+	response := map[string]any{
+		"patchedUsers":     []map[string]any{},
+		"failedUsers":      []map[string]any{},
+		"additionalErrors": map[string]any{},
+	}
+
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.Equal(t, "/v1/mgmt/user/patch/batch", r.URL.Path)
+
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+
+		users := req["users"].([]any)
+		require.Len(t, users, 0)
+	}, response))
+
+	res, err := m.User().PatchBatch(context.Background(), nil)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Len(t, res.PatchedUsers, 0)
+	require.Len(t, res.FailedUsers, 0)
+}
+
+func TestUserPatchBatchWithComplexData(t *testing.T) {
+	response := map[string]any{
+		"patchedUsers": []map[string]any{
+			{
+				"name":       "Complex User",
+				"givenName":  "Complex",
+				"familyName": "User",
+				"email":      "complex@example.com",
+				"phone":      "+1-555-0123",
+				"userId":     "complex-user-id",
+				"loginIds":   []string{"complex@example.com"},
+				"roleNames":  []string{"admin", "user"},
+				"ssoAppIds":  []string{"app1", "app2"},
+				"scim":       true,
+				"status":     "invited",
+				"customAttributes": map[string]any{
+					"department": "Engineering",
+					"level":      "senior",
+				},
+				"userTenants": []map[string]any{
+					{
+						"tenantId":  "tenant1",
+						"roleNames": []string{"admin"},
+					},
+					{
+						"tenantId":  "tenant2",
+						"roleNames": []string{"user"},
+					},
+				},
+			},
+		},
+		"failedUsers":      []map[string]any{},
+		"additionalErrors": map[string]any{},
+	}
+
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.Equal(t, "/v1/mgmt/user/patch/batch", r.URL.Path)
+
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+
+		users := req["users"].([]any)
+		require.Len(t, users, 1)
+
+		user := users[0].(map[string]any)
+		require.Equal(t, "complex@example.com", user["loginId"])
+		require.Equal(t, "Complex User", user["name"])
+		require.Equal(t, "Complex", user["givenName"])
+		require.Equal(t, "User", user["familyName"])
+		require.Equal(t, "complex@example.com", user["email"])
+		require.Equal(t, "+1-555-0123", user["phone"])
+		require.Equal(t, "invited", user["status"])
+		require.True(t, user["scim"].(bool))
+
+		roles := user["roleNames"].([]any)
+		require.EqualValues(t, []any{"admin", "user"}, roles)
+
+		ssoAppIDs := user["ssoAppIds"].([]any)
+		require.EqualValues(t, []any{"app1", "app2"}, ssoAppIDs)
+
+		customAttrs := user["customAttributes"].(map[string]any)
+		require.Equal(t, "Engineering", customAttrs["department"])
+		require.Equal(t, "senior", customAttrs["level"])
+
+		tenants := user["userTenants"].([]any)
+		require.Len(t, tenants, 2)
+	}, response))
+
+	// Prepare complex patch request
+	name := "Complex User"
+	givenName := "Complex"
+	familyName := "User"
+	email := "complex@example.com"
+	phone := "+1-555-0123"
+	scim := true
+	status := descope.UserStatus("invited")
+	roles := []string{"admin", "user"}
+	ssoAppIDs := []string{"app1", "app2"}
+	customAttrs := map[string]any{
+		"department": "Engineering",
+		"level":      "senior",
+	}
+	tenants := []*descope.AssociatedTenant{
+		{TenantID: "tenant1", Roles: []string{"admin"}},
+		{TenantID: "tenant2", Roles: []string{"user"}},
+	}
+
+	users := []*descope.PatchUserBatchRequest{
+		{
+			LoginID: "complex@example.com",
+			PatchUserRequest: &descope.PatchUserRequest{
+				Name:             &name,
+				GivenName:        &givenName,
+				FamilyName:       &familyName,
+				Email:            &email,
+				Phone:            &phone,
+				SCIM:             &scim,
+				Roles:            &roles,
+				SSOAppIDs:        &ssoAppIDs,
+				CustomAttributes: customAttrs,
+				Tenants:          &tenants,
+				Status:           &status,
+			},
+		},
+	}
+
+	res, err := m.User().PatchBatch(context.Background(), users)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Len(t, res.PatchedUsers, 1)
+	require.Len(t, res.FailedUsers, 0)
+
+	user := res.PatchedUsers[0]
+	require.Equal(t, "Complex User", user.Name)
+	require.Equal(t, "Complex", user.GivenName)
+	require.Equal(t, "User", user.FamilyName)
+	require.Equal(t, "complex@example.com", user.Email)
+	require.Equal(t, "complex-user-id", user.UserID)
+	require.Equal(t, "invited", user.Status)
+	require.True(t, user.SCIM)
+	require.EqualValues(t, []string{"admin", "user"}, user.RoleNames)
+	require.EqualValues(t, []string{"app1", "app2"}, user.SSOAppIDs)
+	require.Equal(t, "Engineering", user.CustomAttributes["department"])
+	require.Equal(t, "senior", user.CustomAttributes["level"])
+}
+
+func TestUserPatchBatchError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.Equal(t, "/v1/mgmt/user/patch/batch", r.URL.Path)
+	}))
+
+	name := "Updated Name"
+	users := []*descope.PatchUserBatchRequest{
+		{
+			LoginID: "user@example.com",
+			PatchUserRequest: &descope.PatchUserRequest{
+				Name: &name,
+			},
+		},
+	}
+
+	res, err := m.User().PatchBatch(context.Background(), users)
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
 func TestUserDeleteSuccess(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")

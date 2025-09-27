@@ -206,6 +206,12 @@ type User interface {
 	// Only the fields that are set in the request will be updated.
 	Patch(ctx context.Context, loginIDOrUserID string, user *descope.PatchUserRequest) (*descope.UserResponse, error)
 
+	// Patches users in batch.
+	//
+	// Only the fields that are set in each request will be updated.
+	// Similar to CreateBatch, this function allows batching multiple patch operations.
+	PatchBatch(ctx context.Context, users []*descope.PatchUserBatchRequest) (*descope.UsersBatchResponse, error)
+
 	// Delete an existing user.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.

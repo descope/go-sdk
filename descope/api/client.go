@@ -109,6 +109,7 @@ var (
 			userCreateBatch:                          "mgmt/user/create/batch",
 			userUpdate:                               "mgmt/user/update",
 			userPatch:                                "mgmt/user/patch",
+			userPatchBatch:                           "mgmt/user/patch/batch",
 			userDelete:                               "mgmt/user/delete",
 			userDeleteAllTestUsers:                   "mgmt/user/test/delete/all",
 			userImport:                               "mgmt/user/import",
@@ -353,6 +354,7 @@ type mgmtEndpoints struct {
 	userCreateBatch           string
 	userUpdate                string
 	userPatch                 string
+	userPatchBatch            string
 	userDelete                string
 	userDeleteAllTestUsers    string
 	userImport                string
@@ -823,6 +825,9 @@ func (e *endpoints) ManagementUserUpdate() string {
 
 func (e *endpoints) ManagementUserPatch() string {
 	return path.Join(e.version, e.mgmt.userPatch)
+}
+func (e *endpoints) ManagementUserPatchBatch() string {
+	return path.Join(e.version, e.mgmt.userPatchBatch)
 }
 
 func (e *endpoints) ManagementUserDelete() string {
