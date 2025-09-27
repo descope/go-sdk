@@ -764,6 +764,7 @@ func TestUserPatchBatchWithComplexData(t *testing.T) {
 				"roleNames":  []string{"admin", "user"},
 				"ssoAppIds":  []string{"app1", "app2"},
 				"scim":       true,
+				"status":     "invited",
 				"customAttributes": map[string]any{
 					"department": "Engineering",
 					"level":      "senior",
@@ -801,6 +802,7 @@ func TestUserPatchBatchWithComplexData(t *testing.T) {
 		require.Equal(t, "User", user["familyName"])
 		require.Equal(t, "complex@example.com", user["email"])
 		require.Equal(t, "+1-555-0123", user["phone"])
+		require.Equal(t, "invited", user["status"])
 		require.True(t, user["scim"].(bool))
 
 		roles := user["roleNames"].([]any)
@@ -824,6 +826,7 @@ func TestUserPatchBatchWithComplexData(t *testing.T) {
 	email := "complex@example.com"
 	phone := "+1-555-0123"
 	scim := true
+	status := descope.UserStatus("invited")
 	roles := []string{"admin", "user"}
 	ssoAppIDs := []string{"app1", "app2"}
 	customAttrs := map[string]any{
@@ -849,6 +852,7 @@ func TestUserPatchBatchWithComplexData(t *testing.T) {
 				SSOAppIDs:        &ssoAppIDs,
 				CustomAttributes: customAttrs,
 				Tenants:          &tenants,
+				Status:           &status,
 			},
 		},
 	}
@@ -865,6 +869,7 @@ func TestUserPatchBatchWithComplexData(t *testing.T) {
 	require.Equal(t, "User", user.FamilyName)
 	require.Equal(t, "complex@example.com", user.Email)
 	require.Equal(t, "complex-user-id", user.UserID)
+	require.Equal(t, "invited", user.Status)
 	require.True(t, user.SCIM)
 	require.EqualValues(t, []string{"admin", "user"}, user.RoleNames)
 	require.EqualValues(t, []string{"app1", "app2"}, user.SSOAppIDs)

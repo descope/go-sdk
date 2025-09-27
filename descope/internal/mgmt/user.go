@@ -1024,6 +1024,7 @@ func makePatchUsersBatchRequest(users []*descope.PatchUserBatchRequest) (map[str
 	usersReq := make([]map[string]any, 0)
 	for _, u := range users {
 		if u.PatchUserRequest == nil {
+			// notest
 			u.PatchUserRequest = &descope.PatchUserRequest{}
 		}
 		user := makePatchUserRequest(u.LoginID, u.PatchUserRequest)
