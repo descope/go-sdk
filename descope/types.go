@@ -475,6 +475,12 @@ type PatchUserRequest struct {
 	VerifiedPhone    *bool                `json:"verifiedPhone,omitempty"`
 	SSOAppIDs        *[]string            `json:"ssoAppIds,omitempty"`
 	SCIM             *bool                `json:"scim,omitempty"`
+	Status           *UserStatus          `json:"status,omitempty"`
+}
+
+type PatchUserBatchRequest struct {
+	LoginID string `json:"loginId,omitempty"`
+	*PatchUserRequest `json:",inline"`
 }
 
 type BatchUser struct {
@@ -598,6 +604,7 @@ type UsersFailedResponse struct {
 
 type UsersBatchResponse struct {
 	CreatedUsers     []*UserResponse        `json:"createdUsers,omitempty"`
+	PatchedUsers     []*UserResponse        `json:"patchedUsers,omitempty"`
 	FailedUsers      []*UsersFailedResponse `json:"failedUsers,omitempty"`
 	AdditionalErrors map[string]string      `json:"additionalErrors,omitempty"`
 }

@@ -364,6 +364,10 @@ type MockUser struct {
 	PatchResponse *descope.UserResponse
 	PatchError    error
 
+	PatchBatchAssert   func(users []*descope.PatchUserBatchRequest)
+	PatchBatchResponse *descope.UsersBatchResponse
+	PatchBatchError    error
+
 	DeleteAssert func(loginID string)
 	DeleteError  error
 
@@ -571,6 +575,13 @@ func (m *MockUser) Patch(_ context.Context, loginID string, user *descope.PatchU
 		m.PatchAssert(loginID, user)
 	}
 	return m.PatchResponse, m.PatchError
+}
+
+func (m *MockUser) PatchBatch(_ context.Context, users []*descope.PatchUserBatchRequest) (*descope.UsersBatchResponse, error) {
+	if m.PatchBatchAssert != nil {
+		m.PatchBatchAssert(users)
+	}
+	return m.PatchBatchResponse, m.PatchBatchError
 }
 
 func (m *MockUser) Delete(_ context.Context, loginID string) error {
