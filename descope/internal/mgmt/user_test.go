@@ -558,7 +558,7 @@ func TestUserPatchBatchSuccess(t *testing.T) {
 				"loginIds": []string{"user2@example.com"},
 			},
 		},
-		"failedUsers": []map[string]any{},
+		"failedUsers":      []map[string]any{},
 		"additionalErrors": map[string]any{},
 	}
 
@@ -754,16 +754,16 @@ func TestUserPatchBatchWithComplexData(t *testing.T) {
 	response := map[string]any{
 		"patchedUsers": []map[string]any{
 			{
-				"name":        "Complex User",
-				"givenName":   "Complex",
-				"familyName":  "User",
-				"email":       "complex@example.com",
-				"phone":       "+1-555-0123",
-				"userId":      "complex-user-id",
-				"loginIds":    []string{"complex@example.com"},
-				"roleNames":   []string{"admin", "user"},
-				"ssoAppIds":   []string{"app1", "app2"},
-				"scim":        true,
+				"name":       "Complex User",
+				"givenName":  "Complex",
+				"familyName": "User",
+				"email":      "complex@example.com",
+				"phone":      "+1-555-0123",
+				"userId":     "complex-user-id",
+				"loginIds":   []string{"complex@example.com"},
+				"roleNames":  []string{"admin", "user"},
+				"ssoAppIds":  []string{"app1", "app2"},
+				"scim":       true,
 				"customAttributes": map[string]any{
 					"department": "Engineering",
 					"level":      "senior",
@@ -806,8 +806,8 @@ func TestUserPatchBatchWithComplexData(t *testing.T) {
 		roles := user["roleNames"].([]any)
 		require.EqualValues(t, []any{"admin", "user"}, roles)
 
-		ssoAppIds := user["ssoAppIds"].([]any)
-		require.EqualValues(t, []any{"app1", "app2"}, ssoAppIds)
+		ssoAppIDs := user["ssoAppIds"].([]any)
+		require.EqualValues(t, []any{"app1", "app2"}, ssoAppIDs)
 
 		customAttrs := user["customAttributes"].(map[string]any)
 		require.Equal(t, "Engineering", customAttrs["department"])
@@ -825,7 +825,7 @@ func TestUserPatchBatchWithComplexData(t *testing.T) {
 	phone := "+1-555-0123"
 	scim := true
 	roles := []string{"admin", "user"}
-	ssoAppIds := []string{"app1", "app2"}
+	ssoAppIDs := []string{"app1", "app2"}
 	customAttrs := map[string]any{
 		"department": "Engineering",
 		"level":      "senior",
@@ -846,7 +846,7 @@ func TestUserPatchBatchWithComplexData(t *testing.T) {
 				Phone:            &phone,
 				SCIM:             &scim,
 				Roles:            &roles,
-				SSOAppIDs:        &ssoAppIds,
+				SSOAppIDs:        &ssoAppIDs,
 				CustomAttributes: customAttrs,
 				Tenants:          &tenants,
 			},

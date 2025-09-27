@@ -479,7 +479,7 @@ type PatchUserRequest struct {
 }
 
 type PatchUserBatchRequest struct {
-	LoginID string `json:"loginId,omitempty"`
+	LoginID           string `json:"loginId,omitempty"`
 	*PatchUserRequest `json:",inline"`
 }
 
