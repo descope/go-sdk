@@ -1707,7 +1707,7 @@ func getSDKInfo() *sdkInfo {
 	}
 	if bi, ok := debug.ReadBuildInfo(); ok && bi != nil {
 		for _, dep := range bi.Deps { // notest
-			if strings.HasPrefix(dep.Path, "github.com/descope/go-sdk/descope") {
+			if strings.HasPrefix(dep.Path, "github.com/descope/go-sdk/descope") && len(dep.Version) > 0 {
 				sdkInfo.version = dep.Version
 				sdkInfo.sha = dep.Sum
 				break
