@@ -359,7 +359,8 @@ func (lo *LoginOptions) IsJWTRequired() bool {
 }
 
 type AccessKeyLoginOptions struct {
-	CustomClaims map[string]any `json:"customClaims,omitempty"`
+	CustomClaims   map[string]any `json:"customClaims,omitempty"`
+	SelectedTenant string         `json:"selectedTenant,omitempty"`
 }
 
 type SignUpOptions struct {
