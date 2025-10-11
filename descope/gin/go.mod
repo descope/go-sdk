@@ -6,7 +6,7 @@ replace github.com/descope/go-sdk => ../../
 
 require (
 	github.com/descope/go-sdk v1.6.19
-	github.com/gin-gonic/gin v1.10.1
+	github.com/gin-gonic/gin v1.11.0
 )
 
 require (
