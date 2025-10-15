@@ -95,6 +95,7 @@ var (
 			tenantLoadAll:                            "mgmt/tenant/all",
 			tenantSearchAll:                          "mgmt/tenant/search",
 			tenantSettings:                           "mgmt/tenant/settings",
+			tenantUpdateDefaultRoles:                 "mgmt/tenant/updateDefaultRoles",
 			tenantGenerateSSOConfigurationLink:       "mgmt/tenant/adminlinks/sso/generate",
 			tenantRevokeSSOConfigurationLink:         "mgmt/tenant/adminlinks/sso/revoke",
 			ssoApplicationOIDCCreate:                 "mgmt/sso/idp/app/oidc/create",
@@ -330,13 +331,14 @@ type authEndpoints struct {
 }
 
 type mgmtEndpoints struct {
-	tenantCreate    string
-	tenantUpdate    string
-	tenantDelete    string
-	tenantLoad      string
-	tenantLoadAll   string
-	tenantSearchAll string
-	tenantSettings  string
+	tenantCreate             string
+	tenantUpdate             string
+	tenantDelete             string
+	tenantLoad               string
+	tenantLoadAll            string
+	tenantSearchAll          string
+	tenantSettings           string
+	tenantUpdateDefaultRoles string
 
 	tenantGenerateSSOConfigurationLink string
 	tenantRevokeSSOConfigurationLink   string
@@ -769,6 +771,10 @@ func (e *endpoints) ManagementTenantSearchAll() string {
 
 func (e *endpoints) ManagementTenantSettings() string {
 	return path.Join(e.version, e.mgmt.tenantSettings)
+}
+
+func (e *endpoints) ManagementTenantUpdateDefaultRoles() string {
+	return path.Join(e.version, e.mgmt.tenantUpdateDefaultRoles)
 }
 
 func (e *endpoints) ManagementTenantGenerateSSOConfigurationLink() string {
