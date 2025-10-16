@@ -49,3 +49,4 @@ __debug_bin
 
 !.vscode/launch.json.default
 **/__debug_bin*
+lcov.info

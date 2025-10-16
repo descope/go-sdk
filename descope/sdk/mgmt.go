@@ -68,6 +68,9 @@ type Tenant interface {
 	// Revoke tenant admin self service SSO configuration link
 	// ssoID - Optional, in case provided, the specified sso configuration will be used
 	RevokeSSOConfigurationLink(ctx context.Context, tenantID string, ssoID string) error
+
+	// Update project roles used as tenant default roles.
+	UpdateDefaultRoles(ctx context.Context, tenantID string, defaultRoles []string) error
 }
 
 // Provides functions for managing SSO applications in a project.

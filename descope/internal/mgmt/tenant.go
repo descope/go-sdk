@@ -181,6 +181,18 @@ func (t *tenant) RevokeSSOConfigurationLink(ctx context.Context, tenantID string
 	return err
 }
 
+func (t *tenant) UpdateDefaultRoles(ctx context.Context, tenantID string, defaultRoles []string) error {
+	if tenantID == "" {
+		return utils.NewInvalidArgumentError("tenantID")
+	}
+	req := map[string]any{
+		"id":           tenantID,
+		"defaultRoles": defaultRoles,
+	}
+	_, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantUpdateDefaultRoles(), req, nil, "")
+	return err
+}
+
 func makeCreateUpdateTenantRequest(id string, tenantRequest *descope.TenantRequest, includeSubTenants bool) map[string]any {
 	res := map[string]any{
 		"id":                      id,
