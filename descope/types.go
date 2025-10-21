@@ -591,11 +591,12 @@ type TenantsResponse struct {
 }
 
 type UserHistoryResponse struct {
-	UserID    string `json:"userId,omitempty"`
-	LoginTime int32  `json:"loginTime,omitempty"`
-	City      string `json:"city,omitempty"`
-	Country   string `json:"country,omitempty"`
-	IP        string `json:"ip,omitempty"`
+	UserID         string `json:"userId,omitempty"`
+	LoginTime      int32  `json:"loginTime,omitempty"`
+	City           string `json:"city,omitempty"`
+	Country        string `json:"country,omitempty"`
+	IP             string `json:"ip,omitempty"`
+	SelectedTenant string `json:"selectedTenant,omitempty"`
 }
 
 type UsersFailedResponse struct {
