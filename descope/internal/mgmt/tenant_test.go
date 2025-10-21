@@ -413,3 +413,35 @@ func TestTenantRevokeSSOConfigurationLinkNoTenantID(t *testing.T) {
 	err := mgmt.Tenant().RevokeSSOConfigurationLink(context.Background(), "", "")
 	require.ErrorIs(t, err, utils.NewInvalidArgumentError("tenantId"))
 }
+
+func TestTenantUpdateDefaultRolesSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "tenant", req["id"])
+		roles := req["defaultRoles"].([]any)
+		require.Len(t, roles, 2)
+		require.Equal(t, "Role1", roles[0])
+		require.Equal(t, "Role2", roles[1])
+	}))
+	err := mgmt.Tenant().UpdateDefaultRoles(context.Background(), "tenant", []string{"Role1", "Role2"})
+	require.NoError(t, err)
+}
+
+func TestTenantUpdateDefaultRolesError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "tenant", req["id"])
+	}))
+	err := mgmt.Tenant().UpdateDefaultRoles(context.Background(), "tenant", []string{"Role1"})
+	require.Error(t, err)
+}
+
+func TestTenantUpdateDefaultRolesNoTenantID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.Tenant().UpdateDefaultRoles(context.Background(), "", []string{"Role1"})
+	require.ErrorIs(t, err, utils.NewInvalidArgumentError("tenantId"))
+}

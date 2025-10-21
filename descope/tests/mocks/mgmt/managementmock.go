@@ -1030,6 +1030,9 @@ type MockTenant struct {
 
 	RevokeSSOConfigurationLinkAssert func(tenantID string, ssoID string)
 	RevokeSSOConfigurationLinkError  error
+
+	UpdateDefaultRolesAssert func(tenantID string, defaultRoles []string)
+	UpdateDefaultRolesError  error
 }
 
 func (m *MockTenant) Create(_ context.Context, tenantRequest *descope.TenantRequest) (id string, err error) {
@@ -1101,6 +1104,13 @@ func (m *MockTenant) RevokeSSOConfigurationLink(_ context.Context, tenantID stri
 		m.RevokeSSOConfigurationLinkAssert(tenantID, ssoID)
 	}
 	return m.RevokeSSOConfigurationLinkError
+}
+
+func (m *MockTenant) UpdateDefaultRoles(_ context.Context, tenantID string, defaultRoles []string) error {
+	if m.UpdateDefaultRolesAssert != nil {
+		m.UpdateDefaultRolesAssert(tenantID, defaultRoles)
+	}
+	return m.UpdateDefaultRolesError
 }
 
 // Mock SSOApplication
