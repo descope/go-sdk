@@ -200,6 +200,7 @@ func makeCreateUpdateTenantRequest(id string, tenantRequest *descope.TenantReque
 		"selfProvisioningDomains": tenantRequest.SelfProvisioningDomains,
 		"customAttributes":        tenantRequest.CustomAttributes,
 		"enforceSSO":              tenantRequest.EnforceSSO,
+		"enforceSSOExclusions":    tenantRequest.EnforceSSOExclusions,
 		"disabled":                tenantRequest.Disabled,
 	}
 	if includeSubTenants && len(tenantRequest.ParentTenantID) > 0 {

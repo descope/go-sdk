@@ -28,10 +28,11 @@ func TestTenantCreateSuccess(t *testing.T) {
 		customAttributes := req["customAttributes"].(map[string]any)
 		assert.EqualValues(t, map[string]any{"k1": "v1"}, customAttributes)
 		require.True(t, req["enforceSSO"].(bool))
+		require.EqualValues(t, []any{"aaaa"}, req["enforceSSOExclusions"].([]any))
 		require.True(t, req["disabled"].(bool))
 	}, response))
 
-	id, err := mgmt.Tenant().Create(context.Background(), &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}, Disabled: true, EnforceSSO: true, ParentTenantID: "pid"})
+	id, err := mgmt.Tenant().Create(context.Background(), &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}, Disabled: true, EnforceSSO: true, ParentTenantID: "pid", EnforceSSOExclusions: []string{"aaaa"}})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)
 }
@@ -84,9 +85,10 @@ func TestTenantUpdateSuccess(t *testing.T) {
 		customAttributes := req["customAttributes"].(map[string]any)
 		assert.EqualValues(t, map[string]any{"k1": "v1"}, customAttributes)
 		require.True(t, req["enforceSSO"].(bool))
+		require.EqualValues(t, []any{"aaaa"}, req["enforceSSOExclusions"].([]any))
 		require.True(t, req["disabled"].(bool))
 	}))
-	err := mgmt.Tenant().Update(context.Background(), "123", &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}, Disabled: true, EnforceSSO: true})
+	err := mgmt.Tenant().Update(context.Background(), "123", &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}, Disabled: true, EnforceSSO: true, EnforceSSOExclusions: []string{"aaaa"}})
 	require.NoError(t, err)
 }
 
