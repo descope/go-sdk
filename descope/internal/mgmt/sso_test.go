@@ -1217,6 +1217,76 @@ func TestSSOConfigureOIDCSettingsWithSSOIDSuccess(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestSSOConfigureSAMLSettingsWithConfigFGAMappingResourceIDSuccess(t *testing.T) {
+	settings := &descope.SSOSAMLSettings{
+		IdpURL:      "http://idpURL",
+		IdpEntityID: "entity",
+		IdpCert:     "mycert",
+		AttributeMapping: &descope.AttributeMapping{
+			GivenName: "myGivenName",
+		},
+		ConfigFGATenantIDResourcePrefix: "prefix_",
+		ConfigFGATenantIDResourceSuffix: "_suffix",
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["tenantId"])
+		require.Equal(t, "https://redirect", req["redirectUrl"])
+
+		settings, found := req["settings"]
+		require.True(t, found)
+		sett, ok := settings.(map[string]any)
+		require.True(t, ok)
+		require.Equal(t, "http://idpURL", sett["idpUrl"])
+		require.Equal(t, "mycert", sett["idpCert"])
+		require.Equal(t, "entity", sett["entityId"])
+
+		configFGATenantIDResourcePrefix, found := sett["configFGATenantIDResourcePrefix"]
+		require.True(t, found)
+		require.Equal(t, "prefix_", configFGATenantIDResourcePrefix)
+		configFGATenantIDResourceSuffix, found := sett["configFGATenantIDResourceSuffix"]
+		require.True(t, found)
+		require.Equal(t, "_suffix", configFGATenantIDResourceSuffix)
+	}))
+	err := mgmt.SSO().ConfigureSAMLSettings(context.Background(), "abc", settings, "https://redirect", []string{"domain.com"}, "")
+	require.NoError(t, err)
+}
+
+func TestSSOConfigureSAMLSettingsByMetadataWithConfigFGAMappingResourceIDSuccess(t *testing.T) {
+	settings := &descope.SSOSAMLSettingsByMetadata{
+		IdpMetadataURL: "http://idpURL",
+		AttributeMapping: &descope.AttributeMapping{
+			GivenName: "myGivenName",
+		},
+		ConfigFGATenantIDResourcePrefix: "tenant_",
+		ConfigFGATenantIDResourceSuffix: "_prod",
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["tenantId"])
+		require.Equal(t, "https://redirect", req["redirectUrl"])
+
+		settings, found := req["settings"]
+		require.True(t, found)
+		sett, ok := settings.(map[string]any)
+		require.True(t, ok)
+		require.Equal(t, "http://idpURL", sett["idpMetadataUrl"])
+
+		configFGATenantIDResourcePrefix, found := sett["configFGATenantIDResourcePrefix"]
+		require.True(t, found)
+		require.Equal(t, "tenant_", configFGATenantIDResourcePrefix)
+		configFGATenantIDResourceSuffix, found := sett["configFGATenantIDResourceSuffix"]
+		require.True(t, found)
+		require.Equal(t, "_prod", configFGATenantIDResourceSuffix)
+	}))
+	err := mgmt.SSO().ConfigureSAMLSettingsByMetadata(context.Background(), "abc", settings, "https://redirect", []string{"domain.com"}, "")
+	require.NoError(t, err)
+}
+
 func TestSSOConfigureOIDCSettingsError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
 	err := mgmt.SSO().ConfigureOIDCSettings(context.Background(), "", nil, []string{}, "")

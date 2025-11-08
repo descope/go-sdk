@@ -132,13 +132,15 @@ type SSOSAMLSettingsResponse struct {
 }
 
 type SSOSAMLSettings struct {
-	IdpURL           string                      `json:"idpUrl,omitempty"`
-	IdpEntityID      string                      `json:"entityId,omitempty"`
-	IdpCert          string                      `json:"idpCert,omitempty"`
-	AttributeMapping *AttributeMapping           `json:"attributeMapping,omitempty"`
-	RoleMappings     []*RoleMapping              `json:"roleMappings,omitempty"`
-	DefaultSSORoles  []string                    `json:"defaultSSORoles,omitempty"` // roles names
-	FgaMappings      map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
+	IdpURL                          string                      `json:"idpUrl,omitempty"`
+	IdpEntityID                     string                      `json:"entityId,omitempty"`
+	IdpCert                         string                      `json:"idpCert,omitempty"`
+	AttributeMapping                *AttributeMapping           `json:"attributeMapping,omitempty"`
+	RoleMappings                    []*RoleMapping              `json:"roleMappings,omitempty"`
+	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"` // roles names
+	FgaMappings                     map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
+	ConfigFGATenantIDResourcePrefix string                      `json:"configFGATenantIDResourcePrefix,omitempty"`
+	ConfigFGATenantIDResourceSuffix string                      `json:"configFGATenantIDResourceSuffix,omitempty"`
 
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
 	SpACSUrl   string `json:"spACSUrl,omitempty"`
@@ -146,11 +148,13 @@ type SSOSAMLSettings struct {
 }
 
 type SSOSAMLSettingsByMetadata struct {
-	IdpMetadataURL   string                      `json:"idpMetadataUrl,omitempty"`
-	AttributeMapping *AttributeMapping           `json:"attributeMapping,omitempty"`
-	RoleMappings     []*RoleMapping              `json:"roleMappings,omitempty"`
-	DefaultSSORoles  []string                    `json:"defaultSSORoles,omitempty"` // roles names
-	FgaMappings      map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
+	IdpMetadataURL                  string                      `json:"idpMetadataUrl,omitempty"`
+	AttributeMapping                *AttributeMapping           `json:"attributeMapping,omitempty"`
+	RoleMappings                    []*RoleMapping              `json:"roleMappings,omitempty"`
+	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"` // roles names
+	FgaMappings                     map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
+	ConfigFGATenantIDResourcePrefix string                      `json:"configFGATenantIDResourcePrefix,omitempty"`
+	ConfigFGATenantIDResourceSuffix string                      `json:"configFGATenantIDResourceSuffix,omitempty"`
 
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
 	SpACSUrl   string `json:"spACSUrl,omitempty"`
