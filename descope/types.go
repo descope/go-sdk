@@ -117,18 +117,20 @@ type FGAGroupMapping struct {
 }
 
 type SSOSAMLSettingsResponse struct {
-	IdpEntityID      string                      `json:"idpEntityId,omitempty"`
-	IdpSSOURL        string                      `json:"idpSSOUrl,omitempty"`
-	IdpCertificate   string                      `json:"idpCertificate,omitempty"`
-	IdpMetadataURL   string                      `json:"idpMetadataUrl,omitempty"`
-	SpEntityID       string                      `json:"spEntityId,omitempty"`
-	SpACSUrl         string                      `json:"spACSUrl,omitempty"`
-	SpCertificate    string                      `json:"spCertificate,omitempty"`
-	AttributeMapping *AttributeMapping           `json:"attributeMapping,omitempty"`
-	GroupsMapping    []*GroupsMapping            `json:"groupsMapping,omitempty"`
-	DefaultSSORoles  []string                    `json:"defaultSSORoles,omitempty"`
-	RedirectURL      string                      `json:"redirectUrl,omitempty"`
-	FgaMappings      map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
+	IdpEntityID                     string                      `json:"idpEntityId,omitempty"`
+	IdpSSOURL                       string                      `json:"idpSSOUrl,omitempty"`
+	IdpCertificate                  string                      `json:"idpCertificate,omitempty"`
+	IdpMetadataURL                  string                      `json:"idpMetadataUrl,omitempty"`
+	SpEntityID                      string                      `json:"spEntityId,omitempty"`
+	SpACSUrl                        string                      `json:"spACSUrl,omitempty"`
+	SpCertificate                   string                      `json:"spCertificate,omitempty"`
+	AttributeMapping                *AttributeMapping           `json:"attributeMapping,omitempty"`
+	GroupsMapping                   []*GroupsMapping            `json:"groupsMapping,omitempty"`
+	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"`
+	RedirectURL                     string                      `json:"redirectUrl,omitempty"`
+	FgaMappings                     map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
+	ConfigFGATenantIDResourcePrefix string                      `json:"configFGATenantIDResourcePrefix,omitempty"`
+	ConfigFGATenantIDResourceSuffix string                      `json:"configFGATenantIDResourceSuffix,omitempty"`
 }
 
 type SSOSAMLSettings struct {

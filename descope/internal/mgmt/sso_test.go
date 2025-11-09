@@ -437,6 +437,8 @@ func TestLoadSettingsSuccess(t *testing.T) {
 					},
 				},
 			},
+			"configFGATenantIDResourcePrefix": "tenant_prefix_",
+			"configFGATenantIDResourceSuffix": "_tenant_suffix",
 		},
 		"oidc": map[string]any{
 			"name":        "myName",
@@ -491,6 +493,8 @@ func TestLoadSettingsSuccess(t *testing.T) {
 	assert.EqualValues(t, "res3", res.Saml.FgaMappings["group2"].Relations[0].Resource)
 	assert.EqualValues(t, "rd3", res.Saml.FgaMappings["group2"].Relations[0].RelationDefinition)
 	assert.EqualValues(t, "ns3", res.Saml.FgaMappings["group2"].Relations[0].Namespace)
+	assert.EqualValues(t, "tenant_prefix_", res.Saml.ConfigFGATenantIDResourcePrefix)
+	assert.EqualValues(t, "_tenant_suffix", res.Saml.ConfigFGATenantIDResourceSuffix)
 
 	require.NotNil(t, res.Oidc)
 	assert.EqualValues(t, "myName", res.Oidc.Name)
@@ -655,6 +659,8 @@ func TestLoadAllSettingsSuccess(t *testing.T) {
 						},
 					},
 				},
+				"configFGATenantIDResourcePrefix": "prefix_value_",
+				"configFGATenantIDResourceSuffix": "_suffix_value",
 			},
 			"oidc": map[string]any{
 				"name":        "myName",
@@ -704,6 +710,8 @@ func TestLoadAllSettingsSuccess(t *testing.T) {
 	assert.EqualValues(t, "res1", res.Saml.FgaMappings["group1"].Relations[0].Resource)
 	assert.EqualValues(t, "rd1", res.Saml.FgaMappings["group1"].Relations[0].RelationDefinition)
 	assert.EqualValues(t, "ns1", res.Saml.FgaMappings["group1"].Relations[0].Namespace)
+	assert.EqualValues(t, "prefix_value_", res.Saml.ConfigFGATenantIDResourcePrefix)
+	assert.EqualValues(t, "_suffix_value", res.Saml.ConfigFGATenantIDResourceSuffix)
 
 	require.NotNil(t, res.Oidc)
 	assert.EqualValues(t, "myName", res.Oidc.Name)
