@@ -99,6 +99,12 @@ func (s *sso) ConfigureSAMLSettings(ctx context.Context, tenantID string, settin
 	if len(fgaMappings) > 0 {
 		req["settings"].(map[string]any)["fgaMappings"] = fgaMappings
 	}
+	if settings.ConfigFGATenantIDResourcePrefix != "" {
+		req["settings"].(map[string]any)["configFGATenantIDResourcePrefix"] = settings.ConfigFGATenantIDResourcePrefix
+	}
+	if settings.ConfigFGATenantIDResourceSuffix != "" {
+		req["settings"].(map[string]any)["configFGATenantIDResourceSuffix"] = settings.ConfigFGATenantIDResourceSuffix
+	}
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSAMLSettings(), req, nil, "")
 	return err
 }
@@ -143,6 +149,12 @@ func (s *sso) ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID stri
 	}
 	if len(fgaMappings) > 0 {
 		req["settings"].(map[string]any)["fgaMappings"] = fgaMappings
+	}
+	if settings.ConfigFGATenantIDResourcePrefix != "" {
+		req["settings"].(map[string]any)["configFGATenantIDResourcePrefix"] = settings.ConfigFGATenantIDResourcePrefix
+	}
+	if settings.ConfigFGATenantIDResourceSuffix != "" {
+		req["settings"].(map[string]any)["configFGATenantIDResourceSuffix"] = settings.ConfigFGATenantIDResourceSuffix
 	}
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSAMLSettingsByMetadata(), req, nil, "")
 	return err
