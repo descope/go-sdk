@@ -7,7 +7,7 @@ toolchain go1.24.10
 replace github.com/descope/go-sdk => ../../
 
 require (
-	github.com/descope/go-sdk v1.6.20
+	github.com/descope/go-sdk/v2 v2.0.0
 	github.com/gin-gonic/gin v1.11.0
 )
 
