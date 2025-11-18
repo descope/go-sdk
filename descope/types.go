@@ -1386,4 +1386,5 @@ type MgmtUserRequest struct {
 type MgmtFlowOptions struct {
 	Input   map[string]any `json:"input,omitempty"`
 	Preview bool           `json:"preview,omitempty"`
+	Tenant  string         `json:"tenant,omitempty"`
 }
