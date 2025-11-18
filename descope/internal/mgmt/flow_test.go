@@ -133,7 +133,8 @@ func TestImportThemeMissingArgument(t *testing.T) {
 func TestRunManagementFlowSuccess(t *testing.T) {
 	flowID := "test-flow"
 	options := &descope.MgmtFlowOptions{
-		Input: map[string]any{"key": "value"},
+		Input:  map[string]any{"key": "value"},
+		Tenant: "tenant-id",
 	}
 	output := map[string]any{
 		"result": "success",
@@ -150,6 +151,7 @@ func TestRunManagementFlowSuccess(t *testing.T) {
 		require.NotNil(t, req["options"])
 		optionsMap := req["options"].(map[string]any)
 		require.Equal(t, map[string]any{"key": "value"}, optionsMap["input"])
+		require.Equal(t, "tenant-id", optionsMap["tenant"])
 	}, body))
 	res, err := mgmt.Flow().RunManagementFlow(context.Background(), flowID, options)
 	require.NoError(t, err)
