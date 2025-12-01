@@ -1716,7 +1716,7 @@ err = tc.DescopeClient().Management.ThirdPartyApplication().UpdateApplication(co
 app, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadApplication(context.Background(), "appId")
 
 // Load all third party applications with options for pagination
-apps, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadAllApplications(context.Background(), &descope.ThirdPartyApplicationSearchOptions{
+apps, total, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadAllApplications(context.Background(), &descope.ThirdPartyApplicationSearchOptions{
     Page: 0, 
     Limit: 100
 })
