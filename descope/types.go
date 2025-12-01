@@ -1295,7 +1295,7 @@ type ThirdPartyApplicationRequest struct {
 
 // Options for loading third party applications
 //
-// Page - allows to paginate over the results. Pages start at 0 and must non-negative.
+// Page - allows to paginate over the results. Pages start at 0 and must be non-negative.
 // Limit - limits the number of returned applications. Leave at 0 to return the default amount.
 type ThirdPartyApplicationSearchOptions struct {
 	Page  int32 `json:"page"`
