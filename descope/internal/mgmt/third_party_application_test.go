@@ -324,13 +324,17 @@ func TestAllThirdPartyApplicationsLoadSuccess(t *testing.T) {
 					{"name": "scope1", "description": "desc1"},
 				},
 			},
-		}}
+		},
+		"total": 2}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.Equal(t, "1", r.URL.Query().Get("page"))
+		require.Equal(t, "5", r.URL.Query().Get("limit"))
 	}, response))
-	res, err := mgmt.ThirdPartyApplication().LoadAllApplications(context.Background())
+	res, total, err := mgmt.ThirdPartyApplication().LoadAllApplications(context.Background(), &descope.ThirdPartyApplicationSearchOptions{Page: 1, Limit: 5})
 	require.NoError(t, err)
 	require.NotNil(t, res)
+	require.Equal(t, 2, total)
 	require.Len(t, res, 2)
 	for i := range res {
 		if i == 0 {
@@ -362,9 +366,10 @@ func TestAllThirdPartyApplicationsLoadSuccess(t *testing.T) {
 
 func TestAllThirdPartyApplicationsLoadError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := mgmt.ThirdPartyApplication().LoadAllApplications(context.Background())
+	res, total, err := mgmt.ThirdPartyApplication().LoadAllApplications(context.Background(), nil)
 	require.Error(t, err)
 	require.Nil(t, res)
+	require.Zero(t, total)
 }
 
 func TestSearchThirdPartyApplicationConsents(t *testing.T) {

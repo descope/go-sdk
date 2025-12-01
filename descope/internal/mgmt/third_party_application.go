@@ -2,6 +2,7 @@ package mgmt
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
@@ -90,10 +91,32 @@ func (s *thirdPartyApplication) LoadApplication(ctx context.Context, id string) 
 	return unmarshalLoadThirdPartyApplicationResponse(res)
 }
 
-func (s *thirdPartyApplication) LoadAllApplications(ctx context.Context) ([]*descope.ThirdPartyApplication, error) {
-	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementThirdPartyApplicationLoadAll(), nil, "")
+func (s *thirdPartyApplication) LoadAllApplications(ctx context.Context, options *descope.ThirdPartyApplicationSearchOptions) ([]*descope.ThirdPartyApplication, int, error) {
+	// Init empty options if non given
+	if options == nil {
+		options = &descope.ThirdPartyApplicationSearchOptions{}
+	}
+
+	// Make sure limit is non-negative
+	if options.Limit < 0 {
+		return nil, 0, utils.NewInvalidArgumentError("limit")
+	}
+
+	// Make sure page is non-negative
+	if options.Page < 0 {
+		return nil, 0, utils.NewInvalidArgumentError("page")
+	}
+
+	req := &api.HTTPRequest{
+		QueryParams: map[string]string{
+			"page":  strconv.Itoa(int(options.Page)),
+			"limit": strconv.Itoa(int(options.Limit)),
+		},
+	}
+
+	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementThirdPartyApplicationLoadAll(), req, "")
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	return unmarshalLoadAllThirdPartyApplicationsResponse(res)
 }
@@ -214,15 +237,16 @@ func unmarshalLoadThirdPartyApplicationResponse(res *api.HTTPResponse) (*descope
 	return appRes, nil
 }
 
-func unmarshalLoadAllThirdPartyApplicationsResponse(res *api.HTTPResponse) ([]*descope.ThirdPartyApplication, error) {
+func unmarshalLoadAllThirdPartyApplicationsResponse(res *api.HTTPResponse) ([]*descope.ThirdPartyApplication, int, error) {
 	appsRes := struct {
-		Apps []*descope.ThirdPartyApplication
+		Apps  []*descope.ThirdPartyApplication
+		Total int
 	}{}
 	err := utils.Unmarshal([]byte(res.BodyStr), &appsRes)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return appsRes.Apps, nil
+	return appsRes.Apps, appsRes.Total, nil
 }
 
 func unmarshalApplicationConsentsResponse(res *api.HTTPResponse) ([]*descope.ThirdPartyApplicationConsent, int, error) {

@@ -985,7 +985,7 @@ type ThirdPartyApplication interface {
 	RotateApplicationSecret(ctx context.Context, id string) (string, error)
 
 	// Load all project third party applications.
-	LoadAllApplications(ctx context.Context) ([]*descope.ThirdPartyApplication, error)
+	LoadAllApplications(ctx context.Context, options *descope.ThirdPartyApplicationSearchOptions) ([]*descope.ThirdPartyApplication, int, error)
 
 	// Delete a consent for a third party application.
 	// (Note: this will not delete tenant level consents)
