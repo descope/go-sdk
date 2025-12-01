@@ -92,7 +92,7 @@ func (s *thirdPartyApplication) LoadApplication(ctx context.Context, id string) 
 }
 
 func (s *thirdPartyApplication) LoadAllApplications(ctx context.Context, options *descope.ThirdPartyApplicationSearchOptions) ([]*descope.ThirdPartyApplication, int, error) {
-	// Init empty options if non given
+	// Init empty options if none given
 	if options == nil {
 		options = &descope.ThirdPartyApplicationSearchOptions{}
 	}
