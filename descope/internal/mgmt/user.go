@@ -245,6 +245,22 @@ func (u *user) Load(ctx context.Context, loginIDOrUserID string) (*descope.UserR
 	return u.load(ctx, loginIDOrUserID, "")
 }
 
+func (u *user) LoadUsers(ctx context.Context, usersID []string, includeInvalidUsers bool) ([]*descope.UserResponse, int, error) {
+	if len(usersID) == 0 {
+		return nil, 0, utils.NewInvalidArgumentError("usersID")
+	}
+	req := map[string]any{
+		"userIds":             usersID,
+		"includeInvalidUsers": includeInvalidUsers,
+	}
+
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUsersLoad(), req, nil, "")
+	if err != nil {
+		return nil, 0, err
+	}
+	return unmarshalUserSearchAllResponse(res)
+}
+
 // Deprecated
 func (u *user) LoadByUserID(ctx context.Context, userID string) (*descope.UserResponse, error) {
 	if userID == "" {

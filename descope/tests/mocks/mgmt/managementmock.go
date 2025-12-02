@@ -382,6 +382,11 @@ type MockUser struct {
 	LoadResponse *descope.UserResponse
 	LoadError    error
 
+	LoadUsersAssert        func(usersID []string, includeInvalidUsers bool)
+	LoadUsersResponse      []*descope.UserResponse
+	LoadUsersTotalResponse int
+	LoadUsersError         error
+
 	SearchAllAssert        func(options *descope.UserSearchOptions)
 	SearchAllResponse      []*descope.UserResponse
 	SearchAllTotalResponse int
@@ -617,6 +622,13 @@ func (m *MockUser) Load(_ context.Context, loginID string) (*descope.UserRespons
 		m.LoadAssert(loginID)
 	}
 	return m.LoadResponse, m.LoadError
+}
+
+func (m *MockUser) LoadUsers(_ context.Context, usersID []string, includeInvalidUsers bool) ([]*descope.UserResponse, int, error) {
+	if m.LoadUsersAssert != nil {
+		m.LoadUsersAssert(usersID, includeInvalidUsers)
+	}
+	return m.LoadUsersResponse, m.LoadUsersTotalResponse, m.LoadUsersError
 }
 
 func (m *MockUser) LoadByUserID(_ context.Context, userID string) (*descope.UserResponse, error) {
