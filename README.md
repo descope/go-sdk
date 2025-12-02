@@ -1723,8 +1723,11 @@ err = tc.DescopeClient().Management.ThirdPartyApplication().UpdateApplication(co
 // Load third party application by id
 app, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadApplication(context.Background(), "appId")
 
-// Load all third party applications
-apps, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadAllApplications(context.Background())
+// Load all third party applications with options for pagination
+apps, total, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadAllApplications(context.Background(), &descope.ThirdPartyApplicationSearchOptions{
+    Page: 0, 
+    Limit: 100
+})
 
 // Delete a third party application.
 // Deletion cannot be undone. Use carefully.
