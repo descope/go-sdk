@@ -1006,6 +1006,31 @@ func TestUserLoadSuccess(t *testing.T) {
 	require.Equal(t, "a@b.c", res.Email)
 }
 
+func TestUsersLoad(t *testing.T) {
+	response := map[string]any{
+		"users": []map[string]any{{
+			"email": "a@b.c",
+		}},
+		"total": 1,
+	}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.Equal(t, "/v1/mgmt/users/load", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, []any{"abc"}, req["userIds"])
+		assert.EqualValues(t, true, req["includeInvalidUsers"])
+	}, response))
+	res, cnt, err := m.User().LoadUsers(context.Background(), []string{"abc"}, true)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, "a@b.c", res[0].Email)
+	assert.EqualValues(t, 1, cnt)
+	// test error
+	_, _, err = m.User().LoadUsers(context.Background(), []string{}, true)
+	require.Error(t, err)
+}
+
 func TestUserLoadBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
 	res, err := m.User().Load(context.Background(), "")
