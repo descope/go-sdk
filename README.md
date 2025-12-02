@@ -975,6 +975,14 @@ userRes, err := descopeClient.Management.User().Load(context.Background(), "desm
 // If needed, users can be loaded using their ID as well
 userRes, err := descopeClient.Management.User().Load(context.Background(), "<user-id>")
 
+// LoadUsers by their user ID, there is an option to decide whether to get disabled/expired users or not
+usersResp, total, err := descopeClient.Management.User().LoadUsers(context.Background(), []string{userID}, false)
+if err == nil {
+    for _, user := range usersResp {
+        // Do something
+    }
+}
+
 // Search all users, optionally according to tenant and/or role filter
 // Results can be paginated using the limit and page parameters
 usersResp, total, err := descopeClient.Management.User().SearchAll(context.Background(), &descope.UserSearchOptions{TenantIDs: []string{"my-tenant-id"}})
