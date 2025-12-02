@@ -245,12 +245,12 @@ func (u *user) Load(ctx context.Context, loginIDOrUserID string) (*descope.UserR
 	return u.load(ctx, loginIDOrUserID, "")
 }
 
-func (u *user) LoadUsers(ctx context.Context, usersID []string, includeInvalidUsers bool) ([]*descope.UserResponse, int, error) {
-	if len(usersID) == 0 {
-		return nil, 0, utils.NewInvalidArgumentError("usersID")
+func (u *user) LoadUsers(ctx context.Context, userIDs []string, includeInvalidUsers bool) ([]*descope.UserResponse, int, error) {
+	if len(userIDs) == 0 {
+		return nil, 0, utils.NewInvalidArgumentError("userIDs")
 	}
 	req := map[string]any{
-		"userIds":             usersID,
+		"userIds":             userIDs,
 		"includeInvalidUsers": includeInvalidUsers,
 	}
 
