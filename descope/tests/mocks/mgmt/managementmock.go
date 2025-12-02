@@ -624,9 +624,9 @@ func (m *MockUser) Load(_ context.Context, loginID string) (*descope.UserRespons
 	return m.LoadResponse, m.LoadError
 }
 
-func (m *MockUser) LoadUsers(_ context.Context, usersID []string, includeInvalidUsers bool) ([]*descope.UserResponse, int, error) {
+func (m *MockUser) LoadUsers(_ context.Context, userIDs []string, includeInvalidUsers bool) ([]*descope.UserResponse, int, error) {
 	if m.LoadUsersAssert != nil {
-		m.LoadUsersAssert(usersID, includeInvalidUsers)
+		m.LoadUsersAssert(userIDs, includeInvalidUsers)
 	}
 	return m.LoadUsersResponse, m.LoadUsersTotalResponse, m.LoadUsersError
 }
