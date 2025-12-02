@@ -372,6 +372,19 @@ func TestAllThirdPartyApplicationsLoadError(t *testing.T) {
 	require.Zero(t, total)
 }
 
+func TestLoadAllThirdPartyApplicationsPaginationError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, total, err := mgmt.ThirdPartyApplication().LoadAllApplications(context.Background(), &descope.ThirdPartyApplicationSearchOptions{Page: -1, Limit: 5})
+	require.Error(t, err)
+	require.Nil(t, res)
+	require.Zero(t, total)
+
+	res, total, err = mgmt.ThirdPartyApplication().LoadAllApplications(context.Background(), &descope.ThirdPartyApplicationSearchOptions{Page: 1, Limit: -1})
+	require.Error(t, err)
+	require.Nil(t, res)
+	require.Zero(t, total)
+}
+
 func TestSearchThirdPartyApplicationConsents(t *testing.T) {
 	response := map[string]any{
 		"consents": []map[string]any{
