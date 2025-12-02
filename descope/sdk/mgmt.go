@@ -254,9 +254,9 @@ type User interface {
 	// Load existing users by User ID. The user ID can be found
 	// on the user's JWT.
 	//
-	// The usersID is required and the user will be fetched according to it.
+	// The userIDs are required and the users will be fetched according to them.
 	// includeInvalidUsers indicates whether to include invalid users such as expired or disabled in the response.
-	LoadUsers(ctx context.Context, usersID []string, includeInvalidUsers bool) ([]*descope.UserResponse, int, error)
+	LoadUsers(ctx context.Context, userIDs []string, includeInvalidUsers bool) ([]*descope.UserResponse, int, error)
 
 	// Search all users according to given filters
 	//
