@@ -382,7 +382,7 @@ type MockUser struct {
 	LoadResponse *descope.UserResponse
 	LoadError    error
 
-	LoadUsersAssert        func(usersID []string, includeInvalidUsers bool)
+	LoadUsersAssert        func(userIDs []string, includeInvalidUsers bool)
 	LoadUsersResponse      []*descope.UserResponse
 	LoadUsersTotalResponse int
 	LoadUsersError         error
