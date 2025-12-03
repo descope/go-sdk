@@ -250,6 +250,11 @@ var (
 			thirdPartyApplicationConsentDelete:       "mgmt/thirdparty/consents/delete",
 			thirdPartyApplicationTenantConsentDelete: "mgmt/thirdparty/consents/delete/tenant",
 			thirdPartyApplicationConsentsSearch:      "mgmt/thirdparty/consents/search",
+			mgmtKeyCreate:                            "mgmt/managementkey",
+			mgmtKeyUpdate:                            "mgmt/managementkey",
+			mgmtKeyGet:                               "mgmt/managementkey",
+			mgmtKeyDelete:                            "mgmt/managementkey/delete",
+			mgmtKeySearch:                            "mgmt/managementkey/search",
 		},
 		logout:       "auth/logout",
 		logoutAll:    "auth/logoutall",
@@ -515,6 +520,12 @@ type mgmtEndpoints struct {
 	thirdPartyApplicationConsentDelete       string
 	thirdPartyApplicationTenantConsentDelete string
 	thirdPartyApplicationConsentsSearch      string
+
+	mgmtKeyCreate string
+	mgmtKeyUpdate string
+	mgmtKeyGet    string
+	mgmtKeyDelete string
+	mgmtKeySearch string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -1394,6 +1405,26 @@ func (e *endpoints) ManagementThirdPartyApplicationDeleteTenantConsent() string 
 
 func (e *endpoints) ManagementThirdPartyApplicationSearchConsents() string {
 	return path.Join(e.version, e.mgmt.thirdPartyApplicationConsentsSearch)
+}
+
+func (e *endpoints) ManagementMgmtKeyCreate() string {
+	return path.Join(e.version, e.mgmt.mgmtKeyCreate)
+}
+
+func (e *endpoints) ManagementMgmtKeyUpdate() string {
+	return path.Join(e.version, e.mgmt.mgmtKeyUpdate)
+}
+
+func (e *endpoints) ManagementMgmtKeyGet() string {
+	return path.Join(e.version, e.mgmt.mgmtKeyGet)
+}
+
+func (e *endpoints) ManagementMgmtKeyDelete() string {
+	return path.Join(e.version, e.mgmt.mgmtKeyDelete)
+}
+
+func (e *endpoints) ManagementMgmtKeySearch() string {
+	return path.Join(e.version, e.mgmt.mgmtKeySearch)
 }
 
 type sdkInfo struct {

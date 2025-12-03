@@ -1029,6 +1029,39 @@ type OutboundApplication interface {
 	LoadAllApplications(ctx context.Context) ([]*descope.OutboundApp, error)
 }
 
+// Provides functions for managing management keys in a project.
+type ManagementKey interface {
+	// Create a new management key.
+	//
+	// The name parameter is required and shown on the Descope console.
+	// The description parameter is an optional description.
+	// The expiresIn parameter specifies the expiration time in seconds (0 for no expiration).
+	// The permittedIPs parameter is an optional list of IP addresses or CIDR ranges that are allowed to use this key.
+	// The reBac parameter specifies the role-based access control configuration for the key.
+	//
+	// The key object is returned along with its token and an optional error.
+	Create(ctx context.Context, name, description string, expiresIn uint64, permittedIPs []string, reBac *descope.MgmtKeyReBac) (*descope.MgmtKey, string, error)
+
+	// Update an existing management key.
+	//
+	// The parameters follow the same convention as those for the Create function.
+	//
+	// IMPORTANT: All parameters will override whatever values are currently set
+	// in the existing management key. Use carefully.
+	Update(ctx context.Context, id, name, description string, expiresIn uint64, permittedIPs []string, reBac *descope.MgmtKeyReBac) (*descope.MgmtKey, error)
+
+	// Get a management key by ID.
+	Get(ctx context.Context, id string) (*descope.MgmtKey, error)
+
+	// Delete an existing management key.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	Delete(ctx context.Context, id string) error
+
+	// Search for management keys.
+	Search(ctx context.Context, options *descope.MgmtKeySearchOptions) ([]*descope.MgmtKey, error)
+}
+
 // Provides various APIs for managing a Descope project programmatically. A management key must
 // be provided in the DecopeClient configuration or by setting the DESCOPE_MANAGEMENT_KEY
 // environment variable. Management keys can be generated in the Descope console.
@@ -1086,4 +1119,7 @@ type Management interface {
 
 	// Provides functions for managing outbound applications in a project.
 	OutboundApplication() OutboundApplication
+
+	// Provides functions for management key management.
+	ManagementKey() ManagementKey
 }
