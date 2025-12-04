@@ -39,6 +39,7 @@ type managementService struct {
 	fga                   sdk.FGA
 	thirdPartyApplication sdk.ThirdPartyApplication
 	outboundApplication   sdk.OutboundApplication
+	managementKey         sdk.ManagementKey
 }
 
 func NewManagement(conf ManagementParams, provider *auth.Provider, c *api.Client) *managementService {
@@ -62,6 +63,7 @@ func NewManagement(conf ManagementParams, provider *auth.Provider, c *api.Client
 	service.password = &passwordManagement{managementBase: base}
 	service.fga = &fga{managementBase: base, fgaCacheURL: conf.FGACacheURL}
 	service.analytics = &analytics{managementBase: base}
+	service.managementKey = &mgmtkey{managementBase: base}
 	return service
 }
 
@@ -153,6 +155,11 @@ func (mgmt *managementService) ThirdPartyApplication() sdk.ThirdPartyApplication
 func (mgmt *managementService) OutboundApplication() sdk.OutboundApplication {
 	mgmt.ensureManagementKey()
 	return mgmt.outboundApplication
+}
+
+func (mgmt *managementService) ManagementKey() sdk.ManagementKey {
+	mgmt.ensureManagementKey()
+	return mgmt.managementKey
 }
 
 func (mgmt *managementService) ensureManagementKey() {
