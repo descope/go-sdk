@@ -1389,13 +1389,20 @@ type MgmtFlowOptions struct {
 	Tenant  string         `json:"tenant,omitempty"`
 }
 
+type MgmtKeyStatus string
+
+const (
+	MgmtKeyActive   MgmtKeyStatus = "active"
+	MgmtKeyInactive MgmtKeyStatus = "inactive"
+)
+
 type MgmtKey struct {
 	ID           string        `json:"id,omitempty"`
 	Name         string        `json:"name,omitempty"`
 	Description  string        `json:"description,omitempty"`
-	Status       string        `json:"status,omitempty"`
-	CreatedTime  uint64        `json:"createdTime,omitempty"`
-	ExpireTime   uint64        `json:"expireTime,omitempty"`
+	Status       MgmtKeyStatus `json:"status,omitempty"`
+	CreatedTime  int64         `json:"createdTime,omitempty"`
+	ExpireTime   int64         `json:"expireTime,omitempty"`
 	PermittedIPs []string      `json:"permittedIps,omitempty"`
 	ReBac        *MgmtKeyReBac `json:"reBac,omitempty"`
 	Version      int64         `json:"version,omitempty"`

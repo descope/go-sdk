@@ -1044,11 +1044,11 @@ type ManagementKey interface {
 
 	// Update an existing management key.
 	//
-	// The parameters follow the same convention as those for the Create function.
+	// The id parameter is used to identify the management key.
 	//
 	// IMPORTANT: All parameters will override whatever values are currently set
 	// in the existing management key. Use carefully.
-	Update(ctx context.Context, id, name, description string, expiresIn uint64, permittedIPs []string, reBac *descope.MgmtKeyReBac) (*descope.MgmtKey, error)
+	Update(ctx context.Context, id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus) (*descope.MgmtKey, error)
 
 	// Get a management key by ID.
 	Get(ctx context.Context, id string) (*descope.MgmtKey, error)
@@ -1056,7 +1056,7 @@ type ManagementKey interface {
 	// Delete an existing management key.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, ids []string) error
 
 	// Search for management keys.
 	Search(ctx context.Context, options *descope.MgmtKeySearchOptions) ([]*descope.MgmtKey, error)

@@ -24,7 +24,7 @@ type genericResp struct {
 	Key *descope.MgmtKey `json:"key,omitempty"`
 }
 type searchResp struct {
-	MgmtKeys []*descope.MgmtKey `json:"mgmtKeys,omitempty"`
+	Keys []*descope.MgmtKey `json:"keys,omitempty"`
 }
 
 func (r *mgmtkey) Create(ctx context.Context, name, description string, expiresIn uint64, permittedIPs []string, reBac *descope.MgmtKeyReBac) (key *descope.MgmtKey, cleartext string, err error) {
@@ -39,33 +39,36 @@ func (r *mgmtkey) Create(ctx context.Context, name, description string, expiresI
 		"reBac":        reBac,
 	}
 	resp, err := r.client.DoPutRequest(ctx, api.Routes.ManagementMgmtKeyCreate(), body, nil, "")
-	if err != nil { // notest
+	if err != nil {
 		return nil, "", err
 	}
 	res := &createResp{}
 	err = utils.Unmarshal([]byte(resp.BodyStr), res)
+	if err != nil {
+		return nil, "", err
+	}
 	return res.Key, res.Cleartext, nil
 }
 
-func (r *mgmtkey) Update(ctx context.Context, id, name, description string, expiresIn uint64, permittedIPs []string, reBac *descope.MgmtKeyReBac) (*descope.MgmtKey, error) {
+func (r *mgmtkey) Update(ctx context.Context, id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus) (*descope.MgmtKey, error) {
 	if id == "" {
 		return nil, utils.NewInvalidArgumentError("id")
 	}
 	body := map[string]any{
-		"id":           id,
+		"id": id,
+		// to be updated
 		"name":         name,
 		"description":  description,
-		"expiresIn":    expiresIn,
 		"permittedIps": permittedIPs,
-		"reBac":        reBac,
+		"status":       status,
 	}
 	resp, err := r.client.DoPatchRequest(ctx, api.Routes.ManagementMgmtKeyUpdate(), body, nil, "")
-	if err != nil { // notest
+	if err != nil {
 		return nil, err
 	}
 	res := &genericResp{}
 	err = utils.Unmarshal([]byte(resp.BodyStr), res)
-	if err != nil { // notest
+	if err != nil {
 		return nil, err
 	}
 	return res.Key, err
@@ -91,18 +94,21 @@ func (r *mgmtkey) Get(ctx context.Context, id string) (*descope.MgmtKey, error) 
 	return res.Key, nil
 }
 
-func (r *mgmtkey) Delete(ctx context.Context, id string) error {
-	if id == "" {
-		return utils.NewInvalidArgumentError("id")
+func (r *mgmtkey) Delete(ctx context.Context, ids []string) error {
+	if len(ids) == 0 {
+		return utils.NewInvalidArgumentError("ids")
 	}
 	body := map[string]any{
-		"id": id,
+		"ids": ids,
 	}
 	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementMgmtKeyDelete(), body, nil, "")
 	return err
 }
 
 func (r *mgmtkey) Search(ctx context.Context, options *descope.MgmtKeySearchOptions) ([]*descope.MgmtKey, error) {
+	if options == nil {
+		return nil, utils.NewInvalidArgumentError("options")
+	}
 	resp, err := r.client.DoGetRequest(ctx, api.Routes.ManagementMgmtKeySearch(), nil, "")
 	if err != nil {
 		return nil, err
@@ -113,5 +119,5 @@ func (r *mgmtkey) Search(ctx context.Context, options *descope.MgmtKeySearchOpti
 	if err != nil {
 		return nil, err
 	}
-	return res.MgmtKeys, nil
+	return res.Keys, nil
 }
