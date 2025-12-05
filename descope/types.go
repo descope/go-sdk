@@ -916,8 +916,8 @@ type UserSearchOptions struct {
 }
 
 type UserSearchSort struct {
-	Field string
-	Desc  bool
+	Field string `json:"field"`
+	Desc  bool   `json:"desc"`
 }
 
 type RoleList struct {
