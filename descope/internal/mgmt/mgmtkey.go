@@ -26,6 +26,9 @@ type genericResp struct {
 type searchResp struct {
 	Keys []*descope.MgmtKey `json:"keys,omitempty"`
 }
+type deleteResp struct {
+	Total int `json:"total,omitempty"`
+}
 
 func (r *mgmtkey) Create(ctx context.Context, name, description string, expiresIn uint64, permittedIPs []string, reBac *descope.MgmtKeyReBac) (key *descope.MgmtKey, cleartext string, err error) {
 	if name == "" {
@@ -94,15 +97,20 @@ func (r *mgmtkey) Get(ctx context.Context, id string) (*descope.MgmtKey, error) 
 	return res.Key, nil
 }
 
-func (r *mgmtkey) Delete(ctx context.Context, ids []string) error {
+func (r *mgmtkey) Delete(ctx context.Context, ids []string) (int, error) {
 	if len(ids) == 0 {
-		return utils.NewInvalidArgumentError("ids")
+		return 0, utils.NewInvalidArgumentError("ids")
 	}
 	body := map[string]any{
 		"ids": ids,
 	}
-	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementMgmtKeyDelete(), body, nil, "")
-	return err
+	resp, err := r.client.DoPostRequest(ctx, api.Routes.ManagementMgmtKeyDelete(), body, nil, "")
+	res := &deleteResp{}
+	err = utils.Unmarshal([]byte(resp.BodyStr), res)
+	if err != nil {
+		return 0, err
+	}
+	return res.Total, err
 }
 
 func (r *mgmtkey) Search(ctx context.Context, options *descope.MgmtKeySearchOptions) ([]*descope.MgmtKey, error) {

@@ -1053,10 +1053,10 @@ type ManagementKey interface {
 	// Get a management key by ID.
 	Get(ctx context.Context, id string) (*descope.MgmtKey, error)
 
-	// Delete an existing management key.
+	// Delete an existing management key. Returns number of keys deleted.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
-	Delete(ctx context.Context, ids []string) error
+	Delete(ctx context.Context, ids []string) (int, error)
 
 	// Search for management keys.
 	Search(ctx context.Context, options *descope.MgmtKeySearchOptions) ([]*descope.MgmtKey, error)

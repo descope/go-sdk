@@ -2040,8 +2040,9 @@ type MockManagementKey struct {
 	GetResponse *descope.MgmtKey
 	GetError    error
 
-	DeleteAssert func(ids []string)
-	DeleteError  error
+	DeleteAssert   func(ids []string)
+	DeleteError    error
+	DeleteResponse int
 
 	SearchAssert   func(options *descope.MgmtKeySearchOptions)
 	SearchResponse []*descope.MgmtKey
@@ -2069,11 +2070,11 @@ func (m *MockManagementKey) Get(_ context.Context, id string) (*descope.MgmtKey,
 	return m.GetResponse, m.GetError
 }
 
-func (m *MockManagementKey) Delete(_ context.Context, ids []string) error {
+func (m *MockManagementKey) Delete(_ context.Context, ids []string) (int, error) {
 	if m.DeleteAssert != nil {
 		m.DeleteAssert(ids)
 	}
-	return m.DeleteError
+	return m.DeleteResponse, m.DeleteError
 }
 
 func (m *MockManagementKey) Search(_ context.Context, options *descope.MgmtKeySearchOptions) ([]*descope.MgmtKey, error) {

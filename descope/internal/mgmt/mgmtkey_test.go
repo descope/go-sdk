@@ -133,7 +133,7 @@ func TestMgmtKeyGet_Success(t *testing.T) {
 }
 
 func TestMgmtKeyDelete_Success(t *testing.T) {
-	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
@@ -141,9 +141,10 @@ func TestMgmtKeyDelete_Success(t *testing.T) {
 		require.Len(t, ids, 2)
 		require.Equal(t, "mk1", ids[0])
 		require.Equal(t, "mk2", ids[1])
-	}))
-	err := mgmt.ManagementKey().Delete(context.Background(), []string{"mk1", "mk2"})
+	}, map[string]any{"total": 2}))
+	total, err := mgmt.ManagementKey().Delete(context.Background(), []string{"mk1", "mk2"})
 	require.NoError(t, err)
+	require.Equal(t, 2, total)
 }
 
 func TestMgmtKeySearch_Success(t *testing.T) {
@@ -226,8 +227,9 @@ func TestMgmtKeyGet_Error(t *testing.T) {
 
 func TestMgmtKeyDelete_Error(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	err := mgmt.ManagementKey().Delete(context.Background(), []string{})
+	total, err := mgmt.ManagementKey().Delete(context.Background(), []string{})
 	require.Error(t, err)
+	require.Equal(t, 0, total)
 }
 
 func TestMgmtKeySearch_Error(t *testing.T) {
