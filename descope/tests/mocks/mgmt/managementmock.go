@@ -1878,6 +1878,7 @@ type MockThirdPartyApplication struct {
 	RotateApplicationSecretError    error
 
 	LoadAllApplicationsResponse []*descope.ThirdPartyApplication
+	LoadAllApplicationsTotal    int
 	LoadAllApplicationsError    error
 
 	DeleteConsentsAssert func(*descope.ThirdPartyApplicationConsentDeleteOptions)
@@ -1920,8 +1921,8 @@ func (m *MockThirdPartyApplication) LoadApplication(_ context.Context, id string
 	return m.LoadApplicationResponse, m.LoadApplicationError
 }
 
-func (m *MockThirdPartyApplication) LoadAllApplications(_ context.Context) ([]*descope.ThirdPartyApplication, error) {
-	return m.LoadAllApplicationsResponse, m.LoadAllApplicationsError
+func (m *MockThirdPartyApplication) LoadAllApplications(_ context.Context, _ *descope.ThirdPartyApplicationSearchOptions) ([]*descope.ThirdPartyApplication, int, error) {
+	return m.LoadAllApplicationsResponse, m.LoadAllApplicationsTotal, m.LoadAllApplicationsError
 }
 
 func (m *MockThirdPartyApplication) PatchApplication(_ context.Context, app *descope.ThirdPartyApplicationRequest) error {
