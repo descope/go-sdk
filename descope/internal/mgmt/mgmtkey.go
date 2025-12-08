@@ -105,6 +105,9 @@ func (r *mgmtkey) Delete(ctx context.Context, ids []string) (int, error) {
 		"ids": ids,
 	}
 	resp, err := r.client.DoPostRequest(ctx, api.Routes.ManagementMgmtKeyDelete(), body, nil, "")
+	if err != nil {
+		return 0, err
+	}
 	res := &deleteResp{}
 	err = utils.Unmarshal([]byte(resp.BodyStr), res)
 	if err != nil {
