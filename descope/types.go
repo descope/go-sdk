@@ -1397,3 +1397,42 @@ type MgmtFlowOptions struct {
 	Preview bool           `json:"preview,omitempty"`
 	Tenant  string         `json:"tenant,omitempty"`
 }
+
+type MgmtKeyStatus string
+
+const (
+	MgmtKeyActive   MgmtKeyStatus = "active"
+	MgmtKeyInactive MgmtKeyStatus = "inactive"
+)
+
+type MgmtKey struct {
+	ID           string        `json:"id,omitempty"`
+	Name         string        `json:"name,omitempty"`
+	Description  string        `json:"description,omitempty"`
+	Status       MgmtKeyStatus `json:"status,omitempty"`
+	CreatedTime  int64         `json:"createdTime,omitempty"`
+	ExpireTime   int64         `json:"expireTime,omitempty"`
+	PermittedIPs []string      `json:"permittedIps,omitempty"`
+	ReBac        *MgmtKeyReBac `json:"reBac,omitempty"`
+	Version      int64         `json:"version,omitempty"`
+	AuthzVersion int64         `json:"authzVersion,omitempty"`
+}
+
+type MgmtKeyReBac struct {
+	CompanyRoles []string              `json:"companyRoles,omitempty"`
+	ProjectRoles []*MgmtKeyProjectRole `json:"projectRoles,omitempty"`
+	TagRoles     []*MgmtKeyTagRole     `json:"tagRoles,omitempty"`
+}
+
+type MgmtKeyTagRole struct {
+	Tags  []string `json:"tags,omitempty"`
+	Roles []string `json:"roles,omitempty"`
+}
+
+type MgmtKeyProjectRole struct {
+	ProjectIDs []string `json:"projectIds,omitempty"`
+	Roles      []string `json:"roles,omitempty"`
+}
+
+type MgmtKeySearchOptions struct {
+}
