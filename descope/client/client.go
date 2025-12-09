@@ -1,8 +1,6 @@
 package client
 
 import (
-	"strings"
-
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/auth"
@@ -41,7 +39,7 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 	}
 	logger.Init(config.LogLevel, config.Logger)
 
-	if strings.TrimSpace(config.setProjectID()) == "" {
+	if _, ok := config.setProjectID(); !ok {
 		return nil, descope.ErrMissingProjectID.WithMessage("Project ID is missing, make sure to add it in the Config struct or the environment variable \"%s\"", descope.EnvironmentVariableProjectID)
 	}
 	if config.setPublicKey() != "" {

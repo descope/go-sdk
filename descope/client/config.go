@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/descope/go-sdk/descope/api"
@@ -12,7 +13,9 @@ import (
 
 // Conf - Configuration struct describes the configurational data for the authentication methods.
 type Config struct {
-	// ProjectID (required, "") - used to validate and authenticate against descope services.
+	// ProjectID (required, "") - used to validate and authenticate against Descope services.
+	// Some management APIs can be called without a project ID, in which case a value of "-" can
+	// be used to skip the project ID validation.
 	ProjectID string
 	// ManagementKey (optional, "") - used to provide a management key that's required
 	// for using any of the Management APIs. If empty, this value is retrieved
@@ -61,15 +64,18 @@ type Config struct {
 	SessionCookieName string
 }
 
-func (c *Config) setProjectID() string {
+func (c *Config) setProjectID() (projectID string, ok bool) {
 	if c.ProjectID == "" {
-		if projectID := utils.GetProjectIDEnvVariable(); projectID != "" {
-			c.ProjectID = projectID
-		} else {
-			return ""
-		}
+		c.ProjectID = utils.GetProjectIDEnvVariable()
 	}
-	return c.ProjectID
+	c.ProjectID = strings.TrimSpace(c.ProjectID)
+	if c.ProjectID == "" {
+		return "", false
+	}
+	if c.ProjectID == "-" {
+		c.ProjectID = ""
+	}
+	return c.ProjectID, true
 }
 
 func (c *Config) setPublicKey() string {
