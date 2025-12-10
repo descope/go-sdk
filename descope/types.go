@@ -566,24 +566,24 @@ type BatchUserPasswordArgon2 struct {
 
 type UserResponse struct {
 	User             `json:",inline"`
-	UserID           string              `json:"userId,omitempty"`
-	LoginIDs         []string            `json:"loginIds,omitempty"`
-	VerifiedEmail    bool                `json:"verifiedEmail,omitempty"`
-	VerifiedPhone    bool                `json:"verifiedPhone,omitempty"`
-	RoleNames        []string            `json:"roleNames,omitempty"`
-	UserTenants      []*AssociatedTenant `json:"userTenants,omitempty"`
-	Status           string              `json:"status,omitempty"`
-	Picture          string              `json:"picture,omitempty"`
-	Test             bool                `json:"test,omitempty"`
-	CustomAttributes map[string]any      `json:"customAttributes,omitempty"`
-	CreatedTime      int32               `json:"createdTime,omitempty"`
-	TOTP             bool                `json:"totp,omitempty"`
-	WebAuthn         bool                `json:"webauthn,omitempty"`
-	Password         bool                `json:"password,omitempty"`
-	SAML             bool                `json:"saml,omitempty"`
-	SCIM             bool                `json:"scim,omitempty"`
-	OAuth            map[string]bool     `json:"oauth,omitempty"`
-	SSOAppIDs        []string            `json:"ssoAppIds,omitempty"`
+	UserID           string                          `json:"userId,omitempty"`
+	LoginIDs         []string                        `json:"loginIds,omitempty"`
+	VerifiedEmail    bool                            `json:"verifiedEmail,omitempty"`
+	VerifiedPhone    bool                            `json:"verifiedPhone,omitempty"`
+	RoleNames        []string                        `json:"roleNames,omitempty"`
+	UserTenants      []*UserResponseAssociatedTenant `json:"userTenants,omitempty"`
+	Status           string                          `json:"status,omitempty"`
+	Picture          string                          `json:"picture,omitempty"`
+	Test             bool                            `json:"test,omitempty"`
+	CustomAttributes map[string]any                  `json:"customAttributes,omitempty"`
+	CreatedTime      int32                           `json:"createdTime,omitempty"`
+	TOTP             bool                            `json:"totp,omitempty"`
+	WebAuthn         bool                            `json:"webauthn,omitempty"`
+	Password         bool                            `json:"password,omitempty"`
+	SAML             bool                            `json:"saml,omitempty"`
+	SCIM             bool                            `json:"scim,omitempty"`
+	OAuth            map[string]bool                 `json:"oauth,omitempty"`
+	SSOAppIDs        []string                        `json:"ssoAppIds,omitempty"`
 }
 
 type MeTenant struct {
@@ -681,6 +681,11 @@ type AssociatedTenant struct {
 	TenantID   string   `json:"tenantId"`
 	TenantName string   `json:"tenantName"`
 	Roles      []string `json:"roleNames,omitempty"`
+}
+
+type UserResponseAssociatedTenant struct {
+	AssociatedTenant `json:",inline"`
+	Permissions      []string `json:"permissions,omitempty"`
 }
 
 // Represents a mapping between a set of groups of users and a role that will be assigned to them.
