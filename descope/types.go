@@ -566,24 +566,24 @@ type BatchUserPasswordArgon2 struct {
 
 type UserResponse struct {
 	User             `json:",inline"`
-	UserID           string              `json:"userId,omitempty"`
-	LoginIDs         []string            `json:"loginIds,omitempty"`
-	VerifiedEmail    bool                `json:"verifiedEmail,omitempty"`
-	VerifiedPhone    bool                `json:"verifiedPhone,omitempty"`
-	RoleNames        []string            `json:"roleNames,omitempty"`
-	UserTenants      []*AssociatedTenant `json:"userTenants,omitempty"`
-	Status           string              `json:"status,omitempty"`
-	Picture          string              `json:"picture,omitempty"`
-	Test             bool                `json:"test,omitempty"`
-	CustomAttributes map[string]any      `json:"customAttributes,omitempty"`
-	CreatedTime      int32               `json:"createdTime,omitempty"`
-	TOTP             bool                `json:"totp,omitempty"`
-	WebAuthn         bool                `json:"webauthn,omitempty"`
-	Password         bool                `json:"password,omitempty"`
-	SAML             bool                `json:"saml,omitempty"`
-	SCIM             bool                `json:"scim,omitempty"`
-	OAuth            map[string]bool     `json:"oauth,omitempty"`
-	SSOAppIDs        []string            `json:"ssoAppIds,omitempty"`
+	UserID           string                          `json:"userId,omitempty"`
+	LoginIDs         []string                        `json:"loginIds,omitempty"`
+	VerifiedEmail    bool                            `json:"verifiedEmail,omitempty"`
+	VerifiedPhone    bool                            `json:"verifiedPhone,omitempty"`
+	RoleNames        []string                        `json:"roleNames,omitempty"`
+	UserTenants      []*UserResponseAssociatedTenant `json:"userTenants,omitempty"`
+	Status           string                          `json:"status,omitempty"`
+	Picture          string                          `json:"picture,omitempty"`
+	Test             bool                            `json:"test,omitempty"`
+	CustomAttributes map[string]any                  `json:"customAttributes,omitempty"`
+	CreatedTime      int32                           `json:"createdTime,omitempty"`
+	TOTP             bool                            `json:"totp,omitempty"`
+	WebAuthn         bool                            `json:"webauthn,omitempty"`
+	Password         bool                            `json:"password,omitempty"`
+	SAML             bool                            `json:"saml,omitempty"`
+	SCIM             bool                            `json:"scim,omitempty"`
+	OAuth            map[string]bool                 `json:"oauth,omitempty"`
+	SSOAppIDs        []string                        `json:"ssoAppIds,omitempty"`
 }
 
 type MeTenant struct {
@@ -681,6 +681,11 @@ type AssociatedTenant struct {
 	TenantID   string   `json:"tenantId"`
 	TenantName string   `json:"tenantName"`
 	Roles      []string `json:"roleNames,omitempty"`
+}
+
+type UserResponseAssociatedTenant struct {
+	AssociatedTenant `json:",inline"`
+	Permissions      []string `json:"permissions,omitempty"`
 }
 
 // Represents a mapping between a set of groups of users and a role that will be assigned to them.
@@ -1293,6 +1298,15 @@ type ThirdPartyApplicationRequest struct {
 	JWTBearerSettings    *JWTBearerSettings            `json:"jwtBearerSettings,omitempty"`
 }
 
+// Options for loading third party applications
+//
+// Page - allows to paginate over the results. Pages start at 0 and must be non-negative.
+// Limit - limits the number of returned applications. Leave at 0 to return the default amount.
+type ThirdPartyApplicationSearchOptions struct {
+	Page  int32 `json:"page"`
+	Limit int32 `json:"limit"`
+}
+
 type ThirdPartyApplicationConsent struct {
 	// Consent ID
 	ID string `json:"id"`
@@ -1387,4 +1401,43 @@ type MgmtFlowOptions struct {
 	Input   map[string]any `json:"input,omitempty"`
 	Preview bool           `json:"preview,omitempty"`
 	Tenant  string         `json:"tenant,omitempty"`
+}
+
+type MgmtKeyStatus string
+
+const (
+	MgmtKeyActive   MgmtKeyStatus = "active"
+	MgmtKeyInactive MgmtKeyStatus = "inactive"
+)
+
+type MgmtKey struct {
+	ID           string        `json:"id,omitempty"`
+	Name         string        `json:"name,omitempty"`
+	Description  string        `json:"description,omitempty"`
+	Status       MgmtKeyStatus `json:"status,omitempty"`
+	CreatedTime  int64         `json:"createdTime,omitempty"`
+	ExpireTime   int64         `json:"expireTime,omitempty"`
+	PermittedIPs []string      `json:"permittedIps,omitempty"`
+	ReBac        *MgmtKeyReBac `json:"reBac,omitempty"`
+	Version      int64         `json:"version,omitempty"`
+	AuthzVersion int64         `json:"authzVersion,omitempty"`
+}
+
+type MgmtKeyReBac struct {
+	CompanyRoles []string              `json:"companyRoles,omitempty"`
+	ProjectRoles []*MgmtKeyProjectRole `json:"projectRoles,omitempty"`
+	TagRoles     []*MgmtKeyTagRole     `json:"tagRoles,omitempty"`
+}
+
+type MgmtKeyTagRole struct {
+	Tags  []string `json:"tags,omitempty"`
+	Roles []string `json:"roles,omitempty"`
+}
+
+type MgmtKeyProjectRole struct {
+	ProjectIDs []string `json:"projectIds,omitempty"`
+	Roles      []string `json:"roles,omitempty"`
+}
+
+type MgmtKeySearchOptions struct {
 }

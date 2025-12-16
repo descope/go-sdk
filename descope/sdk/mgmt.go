@@ -251,6 +251,13 @@ type User interface {
 	// The userID is required and the user will be fetched according to it.
 	LoadByUserID(ctx context.Context, userID string) (*descope.UserResponse, error)
 
+	// Load existing users by User ID. The user ID can be found
+	// on the user's JWT.
+	//
+	// The userIDs are required and the users will be fetched according to them.
+	// includeInvalidUsers indicates whether to include invalid users such as expired or disabled in the response.
+	LoadUsers(ctx context.Context, userIDs []string, includeInvalidUsers bool) ([]*descope.UserResponse, int, error)
+
 	// Search all users according to given filters
 	//
 	// The options optional parameter allows to fine-tune the search filters
@@ -985,7 +992,7 @@ type ThirdPartyApplication interface {
 	RotateApplicationSecret(ctx context.Context, id string) (string, error)
 
 	// Load all project third party applications.
-	LoadAllApplications(ctx context.Context) ([]*descope.ThirdPartyApplication, error)
+	LoadAllApplications(ctx context.Context, options *descope.ThirdPartyApplicationSearchOptions) ([]*descope.ThirdPartyApplication, int, error)
 
 	// Delete a consent for a third party application.
 	// (Note: this will not delete tenant level consents)
@@ -1020,6 +1027,39 @@ type OutboundApplication interface {
 
 	// Load all project outbound applications.
 	LoadAllApplications(ctx context.Context) ([]*descope.OutboundApp, error)
+}
+
+// Provides functions for managing management keys in a project.
+type ManagementKey interface {
+	// Create a new management key.
+	//
+	// The name parameter is required and shown on the Descope console.
+	// The description parameter is an optional description.
+	// The expiresIn parameter specifies the expiration time in seconds (0 for no expiration).
+	// The permittedIPs parameter is an optional list of IP addresses or CIDR ranges that are allowed to use this key.
+	// The reBac parameter specifies the role-based access control configuration for the key.
+	//
+	// The key object is returned along with its token and an optional error.
+	Create(ctx context.Context, name, description string, expiresIn uint64, permittedIPs []string, reBac *descope.MgmtKeyReBac) (*descope.MgmtKey, string, error)
+
+	// Update an existing management key.
+	//
+	// The id parameter is used to identify the management key.
+	//
+	// IMPORTANT: All parameters will override whatever values are currently set
+	// in the existing management key. Use carefully.
+	Update(ctx context.Context, id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus) (*descope.MgmtKey, error)
+
+	// Get a management key by ID.
+	Get(ctx context.Context, id string) (*descope.MgmtKey, error)
+
+	// Delete an existing management key. Returns number of keys deleted.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	Delete(ctx context.Context, ids []string) (int, error)
+
+	// Search for management keys.
+	Search(ctx context.Context, options *descope.MgmtKeySearchOptions) ([]*descope.MgmtKey, error)
 }
 
 // Provides various APIs for managing a Descope project programmatically. A management key must
@@ -1079,4 +1119,7 @@ type Management interface {
 
 	// Provides functions for managing outbound applications in a project.
 	OutboundApplication() OutboundApplication
+
+	// Provides functions for management key management.
+	ManagementKey() ManagementKey
 }

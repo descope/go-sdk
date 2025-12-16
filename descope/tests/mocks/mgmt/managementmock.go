@@ -27,6 +27,7 @@ type MockManagement struct {
 	*MockFGA
 	*MockThirdPartyApplication
 	*MockOutboundApplication
+	*MockManagementKey
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -99,6 +100,10 @@ func (m *MockManagement) ThirdPartyApplication() sdk.ThirdPartyApplication {
 
 func (m *MockManagement) OutboundApplication() sdk.OutboundApplication {
 	return m.MockOutboundApplication
+}
+
+func (m *MockManagement) ManagementKey() sdk.ManagementKey {
+	return m.MockManagementKey
 }
 
 // Mock JWT
@@ -382,6 +387,11 @@ type MockUser struct {
 	LoadResponse *descope.UserResponse
 	LoadError    error
 
+	LoadUsersAssert        func(userIDs []string, includeInvalidUsers bool)
+	LoadUsersResponse      []*descope.UserResponse
+	LoadUsersTotalResponse int
+	LoadUsersError         error
+
 	SearchAllAssert        func(options *descope.UserSearchOptions)
 	SearchAllResponse      []*descope.UserResponse
 	SearchAllTotalResponse int
@@ -617,6 +627,13 @@ func (m *MockUser) Load(_ context.Context, loginID string) (*descope.UserRespons
 		m.LoadAssert(loginID)
 	}
 	return m.LoadResponse, m.LoadError
+}
+
+func (m *MockUser) LoadUsers(_ context.Context, userIDs []string, includeInvalidUsers bool) ([]*descope.UserResponse, int, error) {
+	if m.LoadUsersAssert != nil {
+		m.LoadUsersAssert(userIDs, includeInvalidUsers)
+	}
+	return m.LoadUsersResponse, m.LoadUsersTotalResponse, m.LoadUsersError
 }
 
 func (m *MockUser) LoadByUserID(_ context.Context, userID string) (*descope.UserResponse, error) {
@@ -1866,6 +1883,7 @@ type MockThirdPartyApplication struct {
 	RotateApplicationSecretError    error
 
 	LoadAllApplicationsResponse []*descope.ThirdPartyApplication
+	LoadAllApplicationsTotal    int
 	LoadAllApplicationsError    error
 
 	DeleteConsentsAssert func(*descope.ThirdPartyApplicationConsentDeleteOptions)
@@ -1908,8 +1926,8 @@ func (m *MockThirdPartyApplication) LoadApplication(_ context.Context, id string
 	return m.LoadApplicationResponse, m.LoadApplicationError
 }
 
-func (m *MockThirdPartyApplication) LoadAllApplications(_ context.Context) ([]*descope.ThirdPartyApplication, error) {
-	return m.LoadAllApplicationsResponse, m.LoadAllApplicationsError
+func (m *MockThirdPartyApplication) LoadAllApplications(_ context.Context, _ *descope.ThirdPartyApplicationSearchOptions) ([]*descope.ThirdPartyApplication, int, error) {
+	return m.LoadAllApplicationsResponse, m.LoadAllApplicationsTotal, m.LoadAllApplicationsError
 }
 
 func (m *MockThirdPartyApplication) PatchApplication(_ context.Context, app *descope.ThirdPartyApplicationRequest) error {
@@ -2005,4 +2023,64 @@ func (m *MockOutboundApplication) LoadApplication(_ context.Context, id string) 
 
 func (m *MockOutboundApplication) LoadAllApplications(_ context.Context) ([]*descope.OutboundApp, error) {
 	return m.LoadAllApplicationsResponse, m.LoadAllApplicationsError
+}
+
+// Mock ManagementKey
+
+type MockManagementKey struct {
+	CreateAssert        func(name, description string, expiresIn uint64, permittedIPs []string, reBac *descope.MgmtKeyReBac)
+	CreateResponseKey   *descope.MgmtKey
+	CreateResponseToken string
+	CreateError         error
+
+	UpdateAssert   func(id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus)
+	UpdateResponse *descope.MgmtKey
+	UpdateError    error
+
+	GetAssert   func(id string)
+	GetResponse *descope.MgmtKey
+	GetError    error
+
+	DeleteAssert   func(ids []string)
+	DeleteError    error
+	DeleteResponse int
+
+	SearchAssert   func(options *descope.MgmtKeySearchOptions)
+	SearchResponse []*descope.MgmtKey
+	SearchError    error
+}
+
+func (m *MockManagementKey) Create(_ context.Context, name, description string, expiresIn uint64, permittedIPs []string, reBac *descope.MgmtKeyReBac) (*descope.MgmtKey, string, error) {
+	if m.CreateAssert != nil {
+		m.CreateAssert(name, description, expiresIn, permittedIPs, reBac)
+	}
+	return m.CreateResponseKey, m.CreateResponseToken, m.CreateError
+}
+
+func (m *MockManagementKey) Update(_ context.Context, id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus) (*descope.MgmtKey, error) {
+	if m.UpdateAssert != nil {
+		m.UpdateAssert(id, name, description, permittedIPs, status)
+	}
+	return m.UpdateResponse, m.UpdateError
+}
+
+func (m *MockManagementKey) Get(_ context.Context, id string) (*descope.MgmtKey, error) {
+	if m.GetAssert != nil {
+		m.GetAssert(id)
+	}
+	return m.GetResponse, m.GetError
+}
+
+func (m *MockManagementKey) Delete(_ context.Context, ids []string) (int, error) {
+	if m.DeleteAssert != nil {
+		m.DeleteAssert(ids)
+	}
+	return m.DeleteResponse, m.DeleteError
+}
+
+func (m *MockManagementKey) Search(_ context.Context, options *descope.MgmtKeySearchOptions) ([]*descope.MgmtKey, error) {
+	if m.SearchAssert != nil {
+		m.SearchAssert(options)
+	}
+	return m.SearchResponse, m.SearchError
 }
