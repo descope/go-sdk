@@ -936,6 +936,7 @@ const (
 	UserStatusEnabled  UserStatus = "enabled"
 	UserStatusDisabled UserStatus = "disabled"
 	UserStatusInvited  UserStatus = "invited"
+	UserStatusExpired  UserStatus = "expired"
 )
 
 type UserImportResponse struct {
