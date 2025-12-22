@@ -51,7 +51,7 @@ func (r *descoper) Update(ctx context.Context, id string, attributes *descope.De
 	}
 	body := map[string]any{
 		"id": id,
-		// to be updated
+		// following fields are updated on the object
 		"attributes": attributes,
 		"rbac":       rbac,
 	}
@@ -64,7 +64,7 @@ func (r *descoper) Update(ctx context.Context, id string, attributes *descope.De
 	if err != nil {
 		return nil, err
 	}
-	return res.Descoper, err
+	return res.Descoper, nil
 }
 
 func (r *descoper) Get(ctx context.Context, id string) (*descope.Descoper, error) {
@@ -88,7 +88,7 @@ func (r *descoper) Get(ctx context.Context, id string) (*descope.Descoper, error
 }
 
 func (r *descoper) Delete(ctx context.Context, id string) error {
-	if len(id) == 0 {
+	if id == "" {
 		return utils.NewInvalidArgumentError("id")
 	}
 	req := &api.HTTPRequest{

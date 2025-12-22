@@ -59,7 +59,7 @@ func (r *mgmtkey) Update(ctx context.Context, id, name, description string, perm
 	}
 	body := map[string]any{
 		"id": id,
-		// to be updated
+		// following fields are updated on the object
 		"name":         name,
 		"description":  description,
 		"permittedIps": permittedIPs,
