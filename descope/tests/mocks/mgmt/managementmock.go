@@ -28,6 +28,7 @@ type MockManagement struct {
 	*MockThirdPartyApplication
 	*MockOutboundApplication
 	*MockManagementKey
+	*MockDescoper
 }
 
 func (m *MockManagement) JWT() sdk.JWT {

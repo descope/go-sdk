@@ -255,6 +255,11 @@ var (
 			mgmtKeyGet:                               "mgmt/managementkey",
 			mgmtKeyDelete:                            "mgmt/managementkey/delete",
 			mgmtKeySearch:                            "mgmt/managementkey/search",
+			descoperCreate:                           "mgmt/descoper",
+			descoperUpdate:                           "mgmt/descoper",
+			descoperGet:                              "mgmt/descoper",
+			descoperDelete:                           "mgmt/descoper",
+			descoperSearch:                           "mgmt/descoper/list",
 		},
 		logout:       "auth/logout",
 		logoutAll:    "auth/logoutall",
@@ -526,6 +531,12 @@ type mgmtEndpoints struct {
 	mgmtKeyGet    string
 	mgmtKeyDelete string
 	mgmtKeySearch string
+
+	descoperCreate string
+	descoperUpdate string
+	descoperGet    string
+	descoperDelete string
+	descoperSearch string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -1425,6 +1436,26 @@ func (e *endpoints) ManagementMgmtKeyDelete() string {
 
 func (e *endpoints) ManagementMgmtKeySearch() string {
 	return path.Join(e.version, e.mgmt.mgmtKeySearch)
+}
+
+func (e *endpoints) ManagementDescoperCreate() string {
+	return path.Join(e.version, e.mgmt.descoperCreate)
+}
+
+func (e *endpoints) ManagementDescoperUpdate() string {
+	return path.Join(e.version, e.mgmt.descoperUpdate)
+}
+
+func (e *endpoints) ManagementDescoperGet() string {
+	return path.Join(e.version, e.mgmt.descoperGet)
+}
+
+func (e *endpoints) ManagementDescoperDelete() string {
+	return path.Join(e.version, e.mgmt.descoperDelete)
+}
+
+func (e *endpoints) ManagementDescoperSearch() string {
+	return path.Join(e.version, e.mgmt.descoperSearch)
 }
 
 type sdkInfo struct {
