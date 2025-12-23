@@ -103,9 +103,6 @@ func (r *descoper) Delete(ctx context.Context, id string) error {
 
 func (r *descoper) List(ctx context.Context, options *descope.DescoperLoadOptions) ([]*descope.Descoper, int, error) {
 	body := map[string]any{}
-	if options != nil {
-		body["options"] = options
-	}
 	resp, err := r.client.DoPostRequest(ctx, api.Routes.ManagementDescoperSearch(), body, nil, "")
 	if err != nil {
 		return nil, 0, err

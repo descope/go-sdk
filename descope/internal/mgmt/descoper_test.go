@@ -172,6 +172,34 @@ func TestDescoperDelete_Success(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestDescoperCreate_ErrorBadInput(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, total, err := mgmt.Descoper().Create(context.Background(), []*descope.DescoperCreate{})
+	require.Error(t, err)
+	require.Nil(t, res)
+	require.Equal(t, 0, total)
+}
+
+func TestDescoperGet_ErrorBadInput(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.Descoper().Get(context.Background(), "")
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestDescoperUpdate_ErrorBadInput(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.Descoper().Update(context.Background(), "", nil, nil)
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestDescoperDelete_ErrorBadInput(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.Descoper().Delete(context.Background(), "")
+	require.Error(t, err)
+}
+
 func TestDescoperList_Success(t *testing.T) {
 	response := map[string]any{
 		"descopers": []map[string]any{
