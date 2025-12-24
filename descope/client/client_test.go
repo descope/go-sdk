@@ -155,6 +155,14 @@ func TestEmptyProjectID(t *testing.T) {
 	assert.Contains(t, err.Error(), "Project ID is missing")
 }
 
+func TestAllowEmptyProjectID(t *testing.T) {
+	a, err := NewWithConfig(&Config{AllowEmptyProjectID: true})
+	require.NoError(t, err)
+	assert.Empty(t, a.config.ProjectID)
+	assert.NotNil(t, a.Auth)
+	assert.NotNil(t, a.Management)
+}
+
 func TestEmptyConfig(t *testing.T) {
 	_, err := NewWithConfig(nil)
 	require.Error(t, err)
