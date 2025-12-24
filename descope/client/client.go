@@ -39,7 +39,7 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 	}
 	logger.Init(config.LogLevel, config.Logger)
 
-	if _, ok := config.setProjectID(); !ok {
+	if v := config.setProjectID(); v == "" && !config.AllowEmptyProjectID {
 		return nil, descope.ErrMissingProjectID.WithMessage("Project ID is missing, make sure to add it in the Config struct or the environment variable \"%s\"", descope.EnvironmentVariableProjectID)
 	}
 	if config.setPublicKey() != "" {

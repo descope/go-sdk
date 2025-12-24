@@ -14,8 +14,8 @@ import (
 // Conf - Configuration struct describes the configurational data for the authentication methods.
 type Config struct {
 	// ProjectID (required, "") - used to validate and authenticate against Descope services.
-	// Some management APIs can be called without a project ID, in which case a value of "-" can
-	// be used to skip the project ID validation.
+	// Some management APIs can be called without a project ID, in which case this can be an empty string
+	// and the AllowEmptyProjectID flag must be set.
 	ProjectID string
 	// ManagementKey (optional, "") - used to provide a management key that's required
 	// for using any of the Management APIs. If empty, this value is retrieved
@@ -50,6 +50,8 @@ type Config struct {
 	// LoggerInterface (optional, log.Default()) - set the logger instance to use for logging with the sdk.
 	// Note that this attribute will be used to init a global logger once, in a goroutine safe manner
 	Logger logger.LoggerInterface
+	// AllowEmptyProjectID (optional, false) - set to true to allow creating a client without a project ID.
+	AllowEmptyProjectID bool
 	// State whether session jwt should be sent to client in cookie or let the calling function handle the transfer of the jwt,
 	// defaults to leaving it for calling function, use cookie if session jwt will stay small (less than 1k)
 	// session cookie can grow bigger, in case of using authorization, or adding custom claims
@@ -64,18 +66,12 @@ type Config struct {
 	SessionCookieName string
 }
 
-func (c *Config) setProjectID() (projectID string, ok bool) {
+func (c *Config) setProjectID() string {
 	if c.ProjectID == "" {
 		c.ProjectID = utils.GetProjectIDEnvVariable()
 	}
 	c.ProjectID = strings.TrimSpace(c.ProjectID)
-	if c.ProjectID == "" {
-		return "", false
-	}
-	if c.ProjectID == "-" {
-		c.ProjectID = ""
-	}
-	return c.ProjectID, true
+	return c.ProjectID
 }
 
 func (c *Config) setPublicKey() string {
