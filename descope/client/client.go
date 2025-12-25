@@ -69,7 +69,7 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 		SessionCookieName:   config.SessionCookieName,
 	}
 	provider := auth.NewProvider(authClient, conf)
-	authService, err := auth.NewAuthWithProvider(*conf, provider, authClient)
+	authService, err := auth.NewAuthWithProvider(*conf, provider, authClient, config.RequestTokensProvider)
 	if err != nil {
 		return nil, err
 	}

@@ -29,6 +29,36 @@ type AuthParams struct {
 	RefreshCookieName   string
 }
 
+type defaultRequestTokensProvider struct {
+	sessionCookieName string
+	refreshCookieName string
+}
+
+func (d *defaultRequestTokensProvider) ProvideTokens(r *http.Request) (sessionToken string, refreshToken string) {
+	if r == nil {
+		return "", ""
+	}
+	sessionToken = ""
+	// First, check the header for Bearer token
+	// Header takes precedence over cookie
+	reqToken := r.Header.Get(api.AuthorizationHeaderName)
+	if splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix); len(splitToken) == 2 {
+		sessionToken = splitToken[1]
+	}
+
+	if sessionToken == "" {
+		if sessionCookie, _ := r.Cookie(d.sessionCookieName); sessionCookie != nil {
+			sessionToken = sessionCookie.Value
+		}
+	}
+
+	refreshCookie, err := r.Cookie(d.refreshCookieName)
+	if err != nil {
+		return sessionToken, ""
+	}
+	return sessionToken, refreshCookie.Value
+}
+
 func (ap *AuthParams) GetRefreshCookieName() string {
 	if ap.RefreshCookieName != "" {
 		// notest
@@ -49,6 +79,8 @@ type authenticationsBase struct {
 	client             *api.Client
 	conf               *AuthParams
 	publicKeysProvider *Provider
+
+	requestTokensProvider sdk.RequestTokensProvider
 }
 
 type authenticationService struct {
@@ -66,13 +98,22 @@ type authenticationService struct {
 	sso           sdk.SSOServiceProvider
 }
 
-func NewAuth(conf AuthParams, c *api.Client) (*authenticationService, error) {
-	return NewAuthWithProvider(conf, NewProvider(c, &conf), c)
+func NewAuth(conf AuthParams, c *api.Client, requestTokensProvider sdk.RequestTokensProvider) (*authenticationService, error) {
+	return NewAuthWithProvider(conf, NewProvider(c, &conf), c, requestTokensProvider)
 }
 
-func NewAuthWithProvider(conf AuthParams, provider *Provider, c *api.Client) (*authenticationService, error) {
+func NewAuthWithProvider(conf AuthParams, provider *Provider, c *api.Client, requestTokensProvider sdk.RequestTokensProvider) (*authenticationService, error) {
 	base := authenticationsBase{conf: &conf, client: c}
 	base.publicKeysProvider = provider
+
+	if requestTokensProvider == nil {
+		requestTokensProvider = &defaultRequestTokensProvider{
+			sessionCookieName: conf.GetSessionCookieName(),
+			refreshCookieName: conf.GetRefreshCookieName(),
+		}
+	}
+	base.requestTokensProvider = requestTokensProvider
+
 	authenticationService := &authenticationService{authenticationsBase: base}
 	authenticationService.otp = &otp{authenticationsBase: base}
 	authenticationService.magicLink = &magicLink{authenticationsBase: base}
@@ -84,6 +125,7 @@ func NewAuthWithProvider(conf AuthParams, provider *Provider, c *api.Client) (*a
 	authenticationService.totp = &totp{authenticationsBase: base}
 	authenticationService.notp = &notp{authenticationsBase: base}
 	authenticationService.password = &password{authenticationsBase: base}
+
 	return authenticationService, nil
 }
 
@@ -830,28 +872,7 @@ func (auth *authenticationsBase) createCookie(token *descope.Token, jwtRes *desc
 }
 
 func (auth *authenticationsBase) provideTokens(r *http.Request) (string, string) {
-	if r == nil {
-		return "", ""
-	}
-	sessionToken := ""
-	// First, check the header for Bearer token
-	// Header takes precedence over cookie
-	reqToken := r.Header.Get(api.AuthorizationHeaderName)
-	if splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix); len(splitToken) == 2 {
-		sessionToken = splitToken[1]
-	}
-
-	if sessionToken == "" {
-		if sessionCookie, _ := r.Cookie(auth.conf.GetSessionCookieName()); sessionCookie != nil {
-			sessionToken = sessionCookie.Value
-		}
-	}
-
-	refreshCookie, err := r.Cookie(auth.conf.GetRefreshCookieName())
-	if err != nil {
-		return sessionToken, ""
-	}
-	return sessionToken, refreshCookie.Value
+	return auth.requestTokensProvider.ProvideTokens(r)
 }
 
 func convertTokenError(err error) error {

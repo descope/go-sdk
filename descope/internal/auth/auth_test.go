@@ -14,6 +14,7 @@ import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
+	"github.com/descope/go-sdk/descope/sdk"
 	"github.com/descope/go-sdk/descope/tests/helpers"
 	"github.com/descope/go-sdk/descope/tests/mocks"
 	"github.com/lestrrat-go/jwx/v2/jwt"
@@ -177,7 +178,7 @@ func newTestAuthConf(authParams *AuthParams, clientParams *api.ClientParams, cal
 		authParams = &AuthParams{ProjectID: "a", PublicKey: publicKey}
 	}
 	clientParams.DefaultClient = mocks.NewTestClient(callback)
-	return NewAuth(*authParams, api.NewClient(*clientParams))
+	return NewAuth(*authParams, api.NewClient(*clientParams), nil)
 }
 
 func TestVerifyDeliveryMethod(t *testing.T) {
@@ -1344,4 +1345,187 @@ func TestHistoryEmptyResponse(t *testing.T) {
 	user, err := a.History(request)
 	assert.ErrorContains(t, err, "JSON input")
 	assert.Nil(t, user)
+}
+
+// RequestTokensProvider tests
+
+type mockRequestTokensProvider struct {
+	sessionToken string
+	refreshToken string
+}
+
+func (m *mockRequestTokensProvider) ProvideTokens(_ *http.Request) (string, string) {
+	return m.sessionToken, m.refreshToken
+}
+
+func newTestAuthWithTokenProvider(clientParams *api.ClientParams, callback mocks.Do, tokenProvider sdk.RequestTokensProvider) (*authenticationService, error) {
+	if clientParams == nil {
+		clientParams = &api.ClientParams{ProjectID: "a"}
+	}
+	authParams := &AuthParams{ProjectID: "a", PublicKey: publicKey}
+	clientParams.DefaultClient = mocks.NewTestClient(callback)
+	return NewAuth(*authParams, api.NewClient(*clientParams), tokenProvider)
+}
+
+func TestDefaultRequestTokensProviderNilRequest(t *testing.T) {
+	provider := &defaultRequestTokensProvider{
+		sessionCookieName: descope.SessionCookieName,
+		refreshCookieName: descope.RefreshCookieName,
+	}
+	sessionToken, refreshToken := provider.ProvideTokens(nil)
+	assert.Empty(t, sessionToken)
+	assert.Empty(t, refreshToken)
+}
+
+func TestDefaultRequestTokensProviderFromCookie(t *testing.T) {
+	provider := &defaultRequestTokensProvider{
+		sessionCookieName: descope.SessionCookieName,
+		refreshCookieName: descope.RefreshCookieName,
+	}
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: descope.SessionCookieName, Value: "session-token-value"})
+	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: "refresh-token-value"})
+
+	sessionToken, refreshToken := provider.ProvideTokens(request)
+	assert.Equal(t, "session-token-value", sessionToken)
+	assert.Equal(t, "refresh-token-value", refreshToken)
+}
+
+func TestDefaultRequestTokensProviderFromHeader(t *testing.T) {
+	provider := &defaultRequestTokensProvider{
+		sessionCookieName: descope.SessionCookieName,
+		refreshCookieName: descope.RefreshCookieName,
+	}
+	request := &http.Request{Header: http.Header{}}
+	request.Header.Add(api.AuthorizationHeaderName, api.BearerAuthorizationPrefix+"header-session-token")
+	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: "refresh-token-value"})
+
+	sessionToken, refreshToken := provider.ProvideTokens(request)
+	assert.Equal(t, "header-session-token", sessionToken)
+	assert.Equal(t, "refresh-token-value", refreshToken)
+}
+
+func TestDefaultRequestTokensProviderHeaderTakesPrecedence(t *testing.T) {
+	provider := &defaultRequestTokensProvider{
+		sessionCookieName: descope.SessionCookieName,
+		refreshCookieName: descope.RefreshCookieName,
+	}
+	request := &http.Request{Header: http.Header{}}
+	request.Header.Add(api.AuthorizationHeaderName, api.BearerAuthorizationPrefix+"header-session-token")
+	request.AddCookie(&http.Cookie{Name: descope.SessionCookieName, Value: "cookie-session-token"})
+	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: "refresh-token-value"})
+
+	sessionToken, refreshToken := provider.ProvideTokens(request)
+	assert.Equal(t, "header-session-token", sessionToken)
+	assert.Equal(t, "refresh-token-value", refreshToken)
+}
+
+func TestDefaultRequestTokensProviderNoRefreshCookie(t *testing.T) {
+	provider := &defaultRequestTokensProvider{
+		sessionCookieName: descope.SessionCookieName,
+		refreshCookieName: descope.RefreshCookieName,
+	}
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: descope.SessionCookieName, Value: "session-token-value"})
+
+	sessionToken, refreshToken := provider.ProvideTokens(request)
+	assert.Equal(t, "session-token-value", sessionToken)
+	assert.Empty(t, refreshToken)
+}
+
+func TestDefaultRequestTokensProviderCustomCookieNames(t *testing.T) {
+	provider := &defaultRequestTokensProvider{
+		sessionCookieName: "CustomSession",
+		refreshCookieName: "CustomRefresh",
+	}
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: "CustomSession", Value: "custom-session-token"})
+	request.AddCookie(&http.Cookie{Name: "CustomRefresh", Value: "custom-refresh-token"})
+
+	sessionToken, refreshToken := provider.ProvideTokens(request)
+	assert.Equal(t, "custom-session-token", sessionToken)
+	assert.Equal(t, "custom-refresh-token", refreshToken)
+}
+
+func TestCustomRequestTokensProviderValidateSession(t *testing.T) {
+	customProvider := &mockRequestTokensProvider{
+		sessionToken: jwtTokenValid,
+		refreshToken: jwtRTokenValid,
+	}
+	a, err := newTestAuthWithTokenProvider(nil, DoOk(nil), customProvider)
+	require.NoError(t, err)
+
+	// Even with an empty request, the custom provider should provide the tokens
+	request := &http.Request{Header: http.Header{}}
+	ok, token, err := a.ValidateSessionWithRequest(request)
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.NotNil(t, token)
+}
+
+func TestCustomRequestTokensProviderValidateAndRefreshSession(t *testing.T) {
+	customProvider := &mockRequestTokensProvider{
+		sessionToken: jwtTokenValid,
+		refreshToken: jwtRTokenValid,
+	}
+	a, err := newTestAuthWithTokenProvider(nil, DoOk(nil), customProvider)
+	require.NoError(t, err)
+
+	// Even with an empty request, the custom provider should provide the tokens
+	request := &http.Request{Header: http.Header{}}
+	ok, token, err := a.ValidateAndRefreshSessionWithRequest(request, nil)
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.NotNil(t, token)
+}
+
+func TestCustomRequestTokensProviderRefreshSession(t *testing.T) {
+	customProvider := &mockRequestTokensProvider{
+		sessionToken: "",
+		refreshToken: jwtRTokenValid,
+	}
+	a, err := newTestAuthWithTokenProvider(nil, DoOk(nil), customProvider)
+	require.NoError(t, err)
+
+	// Even with an empty request, the custom provider should provide the refresh token
+	request := &http.Request{Header: http.Header{}}
+	ok, token, err := a.RefreshSessionWithRequest(request, nil)
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.NotNil(t, token)
+}
+
+func TestCustomRequestTokensProviderEmptyTokens(t *testing.T) {
+	customProvider := &mockRequestTokensProvider{
+		sessionToken: "",
+		refreshToken: "",
+	}
+	a, err := newTestAuthWithTokenProvider(nil, DoOk(nil), customProvider)
+	require.NoError(t, err)
+
+	request := &http.Request{Header: http.Header{}}
+	ok, _, err := a.ValidateSessionWithRequest(request)
+	require.ErrorIs(t, err, descope.ErrMissingArguments)
+	require.False(t, ok)
+}
+
+func TestCustomRequestTokensProviderOverridesDefaultBehavior(t *testing.T) {
+	// Create a custom provider that returns specific tokens
+	customProvider := &mockRequestTokensProvider{
+		sessionToken: jwtTokenValid,
+		refreshToken: jwtRTokenValid,
+	}
+	a, err := newTestAuthWithTokenProvider(nil, DoOk(nil), customProvider)
+	require.NoError(t, err)
+
+	// Create a request with different tokens in cookies - these should be ignored
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: descope.SessionCookieName, Value: jwtTokenExpired})
+	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenExpired})
+
+	// The custom provider's valid tokens should be used, not the expired ones from cookies
+	ok, token, err := a.ValidateSessionWithRequest(request)
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.NotNil(t, token)
 }
