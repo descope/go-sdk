@@ -9,6 +9,7 @@ import (
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/logger"
+	"github.com/descope/go-sdk/descope/sdk"
 )
 
 // Conf - Configuration struct describes the configurational data for the authentication methods.
@@ -64,6 +65,8 @@ type Config struct {
 	RefreshCookieName string
 	// When using custom DS cookie name, set the correct value here, to make the SDK fetch the correct cookie
 	SessionCookieName string
+	// When using custom request tokens provider, set the correct value here, to make the SDK fetch the correct tokens
+	RequestTokensProvider sdk.RequestTokensProvider
 }
 
 func (c *Config) setProjectID() string {
