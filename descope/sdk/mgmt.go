@@ -1062,6 +1062,33 @@ type ManagementKey interface {
 	Search(ctx context.Context, options *descope.MgmtKeySearchOptions) ([]*descope.MgmtKey, error)
 }
 
+type Descoper interface {
+	// Create a new Descoper.
+	//
+	// The descopers parameter takes a list of DescoperCreate's.
+	// Note that tags are referred to by name, without the company ID prefix.
+	//
+	// The newly-created descopers are returned along with the total.
+	Create(ctx context.Context, descopers []*descope.DescoperCreate) ([]*descope.Descoper, int, error)
+
+	// Update an existing Descoper's RBAC and/or Attributes.
+	//
+	// IMPORTANT: All parameter *fields*, if set, will override whatever values are currently set
+	// in the existing descoper. Use carefully.
+	Update(ctx context.Context, id string, attributes *descope.DescoperAttributes, rbac *descope.DescoperRBAC) (*descope.Descoper, error)
+
+	// Get a Descoper by ID.
+	Get(ctx context.Context, id string) (*descope.Descoper, error)
+
+	// Delete an existing Descoper.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	Delete(ctx context.Context, id string) error
+
+	// List all descopers
+	List(ctx context.Context, options *descope.DescoperLoadOptions) ([]*descope.Descoper, int, error)
+}
+
 // Provides various APIs for managing a Descope project programmatically. A management key must
 // be provided in the DecopeClient configuration or by setting the DESCOPE_MANAGEMENT_KEY
 // environment variable. Management keys can be generated in the Descope console.
@@ -1122,4 +1149,7 @@ type Management interface {
 
 	// Provides functions for management key management.
 	ManagementKey() ManagementKey
+
+	// Provides functions for managing descopers.
+	Descoper() Descoper
 }

@@ -15,18 +15,18 @@ type mgmtkey struct {
 
 var _ sdk.ManagementKey = &mgmtkey{}
 
-type createResp struct {
+type mgmtKeyCreateResp struct {
 	Cleartext string           `json:"cleartext,omitempty"`
 	Key       *descope.MgmtKey `json:"key,omitempty"`
 }
 
-type genericResp struct {
+type mgmtKeyGenericResp struct {
 	Key *descope.MgmtKey `json:"key,omitempty"`
 }
-type searchResp struct {
+type mgmtKeySearchResp struct {
 	Keys []*descope.MgmtKey `json:"keys,omitempty"`
 }
-type deleteResp struct {
+type mgmtKeyDeleteResp struct {
 	Total int `json:"total,omitempty"`
 }
 
@@ -45,7 +45,7 @@ func (r *mgmtkey) Create(ctx context.Context, name, description string, expiresI
 	if err != nil {
 		return nil, "", err
 	}
-	res := &createResp{}
+	res := &mgmtKeyCreateResp{}
 	err = utils.Unmarshal([]byte(resp.BodyStr), res)
 	if err != nil {
 		return nil, "", err
@@ -59,7 +59,7 @@ func (r *mgmtkey) Update(ctx context.Context, id, name, description string, perm
 	}
 	body := map[string]any{
 		"id": id,
-		// to be updated
+		// following fields are updated on the object
 		"name":         name,
 		"description":  description,
 		"permittedIps": permittedIPs,
@@ -69,7 +69,7 @@ func (r *mgmtkey) Update(ctx context.Context, id, name, description string, perm
 	if err != nil {
 		return nil, err
 	}
-	res := &genericResp{}
+	res := &mgmtKeyGenericResp{}
 	err = utils.Unmarshal([]byte(resp.BodyStr), res)
 	if err != nil {
 		return nil, err
@@ -89,7 +89,7 @@ func (r *mgmtkey) Get(ctx context.Context, id string) (*descope.MgmtKey, error) 
 		return nil, err
 	}
 
-	res := &genericResp{}
+	res := &mgmtKeyGenericResp{}
 	err = utils.Unmarshal([]byte(resp.BodyStr), &res)
 	if err != nil {
 		return nil, err
@@ -108,12 +108,12 @@ func (r *mgmtkey) Delete(ctx context.Context, ids []string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	res := &deleteResp{}
+	res := &mgmtKeyDeleteResp{}
 	err = utils.Unmarshal([]byte(resp.BodyStr), res)
 	if err != nil {
 		return 0, err
 	}
-	return res.Total, err
+	return res.Total, nil
 }
 
 func (r *mgmtkey) Search(ctx context.Context, options *descope.MgmtKeySearchOptions) ([]*descope.MgmtKey, error) {
@@ -125,7 +125,7 @@ func (r *mgmtkey) Search(ctx context.Context, options *descope.MgmtKeySearchOpti
 		return nil, err
 	}
 
-	res := searchResp{}
+	res := mgmtKeySearchResp{}
 	err = utils.Unmarshal([]byte(resp.BodyStr), &res)
 	if err != nil {
 		return nil, err

@@ -1442,3 +1442,53 @@ type MgmtKeyProjectRole struct {
 
 type MgmtKeySearchOptions struct {
 }
+
+type DescoperRole string
+
+const (
+	DescoperRoleAdmin     DescoperRole = "admin"
+	DescoperRoleDeveloper DescoperRole = "developer"
+	DescoperRoleSupport   DescoperRole = "support"
+	DescoperRoleAuditor   DescoperRole = "auditor"
+)
+
+type DescoperAttributes struct {
+	DisplayName string `json:"displayName,omitempty"`
+	Email       string `json:"email,omitempty"`
+	Phone       string `json:"phone,omitempty"`
+	// custom attributes are unsupported
+}
+
+type DescoperTagRole struct {
+	Tags []string     `json:"tags,omitempty"`
+	Role DescoperRole `json:"role,omitempty"`
+}
+
+type DescoperProjectRole struct {
+	ProjectIDs []string     `json:"projectIds,omitempty"`
+	Role       DescoperRole `json:"role,omitempty"`
+}
+
+type DescoperRBAC struct {
+	IsCompanyAdmin bool                   `json:"isCompanyAdmin,omitempty"`
+	Tags           []*DescoperTagRole     `json:"tags,omitempty"`
+	Projects       []*DescoperProjectRole `json:"projects,omitempty"`
+}
+
+type Descoper struct {
+	ID         string              `json:"id,omitempty"`
+	LoginIDs   []string            `json:"loginIDs,omitempty"`
+	Attributes *DescoperAttributes `json:"attributes,omitempty"`
+	ReBac      *DescoperRBAC       `json:"rbac,omitempty"`
+	Status     string              `json:"status,omitempty"`
+}
+
+type DescoperCreate struct {
+	LoginID    string              `json:"loginId,omitempty"`
+	Attributes *DescoperAttributes `json:"attributes,omitempty"`
+	SendInvite bool                `json:"sendInvite,omitempty"`
+	ReBac      *DescoperRBAC       `json:"rbac,omitempty"`
+}
+
+type DescoperLoadOptions struct {
+}

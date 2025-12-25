@@ -28,6 +28,7 @@ type MockManagement struct {
 	*MockThirdPartyApplication
 	*MockOutboundApplication
 	*MockManagementKey
+	*MockDescoper
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -104,6 +105,10 @@ func (m *MockManagement) OutboundApplication() sdk.OutboundApplication {
 
 func (m *MockManagement) ManagementKey() sdk.ManagementKey {
 	return m.MockManagementKey
+}
+
+func (m *MockManagement) Descoper() sdk.Descoper {
+	return m.MockDescoper
 }
 
 // Mock JWT
@@ -2083,4 +2088,64 @@ func (m *MockManagementKey) Search(_ context.Context, options *descope.MgmtKeySe
 		m.SearchAssert(options)
 	}
 	return m.SearchResponse, m.SearchError
+}
+
+// Mock Descoper
+
+type MockDescoper struct {
+	CreateAssert        func(descopers []*descope.DescoperCreate)
+	CreateResponse      []*descope.Descoper
+	CreateTotalResponse int
+	CreateError         error
+
+	UpdateAssert   func(id string, attributes *descope.DescoperAttributes, rbac *descope.DescoperRBAC)
+	UpdateResponse *descope.Descoper
+	UpdateError    error
+
+	GetAssert   func(id string)
+	GetResponse *descope.Descoper
+	GetError    error
+
+	DeleteAssert func(id string)
+	DeleteError  error
+
+	ListAssert        func(options *descope.DescoperLoadOptions)
+	ListResponse      []*descope.Descoper
+	ListTotalResponse int
+	ListError         error
+}
+
+func (m *MockDescoper) Create(_ context.Context, descopers []*descope.DescoperCreate) ([]*descope.Descoper, int, error) {
+	if m.CreateAssert != nil {
+		m.CreateAssert(descopers)
+	}
+	return m.CreateResponse, m.CreateTotalResponse, m.CreateError
+}
+
+func (m *MockDescoper) Update(_ context.Context, id string, attributes *descope.DescoperAttributes, rbac *descope.DescoperRBAC) (*descope.Descoper, error) {
+	if m.UpdateAssert != nil {
+		m.UpdateAssert(id, attributes, rbac)
+	}
+	return m.UpdateResponse, m.UpdateError
+}
+
+func (m *MockDescoper) Get(_ context.Context, id string) (*descope.Descoper, error) {
+	if m.GetAssert != nil {
+		m.GetAssert(id)
+	}
+	return m.GetResponse, m.GetError
+}
+
+func (m *MockDescoper) Delete(_ context.Context, id string) error {
+	if m.DeleteAssert != nil {
+		m.DeleteAssert(id)
+	}
+	return m.DeleteError
+}
+
+func (m *MockDescoper) List(_ context.Context, options *descope.DescoperLoadOptions) ([]*descope.Descoper, int, error) {
+	if m.ListAssert != nil {
+		m.ListAssert(options)
+	}
+	return m.ListResponse, m.ListTotalResponse, m.ListError
 }
