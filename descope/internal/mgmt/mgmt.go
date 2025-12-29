@@ -40,6 +40,7 @@ type managementService struct {
 	thirdPartyApplication sdk.ThirdPartyApplication
 	outboundApplication   sdk.OutboundApplication
 	managementKey         sdk.ManagementKey
+	descoper              sdk.Descoper
 }
 
 func NewManagement(conf ManagementParams, provider *auth.Provider, c *api.Client) *managementService {
@@ -64,6 +65,7 @@ func NewManagement(conf ManagementParams, provider *auth.Provider, c *api.Client
 	service.fga = &fga{managementBase: base, fgaCacheURL: conf.FGACacheURL}
 	service.analytics = &analytics{managementBase: base}
 	service.managementKey = &mgmtkey{managementBase: base}
+	service.descoper = &descoper{managementBase: base}
 	return service
 }
 
@@ -160,6 +162,11 @@ func (mgmt *managementService) OutboundApplication() sdk.OutboundApplication {
 func (mgmt *managementService) ManagementKey() sdk.ManagementKey {
 	mgmt.ensureManagementKey()
 	return mgmt.managementKey
+}
+
+func (mgmt *managementService) Descoper() sdk.Descoper {
+	mgmt.ensureManagementKey()
+	return mgmt.descoper
 }
 
 func (mgmt *managementService) ensureManagementKey() {
