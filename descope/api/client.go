@@ -1671,18 +1671,23 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 	for _, cookie := range options.Cookies {
 		req.AddCookie(cookie)
 	}
-	bearer := c.Conf.ProjectID
+
+	bearerParts := []string{}
+	if len(c.Conf.ProjectID) > 0 {
+		bearerParts = append(bearerParts, c.Conf.ProjectID)
+	}
 	if len(pswd) > 0 {
-		bearer = fmt.Sprintf("%s:%s", bearer, pswd)
+		bearerParts = append(bearerParts, pswd)
 	}
-	// append a management key if available
-	// this is true for both management and authentication requests
-	// only using the different provided keys in the client initialization
-	mgmtKey := c.Conf.ManagementKey
-	if len(mgmtKey) > 0 {
-		bearer = fmt.Sprintf("%s:%s", bearer, mgmtKey)
+	if mgmtKey := c.Conf.ManagementKey; len(mgmtKey) > 0 {
+		// append a management key if available, this is true for both management and authentication requests
+		// only using the different provided keys in the client initialization
+		bearerParts = append(bearerParts, mgmtKey)
 	}
-	req.Header.Set(AuthorizationHeaderName, BearerAuthorizationPrefix+bearer)
+	if len(bearerParts) > 0 {
+		req.Header.Set(AuthorizationHeaderName, BearerAuthorizationPrefix+strings.Join(bearerParts, ":"))
+	}
+
 	c.addDescopeHeaders(req)
 
 	logger.LogDebug("Sending request to [%s]", url)
