@@ -298,8 +298,8 @@ type User interface {
 	// The isVerified flag must be true for the user to be able to login with
 	// the email address.
 	//
-	// The onConflictFail flag indicates whether to fail the update if the new email is also the login ID of another user.
-	UpdateEmail(ctx context.Context, loginIDOrUserID, email string, isVerified bool, onConflictFail bool) (*descope.UserResponse, error)
+	// The failOnConflict flag indicates whether to fail the update if the new email is also the login ID of another user.
+	UpdateEmail(ctx context.Context, loginIDOrUserID, email string, isVerified bool, failOnConflict bool) (*descope.UserResponse, error)
 
 	// Update the phone number for an existing user.
 	//
@@ -308,8 +308,8 @@ type User interface {
 	// The isVerified flag must be true for the user to be able to login with
 	// the phone number.
 	//
-	// The onConflictFail flag indicates whether to fail the update if the new phone number is also the login ID of another user.
-	UpdatePhone(ctx context.Context, loginIDOrUserID, phone string, isVerified bool, onConflictFail bool) (*descope.UserResponse, error)
+	// The failOnConflict flag indicates whether to fail the update if the new phone number is also the login ID of another user.
+	UpdatePhone(ctx context.Context, loginIDOrUserID, phone string, isVerified bool, failOnConflict bool) (*descope.UserResponse, error)
 
 	// Update an existing user's display name (i.e., their full name).
 	//

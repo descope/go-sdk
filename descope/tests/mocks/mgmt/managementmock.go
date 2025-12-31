@@ -419,11 +419,11 @@ type MockUser struct {
 	UpdateLoginIDResponse *descope.UserResponse
 	UpdateLoginIDError    error
 
-	UpdateEmailAssert   func(loginID, email string, isVerified bool, onConflictFail bool)
+	UpdateEmailAssert   func(loginID, email string, isVerified bool, failOnConflict bool)
 	UpdateEmailResponse *descope.UserResponse
 	UpdateEmailError    error
 
-	UpdatePhoneAssert   func(loginID, phone string, isVerified bool, onConflictFail bool)
+	UpdatePhoneAssert   func(loginID, phone string, isVerified bool, failOnConflict bool)
 	UpdatePhoneResponse *descope.UserResponse
 	UpdatePhoneError    error
 
@@ -697,16 +697,16 @@ func (m *MockUser) UpdateLoginID(_ context.Context, loginID, newLoginID string) 
 	return m.UpdateLoginIDResponse, m.UpdateEmailError
 }
 
-func (m *MockUser) UpdateEmail(_ context.Context, loginID, email string, isVerified bool, onConflictFail bool) (*descope.UserResponse, error) {
+func (m *MockUser) UpdateEmail(_ context.Context, loginID, email string, isVerified bool, failOnConflict bool) (*descope.UserResponse, error) {
 	if m.UpdateEmailAssert != nil {
-		m.UpdateEmailAssert(loginID, email, isVerified, onConflictFail)
+		m.UpdateEmailAssert(loginID, email, isVerified, failOnConflict)
 	}
 	return m.UpdateEmailResponse, m.UpdateEmailError
 }
 
-func (m *MockUser) UpdatePhone(_ context.Context, loginID, phone string, isVerified bool, onConflictFail bool) (*descope.UserResponse, error) {
+func (m *MockUser) UpdatePhone(_ context.Context, loginID, phone string, isVerified bool, failOnConflict bool) (*descope.UserResponse, error) {
 	if m.UpdatePhoneAssert != nil {
-		m.UpdatePhoneAssert(loginID, phone, isVerified, onConflictFail)
+		m.UpdatePhoneAssert(loginID, phone, isVerified, failOnConflict)
 	}
 	return m.UpdatePhoneResponse, m.UpdatePhoneError
 }
