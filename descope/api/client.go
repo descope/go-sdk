@@ -1239,7 +1239,7 @@ func (e *endpoints) ManagementAuditCreate() string {
 }
 
 func (e *endpoints) ManagementAuditWebhookCreate() string {
-	return path.Join(e.version, e.mgmt.auditWebhookCreate)
+	return path.Join(e.versionV2, e.mgmt.auditWebhookCreate)
 }
 
 func (e *endpoints) ManagementAnalyticsSearch() string {

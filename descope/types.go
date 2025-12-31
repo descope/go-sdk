@@ -1059,7 +1059,7 @@ type AuditWebhook struct {
 	HmacSecret     string                       `json:"hmacSecret,omitempty"`
 	Headers        map[string]string            `json:"headers,omitempty"`
 	Insecure       bool                         `json:"insecure,omitempty"`
-	Filters        *AuditFilters                `json:"filters,omitempty"`
+	Filters        []*AuditFilters              `json:"filters,omitempty"`
 }
 
 type ConnectorHTTPAuthentication struct {
