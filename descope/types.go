@@ -1257,6 +1257,39 @@ type CreateOutboundAppRequest struct {
 	ClientSecret string `json:"clientSecret,omitempty"`
 }
 
+// OutboundAppUserTokenOptions specifies additional options for fetching outbound app user tokens.
+type OutboundAppUserTokenOptions struct {
+	WithRefreshToken bool `json:"withRefreshToken,omitempty"`
+	ForceRefresh     bool `json:"forceRefresh,omitempty"`
+}
+
+// OutboundAppUserTokenRequest represents a request to fetch an outbound app user token.
+type OutboundAppUserTokenRequest struct {
+	AppID    string                       `json:"appId"`
+	UserID   string                       `json:"userId"`
+	Scopes   []string                     `json:"scopes,omitempty"`
+	Options  *OutboundAppUserTokenOptions `json:"options,omitempty"`
+	TenantID string                       `json:"tenantId,omitempty"`
+}
+
+// OutboundAppUserToken represents a token associated with an outbound application user.
+type OutboundAppUserToken struct {
+	ID               string   `json:"id,omitempty"`
+	AppID            string   `json:"appId,omitempty"`
+	UserID           string   `json:"userId,omitempty"`
+	TokenSub         string   `json:"tokenSub,omitempty"`
+	AccessToken      string   `json:"accessToken,omitempty"`
+	AccessTokenType  string   `json:"accessTokenType,omitempty"`
+	AccessTokenExp   string   `json:"accessTokenExpiry,omitempty"`
+	HasRefreshToken  bool     `json:"hasRefreshToken,omitempty"`
+	RefreshToken     string   `json:"refreshToken,omitempty"`
+	LastRefreshTime  string   `json:"lastRefreshTime,omitempty"`
+	LastRefreshError string   `json:"lastRefreshError,omitempty"`
+	Scopes           []string `json:"scopes,omitempty"`
+	TenantID         string   `json:"tenantId,omitempty"`
+	GrantedBy        string   `json:"grantedBy,omitempty"`
+}
+
 type ThirdPartyApplicationScope struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`

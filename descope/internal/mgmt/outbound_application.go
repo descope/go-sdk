@@ -113,6 +113,75 @@ func makeCreateUpdateOutboundApplicationRequest(app *descope.OutboundApp) map[st
 	}
 }
 
+func (s *outboundApplication) FetchUserToken(ctx context.Context, request *descope.OutboundAppUserTokenRequest) (*descope.OutboundAppUserToken, error) {
+	if request == nil {
+		return nil, utils.NewInvalidArgumentError("request")
+	}
+	if request.AppID == "" {
+		return nil, utils.NewInvalidArgumentError("request.AppID")
+	}
+	if request.UserID == "" {
+		return nil, utils.NewInvalidArgumentError("request.UserID")
+	}
+
+	req := map[string]any{
+		"appId":  request.AppID,
+		"userId": request.UserID,
+	}
+	if len(request.Scopes) > 0 {
+		req["scopes"] = request.Scopes
+	}
+	if request.Options != nil {
+		req["options"] = map[string]any{
+			"withRefreshToken": request.Options.WithRefreshToken,
+			"forceRefresh":     request.Options.ForceRefresh,
+		}
+	}
+	if request.TenantID != "" {
+		req["tenantId"] = request.TenantID
+	}
+
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementOutboundApplicationUserToken(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+
+	res := &struct {
+		Token *descope.OutboundAppUserToken `json:"token"`
+	}{}
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), res); err != nil {
+		return nil, err
+	}
+	return res.Token, nil
+}
+
+func (s *outboundApplication) DeleteUserTokens(ctx context.Context, appID, userID string) error {
+	if appID == "" && userID == "" {
+		return utils.NewInvalidArgumentError("appID or userID")
+	}
+
+	queryParams := map[string]string{}
+	if appID != "" {
+		queryParams["appId"] = appID
+	}
+	if userID != "" {
+		queryParams["userId"] = userID
+	}
+
+	_, err := s.client.DoDeleteRequest(ctx, api.Routes.ManagementOutboundApplicationDeleteUserTokens(), &api.HTTPRequest{QueryParams: queryParams}, "")
+	return err
+}
+
+func (s *outboundApplication) DeleteTokenByID(ctx context.Context, tokenID string) error {
+	if tokenID == "" {
+		return utils.NewInvalidArgumentError("tokenID")
+	}
+
+	queryParams := map[string]string{"id": tokenID}
+	_, err := s.client.DoDeleteRequest(ctx, api.Routes.ManagementOutboundApplicationDeleteTokenByID(), &api.HTTPRequest{QueryParams: queryParams}, "")
+	return err
+}
+
 func (s *outboundApplication) unmarshalAppResponse(httpRes *api.HTTPResponse) (*descope.OutboundApp, error) {
 	var err error
 	res := &struct {

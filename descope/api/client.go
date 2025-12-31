@@ -239,6 +239,9 @@ var (
 			outboundApplicationDelete:                "mgmt/outbound/app/delete",
 			outboundApplicationLoad:                  "mgmt/outbound/app",
 			outboundApplicationLoadAll:               "mgmt/outbound/apps",
+			outboundApplicationUserToken:             "mgmt/outbound/app/user/token",
+			outboundApplicationDeleteUserTokens:      "mgmt/outbound/user/tokens",
+			outboundApplicationDeleteTokenByID:       "mgmt/outbound/token",
 			thirdPartyApplicationCreate:              "mgmt/thirdparty/app/create",
 			thirdPartyApplicationUpdate:              "mgmt/thirdparty/app/update",
 			thirdPartyApplicationPatch:               "mgmt/thirdparty/app/patch",
@@ -508,11 +511,14 @@ type mgmtEndpoints struct {
 	fgaResourcesLoad           string
 	fgaResourcesSave           string
 
-	outboundApplicationCreate  string
-	outboundApplicationUpdate  string
-	outboundApplicationDelete  string
-	outboundApplicationLoad    string
-	outboundApplicationLoadAll string
+	outboundApplicationCreate           string
+	outboundApplicationUpdate           string
+	outboundApplicationDelete           string
+	outboundApplicationLoad             string
+	outboundApplicationLoadAll          string
+	outboundApplicationUserToken        string
+	outboundApplicationDeleteUserTokens string
+	outboundApplicationDeleteTokenByID  string
 
 	thirdPartyApplicationCreate              string
 	thirdPartyApplicationUpdate              string
@@ -1372,6 +1378,18 @@ func (e *endpoints) ManagementOutboundApplicationLoad() string {
 
 func (e *endpoints) ManagementOutboundApplicationLoadAll() string {
 	return path.Join(e.version, e.mgmt.outboundApplicationLoadAll)
+}
+
+func (e *endpoints) ManagementOutboundApplicationUserToken() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationUserToken)
+}
+
+func (e *endpoints) ManagementOutboundApplicationDeleteUserTokens() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationDeleteUserTokens)
+}
+
+func (e *endpoints) ManagementOutboundApplicationDeleteTokenByID() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationDeleteTokenByID)
 }
 
 func (e *endpoints) ManagementThirdPartyApplicationCreate() string {

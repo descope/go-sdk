@@ -1996,6 +1996,16 @@ type MockOutboundApplication struct {
 
 	LoadAllApplicationsResponse []*descope.OutboundApp
 	LoadAllApplicationsError    error
+
+	FetchUserTokenAssert   func(request *descope.OutboundAppUserTokenRequest)
+	FetchUserTokenResponse *descope.OutboundAppUserToken
+	FetchUserTokenError    error
+
+	DeleteUserTokensAssert func(appID, userID string)
+	DeleteUserTokensError  error
+
+	DeleteTokenByIDAssert func(tokenID string)
+	DeleteTokenByIDError  error
 }
 
 func (m *MockOutboundApplication) CreateApplication(_ context.Context, appRequest *descope.CreateOutboundAppRequest) (app *descope.OutboundApp, err error) {
@@ -2028,6 +2038,27 @@ func (m *MockOutboundApplication) LoadApplication(_ context.Context, id string) 
 
 func (m *MockOutboundApplication) LoadAllApplications(_ context.Context) ([]*descope.OutboundApp, error) {
 	return m.LoadAllApplicationsResponse, m.LoadAllApplicationsError
+}
+
+func (m *MockOutboundApplication) FetchUserToken(_ context.Context, request *descope.OutboundAppUserTokenRequest) (*descope.OutboundAppUserToken, error) {
+	if m.FetchUserTokenAssert != nil {
+		m.FetchUserTokenAssert(request)
+	}
+	return m.FetchUserTokenResponse, m.FetchUserTokenError
+}
+
+func (m *MockOutboundApplication) DeleteUserTokens(_ context.Context, appID, userID string) error {
+	if m.DeleteUserTokensAssert != nil {
+		m.DeleteUserTokensAssert(appID, userID)
+	}
+	return m.DeleteUserTokensError
+}
+
+func (m *MockOutboundApplication) DeleteTokenByID(_ context.Context, tokenID string) error {
+	if m.DeleteTokenByIDAssert != nil {
+		m.DeleteTokenByIDAssert(tokenID)
+	}
+	return m.DeleteTokenByIDError
 }
 
 // Mock ManagementKey

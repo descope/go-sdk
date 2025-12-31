@@ -1005,7 +1005,7 @@ type ThirdPartyApplication interface {
 	SearchConsents(ctx context.Context, options *descope.ThirdPartyApplicationConsentSearchOptions) ([]*descope.ThirdPartyApplicationConsent, int, error)
 }
 
-// Provides functions for managing third party applications in a project.
+// Provides functions for managing outbound applications in a project.
 type OutboundApplication interface {
 	// Create a new outbound application with the given name.
 	CreateApplication(ctx context.Context, appRequest *descope.CreateOutboundAppRequest) (app *descope.OutboundApp, err error)
@@ -1027,6 +1027,16 @@ type OutboundApplication interface {
 
 	// Load all project outbound applications.
 	LoadAllApplications(ctx context.Context) ([]*descope.OutboundApp, error)
+
+	// Fetch user token with the specified scopes for an outbound application.
+	FetchUserToken(ctx context.Context, request *descope.OutboundAppUserTokenRequest) (*descope.OutboundAppUserToken, error)
+
+	// Delete user tokens for an outbound application by appID and/or userID.
+	// At least one of appID or userID must be provided.
+	DeleteUserTokens(ctx context.Context, appID, userID string) error
+
+	// Delete a specific outbound application token by its ID.
+	DeleteTokenByID(ctx context.Context, tokenID string) error
 }
 
 // Provides functions for managing management keys in a project.
