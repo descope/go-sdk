@@ -153,7 +153,10 @@ func (s *outboundApplication) DeleteUserTokens(ctx context.Context, appID, userI
 		QueryParams: params,
 	}
 	_, err := s.client.DoDeleteRequest(ctx, api.Routes.ManagementOutboundApplicationDeleteUserTokens(), req, "")
-	return err
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *outboundApplication) DeleteTokenByID(ctx context.Context, id string) error {
@@ -165,7 +168,10 @@ func (s *outboundApplication) DeleteTokenByID(ctx context.Context, id string) er
 		QueryParams: map[string]string{"id": id},
 	}
 	_, err := s.client.DoDeleteRequest(ctx, api.Routes.ManagementOutboundApplicationDeleteTokenByID(), req, "")
-	return err
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *outboundApplication) unmarshalAppResponse(httpRes *api.HTTPResponse) (*descope.OutboundApp, error) {
