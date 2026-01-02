@@ -113,6 +113,61 @@ func makeCreateUpdateOutboundApplicationRequest(app *descope.OutboundApp) map[st
 	}
 }
 
+func (s *outboundApplication) FetchUserToken(ctx context.Context, request *descope.FetchOutboundAppUserTokenRequest) (*descope.OutboundAppUserToken, error) {
+	if request == nil {
+		return nil, utils.NewInvalidArgumentError("request")
+	}
+	if request.AppID == "" {
+		return nil, utils.NewInvalidArgumentError("request.AppID")
+	}
+	if request.UserID == "" {
+		return nil, utils.NewInvalidArgumentError("request.UserID")
+	}
+
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementOutboundApplicationFetchUserToken(), request, nil, "")
+	if err != nil {
+		return nil, err
+	}
+
+	var response descope.FetchOutboundAppUserTokenResponse
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), &response); err != nil {
+		return nil, err
+	}
+	return response.Token, nil
+}
+
+func (s *outboundApplication) DeleteUserTokens(ctx context.Context, appID, userID string) error {
+	if appID == "" && userID == "" {
+		return utils.NewInvalidArgumentError("either appID or userID must be provided")
+	}
+
+	params := map[string]string{}
+	if appID != "" {
+		params["appId"] = appID
+	}
+	if userID != "" {
+		params["userId"] = userID
+	}
+
+	req := &api.HTTPRequest{
+		QueryParams: params,
+	}
+	_, err := s.client.DoDeleteRequest(ctx, api.Routes.ManagementOutboundApplicationDeleteUserTokens(), req, "")
+	return err
+}
+
+func (s *outboundApplication) DeleteTokenByID(ctx context.Context, id string) error {
+	if id == "" {
+		return utils.NewInvalidArgumentError("id")
+	}
+
+	req := &api.HTTPRequest{
+		QueryParams: map[string]string{"id": id},
+	}
+	_, err := s.client.DoDeleteRequest(ctx, api.Routes.ManagementOutboundApplicationDeleteTokenByID(), req, "")
+	return err
+}
+
 func (s *outboundApplication) unmarshalAppResponse(httpRes *api.HTTPResponse) (*descope.OutboundApp, error) {
 	var err error
 	res := &struct {
