@@ -16,7 +16,7 @@ validate_commit_message() {
     echo "- Validating commit message with commitlint"
     if [ -f .git/COMMIT_EDITMSG ]; then
         ensure_commitlint
-        if ! commitlint --file .git/COMMIT_EDITMSG; then
+        if ! commitlint lint < .git/COMMIT_EDITMSG; then
             echo "Commit message does not follow conventional commits format"
             echo "Expected format: <type>(<scope>): <subject>"
             echo "Example: feat: add new authentication method"
