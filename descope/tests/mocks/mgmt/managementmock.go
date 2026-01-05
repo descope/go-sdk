@@ -28,6 +28,7 @@ type MockManagement struct {
 	*MockThirdPartyApplication
 	*MockOutboundApplication
 	*MockManagementKey
+	*MockDescoper
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -104,6 +105,10 @@ func (m *MockManagement) OutboundApplication() sdk.OutboundApplication {
 
 func (m *MockManagement) ManagementKey() sdk.ManagementKey {
 	return m.MockManagementKey
+}
+
+func (m *MockManagement) Descoper() sdk.Descoper {
+	return m.MockDescoper
 }
 
 // Mock JWT
@@ -414,11 +419,11 @@ type MockUser struct {
 	UpdateLoginIDResponse *descope.UserResponse
 	UpdateLoginIDError    error
 
-	UpdateEmailAssert   func(loginID, email string, isVerified bool)
+	UpdateEmailAssert   func(loginID, email string, isVerified bool, failOnConflict bool)
 	UpdateEmailResponse *descope.UserResponse
 	UpdateEmailError    error
 
-	UpdatePhoneAssert   func(loginID, phone string, isVerified bool)
+	UpdatePhoneAssert   func(loginID, phone string, isVerified bool, failOnConflict bool)
 	UpdatePhoneResponse *descope.UserResponse
 	UpdatePhoneError    error
 
@@ -692,16 +697,16 @@ func (m *MockUser) UpdateLoginID(_ context.Context, loginID, newLoginID string) 
 	return m.UpdateLoginIDResponse, m.UpdateEmailError
 }
 
-func (m *MockUser) UpdateEmail(_ context.Context, loginID, email string, isVerified bool) (*descope.UserResponse, error) {
+func (m *MockUser) UpdateEmail(_ context.Context, loginID, email string, isVerified bool, failOnConflict bool) (*descope.UserResponse, error) {
 	if m.UpdateEmailAssert != nil {
-		m.UpdateEmailAssert(loginID, email, isVerified)
+		m.UpdateEmailAssert(loginID, email, isVerified, failOnConflict)
 	}
 	return m.UpdateEmailResponse, m.UpdateEmailError
 }
 
-func (m *MockUser) UpdatePhone(_ context.Context, loginID, phone string, isVerified bool) (*descope.UserResponse, error) {
+func (m *MockUser) UpdatePhone(_ context.Context, loginID, phone string, isVerified bool, failOnConflict bool) (*descope.UserResponse, error) {
 	if m.UpdatePhoneAssert != nil {
-		m.UpdatePhoneAssert(loginID, phone, isVerified)
+		m.UpdatePhoneAssert(loginID, phone, isVerified, failOnConflict)
 	}
 	return m.UpdatePhoneResponse, m.UpdatePhoneError
 }
@@ -1991,6 +1996,16 @@ type MockOutboundApplication struct {
 
 	LoadAllApplicationsResponse []*descope.OutboundApp
 	LoadAllApplicationsError    error
+
+	FetchUserTokenAssert   func(request *descope.FetchOutboundAppUserTokenRequest)
+	FetchUserTokenResponse *descope.OutboundAppUserToken
+	FetchUserTokenError    error
+
+	DeleteUserTokensAssert func(appID, userID string)
+	DeleteUserTokensError  error
+
+	DeleteTokenByIDAssert func(id string)
+	DeleteTokenByIDError  error
 }
 
 func (m *MockOutboundApplication) CreateApplication(_ context.Context, appRequest *descope.CreateOutboundAppRequest) (app *descope.OutboundApp, err error) {
@@ -2023,6 +2038,27 @@ func (m *MockOutboundApplication) LoadApplication(_ context.Context, id string) 
 
 func (m *MockOutboundApplication) LoadAllApplications(_ context.Context) ([]*descope.OutboundApp, error) {
 	return m.LoadAllApplicationsResponse, m.LoadAllApplicationsError
+}
+
+func (m *MockOutboundApplication) FetchUserToken(_ context.Context, request *descope.FetchOutboundAppUserTokenRequest) (*descope.OutboundAppUserToken, error) {
+	if m.FetchUserTokenAssert != nil {
+		m.FetchUserTokenAssert(request)
+	}
+	return m.FetchUserTokenResponse, m.FetchUserTokenError
+}
+
+func (m *MockOutboundApplication) DeleteUserTokens(_ context.Context, appID, userID string) error {
+	if m.DeleteUserTokensAssert != nil {
+		m.DeleteUserTokensAssert(appID, userID)
+	}
+	return m.DeleteUserTokensError
+}
+
+func (m *MockOutboundApplication) DeleteTokenByID(_ context.Context, id string) error {
+	if m.DeleteTokenByIDAssert != nil {
+		m.DeleteTokenByIDAssert(id)
+	}
+	return m.DeleteTokenByIDError
 }
 
 // Mock ManagementKey
@@ -2083,4 +2119,64 @@ func (m *MockManagementKey) Search(_ context.Context, options *descope.MgmtKeySe
 		m.SearchAssert(options)
 	}
 	return m.SearchResponse, m.SearchError
+}
+
+// Mock Descoper
+
+type MockDescoper struct {
+	CreateAssert        func(descopers []*descope.DescoperCreate)
+	CreateResponse      []*descope.Descoper
+	CreateTotalResponse int
+	CreateError         error
+
+	UpdateAssert   func(id string, attributes *descope.DescoperAttributes, rbac *descope.DescoperRBAC)
+	UpdateResponse *descope.Descoper
+	UpdateError    error
+
+	GetAssert   func(id string)
+	GetResponse *descope.Descoper
+	GetError    error
+
+	DeleteAssert func(id string)
+	DeleteError  error
+
+	ListAssert        func(options *descope.DescoperLoadOptions)
+	ListResponse      []*descope.Descoper
+	ListTotalResponse int
+	ListError         error
+}
+
+func (m *MockDescoper) Create(_ context.Context, descopers []*descope.DescoperCreate) ([]*descope.Descoper, int, error) {
+	if m.CreateAssert != nil {
+		m.CreateAssert(descopers)
+	}
+	return m.CreateResponse, m.CreateTotalResponse, m.CreateError
+}
+
+func (m *MockDescoper) Update(_ context.Context, id string, attributes *descope.DescoperAttributes, rbac *descope.DescoperRBAC) (*descope.Descoper, error) {
+	if m.UpdateAssert != nil {
+		m.UpdateAssert(id, attributes, rbac)
+	}
+	return m.UpdateResponse, m.UpdateError
+}
+
+func (m *MockDescoper) Get(_ context.Context, id string) (*descope.Descoper, error) {
+	if m.GetAssert != nil {
+		m.GetAssert(id)
+	}
+	return m.GetResponse, m.GetError
+}
+
+func (m *MockDescoper) Delete(_ context.Context, id string) error {
+	if m.DeleteAssert != nil {
+		m.DeleteAssert(id)
+	}
+	return m.DeleteError
+}
+
+func (m *MockDescoper) List(_ context.Context, options *descope.DescoperLoadOptions) ([]*descope.Descoper, int, error) {
+	if m.ListAssert != nil {
+		m.ListAssert(options)
+	}
+	return m.ListResponse, m.ListTotalResponse, m.ListError
 }

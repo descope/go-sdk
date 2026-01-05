@@ -921,8 +921,8 @@ type UserSearchOptions struct {
 }
 
 type UserSearchSort struct {
-	Field string
-	Desc  bool
+	Field string `json:"field"`
+	Desc  bool   `json:"desc"`
 }
 
 type RoleList struct {
@@ -936,6 +936,7 @@ const (
 	UserStatusEnabled  UserStatus = "enabled"
 	UserStatusDisabled UserStatus = "disabled"
 	UserStatusInvited  UserStatus = "invited"
+	UserStatusExpired  UserStatus = "expired"
 )
 
 type UserImportResponse struct {
@@ -1058,7 +1059,7 @@ type AuditWebhook struct {
 	HmacSecret     string                       `json:"hmacSecret,omitempty"`
 	Headers        map[string]string            `json:"headers,omitempty"`
 	Insecure       bool                         `json:"insecure,omitempty"`
-	Filters        *AuditFilters                `json:"filters,omitempty"`
+	Filters        []*AuditFilters              `json:"filters,omitempty"`
 }
 
 type ConnectorHTTPAuthentication struct {
@@ -1256,6 +1257,44 @@ type CreateOutboundAppRequest struct {
 	ClientSecret string `json:"clientSecret,omitempty"`
 }
 
+// FetchOutboundAppUserTokenRequest represents a request to fetch an outbound app user token
+type FetchOutboundAppUserTokenRequest struct {
+	AppID    string                       `json:"appId"`
+	UserID   string                       `json:"userId"`
+	Scopes   []string                     `json:"scopes"`
+	Options  *OutboundAppUserTokenOptions `json:"options,omitempty"`
+	TenantID string                       `json:"tenantId,omitempty"`
+}
+
+// OutboundAppUserTokenOptions represents options for fetching a user token
+type OutboundAppUserTokenOptions struct {
+	WithRefreshToken bool `json:"withRefreshToken,omitempty"`
+	ForceRefresh     bool `json:"forceRefresh,omitempty"`
+}
+
+// OutboundAppUserToken represents an outbound app user token
+type OutboundAppUserToken struct {
+	ID                string   `json:"id"`
+	AppID             string   `json:"appId"`
+	UserID            string   `json:"userId"`
+	TokenSub          string   `json:"tokenSub"`
+	AccessToken       string   `json:"accessToken"`
+	AccessTokenType   string   `json:"accessTokenType"`
+	AccessTokenExpiry string   `json:"accessTokenExpiry"`
+	HasRefreshToken   bool     `json:"hasRefreshToken"`
+	RefreshToken      string   `json:"refreshToken,omitempty"`
+	LastRefreshTime   string   `json:"lastRefreshTime,omitempty"`
+	LastRefreshError  string   `json:"lastRefreshError,omitempty"`
+	Scopes            []string `json:"scopes"`
+	TenantID          string   `json:"tenantId,omitempty"`
+	GrantedBy         string   `json:"grantedBy,omitempty"`
+}
+
+// FetchOutboundAppUserTokenResponse represents the response from fetching a user token
+type FetchOutboundAppUserTokenResponse struct {
+	Token *OutboundAppUserToken `json:"token"`
+}
+
 type ThirdPartyApplicationScope struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
@@ -1440,4 +1479,54 @@ type MgmtKeyProjectRole struct {
 }
 
 type MgmtKeySearchOptions struct {
+}
+
+type DescoperRole string
+
+const (
+	DescoperRoleAdmin     DescoperRole = "admin"
+	DescoperRoleDeveloper DescoperRole = "developer"
+	DescoperRoleSupport   DescoperRole = "support"
+	DescoperRoleAuditor   DescoperRole = "auditor"
+)
+
+type DescoperAttributes struct {
+	DisplayName string `json:"displayName,omitempty"`
+	Email       string `json:"email,omitempty"`
+	Phone       string `json:"phone,omitempty"`
+	// custom attributes are unsupported
+}
+
+type DescoperTagRole struct {
+	Tags []string     `json:"tags,omitempty"`
+	Role DescoperRole `json:"role,omitempty"`
+}
+
+type DescoperProjectRole struct {
+	ProjectIDs []string     `json:"projectIds,omitempty"`
+	Role       DescoperRole `json:"role,omitempty"`
+}
+
+type DescoperRBAC struct {
+	IsCompanyAdmin bool                   `json:"isCompanyAdmin,omitempty"`
+	Tags           []*DescoperTagRole     `json:"tags,omitempty"`
+	Projects       []*DescoperProjectRole `json:"projects,omitempty"`
+}
+
+type Descoper struct {
+	ID         string              `json:"id,omitempty"`
+	LoginIDs   []string            `json:"loginIDs,omitempty"`
+	Attributes *DescoperAttributes `json:"attributes,omitempty"`
+	ReBac      *DescoperRBAC       `json:"rbac,omitempty"`
+	Status     string              `json:"status,omitempty"`
+}
+
+type DescoperCreate struct {
+	LoginID    string              `json:"loginId,omitempty"`
+	Attributes *DescoperAttributes `json:"attributes,omitempty"`
+	SendInvite bool                `json:"sendInvite,omitempty"`
+	ReBac      *DescoperRBAC       `json:"rbac,omitempty"`
+}
+
+type DescoperLoadOptions struct {
 }

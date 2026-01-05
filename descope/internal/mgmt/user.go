@@ -357,11 +357,11 @@ func (u *user) UpdateLoginID(ctx context.Context, loginID, newLoginID string) (*
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) UpdateEmail(ctx context.Context, loginIDOrUserID, email string, isVerified bool) (*descope.UserResponse, error) {
+func (u *user) UpdateEmail(ctx context.Context, loginIDOrUserID, email string, isVerified bool, failOnConflict bool) (*descope.UserResponse, error) {
 	if loginIDOrUserID == "" {
 		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
-	req := map[string]any{"loginId": loginIDOrUserID, "email": email, "verified": isVerified}
+	req := map[string]any{"loginId": loginIDOrUserID, "email": email, "verified": isVerified, "failOnConflict": failOnConflict}
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateEmail(), req, nil, "")
 	if err != nil {
 		return nil, err
@@ -369,11 +369,11 @@ func (u *user) UpdateEmail(ctx context.Context, loginIDOrUserID, email string, i
 	return unmarshalUserResponse(res)
 }
 
-func (u *user) UpdatePhone(ctx context.Context, loginIDOrUserID, phone string, isVerified bool) (*descope.UserResponse, error) {
+func (u *user) UpdatePhone(ctx context.Context, loginIDOrUserID, phone string, isVerified bool, failOnConflict bool) (*descope.UserResponse, error) {
 	if loginIDOrUserID == "" {
 		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
 	}
-	req := map[string]any{"loginId": loginIDOrUserID, "phone": phone, "verified": isVerified}
+	req := map[string]any{"loginId": loginIDOrUserID, "phone": phone, "verified": isVerified, "failOnConflict": failOnConflict}
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdatePhone(), req, nil, "")
 	if err != nil {
 		return nil, err
