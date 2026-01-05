@@ -1,0 +1,17 @@
+{
+  "name": "go-sdk",
+  "version": "1.0.0",
+  "description": "Descope SDK for Go",
+  "private": true,
+  "scripts": {
+    "commitlint": "commitlint --edit"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^18.4.3",
+    "@commitlint/config-conventional": "^18.4.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/descope/go-sdk.git"
+  }
+}
