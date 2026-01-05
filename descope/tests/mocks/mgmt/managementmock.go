@@ -419,11 +419,11 @@ type MockUser struct {
 	UpdateLoginIDResponse *descope.UserResponse
 	UpdateLoginIDError    error
 
-	UpdateEmailAssert   func(loginID, email string, isVerified bool)
+	UpdateEmailAssert   func(loginID, email string, isVerified bool, failOnConflict bool)
 	UpdateEmailResponse *descope.UserResponse
 	UpdateEmailError    error
 
-	UpdatePhoneAssert   func(loginID, phone string, isVerified bool)
+	UpdatePhoneAssert   func(loginID, phone string, isVerified bool, failOnConflict bool)
 	UpdatePhoneResponse *descope.UserResponse
 	UpdatePhoneError    error
 
@@ -697,16 +697,16 @@ func (m *MockUser) UpdateLoginID(_ context.Context, loginID, newLoginID string) 
 	return m.UpdateLoginIDResponse, m.UpdateEmailError
 }
 
-func (m *MockUser) UpdateEmail(_ context.Context, loginID, email string, isVerified bool) (*descope.UserResponse, error) {
+func (m *MockUser) UpdateEmail(_ context.Context, loginID, email string, isVerified bool, failOnConflict bool) (*descope.UserResponse, error) {
 	if m.UpdateEmailAssert != nil {
-		m.UpdateEmailAssert(loginID, email, isVerified)
+		m.UpdateEmailAssert(loginID, email, isVerified, failOnConflict)
 	}
 	return m.UpdateEmailResponse, m.UpdateEmailError
 }
 
-func (m *MockUser) UpdatePhone(_ context.Context, loginID, phone string, isVerified bool) (*descope.UserResponse, error) {
+func (m *MockUser) UpdatePhone(_ context.Context, loginID, phone string, isVerified bool, failOnConflict bool) (*descope.UserResponse, error) {
 	if m.UpdatePhoneAssert != nil {
-		m.UpdatePhoneAssert(loginID, phone, isVerified)
+		m.UpdatePhoneAssert(loginID, phone, isVerified, failOnConflict)
 	}
 	return m.UpdatePhoneResponse, m.UpdatePhoneError
 }
@@ -1996,6 +1996,16 @@ type MockOutboundApplication struct {
 
 	LoadAllApplicationsResponse []*descope.OutboundApp
 	LoadAllApplicationsError    error
+
+	FetchUserTokenAssert   func(request *descope.FetchOutboundAppUserTokenRequest)
+	FetchUserTokenResponse *descope.OutboundAppUserToken
+	FetchUserTokenError    error
+
+	DeleteUserTokensAssert func(appID, userID string)
+	DeleteUserTokensError  error
+
+	DeleteTokenByIDAssert func(id string)
+	DeleteTokenByIDError  error
 }
 
 func (m *MockOutboundApplication) CreateApplication(_ context.Context, appRequest *descope.CreateOutboundAppRequest) (app *descope.OutboundApp, err error) {
@@ -2028,6 +2038,27 @@ func (m *MockOutboundApplication) LoadApplication(_ context.Context, id string) 
 
 func (m *MockOutboundApplication) LoadAllApplications(_ context.Context) ([]*descope.OutboundApp, error) {
 	return m.LoadAllApplicationsResponse, m.LoadAllApplicationsError
+}
+
+func (m *MockOutboundApplication) FetchUserToken(_ context.Context, request *descope.FetchOutboundAppUserTokenRequest) (*descope.OutboundAppUserToken, error) {
+	if m.FetchUserTokenAssert != nil {
+		m.FetchUserTokenAssert(request)
+	}
+	return m.FetchUserTokenResponse, m.FetchUserTokenError
+}
+
+func (m *MockOutboundApplication) DeleteUserTokens(_ context.Context, appID, userID string) error {
+	if m.DeleteUserTokensAssert != nil {
+		m.DeleteUserTokensAssert(appID, userID)
+	}
+	return m.DeleteUserTokensError
+}
+
+func (m *MockOutboundApplication) DeleteTokenByID(_ context.Context, id string) error {
+	if m.DeleteTokenByIDAssert != nil {
+		m.DeleteTokenByIDAssert(id)
+	}
+	return m.DeleteTokenByIDError
 }
 
 // Mock ManagementKey

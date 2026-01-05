@@ -366,6 +366,27 @@ func TestRefreshSessionWithTokenExpired(t *testing.T) {
 	require.False(t, ok)
 }
 
+func TestRefreshSessionWithTokenViaCookie(t *testing.T) {
+	// Test that refresh session works when tokens are returned via cookies instead of response body
+	// This tests the fix for a panic that occurred when sToken was nil due to empty body
+	sessionCookie := &http.Cookie{Name: descope.SessionCookieName, Value: jwtTokenValid}
+	refreshCookie := &http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid}
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(`{"cookiePath": "/", "cookieDomain": "test.com"}`)),
+			Header:     http.Header{"Set-Cookie": []string{sessionCookie.String(), refreshCookie.String()}},
+		}, nil
+	})
+	require.NoError(t, err)
+	ok, token, err := a.RefreshSessionWithToken(context.Background(), jwtRTokenValid)
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.NotNil(t, token)
+	require.NotEmpty(t, token.JWT)
+	require.NotZero(t, token.RefreshExpiration)
+}
+
 // Tenant Selection
 
 func TestSelectTenantWithRequest(t *testing.T) {

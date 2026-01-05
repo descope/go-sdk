@@ -297,7 +297,9 @@ type User interface {
 	//
 	// The isVerified flag must be true for the user to be able to login with
 	// the email address.
-	UpdateEmail(ctx context.Context, loginIDOrUserID, email string, isVerified bool) (*descope.UserResponse, error)
+	//
+	// The failOnConflict flag indicates whether to fail the update if the new email is also the login ID of another user.
+	UpdateEmail(ctx context.Context, loginIDOrUserID, email string, isVerified bool, failOnConflict bool) (*descope.UserResponse, error)
 
 	// Update the phone number for an existing user.
 	//
@@ -305,7 +307,9 @@ type User interface {
 	//
 	// The isVerified flag must be true for the user to be able to login with
 	// the phone number.
-	UpdatePhone(ctx context.Context, loginIDOrUserID, phone string, isVerified bool) (*descope.UserResponse, error)
+	//
+	// The failOnConflict flag indicates whether to fail the update if the new phone number is also the login ID of another user.
+	UpdatePhone(ctx context.Context, loginIDOrUserID, phone string, isVerified bool, failOnConflict bool) (*descope.UserResponse, error)
 
 	// Update an existing user's display name (i.e., their full name).
 	//
@@ -1005,7 +1009,7 @@ type ThirdPartyApplication interface {
 	SearchConsents(ctx context.Context, options *descope.ThirdPartyApplicationConsentSearchOptions) ([]*descope.ThirdPartyApplicationConsent, int, error)
 }
 
-// Provides functions for managing third party applications in a project.
+// Provides functions for managing outbound applications in a project.
 type OutboundApplication interface {
 	// Create a new outbound application with the given name.
 	CreateApplication(ctx context.Context, appRequest *descope.CreateOutboundAppRequest) (app *descope.OutboundApp, err error)
@@ -1022,11 +1026,22 @@ type OutboundApplication interface {
 	// IMPORTANT: This action is irreversible. Use carefully.
 	DeleteApplication(ctx context.Context, id string) error
 
-	// Load a outbound application by id.
+	// Load an outbound application by id.
 	LoadApplication(ctx context.Context, id string) (*descope.OutboundApp, error)
 
 	// Load all project outbound applications.
 	LoadAllApplications(ctx context.Context) ([]*descope.OutboundApp, error)
+
+	// Fetch an outbound application user token with the specified scopes.
+	// The token can be used to access external resources on behalf of the user.
+	FetchUserToken(ctx context.Context, request *descope.FetchOutboundAppUserTokenRequest) (*descope.OutboundAppUserToken, error)
+
+	// Delete outbound application user tokens by appID or userID.
+	// At least one of appID or userID must be provided.
+	DeleteUserTokens(ctx context.Context, appID, userID string) error
+
+	// Delete an outbound application token by its ID.
+	DeleteTokenByID(ctx context.Context, id string) error
 }
 
 // Provides functions for managing management keys in a project.
