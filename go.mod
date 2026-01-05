@@ -6,7 +6,7 @@ toolchain go1.24.10
 
 require (
 	github.com/google/uuid v1.6.0
-	github.com/lestrrat-go/jwx/v2 v2.1.6
+	github.com/lestrrat-go/jwx/v3 v3.0.12
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/exp v0.0.0-20220921023135-46d9e7742f1e
 )
