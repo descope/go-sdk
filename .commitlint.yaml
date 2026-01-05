@@ -1,0 +1,26 @@
+conventional: true
+
+rules:
+  type-enum:
+    - feat
+    - fix
+    - docs
+    - style
+    - refactor
+    - perf
+    - test
+    - build
+    - ci
+    - chore
+    - revert
+  
+  type-case: lower
+  type-required: true
+  scope-case: lower
+  subject-required: true
+  subject-full-stop: false
+  header-max-length: 72
+  body-leading-blank: true
+  body-max-line-length: 100
+  footer-leading-blank: true
+  footer-max-line-length: 100
