@@ -431,7 +431,6 @@ func (auth *authenticationService) refreshSession(ctx context.Context, refreshTo
 		return false, nil, err
 	}
 
-	// refresh session token
 	httpResponse, err := auth.client.DoPostRequest(ctx, api.Routes.RefreshToken(), nil, &api.HTTPRequest{}, refreshToken)
 	if err != nil {
 		return false, nil, err
@@ -440,7 +439,11 @@ func (auth *authenticationService) refreshSession(ctx context.Context, refreshTo
 	if err != nil {
 		return false, nil, err
 	}
-	// No need to check for error again because validateTokenError will return false for any non-nil error
+
+	if info.SessionToken == nil { // notest
+		return false, nil, descope.ErrUnexpectedResponse.WithMessage("Missing session token in refresh response")
+	}
+
 	info.SessionToken.RefreshExpiration = token.Expiration
 	return true, info.SessionToken, nil
 }
@@ -793,11 +796,11 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 	}
 
 	cookies := httpResponse.Res.Cookies()
-	var sToken *descope.Token
+	var sessionToken *descope.Token
 	for i := range tokens {
 		addToCookie := true
 		if tokens[i].Claims[claimAttributeName] == auth.conf.GetSessionCookieName() {
-			sToken = tokens[i]
+			sessionToken = tokens[i]
 			if !auth.conf.SessionJWTViaCookie {
 				addToCookie = false
 			}
@@ -814,27 +817,23 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 	}
 
 	for i := range cookies {
-		if sToken == nil && cookies[i].Name == auth.conf.GetSessionCookieName() {
-			sToken, err = auth.validateJWT(cookies[i].Value)
+		if (sessionToken == nil || sessionToken.JWT == "") && cookies[i].Name == auth.conf.GetSessionCookieName() {
+			sessionToken, err = auth.validateJWT(cookies[i].Value)
 			if err != nil {
 				logger.LogDebug("Validation of session token failed: %s", err.Error())
 				return nil, err
 			}
-		}
-		if (refreshToken == nil || refreshToken.JWT == "") && cookies[i].Name == auth.conf.GetRefreshCookieName() {
+		} else if (refreshToken == nil || refreshToken.JWT == "") && cookies[i].Name == auth.conf.GetRefreshCookieName() {
 			refreshToken, err = auth.validateJWT(cookies[i].Value)
 			if err != nil {
 				logger.LogDebug("Validation of refresh token failed: %s", err.Error())
 				return nil, err
 			}
 		}
-		if sToken != nil && refreshToken != nil && refreshToken.JWT != "" {
-			break
-		}
 	}
 
 	setCookies(cookies, w)
-	return descope.NewAuthenticationInfo(jwtResponse, sToken, refreshToken), err
+	return descope.NewAuthenticationInfo(jwtResponse, sessionToken, refreshToken), err
 }
 
 func (auth *authenticationsBase) getValidRefreshToken(r *http.Request) (string, error) {
