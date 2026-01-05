@@ -814,20 +814,22 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 	}
 
 	for i := range cookies {
-		if (sToken == nil || sToken.JWT == "") && cookies[i].Name == auth.conf.GetSessionCookieName() {
+		if sToken == nil && cookies[i].Name == auth.conf.GetSessionCookieName() {
 			sToken, err = auth.validateJWT(cookies[i].Value)
 			if err != nil {
 				logger.LogDebug("Validation of session token failed: %s", err.Error())
 				return nil, err
 			}
 		}
-
 		if (refreshToken == nil || refreshToken.JWT == "") && cookies[i].Name == auth.conf.GetRefreshCookieName() {
 			refreshToken, err = auth.validateJWT(cookies[i].Value)
 			if err != nil {
 				logger.LogDebug("Validation of refresh token failed: %s", err.Error())
 				return nil, err
 			}
+		}
+		if sToken != nil && refreshToken != nil && refreshToken.JWT != "" {
+			break
 		}
 	}
 

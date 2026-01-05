@@ -384,6 +384,7 @@ func TestRefreshSessionWithTokenViaCookie(t *testing.T) {
 	require.True(t, ok)
 	require.NotNil(t, token)
 	require.NotEmpty(t, token.JWT)
+	require.NotZero(t, token.RefreshExpiration)
 }
 
 // Tenant Selection
