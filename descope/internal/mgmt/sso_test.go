@@ -821,7 +821,7 @@ func TestSSOConfigureSAMLSettingsSuccess(t *testing.T) {
 		require.Equal(t, "mycert", sett["idpCert"])
 		require.Equal(t, "entity", sett["entityId"])
 		require.Equal(t, []any{"defrole1", "defrole2"}, sett["defaultSSORoles"])
-		require.Equal(t, map[string]int32{"group1": 1}, sett["groupsPriority"])
+		require.Equal(t, map[string]any{"group1": float64(1)}, sett["groupsPriority"])
 
 		require.Equal(t, "https://spacsurl.com", sett["spACSUrl"])
 		require.Equal(t, "spentityid", sett["spEntityId"])
@@ -1015,7 +1015,7 @@ func TestSSOConfigureSAMLSettingsByMetadataSuccess(t *testing.T) {
 		require.Equal(t, "https://spacsurl.com", sett["spACSUrl"])
 		require.Equal(t, "spentityid", sett["spEntityId"])
 		require.Equal(t, []any{"defrole1", "defrole2"}, sett["defaultSSORoles"])
-		require.Equal(t, map[string]int32{"group1": 1}, sett["groupsPriority"])
+		require.Equal(t, map[string]any{"group1": float64(1)}, sett["groupsPriority"])
 
 		userAttrMappingMap, found := sett["attributeMapping"]
 		require.True(t, found)
@@ -1183,7 +1183,7 @@ func TestSSOConfigureOIDCSettingsSuccess(t *testing.T) {
 		userAttrMapping, _ := userAttrMappingInt.(map[string]any)
 		require.Equal(t, "myGivenName", userAttrMapping["givenName"])
 		require.Equal(t, []any{"defrole1", "defrole2"}, sett["defaultSSORoles"])
-		require.Equal(t, map[string]int32{"group1": 1}, sett["groupsPriority"])
+		require.Equal(t, map[string]any{"group1": float64(1)}, sett["groupsPriority"])
 		require.Equal(t, []any{map[string]any{"groups": []any{"grp1", "grp2"}, "role": map[string]any{"id": "role.id", "name": "role.name"}}}, sett["groupsMapping"])
 		require.Equal(t, map[string]any(map[string]any{"aa": map[string]any{}}), sett["fgaMappings"])
 	}))
