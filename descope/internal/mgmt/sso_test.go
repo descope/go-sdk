@@ -147,6 +147,7 @@ func TestNewSSOSettingsSuccess(t *testing.T) {
 			},
 			"redirectURL":     "redirectURL",
 			"defaultSSORoles": []string{"defrole1", "defrole2"},
+			"groupsPriority":  map[string]int32{"group1": 1},
 		},
 		"oidc": map[string]any{
 			"name":        "myName",
@@ -192,6 +193,7 @@ func TestNewSSOSettingsSuccess(t *testing.T) {
 	assert.EqualValues(t, "role.name", res.Saml.GroupsMapping[0].Role.Name)
 	assert.EqualValues(t, "redirectURL", res.Saml.RedirectURL)
 	assert.EqualValues(t, []string{"defrole1", "defrole2"}, res.Saml.DefaultSSORoles)
+	assert.EqualValues(t, map[string]int32{"group1": 1}, res.Saml.GroupsPriority)
 
 	require.NotNil(t, res.Oidc)
 	assert.EqualValues(t, "myName", res.Oidc.Name)
@@ -412,6 +414,7 @@ func TestLoadSettingsSuccess(t *testing.T) {
 			},
 			"redirectURL":     "redirectURL",
 			"defaultSSORoles": []string{"defrole1", "defrole2"},
+			"groupsPriority":  map[string]int32{"group1": 1},
 			"fgaMappings": map[string]any{
 				"group1": map[string]any{
 					"relations": []map[string]any{
@@ -481,6 +484,7 @@ func TestLoadSettingsSuccess(t *testing.T) {
 	assert.EqualValues(t, "role.name", res.Saml.GroupsMapping[0].Role.Name)
 	assert.EqualValues(t, "redirectURL", res.Saml.RedirectURL)
 	assert.EqualValues(t, []string{"defrole1", "defrole2"}, res.Saml.DefaultSSORoles)
+	assert.EqualValues(t, map[string]int32{"group1": 1}, res.Saml.GroupsPriority)
 	assert.EqualValues(t, 2, len(res.Saml.FgaMappings))
 	assert.EqualValues(t, 2, len(res.Saml.FgaMappings["group1"].Relations))
 	assert.EqualValues(t, 1, len(res.Saml.FgaMappings["group2"].Relations))
@@ -767,9 +771,9 @@ func TestSSOConfigureSAMLSettingsSuccess(t *testing.T) {
 				Role:   "role1",
 			},
 		},
-		SpACSUrl:        "https://spacsurl.com",
-		SpEntityID:      "spentityid",
-		DefaultSSORoles: []string{"defrole1", "defrole2"},
+		SpACSUrl:       "https://spacsurl.com",
+		SpEntityID:     "spentityid",
+		GroupsPriority: map[string]int32{"group1": 1},
 		FgaMappings: map[string]*descope.FGAGroupMapping{
 			"group1": {
 				Relations: []*descope.FGAGroupMappingRelation{
@@ -816,6 +820,7 @@ func TestSSOConfigureSAMLSettingsSuccess(t *testing.T) {
 		require.Equal(t, "mycert", sett["idpCert"])
 		require.Equal(t, "entity", sett["entityId"])
 		require.Equal(t, []any{"defrole1", "defrole2"}, sett["defaultSSORoles"])
+		require.Equal(t, map[string]int32{"group1": 1}, sett["groupsPriority"])
 
 		require.Equal(t, "https://spacsurl.com", sett["spACSUrl"])
 		require.Equal(t, "spentityid", sett["spEntityId"])
@@ -975,6 +980,7 @@ func TestSSOConfigureSAMLSettingsByMetadataSuccess(t *testing.T) {
 		SpACSUrl:        "https://spacsurl.com",
 		SpEntityID:      "spentityid",
 		DefaultSSORoles: []string{"defrole1", "defrole2"},
+		GroupsPriority:  map[string]int32{"group1": 1},
 		FgaMappings: map[string]*descope.FGAGroupMapping{
 			"group1": {
 				Relations: []*descope.FGAGroupMappingRelation{
@@ -1008,6 +1014,7 @@ func TestSSOConfigureSAMLSettingsByMetadataSuccess(t *testing.T) {
 		require.Equal(t, "https://spacsurl.com", sett["spACSUrl"])
 		require.Equal(t, "spentityid", sett["spEntityId"])
 		require.Equal(t, []any{"defrole1", "defrole2"}, sett["defaultSSORoles"])
+		require.Equal(t, map[string]int32{"group1": 1}, sett["groupsPriority"])
 
 		userAttrMappingMap, found := sett["attributeMapping"]
 		require.True(t, found)
@@ -1141,6 +1148,7 @@ func TestSSOConfigureOIDCSettingsSuccess(t *testing.T) {
 			},
 		},
 		DefaultSSORoles: []string{"defrole1", "defrole2"},
+		GroupsPriority:  map[string]int32{"group1": 1},
 		FgaMappings: map[string]*descope.FGAGroupMapping{
 			"aa": {
 				Relations: []*descope.FGAGroupMappingRelation{},
@@ -1174,6 +1182,7 @@ func TestSSOConfigureOIDCSettingsSuccess(t *testing.T) {
 		userAttrMapping, _ := userAttrMappingInt.(map[string]any)
 		require.Equal(t, "myGivenName", userAttrMapping["givenName"])
 		require.Equal(t, []any{"defrole1", "defrole2"}, sett["defaultSSORoles"])
+		require.Equal(t, map[string]int32{"group1": 1}, sett["groupsPriority"])
 		require.Equal(t, []any{map[string]any{"groups": []any{"grp1", "grp2"}, "role": map[string]any{"id": "role.id", "name": "role.name"}}}, sett["groupsMapping"])
 		require.Equal(t, map[string]any(map[string]any{"aa": map[string]any{}}), sett["fgaMappings"])
 	}))
