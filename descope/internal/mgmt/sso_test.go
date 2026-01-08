@@ -771,9 +771,9 @@ func TestSSOConfigureSAMLSettingsSuccess(t *testing.T) {
 				Role:   "role1",
 			},
 		},
-		DefaultSSORoles: []string{"role1"},
 		SpACSUrl:        "https://spacsurl.com",
 		SpEntityID:      "spentityid",
+		DefaultSSORoles: []string{"defrole1", "defrole2"},
 		GroupsPriority:  map[string]int32{"group1": 1},
 		FgaMappings: map[string]*descope.FGAGroupMapping{
 			"group1": {
