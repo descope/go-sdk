@@ -127,6 +127,7 @@ type SSOSAMLSettingsResponse struct {
 	AttributeMapping                *AttributeMapping           `json:"attributeMapping,omitempty"`
 	GroupsMapping                   []*GroupsMapping            `json:"groupsMapping,omitempty"`
 	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"`
+	GroupsPriority                  []string                    `json:"groupsPriority,omitempty"` // list of group names in priority order (first = highest priority)
 	RedirectURL                     string                      `json:"redirectUrl,omitempty"`
 	FgaMappings                     map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 	ConfigFGATenantIDResourcePrefix string                      `json:"configFGATenantIDResourcePrefix,omitempty"`
@@ -140,6 +141,7 @@ type SSOSAMLSettings struct {
 	AttributeMapping                *AttributeMapping           `json:"attributeMapping,omitempty"`
 	RoleMappings                    []*RoleMapping              `json:"roleMappings,omitempty"`
 	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"` // roles names
+	GroupsPriority                  []string                    `json:"groupsPriority,omitempty"`  // list of group names in priority order (first = highest priority)
 	FgaMappings                     map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 	ConfigFGATenantIDResourcePrefix string                      `json:"configFGATenantIDResourcePrefix,omitempty"`
 	ConfigFGATenantIDResourceSuffix string                      `json:"configFGATenantIDResourceSuffix,omitempty"`
@@ -154,6 +156,7 @@ type SSOSAMLSettingsByMetadata struct {
 	AttributeMapping                *AttributeMapping           `json:"attributeMapping,omitempty"`
 	RoleMappings                    []*RoleMapping              `json:"roleMappings,omitempty"`
 	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"` // roles names
+	GroupsPriority                  []string                    `json:"groupsPriority,omitempty"`  // list of group names in priority order (first = highest priority)
 	FgaMappings                     map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 	ConfigFGATenantIDResourcePrefix string                      `json:"configFGATenantIDResourcePrefix,omitempty"`
 	ConfigFGATenantIDResourceSuffix string                      `json:"configFGATenantIDResourceSuffix,omitempty"`
@@ -195,6 +198,7 @@ type SSOOIDCSettings struct {
 	Issuer               string                      `json:"issuer,omitempty"`
 	GroupsMapping        []*GroupsMapping            `json:"groupsMapping,omitempty"`
 	DefaultSSORoles      []string                    `json:"defaultSSORoles,omitempty"`
+	GroupsPriority       []string                    `json:"groupsPriority,omitempty"` // list of group names in priority order (first = highest priority)
 	FgaMappings          map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 }
 
