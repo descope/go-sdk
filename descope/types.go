@@ -1539,7 +1539,7 @@ type DescoperLoadOptions struct {
 type AccessKeysSearchOptions struct {
 	Sort             []UserSearchSort `json:"sort,omitempty"`
 	TenantIDs        []string         `json:"tenantIds,omitempty"`
-	BoundUserId      *string          `json:"boundUserId,omitempty"`
+	BoundUserID      *string          `json:"boundUserId,omitempty"`
 	CreatingUser     *string          `json:"creatingUser,omitempty"`
 	CustomAttributes map[string]any   `json:"customAttributes,omitempty"`
 }
