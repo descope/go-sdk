@@ -233,7 +233,7 @@ type MockSSO struct {
 	ConfigureMappingAssert func(tenantID string, roleMappings []*descope.RoleMapping, attributeMapping *descope.AttributeMapping)
 	ConfigureMappingError  error
 
-	RecalculateSSOMappingsAssert   func(tenantID string, ssoId string)
+	RecalculateSSOMappingsAssert   func(tenantID string, ssoID string)
 	RecalculateSSOMappingsResponse []string
 	RecalculateSSOMappingsError    error
 }
