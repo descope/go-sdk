@@ -373,3 +373,29 @@ func parseFgaMappings(fgaMappings map[string]*descope.FGAGroupMapping) map[strin
 	}
 	return res
 }
+
+func (s *sso) RecalculateSSOMappings(ctx context.Context, tenantID string, ssoID string) ([]string, error) {
+	if tenantID == "" {
+		return nil, utils.NewInvalidArgumentError("tenantID")
+	}
+
+	req := map[string]any{
+		"tenantId": tenantID,
+	}
+
+	if len(ssoID) > 0 {
+		req["ssoId"] = ssoID
+	}
+
+	res, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSORecalculateMappings(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+
+	var recalculateMappingsRes descope.RecalculateSSOMappingsResponse
+	if err := utils.Unmarshal([]byte(res.BodyStr), &recalculateMappingsRes); err != nil {
+		return nil, err
+	}
+
+	return recalculateMappingsRes.AffectedUserIDs, nil
+}
