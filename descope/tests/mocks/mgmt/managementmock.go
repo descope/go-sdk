@@ -322,7 +322,7 @@ func (m *MockSSO) ConfigureMapping(_ context.Context, tenantID string, roleMappi
 	return m.ConfigureMappingError
 }
 
-func (m *MockSSO) RecalculateSSOMappings(ctx context.Context, tenantID string, ssoID string) ([]string, error) {
+func (m *MockSSO) RecalculateSSOMappings(_ context.Context, tenantID string, ssoID string) ([]string, error) {
 	if m.RecalculateSSOMappingsAssert != nil {
 		m.RecalculateSSOMappingsAssert(tenantID, ssoID)
 	}
