@@ -474,7 +474,7 @@ type AccessKey interface {
 	// The description parameter is an optional text providing a brief summary about the access key.
 	// The permittedIPs parameter is an optional list of IP addresses or CIDR ranges that are allowed to use this access key.
 	// If not provided, all IPs are allowed.
-	Create(ctx context.Context, name string, description string, expireTime int64, roles []string, tenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIPs []string) (string, *descope.AccessKeyResponse, error)
+	Create(ctx context.Context, name string, description string, expireTime int64, roles []string, tenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIPs []string, customAttributes map[string]any) (string, *descope.AccessKeyResponse, error)
 
 	// Load an existing access key.
 	//
@@ -484,7 +484,7 @@ type AccessKey interface {
 	// Search all access keys according to given filters
 	//
 	// The tenantIDs parameter is an optional array of tenant IDs to filter by.
-	SearchAll(ctx context.Context, tenantIDs []string) ([]*descope.AccessKeyResponse, error)
+	SearchAll(ctx context.Context, req *descope.AccessKeysSearchOptions) ([]*descope.AccessKeyResponse, error)
 
 	// Update an existing access key.
 	//
@@ -492,7 +492,7 @@ type AccessKey interface {
 	// If description, roles, tenants, customClaims, or permittedIPs are nil, their existing values will be preserved.
 	//
 	// IMPORTANT: id and name are mandatory parameters.
-	Update(ctx context.Context, id, name string, description *string, roles []string, tenants []*descope.AssociatedTenant, customClaims map[string]any, permittedIPs []string) (*descope.AccessKeyResponse, error)
+	Update(ctx context.Context, id, name string, description *string, roles []string, tenants []*descope.AssociatedTenant, customClaims map[string]any, permittedIPs []string, customAttributes map[string]any) (*descope.AccessKeyResponse, error)
 
 	// Deactivate an existing access key.
 	//
