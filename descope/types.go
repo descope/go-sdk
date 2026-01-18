@@ -672,19 +672,20 @@ type NOTPUpdateOptions struct {
 }
 
 type AccessKeyResponse struct {
-	ID           string              `json:"id,omitempty"`
-	Name         string              `json:"name,omitempty"`
-	RoleNames    []string            `json:"roleNames,omitempty"`
-	KeyTenants   []*AssociatedTenant `json:"keyTenants,omitempty"`
-	Status       string              `json:"status,omitempty"`
-	CreatedTime  int32               `json:"createdTime,omitempty"`
-	ExpireTime   int32               `json:"expireTime,omitempty"`
-	CreatedBy    string              `json:"createdBy,omitempty"`
-	ClientID     string              `json:"clientId,omitempty"`
-	UserID       string              `json:"boundUserId,omitempty"`
-	CustomClaims map[string]any      `json:"customClaims,omitempty"`
-	Description  string              `json:"description,omitempty"`
-	PermittedIPs []string            `json:"permittedIps,omitempty"`
+	ID               string              `json:"id,omitempty"`
+	Name             string              `json:"name,omitempty"`
+	RoleNames        []string            `json:"roleNames,omitempty"`
+	KeyTenants       []*AssociatedTenant `json:"keyTenants,omitempty"`
+	Status           string              `json:"status,omitempty"`
+	CreatedTime      int32               `json:"createdTime,omitempty"`
+	ExpireTime       int32               `json:"expireTime,omitempty"`
+	CreatedBy        string              `json:"createdBy,omitempty"`
+	ClientID         string              `json:"clientId,omitempty"`
+	UserID           string              `json:"boundUserId,omitempty"`
+	CustomClaims     map[string]any      `json:"customClaims,omitempty"`
+	Description      string              `json:"description,omitempty"`
+	PermittedIPs     []string            `json:"permittedIps,omitempty"`
+	CustomAttributes map[string]any      `json:"customAttributes,omitempty"`
 }
 
 // Represents a tenant association for a User or an Access Key. The tenant ID is required
@@ -1542,4 +1543,12 @@ type DescoperCreate struct {
 }
 
 type DescoperLoadOptions struct {
+}
+
+type AccessKeysSearchOptions struct {
+	Sort             []UserSearchSort `json:"sort,omitempty"`
+	TenantIDs        []string         `json:"tenantIds,omitempty"`
+	BoundUserID      *string          `json:"boundUserId,omitempty"`
+	CreatingUser     *string          `json:"creatingUser,omitempty"`
+	CustomAttributes map[string]any   `json:"customAttributes,omitempty"`
 }

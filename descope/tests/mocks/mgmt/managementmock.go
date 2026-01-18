@@ -943,7 +943,7 @@ func (m *MockUser) History(_ context.Context, userIDs []string) ([]*descope.User
 // Mock Access Key
 
 type MockAccessKey struct {
-	CreateAssert     func(name string, description string, expireTime int64, roles []string, tenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIPs []string)
+	CreateAssert     func(name string, description string, expireTime int64, roles []string, tenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIPs []string, customAttributes map[string]any)
 	CreateResponseFn func() (string, *descope.AccessKeyResponse)
 	CreateError      error
 
@@ -951,11 +951,11 @@ type MockAccessKey struct {
 	LoadResponse *descope.AccessKeyResponse
 	LoadError    error
 
-	SearchAllAssert   func(tenantIDs []string)
+	SearchAllAssert   func(req *descope.AccessKeysSearchOptions)
 	SearchAllResponse []*descope.AccessKeyResponse
 	SearchAllError    error
 
-	UpdateAssert   func(id, name string, description *string, roles []string, tenants []*descope.AssociatedTenant, customClaims map[string]any, permittedIPs []string)
+	UpdateAssert   func(id, name string, description *string, roles []string, tenants []*descope.AssociatedTenant, customClaims map[string]any, permittedIPs []string, customAttributes map[string]any)
 	UpdateResponse *descope.AccessKeyResponse
 	UpdateError    error
 
@@ -969,9 +969,9 @@ type MockAccessKey struct {
 	DeleteError  error
 }
 
-func (m *MockAccessKey) Create(_ context.Context, name string, description string, expireTime int64, roles []string, tenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIPs []string) (string, *descope.AccessKeyResponse, error) {
+func (m *MockAccessKey) Create(_ context.Context, name string, description string, expireTime int64, roles []string, tenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIPs []string, customAttributes map[string]any) (string, *descope.AccessKeyResponse, error) {
 	if m.CreateAssert != nil {
-		m.CreateAssert(name, description, expireTime, roles, tenants, userID, customClaims, permittedIPs)
+		m.CreateAssert(name, description, expireTime, roles, tenants, userID, customClaims, permittedIPs, customAttributes)
 	}
 	var cleartext string
 	var key *descope.AccessKeyResponse
@@ -988,16 +988,16 @@ func (m *MockAccessKey) Load(_ context.Context, id string) (*descope.AccessKeyRe
 	return m.LoadResponse, m.LoadError
 }
 
-func (m *MockAccessKey) SearchAll(_ context.Context, tenantIDs []string) ([]*descope.AccessKeyResponse, error) {
+func (m *MockAccessKey) SearchAll(_ context.Context, req *descope.AccessKeysSearchOptions) ([]*descope.AccessKeyResponse, error) {
 	if m.SearchAllAssert != nil {
-		m.SearchAllAssert(tenantIDs)
+		m.SearchAllAssert(req)
 	}
 	return m.SearchAllResponse, m.SearchAllError
 }
 
-func (m *MockAccessKey) Update(_ context.Context, id, name string, description *string, roles []string, tenants []*descope.AssociatedTenant, customClaims map[string]any, permittedIPs []string) (*descope.AccessKeyResponse, error) {
+func (m *MockAccessKey) Update(_ context.Context, id, name string, description *string, roles []string, tenants []*descope.AssociatedTenant, customClaims map[string]any, permittedIPs []string, customAttributes map[string]any) (*descope.AccessKeyResponse, error) {
 	if m.UpdateAssert != nil {
-		m.UpdateAssert(id, name, description, roles, tenants, customClaims, permittedIPs)
+		m.UpdateAssert(id, name, description, roles, tenants, customClaims, permittedIPs, customAttributes)
 	}
 	return m.UpdateResponse, m.UpdateError
 }

@@ -1063,13 +1063,13 @@ res, err := descopeClient.Management.AccessKey().Create(context.Background(), "a
     },
 	"",
     map[string]any{"k1": "v1"},
-	nil)
+	nil, map[string]any{"attributeName": "attributeValue"})
 
 // Load specific access key
 res, err := descopeClient.Management.AccessKey().Load(context.Background(), "access-key-id")
 
 // Search all access keys, optionally according to tenant and/or role filter
-accessKeysResp, err := descopeClient.Management.AccessKey().SearchAll(context.Background(), []string{"my-tenant-id"})
+accessKeysResp, err := descopeClient.Management.AccessKey().SearchAll(context.Background(), &descope.AccessKeysSearchOptions{TenantIDs: []string{"my-tenant-id"}})
 if err == nil {
     for _, accessKey := range accessKeysResp {
         // Do something
@@ -1077,9 +1077,9 @@ if err == nil {
 }
 
 // Update access key
-// If description, roles, tenants, customClaims, or permittedIPs are nil, their existing values will be preserved. If you want to remove them, pass an empty slice or map.
+// If description, roles, tenants, customClaims, permittedIPs, or customAttributes are nil, their existing values will be preserved. If you want to remove them, pass an empty slice or map.
 updatedDescription := "Updated description"
-res, err := descopeClient.Management.AccessKey().Update(context.Background(), "access-key-id", "updated-name", &updatedDescription, []string{"role"}, nil, map[string]any{"k1": "v1"}, []string{"1.2.3.4"})
+res, err := descopeClient.Management.AccessKey().Update(context.Background(), "access-key-id", "updated-name", &updatedDescription, []string{"role"}, nil, map[string]any{"k1": "v1"}, []string{"1.2.3.4"}, map[string]any{"attributeName": "attributeValue"})
 
 // Access keys can be deactivated to prevent usage. This can be undone using "activate".
 err := descopeClient.Management.AccessKey().Deactivate(context.Background(), "access-key-id")

@@ -31,13 +31,15 @@ func TestAccessKeyCreateSuccess(t *testing.T) {
 		require.Len(t, roleNames, 1)
 		require.Equal(t, "foo", roleNames[0])
 		require.Len(t, req["customClaims"], 1)
+		require.Len(t, req["customAttributes"], 1)
 		require.Equal(t, desc, req["description"])
 		permittedIPs := req["permittedIps"].([]any)
 		require.Len(t, permittedIPs, 1)
 		require.Equal(t, "10.0.0.1", permittedIPs[0])
 	}, response))
 	cc := map[string]any{"k1": "v1"}
-	cleartext, key, err := mgmt.AccessKey().Create(context.Background(), "abc", desc, 0, []string{"foo"}, nil, "uid", cc, []string{"10.0.0.1"})
+	ca := map[string]any{"attr1": "value1"}
+	cleartext, key, err := mgmt.AccessKey().Create(context.Background(), "abc", desc, 0, []string{"foo"}, nil, "uid", cc, []string{"10.0.0.1"}, ca)
 	require.NoError(t, err)
 	require.Equal(t, "cleartext", cleartext)
 	require.Equal(t, "abc", key.Name)
@@ -50,7 +52,7 @@ func TestAccessKeyCreateSuccess(t *testing.T) {
 
 func TestAccessKeyCreateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	_, _, err := mgmt.AccessKey().Create(context.Background(), "", "", 0, nil, nil, "", nil, nil)
+	_, _, err := mgmt.AccessKey().Create(context.Background(), "", "", 0, nil, nil, "", nil, nil, nil)
 	require.Error(t, err)
 }
 
@@ -100,7 +102,7 @@ func TestSearchAllAccessKeysSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.EqualValues(t, tenantIDs[0], req["tenantIds"].([]any)[0])
 	}, response))
-	res, err := mgmt.AccessKey().SearchAll(context.Background(), tenantIDs)
+	res, err := mgmt.AccessKey().SearchAll(context.Background(), &descope.AccessKeysSearchOptions{TenantIDs: tenantIDs})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res, 1)
@@ -140,8 +142,10 @@ func TestAccessKeyUpdateSuccess(t *testing.T) {
 		require.EqualValues(t, []any{"role"}, req["keyTenants"].([]any)[0].(map[string]any)["roleNames"])
 		require.EqualValues(t, map[string]any{"k1": "v1"}, req["customClaims"])
 		require.EqualValues(t, []any{"1.2.3.4"}, req["permittedIps"])
+		require.EqualValues(t, map[string]any{"attr1": "value1"}, req["customAttributes"])
 	}, response))
-	res, err := mgmt.AccessKey().Update(context.Background(), "ak1", "abc", &desc, []string{"role"}, []*descope.AssociatedTenant{{TenantID: "t1", Roles: []string{"role"}}}, map[string]any{"k1": "v1"}, []string{"1.2.3.4"})
+	ca := map[string]any{"attr1": "value1"}
+	res, err := mgmt.AccessKey().Update(context.Background(), "ak1", "abc", &desc, []string{"role"}, []*descope.AssociatedTenant{{TenantID: "t1", Roles: []string{"role"}}}, map[string]any{"k1": "v1"}, []string{"1.2.3.4"}, ca)
 	require.NoError(t, err)
 	require.Equal(t, "ak1", res.ID)
 	require.Equal(t, "abc", res.Name)
@@ -174,7 +178,7 @@ func TestAccessKeyUpdateWontChangeSuccess(t *testing.T) {
 		_, ok := req["description"]
 		require.False(t, ok)
 	}, response))
-	res, err := mgmt.AccessKey().Update(context.Background(), "ak1", "abc", nil, nil, nil, nil, nil)
+	res, err := mgmt.AccessKey().Update(context.Background(), "ak1", "abc", nil, nil, nil, nil, nil, nil)
 	require.NoError(t, err)
 	require.Equal(t, "ak1", res.ID)
 	require.Equal(t, "abc", res.Name)
@@ -186,9 +190,9 @@ func TestAccessKeyUpdateWontChangeSuccess(t *testing.T) {
 
 func TestAccessKeyUpdateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	_, err := mgmt.AccessKey().Update(context.Background(), "", "abc", nil, nil, nil, nil, nil)
+	_, err := mgmt.AccessKey().Update(context.Background(), "", "abc", nil, nil, nil, nil, nil, nil)
 	require.Error(t, err)
-	_, err = mgmt.AccessKey().Update(context.Background(), "ak1", "", nil, nil, nil, nil, nil)
+	_, err = mgmt.AccessKey().Update(context.Background(), "ak1", "", nil, nil, nil, nil, nil, nil)
 	require.Error(t, err)
 }
 
