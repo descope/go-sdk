@@ -603,6 +603,16 @@ type SSO interface {
 	//* Deprecated (use ConfigureSAMLSettings() or ConfigureSAMLSettingsByMetadata() instead) *//
 	// Configure SSO IDP mapping including groups to the Descope roles and user attributes.
 	ConfigureMapping(ctx context.Context, tenantID string, roleMappings []*descope.RoleMapping, attributeMapping *descope.AttributeMapping) error
+
+	// Recalculate SSO group to role mappings for all users in a tenant.
+	//
+	// This method triggers a recalculation of user roles based on the current SSO group mappings.
+	// It will update the roles for all users in the tenant who have SSO group mappings.
+	//
+	// tenantID is required.
+	// ssoID is optional - specify to recalculate mappings for a specific SSO configuration.
+	// Returns a list of affected user IDs.
+	RecalculateSSOMappings(ctx context.Context, tenantID string, ssoID string) ([]string, error)
 }
 
 // Provides functions for managing password policy for a project or a tenant.
