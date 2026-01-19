@@ -611,8 +611,7 @@ type SSO interface {
 	//
 	// tenantID is required.
 	// ssoID is optional - specify to recalculate mappings for a specific SSO configuration.
-	// Returns a list of affected user IDs.
-	RecalculateSSOMappings(ctx context.Context, tenantID string, ssoID string) ([]string, error)
+	RecalculateSSOMappings(ctx context.Context, tenantID string, ssoID string) error
 }
 
 // Provides functions for managing password policy for a project or a tenant.

@@ -374,9 +374,9 @@ func parseFgaMappings(fgaMappings map[string]*descope.FGAGroupMapping) map[strin
 	return res
 }
 
-func (s *sso) RecalculateSSOMappings(ctx context.Context, tenantID string, ssoID string) ([]string, error) {
+func (s *sso) RecalculateSSOMappings(ctx context.Context, tenantID string, ssoID string) error {
 	if tenantID == "" {
-		return nil, utils.NewInvalidArgumentError("tenantID")
+		return utils.NewInvalidArgumentError("tenantID")
 	}
 
 	req := map[string]any{
@@ -387,15 +387,7 @@ func (s *sso) RecalculateSSOMappings(ctx context.Context, tenantID string, ssoID
 		req["ssoId"] = ssoID
 	}
 
-	res, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSORecalculateMappings(), req, nil, "")
-	if err != nil {
-		return nil, err
-	}
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSORecalculateMappings(), req, nil, "")
 
-	var recalculateMappingsRes descope.RecalculateSSOMappingsResponse
-	if err := utils.Unmarshal([]byte(res.BodyStr), &recalculateMappingsRes); err != nil {
-		return nil, err
-	}
-
-	return recalculateMappingsRes.AffectedUserIDs, nil
+	return err
 }
