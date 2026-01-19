@@ -232,6 +232,9 @@ type MockSSO struct {
 
 	ConfigureMappingAssert func(tenantID string, roleMappings []*descope.RoleMapping, attributeMapping *descope.AttributeMapping)
 	ConfigureMappingError  error
+
+	RecalculateSSOMappingsAssert func(tenantID string, ssoID string)
+	RecalculateSSOMappingsError  error
 }
 
 func (m *MockSSO) LoadSettings(_ context.Context, tenantID string, ssoID string) (*descope.SSOTenantSettingsResponse, error) {
@@ -316,6 +319,13 @@ func (m *MockSSO) ConfigureMapping(_ context.Context, tenantID string, roleMappi
 		m.ConfigureMappingAssert(tenantID, roleMappings, attributeMapping)
 	}
 	return m.ConfigureMappingError
+}
+
+func (m *MockSSO) RecalculateSSOMappings(_ context.Context, tenantID string, ssoID string) error {
+	if m.RecalculateSSOMappingsAssert != nil {
+		m.RecalculateSSOMappingsAssert(tenantID, ssoID)
+	}
+	return m.RecalculateSSOMappingsError
 }
 
 // Mock Password

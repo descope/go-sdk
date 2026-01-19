@@ -166,6 +166,7 @@ var (
 			ssoOIDCSettings:                          "mgmt/sso/oidc",
 			ssoMetadata:                              "mgmt/sso/metadata",
 			ssoMapping:                               "mgmt/sso/mapping",
+			ssoRecalculateMappings:                   "mgmt/sso/recalculate-mappings",
 			passwordSettings:                         "mgmt/password/settings",
 			updateJWT:                                "mgmt/jwt/update",
 			impersonate:                              "mgmt/impersonate",
@@ -433,6 +434,7 @@ type mgmtEndpoints struct {
 	ssoSAMLSettingsByMetadata string
 	ssoRedirectURL            string
 	ssoOIDCSettings           string
+	ssoRecalculateMappings    string
 	updateJWT                 string
 	impersonate               string
 	stopImpersonation         string
@@ -1078,6 +1080,10 @@ func (e *endpoints) ManagementSSOMetadata() string {
 
 func (e *endpoints) ManagementSSOMapping() string {
 	return path.Join(e.version, e.mgmt.ssoMapping)
+}
+
+func (e *endpoints) ManagementSSORecalculateMappings() string {
+	return path.Join(e.version, e.mgmt.ssoRecalculateMappings)
 }
 
 func (e *endpoints) ManagementPasswordSettings() string {

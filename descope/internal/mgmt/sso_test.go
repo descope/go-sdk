@@ -1312,3 +1312,47 @@ func TestSSOConfigureOIDCSettingsError(t *testing.T) {
 	err = mgmt.SSO().ConfigureOIDCSettings(context.Background(), "abc", nil, []string{}, "")
 	require.Error(t, err)
 }
+
+func TestRecalculateSSOMappingsSuccess(t *testing.T) {
+	response := map[string]any{}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		tenantID, found := req["tenantId"]
+		require.True(t, found)
+		require.Equal(t, "tenant123", tenantID)
+		ssoID, found := req["ssoId"]
+		require.True(t, found)
+		require.Equal(t, "sso456", ssoID)
+	}, response))
+
+	err := mgmt.SSO().RecalculateSSOMappings(context.Background(), "tenant123", "sso456")
+	require.NoError(t, err)
+}
+
+func TestRecalculateSSOMappingsWithoutSSOID(t *testing.T) {
+	response := map[string]any{}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		tenantID, found := req["tenantId"]
+		require.True(t, found)
+		require.Equal(t, "tenant123", tenantID)
+		_, found = req["ssoId"]
+		require.False(t, found) // ssoId should not be present
+	}, response))
+
+	err := mgmt.SSO().RecalculateSSOMappings(context.Background(), "tenant123", "")
+	require.NoError(t, err)
+}
+
+func TestRecalculateSSOMappingsError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+
+	// Test with empty tenant ID
+	err := mgmt.SSO().RecalculateSSOMappings(context.Background(), "", "")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "tenantID")
+}
