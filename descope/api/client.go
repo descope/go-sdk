@@ -1822,6 +1822,9 @@ func (c *Client) FetchLicense(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	if resp.LicenseType == "" {
+		return "", fmt.Errorf("empty license type returned from server")
+	}
 	return resp.LicenseType, nil
 }
 

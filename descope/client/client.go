@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"time"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
@@ -90,7 +91,9 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 	})
 
 	if config.ManagementKey != "" {
-		if license, err := mgmtClient.FetchLicense(context.Background()); err != nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if license, err := mgmtClient.FetchLicense(ctx); err != nil {
 			logger.LogInfo("License handshake failed, continuing without header: %v", err)
 		} else {
 			mgmtClient.SetLicenseType(license)
