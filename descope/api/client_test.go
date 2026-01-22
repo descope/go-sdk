@@ -364,7 +364,7 @@ func TestFetchLicense_APIError(t *testing.T) {
 	c := NewClient(ClientParams{
 		ProjectID:     projectID,
 		ManagementKey: "test-key",
-		DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+		DefaultClient: mocks.NewTestClient(func(_ *http.Request) (*http.Response, error) {
 			// Return an error response
 			return &http.Response{
 				StatusCode: http.StatusInternalServerError,
@@ -385,7 +385,7 @@ func TestFetchLicense_NetworkError(t *testing.T) {
 	c := NewClient(ClientParams{
 		ProjectID:     projectID,
 		ManagementKey: "test-key",
-		DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+		DefaultClient: mocks.NewTestClient(func(_ *http.Request) (*http.Response, error) {
 			return nil, expectedErr
 		}),
 	})
