@@ -18,13 +18,6 @@ func TestLoadAllGroupsSuccess(t *testing.T) {
 		{
 			ID:      "some-id",
 			Display: "some-display",
-			Members: []descope.GroupMember{
-				{
-					LoginID: "some-loginID",
-					UserID:  "some-userID",
-					Display: "some-display",
-				},
-			},
 		},
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -62,13 +55,6 @@ func TestLoadAllGroupsForMembersSuccess(t *testing.T) {
 		{
 			ID:      "some-id",
 			Display: "some-display",
-			Members: []descope.GroupMember{
-				{
-					LoginID: "some-loginID",
-					UserID:  "some-userIDs",
-					Display: "some-display",
-				},
-			},
 		},
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
