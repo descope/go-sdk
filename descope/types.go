@@ -717,27 +717,35 @@ type AttributeMapping struct {
 	CustomAttributes map[string]string `json:"customAttributes,omitempty"`
 }
 
+type RoleInheritance string
+
+const RoleInheritanceDefault RoleInheritance = ""
+const RoleInheritanceNone RoleInheritance = "none"
+const RoleInheritanceUserOnly RoleInheritance = "userOnly"
+
 type Tenant struct {
-	ID                      string         `json:"id"`
-	Name                    string         `json:"name"`
-	SelfProvisioningDomains []string       `json:"selfProvisioningDomains"`
-	CustomAttributes        map[string]any `json:"customAttributes,omitempty"`
-	AuthType                string         `json:"authType,omitempty"`
-	Domains                 []string       `json:"domains,omitempty"`
-	CreatedTime             int32          `json:"createdTime,omitempty"`
-	EnforceSSO              bool           `json:"enforceSSO,omitempty"`
-	Disabled                bool           `json:"disabled,omitempty"`
-	EnforceSSOExclusions    []string       `json:"enforceSSOExclusions,omitempty"`
+	ID                      string          `json:"id"`
+	Name                    string          `json:"name"`
+	SelfProvisioningDomains []string        `json:"selfProvisioningDomains"`
+	CustomAttributes        map[string]any  `json:"customAttributes,omitempty"`
+	AuthType                string          `json:"authType,omitempty"`
+	Domains                 []string        `json:"domains,omitempty"`
+	CreatedTime             int32           `json:"createdTime,omitempty"`
+	EnforceSSO              bool            `json:"enforceSSO,omitempty"`
+	Disabled                bool            `json:"disabled,omitempty"`
+	EnforceSSOExclusions    []string        `json:"enforceSSOExclusions,omitempty"`
+	RoleInheritance         RoleInheritance `json:"roleInheritance,omitempty"`
 }
 
 type TenantRequest struct {
-	Name                    string         `json:"name"`
-	SelfProvisioningDomains []string       `json:"selfProvisioningDomains"`
-	CustomAttributes        map[string]any `json:"customAttributes,omitempty"`
-	EnforceSSO              bool           `json:"enforceSSO,omitempty"`
-	Disabled                bool           `json:"disabled,omitempty"`
-	ParentTenantID          string         `json:"parentId,omitempty"` // applicable only for creation request
-	EnforceSSOExclusions    []string       `json:"enforceSSOExclusions,omitempty"`
+	Name                    string          `json:"name"`
+	SelfProvisioningDomains []string        `json:"selfProvisioningDomains"`
+	CustomAttributes        map[string]any  `json:"customAttributes,omitempty"`
+	EnforceSSO              bool            `json:"enforceSSO,omitempty"`
+	Disabled                bool            `json:"disabled,omitempty"`
+	ParentTenantID          string          `json:"parentId,omitempty"` // applicable only for creation request
+	EnforceSSOExclusions    []string        `json:"enforceSSOExclusions,omitempty"`
+	RoleInheritance         RoleInheritance `json:"roleInheritance,omitempty"`
 }
 
 type TenantSearchOptions struct {
