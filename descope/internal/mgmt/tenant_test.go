@@ -25,6 +25,7 @@ func TestTenantCreateSuccess(t *testing.T) {
 		require.Equal(t, "foo", selfProvisioningDomains[0])
 		require.Equal(t, "bar", selfProvisioningDomains[1])
 		require.Equal(t, "pid", req["parent"])
+		require.Equal(t, string(descope.RoleInheritanceNone), req["roleInheritance"])
 		customAttributes := req["customAttributes"].(map[string]any)
 		assert.EqualValues(t, map[string]any{"k1": "v1"}, customAttributes)
 		require.True(t, req["enforceSSO"].(bool))
@@ -32,7 +33,7 @@ func TestTenantCreateSuccess(t *testing.T) {
 		require.True(t, req["disabled"].(bool))
 	}, response))
 
-	id, err := mgmt.Tenant().Create(context.Background(), &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}, Disabled: true, EnforceSSO: true, ParentTenantID: "pid", EnforceSSOExclusions: []string{"aaaa"}})
+	id, err := mgmt.Tenant().Create(context.Background(), &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}, Disabled: true, EnforceSSO: true, ParentTenantID: "pid", RoleInheritance: descope.RoleInheritanceNone, EnforceSSOExclusions: []string{"aaaa"}})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)
 }
@@ -87,8 +88,9 @@ func TestTenantUpdateSuccess(t *testing.T) {
 		require.True(t, req["enforceSSO"].(bool))
 		require.EqualValues(t, []any{"aaaa"}, req["enforceSSOExclusions"].([]any))
 		require.True(t, req["disabled"].(bool))
+		require.Equal(t, string(descope.RoleInheritanceUserOnly), req["roleInheritance"])
 	}))
-	err := mgmt.Tenant().Update(context.Background(), "123", &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}, Disabled: true, EnforceSSO: true, EnforceSSOExclusions: []string{"aaaa"}})
+	err := mgmt.Tenant().Update(context.Background(), "123", &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}, Disabled: true, EnforceSSO: true, RoleInheritance: descope.RoleInheritanceUserOnly, EnforceSSOExclusions: []string{"aaaa"}})
 	require.NoError(t, err)
 }
 
