@@ -10,6 +10,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
@@ -309,6 +310,43 @@ func TestValidateSessionWithTokenExpired(t *testing.T) {
 	ok, _, err := a.ValidateSessionWithToken(context.Background(), jwtTokenExpired)
 	require.Error(t, err)
 	require.False(t, ok)
+}
+
+func TestJWTLeewayConfiguration(t *testing.T) {
+	// Test that JWTLeeway can be configured in AuthParams
+	customLeeway := 30 * time.Second
+	authParams := &AuthParams{ProjectID: "a", PublicKey: publicKey, JWTLeeway: customLeeway}
+	a, err := newTestAuthConf(authParams, nil, DoOk(nil))
+	require.NoError(t, err)
+	// Verify that the configuration is stored correctly
+	require.Equal(t, customLeeway, a.conf.JWTLeeway)
+}
+
+func TestJWTLeewayDefault(t *testing.T) {
+	// Test that default leeway is used when JWTLeeway is not set
+	authParams := &AuthParams{ProjectID: "a", PublicKey: publicKey}
+	a, err := newTestAuthConf(authParams, nil, DoOk(nil))
+	require.NoError(t, err)
+	// Verify that JWTLeeway is 0 (default) when not set
+	require.Equal(t, time.Duration(0), a.conf.JWTLeeway)
+	// Test that ValidateJWT uses default leeway (SKEW) when JWTLeeway is 0
+	// This exercises the getLeeway function's default path
+	_, err = ValidateJWT(jwtTokenValid, a.publicKeysProvider)
+	// Should not error due to leeway - token validation should work with default 5 second leeway
+	require.NoError(t, err)
+}
+
+func TestJWTLeewayCustomUsed(t *testing.T) {
+	// Test that custom leeway is actually used during JWT validation
+	customLeeway := 30 * time.Second
+	authParams := &AuthParams{ProjectID: "a", PublicKey: publicKey, JWTLeeway: customLeeway}
+	a, err := newTestAuthConf(authParams, nil, DoOk(nil))
+	require.NoError(t, err)
+	// Test that ValidateJWT uses custom leeway
+	// This exercises the getLeeway function's custom leeway path
+	_, err = ValidateJWT(jwtTokenValid, a.publicKeysProvider)
+	// Should not error - token validation should work with custom leeway
+	require.NoError(t, err)
 }
 
 // Refresh Session

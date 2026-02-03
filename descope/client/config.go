@@ -67,6 +67,8 @@ type Config struct {
 	SessionCookieName string
 	// When using custom request tokens provider, set the correct value here, to make the SDK fetch the correct tokens
 	RequestTokensProvider sdk.RequestTokensProvider
+	// JWTLeeway (optional, 5 seconds) - used to set the acceptable time skew (leeway) for JWT validation.
+	JWTLeeway time.Duration
 }
 
 func (c *Config) setProjectID() string {
