@@ -311,6 +311,95 @@ func TestValidateSessionWithTokenExpired(t *testing.T) {
 	require.False(t, ok)
 }
 
+func TestJWTLeewayDefault(t *testing.T) {
+	// Test that default leeway (5 seconds) is used when JWTLeeway is not set
+	authParams := &AuthParams{ProjectID: "a", PublicKey: publicKey}
+	a, err := newTestAuthConf(authParams, nil, DoOk(nil))
+	require.NoError(t, err)
+
+	// Create a token that expires 3 seconds ago (within default 5 second leeway)
+	now := time.Now()
+	token, err := jwt.NewBuilder().
+		Issuer("test").
+		Subject("someuser").
+		Audience([]string{"test"}).
+		IssuedAt(now.Add(-10 * time.Second)).
+		Expiration(now.Add(-3 * time.Second)).
+		Build()
+	require.NoError(t, err)
+
+	// Sign the token
+	key, err := helpers.LoadPrivateKey()
+	require.NoError(t, err)
+	signed, err := jwt.Sign(token, jwt.WithKey(jwa.ES384, key))
+	require.NoError(t, err)
+
+	// Should validate successfully with default 5 second leeway
+	ok, _, err := a.ValidateSessionWithToken(context.Background(), string(signed))
+	require.NoError(t, err)
+	require.True(t, ok)
+}
+
+func TestJWTLeewayCustom(t *testing.T) {
+	// Test that custom leeway is used when JWTLeeway is set
+	customLeeway := 30 * time.Second
+	authParams := &AuthParams{ProjectID: "a", PublicKey: publicKey, JWTLeeway: customLeeway}
+	a, err := newTestAuthConf(authParams, nil, DoOk(nil))
+	require.NoError(t, err)
+
+	// Create a token that expires 15 seconds ago (within custom 30 second leeway, but outside default 5 second leeway)
+	now := time.Now()
+	token, err := jwt.NewBuilder().
+		Issuer("test").
+		Subject("someuser").
+		Audience([]string{"test"}).
+		IssuedAt(now.Add(-20 * time.Second)).
+		Expiration(now.Add(-15 * time.Second)).
+		Build()
+	require.NoError(t, err)
+
+	// Sign the token
+	key, err := helpers.LoadPrivateKey()
+	require.NoError(t, err)
+	signed, err := jwt.Sign(token, jwt.WithKey(jwa.ES384, key))
+	require.NoError(t, err)
+
+	// Should validate successfully with custom 30 second leeway
+	ok, _, err := a.ValidateSessionWithToken(context.Background(), string(signed))
+	require.NoError(t, err)
+	require.True(t, ok)
+}
+
+func TestJWTLeewayCustomTooSmall(t *testing.T) {
+	// Test that a token outside the custom leeway fails validation
+	customLeeway := 5 * time.Second
+	authParams := &AuthParams{ProjectID: "a", PublicKey: publicKey, JWTLeeway: customLeeway}
+	a, err := newTestAuthConf(authParams, nil, DoOk(nil))
+	require.NoError(t, err)
+
+	// Create a token that expires 10 seconds ago (outside custom 5 second leeway)
+	now := time.Now()
+	token, err := jwt.NewBuilder().
+		Issuer("test").
+		Subject("someuser").
+		Audience([]string{"test"}).
+		IssuedAt(now.Add(-20 * time.Second)).
+		Expiration(now.Add(-10 * time.Second)).
+		Build()
+	require.NoError(t, err)
+
+	// Sign the token
+	key, err := helpers.LoadPrivateKey()
+	require.NoError(t, err)
+	signed, err := jwt.Sign(token, jwt.WithKey(jwa.ES384, key))
+	require.NoError(t, err)
+
+	// Should fail validation as token is outside the 5 second leeway
+	ok, _, err := a.ValidateSessionWithToken(context.Background(), string(signed))
+	require.Error(t, err)
+	require.False(t, ok)
+}
+
 // Refresh Session
 
 func TestRefreshSessionWithRequest(t *testing.T) {

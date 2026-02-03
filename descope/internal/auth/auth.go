@@ -27,6 +27,7 @@ type AuthParams struct {
 	CookieSameSite      http.SameSite
 	SessionCookieName   string
 	RefreshCookieName   string
+	JWTLeeway           time.Duration
 }
 
 type defaultRequestTokensProvider struct {
@@ -691,10 +692,11 @@ func (auth *authenticationsBase) extractTokens(jRes *descope.JWTResponse) ([]*de
 }
 
 func ValidateJWT(JWT string, publicKeysProvider *Provider) (*descope.Token, error) {
-	token, err := jwt.Parse([]byte(JWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true), jwt.WithAcceptableSkew(SKEW))
+	leeway := getLeeway(publicKeysProvider)
+	token, err := jwt.Parse([]byte(JWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true), jwt.WithAcceptableSkew(leeway))
 	if err != nil {
 		var parseErr error
-		token, parseErr = jwt.Parse([]byte(JWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(false), jwt.WithValidate(false), jwt.WithAcceptableSkew(SKEW))
+		token, parseErr = jwt.Parse([]byte(JWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(false), jwt.WithValidate(false), jwt.WithAcceptableSkew(leeway))
 		if parseErr != nil {
 			err = parseErr
 		}
@@ -719,6 +721,13 @@ func ValidateJWT(JWT string, publicKeysProvider *Provider) (*descope.Token, erro
 
 func (auth *authenticationsBase) validateJWT(JWT string) (*descope.Token, error) {
 	return ValidateJWT(JWT, auth.publicKeysProvider)
+}
+
+func getLeeway(provider *Provider) time.Duration {
+	if provider != nil && provider.conf != nil && provider.conf.JWTLeeway > 0 {
+		return provider.conf.JWTLeeway
+	}
+	return SKEW
 }
 
 func (*authenticationsBase) verifyDeliveryMethod(method descope.DeliveryMethod, loginID string, user *descope.User) *descope.Error {
