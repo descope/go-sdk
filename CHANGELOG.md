@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.8.0](https://github.com/descope/go-sdk/compare/v1.7.0...v1.8.0) (2026-02-03)
+
+
+### Features
+
+* added jwt leeway ([#675](https://github.com/descope/go-sdk/issues/675)) ([c6b7b43](https://github.com/descope/go-sdk/commit/c6b7b43d802d29fceb6f40dc21a6cb5a27e2d970))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.7.0 ([#669](https://github.com/descope/go-sdk/issues/669)) ([c0a03f4](https://github.com/descope/go-sdk/commit/c0a03f46f32a595609d992d85e6bd7a02ed554b4))
+
 ## [1.7.0](https://github.com/descope/go-sdk/compare/v1.6.23...v1.7.0) (2026-01-19)
 
 
