@@ -56,6 +56,23 @@ descopeClient, err := client.NewWithConfig(&client.Config{
 })
 ```
 
+### JWT Validation Leeway
+
+By default, the SDK uses a 5-second leeway (time skew) when validating JWT tokens to account for minor clock synchronization differences between systems.
+
+```go
+import "github.com/descope/go-sdk/descope/client"
+import "time"
+
+// Configure custom JWT validation leeway (e.g., 30 seconds)
+descopeClient, err := client.NewWithConfig(&client.Config{
+    ProjectID: "project-ID",
+    JWTLeeway: 30 * time.Second, // Increase leeway to handle larger clock differences
+})
+```
+
+If `JWTLeeway` is not set or set to 0, the SDK will use the default 5-second leeway for backward compatibility.
+
 ## Usage
 
 ### Authentication Functions
