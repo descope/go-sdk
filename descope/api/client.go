@@ -88,6 +88,7 @@ var (
 			exchangeAccessKey:            "auth/accesskey/exchange",
 		},
 		mgmt: mgmtEndpoints{
+			license:                                  "mgmt/license",
 			tenantCreate:                             "mgmt/tenant/create",
 			tenantUpdate:                             "mgmt/tenant/update",
 			tenantDelete:                             "mgmt/tenant/delete",
@@ -346,6 +347,7 @@ type authEndpoints struct {
 }
 
 type mgmtEndpoints struct {
+	license                  string
 	tenantCreate             string
 	tenantUpdate             string
 	tenantDelete             string
@@ -1482,6 +1484,10 @@ func (e *endpoints) ManagementDescoperSearch() string {
 	return path.Join(e.version, e.mgmt.descoperSearch)
 }
 
+func (e *endpoints) ManagementLicense() string {
+	return path.Join(e.version, e.mgmt.license)
+}
+
 type sdkInfo struct {
 	name      string
 	version   string
@@ -1526,6 +1532,7 @@ type Client struct {
 	externalRequestID func(context.Context) string
 	Conf              ClientParams
 	sdkInfo           *sdkInfo
+	licenseType       string // License type from handshake (free/pro/enterprise)
 }
 type HTTPResponse struct {
 	Req     *http.Request
@@ -1801,6 +1808,28 @@ func (c *Client) addDescopeHeaders(req *http.Request) {
 	req.Header.Set("x-descope-sdk-sha", c.sdkInfo.sha)
 	req.Header.Set("x-descope-sdk-uuid", instanceUUID)
 	req.Header.Set("x-descope-project-id", c.Conf.ProjectID)
+	if c.licenseType != "" {
+		req.Header.Set("x-descope-license", c.licenseType)
+	}
+}
+
+func (c *Client) FetchLicense(ctx context.Context) (string, error) {
+	var resp struct {
+		LicenseType string `json:"licenseType"`
+	}
+	opts := &HTTPRequest{ResBodyObj: &resp}
+	_, err := c.DoGetRequest(ctx, Routes.ManagementLicense(), opts, "")
+	if err != nil {
+		return "", err
+	}
+	if resp.LicenseType == "" {
+		return "", fmt.Errorf("empty license type returned from server")
+	}
+	return resp.LicenseType, nil
+}
+
+func (c *Client) SetLicenseType(licenseType string) {
+	c.licenseType = licenseType
 }
 
 func getSDKInfo() *sdkInfo {

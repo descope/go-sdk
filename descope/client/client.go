@@ -1,6 +1,9 @@
 package client
 
 import (
+	"context"
+	"time"
+
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/auth"
@@ -86,6 +89,17 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 		CertificateVerify:    config.CertificateVerify,
 		RequestTimeout:       config.RequestTimeout,
 	})
+
+	if config.ManagementKey != "" {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if licenseType, err := mgmtClient.FetchLicense(ctx); err != nil {
+			logger.LogInfo("License handshake failed, continuing without header: %v", err)
+		} else {
+			mgmtClient.SetLicenseType(licenseType)
+		}
+	}
+
 	managementService := mgmt.NewManagement(mgmt.ManagementParams{ProjectID: config.ProjectID, FGACacheURL: config.FGACacheURL}, provider, mgmtClient)
 
 	return &DescopeClient{Auth: authService, Management: managementService, config: config}, nil
