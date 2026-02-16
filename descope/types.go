@@ -1341,6 +1341,7 @@ type ThirdPartyApplication struct {
 	PermissionsScopes    []*ThirdPartyApplicationScope `json:"permissionsScopes"`
 	AttributesScopes     []*ThirdPartyApplicationScope `json:"attributesScopes"`
 	JWTBearerSettings    *JWTBearerSettings            `json:"jwtBearerSettings,omitempty"`
+	CustomAttributes     map[string]any                `json:"customAttributes,omitempty"`
 }
 
 type ThirdPartyApplicationRequest struct {
@@ -1353,6 +1354,7 @@ type ThirdPartyApplicationRequest struct {
 	PermissionsScopes    []*ThirdPartyApplicationScope `json:"permissionsScopes"`
 	AttributesScopes     []*ThirdPartyApplicationScope `json:"attributesScopes"`
 	JWTBearerSettings    *JWTBearerSettings            `json:"jwtBearerSettings,omitempty"`
+	CustomAttributes     map[string]any                `json:"customAttributes,omitempty"`
 }
 
 // Options for loading third party applications

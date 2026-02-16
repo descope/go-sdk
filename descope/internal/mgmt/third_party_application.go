@@ -225,6 +225,7 @@ func makeCreateUpdateThirdPartyApplicationRequest(appRequest *descope.ThirdParty
 		"permissionsScopes":    appRequest.PermissionsScopes,
 		"attributesScopes":     appRequest.AttributesScopes,
 		"jwtBearerSettings":    appRequest.JWTBearerSettings,
+		"customAttributes":     appRequest.CustomAttributes,
 	}
 }
 
