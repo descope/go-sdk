@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.9.0](https://github.com/descope/go-sdk/compare/v1.8.0...v1.9.0) (2026-02-17)
+
+
+### Features
+
+* add license handshake and header injection ([#681](https://github.com/descope/go-sdk/issues/681)) ([1e5c653](https://github.com/descope/go-sdk/commit/1e5c6532db410c267f59a2130cfa12673ca0a3c9))
+* custom attributes for third party app [#682](https://github.com/descope/go-sdk/issues/682) ([89f234d](https://github.com/descope/go-sdk/commit/89f234d30b67cdaef67521d98cbd77c464e2ac94))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.8.0 ([#676](https://github.com/descope/go-sdk/issues/676)) ([c5abbff](https://github.com/descope/go-sdk/commit/c5abbff9f02883c709f156d55b4b788a043341c8))
+
 ## [1.8.0](https://github.com/descope/go-sdk/compare/v1.7.0...v1.8.0) (2026-02-03)
 
 
