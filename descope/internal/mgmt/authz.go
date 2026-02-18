@@ -12,6 +12,7 @@ import (
 
 type authz struct {
 	managementBase
+	fgaCacheURL string
 }
 
 var _ sdk.Authz = &authz{}
@@ -199,7 +200,8 @@ func (a *authz) WhoCanAccess(ctx context.Context, resource, relationDefinition, 
 		"relationDefinition": relationDefinition,
 		"namespace":          namespace,
 	}
-	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzREWho(), body, nil, "")
+	options := &api.HTTPRequest{BaseURL: a.fgaCacheURL}
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzREWho(), body, options, "")
 	if err != nil {
 		// notest
 		return nil, err
@@ -280,7 +282,8 @@ func (a *authz) WhatCanTargetAccess(ctx context.Context, target string) ([]*desc
 	body := map[string]any{
 		"target": target,
 	}
-	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRETargetAll(), body, nil, "")
+	options := &api.HTTPRequest{BaseURL: a.fgaCacheURL}
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRETargetAll(), body, options, "")
 	if err != nil {
 		// notest
 		return nil, err

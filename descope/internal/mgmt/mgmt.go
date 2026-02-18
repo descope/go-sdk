@@ -60,7 +60,7 @@ func NewManagement(conf ManagementParams, provider *auth.Provider, c *api.Client
 	service.flow = &flow{managementBase: base}
 	service.project = &project{managementBase: base}
 	service.audit = &audit{managementBase: base}
-	service.authz = &authz{managementBase: base}
+	service.authz = &authz{managementBase: base, fgaCacheURL: conf.FGACacheURL}
 	service.password = &passwordManagement{managementBase: base}
 	service.fga = &fga{managementBase: base, fgaCacheURL: conf.FGACacheURL}
 	service.analytics = &analytics{managementBase: base}
