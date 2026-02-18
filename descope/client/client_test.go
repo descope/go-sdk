@@ -133,6 +133,23 @@ func TestManagementKeys(t *testing.T) {
 	assert.Equal(t, expectedAuthBearer, authHeader)
 }
 
+func TestFetchLicenseSuccess(t *testing.T) {
+	mockClient := mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: 200,
+			Body:       io.NopCloser(strings.NewReader(`{"licenseType":"enterprise"}`)),
+			Header:     make(http.Header),
+		}, nil
+	})
+	client, err := NewWithConfig(&Config{
+		ProjectID:     "test",
+		ManagementKey: "mgmt-key",
+		DefaultClient: mockClient,
+	})
+	require.NoError(t, err)
+	assert.NotNil(t, client)
+}
+
 func TestConcurrentClients(t *testing.T) {
 	// This test should be run with the 'race' flag, to ensure that
 	// creating two client in a concurrent manner is safe
