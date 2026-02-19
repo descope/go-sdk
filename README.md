@@ -1647,12 +1647,7 @@ if !res.Ok {
 inputSecrets := ...
 
 // Import the previously exported snapshot into the current project
-// Optionally specify entity types to exclude from the import (e.g., "connectors", "flows", "roles")
-importReq := &descope.ImportSnapshotRequest{
-	Files: files,
-	InputSecrets: inputSecrets,
-	Excludes: []string{"connectors", "flows"}, // Optional: exclude specific entity types from import
-}
+importReq := &descope.ImportSnapshotRequest{Files: files, InputSecrets: inputSecrets}
 err := descopeClient.Management.Project().ImportSnapshot(context.Background(), importReq)
 if err != nil {
 	// handle import failure
