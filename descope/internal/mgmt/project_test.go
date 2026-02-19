@@ -31,8 +31,56 @@ func TestProjectImport(t *testing.T) {
 		files, ok := req["files"].(map[string]any)
 		require.True(t, ok)
 		require.Equal(t, "bar", files["foo"])
+		excludes, ok := req["excludes"].([]any)
+		require.True(t, ok)
+		require.Len(t, excludes, 2)
+		require.Equal(t, "connectors", excludes[0])
+		require.Equal(t, "flows", excludes[1])
 	}))
-	req := &descope.ImportSnapshotRequest{Files: map[string]any{"foo": "bar"}}
+	req := &descope.ImportSnapshotRequest{
+		Files:    map[string]any{"foo": "bar"},
+		Excludes: []string{"connectors", "flows"},
+	}
+	err := mgmt.Project().ImportSnapshot(context.Background(), req)
+	require.NoError(t, err)
+}
+
+func TestProjectImportWithoutExcludes(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		files, ok := req["files"].(map[string]any)
+		require.True(t, ok)
+		require.Equal(t, "bar", files["foo"])
+		// Verify excludes field is not present in the JSON when nil
+		_, excludesPresent := req["excludes"]
+		require.False(t, excludesPresent, "excludes field should not be present when nil")
+	}))
+	req := &descope.ImportSnapshotRequest{
+		Files: map[string]any{"foo": "bar"},
+		// Excludes is intentionally nil to test backward compatibility
+	}
+	err := mgmt.Project().ImportSnapshot(context.Background(), req)
+	require.NoError(t, err)
+}
+
+func TestProjectImportWithEmptyExcludes(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		files, ok := req["files"].(map[string]any)
+		require.True(t, ok)
+		require.Equal(t, "bar", files["foo"])
+		// Verify excludes field is not present in the JSON when empty (due to omitempty)
+		_, excludesPresent := req["excludes"]
+		require.False(t, excludesPresent, "excludes field should not be present when empty due to omitempty")
+	}))
+	req := &descope.ImportSnapshotRequest{
+		Files:    map[string]any{"foo": "bar"},
+		Excludes: []string{}, // Empty slice to test backward compatibility
+	}
 	err := mgmt.Project().ImportSnapshot(context.Background(), req)
 	require.NoError(t, err)
 }
@@ -52,6 +100,7 @@ func TestValidateProjectImport(t *testing.T) {
 		files, ok := req["files"].(map[string]any)
 		require.True(t, ok)
 		require.Equal(t, "bar", files["foo"])
+
 		secrets, ok := req["inputSecrets"].(map[string]any)
 		require.True(t, ok)
 		list, ok := secrets["connectors"].([]any)

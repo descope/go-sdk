@@ -1126,6 +1126,8 @@ type ExportSnapshotResponse struct {
 type ImportSnapshotRequest struct {
 	// All project settings and configurations represented as JSON files
 	Files map[string]any `json:"files"`
+	// An optional list of entity types to exclude from the import
+	Excludes []string `json:"excludes,omitempty"`
 	// An optional map of project entities and their secrets that will be
 	// injected into the snapshot before import (see below)
 	InputSecrets *SnapshotSecrets `json:"inputSecrets,omitempty"`
