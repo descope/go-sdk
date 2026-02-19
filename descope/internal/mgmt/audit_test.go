@@ -288,7 +288,7 @@ func TestCreateAuditWebhookConnector(t *testing.T) {
 		filter1 := filters[0].(map[string]any)
 		assert.EqualValues(t, "actions", filter1["filterType"])
 		assert.EqualValues(t, "includes", filter1["operator"])
-		assert.EqualValues(t, []any{"action1", "action2"}, filter1["values"])
+		assert.EqualValues(t, []any{"AccessKeyExchange", "AuthzNamespaceCreated"}, filter1["values"])
 		filter2 := filters[1].(map[string]any)
 		assert.EqualValues(t, "tenants", filter2["filterType"])
 		assert.EqualValues(t, "excludes", filter2["operator"])
@@ -300,7 +300,7 @@ func TestCreateAuditWebhookConnector(t *testing.T) {
 			{
 				FilterType: descope.FilterTypeActions,
 				Operator:   descope.OperatorIncludes,
-				Values:     []string{"action1", "action2"},
+				Values:     []string{"AccessKeyExchange", "AuthzNamespaceCreated"},
 			},
 			{
 				FilterType: descope.FilterTypeTenants,
