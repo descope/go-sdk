@@ -134,7 +134,7 @@ func TestManagementKeys(t *testing.T) {
 }
 
 func TestFetchLicenseSuccess(t *testing.T) {
-	mockClient := mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+	mockClient := mocks.NewTestClient(func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{
 			StatusCode: 200,
 			Body:       io.NopCloser(strings.NewReader(`{"licenseType":"enterprise"}`)),
