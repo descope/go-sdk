@@ -3,6 +3,7 @@ package mgmt
 import (
 	"context"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -404,6 +405,52 @@ func TestWhatCanTargetAccessWithRelationMissingArgument(t *testing.T) {
 
 	_, err = mgmt.Authz().WhatCanTargetAccessWithRelation(context.Background(), "tar", "def", "")
 	require.ErrorContains(t, err, utils.NewInvalidArgumentError("namespace").Message)
+}
+
+func TestAuthzCacheURL(t *testing.T) {
+	mgmtWithCache := newTestMgmtConf(&ManagementParams{FGACacheURL: "https://my.auth"}, nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.True(t, strings.HasPrefix(r.URL.String(), "https://my.auth"))
+	}, map[string]any{"targets": []string{"u1"}}))
+	mgmtWithoutCache := newTestMgmtConf(&ManagementParams{}, nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.True(t, strings.HasPrefix(r.URL.String(), "https://api.descope.co"))
+	}, map[string]any{"targets": []string{"u1"}}))
+
+	tt := []struct {
+		name string
+		mgmt *managementService
+	}{
+		{"WithFGACacheURL", mgmtWithCache},
+		{"WithoutFGACacheURL", mgmtWithoutCache},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := tc.mgmt.Authz().WhoCanAccess(context.Background(), "r", "rd", "ns")
+			require.NoError(t, err)
+		})
+	}
+}
+
+func TestAuthzCacheURLWhatCanTargetAccess(t *testing.T) {
+	mgmtWithCache := newTestMgmtConf(&ManagementParams{FGACacheURL: "https://my.auth"}, nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.True(t, strings.HasPrefix(r.URL.String(), "https://my.auth"))
+	}, map[string]any{"relations": []*descope.AuthzRelation{}}))
+	mgmtWithoutCache := newTestMgmtConf(&ManagementParams{}, nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.True(t, strings.HasPrefix(r.URL.String(), "https://api.descope.co"))
+	}, map[string]any{"relations": []*descope.AuthzRelation{}}))
+
+	tt := []struct {
+		name string
+		mgmt *managementService
+	}{
+		{"WithFGACacheURL", mgmtWithCache},
+		{"WithoutFGACacheURL", mgmtWithoutCache},
+	}
+	for _, tc := range tt {
+		t.Run(tc.name, func(t *testing.T) {
+			_, err := tc.mgmt.Authz().WhatCanTargetAccess(context.Background(), "u1")
+			require.NoError(t, err)
+		})
+	}
 }
 
 func TestGetModifiedWrongArgument(t *testing.T) {
