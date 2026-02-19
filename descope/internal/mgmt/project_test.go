@@ -45,6 +45,46 @@ func TestProjectImport(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestProjectImportWithoutExcludes(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		files, ok := req["files"].(map[string]any)
+		require.True(t, ok)
+		require.Equal(t, "bar", files["foo"])
+		// Verify excludes field is not present in the JSON when nil
+		_, excludesPresent := req["excludes"]
+		require.False(t, excludesPresent, "excludes field should not be present when nil")
+	}))
+	req := &descope.ImportSnapshotRequest{
+		Files: map[string]any{"foo": "bar"},
+		// Excludes is intentionally nil to test backward compatibility
+	}
+	err := mgmt.Project().ImportSnapshot(context.Background(), req)
+	require.NoError(t, err)
+}
+
+func TestProjectImportWithEmptyExcludes(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		files, ok := req["files"].(map[string]any)
+		require.True(t, ok)
+		require.Equal(t, "bar", files["foo"])
+		// Verify excludes field is not present in the JSON when empty (due to omitempty)
+		_, excludesPresent := req["excludes"]
+		require.False(t, excludesPresent, "excludes field should not be present when empty due to omitempty")
+	}))
+	req := &descope.ImportSnapshotRequest{
+		Files:    map[string]any{"foo": "bar"},
+		Excludes: []string{}, // Empty slice to test backward compatibility
+	}
+	err := mgmt.Project().ImportSnapshot(context.Background(), req)
+	require.NoError(t, err)
+}
+
 func TestValidateProjectImport(t *testing.T) {
 	resbody := map[string]any{
 		"ok":       false,
