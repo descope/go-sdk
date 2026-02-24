@@ -93,10 +93,10 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 	if config.ManagementKey != "" {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		if licenseType, err := mgmtClient.FetchLicense(ctx); err != nil {
+		if rateLimitTier, err := mgmtClient.FetchLicense(ctx); err != nil {
 			logger.LogInfo("License handshake failed, continuing without header: %v", err)
 		} else {
-			mgmtClient.SetLicenseType(licenseType)
+			mgmtClient.SetRateLimitTier(rateLimitTier)
 		}
 	}
 
