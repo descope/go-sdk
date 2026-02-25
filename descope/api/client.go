@@ -1524,7 +1524,7 @@ func (e *endpoints) ManagementListLoad(id string) string {
 }
 
 func (e *endpoints) ManagementListLoadByName(name string) string {
-	return path.Join(e.version, e.mgmt.listLoadByName, name)
+	return path.Join(e.version, e.mgmt.listLoadByName, urlpkg.PathEscape(name))
 }
 
 func (e *endpoints) ManagementListLoadAll() string {

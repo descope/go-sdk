@@ -13,6 +13,9 @@ type lists struct {
 }
 
 func (l *lists) Create(ctx context.Context, request *descope.ListRequest) (*descope.List, error) {
+	if request == nil {
+		return nil, utils.NewInvalidArgumentError("request")
+	}
 	res, err := l.client.DoPostRequest(ctx, api.Routes.ManagementListCreate(), request, nil, "")
 	if err != nil {
 		return nil, err
@@ -21,6 +24,9 @@ func (l *lists) Create(ctx context.Context, request *descope.ListRequest) (*desc
 }
 
 func (l *lists) Update(ctx context.Context, id string, request *descope.ListRequest) (*descope.List, error) {
+	if request == nil {
+		return nil, utils.NewInvalidArgumentError("request")
+	}
 	req := &descope.ListUpdateRequest{
 		ID:          id,
 		Name:        request.Name,
@@ -50,6 +56,9 @@ func (l *lists) Load(ctx context.Context, id string) (*descope.List, error) {
 }
 
 func (l *lists) LoadByName(ctx context.Context, name string) (*descope.List, error) {
+	if name == "" {
+		return nil, utils.NewInvalidArgumentError("name")
+	}
 	res, err := l.client.DoGetRequest(ctx, api.Routes.ManagementListLoadByName(name), nil, "")
 	if err != nil {
 		return nil, err

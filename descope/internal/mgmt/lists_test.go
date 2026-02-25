@@ -157,6 +157,7 @@ func TestListLoadByNameSuccess(t *testing.T) {
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		// URL path is decoded by the HTTP library, so we check for the actual decoded name
 		require.Contains(t, r.URL.Path, "Named List")
 	}, response))
 
@@ -322,6 +323,30 @@ func TestListDeleteError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
 	err := mgmt.List().Delete(context.Background(), "list-123")
 	require.Error(t, err)
+}
+
+func TestListCreateNilRequest(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	list, err := mgmt.List().Create(context.Background(), nil)
+	require.Error(t, err)
+	require.Nil(t, list)
+	require.Contains(t, err.Error(), "request")
+}
+
+func TestListUpdateNilRequest(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	list, err := mgmt.List().Update(context.Background(), "list-123", nil)
+	require.Error(t, err)
+	require.Nil(t, list)
+	require.Contains(t, err.Error(), "request")
+}
+
+func TestListLoadByNameEmpty(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	list, err := mgmt.List().LoadByName(context.Background(), "")
+	require.Error(t, err)
+	require.Nil(t, list)
+	require.Contains(t, err.Error(), "name")
 }
 
 func TestListLoadError(t *testing.T) {
