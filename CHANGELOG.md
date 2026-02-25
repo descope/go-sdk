@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.10.0](https://github.com/descope/go-sdk/compare/v1.9.0...v1.10.0) (2026-02-25)
+
+
+### Features
+
+* **authz:** route WhoCanAccess and WhatCanTargetAccess through FGA cache ([#689](https://github.com/descope/go-sdk/issues/689)) ([f6a1dc1](https://github.com/descope/go-sdk/commit/f6a1dc110109b09da9df4d53b9f31923fdda04c5))
+* **lists:** add crud support ([#693](https://github.com/descope/go-sdk/issues/693)) ([1034c32](https://github.com/descope/go-sdk/commit/1034c327b613a8b75133f4c27321464b2197507f))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.9.0 ([#683](https://github.com/descope/go-sdk/issues/683)) ([3ca81e8](https://github.com/descope/go-sdk/commit/3ca81e822bc91e7323985afc5cec9e30af9cc773))
+* project snapshot import exclude list ([e7f2a2e](https://github.com/descope/go-sdk/commit/e7f2a2eec631c6ec9c23b0951d508bff50065148))
+
 ## [1.9.0](https://github.com/descope/go-sdk/compare/v1.8.0...v1.9.0) (2026-02-17)
 
 
