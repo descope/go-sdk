@@ -99,12 +99,21 @@ func (l *lists) LoadAll(ctx context.Context) ([]*descope.List, error) {
 }
 
 func (l *lists) Import(ctx context.Context, lists []*descope.List) error {
+	if lists == nil {
+		return utils.NewInvalidArgumentError("lists")
+	}
 	req := &descope.ListImportRequest{Lists: lists}
 	_, err := l.client.DoPostRequest(ctx, api.Routes.ManagementListImport(), req, nil, "")
 	return err
 }
 
 func (l *lists) AddIPs(ctx context.Context, id string, ips []string) error {
+	if id == "" {
+		return utils.NewInvalidArgumentError("id")
+	}
+	if ips == nil {
+		return utils.NewInvalidArgumentError("ips")
+	}
 	req := &descope.ListIPsRequest{
 		ID:  id,
 		IPs: ips,
@@ -114,6 +123,12 @@ func (l *lists) AddIPs(ctx context.Context, id string, ips []string) error {
 }
 
 func (l *lists) RemoveIPs(ctx context.Context, id string, ips []string) error {
+	if id == "" {
+		return utils.NewInvalidArgumentError("id")
+	}
+	if ips == nil {
+		return utils.NewInvalidArgumentError("ips")
+	}
 	req := &descope.ListIPsRequest{
 		ID:  id,
 		IPs: ips,
@@ -123,6 +138,12 @@ func (l *lists) RemoveIPs(ctx context.Context, id string, ips []string) error {
 }
 
 func (l *lists) CheckIP(ctx context.Context, id string, ip string) (bool, error) {
+	if id == "" {
+		return false, utils.NewInvalidArgumentError("id")
+	}
+	if ip == "" {
+		return false, utils.NewInvalidArgumentError("ip")
+	}
 	req := &descope.ListCheckIPRequest{
 		ID: id,
 		IP: ip,
@@ -142,6 +163,9 @@ func (l *lists) CheckIP(ctx context.Context, id string, ip string) (bool, error)
 }
 
 func (l *lists) Clear(ctx context.Context, id string) error {
+	if id == "" {
+		return utils.NewInvalidArgumentError("id")
+	}
 	req := &descope.ListIDRequest{ID: id}
 	_, err := l.client.DoPostRequest(ctx, api.Routes.ManagementListClear(), req, nil, "")
 	return err

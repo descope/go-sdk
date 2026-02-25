@@ -430,3 +430,61 @@ func TestListLoadEmptyID(t *testing.T) {
 	require.Nil(t, list)
 	require.Contains(t, err.Error(), "id")
 }
+
+func TestListImportNilLists(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.List().Import(context.Background(), nil)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "lists")
+}
+
+func TestListAddIPsEmptyID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.List().AddIPs(context.Background(), "", []string{"192.168.1.1"})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "id")
+}
+
+func TestListAddIPsNilIPs(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.List().AddIPs(context.Background(), "list-123", nil)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "ips")
+}
+
+func TestListRemoveIPsEmptyID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.List().RemoveIPs(context.Background(), "", []string{"192.168.1.1"})
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "id")
+}
+
+func TestListRemoveIPsNilIPs(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.List().RemoveIPs(context.Background(), "list-123", nil)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "ips")
+}
+
+func TestListCheckIPEmptyID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	exists, err := mgmt.List().CheckIP(context.Background(), "", "192.168.1.1")
+	require.Error(t, err)
+	require.False(t, exists)
+	require.Contains(t, err.Error(), "id")
+}
+
+func TestListCheckIPEmptyIP(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	exists, err := mgmt.List().CheckIP(context.Background(), "list-123", "")
+	require.Error(t, err)
+	require.False(t, exists)
+	require.Contains(t, err.Error(), "ip")
+}
+
+func TestListClearEmptyID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.List().Clear(context.Background(), "")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "id")
+}
