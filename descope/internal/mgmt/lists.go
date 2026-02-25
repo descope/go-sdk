@@ -6,15 +6,24 @@ import (
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/internal/utils"
+	"github.com/descope/go-sdk/descope/sdk"
 )
 
 type lists struct {
 	managementBase
 }
 
+var _ sdk.List = &lists{}
+
 func (l *lists) Create(ctx context.Context, request *descope.ListRequest) (*descope.List, error) {
 	if request == nil {
 		return nil, utils.NewInvalidArgumentError("request")
+	}
+	if request.Name == "" {
+		return nil, utils.NewInvalidArgumentError("name")
+	}
+	if request.Type == "" {
+		return nil, utils.NewInvalidArgumentError("type")
 	}
 	res, err := l.client.DoPostRequest(ctx, api.Routes.ManagementListCreate(), request, nil, "")
 	if err != nil {
@@ -24,8 +33,17 @@ func (l *lists) Create(ctx context.Context, request *descope.ListRequest) (*desc
 }
 
 func (l *lists) Update(ctx context.Context, id string, request *descope.ListRequest) (*descope.List, error) {
+	if id == "" {
+		return nil, utils.NewInvalidArgumentError("id")
+	}
 	if request == nil {
 		return nil, utils.NewInvalidArgumentError("request")
+	}
+	if request.Name == "" {
+		return nil, utils.NewInvalidArgumentError("name")
+	}
+	if request.Type == "" {
+		return nil, utils.NewInvalidArgumentError("type")
 	}
 	req := &descope.ListUpdateRequest{
 		ID:          id,
@@ -42,12 +60,18 @@ func (l *lists) Update(ctx context.Context, id string, request *descope.ListRequ
 }
 
 func (l *lists) Delete(ctx context.Context, id string) error {
+	if id == "" {
+		return utils.NewInvalidArgumentError("id")
+	}
 	req := &descope.ListIDRequest{ID: id}
 	_, err := l.client.DoPostRequest(ctx, api.Routes.ManagementListDelete(), req, nil, "")
 	return err
 }
 
 func (l *lists) Load(ctx context.Context, id string) (*descope.List, error) {
+	if id == "" {
+		return nil, utils.NewInvalidArgumentError("id")
+	}
 	res, err := l.client.DoGetRequest(ctx, api.Routes.ManagementListLoad(id), nil, "")
 	if err != nil {
 		return nil, err

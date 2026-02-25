@@ -355,3 +355,78 @@ func TestListLoadError(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, list)
 }
+
+func TestListCreateEmptyName(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	listReq := &descope.ListRequest{
+		Name: "",
+		Type: descope.ListTypeIPs,
+	}
+	list, err := mgmt.List().Create(context.Background(), listReq)
+	require.Error(t, err)
+	require.Nil(t, list)
+	require.Contains(t, err.Error(), "name")
+}
+
+func TestListCreateEmptyType(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	listReq := &descope.ListRequest{
+		Name: "Test List",
+		Type: "",
+	}
+	list, err := mgmt.List().Create(context.Background(), listReq)
+	require.Error(t, err)
+	require.Nil(t, list)
+	require.Contains(t, err.Error(), "type")
+}
+
+func TestListUpdateEmptyID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	listReq := &descope.ListRequest{
+		Name: "Test List",
+		Type: descope.ListTypeIPs,
+	}
+	list, err := mgmt.List().Update(context.Background(), "", listReq)
+	require.Error(t, err)
+	require.Nil(t, list)
+	require.Contains(t, err.Error(), "id")
+}
+
+func TestListUpdateEmptyName(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	listReq := &descope.ListRequest{
+		Name: "",
+		Type: descope.ListTypeIPs,
+	}
+	list, err := mgmt.List().Update(context.Background(), "list-123", listReq)
+	require.Error(t, err)
+	require.Nil(t, list)
+	require.Contains(t, err.Error(), "name")
+}
+
+func TestListUpdateEmptyType(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	listReq := &descope.ListRequest{
+		Name: "Test List",
+		Type: "",
+	}
+	list, err := mgmt.List().Update(context.Background(), "list-123", listReq)
+	require.Error(t, err)
+	require.Nil(t, list)
+	require.Contains(t, err.Error(), "type")
+}
+
+func TestListDeleteEmptyID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.List().Delete(context.Background(), "")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "id")
+}
+
+func TestListLoadEmptyID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	list, err := mgmt.List().Load(context.Background(), "")
+	require.Error(t, err)
+	require.Nil(t, list)
+	require.Contains(t, err.Error(), "id")
+}
