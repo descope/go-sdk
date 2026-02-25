@@ -29,6 +29,7 @@ type MockManagement struct {
 	*MockOutboundApplication
 	*MockManagementKey
 	*MockDescoper
+	*MockList
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -109,6 +110,10 @@ func (m *MockManagement) ManagementKey() sdk.ManagementKey {
 
 func (m *MockManagement) Descoper() sdk.Descoper {
 	return m.MockDescoper
+}
+
+func (m *MockManagement) List() sdk.List {
+	return m.MockList
 }
 
 // Mock JWT
@@ -2189,4 +2194,120 @@ func (m *MockDescoper) List(_ context.Context, options *descope.DescoperLoadOpti
 		m.ListAssert(options)
 	}
 	return m.ListResponse, m.ListTotalResponse, m.ListError
+}
+
+// Mock List
+
+type MockList struct {
+	CreateAssert   func(request *descope.ListRequest)
+	CreateResponse *descope.List
+	CreateError    error
+
+	UpdateAssert   func(id string, request *descope.ListRequest)
+	UpdateResponse *descope.List
+	UpdateError    error
+
+	DeleteAssert func(id string)
+	DeleteError  error
+
+	LoadAssert   func(id string)
+	LoadResponse *descope.List
+	LoadError    error
+
+	LoadByNameAssert   func(name string)
+	LoadByNameResponse *descope.List
+	LoadByNameError    error
+
+	LoadAllResponse []*descope.List
+	LoadAllError    error
+
+	ImportAssert func(lists []*descope.List)
+	ImportError  error
+
+	AddIPsAssert func(id string, ips []string)
+	AddIPsError  error
+
+	RemoveIPsAssert func(id string, ips []string)
+	RemoveIPsError  error
+
+	CheckIPAssert   func(id string, ip string)
+	CheckIPResponse bool
+	CheckIPError    error
+
+	ClearAssert func(id string)
+	ClearError  error
+}
+
+func (m *MockList) Create(_ context.Context, request *descope.ListRequest) (*descope.List, error) {
+	if m.CreateAssert != nil {
+		m.CreateAssert(request)
+	}
+	return m.CreateResponse, m.CreateError
+}
+
+func (m *MockList) Update(_ context.Context, id string, request *descope.ListRequest) (*descope.List, error) {
+	if m.UpdateAssert != nil {
+		m.UpdateAssert(id, request)
+	}
+	return m.UpdateResponse, m.UpdateError
+}
+
+func (m *MockList) Delete(_ context.Context, id string) error {
+	if m.DeleteAssert != nil {
+		m.DeleteAssert(id)
+	}
+	return m.DeleteError
+}
+
+func (m *MockList) Load(_ context.Context, id string) (*descope.List, error) {
+	if m.LoadAssert != nil {
+		m.LoadAssert(id)
+	}
+	return m.LoadResponse, m.LoadError
+}
+
+func (m *MockList) LoadByName(_ context.Context, name string) (*descope.List, error) {
+	if m.LoadByNameAssert != nil {
+		m.LoadByNameAssert(name)
+	}
+	return m.LoadByNameResponse, m.LoadByNameError
+}
+
+func (m *MockList) LoadAll(_ context.Context) ([]*descope.List, error) {
+	return m.LoadAllResponse, m.LoadAllError
+}
+
+func (m *MockList) Import(_ context.Context, lists []*descope.List) error {
+	if m.ImportAssert != nil {
+		m.ImportAssert(lists)
+	}
+	return m.ImportError
+}
+
+func (m *MockList) AddIPs(_ context.Context, id string, ips []string) error {
+	if m.AddIPsAssert != nil {
+		m.AddIPsAssert(id, ips)
+	}
+	return m.AddIPsError
+}
+
+func (m *MockList) RemoveIPs(_ context.Context, id string, ips []string) error {
+	if m.RemoveIPsAssert != nil {
+		m.RemoveIPsAssert(id, ips)
+	}
+	return m.RemoveIPsError
+}
+
+func (m *MockList) CheckIP(_ context.Context, id string, ip string) (bool, error) {
+	if m.CheckIPAssert != nil {
+		m.CheckIPAssert(id, ip)
+	}
+	return m.CheckIPResponse, m.CheckIPError
+}
+
+func (m *MockList) Clear(_ context.Context, id string) error {
+	if m.ClearAssert != nil {
+		m.ClearAssert(id)
+	}
+	return m.ClearError
 }

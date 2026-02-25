@@ -1558,3 +1558,54 @@ type AccessKeysSearchOptions struct {
 	CreatingUser     *string          `json:"creatingUser,omitempty"`
 	CustomAttributes map[string]any   `json:"customAttributes,omitempty"`
 }
+
+// List types
+
+type ListType string
+
+const (
+	ListTypeTexts ListType = "texts"
+	ListTypeIPs   ListType = "ips"
+	ListTypeJSON  ListType = "json"
+)
+
+type List struct {
+	ID          string   `json:"id,omitempty"`
+	Name        string   `json:"name,omitempty"`
+	Description string   `json:"description,omitempty"`
+	Type        ListType `json:"type,omitempty"`
+	Data        any      `json:"data,omitempty"`
+}
+
+type ListRequest struct {
+	Name        string   `json:"name"`
+	Description string   `json:"description,omitempty"`
+	Type        ListType `json:"type"`
+	Data        any      `json:"data,omitempty"`
+}
+
+type ListUpdateRequest struct {
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Description string   `json:"description,omitempty"`
+	Type        ListType `json:"type"`
+	Data        any      `json:"data,omitempty"`
+}
+
+type ListIDRequest struct {
+	ID string `json:"id"`
+}
+
+type ListImportRequest struct {
+	Lists []*List `json:"lists"`
+}
+
+type ListIPsRequest struct {
+	ID  string   `json:"id"`
+	IPs []string `json:"ips"`
+}
+
+type ListCheckIPRequest struct {
+	ID string `json:"id"`
+	IP string `json:"ip"`
+}
