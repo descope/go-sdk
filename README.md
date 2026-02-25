@@ -1802,7 +1802,7 @@ You can create, update, delete, or load lists, as well as perform IP-specific op
 listReq := &descope.ListRequest{
     Name:        "Blocked IPs",
     Description: "List of blocked IP addresses",
-    Type:        "ips", // Can be "texts", "ips", or "json"
+    Type:        descope.ListTypeIPs, // Can be ListTypeTexts, ListTypeIPs, or ListTypeJSON
     Data:        []string{"192.168.1.1", "10.0.0.1"},
 }
 list, err := descopeClient.Management.List().Create(context.Background(), listReq)
@@ -1811,7 +1811,7 @@ list, err := descopeClient.Management.List().Create(context.Background(), listRe
 jsonListReq := &descope.ListRequest{
     Name:        "Config Data",
     Description: "Configuration settings",
-    Type:        "json",
+    Type:        descope.ListTypeJSON,
     Data:        map[string]any{"key": "value", "setting": 123},
 }
 list, err := descopeClient.Management.List().Create(context.Background(), jsonListReq)
@@ -1821,7 +1821,7 @@ list, err := descopeClient.Management.List().Create(context.Background(), jsonLi
 updateReq := &descope.ListRequest{
     Name:        "Updated Blocked IPs",
     Description: "Updated description",
-    Type:        "ips",
+    Type:        descope.ListTypeIPs,
     Data:        []string{"192.168.1.1", "10.0.0.1", "172.16.0.1"},
 }
 list, err := descopeClient.Management.List().Update(context.Background(), "list-id", updateReq)
@@ -1849,13 +1849,13 @@ listsToImport := []*descope.List{
     {
         ID:          "list-1",
         Name:        "List 1",
-        Type:        "ips",
+        Type:        descope.ListTypeIPs,
         Data:        []string{"192.168.1.1"},
     },
     {
         ID:          "list-2",
         Name:        "List 2",
-        Type:        "texts",
+        Type:        descope.ListTypeTexts,
         Data:        []string{"item1", "item2"},
     },
 }

@@ -1570,29 +1570,29 @@ const (
 )
 
 type List struct {
-	ID           string `json:"id,omitempty"`
-	Name         string `json:"name,omitempty"`
-	Description  string `json:"description,omitempty"`
-	Type         string `json:"type,omitempty"`
-	Data         any    `json:"data,omitempty"`
-	CreatedTime  int64  `json:"createdTime,omitempty"`
-	ModifiedTime int64  `json:"modifiedTime,omitempty"`
-	Version      int64  `json:"version,omitempty"`
+	ID           string   `json:"id,omitempty"`
+	Name         string   `json:"name,omitempty"`
+	Description  string   `json:"description,omitempty"`
+	Type         ListType `json:"type,omitempty"`
+	Data         any      `json:"data,omitempty"`
+	CreatedTime  int64    `json:"createdTime,omitempty"`
+	ModifiedTime int64    `json:"modifiedTime,omitempty"`
+	Version      int64    `json:"version,omitempty"`
 }
 
 type ListRequest struct {
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
-	Type        string `json:"type"`
-	Data        any    `json:"data,omitempty"`
+	Name        string   `json:"name"`
+	Description string   `json:"description,omitempty"`
+	Type        ListType `json:"type"`
+	Data        any      `json:"data,omitempty"`
 }
 
 type ListUpdateRequest struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description,omitempty"`
-	Type        string `json:"type"`
-	Data        any    `json:"data,omitempty"`
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Description string   `json:"description,omitempty"`
+	Type        ListType `json:"type"`
+	Data        any      `json:"data,omitempty"`
 }
 
 type ListIDRequest struct {

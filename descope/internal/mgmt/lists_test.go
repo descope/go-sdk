@@ -35,7 +35,7 @@ func TestListCreateSuccess(t *testing.T) {
 	listReq := &descope.ListRequest{
 		Name:        "Test List",
 		Description: "Test Description",
-		Type:        "ips",
+		Type:        descope.ListTypeIPs,
 		Data:        []string{"192.168.1.1", "10.0.0.1"},
 	}
 	list, err := mgmt.List().Create(context.Background(), listReq)
@@ -44,7 +44,7 @@ func TestListCreateSuccess(t *testing.T) {
 	require.Equal(t, "list-123", list.ID)
 	require.Equal(t, "Test List", list.Name)
 	require.Equal(t, "Test Description", list.Description)
-	require.Equal(t, "ips", list.Type)
+	require.Equal(t, descope.ListTypeIPs, list.Type)
 }
 
 func TestListCreateJSONSuccess(t *testing.T) {
@@ -70,7 +70,7 @@ func TestListCreateJSONSuccess(t *testing.T) {
 	listReq := &descope.ListRequest{
 		Name:        "JSON List",
 		Description: "JSON Description",
-		Type:        "json",
+		Type:        descope.ListTypeJSON,
 		Data:        map[string]any{"key": "value"},
 	}
 	list, err := mgmt.List().Create(context.Background(), listReq)
@@ -78,7 +78,7 @@ func TestListCreateJSONSuccess(t *testing.T) {
 	require.NotNil(t, list)
 	require.Equal(t, "list-456", list.ID)
 	require.Equal(t, "JSON List", list.Name)
-	require.Equal(t, "json", list.Type)
+	require.Equal(t, descope.ListTypeJSON, list.Type)
 }
 
 func TestListUpdateSuccess(t *testing.T) {
@@ -103,7 +103,7 @@ func TestListUpdateSuccess(t *testing.T) {
 	listReq := &descope.ListRequest{
 		Name:        "Updated List",
 		Description: "Updated Description",
-		Type:        "texts",
+		Type:        descope.ListTypeTexts,
 		Data:        []string{"item1", "item2"},
 	}
 	list, err := mgmt.List().Update(context.Background(), "list-123", listReq)
@@ -212,12 +212,12 @@ func TestListImportSuccess(t *testing.T) {
 		{
 			ID:   "list-1",
 			Name: "List 1",
-			Type: "ips",
+			Type: descope.ListTypeIPs,
 		},
 		{
 			ID:   "list-2",
 			Name: "List 2",
-			Type: "texts",
+			Type: descope.ListTypeTexts,
 		},
 	}
 	err := mgmt.List().Import(context.Background(), lists)
@@ -301,7 +301,7 @@ func TestListCreateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
 	listReq := &descope.ListRequest{
 		Name: "Test List",
-		Type: "ips",
+		Type: descope.ListTypeIPs,
 	}
 	list, err := mgmt.List().Create(context.Background(), listReq)
 	require.Error(t, err)
@@ -312,7 +312,7 @@ func TestListUpdateError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
 	listReq := &descope.ListRequest{
 		Name: "Updated List",
-		Type: "ips",
+		Type: descope.ListTypeIPs,
 	}
 	list, err := mgmt.List().Update(context.Background(), "list-123", listReq)
 	require.Error(t, err)
