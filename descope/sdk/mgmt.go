@@ -1113,6 +1113,71 @@ type Descoper interface {
 	List(ctx context.Context, options *descope.DescoperLoadOptions) ([]*descope.Descoper, int, error)
 }
 
+// Provides functions for managing lists in a project.
+type List interface {
+	// Create a new list with the given name and type.
+	//
+	// ListRequest fields:
+	// Name: The list's name (required).
+	// Description: Optional list description.
+	// Type: The list type - one of "texts", "ips", or "json" (required).
+	// Data: The list data - format depends on type:
+	//   - For "texts" and "ips": array of strings
+	//   - For "json": map[string]any
+	//
+	// The name must be unique per project.
+	Create(ctx context.Context, request *descope.ListRequest) (*descope.List, error)
+
+	// Update an existing list.
+	//
+	// IMPORTANT: All parameters are required and will override whatever value is currently
+	// set in the existing list. Use carefully.
+	Update(ctx context.Context, id string, request *descope.ListRequest) (*descope.List, error)
+
+	// Delete an existing list.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	Delete(ctx context.Context, id string) error
+
+	// Load a list by ID.
+	Load(ctx context.Context, id string) (*descope.List, error)
+
+	// Load a list by name.
+	LoadByName(ctx context.Context, name string) (*descope.List, error)
+
+	// Load all lists in the project.
+	LoadAll(ctx context.Context) ([]*descope.List, error)
+
+	// Import multiple lists into the project.
+	//
+	// This will create or update lists based on their ID.
+	Import(ctx context.Context, lists []*descope.List) error
+
+	// Add IP addresses to an IP list.
+	//
+	// The list must be of type "ips". Duplicate IPs are automatically ignored.
+	// The order of existing IPs is preserved and new IPs are appended.
+	AddIPs(ctx context.Context, id string, ips []string) error
+
+	// Remove IP addresses from an IP list.
+	//
+	// The list must be of type "ips". Non-existent IPs are silently ignored.
+	RemoveIPs(ctx context.Context, id string, ips []string) error
+
+	// Check if an IP address exists in an IP list.
+	//
+	// The list must be of type "ips".
+	// Returns true if the IP exists in the list, false otherwise.
+	CheckIP(ctx context.Context, id string, ip string) (bool, error)
+
+	// Clear all data from a list.
+	//
+	// The list metadata (name, description, type) is preserved.
+	// For "json" type lists, sets data to empty object.
+	// For "texts" and "ips" type lists, sets data to empty array.
+	Clear(ctx context.Context, id string) error
+}
+
 // Provides various APIs for managing a Descope project programmatically. A management key must
 // be provided in the DecopeClient configuration or by setting the DESCOPE_MANAGEMENT_KEY
 // environment variable. Management keys can be generated in the Descope console.
@@ -1176,4 +1241,7 @@ type Management interface {
 
 	// Provides functions for managing descopers.
 	Descoper() Descoper
+
+	// Provides functions for managing lists in a project.
+	List() List
 }

@@ -265,6 +265,17 @@ var (
 			descoperGet:                              "mgmt/descoper",
 			descoperDelete:                           "mgmt/descoper",
 			descoperSearch:                           "mgmt/descoper/list",
+			listCreate:                               "mgmt/list",
+			listUpdate:                               "mgmt/list/update",
+			listDelete:                               "mgmt/list/delete",
+			listLoad:                                 "mgmt/list",
+			listLoadByName:                           "mgmt/list/name",
+			listLoadAll:                              "mgmt/list/all",
+			listImport:                               "mgmt/list/import",
+			listAddIPs:                               "mgmt/list/ip/add",
+			listRemoveIPs:                            "mgmt/list/ip/remove",
+			listCheckIP:                              "mgmt/list/ip/check",
+			listClear:                                "mgmt/list/clear",
 		},
 		logout:       "auth/logout",
 		logoutAll:    "auth/logoutall",
@@ -547,6 +558,18 @@ type mgmtEndpoints struct {
 	descoperGet    string
 	descoperDelete string
 	descoperSearch string
+
+	listCreate     string
+	listUpdate     string
+	listDelete     string
+	listLoad       string
+	listLoadByName string
+	listLoadAll    string
+	listImport     string
+	listAddIPs     string
+	listRemoveIPs  string
+	listCheckIP    string
+	listClear      string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -1482,6 +1505,50 @@ func (e *endpoints) ManagementDescoperDelete() string {
 
 func (e *endpoints) ManagementDescoperSearch() string {
 	return path.Join(e.version, e.mgmt.descoperSearch)
+}
+
+func (e *endpoints) ManagementListCreate() string {
+	return path.Join(e.version, e.mgmt.listCreate)
+}
+
+func (e *endpoints) ManagementListUpdate() string {
+	return path.Join(e.version, e.mgmt.listUpdate)
+}
+
+func (e *endpoints) ManagementListDelete() string {
+	return path.Join(e.version, e.mgmt.listDelete)
+}
+
+func (e *endpoints) ManagementListLoad(id string) string {
+	return path.Join(e.version, e.mgmt.listLoad, id)
+}
+
+func (e *endpoints) ManagementListLoadByName(name string) string {
+	return path.Join(e.version, e.mgmt.listLoadByName, name)
+}
+
+func (e *endpoints) ManagementListLoadAll() string {
+	return path.Join(e.version, e.mgmt.listLoadAll)
+}
+
+func (e *endpoints) ManagementListImport() string {
+	return path.Join(e.version, e.mgmt.listImport)
+}
+
+func (e *endpoints) ManagementListAddIPs() string {
+	return path.Join(e.version, e.mgmt.listAddIPs)
+}
+
+func (e *endpoints) ManagementListRemoveIPs() string {
+	return path.Join(e.version, e.mgmt.listRemoveIPs)
+}
+
+func (e *endpoints) ManagementListCheckIP() string {
+	return path.Join(e.version, e.mgmt.listCheckIP)
+}
+
+func (e *endpoints) ManagementListClear() string {
+	return path.Join(e.version, e.mgmt.listClear)
 }
 
 func (e *endpoints) ManagementLicense() string {
