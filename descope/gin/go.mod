@@ -2,7 +2,7 @@ module github.com/descope/go-sdk/descope/gin
 
 go 1.24.0
 
-toolchain go1.24.10
+toolchain go1.25.7
 
 replace github.com/descope/go-sdk => ../../
 

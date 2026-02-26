@@ -2,7 +2,7 @@ module github.com/descope/go-sdk
 
 go 1.24.0
 
-toolchain go1.24.10
+toolchain go1.25.7
 
 require (
 	github.com/google/uuid v1.6.0
