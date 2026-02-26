@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.11.0](https://github.com/descope/go-sdk/compare/v1.10.0...v1.11.0) (2026-02-26)
+
+
+### Features
+
+* **lists:** text crud ([a795d7d](https://github.com/descope/go-sdk/commit/a795d7df7e326c676a53682d0488b2038380e41a))
+* **lists:** text crud ([a795d7d](https://github.com/descope/go-sdk/commit/a795d7df7e326c676a53682d0488b2038380e41a))
+* refresh session with a writer and a given token ([#698](https://github.com/descope/go-sdk/issues/698)) ([a28b400](https://github.com/descope/go-sdk/commit/a28b400229aa0c680a2089b6d39cf34dd13e57e0))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.10.0 ([#695](https://github.com/descope/go-sdk/issues/695)) ([4534208](https://github.com/descope/go-sdk/commit/4534208cbeb61c33362c6d8fe5ac2e7bae94066f))
+
 ## [1.10.0](https://github.com/descope/go-sdk/compare/v1.9.0...v1.10.0) (2026-02-25)
 
 
