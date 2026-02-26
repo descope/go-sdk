@@ -562,13 +562,13 @@ type mgmtEndpoints struct {
 	descoperDelete string
 	descoperSearch string
 
-	listCreate     string
-	listUpdate     string
-	listDelete     string
-	listLoad       string
-	listLoadByName string
-	listLoadAll    string
-	listImport     string
+	listCreate      string
+	listUpdate      string
+	listDelete      string
+	listLoad        string
+	listLoadByName  string
+	listLoadAll     string
+	listImport      string
 	listAddIPs      string
 	listRemoveIPs   string
 	listCheckIP     string
