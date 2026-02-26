@@ -2234,6 +2234,16 @@ type MockList struct {
 	CheckIPResponse bool
 	CheckIPError    error
 
+	AddTextsAssert func(id string, texts []string)
+	AddTextsError  error
+
+	RemoveTextsAssert func(id string, texts []string)
+	RemoveTextsError  error
+
+	CheckTextAssert   func(id string, text string)
+	CheckTextResponse bool
+	CheckTextError    error
+
 	ClearAssert func(id string)
 	ClearError  error
 }
@@ -2303,6 +2313,27 @@ func (m *MockList) CheckIP(_ context.Context, id string, ip string) (bool, error
 		m.CheckIPAssert(id, ip)
 	}
 	return m.CheckIPResponse, m.CheckIPError
+}
+
+func (m *MockList) AddTexts(_ context.Context, id string, texts []string) error {
+	if m.AddTextsAssert != nil {
+		m.AddTextsAssert(id, texts)
+	}
+	return m.AddTextsError
+}
+
+func (m *MockList) RemoveTexts(_ context.Context, id string, texts []string) error {
+	if m.RemoveTextsAssert != nil {
+		m.RemoveTextsAssert(id, texts)
+	}
+	return m.RemoveTextsError
+}
+
+func (m *MockList) CheckText(_ context.Context, id string, text string) (bool, error) {
+	if m.CheckTextAssert != nil {
+		m.CheckTextAssert(id, text)
+	}
+	return m.CheckTextResponse, m.CheckTextError
 }
 
 func (m *MockList) Clear(_ context.Context, id string) error {

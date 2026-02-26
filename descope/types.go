@@ -1609,3 +1609,13 @@ type ListCheckIPRequest struct {
 	ID string `json:"id"`
 	IP string `json:"ip"`
 }
+
+type ListTextsRequest struct {
+	ID    string   `json:"id"`
+	Texts []string `json:"texts"`
+}
+
+type ListCheckTextRequest struct {
+	ID   string `json:"id"`
+	Text string `json:"text"`
+}

@@ -1170,6 +1170,23 @@ type List interface {
 	// Returns true if the IP exists in the list, false otherwise.
 	CheckIP(ctx context.Context, id string, ip string) (bool, error)
 
+	// Add text items to a text list.
+	//
+	// The list must be of type "texts". Duplicate texts are automatically ignored.
+	// The order of existing texts is preserved and new texts are appended.
+	AddTexts(ctx context.Context, id string, texts []string) error
+
+	// Remove text items from a text list.
+	//
+	// The list must be of type "texts". Non-existent texts are silently ignored.
+	RemoveTexts(ctx context.Context, id string, texts []string) error
+
+	// Check if a text exists in a text list.
+	//
+	// The list must be of type "texts".
+	// Returns true if the text exists in the list, false otherwise.
+	CheckText(ctx context.Context, id string, text string) (bool, error)
+
 	// Clear all data from a list.
 	//
 	// The list metadata (name, description, type) is preserved.
