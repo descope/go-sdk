@@ -388,6 +388,24 @@ func TestRefreshSessionWithTokenInvalidInput(t *testing.T) {
 	require.False(t, ok)
 }
 
+func TestRefreshSessionWithTokenAndWriter(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	response := httptest.NewRecorder()
+	ok, _, err := a.RefreshSessionWithTokenAndWriter(context.Background(), jwtRTokenValid, response)
+	require.NoError(t, err)
+	require.True(t, ok)
+	strictCookies(t, response)
+}
+
+func TestRefreshSessionWithTokenAndWriterInvalidInput(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	ok, _, err := a.RefreshSessionWithTokenAndWriter(context.Background(), "", nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.False(t, ok)
+}
+
 func TestRefreshSessionWithTokenNoPublicKey(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, DoOk(nil))
 	require.NoError(t, err)
