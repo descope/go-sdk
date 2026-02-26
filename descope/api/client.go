@@ -275,6 +275,9 @@ var (
 			listAddIPs:                               "mgmt/list/ip/add",
 			listRemoveIPs:                            "mgmt/list/ip/remove",
 			listCheckIP:                              "mgmt/list/ip/check",
+			listAddTexts:                             "mgmt/list/text/add",
+			listRemoveTexts:                          "mgmt/list/text/remove",
+			listCheckText:                            "mgmt/list/text/check",
 			listClear:                                "mgmt/list/clear",
 		},
 		logout:       "auth/logout",
@@ -559,17 +562,20 @@ type mgmtEndpoints struct {
 	descoperDelete string
 	descoperSearch string
 
-	listCreate     string
-	listUpdate     string
-	listDelete     string
-	listLoad       string
-	listLoadByName string
-	listLoadAll    string
-	listImport     string
-	listAddIPs     string
-	listRemoveIPs  string
-	listCheckIP    string
-	listClear      string
+	listCreate      string
+	listUpdate      string
+	listDelete      string
+	listLoad        string
+	listLoadByName  string
+	listLoadAll     string
+	listImport      string
+	listAddIPs      string
+	listRemoveIPs   string
+	listCheckIP     string
+	listAddTexts    string
+	listRemoveTexts string
+	listCheckText   string
+	listClear       string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -1545,6 +1551,18 @@ func (e *endpoints) ManagementListRemoveIPs() string {
 
 func (e *endpoints) ManagementListCheckIP() string {
 	return path.Join(e.version, e.mgmt.listCheckIP)
+}
+
+func (e *endpoints) ManagementListAddTexts() string {
+	return path.Join(e.version, e.mgmt.listAddTexts)
+}
+
+func (e *endpoints) ManagementListRemoveTexts() string {
+	return path.Join(e.version, e.mgmt.listRemoveTexts)
+}
+
+func (e *endpoints) ManagementListCheckText() string {
+	return path.Join(e.version, e.mgmt.listCheckText)
 }
 
 func (e *endpoints) ManagementListClear() string {

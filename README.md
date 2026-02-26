@@ -1876,6 +1876,21 @@ if err == nil && exists {
     // IP is in the list
 }
 
+// Add text items to a text list
+// The list must be of type "texts". Duplicates are automatically ignored.
+err := descopeClient.Management.List().AddTexts(context.Background(), "list-id", []string{"item1", "item2"})
+
+// Remove text items from a text list
+// The list must be of type "texts". Non-existent texts are silently ignored.
+err := descopeClient.Management.List().RemoveTexts(context.Background(), "list-id", []string{"item1"})
+
+// Check if a text exists in a text list
+// The list must be of type "texts".
+exists, err := descopeClient.Management.List().CheckText(context.Background(), "list-id", "item1")
+if err == nil && exists {
+    // Text is in the list
+}
+
 // Clear all data from a list
 // The list metadata (name, description, type) is preserved.
 err := descopeClient.Management.List().Clear(context.Background(), "list-id")

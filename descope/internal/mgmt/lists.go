@@ -162,6 +162,61 @@ func (l *lists) CheckIP(ctx context.Context, id string, ip string) (bool, error)
 	return checkRes.Exists, nil
 }
 
+func (l *lists) AddTexts(ctx context.Context, id string, texts []string) error {
+	if id == "" {
+		return utils.NewInvalidArgumentError("id")
+	}
+	if texts == nil {
+		return utils.NewInvalidArgumentError("texts")
+	}
+	req := &descope.ListTextsRequest{
+		ID:    id,
+		Texts: texts,
+	}
+	_, err := l.client.DoPostRequest(ctx, api.Routes.ManagementListAddTexts(), req, nil, "")
+	return err
+}
+
+func (l *lists) RemoveTexts(ctx context.Context, id string, texts []string) error {
+	if id == "" {
+		return utils.NewInvalidArgumentError("id")
+	}
+	if texts == nil {
+		return utils.NewInvalidArgumentError("texts")
+	}
+	req := &descope.ListTextsRequest{
+		ID:    id,
+		Texts: texts,
+	}
+	_, err := l.client.DoPostRequest(ctx, api.Routes.ManagementListRemoveTexts(), req, nil, "")
+	return err
+}
+
+func (l *lists) CheckText(ctx context.Context, id string, text string) (bool, error) {
+	if id == "" {
+		return false, utils.NewInvalidArgumentError("id")
+	}
+	if text == "" {
+		return false, utils.NewInvalidArgumentError("text")
+	}
+	req := &descope.ListCheckTextRequest{
+		ID:   id,
+		Text: text,
+	}
+	res, err := l.client.DoPostRequest(ctx, api.Routes.ManagementListCheckText(), req, nil, "")
+	if err != nil {
+		return false, err
+	}
+
+	var checkRes struct {
+		Exists bool `json:"exists"`
+	}
+	if err := utils.Unmarshal([]byte(res.BodyStr), &checkRes); err != nil {
+		return false, err
+	}
+	return checkRes.Exists, nil
+}
+
 func (l *lists) Clear(ctx context.Context, id string) error {
 	if id == "" {
 		return utils.NewInvalidArgumentError("id")
