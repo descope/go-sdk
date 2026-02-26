@@ -426,6 +426,13 @@ func (auth *authenticationService) RefreshSessionWithToken(ctx context.Context, 
 	return auth.refreshSession(ctx, refreshToken, nil)
 }
 
+func (auth *authenticationService) RefreshSessionWithTokenAndWriter(ctx context.Context, refreshToken string, w http.ResponseWriter) (bool, *descope.Token, error) {
+	if refreshToken == "" {
+		return false, nil, utils.NewInvalidArgumentError("refreshToken")
+	}
+	return auth.refreshSession(ctx, refreshToken, w)
+}
+
 func (auth *authenticationService) refreshSession(ctx context.Context, refreshToken string, w http.ResponseWriter) (bool, *descope.Token, error) {
 	token, err := auth.validateJWT(refreshToken)
 	if err != nil {
