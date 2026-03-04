@@ -136,7 +136,9 @@ func NewAuth(conf AuthParams, c *api.Client, requestTokensProvider sdk.RequestTo
 func NewAuthWithProvider(conf AuthParams, provider *Provider, c *api.Client, requestTokensProvider sdk.RequestTokensProvider) (*authenticationService, error) {
 	base := authenticationsBase{conf: &conf, client: c}
 	base.publicKeysProvider = provider
-
+	if len(conf.GetSessionCookieNameWithFallback()) == 0 || len(conf.GetRefreshCookieNameWithFallback()) == 0 {
+		conf.SetCookieNames("", nil, "", nil)
+	}
 	if requestTokensProvider == nil {
 		requestTokensProvider = &defaultRequestTokensProvider{
 			sessionCookieNames: conf.GetSessionCookieNameWithFallback(),
