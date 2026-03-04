@@ -20,16 +20,16 @@ import (
 const SKEW = time.Second * 5
 
 type AuthParams struct {
-	ProjectID                 string
-	PublicKey                 string
-	SessionJWTViaCookie       bool
-	CookieDomain              string
-	CookieSameSite            http.SameSite
-	sessionCookieName         string
-	refreshCookieName         string
-	fallBackSessionCookieName []string
-	fallBackRefreshCookieName []string
-	JWTLeeway                 time.Duration
+	ProjectID                  string
+	PublicKey                  string
+	SessionJWTViaCookie        bool
+	CookieDomain               string
+	CookieSameSite             http.SameSite
+	sessionCookieName          string
+	refreshCookieName          string
+	fallBackSessionCookieNames []string
+	fallBackRefreshCookieNames []string
+	JWTLeeway                  time.Duration
 }
 
 type defaultRequestTokensProvider struct {
@@ -70,14 +70,16 @@ func (d *defaultRequestTokensProvider) ProvideTokens(r *http.Request) (sessionTo
 func (ap *AuthParams) SetCookieNames(refreshCookieName string, fallBackRefreshCookieNames []string, sessionCookieName string, fallBackSessionCookieNames []string) {
 	ap.refreshCookieName = refreshCookieName
 	ap.sessionCookieName = sessionCookieName
-	ap.fallBackRefreshCookieName = append(fallBackRefreshCookieNames, ap.GetRefreshCookieName())
-	ap.fallBackSessionCookieName = append(fallBackSessionCookieNames, ap.GetSessionCookieName())
-	ap.fallBackRefreshCookieName = slices.DeleteFunc(ap.fallBackRefreshCookieName, func(s string) bool { return s == "" })
-	slices.Sort(ap.fallBackRefreshCookieName)
-	ap.fallBackRefreshCookieName = slices.Compact(ap.fallBackRefreshCookieName)
-	ap.fallBackSessionCookieName = slices.DeleteFunc(ap.fallBackSessionCookieName, func(s string) bool { return s == "" })
-	slices.Sort(ap.fallBackSessionCookieName)
-	ap.fallBackSessionCookieName = slices.Compact(ap.fallBackSessionCookieName)
+	ap.fallBackRefreshCookieNames = append(ap.fallBackRefreshCookieNames, ap.GetRefreshCookieName())
+	ap.fallBackRefreshCookieNames = append(ap.fallBackRefreshCookieNames, fallBackRefreshCookieNames...)
+	ap.fallBackSessionCookieNames = append(ap.fallBackSessionCookieNames, ap.GetSessionCookieName())
+	ap.fallBackSessionCookieNames = append(ap.fallBackSessionCookieNames, fallBackSessionCookieNames...)
+	ap.fallBackRefreshCookieNames = slices.DeleteFunc(ap.fallBackRefreshCookieNames, func(s string) bool { return s == "" })
+	slices.Sort(ap.fallBackRefreshCookieNames)
+	ap.fallBackRefreshCookieNames = slices.Compact(ap.fallBackRefreshCookieNames)
+	ap.fallBackSessionCookieNames = slices.DeleteFunc(ap.fallBackSessionCookieNames, func(s string) bool { return s == "" })
+	slices.Sort(ap.fallBackSessionCookieNames)
+	ap.fallBackSessionCookieNames = slices.Compact(ap.fallBackSessionCookieNames)
 }
 
 func (ap *AuthParams) GetRefreshCookieName() string {
@@ -97,11 +99,11 @@ func (ap *AuthParams) GetSessionCookieName() string {
 }
 
 func (ap *AuthParams) GetRefreshCookieNameWithFallback() []string {
-	return ap.fallBackRefreshCookieName
+	return ap.fallBackRefreshCookieNames
 }
 
 func (ap *AuthParams) GetSessionCookieNameWithFallback() []string {
-	return ap.fallBackSessionCookieName
+	return ap.fallBackSessionCookieNames
 }
 
 type authenticationsBase struct {
