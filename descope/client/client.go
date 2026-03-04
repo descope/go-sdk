@@ -62,16 +62,16 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 		CertificateVerify:    config.CertificateVerify,
 		RequestTimeout:       config.RequestTimeout,
 	})
+
 	conf := &auth.AuthParams{
 		ProjectID:           config.ProjectID,
 		PublicKey:           config.PublicKey,
 		SessionJWTViaCookie: config.SessionJWTViaCookie,
 		CookieDomain:        config.SessionJWTCookieDomain,
 		CookieSameSite:      config.SessionJWTCookieSameSite,
-		RefreshCookieName:   config.RefreshCookieName,
-		SessionCookieName:   config.SessionCookieName,
 		JWTLeeway:           config.JWTLeeway,
 	}
+	conf.SetCookieNames(config.RefreshCookieName, config.FallBackRefreshCookieNames, config.SessionCookieName, config.FallBackSessionCookieNames)
 	provider := auth.NewProvider(authClient, conf)
 	authService, err := auth.NewAuthWithProvider(*conf, provider, authClient, config.RequestTokensProvider)
 	if err != nil {

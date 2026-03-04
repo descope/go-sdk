@@ -65,6 +65,10 @@ type Config struct {
 	RefreshCookieName string
 	// When using custom DS cookie name, set the correct value here, to make the SDK fetch the correct cookie
 	SessionCookieName string
+	// When using custom DSR cookie name, set the correct value here, to make the SDK fetch the correct cookie
+	FallBackRefreshCookieNames []string
+	// When using custom DS cookie name, set the correct value here, to make the SDK fetch the correct cookie
+	FallBackSessionCookieNames []string
 	// When using custom request tokens provider, set the correct value here, to make the SDK fetch the correct tokens
 	RequestTokensProvider sdk.RequestTokensProvider
 	// JWTLeeway (optional, 5 seconds) - used to set the acceptable time skew (leeway) for JWT validation.
