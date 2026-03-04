@@ -1446,8 +1446,8 @@ func newTestAuthWithTokenProvider(clientParams *api.ClientParams, callback mocks
 
 func TestDefaultRequestTokensProviderNilRequest(t *testing.T) {
 	provider := &defaultRequestTokensProvider{
-		sessionCookieName: descope.SessionCookieName,
-		refreshCookieName: descope.RefreshCookieName,
+		sessionCookieNames: []string{descope.SessionCookieName},
+		refreshCookieNames: []string{descope.RefreshCookieName},
 	}
 	sessionToken, refreshToken := provider.ProvideTokens(nil)
 	assert.Empty(t, sessionToken)
@@ -1456,8 +1456,8 @@ func TestDefaultRequestTokensProviderNilRequest(t *testing.T) {
 
 func TestDefaultRequestTokensProviderFromCookie(t *testing.T) {
 	provider := &defaultRequestTokensProvider{
-		sessionCookieName: descope.SessionCookieName,
-		refreshCookieName: descope.RefreshCookieName,
+		sessionCookieNames: []string{descope.SessionCookieName},
+		refreshCookieNames: []string{descope.RefreshCookieName},
 	}
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: descope.SessionCookieName, Value: "session-token-value"})
@@ -1470,8 +1470,8 @@ func TestDefaultRequestTokensProviderFromCookie(t *testing.T) {
 
 func TestDefaultRequestTokensProviderFromHeader(t *testing.T) {
 	provider := &defaultRequestTokensProvider{
-		sessionCookieName: descope.SessionCookieName,
-		refreshCookieName: descope.RefreshCookieName,
+		sessionCookieNames: []string{descope.SessionCookieName},
+		refreshCookieNames: []string{descope.RefreshCookieName},
 	}
 	request := &http.Request{Header: http.Header{}}
 	request.Header.Add(api.AuthorizationHeaderName, api.BearerAuthorizationPrefix+"header-session-token")
@@ -1484,8 +1484,8 @@ func TestDefaultRequestTokensProviderFromHeader(t *testing.T) {
 
 func TestDefaultRequestTokensProviderHeaderTakesPrecedence(t *testing.T) {
 	provider := &defaultRequestTokensProvider{
-		sessionCookieName: descope.SessionCookieName,
-		refreshCookieName: descope.RefreshCookieName,
+		sessionCookieNames: []string{descope.SessionCookieName},
+		refreshCookieNames: []string{descope.RefreshCookieName},
 	}
 	request := &http.Request{Header: http.Header{}}
 	request.Header.Add(api.AuthorizationHeaderName, api.BearerAuthorizationPrefix+"header-session-token")
@@ -1499,8 +1499,8 @@ func TestDefaultRequestTokensProviderHeaderTakesPrecedence(t *testing.T) {
 
 func TestDefaultRequestTokensProviderNoRefreshCookie(t *testing.T) {
 	provider := &defaultRequestTokensProvider{
-		sessionCookieName: descope.SessionCookieName,
-		refreshCookieName: descope.RefreshCookieName,
+		sessionCookieNames: []string{descope.SessionCookieName},
+		refreshCookieNames: []string{descope.RefreshCookieName},
 	}
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: descope.SessionCookieName, Value: "session-token-value"})
@@ -1512,8 +1512,8 @@ func TestDefaultRequestTokensProviderNoRefreshCookie(t *testing.T) {
 
 func TestDefaultRequestTokensProviderCustomCookieNames(t *testing.T) {
 	provider := &defaultRequestTokensProvider{
-		sessionCookieName: "CustomSession",
-		refreshCookieName: "CustomRefresh",
+		sessionCookieNames: []string{"CustomSession"},
+		refreshCookieNames: []string{"CustomRefresh"},
 	}
 	request := &http.Request{Header: http.Header{}}
 	request.AddCookie(&http.Cookie{Name: "CustomSession", Value: "custom-session-token"})
@@ -1605,4 +1605,54 @@ func TestCustomRequestTokensProviderOverridesDefaultBehavior(t *testing.T) {
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.NotNil(t, token)
+}
+
+func TestSetCookieNamesNoDuplicates(t *testing.T) {
+	ap := &AuthParams{}
+	// Provide the primary name also in the fallback list — it should appear only once
+	ap.SetCookieNames("myRefresh", []string{"myRefresh", "extra"}, "mySession", []string{"mySession", "extra2"})
+
+	refreshFallback := ap.GetRefreshCookieNameWithFallback()
+	seen := map[string]bool{}
+	for _, v := range refreshFallback {
+		require.False(t, seen[v], "duplicate found in refresh fallback: %q", v)
+		seen[v] = true
+	}
+	assert.Contains(t, refreshFallback, "myRefresh")
+	assert.Contains(t, refreshFallback, "extra")
+
+	sessionFallback := ap.GetSessionCookieNameWithFallback()
+	seen = map[string]bool{}
+	for _, v := range sessionFallback {
+		require.False(t, seen[v], "duplicate found in session fallback: %q", v)
+		seen[v] = true
+	}
+	assert.Contains(t, sessionFallback, "mySession")
+	assert.Contains(t, sessionFallback, "extra2")
+}
+
+func TestSetCookieNamesNoEmptyStrings(t *testing.T) {
+	ap := &AuthParams{}
+	ap.SetCookieNames("myRefresh", []string{"", "extra"}, "mySession", []string{"", "extra2"})
+
+	assert.NotContains(t, ap.GetRefreshCookieNameWithFallback(), "")
+	assert.NotContains(t, ap.GetSessionCookieNameWithFallback(), "")
+}
+
+func TestSetCookieNamesFallbackIncludesPrimary(t *testing.T) {
+	ap := &AuthParams{}
+	ap.SetCookieNames("myRefresh", []string{"fallbackRefresh"}, "mySession", []string{"fallbackSession"})
+
+	assert.Contains(t, ap.GetRefreshCookieNameWithFallback(), "myRefresh")
+	assert.Contains(t, ap.GetRefreshCookieNameWithFallback(), "fallbackRefresh")
+	assert.Contains(t, ap.GetSessionCookieNameWithFallback(), "mySession")
+	assert.Contains(t, ap.GetSessionCookieNameWithFallback(), "fallbackSession")
+}
+
+func TestSetCookieNamesDefaultsUsedWhenPrimaryEmpty(t *testing.T) {
+	ap := &AuthParams{}
+	ap.SetCookieNames("", nil, "", nil)
+
+	assert.Contains(t, ap.GetRefreshCookieNameWithFallback(), descope.RefreshCookieName)
+	assert.Contains(t, ap.GetSessionCookieNameWithFallback(), descope.SessionCookieName)
 }

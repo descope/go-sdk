@@ -5,6 +5,7 @@ import (
 	goErrors "errors"
 	"net/http"
 	"path"
+	"slices"
 	"strings"
 	"time"
 
@@ -14,25 +15,26 @@ import (
 	"github.com/descope/go-sdk/descope/logger"
 	"github.com/descope/go-sdk/descope/sdk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
-	"golang.org/x/exp/slices"
 )
 
 const SKEW = time.Second * 5
 
 type AuthParams struct {
-	ProjectID           string
-	PublicKey           string
-	SessionJWTViaCookie bool
-	CookieDomain        string
-	CookieSameSite      http.SameSite
-	SessionCookieName   string
-	RefreshCookieName   string
-	JWTLeeway           time.Duration
+	ProjectID                 string
+	PublicKey                 string
+	SessionJWTViaCookie       bool
+	CookieDomain              string
+	CookieSameSite            http.SameSite
+	sessionCookieName         string
+	refreshCookieName         string
+	fallBackSessionCookieName []string
+	fallBackRefreshCookieName []string
+	JWTLeeway                 time.Duration
 }
 
 type defaultRequestTokensProvider struct {
-	sessionCookieName string
-	refreshCookieName string
+	sessionCookieNames []string
+	refreshCookieNames []string
 }
 
 func (d *defaultRequestTokensProvider) ProvideTokens(r *http.Request) (sessionToken string, refreshToken string) {
@@ -48,32 +50,58 @@ func (d *defaultRequestTokensProvider) ProvideTokens(r *http.Request) (sessionTo
 	}
 
 	if sessionToken == "" {
-		if sessionCookie, _ := r.Cookie(d.sessionCookieName); sessionCookie != nil {
-			sessionToken = sessionCookie.Value
+		for _, cookieName := range d.sessionCookieNames {
+			if sessionCookie, _ := r.Cookie(cookieName); sessionCookie != nil {
+				sessionToken = sessionCookie.Value
+				break
+			}
 		}
 	}
 
-	refreshCookie, err := r.Cookie(d.refreshCookieName)
-	if err != nil {
-		return sessionToken, ""
+	for _, cookieName := range d.refreshCookieNames {
+		refreshCookie, err := r.Cookie(cookieName)
+		if err == nil {
+			return sessionToken, refreshCookie.Value
+		}
 	}
-	return sessionToken, refreshCookie.Value
+	return sessionToken, ""
+}
+
+func (ap *AuthParams) SetCookieNames(refreshCookieName string, fallBackRefreshCookieNames []string, sessionCookieName string, fallBackSessionCookieNames []string) {
+	ap.refreshCookieName = refreshCookieName
+	ap.sessionCookieName = sessionCookieName
+	ap.fallBackRefreshCookieName = append(fallBackRefreshCookieNames, ap.GetRefreshCookieName())
+	ap.fallBackSessionCookieName = append(fallBackSessionCookieNames, ap.GetSessionCookieName())
+	ap.fallBackRefreshCookieName = slices.DeleteFunc(ap.fallBackRefreshCookieName, func(s string) bool { return s == "" })
+	slices.Sort(ap.fallBackRefreshCookieName)
+	ap.fallBackRefreshCookieName = slices.Compact(ap.fallBackRefreshCookieName)
+	ap.fallBackSessionCookieName = slices.DeleteFunc(ap.fallBackSessionCookieName, func(s string) bool { return s == "" })
+	slices.Sort(ap.fallBackSessionCookieName)
+	ap.fallBackSessionCookieName = slices.Compact(ap.fallBackSessionCookieName)
 }
 
 func (ap *AuthParams) GetRefreshCookieName() string {
-	if ap.RefreshCookieName != "" {
+	if ap.refreshCookieName != "" {
 		// notest
-		return ap.RefreshCookieName
+		return ap.refreshCookieName
 	}
 	return descope.RefreshCookieName
 }
 
 func (ap *AuthParams) GetSessionCookieName() string {
-	if ap.SessionCookieName != "" {
+	if ap.sessionCookieName != "" {
 		// notest
-		return ap.SessionCookieName
+		return ap.sessionCookieName
 	}
 	return descope.SessionCookieName
+}
+
+func (ap *AuthParams) GetRefreshCookieNameWithFallback() []string {
+	return ap.fallBackRefreshCookieName
+}
+
+func (ap *AuthParams) GetSessionCookieNameWithFallback() []string {
+	return ap.fallBackSessionCookieName
 }
 
 type authenticationsBase struct {
@@ -109,8 +137,8 @@ func NewAuthWithProvider(conf AuthParams, provider *Provider, c *api.Client, req
 
 	if requestTokensProvider == nil {
 		requestTokensProvider = &defaultRequestTokensProvider{
-			sessionCookieName: conf.GetSessionCookieName(),
-			refreshCookieName: conf.GetRefreshCookieName(),
+			sessionCookieNames: conf.GetSessionCookieNameWithFallback(),
+			refreshCookieNames: conf.GetRefreshCookieNameWithFallback(),
 		}
 	}
 	base.requestTokensProvider = requestTokensProvider
@@ -815,13 +843,14 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 	var sessionToken *descope.Token
 	for i := range tokens {
 		addToCookie := true
-		if tokens[i].Claims[claimAttributeName] == auth.conf.GetSessionCookieName() {
+		ckn, _ := tokens[i].Claims[claimAttributeName].(string)
+		if slices.Contains(auth.conf.GetSessionCookieNameWithFallback(), ckn) {
 			sessionToken = tokens[i]
 			if !auth.conf.SessionJWTViaCookie {
 				addToCookie = false
 			}
 		}
-		if tokens[i].Claims[claimAttributeName] == auth.conf.GetRefreshCookieName() {
+		if slices.Contains(auth.conf.GetRefreshCookieNameWithFallback(), ckn) {
 			refreshToken = tokens[i]
 		}
 		if addToCookie {
@@ -833,13 +862,13 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 	}
 
 	for i := range cookies {
-		if (sessionToken == nil || sessionToken.JWT == "") && cookies[i].Name == auth.conf.GetSessionCookieName() {
+		if (sessionToken == nil || sessionToken.JWT == "") && slices.Contains(auth.conf.GetSessionCookieNameWithFallback(), cookies[i].Name) {
 			sessionToken, err = auth.validateJWT(cookies[i].Value)
 			if err != nil {
 				logger.LogDebug("Validation of session token failed: %s", err.Error())
 				return nil, err
 			}
-		} else if (refreshToken == nil || refreshToken.JWT == "") && cookies[i].Name == auth.conf.GetRefreshCookieName() {
+		} else if (refreshToken == nil || refreshToken.JWT == "") && slices.Contains(auth.conf.GetRefreshCookieNameWithFallback(), cookies[i].Name) {
 			refreshToken, err = auth.validateJWT(cookies[i].Value)
 			if err != nil {
 				logger.LogDebug("Validation of refresh token failed: %s", err.Error())
