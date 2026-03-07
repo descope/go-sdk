@@ -282,9 +282,32 @@ func TestCreateAuditWebhookConnector(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		assert.EqualValues(t, "name", req["name"])
+		// Verify filters are included in request
+		filters := req["filters"].([]any)
+		require.Len(t, filters, 2)
+		filter1 := filters[0].(map[string]any)
+		assert.EqualValues(t, "actions", filter1["filterType"])
+		assert.EqualValues(t, "includes", filter1["operator"])
+		assert.EqualValues(t, []any{"action1", "action2"}, filter1["values"])
+		filter2 := filters[1].(map[string]any)
+		assert.EqualValues(t, "tenants", filter2["filterType"])
+		assert.EqualValues(t, "excludes", filter2["operator"])
+		assert.EqualValues(t, []any{"tenant1"}, filter2["values"])
 	}, nil))
 	err := mgmt.Audit().CreateAuditWebhook(context.Background(), &descope.AuditWebhook{
 		Name: "name",
+		Filters: []*descope.AuditFilters{
+			{
+				FilterType: descope.FilterTypeActions,
+				Operator:   descope.OperatorIncludes,
+				Values:     []string{"action1", "action2"},
+			},
+			{
+				FilterType: descope.FilterTypeTenants,
+				Operator:   descope.OperatorExcludes,
+				Values:     []string{"tenant1"},
+			},
+		},
 	})
 	require.NoError(t, err)
 	assert.True(t, called)

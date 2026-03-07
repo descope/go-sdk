@@ -56,6 +56,23 @@ descopeClient, err := client.NewWithConfig(&client.Config{
 })
 ```
 
+### JWT Validation Leeway
+
+By default, the SDK uses a 5-second leeway (time skew) when validating JWT tokens to account for minor clock synchronization differences between systems.
+
+```go
+import "github.com/descope/go-sdk/descope/client"
+import "time"
+
+// Configure custom JWT validation leeway (e.g., 30 seconds)
+descopeClient, err := client.NewWithConfig(&client.Config{
+    ProjectID: "project-ID",
+    JWTLeeway: 30 * time.Second, // Increase leeway to handle larger clock differences
+})
+```
+
+If `JWTLeeway` is not set or set to 0, the SDK will use the default 5-second leeway for backward compatibility.
+
 ## Usage
 
 ### Authentication Functions
@@ -96,6 +113,7 @@ These sections show how to use the SDK to perform API management functions. Befo
 13. [Manage FGA (Fine-grained Authorization)](#manage-fga-fine-grained-authorization)
 14. [Manage Project](#manage-project)
 15. [Manage SSO Applications](#manage-sso-applications)
+16. [Manage Lists](#manage-lists)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -1063,13 +1081,13 @@ res, err := descopeClient.Management.AccessKey().Create(context.Background(), "a
     },
 	"",
     map[string]any{"k1": "v1"},
-	nil)
+	nil, map[string]any{"attributeName": "attributeValue"})
 
 // Load specific access key
 res, err := descopeClient.Management.AccessKey().Load(context.Background(), "access-key-id")
 
 // Search all access keys, optionally according to tenant and/or role filter
-accessKeysResp, err := descopeClient.Management.AccessKey().SearchAll(context.Background(), []string{"my-tenant-id"})
+accessKeysResp, err := descopeClient.Management.AccessKey().SearchAll(context.Background(), &descope.AccessKeysSearchOptions{TenantIDs: []string{"my-tenant-id"}})
 if err == nil {
     for _, accessKey := range accessKeysResp {
         // Do something
@@ -1077,9 +1095,9 @@ if err == nil {
 }
 
 // Update access key
-// If description, roles, tenants, customClaims, or permittedIPs are nil, their existing values will be preserved. If you want to remove them, pass an empty slice or map.
+// If description, roles, tenants, customClaims, permittedIPs, or customAttributes are nil, their existing values will be preserved. If you want to remove them, pass an empty slice or map.
 updatedDescription := "Updated description"
-res, err := descopeClient.Management.AccessKey().Update(context.Background(), "access-key-id", "updated-name", &updatedDescription, []string{"role"}, nil, map[string]any{"k1": "v1"}, []string{"1.2.3.4"})
+res, err := descopeClient.Management.AccessKey().Update(context.Background(), "access-key-id", "updated-name", &updatedDescription, []string{"role"}, nil, map[string]any{"k1": "v1"}, []string{"1.2.3.4"}, map[string]any{"attributeName": "attributeValue"})
 
 // Access keys can be deactivated to prevent usage. This can be undone using "activate".
 err := descopeClient.Management.AccessKey().Deactivate(context.Background(), "access-key-id")
@@ -1773,6 +1791,109 @@ app, err := descopeClient.Management.OutboundApplication().LoadApplication(conte
 
 // Load all outbound applications
 apps, err := descopeClient.Management.OutboundApplication().LoadAllApplications(context.Background())
+```
+
+### Manage Lists
+
+You can create, update, delete, or load lists, as well as perform IP-specific operations:
+
+```go
+// Create a new list
+listReq := &descope.ListRequest{
+    Name:        "Blocked IPs",
+    Description: "List of blocked IP addresses",
+    Type:        descope.ListTypeIPs, // Can be ListTypeTexts, ListTypeIPs, or ListTypeJSON
+    Data:        []string{"192.168.1.1", "10.0.0.1"},
+}
+list, err := descopeClient.Management.List().Create(context.Background(), listReq)
+
+// Create a JSON list
+jsonListReq := &descope.ListRequest{
+    Name:        "Config Data",
+    Description: "Configuration settings",
+    Type:        descope.ListTypeJSON,
+    Data:        map[string]any{"key": "value", "setting": 123},
+}
+list, err := descopeClient.Management.List().Create(context.Background(), jsonListReq)
+
+// Update an existing list
+// Update will override all fields as is. Use carefully.
+updateReq := &descope.ListRequest{
+    Name:        "Updated Blocked IPs",
+    Description: "Updated description",
+    Type:        descope.ListTypeIPs,
+    Data:        []string{"192.168.1.1", "10.0.0.1", "172.16.0.1"},
+}
+list, err := descopeClient.Management.List().Update(context.Background(), "list-id", updateReq)
+
+// Delete a list
+// List deletion cannot be undone. Use carefully.
+err := descopeClient.Management.List().Delete(context.Background(), "list-id")
+
+// Load a list by ID
+list, err := descopeClient.Management.List().Load(context.Background(), "list-id")
+
+// Load a list by name
+list, err := descopeClient.Management.List().LoadByName(context.Background(), "Blocked IPs")
+
+// Load all lists in the project
+lists, err := descopeClient.Management.List().LoadAll(context.Background())
+if err == nil {
+    for _, list := range lists {
+        // Do something
+    }
+}
+
+// Import multiple lists
+listsToImport := []*descope.List{
+    {
+        ID:          "list-1",
+        Name:        "List 1",
+        Type:        descope.ListTypeIPs,
+        Data:        []string{"192.168.1.1"},
+    },
+    {
+        ID:          "list-2",
+        Name:        "List 2",
+        Type:        descope.ListTypeTexts,
+        Data:        []string{"item1", "item2"},
+    },
+}
+err := descopeClient.Management.List().Import(context.Background(), listsToImport)
+
+// Add IP addresses to an IP list
+// The list must be of type "ips". Duplicates are automatically ignored.
+err := descopeClient.Management.List().AddIPs(context.Background(), "list-id", []string{"203.0.113.1", "198.51.100.1"})
+
+// Remove IP addresses from an IP list
+// The list must be of type "ips". Non-existent IPs are silently ignored.
+err := descopeClient.Management.List().RemoveIPs(context.Background(), "list-id", []string{"192.168.1.1"})
+
+// Check if an IP exists in an IP list
+// The list must be of type "ips".
+exists, err := descopeClient.Management.List().CheckIP(context.Background(), "list-id", "192.168.1.1")
+if err == nil && exists {
+    // IP is in the list
+}
+
+// Add text items to a text list
+// The list must be of type "texts". Duplicates are automatically ignored.
+err := descopeClient.Management.List().AddTexts(context.Background(), "list-id", []string{"item1", "item2"})
+
+// Remove text items from a text list
+// The list must be of type "texts". Non-existent texts are silently ignored.
+err := descopeClient.Management.List().RemoveTexts(context.Background(), "list-id", []string{"item1"})
+
+// Check if a text exists in a text list
+// The list must be of type "texts".
+exists, err := descopeClient.Management.List().CheckText(context.Background(), "list-id", "item1")
+if err == nil && exists {
+    // Text is in the list
+}
+
+// Clear all data from a list
+// The list metadata (name, description, type) is preserved.
+err := descopeClient.Management.List().Clear(context.Background(), "list-id")
 ```
 
 ## Code Examples

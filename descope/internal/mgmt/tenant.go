@@ -202,6 +202,7 @@ func makeCreateUpdateTenantRequest(id string, tenantRequest *descope.TenantReque
 		"enforceSSO":              tenantRequest.EnforceSSO,
 		"enforceSSOExclusions":    tenantRequest.EnforceSSOExclusions,
 		"disabled":                tenantRequest.Disabled,
+		"roleInheritance":         tenantRequest.RoleInheritance,
 	}
 	if includeSubTenants && len(tenantRequest.ParentTenantID) > 0 {
 		res["parent"] = tenantRequest.ParentTenantID

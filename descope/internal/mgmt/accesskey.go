@@ -15,11 +15,11 @@ type accessKey struct {
 
 var _ sdk.AccessKey = &accessKey{}
 
-func (a *accessKey) Create(ctx context.Context, name string, description string, expireTime int64, roleNames []string, tenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIPs []string) (string, *descope.AccessKeyResponse, error) {
+func (a *accessKey) Create(ctx context.Context, name string, description string, expireTime int64, roleNames []string, tenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIPs []string, customAttributes map[string]any) (string, *descope.AccessKeyResponse, error) {
 	if name == "" {
 		return "", nil, utils.NewInvalidArgumentError("name")
 	}
-	body := makeCreateAccessKeyBody(name, expireTime, roleNames, tenants, userID, customClaims, description, permittedIPs)
+	body := makeCreateAccessKeyBody(name, expireTime, roleNames, tenants, userID, customClaims, description, permittedIPs, customAttributes)
 	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyCreate(), body, nil, "")
 	if err != nil {
 		return "", nil, err
@@ -41,16 +41,15 @@ func (a *accessKey) Load(ctx context.Context, id string) (*descope.AccessKeyResp
 	return unmarshalAccessKeyResponse(res)
 }
 
-func (a *accessKey) SearchAll(ctx context.Context, tenantIDs []string) ([]*descope.AccessKeyResponse, error) {
-	body := map[string]any{"tenantIds": tenantIDs}
-	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeySearchAll(), body, nil, "")
+func (a *accessKey) SearchAll(ctx context.Context, request *descope.AccessKeysSearchOptions) ([]*descope.AccessKeyResponse, error) {
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeySearchAll(), request, nil, "")
 	if err != nil {
 		return nil, err
 	}
 	return unmarshalAccessKeySearchAllResponse(res)
 }
 
-func (a *accessKey) Update(ctx context.Context, id, name string, description *string, roles []string, tenants []*descope.AssociatedTenant, customClaims map[string]any, permittedIPs []string) (*descope.AccessKeyResponse, error) {
+func (a *accessKey) Update(ctx context.Context, id, name string, description *string, roles []string, tenants []*descope.AssociatedTenant, customClaims map[string]any, permittedIPs []string, customAttributes map[string]any) (*descope.AccessKeyResponse, error) {
 	if id == "" {
 		return nil, utils.NewInvalidArgumentError("id")
 	}
@@ -72,6 +71,9 @@ func (a *accessKey) Update(ctx context.Context, id, name string, description *st
 	}
 	if permittedIPs != nil {
 		body["permittedIps"] = permittedIPs
+	}
+	if len(customAttributes) > 0 {
+		body["customAttributes"] = customAttributes
 	}
 	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyUpdate(), body, nil, "")
 	if err != nil {
@@ -107,16 +109,17 @@ func (a *accessKey) Delete(ctx context.Context, id string) error {
 	return err
 }
 
-func makeCreateAccessKeyBody(name string, expireTime int64, roleNames []string, tenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, description string, permittedIPs []string) map[string]any {
+func makeCreateAccessKeyBody(name string, expireTime int64, roleNames []string, tenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, description string, permittedIPs []string, customAttributes map[string]any) map[string]any {
 	return map[string]any{
-		"name":         name,
-		"expireTime":   expireTime,
-		"roleNames":    roleNames,
-		"keyTenants":   makeAssociatedTenantList(tenants),
-		"userId":       userID,
-		"customClaims": customClaims,
-		"description":  description,
-		"permittedIps": permittedIPs,
+		"name":             name,
+		"expireTime":       expireTime,
+		"roleNames":        roleNames,
+		"keyTenants":       makeAssociatedTenantList(tenants),
+		"userId":           userID,
+		"customClaims":     customClaims,
+		"description":      description,
+		"permittedIps":     permittedIPs,
+		"customAttributes": customAttributes,
 	}
 }
 

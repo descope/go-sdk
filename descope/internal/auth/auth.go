@@ -5,6 +5,7 @@ import (
 	goErrors "errors"
 	"net/http"
 	"path"
+	"slices"
 	"strings"
 	"time"
 
@@ -14,41 +15,103 @@ import (
 	"github.com/descope/go-sdk/descope/logger"
 	"github.com/descope/go-sdk/descope/sdk"
 	"github.com/lestrrat-go/jwx/v2/jwt"
-	"golang.org/x/exp/slices"
 )
 
 const SKEW = time.Second * 5
 
 type AuthParams struct {
-	ProjectID           string
-	PublicKey           string
-	SessionJWTViaCookie bool
-	CookieDomain        string
-	CookieSameSite      http.SameSite
-	SessionCookieName   string
-	RefreshCookieName   string
+	ProjectID                  string
+	PublicKey                  string
+	SessionJWTViaCookie        bool
+	CookieDomain               string
+	CookieSameSite             http.SameSite
+	sessionCookieName          string
+	refreshCookieName          string
+	fallBackSessionCookieNames []string
+	fallBackRefreshCookieNames []string
+	JWTLeeway                  time.Duration
+}
+
+type defaultRequestTokensProvider struct {
+	sessionCookieNames []string
+	refreshCookieNames []string
+}
+
+func (d *defaultRequestTokensProvider) ProvideTokens(r *http.Request) (sessionToken string, refreshToken string) {
+	if r == nil {
+		return "", ""
+	}
+	sessionToken = ""
+	// First, check the header for Bearer token
+	// Header takes precedence over cookie
+	reqToken := r.Header.Get(api.AuthorizationHeaderName)
+	if splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix); len(splitToken) == 2 {
+		sessionToken = splitToken[1]
+	}
+
+	if sessionToken == "" {
+		for _, cookieName := range d.sessionCookieNames {
+			if sessionCookie, _ := r.Cookie(cookieName); sessionCookie != nil {
+				sessionToken = sessionCookie.Value
+				break
+			}
+		}
+	}
+
+	for _, cookieName := range d.refreshCookieNames {
+		refreshCookie, err := r.Cookie(cookieName)
+		if err == nil {
+			return sessionToken, refreshCookie.Value
+		}
+	}
+	return sessionToken, ""
+}
+
+func (ap *AuthParams) SetCookieNames(refreshCookieName string, fallBackRefreshCookieNames []string, sessionCookieName string, fallBackSessionCookieNames []string) {
+	ap.refreshCookieName = refreshCookieName
+	ap.sessionCookieName = sessionCookieName
+	ap.fallBackRefreshCookieNames = append(ap.fallBackRefreshCookieNames, ap.GetRefreshCookieName())
+	ap.fallBackRefreshCookieNames = append(ap.fallBackRefreshCookieNames, fallBackRefreshCookieNames...)
+	ap.fallBackSessionCookieNames = append(ap.fallBackSessionCookieNames, ap.GetSessionCookieName())
+	ap.fallBackSessionCookieNames = append(ap.fallBackSessionCookieNames, fallBackSessionCookieNames...)
+	ap.fallBackRefreshCookieNames = slices.DeleteFunc(ap.fallBackRefreshCookieNames, func(s string) bool { return s == "" })
+	slices.Sort(ap.fallBackRefreshCookieNames)
+	ap.fallBackRefreshCookieNames = slices.Compact(ap.fallBackRefreshCookieNames)
+	ap.fallBackSessionCookieNames = slices.DeleteFunc(ap.fallBackSessionCookieNames, func(s string) bool { return s == "" })
+	slices.Sort(ap.fallBackSessionCookieNames)
+	ap.fallBackSessionCookieNames = slices.Compact(ap.fallBackSessionCookieNames)
 }
 
 func (ap *AuthParams) GetRefreshCookieName() string {
-	if ap.RefreshCookieName != "" {
+	if ap.refreshCookieName != "" {
 		// notest
-		return ap.RefreshCookieName
+		return ap.refreshCookieName
 	}
 	return descope.RefreshCookieName
 }
 
 func (ap *AuthParams) GetSessionCookieName() string {
-	if ap.SessionCookieName != "" {
+	if ap.sessionCookieName != "" {
 		// notest
-		return ap.SessionCookieName
+		return ap.sessionCookieName
 	}
 	return descope.SessionCookieName
+}
+
+func (ap *AuthParams) GetRefreshCookieNameWithFallback() []string {
+	return ap.fallBackRefreshCookieNames
+}
+
+func (ap *AuthParams) GetSessionCookieNameWithFallback() []string {
+	return ap.fallBackSessionCookieNames
 }
 
 type authenticationsBase struct {
 	client             *api.Client
 	conf               *AuthParams
 	publicKeysProvider *Provider
+
+	requestTokensProvider sdk.RequestTokensProvider
 }
 
 type authenticationService struct {
@@ -66,13 +129,24 @@ type authenticationService struct {
 	sso           sdk.SSOServiceProvider
 }
 
-func NewAuth(conf AuthParams, c *api.Client) (*authenticationService, error) {
-	return NewAuthWithProvider(conf, NewProvider(c, &conf), c)
+func NewAuth(conf AuthParams, c *api.Client, requestTokensProvider sdk.RequestTokensProvider) (*authenticationService, error) {
+	return NewAuthWithProvider(conf, NewProvider(c, &conf), c, requestTokensProvider)
 }
 
-func NewAuthWithProvider(conf AuthParams, provider *Provider, c *api.Client) (*authenticationService, error) {
+func NewAuthWithProvider(conf AuthParams, provider *Provider, c *api.Client, requestTokensProvider sdk.RequestTokensProvider) (*authenticationService, error) {
 	base := authenticationsBase{conf: &conf, client: c}
 	base.publicKeysProvider = provider
+	if len(conf.GetSessionCookieNameWithFallback()) == 0 || len(conf.GetRefreshCookieNameWithFallback()) == 0 {
+		conf.SetCookieNames("", nil, "", nil)
+	}
+	if requestTokensProvider == nil {
+		requestTokensProvider = &defaultRequestTokensProvider{
+			sessionCookieNames: conf.GetSessionCookieNameWithFallback(),
+			refreshCookieNames: conf.GetRefreshCookieNameWithFallback(),
+		}
+	}
+	base.requestTokensProvider = requestTokensProvider
+
 	authenticationService := &authenticationService{authenticationsBase: base}
 	authenticationService.otp = &otp{authenticationsBase: base}
 	authenticationService.magicLink = &magicLink{authenticationsBase: base}
@@ -84,6 +158,7 @@ func NewAuthWithProvider(conf AuthParams, provider *Provider, c *api.Client) (*a
 	authenticationService.totp = &totp{authenticationsBase: base}
 	authenticationService.notp = &notp{authenticationsBase: base}
 	authenticationService.password = &password{authenticationsBase: base}
+
 	return authenticationService, nil
 }
 
@@ -383,13 +458,19 @@ func (auth *authenticationService) RefreshSessionWithToken(ctx context.Context, 
 	return auth.refreshSession(ctx, refreshToken, nil)
 }
 
+func (auth *authenticationService) RefreshSessionWithTokenAndWriter(ctx context.Context, refreshToken string, w http.ResponseWriter) (bool, *descope.Token, error) {
+	if refreshToken == "" {
+		return false, nil, utils.NewInvalidArgumentError("refreshToken")
+	}
+	return auth.refreshSession(ctx, refreshToken, w)
+}
+
 func (auth *authenticationService) refreshSession(ctx context.Context, refreshToken string, w http.ResponseWriter) (bool, *descope.Token, error) {
 	token, err := auth.validateJWT(refreshToken)
 	if err != nil {
 		return false, nil, err
 	}
 
-	// refresh session token
 	httpResponse, err := auth.client.DoPostRequest(ctx, api.Routes.RefreshToken(), nil, &api.HTTPRequest{}, refreshToken)
 	if err != nil {
 		return false, nil, err
@@ -398,7 +479,11 @@ func (auth *authenticationService) refreshSession(ctx context.Context, refreshTo
 	if err != nil {
 		return false, nil, err
 	}
-	// No need to check for error again because validateTokenError will return false for any non-nil error
+
+	if info.SessionToken == nil { // notest
+		return false, nil, descope.ErrUnexpectedResponse.WithMessage("Missing session token in refresh response")
+	}
+
 	info.SessionToken.RefreshExpiration = token.Expiration
 	return true, info.SessionToken, nil
 }
@@ -646,10 +731,11 @@ func (auth *authenticationsBase) extractTokens(jRes *descope.JWTResponse) ([]*de
 }
 
 func ValidateJWT(JWT string, publicKeysProvider *Provider) (*descope.Token, error) {
-	token, err := jwt.Parse([]byte(JWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true), jwt.WithAcceptableSkew(SKEW))
+	leeway := getLeeway(publicKeysProvider)
+	token, err := jwt.Parse([]byte(JWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true), jwt.WithAcceptableSkew(leeway))
 	if err != nil {
 		var parseErr error
-		token, parseErr = jwt.Parse([]byte(JWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(false), jwt.WithValidate(false), jwt.WithAcceptableSkew(SKEW))
+		token, parseErr = jwt.Parse([]byte(JWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(false), jwt.WithValidate(false), jwt.WithAcceptableSkew(leeway))
 		if parseErr != nil {
 			err = parseErr
 		}
@@ -674,6 +760,13 @@ func ValidateJWT(JWT string, publicKeysProvider *Provider) (*descope.Token, erro
 
 func (auth *authenticationsBase) validateJWT(JWT string) (*descope.Token, error) {
 	return ValidateJWT(JWT, auth.publicKeysProvider)
+}
+
+func getLeeway(provider *Provider) time.Duration {
+	if provider != nil && provider.conf != nil && provider.conf.JWTLeeway > 0 {
+		return provider.conf.JWTLeeway
+	}
+	return SKEW
 }
 
 func (*authenticationsBase) verifyDeliveryMethod(method descope.DeliveryMethod, loginID string, user *descope.User) *descope.Error {
@@ -751,16 +844,17 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 	}
 
 	cookies := httpResponse.Res.Cookies()
-	var sToken *descope.Token
+	var sessionToken *descope.Token
 	for i := range tokens {
 		addToCookie := true
-		if tokens[i].Claims[claimAttributeName] == auth.conf.GetSessionCookieName() {
-			sToken = tokens[i]
+		ckn, _ := tokens[i].Claims[claimAttributeName].(string)
+		if slices.Contains(auth.conf.GetSessionCookieNameWithFallback(), ckn) {
+			sessionToken = tokens[i]
 			if !auth.conf.SessionJWTViaCookie {
 				addToCookie = false
 			}
 		}
-		if tokens[i].Claims[claimAttributeName] == auth.conf.GetRefreshCookieName() {
+		if slices.Contains(auth.conf.GetRefreshCookieNameWithFallback(), ckn) {
 			refreshToken = tokens[i]
 		}
 		if addToCookie {
@@ -771,20 +865,24 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 		}
 	}
 
-	if refreshToken == nil || refreshToken.JWT == "" {
-		for i := range cookies {
-			if cookies[i].Name == auth.conf.GetRefreshCookieName() {
-				refreshToken, err = auth.validateJWT(cookies[i].Value)
-				if err != nil {
-					logger.LogDebug("Validation of refresh token failed: %s", err.Error())
-					return nil, err
-				}
+	for i := range cookies {
+		if (sessionToken == nil || sessionToken.JWT == "") && slices.Contains(auth.conf.GetSessionCookieNameWithFallback(), cookies[i].Name) {
+			sessionToken, err = auth.validateJWT(cookies[i].Value)
+			if err != nil {
+				logger.LogDebug("Validation of session token failed: %s", err.Error())
+				return nil, err
+			}
+		} else if (refreshToken == nil || refreshToken.JWT == "") && slices.Contains(auth.conf.GetRefreshCookieNameWithFallback(), cookies[i].Name) {
+			refreshToken, err = auth.validateJWT(cookies[i].Value)
+			if err != nil {
+				logger.LogDebug("Validation of refresh token failed: %s", err.Error())
+				return nil, err
 			}
 		}
 	}
 
 	setCookies(cookies, w)
-	return descope.NewAuthenticationInfo(jwtResponse, sToken, refreshToken), err
+	return descope.NewAuthenticationInfo(jwtResponse, sessionToken, refreshToken), err
 }
 
 func (auth *authenticationsBase) getValidRefreshToken(r *http.Request) (string, error) {
@@ -830,28 +928,7 @@ func (auth *authenticationsBase) createCookie(token *descope.Token, jwtRes *desc
 }
 
 func (auth *authenticationsBase) provideTokens(r *http.Request) (string, string) {
-	if r == nil {
-		return "", ""
-	}
-	sessionToken := ""
-	// First, check the header for Bearer token
-	// Header takes precedence over cookie
-	reqToken := r.Header.Get(api.AuthorizationHeaderName)
-	if splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix); len(splitToken) == 2 {
-		sessionToken = splitToken[1]
-	}
-
-	if sessionToken == "" {
-		if sessionCookie, _ := r.Cookie(auth.conf.GetSessionCookieName()); sessionCookie != nil {
-			sessionToken = sessionCookie.Value
-		}
-	}
-
-	refreshCookie, err := r.Cookie(auth.conf.GetRefreshCookieName())
-	if err != nil {
-		return sessionToken, ""
-	}
-	return sessionToken, refreshCookie.Value
+	return auth.requestTokensProvider.ProvideTokens(r)
 }
 
 func convertTokenError(err error) error {

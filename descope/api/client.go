@@ -88,6 +88,7 @@ var (
 			exchangeAccessKey:            "auth/accesskey/exchange",
 		},
 		mgmt: mgmtEndpoints{
+			license:                                  "mgmt/license",
 			tenantCreate:                             "mgmt/tenant/create",
 			tenantUpdate:                             "mgmt/tenant/update",
 			tenantDelete:                             "mgmt/tenant/delete",
@@ -166,6 +167,7 @@ var (
 			ssoOIDCSettings:                          "mgmt/sso/oidc",
 			ssoMetadata:                              "mgmt/sso/metadata",
 			ssoMapping:                               "mgmt/sso/mapping",
+			ssoRecalculateMappings:                   "mgmt/sso/recalculate-mappings",
 			passwordSettings:                         "mgmt/password/settings",
 			updateJWT:                                "mgmt/jwt/update",
 			impersonate:                              "mgmt/impersonate",
@@ -239,6 +241,9 @@ var (
 			outboundApplicationDelete:                "mgmt/outbound/app/delete",
 			outboundApplicationLoad:                  "mgmt/outbound/app",
 			outboundApplicationLoadAll:               "mgmt/outbound/apps",
+			outboundApplicationFetchUserToken:        "mgmt/outbound/app/user/token",
+			outboundApplicationDeleteUserTokens:      "mgmt/outbound/user/tokens",
+			outboundApplicationDeleteTokenByID:       "mgmt/outbound/token",
 			thirdPartyApplicationCreate:              "mgmt/thirdparty/app/create",
 			thirdPartyApplicationUpdate:              "mgmt/thirdparty/app/update",
 			thirdPartyApplicationPatch:               "mgmt/thirdparty/app/patch",
@@ -255,6 +260,25 @@ var (
 			mgmtKeyGet:                               "mgmt/managementkey",
 			mgmtKeyDelete:                            "mgmt/managementkey/delete",
 			mgmtKeySearch:                            "mgmt/managementkey/search",
+			descoperCreate:                           "mgmt/descoper",
+			descoperUpdate:                           "mgmt/descoper",
+			descoperGet:                              "mgmt/descoper",
+			descoperDelete:                           "mgmt/descoper",
+			descoperSearch:                           "mgmt/descoper/list",
+			listCreate:                               "mgmt/list",
+			listUpdate:                               "mgmt/list/update",
+			listDelete:                               "mgmt/list/delete",
+			listLoad:                                 "mgmt/list",
+			listLoadByName:                           "mgmt/list/name",
+			listLoadAll:                              "mgmt/list/all",
+			listImport:                               "mgmt/list/import",
+			listAddIPs:                               "mgmt/list/ip/add",
+			listRemoveIPs:                            "mgmt/list/ip/remove",
+			listCheckIP:                              "mgmt/list/ip/check",
+			listAddTexts:                             "mgmt/list/text/add",
+			listRemoveTexts:                          "mgmt/list/text/remove",
+			listCheckText:                            "mgmt/list/text/check",
+			listClear:                                "mgmt/list/clear",
 		},
 		logout:       "auth/logout",
 		logoutAll:    "auth/logoutall",
@@ -337,6 +361,7 @@ type authEndpoints struct {
 }
 
 type mgmtEndpoints struct {
+	license                  string
 	tenantCreate             string
 	tenantUpdate             string
 	tenantDelete             string
@@ -425,6 +450,7 @@ type mgmtEndpoints struct {
 	ssoSAMLSettingsByMetadata string
 	ssoRedirectURL            string
 	ssoOIDCSettings           string
+	ssoRecalculateMappings    string
 	updateJWT                 string
 	impersonate               string
 	stopImpersonation         string
@@ -503,11 +529,14 @@ type mgmtEndpoints struct {
 	fgaResourcesLoad           string
 	fgaResourcesSave           string
 
-	outboundApplicationCreate  string
-	outboundApplicationUpdate  string
-	outboundApplicationDelete  string
-	outboundApplicationLoad    string
-	outboundApplicationLoadAll string
+	outboundApplicationCreate           string
+	outboundApplicationUpdate           string
+	outboundApplicationDelete           string
+	outboundApplicationLoad             string
+	outboundApplicationLoadAll          string
+	outboundApplicationFetchUserToken   string
+	outboundApplicationDeleteUserTokens string
+	outboundApplicationDeleteTokenByID  string
 
 	thirdPartyApplicationCreate              string
 	thirdPartyApplicationUpdate              string
@@ -526,6 +555,27 @@ type mgmtEndpoints struct {
 	mgmtKeyGet    string
 	mgmtKeyDelete string
 	mgmtKeySearch string
+
+	descoperCreate string
+	descoperUpdate string
+	descoperGet    string
+	descoperDelete string
+	descoperSearch string
+
+	listCreate      string
+	listUpdate      string
+	listDelete      string
+	listLoad        string
+	listLoadByName  string
+	listLoadAll     string
+	listImport      string
+	listAddIPs      string
+	listRemoveIPs   string
+	listCheckIP     string
+	listAddTexts    string
+	listRemoveTexts string
+	listCheckText   string
+	listClear       string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -1063,6 +1113,10 @@ func (e *endpoints) ManagementSSOMapping() string {
 	return path.Join(e.version, e.mgmt.ssoMapping)
 }
 
+func (e *endpoints) ManagementSSORecalculateMappings() string {
+	return path.Join(e.version, e.mgmt.ssoRecalculateMappings)
+}
+
 func (e *endpoints) ManagementPasswordSettings() string {
 	return path.Join(e.version, e.mgmt.passwordSettings)
 }
@@ -1228,7 +1282,7 @@ func (e *endpoints) ManagementAuditCreate() string {
 }
 
 func (e *endpoints) ManagementAuditWebhookCreate() string {
-	return path.Join(e.version, e.mgmt.auditWebhookCreate)
+	return path.Join(e.versionV2, e.mgmt.auditWebhookCreate)
 }
 
 func (e *endpoints) ManagementAnalyticsSearch() string {
@@ -1363,6 +1417,18 @@ func (e *endpoints) ManagementOutboundApplicationLoadAll() string {
 	return path.Join(e.version, e.mgmt.outboundApplicationLoadAll)
 }
 
+func (e *endpoints) ManagementOutboundApplicationFetchUserToken() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationFetchUserToken)
+}
+
+func (e *endpoints) ManagementOutboundApplicationDeleteUserTokens() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationDeleteUserTokens)
+}
+
+func (e *endpoints) ManagementOutboundApplicationDeleteTokenByID() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationDeleteTokenByID)
+}
+
 func (e *endpoints) ManagementThirdPartyApplicationCreate() string {
 	return path.Join(e.version, e.mgmt.thirdPartyApplicationCreate)
 }
@@ -1427,6 +1493,86 @@ func (e *endpoints) ManagementMgmtKeySearch() string {
 	return path.Join(e.version, e.mgmt.mgmtKeySearch)
 }
 
+func (e *endpoints) ManagementDescoperCreate() string {
+	return path.Join(e.version, e.mgmt.descoperCreate)
+}
+
+func (e *endpoints) ManagementDescoperUpdate() string {
+	return path.Join(e.version, e.mgmt.descoperUpdate)
+}
+
+func (e *endpoints) ManagementDescoperGet() string {
+	return path.Join(e.version, e.mgmt.descoperGet)
+}
+
+func (e *endpoints) ManagementDescoperDelete() string {
+	return path.Join(e.version, e.mgmt.descoperDelete)
+}
+
+func (e *endpoints) ManagementDescoperSearch() string {
+	return path.Join(e.version, e.mgmt.descoperSearch)
+}
+
+func (e *endpoints) ManagementListCreate() string {
+	return path.Join(e.version, e.mgmt.listCreate)
+}
+
+func (e *endpoints) ManagementListUpdate() string {
+	return path.Join(e.version, e.mgmt.listUpdate)
+}
+
+func (e *endpoints) ManagementListDelete() string {
+	return path.Join(e.version, e.mgmt.listDelete)
+}
+
+func (e *endpoints) ManagementListLoad(id string) string {
+	return path.Join(e.version, e.mgmt.listLoad, id)
+}
+
+func (e *endpoints) ManagementListLoadByName(name string) string {
+	return path.Join(e.version, e.mgmt.listLoadByName, urlpkg.PathEscape(name))
+}
+
+func (e *endpoints) ManagementListLoadAll() string {
+	return path.Join(e.version, e.mgmt.listLoadAll)
+}
+
+func (e *endpoints) ManagementListImport() string {
+	return path.Join(e.version, e.mgmt.listImport)
+}
+
+func (e *endpoints) ManagementListAddIPs() string {
+	return path.Join(e.version, e.mgmt.listAddIPs)
+}
+
+func (e *endpoints) ManagementListRemoveIPs() string {
+	return path.Join(e.version, e.mgmt.listRemoveIPs)
+}
+
+func (e *endpoints) ManagementListCheckIP() string {
+	return path.Join(e.version, e.mgmt.listCheckIP)
+}
+
+func (e *endpoints) ManagementListAddTexts() string {
+	return path.Join(e.version, e.mgmt.listAddTexts)
+}
+
+func (e *endpoints) ManagementListRemoveTexts() string {
+	return path.Join(e.version, e.mgmt.listRemoveTexts)
+}
+
+func (e *endpoints) ManagementListCheckText() string {
+	return path.Join(e.version, e.mgmt.listCheckText)
+}
+
+func (e *endpoints) ManagementListClear() string {
+	return path.Join(e.version, e.mgmt.listClear)
+}
+
+func (e *endpoints) ManagementLicense() string {
+	return path.Join(e.version, e.mgmt.license)
+}
+
 type sdkInfo struct {
 	name      string
 	version   string
@@ -1471,6 +1617,7 @@ type Client struct {
 	externalRequestID func(context.Context) string
 	Conf              ClientParams
 	sdkInfo           *sdkInfo
+	licenseType       string // License type from handshake (free/pro/enterprise)
 }
 type HTTPResponse struct {
 	Req     *http.Request
@@ -1640,18 +1787,23 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 	for _, cookie := range options.Cookies {
 		req.AddCookie(cookie)
 	}
-	bearer := c.Conf.ProjectID
+
+	bearerParts := []string{}
+	if len(c.Conf.ProjectID) > 0 {
+		bearerParts = append(bearerParts, c.Conf.ProjectID)
+	}
 	if len(pswd) > 0 {
-		bearer = fmt.Sprintf("%s:%s", bearer, pswd)
+		bearerParts = append(bearerParts, pswd)
 	}
-	// append a management key if available
-	// this is true for both management and authentication requests
-	// only using the different provided keys in the client initialization
-	mgmtKey := c.Conf.ManagementKey
-	if len(mgmtKey) > 0 {
-		bearer = fmt.Sprintf("%s:%s", bearer, mgmtKey)
+	if mgmtKey := c.Conf.ManagementKey; len(mgmtKey) > 0 {
+		// append a management key if available, this is true for both management and authentication requests
+		// only using the different provided keys in the client initialization
+		bearerParts = append(bearerParts, mgmtKey)
 	}
-	req.Header.Set(AuthorizationHeaderName, BearerAuthorizationPrefix+bearer)
+	if len(bearerParts) > 0 {
+		req.Header.Set(AuthorizationHeaderName, BearerAuthorizationPrefix+strings.Join(bearerParts, ":"))
+	}
+
 	c.addDescopeHeaders(req)
 
 	logger.LogDebug("Sending request to [%s]", url)
@@ -1741,6 +1893,28 @@ func (c *Client) addDescopeHeaders(req *http.Request) {
 	req.Header.Set("x-descope-sdk-sha", c.sdkInfo.sha)
 	req.Header.Set("x-descope-sdk-uuid", instanceUUID)
 	req.Header.Set("x-descope-project-id", c.Conf.ProjectID)
+	if c.licenseType != "" {
+		req.Header.Set("x-descope-license", c.licenseType)
+	}
+}
+
+func (c *Client) FetchLicense(ctx context.Context) (string, error) {
+	var resp struct {
+		LicenseType string `json:"licenseType"`
+	}
+	opts := &HTTPRequest{ResBodyObj: &resp}
+	_, err := c.DoGetRequest(ctx, Routes.ManagementLicense(), opts, "")
+	if err != nil {
+		return "", err
+	}
+	if resp.LicenseType == "" {
+		return "", fmt.Errorf("empty license type returned from server")
+	}
+	return resp.LicenseType, nil
+}
+
+func (c *Client) SetLicenseType(licenseType string) {
+	c.licenseType = licenseType
 }
 
 func getSDKInfo() *sdkInfo {

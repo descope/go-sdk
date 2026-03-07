@@ -297,7 +297,9 @@ type User interface {
 	//
 	// The isVerified flag must be true for the user to be able to login with
 	// the email address.
-	UpdateEmail(ctx context.Context, loginIDOrUserID, email string, isVerified bool) (*descope.UserResponse, error)
+	//
+	// The failOnConflict flag indicates whether to fail the update if the new email is also the login ID of another user.
+	UpdateEmail(ctx context.Context, loginIDOrUserID, email string, isVerified bool, failOnConflict bool) (*descope.UserResponse, error)
 
 	// Update the phone number for an existing user.
 	//
@@ -305,7 +307,9 @@ type User interface {
 	//
 	// The isVerified flag must be true for the user to be able to login with
 	// the phone number.
-	UpdatePhone(ctx context.Context, loginIDOrUserID, phone string, isVerified bool) (*descope.UserResponse, error)
+	//
+	// The failOnConflict flag indicates whether to fail the update if the new phone number is also the login ID of another user.
+	UpdatePhone(ctx context.Context, loginIDOrUserID, phone string, isVerified bool, failOnConflict bool) (*descope.UserResponse, error)
 
 	// Update an existing user's display name (i.e., their full name).
 	//
@@ -470,7 +474,7 @@ type AccessKey interface {
 	// The description parameter is an optional text providing a brief summary about the access key.
 	// The permittedIPs parameter is an optional list of IP addresses or CIDR ranges that are allowed to use this access key.
 	// If not provided, all IPs are allowed.
-	Create(ctx context.Context, name string, description string, expireTime int64, roles []string, tenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIPs []string) (string, *descope.AccessKeyResponse, error)
+	Create(ctx context.Context, name string, description string, expireTime int64, roles []string, tenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIPs []string, customAttributes map[string]any) (string, *descope.AccessKeyResponse, error)
 
 	// Load an existing access key.
 	//
@@ -480,7 +484,7 @@ type AccessKey interface {
 	// Search all access keys according to given filters
 	//
 	// The tenantIDs parameter is an optional array of tenant IDs to filter by.
-	SearchAll(ctx context.Context, tenantIDs []string) ([]*descope.AccessKeyResponse, error)
+	SearchAll(ctx context.Context, req *descope.AccessKeysSearchOptions) ([]*descope.AccessKeyResponse, error)
 
 	// Update an existing access key.
 	//
@@ -488,7 +492,7 @@ type AccessKey interface {
 	// If description, roles, tenants, customClaims, or permittedIPs are nil, their existing values will be preserved.
 	//
 	// IMPORTANT: id and name are mandatory parameters.
-	Update(ctx context.Context, id, name string, description *string, roles []string, tenants []*descope.AssociatedTenant, customClaims map[string]any, permittedIPs []string) (*descope.AccessKeyResponse, error)
+	Update(ctx context.Context, id, name string, description *string, roles []string, tenants []*descope.AssociatedTenant, customClaims map[string]any, permittedIPs []string, customAttributes map[string]any) (*descope.AccessKeyResponse, error)
 
 	// Deactivate an existing access key.
 	//
@@ -599,6 +603,15 @@ type SSO interface {
 	//* Deprecated (use ConfigureSAMLSettings() or ConfigureSAMLSettingsByMetadata() instead) *//
 	// Configure SSO IDP mapping including groups to the Descope roles and user attributes.
 	ConfigureMapping(ctx context.Context, tenantID string, roleMappings []*descope.RoleMapping, attributeMapping *descope.AttributeMapping) error
+
+	// Recalculate SSO group to role mappings for all users in a tenant.
+	//
+	// This method triggers a recalculation of user roles based on the current SSO group mappings.
+	// It will update the roles for all users in the tenant who have SSO group mappings.
+	//
+	// tenantID is required.
+	// ssoID is optional - specify to recalculate mappings for a specific SSO configuration.
+	RecalculateSSOMappings(ctx context.Context, tenantID string, ssoID string) error
 }
 
 // Provides functions for managing password policy for a project or a tenant.
@@ -1005,7 +1018,7 @@ type ThirdPartyApplication interface {
 	SearchConsents(ctx context.Context, options *descope.ThirdPartyApplicationConsentSearchOptions) ([]*descope.ThirdPartyApplicationConsent, int, error)
 }
 
-// Provides functions for managing third party applications in a project.
+// Provides functions for managing outbound applications in a project.
 type OutboundApplication interface {
 	// Create a new outbound application with the given name.
 	CreateApplication(ctx context.Context, appRequest *descope.CreateOutboundAppRequest) (app *descope.OutboundApp, err error)
@@ -1022,11 +1035,22 @@ type OutboundApplication interface {
 	// IMPORTANT: This action is irreversible. Use carefully.
 	DeleteApplication(ctx context.Context, id string) error
 
-	// Load a outbound application by id.
+	// Load an outbound application by id.
 	LoadApplication(ctx context.Context, id string) (*descope.OutboundApp, error)
 
 	// Load all project outbound applications.
 	LoadAllApplications(ctx context.Context) ([]*descope.OutboundApp, error)
+
+	// Fetch an outbound application user token with the specified scopes.
+	// The token can be used to access external resources on behalf of the user.
+	FetchUserToken(ctx context.Context, request *descope.FetchOutboundAppUserTokenRequest) (*descope.OutboundAppUserToken, error)
+
+	// Delete outbound application user tokens by appID or userID.
+	// At least one of appID or userID must be provided.
+	DeleteUserTokens(ctx context.Context, appID, userID string) error
+
+	// Delete an outbound application token by its ID.
+	DeleteTokenByID(ctx context.Context, id string) error
 }
 
 // Provides functions for managing management keys in a project.
@@ -1060,6 +1084,115 @@ type ManagementKey interface {
 
 	// Search for management keys.
 	Search(ctx context.Context, options *descope.MgmtKeySearchOptions) ([]*descope.MgmtKey, error)
+}
+
+type Descoper interface {
+	// Create a new Descoper.
+	//
+	// The descopers parameter takes a list of DescoperCreate's.
+	// Note that tags are referred to by name, without the company ID prefix.
+	//
+	// The newly-created descopers are returned along with the total.
+	Create(ctx context.Context, descopers []*descope.DescoperCreate) ([]*descope.Descoper, int, error)
+
+	// Update an existing Descoper's RBAC and/or Attributes.
+	//
+	// IMPORTANT: All parameter *fields*, if set, will override whatever values are currently set
+	// in the existing descoper. Use carefully.
+	Update(ctx context.Context, id string, attributes *descope.DescoperAttributes, rbac *descope.DescoperRBAC) (*descope.Descoper, error)
+
+	// Get a Descoper by ID.
+	Get(ctx context.Context, id string) (*descope.Descoper, error)
+
+	// Delete an existing Descoper.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	Delete(ctx context.Context, id string) error
+
+	// List all descopers
+	List(ctx context.Context, options *descope.DescoperLoadOptions) ([]*descope.Descoper, int, error)
+}
+
+// Provides functions for managing lists in a project.
+type List interface {
+	// Create a new list with the given name and type.
+	//
+	// ListRequest fields:
+	// Name: The list's name (required).
+	// Description: Optional list description.
+	// Type: The list type - one of "texts", "ips", or "json" (required).
+	// Data: The list data - format depends on type:
+	//   - For "texts" and "ips": array of strings
+	//   - For "json": map[string]any
+	//
+	// The name must be unique per project.
+	Create(ctx context.Context, request *descope.ListRequest) (*descope.List, error)
+
+	// Update an existing list.
+	//
+	// IMPORTANT: All parameters are required and will override whatever value is currently
+	// set in the existing list. Use carefully.
+	Update(ctx context.Context, id string, request *descope.ListRequest) (*descope.List, error)
+
+	// Delete an existing list.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	Delete(ctx context.Context, id string) error
+
+	// Load a list by ID.
+	Load(ctx context.Context, id string) (*descope.List, error)
+
+	// Load a list by name.
+	LoadByName(ctx context.Context, name string) (*descope.List, error)
+
+	// Load all lists in the project.
+	LoadAll(ctx context.Context) ([]*descope.List, error)
+
+	// Import multiple lists into the project.
+	//
+	// This will create or update lists based on their ID.
+	Import(ctx context.Context, lists []*descope.List) error
+
+	// Add IP addresses to an IP list.
+	//
+	// The list must be of type "ips". Duplicate IPs are automatically ignored.
+	// The order of existing IPs is preserved and new IPs are appended.
+	AddIPs(ctx context.Context, id string, ips []string) error
+
+	// Remove IP addresses from an IP list.
+	//
+	// The list must be of type "ips". Non-existent IPs are silently ignored.
+	RemoveIPs(ctx context.Context, id string, ips []string) error
+
+	// Check if an IP address exists in an IP list.
+	//
+	// The list must be of type "ips".
+	// Returns true if the IP exists in the list, false otherwise.
+	CheckIP(ctx context.Context, id string, ip string) (bool, error)
+
+	// Add text items to a text list.
+	//
+	// The list must be of type "texts". Duplicate texts are automatically ignored.
+	// The order of existing texts is preserved and new texts are appended.
+	AddTexts(ctx context.Context, id string, texts []string) error
+
+	// Remove text items from a text list.
+	//
+	// The list must be of type "texts". Non-existent texts are silently ignored.
+	RemoveTexts(ctx context.Context, id string, texts []string) error
+
+	// Check if a text exists in a text list.
+	//
+	// The list must be of type "texts".
+	// Returns true if the text exists in the list, false otherwise.
+	CheckText(ctx context.Context, id string, text string) (bool, error)
+
+	// Clear all data from a list.
+	//
+	// The list metadata (name, description, type) is preserved.
+	// For "json" type lists, sets data to empty object.
+	// For "texts" and "ips" type lists, sets data to empty array.
+	Clear(ctx context.Context, id string) error
 }
 
 // Provides various APIs for managing a Descope project programmatically. A management key must
@@ -1122,4 +1255,10 @@ type Management interface {
 
 	// Provides functions for management key management.
 	ManagementKey() ManagementKey
+
+	// Provides functions for managing descopers.
+	Descoper() Descoper
+
+	// Provides functions for managing lists in a project.
+	List() List
 }

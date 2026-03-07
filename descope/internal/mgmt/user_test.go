@@ -1140,7 +1140,7 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 		require.EqualValues(t, []any{"a@b.com"}, req["emails"])
 		require.EqualValues(t, []any{"+11111111"}, req["phones"])
 		require.EqualValues(t, "blue", req["text"])
-		require.EqualValues(t, []any([]any{map[string]any{"Desc": true, "Field": "nono"}, map[string]any{"Desc": false, "Field": "lolo"}}), req["sort"])
+		require.EqualValues(t, []any([]any{map[string]any{"desc": true, "field": "nono"}, map[string]any{"desc": false, "field": "lolo"}}), req["sort"])
 		require.EqualValues(t, map[string]any{"tenant1": map[string]any{"values": []any{"id1", "id2"}}}, req["tenantRoleIds"])
 		require.EqualValues(t, map[string]any{"tenant2": map[string]any{"values": []any{"name1", "name2"}}}, req["tenantRoleNames"])
 	}, response))
@@ -1350,8 +1350,9 @@ func TestUserUpdateEmailSuccess(t *testing.T) {
 		require.Equal(t, "abc", req["loginId"])
 		require.Equal(t, "a@b.c", req["email"])
 		require.Equal(t, true, req["verified"])
+		require.Equal(t, true, req["failOnConflict"])
 	}, response))
-	res, err := m.User().UpdateEmail(context.Background(), "abc", "a@b.c", true)
+	res, err := m.User().UpdateEmail(context.Background(), "abc", "a@b.c", true, true)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
@@ -1360,14 +1361,14 @@ func TestUserUpdateEmailSuccess(t *testing.T) {
 
 func TestUserUpdateEmailBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().UpdateEmail(context.Background(), "", "a@b.c", true)
+	res, err := m.User().UpdateEmail(context.Background(), "", "a@b.c", true, true)
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestUserUpdateEmailError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().UpdateEmail(context.Background(), "abc", "a@b.c", true)
+	res, err := m.User().UpdateEmail(context.Background(), "abc", "a@b.c", true, true)
 	require.Error(t, err)
 	require.Nil(t, res)
 }
@@ -1385,8 +1386,9 @@ func TestUserUpdatePhoneSuccess(t *testing.T) {
 		require.Equal(t, "abc", req["loginId"])
 		require.Equal(t, "+18005551234", req["phone"])
 		require.Equal(t, false, req["verified"])
+		require.Equal(t, false, req["failOnConflict"])
 	}, response))
-	res, err := m.User().UpdatePhone(context.Background(), "abc", "+18005551234", false)
+	res, err := m.User().UpdatePhone(context.Background(), "abc", "+18005551234", false, false)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "+18005551234", res.Phone)
@@ -1395,14 +1397,14 @@ func TestUserUpdatePhoneSuccess(t *testing.T) {
 
 func TestUserUpdatePhoneBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	res, err := m.User().UpdatePhone(context.Background(), "", "+18005551234", true)
+	res, err := m.User().UpdatePhone(context.Background(), "", "+18005551234", true, true)
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestUserUpdatePhoneError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().UpdatePhone(context.Background(), "abc", "+18005551234", true)
+	res, err := m.User().UpdatePhone(context.Background(), "abc", "+18005551234", true, true)
 	require.Error(t, err)
 	require.Nil(t, res)
 }

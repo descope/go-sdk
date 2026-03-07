@@ -89,6 +89,7 @@ func (s *sso) ConfigureSAMLSettings(ctx context.Context, tenantID string, settin
 			"spACSUrl":         settings.SpACSUrl,
 			"spEntityId":       settings.SpEntityID,
 			"defaultSSORoles":  settings.DefaultSSORoles,
+			"groupsPriority":   settings.GroupsPriority,
 		},
 		"redirectUrl": redirectURL,
 		"domains":     domains,
@@ -140,6 +141,7 @@ func (s *sso) ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID stri
 			"spACSUrl":         settings.SpACSUrl,
 			"spEntityId":       settings.SpEntityID,
 			"defaultSSORoles":  settings.DefaultSSORoles,
+			"groupsPriority":   settings.GroupsPriority,
 		},
 		"redirectUrl": redirectURL,
 		"domains":     domains,
@@ -370,4 +372,22 @@ func parseFgaMappings(fgaMappings map[string]*descope.FGAGroupMapping) map[strin
 		}
 	}
 	return res
+}
+
+func (s *sso) RecalculateSSOMappings(ctx context.Context, tenantID string, ssoID string) error {
+	if tenantID == "" {
+		return utils.NewInvalidArgumentError("tenantID")
+	}
+
+	req := map[string]any{
+		"tenantId": tenantID,
+	}
+
+	if len(ssoID) > 0 {
+		req["ssoId"] = ssoID
+	}
+
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSORecalculateMappings(), req, nil, "")
+
+	return err
 }

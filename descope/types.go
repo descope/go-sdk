@@ -127,6 +127,7 @@ type SSOSAMLSettingsResponse struct {
 	AttributeMapping                *AttributeMapping           `json:"attributeMapping,omitempty"`
 	GroupsMapping                   []*GroupsMapping            `json:"groupsMapping,omitempty"`
 	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"`
+	GroupsPriority                  []string                    `json:"groupsPriority,omitempty"` // list of group names in priority order (first = highest priority)
 	RedirectURL                     string                      `json:"redirectUrl,omitempty"`
 	FgaMappings                     map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 	ConfigFGATenantIDResourcePrefix string                      `json:"configFGATenantIDResourcePrefix,omitempty"`
@@ -140,6 +141,7 @@ type SSOSAMLSettings struct {
 	AttributeMapping                *AttributeMapping           `json:"attributeMapping,omitempty"`
 	RoleMappings                    []*RoleMapping              `json:"roleMappings,omitempty"`
 	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"` // roles names
+	GroupsPriority                  []string                    `json:"groupsPriority,omitempty"`  // list of group names in priority order (first = highest priority)
 	FgaMappings                     map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 	ConfigFGATenantIDResourcePrefix string                      `json:"configFGATenantIDResourcePrefix,omitempty"`
 	ConfigFGATenantIDResourceSuffix string                      `json:"configFGATenantIDResourceSuffix,omitempty"`
@@ -154,6 +156,7 @@ type SSOSAMLSettingsByMetadata struct {
 	AttributeMapping                *AttributeMapping           `json:"attributeMapping,omitempty"`
 	RoleMappings                    []*RoleMapping              `json:"roleMappings,omitempty"`
 	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"` // roles names
+	GroupsPriority                  []string                    `json:"groupsPriority,omitempty"`  // list of group names in priority order (first = highest priority)
 	FgaMappings                     map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 	ConfigFGATenantIDResourcePrefix string                      `json:"configFGATenantIDResourcePrefix,omitempty"`
 	ConfigFGATenantIDResourceSuffix string                      `json:"configFGATenantIDResourceSuffix,omitempty"`
@@ -195,6 +198,7 @@ type SSOOIDCSettings struct {
 	Issuer               string                      `json:"issuer,omitempty"`
 	GroupsMapping        []*GroupsMapping            `json:"groupsMapping,omitempty"`
 	DefaultSSORoles      []string                    `json:"defaultSSORoles,omitempty"`
+	GroupsPriority       []string                    `json:"groupsPriority,omitempty"` // list of group names in priority order (first = highest priority)
 	FgaMappings          map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 }
 
@@ -211,6 +215,11 @@ type SSOTenantAllSettingsResponse struct {
 
 type GenerateSSOConfigurationLinkResponse struct {
 	AdminSSOConfigurationLink string `json:"adminSSOConfigurationLink,omitempty"`
+}
+
+type RecalculateSSOMappingsRequest struct {
+	TenantID string `json:"tenantId,omitempty"`
+	SSOID    string `json:"ssoId,omitempty"`
 }
 
 // PasswordPolicy - represents the rules for valid passwords configured in the policy
@@ -659,19 +668,20 @@ type NOTPUpdateOptions struct {
 }
 
 type AccessKeyResponse struct {
-	ID           string              `json:"id,omitempty"`
-	Name         string              `json:"name,omitempty"`
-	RoleNames    []string            `json:"roleNames,omitempty"`
-	KeyTenants   []*AssociatedTenant `json:"keyTenants,omitempty"`
-	Status       string              `json:"status,omitempty"`
-	CreatedTime  int32               `json:"createdTime,omitempty"`
-	ExpireTime   int32               `json:"expireTime,omitempty"`
-	CreatedBy    string              `json:"createdBy,omitempty"`
-	ClientID     string              `json:"clientId,omitempty"`
-	UserID       string              `json:"boundUserId,omitempty"`
-	CustomClaims map[string]any      `json:"customClaims,omitempty"`
-	Description  string              `json:"description,omitempty"`
-	PermittedIPs []string            `json:"permittedIps,omitempty"`
+	ID               string              `json:"id,omitempty"`
+	Name             string              `json:"name,omitempty"`
+	RoleNames        []string            `json:"roleNames,omitempty"`
+	KeyTenants       []*AssociatedTenant `json:"keyTenants,omitempty"`
+	Status           string              `json:"status,omitempty"`
+	CreatedTime      int32               `json:"createdTime,omitempty"`
+	ExpireTime       int32               `json:"expireTime,omitempty"`
+	CreatedBy        string              `json:"createdBy,omitempty"`
+	ClientID         string              `json:"clientId,omitempty"`
+	UserID           string              `json:"boundUserId,omitempty"`
+	CustomClaims     map[string]any      `json:"customClaims,omitempty"`
+	Description      string              `json:"description,omitempty"`
+	PermittedIPs     []string            `json:"permittedIps,omitempty"`
+	CustomAttributes map[string]any      `json:"customAttributes,omitempty"`
 }
 
 // Represents a tenant association for a User or an Access Key. The tenant ID is required
@@ -707,27 +717,35 @@ type AttributeMapping struct {
 	CustomAttributes map[string]string `json:"customAttributes,omitempty"`
 }
 
+type RoleInheritance string
+
+const RoleInheritanceDefault RoleInheritance = ""
+const RoleInheritanceNone RoleInheritance = "none"
+const RoleInheritanceUserOnly RoleInheritance = "userOnly"
+
 type Tenant struct {
-	ID                      string         `json:"id"`
-	Name                    string         `json:"name"`
-	SelfProvisioningDomains []string       `json:"selfProvisioningDomains"`
-	CustomAttributes        map[string]any `json:"customAttributes,omitempty"`
-	AuthType                string         `json:"authType,omitempty"`
-	Domains                 []string       `json:"domains,omitempty"`
-	CreatedTime             int32          `json:"createdTime,omitempty"`
-	EnforceSSO              bool           `json:"enforceSSO,omitempty"`
-	Disabled                bool           `json:"disabled,omitempty"`
-	EnforceSSOExclusions    []string       `json:"enforceSSOExclusions,omitempty"`
+	ID                      string          `json:"id"`
+	Name                    string          `json:"name"`
+	SelfProvisioningDomains []string        `json:"selfProvisioningDomains"`
+	CustomAttributes        map[string]any  `json:"customAttributes,omitempty"`
+	AuthType                string          `json:"authType,omitempty"`
+	Domains                 []string        `json:"domains,omitempty"`
+	CreatedTime             int32           `json:"createdTime,omitempty"`
+	EnforceSSO              bool            `json:"enforceSSO,omitempty"`
+	Disabled                bool            `json:"disabled,omitempty"`
+	EnforceSSOExclusions    []string        `json:"enforceSSOExclusions,omitempty"`
+	RoleInheritance         RoleInheritance `json:"roleInheritance,omitempty"`
 }
 
 type TenantRequest struct {
-	Name                    string         `json:"name"`
-	SelfProvisioningDomains []string       `json:"selfProvisioningDomains"`
-	CustomAttributes        map[string]any `json:"customAttributes,omitempty"`
-	EnforceSSO              bool           `json:"enforceSSO,omitempty"`
-	Disabled                bool           `json:"disabled,omitempty"`
-	ParentTenantID          string         `json:"parentId,omitempty"` // applicable only for creation request
-	EnforceSSOExclusions    []string       `json:"enforceSSOExclusions,omitempty"`
+	Name                    string          `json:"name"`
+	SelfProvisioningDomains []string        `json:"selfProvisioningDomains"`
+	CustomAttributes        map[string]any  `json:"customAttributes,omitempty"`
+	EnforceSSO              bool            `json:"enforceSSO,omitempty"`
+	Disabled                bool            `json:"disabled,omitempty"`
+	ParentTenantID          string          `json:"parentId,omitempty"` // applicable only for creation request
+	EnforceSSOExclusions    []string        `json:"enforceSSOExclusions,omitempty"`
+	RoleInheritance         RoleInheritance `json:"roleInheritance,omitempty"`
 }
 
 type TenantSearchOptions struct {
@@ -921,8 +939,8 @@ type UserSearchOptions struct {
 }
 
 type UserSearchSort struct {
-	Field string
-	Desc  bool
+	Field string `json:"field"`
+	Desc  bool   `json:"desc"`
 }
 
 type RoleList struct {
@@ -936,6 +954,7 @@ const (
 	UserStatusEnabled  UserStatus = "enabled"
 	UserStatusDisabled UserStatus = "disabled"
 	UserStatusInvited  UserStatus = "invited"
+	UserStatusExpired  UserStatus = "expired"
 )
 
 type UserImportResponse struct {
@@ -1058,7 +1077,7 @@ type AuditWebhook struct {
 	HmacSecret     string                       `json:"hmacSecret,omitempty"`
 	Headers        map[string]string            `json:"headers,omitempty"`
 	Insecure       bool                         `json:"insecure,omitempty"`
-	Filters        *AuditFilters                `json:"filters,omitempty"`
+	Filters        []*AuditFilters              `json:"filters,omitempty"`
 }
 
 type ConnectorHTTPAuthentication struct {
@@ -1256,6 +1275,44 @@ type CreateOutboundAppRequest struct {
 	ClientSecret string `json:"clientSecret,omitempty"`
 }
 
+// FetchOutboundAppUserTokenRequest represents a request to fetch an outbound app user token
+type FetchOutboundAppUserTokenRequest struct {
+	AppID    string                       `json:"appId"`
+	UserID   string                       `json:"userId"`
+	Scopes   []string                     `json:"scopes"`
+	Options  *OutboundAppUserTokenOptions `json:"options,omitempty"`
+	TenantID string                       `json:"tenantId,omitempty"`
+}
+
+// OutboundAppUserTokenOptions represents options for fetching a user token
+type OutboundAppUserTokenOptions struct {
+	WithRefreshToken bool `json:"withRefreshToken,omitempty"`
+	ForceRefresh     bool `json:"forceRefresh,omitempty"`
+}
+
+// OutboundAppUserToken represents an outbound app user token
+type OutboundAppUserToken struct {
+	ID                string   `json:"id"`
+	AppID             string   `json:"appId"`
+	UserID            string   `json:"userId"`
+	TokenSub          string   `json:"tokenSub"`
+	AccessToken       string   `json:"accessToken"`
+	AccessTokenType   string   `json:"accessTokenType"`
+	AccessTokenExpiry string   `json:"accessTokenExpiry"`
+	HasRefreshToken   bool     `json:"hasRefreshToken"`
+	RefreshToken      string   `json:"refreshToken,omitempty"`
+	LastRefreshTime   string   `json:"lastRefreshTime,omitempty"`
+	LastRefreshError  string   `json:"lastRefreshError,omitempty"`
+	Scopes            []string `json:"scopes"`
+	TenantID          string   `json:"tenantId,omitempty"`
+	GrantedBy         string   `json:"grantedBy,omitempty"`
+}
+
+// FetchOutboundAppUserTokenResponse represents the response from fetching a user token
+type FetchOutboundAppUserTokenResponse struct {
+	Token *OutboundAppUserToken `json:"token"`
+}
+
 type ThirdPartyApplicationScope struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
@@ -1284,6 +1341,7 @@ type ThirdPartyApplication struct {
 	PermissionsScopes    []*ThirdPartyApplicationScope `json:"permissionsScopes"`
 	AttributesScopes     []*ThirdPartyApplicationScope `json:"attributesScopes"`
 	JWTBearerSettings    *JWTBearerSettings            `json:"jwtBearerSettings,omitempty"`
+	CustomAttributes     map[string]any                `json:"customAttributes,omitempty"`
 }
 
 type ThirdPartyApplicationRequest struct {
@@ -1296,6 +1354,7 @@ type ThirdPartyApplicationRequest struct {
 	PermissionsScopes    []*ThirdPartyApplicationScope `json:"permissionsScopes"`
 	AttributesScopes     []*ThirdPartyApplicationScope `json:"attributesScopes"`
 	JWTBearerSettings    *JWTBearerSettings            `json:"jwtBearerSettings,omitempty"`
+	CustomAttributes     map[string]any                `json:"customAttributes,omitempty"`
 }
 
 // Options for loading third party applications
@@ -1440,4 +1499,123 @@ type MgmtKeyProjectRole struct {
 }
 
 type MgmtKeySearchOptions struct {
+}
+
+type DescoperRole string
+
+const (
+	DescoperRoleAdmin     DescoperRole = "admin"
+	DescoperRoleDeveloper DescoperRole = "developer"
+	DescoperRoleSupport   DescoperRole = "support"
+	DescoperRoleAuditor   DescoperRole = "auditor"
+)
+
+type DescoperAttributes struct {
+	DisplayName string `json:"displayName,omitempty"`
+	Email       string `json:"email,omitempty"`
+	Phone       string `json:"phone,omitempty"`
+	// custom attributes are unsupported
+}
+
+type DescoperTagRole struct {
+	Tags []string     `json:"tags,omitempty"`
+	Role DescoperRole `json:"role,omitempty"`
+}
+
+type DescoperProjectRole struct {
+	ProjectIDs []string     `json:"projectIds,omitempty"`
+	Role       DescoperRole `json:"role,omitempty"`
+}
+
+type DescoperRBAC struct {
+	IsCompanyAdmin bool                   `json:"isCompanyAdmin,omitempty"`
+	Tags           []*DescoperTagRole     `json:"tags,omitempty"`
+	Projects       []*DescoperProjectRole `json:"projects,omitempty"`
+}
+
+type Descoper struct {
+	ID         string              `json:"id,omitempty"`
+	LoginIDs   []string            `json:"loginIDs,omitempty"`
+	Attributes *DescoperAttributes `json:"attributes,omitempty"`
+	ReBac      *DescoperRBAC       `json:"rbac,omitempty"`
+	Status     string              `json:"status,omitempty"`
+}
+
+type DescoperCreate struct {
+	LoginID    string              `json:"loginId,omitempty"`
+	Attributes *DescoperAttributes `json:"attributes,omitempty"`
+	SendInvite bool                `json:"sendInvite,omitempty"`
+	ReBac      *DescoperRBAC       `json:"rbac,omitempty"`
+}
+
+type DescoperLoadOptions struct {
+}
+
+type AccessKeysSearchOptions struct {
+	Sort             []UserSearchSort `json:"sort,omitempty"`
+	TenantIDs        []string         `json:"tenantIds,omitempty"`
+	BoundUserID      *string          `json:"boundUserId,omitempty"`
+	CreatingUser     *string          `json:"creatingUser,omitempty"`
+	CustomAttributes map[string]any   `json:"customAttributes,omitempty"`
+}
+
+// List types
+
+type ListType string
+
+const (
+	ListTypeTexts ListType = "texts"
+	ListTypeIPs   ListType = "ips"
+	ListTypeJSON  ListType = "json"
+)
+
+type List struct {
+	ID          string   `json:"id,omitempty"`
+	Name        string   `json:"name,omitempty"`
+	Description string   `json:"description,omitempty"`
+	Type        ListType `json:"type,omitempty"`
+	Data        any      `json:"data,omitempty"`
+}
+
+type ListRequest struct {
+	Name        string   `json:"name"`
+	Description string   `json:"description,omitempty"`
+	Type        ListType `json:"type"`
+	Data        any      `json:"data,omitempty"`
+}
+
+type ListUpdateRequest struct {
+	ID          string   `json:"id"`
+	Name        string   `json:"name"`
+	Description string   `json:"description,omitempty"`
+	Type        ListType `json:"type"`
+	Data        any      `json:"data,omitempty"`
+}
+
+type ListIDRequest struct {
+	ID string `json:"id"`
+}
+
+type ListImportRequest struct {
+	Lists []*List `json:"lists"`
+}
+
+type ListIPsRequest struct {
+	ID  string   `json:"id"`
+	IPs []string `json:"ips"`
+}
+
+type ListCheckIPRequest struct {
+	ID string `json:"id"`
+	IP string `json:"ip"`
+}
+
+type ListTextsRequest struct {
+	ID    string   `json:"id"`
+	Texts []string `json:"texts"`
+}
+
+type ListCheckTextRequest struct {
+	ID   string `json:"id"`
+	Text string `json:"text"`
 }

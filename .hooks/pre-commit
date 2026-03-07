@@ -2,4 +2,29 @@
 
 source scripts/lint/lint.sh
 
-run_linter --build-folder "./..." --do-not-check-main $1
+COMMITLINT_VERSION="0.18.6"
+
+ensure_commitlint() {
+    if ! command -v commitlint &> /dev/null; then
+        echo "Installing commitlint (Go version) v${COMMITLINT_VERSION}..."
+        go install github.com/conventionalcommit/commitlint@v${COMMITLINT_VERSION}
+        echo "Done installing commitlint"
+    fi
+}
+
+validate_commit_message() {
+    echo "- Validating commit message with commitlint"
+    if [ -f .git/COMMIT_EDITMSG ]; then
+        ensure_commitlint
+        if ! commitlint lint < .git/COMMIT_EDITMSG; then
+            echo "Commit message does not follow conventional commits format"
+            echo "Expected format: <type>(<scope>): <subject>"
+            echo "Example: feat: add new authentication method"
+            echo "Allowed types: feat, fix, docs, style, refactor, perf, test, build, ci, chore, revert"
+            exit 1
+        fi
+    fi
+}
+
+validate_commit_message
+run_linter --build-folder "./..." --do-not-check-main "$1"

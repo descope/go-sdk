@@ -133,6 +133,23 @@ func TestManagementKeys(t *testing.T) {
 	assert.Equal(t, expectedAuthBearer, authHeader)
 }
 
+func TestFetchLicenseSuccess(t *testing.T) {
+	mockClient := mocks.NewTestClient(func(_ *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: 200,
+			Body:       io.NopCloser(strings.NewReader(`{"licenseType":"enterprise"}`)),
+			Header:     make(http.Header),
+		}, nil
+	})
+	client, err := NewWithConfig(&Config{
+		ProjectID:     "test",
+		ManagementKey: "mgmt-key",
+		DefaultClient: mockClient,
+	})
+	require.NoError(t, err)
+	assert.NotNil(t, client)
+}
+
 func TestConcurrentClients(t *testing.T) {
 	// This test should be run with the 'race' flag, to ensure that
 	// creating two client in a concurrent manner is safe
@@ -153,6 +170,14 @@ func TestEmptyProjectID(t *testing.T) {
 	_, err := New()
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "Project ID is missing")
+}
+
+func TestAllowEmptyProjectID(t *testing.T) {
+	a, err := NewWithConfig(&Config{AllowEmptyProjectID: true})
+	require.NoError(t, err)
+	assert.Empty(t, a.config.ProjectID)
+	assert.NotNil(t, a.Auth)
+	assert.NotNil(t, a.Management)
 }
 
 func TestEmptyConfig(t *testing.T) {

@@ -1,7 +1,8 @@
 package client
 
 import (
-	"strings"
+	"context"
+	"time"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
@@ -41,7 +42,7 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 	}
 	logger.Init(config.LogLevel, config.Logger)
 
-	if strings.TrimSpace(config.setProjectID()) == "" {
+	if v := config.setProjectID(); v == "" && !config.AllowEmptyProjectID {
 		return nil, descope.ErrMissingProjectID.WithMessage("Project ID is missing, make sure to add it in the Config struct or the environment variable \"%s\"", descope.EnvironmentVariableProjectID)
 	}
 	if config.setPublicKey() != "" {
@@ -61,17 +62,18 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 		CertificateVerify:    config.CertificateVerify,
 		RequestTimeout:       config.RequestTimeout,
 	})
+
 	conf := &auth.AuthParams{
 		ProjectID:           config.ProjectID,
 		PublicKey:           config.PublicKey,
 		SessionJWTViaCookie: config.SessionJWTViaCookie,
 		CookieDomain:        config.SessionJWTCookieDomain,
 		CookieSameSite:      config.SessionJWTCookieSameSite,
-		RefreshCookieName:   config.RefreshCookieName,
-		SessionCookieName:   config.SessionCookieName,
+		JWTLeeway:           config.JWTLeeway,
 	}
+	conf.SetCookieNames(config.RefreshCookieName, config.FallBackRefreshCookieNames, config.SessionCookieName, config.FallBackSessionCookieNames)
 	provider := auth.NewProvider(authClient, conf)
-	authService, err := auth.NewAuthWithProvider(*conf, provider, authClient)
+	authService, err := auth.NewAuthWithProvider(*conf, provider, authClient, config.RequestTokensProvider)
 	if err != nil {
 		return nil, err
 	}
@@ -87,6 +89,17 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 		CertificateVerify:    config.CertificateVerify,
 		RequestTimeout:       config.RequestTimeout,
 	})
+
+	if config.ManagementKey != "" {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		if licenseType, err := mgmtClient.FetchLicense(ctx); err != nil {
+			logger.LogInfo("License handshake failed, continuing without header: %v", err)
+		} else {
+			mgmtClient.SetLicenseType(licenseType)
+		}
+	}
+
 	managementService := mgmt.NewManagement(mgmt.ManagementParams{ProjectID: config.ProjectID, FGACacheURL: config.FGACacheURL}, provider, mgmtClient)
 
 	return &DescopeClient{Auth: authService, Management: managementService, config: config}, nil
