@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.12.0](https://github.com/descope/go-sdk/compare/v1.11.0...v1.12.0) (2026-03-10)
+
+
+### Features
+
+* support additional logind ids on user patch request ([#703](https://github.com/descope/go-sdk/issues/703)) ([12cc236](https://github.com/descope/go-sdk/commit/12cc236f673efaae18008ff2b1bb592f104b43a7))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.11.0 ([#699](https://github.com/descope/go-sdk/issues/699)) ([396305a](https://github.com/descope/go-sdk/commit/396305afb28c9251715bcb8f646fc6eb4bfec76d))
+
 ## [1.11.0](https://github.com/descope/go-sdk/compare/v1.10.0...v1.11.0) (2026-02-26)
 
 
