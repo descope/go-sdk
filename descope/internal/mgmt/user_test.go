@@ -407,6 +407,7 @@ func TestUserPatchSuccess(t *testing.T) {
 		require.Equal(t, "https://test.com", req["picture"])
 		roles := req["roleNames"].([]any)
 		require.EqualValues(t, []any{"foo", "bar"}, roles)
+		require.EqualValues(t, []any{"ali1", "ali2"}, req["additionalLoginIds"])
 		scim := req["scim"].(bool)
 		require.True(t, scim)
 		_, ok := req["givenName"]
@@ -439,6 +440,7 @@ func TestUserPatchSuccess(t *testing.T) {
 	user.Picture = &patchedPicture
 	user.Roles = &patchedRoles
 	user.SCIM = &patchedSCIM
+	user.AdditionalLoginIDs = &[]string{"ali1", "ali2"}
 	res, err := m.User().Patch(context.Background(), "abc", user)
 	require.NoError(t, err)
 	require.NotNil(t, res)
