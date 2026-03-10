@@ -1034,7 +1034,7 @@ func makePatchUserRequest(loginID string, req *descope.PatchUserRequest) map[str
 		res["status"] = *req.Status
 	}
 	if req.AdditionalLoginIDs != nil {
-		res["additionalIdentifiers"] = *req.AdditionalLoginIDs
+		res["additionalLoginIds"] = *req.AdditionalLoginIDs
 	}
 	return res
 }
