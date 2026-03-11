@@ -1114,6 +1114,14 @@ type AuditFilters struct {
 	Values     []string   `json:"values,omitempty"`
 }
 
+// SnapshotExclude represents a resource type that can be excluded from snapshot import.
+type SnapshotExclude string
+
+const (
+	// SnapshotExcludeLists excludes lists from the snapshot import.
+	SnapshotExcludeLists SnapshotExclude = "lists"
+)
+
 type ExportSnapshotRequest struct {
 	// An optional string to set the output format (leave empty for default)
 	Format string `json:"format"`
@@ -1130,6 +1138,8 @@ type ImportSnapshotRequest struct {
 	// An optional map of project entities and their secrets that will be
 	// injected into the snapshot before import (see below)
 	InputSecrets *SnapshotSecrets `json:"inputSecrets,omitempty"`
+	// An optional list of resource types to exclude from the import
+	Excludes []SnapshotExclude `json:"excludes,omitempty"`
 }
 
 type ValidateSnapshotRequest struct {
