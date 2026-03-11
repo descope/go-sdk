@@ -94,7 +94,7 @@ func (p *project) ImportSnapshot(ctx context.Context, req *descope.ImportSnapsho
 		case descope.SnapshotExcludeLists:
 			// valid
 		default:
-			return utils.NewInvalidArgumentError("excludes")
+			return descope.ErrInvalidArguments.WithMessage("The excludes argument contains an unknown value: %q", string(ex))
 		}
 	}
 	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectImportSnapshot(), req, nil, "")
