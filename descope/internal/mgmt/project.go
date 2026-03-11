@@ -89,6 +89,14 @@ func (p *project) ExportSnapshot(ctx context.Context, req *descope.ExportSnapsho
 }
 
 func (p *project) ImportSnapshot(ctx context.Context, req *descope.ImportSnapshotRequest) error {
+	for _, ex := range req.Excludes {
+		switch ex {
+		case descope.SnapshotExcludeLists:
+			// valid
+		default:
+			return utils.NewInvalidArgumentError("excludes")
+		}
+	}
 	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementProjectImportSnapshot(), req, nil, "")
 	return err
 }

@@ -53,6 +53,16 @@ func TestProjectImportWithExcludes(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestProjectImportWithInvalidExclude(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	req := &descope.ImportSnapshotRequest{
+		Files:    map[string]any{"foo": "bar"},
+		Excludes: []descope.SnapshotExclude{"unknown"},
+	}
+	err := mgmt.Project().ImportSnapshot(context.Background(), req)
+	require.Error(t, err)
+}
+
 func TestValidateProjectImport(t *testing.T) {
 	resbody := map[string]any{
 		"ok":       false,
