@@ -40,7 +40,7 @@ func (t *testLogger) Reset() {
 	t.buffer.Reset()
 }
 
-// TestDoLog tests the doLog method which was previously marked as notest
+// TestDoLog tests the doLog method
 func TestDoLog(t *testing.T) {
 	t.Run("LogDebugWithDebugLevel", func(t *testing.T) {
 		logger := newTestLogger()
