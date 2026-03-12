@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -1604,6 +1605,10 @@ type ClientParams struct {
 	ExternalRequestID    func(context.Context) string
 	CertificateVerify    CertificateVerifyMode
 	RequestTimeout       time.Duration
+	// MinTLSVersion (optional) - minimum TLS version to use for connections
+	// Defaults to TLS 1.2 for security. Set to 0 to use Go's default (not recommended for production).
+	// For testing/debugging only, you can set to tls.VersionTLS10 or tls.VersionTLS11.
+	MinTLSVersion uint16
 }
 
 type IHttpClient interface {
@@ -1651,7 +1656,28 @@ func NewClient(conf ClientParams) *Client {
 			t.MaxIdleConns = 100
 			t.MaxConnsPerHost = 100
 			t.MaxIdleConnsPerHost = 100
+			
+			// Ensure TLS config exists
+			if t.TLSClientConfig == nil {
+				t.TLSClientConfig = &tls.Config{}
+			}
+			
+			// Set certificate verification
 			t.TLSClientConfig.InsecureSkipVerify = conf.CertificateVerify.SkipVerifyValue(conf.BaseURL)
+			
+			// Enforce TLS 1.2+ by default for security
+			minTLSVersion := conf.MinTLSVersion
+			if minTLSVersion == 0 {
+				// Default to TLS 1.2 for security
+				minTLSVersion = tls.VersionTLS12
+			}
+			t.TLSClientConfig.MinVersion = minTLSVersion
+			
+			// Log warning if insecure TLS version is used
+			if minTLSVersion < tls.VersionTLS12 {
+				logger.LogInfo("WARNING: Using TLS version below 1.2 (MinVersion: 0x%04X). This is insecure and should only be used for testing/debugging.", minTLSVersion)
+			}
+			
 			rt = t
 		} else {
 			// App has set a different transport layer, we will not change its attributes, and use it as is

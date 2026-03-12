@@ -734,6 +734,9 @@ func ValidateJWT(JWT string, publicKeysProvider *Provider) (*descope.Token, erro
 	leeway := getLeeway(publicKeysProvider)
 	token, err := jwt.Parse([]byte(JWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true), jwt.WithAcceptableSkew(leeway))
 	if err != nil {
+		// SECURITY WARNING: Fallback to unverified parsing for debugging/error inspection only
+		// This should NEVER be used for authorization decisions
+		logger.LogInfo("WARNING: JWT validation failed, parsing token without verification for error inspection only. This token MUST NOT be used for authorization. Error: %s", err.Error())
 		var parseErr error
 		token, parseErr = jwt.Parse([]byte(JWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(false), jwt.WithValidate(false), jwt.WithAcceptableSkew(leeway))
 		if parseErr != nil {
