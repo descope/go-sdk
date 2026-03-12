@@ -1617,7 +1617,7 @@ type Client struct {
 	externalRequestID func(context.Context) string
 	Conf              ClientParams
 	sdkInfo           *sdkInfo
-	licenseType       string // License type from handshake (free/pro/enterprise)
+	rateLimitTier    string // Rate limit tier from handshake (tier1/tier2/tier3/tier4)
 }
 type HTTPResponse struct {
 	Req     *http.Request
@@ -1893,28 +1893,28 @@ func (c *Client) addDescopeHeaders(req *http.Request) {
 	req.Header.Set("x-descope-sdk-sha", c.sdkInfo.sha)
 	req.Header.Set("x-descope-sdk-uuid", instanceUUID)
 	req.Header.Set("x-descope-project-id", c.Conf.ProjectID)
-	if c.licenseType != "" {
-		req.Header.Set("x-descope-license", c.licenseType)
+	if c.rateLimitTier != "" {
+		req.Header.Set("x-descope-license", c.rateLimitTier)
 	}
 }
 
 func (c *Client) FetchLicense(ctx context.Context) (string, error) {
 	var resp struct {
-		LicenseType string `json:"licenseType"`
+		RateLimitTier string `json:"rateLimitTier"`
 	}
 	opts := &HTTPRequest{ResBodyObj: &resp}
 	_, err := c.DoGetRequest(ctx, Routes.ManagementLicense(), opts, "")
 	if err != nil {
 		return "", err
 	}
-	if resp.LicenseType == "" {
-		return "", fmt.Errorf("empty license type returned from server")
+	if resp.RateLimitTier == "" {
+		return "", fmt.Errorf("empty rate limit tier returned from server")
 	}
-	return resp.LicenseType, nil
+	return resp.RateLimitTier, nil
 }
 
-func (c *Client) SetLicenseType(licenseType string) {
-	c.licenseType = licenseType
+func (c *Client) SetRateLimitTier(rateLimitTier string) {
+	c.rateLimitTier = rateLimitTier
 }
 
 func getSDKInfo() *sdkInfo {

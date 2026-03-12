@@ -334,7 +334,7 @@ func TestBaseURLForProjectID(t *testing.T) {
 
 func TestFetchLicense_Success(t *testing.T) {
 	projectID := "test-project"
-	expectedLicenseType := "enterprise"
+	expectedLicenseType := "tier4"
 
 	c := NewClient(ClientParams{
 		ProjectID:     projectID,
@@ -345,7 +345,7 @@ func TestFetchLicense_Success(t *testing.T) {
 			assert.EqualValues(t, http.MethodGet, r.Method)
 
 			// Return a successful response with license type
-			responseBody := fmt.Sprintf(`{"licenseType": "%s"}`, expectedLicenseType)
+			responseBody := fmt.Sprintf(`{"rateLimitTier": "%s"}`, expectedLicenseType)
 			return &http.Response{
 				StatusCode: http.StatusOK,
 				Body:       io.NopCloser(strings.NewReader(responseBody)),
@@ -353,9 +353,9 @@ func TestFetchLicense_Success(t *testing.T) {
 		}),
 	})
 
-	licenseType, err := c.FetchLicense(context.Background())
+	rateLimitTier, err := c.FetchLicense(context.Background())
 	require.NoError(t, err)
-	assert.EqualValues(t, expectedLicenseType, licenseType)
+	assert.EqualValues(t, expectedLicenseType, rateLimitTier)
 }
 
 func TestFetchLicense_APIError(t *testing.T) {
@@ -373,9 +373,9 @@ func TestFetchLicense_APIError(t *testing.T) {
 		}),
 	})
 
-	licenseType, err := c.FetchLicense(context.Background())
+	rateLimitTier, err := c.FetchLicense(context.Background())
 	require.Error(t, err)
-	assert.Empty(t, licenseType)
+	assert.Empty(t, rateLimitTier)
 }
 
 func TestFetchLicense_NetworkError(t *testing.T) {
@@ -390,36 +390,36 @@ func TestFetchLicense_NetworkError(t *testing.T) {
 		}),
 	})
 
-	licenseType, err := c.FetchLicense(context.Background())
+	rateLimitTier, err := c.FetchLicense(context.Background())
 	require.Error(t, err)
-	assert.Empty(t, licenseType)
+	assert.Empty(t, rateLimitTier)
 	assert.Contains(t, err.Error(), "network error")
 }
 
-func TestSetLicenseType(t *testing.T) {
+func TestSetRateLimitTier(t *testing.T) {
 	projectID := "test-project"
 	c := NewClient(ClientParams{ProjectID: projectID})
 
-	// Initially, licenseType should be empty
-	assert.Empty(t, c.licenseType)
+	// Initially, rateLimitTier should be empty
+	assert.Empty(t, c.rateLimitTier)
 
 	// Set license type
-	expectedLicenseType := "pro"
-	c.SetLicenseType(expectedLicenseType)
-	assert.EqualValues(t, expectedLicenseType, c.licenseType)
+	expectedLicenseType := "tier2"
+	c.SetRateLimitTier(expectedLicenseType)
+	assert.EqualValues(t, expectedLicenseType, c.rateLimitTier)
 
-	newLicenseType := "enterprise"
-	c.SetLicenseType(newLicenseType)
-	assert.EqualValues(t, newLicenseType, c.licenseType)
+	newLicenseType := "tier4"
+	c.SetRateLimitTier(newLicenseType)
+	assert.EqualValues(t, newLicenseType, c.rateLimitTier)
 
 	// Set to empty string
-	c.SetLicenseType("")
-	assert.Empty(t, c.licenseType)
+	c.SetRateLimitTier("")
+	assert.Empty(t, c.rateLimitTier)
 }
 
 func TestLicenseHeader_AddedWhenSet(t *testing.T) {
 	projectID := "test-project"
-	expectedLicenseType := "enterprise"
+	expectedLicenseType := "tier4"
 	headerChecked := false
 
 	c := NewClient(ClientParams{
@@ -434,7 +434,7 @@ func TestLicenseHeader_AddedWhenSet(t *testing.T) {
 	})
 
 	// Set the license type
-	c.SetLicenseType(expectedLicenseType)
+	c.SetRateLimitTier(expectedLicenseType)
 
 	// Make a request and verify the header is added
 	_, err := c.DoPostRequest(context.Background(), "test-path", nil, nil, "")
@@ -451,14 +451,14 @@ func TestLicenseHeader_NotAddedWhenEmpty(t *testing.T) {
 		DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
 			// Verify the license header is NOT present
 			actualLicense := r.Header.Get("x-descope-license")
-			assert.Empty(t, actualLicense, "License header should not be present when licenseType is empty")
+			assert.Empty(t, actualLicense, "License header should not be present when rateLimitTier is empty")
 			headerChecked = true
 			return &http.Response{StatusCode: http.StatusOK}, nil
 		}),
 	})
 
 	// Do NOT set license type (should remain empty)
-	assert.Empty(t, c.licenseType)
+	assert.Empty(t, c.rateLimitTier)
 
 	// Make a request and verify the header is NOT added
 	_, err := c.DoPostRequest(context.Background(), "test-path", nil, nil, "")
@@ -468,7 +468,7 @@ func TestLicenseHeader_NotAddedWhenEmpty(t *testing.T) {
 
 func TestLicenseHeader_AddedToAllRequestTypes(t *testing.T) {
 	projectID := "test-project"
-	expectedLicenseType := "pro"
+	expectedLicenseType := "tier2"
 
 	tests := []struct {
 		name        string
@@ -520,7 +520,7 @@ func TestLicenseHeader_AddedToAllRequestTypes(t *testing.T) {
 			})
 
 			// Set the license type
-			c.SetLicenseType(expectedLicenseType)
+			c.SetRateLimitTier(expectedLicenseType)
 
 			// Execute the request
 			err := tt.requestFunc(c)
@@ -545,11 +545,11 @@ func TestLicenseHeader_UpdatedDynamically(t *testing.T) {
 				// First request: no license header
 				assert.Empty(t, actualLicense)
 			case 2:
-				// Second request: "free" license
-				assert.EqualValues(t, "free", actualLicense)
+				// Second request: "tier1" license
+				assert.EqualValues(t, "tier1", actualLicense)
 			case 3:
-				// Third request: "enterprise" license
-				assert.EqualValues(t, "enterprise", actualLicense)
+				// Third request: "tier4" license
+				assert.EqualValues(t, "tier4", actualLicense)
 			case 4:
 				// Fourth request: no license header again
 				assert.Empty(t, actualLicense)
@@ -563,18 +563,18 @@ func TestLicenseHeader_UpdatedDynamically(t *testing.T) {
 	_, err := c.DoPostRequest(context.Background(), "test-path", nil, nil, "")
 	require.NoError(t, err)
 
-	// Request 2: Set to "free"
-	c.SetLicenseType("free")
+	// Request 2: Set to "tier1"
+	c.SetRateLimitTier("tier1")
 	_, err = c.DoPostRequest(context.Background(), "test-path", nil, nil, "")
 	require.NoError(t, err)
 
-	// Request 3: Update to "enterprise"
-	c.SetLicenseType("enterprise")
+	// Request 3: Update to "tier4"
+	c.SetRateLimitTier("tier4")
 	_, err = c.DoPostRequest(context.Background(), "test-path", nil, nil, "")
 	require.NoError(t, err)
 
 	// Request 4: Clear license
-	c.SetLicenseType("")
+	c.SetRateLimitTier("")
 	_, err = c.DoPostRequest(context.Background(), "test-path", nil, nil, "")
 	require.NoError(t, err)
 
