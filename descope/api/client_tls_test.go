@@ -118,4 +118,3 @@ func TestTLSEnforcement(t *testing.T) {
 			"Custom client should be used without modification")
 	})
 }
-

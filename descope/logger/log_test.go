@@ -123,7 +123,7 @@ func TestGlobalLogFunctions(t *testing.T) {
 
 	t.Run("LogError", func(t *testing.T) {
 		logger.Reset()
-		LogError("operation failed", assert.AnError, "context")
+		LogError("operation failed", assert.AnError)
 		output := logger.String()
 		assert.Contains(t, output, "operation failed")
 		assert.Contains(t, output, "error:")
@@ -163,12 +163,12 @@ func TestLoggerInit(t *testing.T) {
 // TestLogLevelFiltering tests that log level filtering works correctly
 func TestLogLevelFiltering(t *testing.T) {
 	tests := []struct {
-		name           string
-		setLevel       LogLevel
-		logLevel       LogLevel
-		shouldLog      bool
-		logFunc        func(string, ...any)
-		message        string
+		name      string
+		setLevel  LogLevel
+		logLevel  LogLevel
+		shouldLog bool
+		logFunc   func(string, ...any)
+		message   string
 	}{
 		{"Debug_WithDebugLevel", LogDebugLevel, LogDebugLevel, true, LogDebug, "debug msg"},
 		{"Debug_WithInfoLevel", LogInfoLevel, LogDebugLevel, false, LogDebug, "debug msg"},

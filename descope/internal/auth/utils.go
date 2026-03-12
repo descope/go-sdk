@@ -287,10 +287,6 @@ const (
 
 var (
 	phoneRegex = regexp.MustCompile(`^(?:(?:\(?(?:00|\+)([1-4]\d\d|[1-9]\d?)\)?)?[\-\.\ \\\/]?)?((?:\(?\d{1,}\)?[\-\.\ \\\/]?){0,})(?:[\-\.\ \\\/]?(?:#|ext\.?|extension|x)[\-\.\ \\\/]?(\d+))?$`)
-	// Simplified email regex for better maintainability and performance
-	// Pattern: local-part @ domain
-	// - Local part: alphanumeric start/end, can contain dots, hyphens, underscores, plus signs
-	// - Domain: alphanumeric with dots, must have at least one dot and valid TLD
-	// Note: Go uses RE2 engine which is immune to ReDoS attacks, but simplicity aids maintainability
-	emailRegex = regexp.MustCompile(`^[a-zA-Z0-9]([a-zA-Z0-9._%+\-]*[a-zA-Z0-9])?@[a-zA-Z0-9]([a-zA-Z0-9.\-]*[a-zA-Z0-9])?\.[a-zA-Z]{2,}$`)
+	// Relaxed email regex for basic sanity checks and OTP method detection. Intentionally permissive to avoid rejecting RFC-valid or previously-supported addresses.
+	emailRegex = regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`)
 )
