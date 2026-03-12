@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.13.0](https://github.com/descope/go-sdk/compare/v1.12.0...v1.13.0) (2026-03-12)
+
+
+### Features
+
+* add lists exclude option in project import ([#706](https://github.com/descope/go-sdk/issues/706)) ([817111f](https://github.com/descope/go-sdk/commit/817111fb1cd2bd6c54a182d9b5f84d4833a58531))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.12.0 ([#704](https://github.com/descope/go-sdk/issues/704)) ([d5a5777](https://github.com/descope/go-sdk/commit/d5a5777fa461e85d7bbb9e9945942546b57f162f))
+
 ## [1.12.0](https://github.com/descope/go-sdk/compare/v1.11.0...v1.12.0) (2026-03-10)
 
 
