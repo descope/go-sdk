@@ -722,7 +722,7 @@ func TestRetryRespectsContextCancellation(t *testing.T) {
 	c := NewClient(ClientParams{
 		ProjectID:   "test",
 		RetryConfig: &RetryConfig{MaxRetries: 2, RetryDelay: 100 * time.Millisecond},
-		DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+		DefaultClient: mocks.NewTestClient(func(_ *http.Request) (*http.Response, error) {
 			callCount++
 			return &http.Response{StatusCode: http.StatusServiceUnavailable, Body: io.NopCloser(strings.NewReader(""))}, nil
 		}),
@@ -735,4 +735,48 @@ func TestRetryRespectsContextCancellation(t *testing.T) {
 	// Either the first call went through and the retry was cancelled, or context was cancelled before first call
 	assert.True(t, err != nil)
 	assert.True(t, callCount <= 2)
+}
+
+func TestRetryWithReadCloserBody(t *testing.T) {
+	expectedBody := `{"hello":"world"}`
+	callCount := 0
+	c := NewClient(ClientParams{
+		ProjectID:   "test",
+		RetryConfig: &RetryConfig{MaxRetries: 1, RetryDelay: 0},
+		DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+			callCount++
+			b, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			assert.Equal(t, expectedBody, string(b))
+			if callCount < 2 {
+				return &http.Response{StatusCode: http.StatusServiceUnavailable, Body: io.NopCloser(strings.NewReader(""))}, nil
+			}
+			return &http.Response{StatusCode: http.StatusOK}, nil
+		}),
+	})
+
+	_, err := c.DoRequest(context.Background(), http.MethodPost, "path", io.NopCloser(strings.NewReader(expectedBody)), nil, "")
+	require.NoError(t, err)
+	assert.Equal(t, 2, callCount)
+}
+
+func TestRetryWithPrebuiltRequestBody(t *testing.T) {
+	callCount := 0
+	c := NewClient(ClientParams{
+		ProjectID:   "test",
+		RetryConfig: &RetryConfig{MaxRetries: 1, RetryDelay: 0},
+		DefaultClient: mocks.NewTestClient(func(_ *http.Request) (*http.Response, error) {
+			callCount++
+			if callCount < 2 {
+				return &http.Response{StatusCode: http.StatusServiceUnavailable, Body: io.NopCloser(strings.NewReader(""))}, nil
+			}
+			return &http.Response{StatusCode: http.StatusOK}, nil
+		}),
+	})
+
+	req, err := http.NewRequest(http.MethodPost, "path", io.NopCloser(strings.NewReader(`{"hello":"world"}`)))
+	require.NoError(t, err)
+	_, err = c.DoRequest(context.Background(), http.MethodPost, "path", nil, &HTTPRequest{Request: req}, "")
+	require.NoError(t, err)
+	assert.Equal(t, 2, callCount)
 }

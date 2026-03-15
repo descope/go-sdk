@@ -1886,6 +1886,7 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 				case <-time.After(retryDelay):
 				}
 			} else {
+				// notest
 				time.Sleep(retryDelay)
 			}
 			logger.LogInfo("Retrying request to [%s] (attempt %d/%d)", url, attempt+1, maxAttempts)
