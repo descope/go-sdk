@@ -1879,7 +1879,7 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 			break
 		}
 		if attempt < maxAttempts-1 {
-			response.Body.Close()
+			_ = response.Body.Close()
 			response = nil
 		}
 	}
