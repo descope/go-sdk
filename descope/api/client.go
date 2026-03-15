@@ -1596,10 +1596,13 @@ const (
 )
 
 // RetryConfig configures automatic retry behavior on transient server errors.
+// Use DefaultRetryConfig() to get the recommended settings.
 type RetryConfig struct {
-	// MaxRetries is the number of additional attempts after the first failure (default: 2).
+	// MaxRetries is the number of additional attempts after the first failure.
+	// Use DefaultRetryConfig() for the recommended default of 2 retries.
 	MaxRetries int
-	// RetryDelay is the wait duration between retry attempts (default: 3 seconds).
+	// RetryDelay is the wait duration between retry attempts.
+	// Use DefaultRetryConfig() for the recommended default of 3 seconds.
 	RetryDelay time.Duration
 }
 
@@ -1764,19 +1767,47 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 
 	url := fmt.Sprintf("%s/%s", base, strings.TrimLeft(uriPath, "/"))
 
-	// Buffer body upfront so it can be replayed on retries
+	// Determine retry configuration
+	maxAttempts := 1
+	retryDelay := time.Duration(0)
+	if c.Conf.RetryConfig != nil {
+		// Clamp MaxRetries to >= 0 to prevent invalid maxAttempts
+		maxAttempts = 1 + max(c.Conf.RetryConfig.MaxRetries, 0)
+		retryDelay = c.Conf.RetryConfig.RetryDelay
+	}
+	retriesEnabled := maxAttempts > 1
+
+	// Only buffer body when retries are enabled
 	var bodyBytes []byte
-	if body != nil {
-		var err error
-		bodyBytes, err = io.ReadAll(body)
-		if err != nil {
-			return nil, err
+	if retriesEnabled {
+		// Read body from the body parameter
+		if body != nil {
+			var err error
+			bodyBytes, err = io.ReadAll(body)
+			// If body is a ReadCloser, close it after reading
+			if closer, ok := body.(io.ReadCloser); ok {
+				_ = closer.Close()
+			}
+			if err != nil {
+				return nil, err
+			}
+		}
+		// Also handle body from options.Request if provided
+		if options.Request != nil && options.Request.Body != nil {
+			var err error
+			bodyBytes, err = io.ReadAll(options.Request.Body)
+			_ = options.Request.Body.Close()
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 
 	var bodyReader io.Reader
-	if len(bodyBytes) > 0 {
+	if retriesEnabled && len(bodyBytes) > 0 {
 		bodyReader = bytes.NewReader(bodyBytes)
+	} else {
+		bodyReader = body
 	}
 
 	req := options.Request
@@ -1844,13 +1875,6 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 		req = req.WithContext(ctx)
 	}
 
-	maxAttempts := 1
-	retryDelay := time.Duration(0)
-	if c.Conf.RetryConfig != nil {
-		maxAttempts = 1 + c.Conf.RetryConfig.MaxRetries
-		retryDelay = c.Conf.RetryConfig.RetryDelay
-	}
-
 	var response *http.Response
 	var err error
 	for attempt := 0; attempt < maxAttempts; attempt++ {
@@ -1879,7 +1903,11 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 			break
 		}
 		if attempt < maxAttempts-1 {
-			_ = response.Body.Close()
+			// Drain response body before closing for better connection reuse
+			if response.Body != nil {
+				_, _ = io.Copy(io.Discard, response.Body)
+				_ = response.Body.Close()
+			}
 			response = nil
 		}
 	}
