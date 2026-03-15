@@ -1595,6 +1595,19 @@ const (
 	CertificateVerifyNever
 )
 
+// RetryConfig configures automatic retry behavior on transient server errors.
+type RetryConfig struct {
+	// MaxRetries is the number of additional attempts after the first failure (default: 2).
+	MaxRetries int
+	// RetryDelay is the wait duration between retry attempts (default: 3 seconds).
+	RetryDelay time.Duration
+}
+
+// DefaultRetryConfig returns the recommended retry settings: 2 retries with a 3-second delay.
+func DefaultRetryConfig() *RetryConfig {
+	return &RetryConfig{MaxRetries: 2, RetryDelay: 3 * time.Second}
+}
+
 type ClientParams struct {
 	ProjectID            string
 	BaseURL              string
@@ -1604,6 +1617,9 @@ type ClientParams struct {
 	ExternalRequestID    func(context.Context) string
 	CertificateVerify    CertificateVerifyMode
 	RequestTimeout       time.Duration
+	// RetryConfig enables automatic retries on transient errors (503/522/530).
+	// If nil (default), no retries are performed.
+	RetryConfig *RetryConfig
 }
 
 type IHttpClient interface {
@@ -1747,10 +1763,26 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 	}
 
 	url := fmt.Sprintf("%s/%s", base, strings.TrimLeft(uriPath, "/"))
+
+	// Buffer body upfront so it can be replayed on retries
+	var bodyBytes []byte
+	if body != nil {
+		var err error
+		bodyBytes, err = io.ReadAll(body)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var bodyReader io.Reader
+	if len(bodyBytes) > 0 {
+		bodyReader = bytes.NewReader(bodyBytes)
+	}
+
 	req := options.Request
 	if req == nil {
 		var err error
-		req, err = http.NewRequest(method, url, body)
+		req, err = http.NewRequest(method, url, bodyReader)
 		if err != nil {
 			return nil, err
 		}
@@ -1811,7 +1843,47 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 	if ctx != nil {
 		req = req.WithContext(ctx)
 	}
-	response, err := c.httpClient.Do(req)
+
+	maxAttempts := 1
+	retryDelay := time.Duration(0)
+	if c.Conf.RetryConfig != nil {
+		maxAttempts = 1 + c.Conf.RetryConfig.MaxRetries
+		retryDelay = c.Conf.RetryConfig.RetryDelay
+	}
+
+	var response *http.Response
+	var err error
+	for attempt := 0; attempt < maxAttempts; attempt++ {
+		if attempt > 0 {
+			if ctx != nil {
+				select {
+				case <-ctx.Done():
+					return nil, ctx.Err()
+				case <-time.After(retryDelay):
+				}
+			} else {
+				time.Sleep(retryDelay)
+			}
+			logger.LogInfo("Retrying request to [%s] (attempt %d/%d)", url, attempt+1, maxAttempts)
+			if len(bodyBytes) > 0 {
+				req.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+				req.ContentLength = int64(len(bodyBytes))
+			}
+		}
+
+		response, err = c.httpClient.Do(req)
+		if err != nil {
+			break
+		}
+		if !isRetryableStatus(response.StatusCode) {
+			break
+		}
+		if attempt < maxAttempts-1 {
+			response.Body.Close()
+			response = nil
+		}
+	}
+
 	if err != nil {
 		logger.LogError("Failed sending request to [%s]", err, url)
 		return nil, err
@@ -1884,6 +1956,12 @@ func (c *Client) parseDescopeError(response *http.Response) *descope.Error {
 
 func isResponseOK(response *http.Response) bool {
 	return response.StatusCode >= http.StatusOK && response.StatusCode < http.StatusMultipleChoices || response.StatusCode == http.StatusTemporaryRedirect
+}
+
+func isRetryableStatus(statusCode int) bool {
+	return statusCode == http.StatusServiceUnavailable || // 503
+		statusCode == 522 ||
+		statusCode == 530
 }
 
 func (c *Client) addDescopeHeaders(req *http.Request) {

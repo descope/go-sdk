@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/internal/utils"
@@ -579,4 +580,134 @@ func TestLicenseHeader_UpdatedDynamically(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.EqualValues(t, 4, requestCount, "Expected 4 requests to be made")
+}
+
+func TestRetryOnServiceUnavailable(t *testing.T) {
+	callCount := 0
+	c := NewClient(ClientParams{
+		ProjectID:   "test",
+		RetryConfig: &RetryConfig{MaxRetries: 2, RetryDelay: 0},
+		DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+			callCount++
+			if callCount < 3 {
+				return &http.Response{StatusCode: http.StatusServiceUnavailable, Body: io.NopCloser(strings.NewReader(""))}, nil
+			}
+			return &http.Response{StatusCode: http.StatusOK}, nil
+		}),
+	})
+
+	_, err := c.DoPostRequest(context.Background(), "path", nil, nil, "")
+	require.NoError(t, err)
+	assert.Equal(t, 3, callCount)
+}
+
+func TestRetryOnCloudflareErrors(t *testing.T) {
+	for _, retryableCode := range []int{522, 530} {
+		callCount := 0
+		c := NewClient(ClientParams{
+			ProjectID:   "test",
+			RetryConfig: &RetryConfig{MaxRetries: 2, RetryDelay: 0},
+			DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+				callCount++
+				if callCount == 1 {
+					return &http.Response{StatusCode: retryableCode, Body: io.NopCloser(strings.NewReader(""))}, nil
+				}
+				return &http.Response{StatusCode: http.StatusOK}, nil
+			}),
+		})
+
+		_, err := c.DoPostRequest(context.Background(), "path", nil, nil, "")
+		require.NoError(t, err, "expected success after retry for status %d", retryableCode)
+		assert.Equal(t, 2, callCount, "expected 2 calls for status %d", retryableCode)
+	}
+}
+
+func TestRetryExhausted(t *testing.T) {
+	callCount := 0
+	c := NewClient(ClientParams{
+		ProjectID:   "test",
+		RetryConfig: &RetryConfig{MaxRetries: 2, RetryDelay: 0},
+		DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+			callCount++
+			return &http.Response{StatusCode: http.StatusServiceUnavailable, Body: io.NopCloser(strings.NewReader(`{"errorCode":"E999999"}`))}, nil
+		}),
+	})
+
+	_, err := c.DoPostRequest(context.Background(), "path", nil, nil, "")
+	require.Error(t, err)
+	assert.Equal(t, 3, callCount)
+}
+
+func TestNoRetryWithoutConfig(t *testing.T) {
+	callCount := 0
+	c := NewClient(ClientParams{
+		ProjectID: "test",
+		DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+			callCount++
+			return &http.Response{StatusCode: http.StatusServiceUnavailable, Body: io.NopCloser(strings.NewReader(`{"errorCode":"E999999"}`))}, nil
+		}),
+	})
+
+	_, err := c.DoPostRequest(context.Background(), "path", nil, nil, "")
+	require.Error(t, err)
+	assert.Equal(t, 1, callCount)
+}
+
+func TestNoRetryOnNonRetryableStatus(t *testing.T) {
+	callCount := 0
+	c := NewClient(ClientParams{
+		ProjectID:   "test",
+		RetryConfig: &RetryConfig{MaxRetries: 2, RetryDelay: 0},
+		DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+			callCount++
+			return &http.Response{StatusCode: http.StatusBadRequest, Body: io.NopCloser(strings.NewReader(`{"errorCode":"E999999"}`))}, nil
+		}),
+	})
+
+	_, err := c.DoPostRequest(context.Background(), "path", nil, nil, "")
+	require.Error(t, err)
+	assert.Equal(t, 1, callCount)
+}
+
+func TestRetryResendsBody(t *testing.T) {
+	expectedBody := `{"hello":"world"}`
+	callCount := 0
+	c := NewClient(ClientParams{
+		ProjectID:   "test",
+		RetryConfig: &RetryConfig{MaxRetries: 2, RetryDelay: 0},
+		DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+			callCount++
+			b, err := io.ReadAll(r.Body)
+			require.NoError(t, err)
+			assert.Equal(t, expectedBody, string(b))
+			if callCount < 2 {
+				return &http.Response{StatusCode: http.StatusServiceUnavailable, Body: io.NopCloser(strings.NewReader(""))}, nil
+			}
+			return &http.Response{StatusCode: http.StatusOK}, nil
+		}),
+	})
+
+	_, err := c.DoRequest(context.Background(), http.MethodPost, "path", strings.NewReader(expectedBody), nil, "")
+	require.NoError(t, err)
+	assert.Equal(t, 2, callCount)
+}
+
+func TestRetryRespectsContextCancellation(t *testing.T) {
+	callCount := 0
+	c := NewClient(ClientParams{
+		ProjectID:   "test",
+		RetryConfig: &RetryConfig{MaxRetries: 2, RetryDelay: 100 * time.Millisecond},
+		DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+			callCount++
+			return &http.Response{StatusCode: http.StatusServiceUnavailable, Body: io.NopCloser(strings.NewReader(""))}, nil
+		}),
+	})
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // cancel immediately
+
+	_, err := c.DoPostRequest(ctx, "path", nil, nil, "")
+	// Either the first call went through and the retry was cancelled, or context was cancelled before first call
+	assert.True(t, err != nil)
+	assert.True(t, callCount <= 2)
 }

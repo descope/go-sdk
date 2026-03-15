@@ -73,6 +73,38 @@ descopeClient, err := client.NewWithConfig(&client.Config{
 
 If `JWTLeeway` is not set or set to 0, the SDK will use the default 5-second leeway for backward compatibility.
 
+### Retry Configuration
+
+The SDK can automatically retry requests that fail with transient server errors. This helps avoid request loss due to temporary service unavailability.
+
+By default, no retries are performed. Use `api.DefaultRetryConfig()` for the recommended settings (2 retries with a 3-second delay between them):
+
+```go
+import (
+    "github.com/descope/go-sdk/descope/api"
+    "github.com/descope/go-sdk/descope/client"
+)
+
+descopeClient, err := client.NewWithConfig(&client.Config{
+    ProjectID:   "project-ID",
+    RetryConfig: api.DefaultRetryConfig(), // 2 retries, 3s delay
+})
+```
+
+You can also customize the retry behavior:
+
+```go
+descopeClient, err := client.NewWithConfig(&client.Config{
+    ProjectID: "project-ID",
+    RetryConfig: &api.RetryConfig{
+        MaxRetries: 3,
+        RetryDelay: 5 * time.Second,
+    },
+})
+```
+
+Retries are triggered on transient HTTP status codes: `503`, `522`, and `530`.
+
 ## Usage
 
 ### Authentication Functions
