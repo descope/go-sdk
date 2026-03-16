@@ -99,29 +99,31 @@ func TestSSOApplicationCreateSAMLApplicationSuccess(t *testing.T) {
 		require.Equal(t, "", req["subjectNameIdFormat"])
 		require.True(t, req["forceAuthentication"].(bool))
 		require.Equal(t, "http://dummy.com/logout", req["logoutRedirectUrl"])
+		require.Equal(t, "sha256", req["defaultSignatureAlgorithm"])
 
 	}, response))
 
 	id, err := mgmt.SSOApplication().CreateSAMLApplication(context.Background(), &descope.SAMLApplicationRequest{
-		ID:                  "id1",
-		Name:                "abc",
-		Description:         "desc",
-		Enabled:             true,
-		Logo:                "logo",
-		LoginPageURL:        "http://dummy.com/login",
-		UseMetadataInfo:     true,
-		MetadataURL:         "http://dummy.com/md",
-		EntityID:            "aaaa",
-		AcsURL:              "http://dummy.com/acs",
-		Certificate:         "cert",
-		AttributeMapping:    []descope.SAMLIDPAttributeMappingInfo{{Name: "n1", Type: "t1", Value: "v1"}},
-		GroupsMapping:       []descope.SAMLIDPGroupsMappingInfo{{Name: "n1", Type: "t1", FilterType: "ft1", Value: "v1", Roles: []descope.SAMLIDPRoleGroupMappingInfo{{ID: "r1", Name: "rn1"}}}},
-		AcsAllowedCallbacks: []string{"http://dummy.com/acsallow"},
-		DefaultRelayState:   "rs",
-		SubjectNameIDType:   "email",
-		SubjectNameIDFormat: "",
-		ForceAuthentication: true,
-		LogoutRedirectURL:   "http://dummy.com/logout",
+		ID:                        "id1",
+		Name:                      "abc",
+		Description:               "desc",
+		Enabled:                   true,
+		Logo:                      "logo",
+		LoginPageURL:              "http://dummy.com/login",
+		UseMetadataInfo:           true,
+		MetadataURL:               "http://dummy.com/md",
+		EntityID:                  "aaaa",
+		AcsURL:                    "http://dummy.com/acs",
+		Certificate:               "cert",
+		AttributeMapping:          []descope.SAMLIDPAttributeMappingInfo{{Name: "n1", Type: "t1", Value: "v1"}},
+		GroupsMapping:             []descope.SAMLIDPGroupsMappingInfo{{Name: "n1", Type: "t1", FilterType: "ft1", Value: "v1", Roles: []descope.SAMLIDPRoleGroupMappingInfo{{ID: "r1", Name: "rn1"}}}},
+		AcsAllowedCallbacks:       []string{"http://dummy.com/acsallow"},
+		DefaultRelayState:         "rs",
+		SubjectNameIDType:         "email",
+		SubjectNameIDFormat:       "",
+		ForceAuthentication:       true,
+		LogoutRedirectURL:         "http://dummy.com/logout",
+		DefaultSignatureAlgorithm: "sha256",
 	})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)
@@ -231,29 +233,31 @@ func TestSSOApplicationUpdateSAMLApplicationSuccess(t *testing.T) {
 		require.Equal(t, "", req["subjectNameIdFormat"])
 		require.True(t, req["forceAuthentication"].(bool))
 		require.Equal(t, "http://dummy.com/logout", req["logoutRedirectUrl"])
+		require.Equal(t, "sha256", req["defaultSignatureAlgorithm"])
 
 	}, response))
 
 	err := mgmt.SSOApplication().UpdateSAMLApplication(context.Background(), &descope.SAMLApplicationRequest{
-		ID:                  "id1",
-		Name:                "abc",
-		Description:         "desc",
-		Enabled:             true,
-		Logo:                "logo",
-		LoginPageURL:        "http://dummy.com/login",
-		UseMetadataInfo:     true,
-		MetadataURL:         "http://dummy.com/md",
-		EntityID:            "aaaa",
-		AcsURL:              "http://dummy.com/acs",
-		Certificate:         "cert",
-		AttributeMapping:    []descope.SAMLIDPAttributeMappingInfo{{Name: "n1", Type: "t1", Value: "v1"}},
-		GroupsMapping:       []descope.SAMLIDPGroupsMappingInfo{{Name: "n1", Type: "t1", FilterType: "ft1", Value: "v1", Roles: []descope.SAMLIDPRoleGroupMappingInfo{{ID: "r1", Name: "rn1"}}}},
-		AcsAllowedCallbacks: []string{"http://dummy.com/acsallow"},
-		DefaultRelayState:   "rs",
-		SubjectNameIDType:   "email",
-		SubjectNameIDFormat: "",
-		ForceAuthentication: true,
-		LogoutRedirectURL:   "http://dummy.com/logout",
+		ID:                        "id1",
+		Name:                      "abc",
+		Description:               "desc",
+		Enabled:                   true,
+		Logo:                      "logo",
+		LoginPageURL:              "http://dummy.com/login",
+		UseMetadataInfo:           true,
+		MetadataURL:               "http://dummy.com/md",
+		EntityID:                  "aaaa",
+		AcsURL:                    "http://dummy.com/acs",
+		Certificate:               "cert",
+		AttributeMapping:          []descope.SAMLIDPAttributeMappingInfo{{Name: "n1", Type: "t1", Value: "v1"}},
+		GroupsMapping:             []descope.SAMLIDPGroupsMappingInfo{{Name: "n1", Type: "t1", FilterType: "ft1", Value: "v1", Roles: []descope.SAMLIDPRoleGroupMappingInfo{{ID: "r1", Name: "rn1"}}}},
+		AcsAllowedCallbacks:       []string{"http://dummy.com/acsallow"},
+		DefaultRelayState:         "rs",
+		SubjectNameIDType:         "email",
+		SubjectNameIDFormat:       "",
+		ForceAuthentication:       true,
+		LogoutRedirectURL:         "http://dummy.com/logout",
+		DefaultSignatureAlgorithm: "sha256",
 	})
 	require.NoError(t, err)
 }
@@ -353,26 +357,27 @@ func TestSSOApplicationLoadSAMLSuccess(t *testing.T) {
 		"logo":        "logo",
 		"appType":     "saml",
 		"samlSettings": map[string]any{
-			"loginPageUrl":        "http://dummy.com/login",
-			"idpCert":             "cert",
-			"useMetadataInfo":     true,
-			"metadataUrl":         "http://dummy.com/md",
-			"entityId":            "aaaa",
-			"acsUrl":              "http://dummy.com/acs",
-			"certificate":         "cert",
-			"attributeMapping":    []any{map[string]any{"name": "n1", "type": "t1", "value": "v1"}},
-			"groupsMapping":       []any{map[string]any{"filterType": "ft1", "name": "n1", "roles": []any{map[string]any{"id": "r1", "name": "rn1"}}, "type": "t1", "value": "v1"}},
-			"acsAllowedCallbacks": []any{"http://dummy.com/acsallow"},
-			"idpMetadataUrl":      "http://dummy.com/ssomd",
-			"idpEntityId":         "eId1",
-			"idpSsoUrl":           "http://dummy.com/sso",
-			"defaultRelayState":   "rs",
-			"idpInitiatedUrl":     "http://dummy.com/idpinit",
-			"subjectNameIdType":   "email",
-			"subjectNameIdFormat": "",
-			"forceAuthentication": true,
-			"idpLogoutUrl":        "http://dummy.com/idplogout",
-			"logoutRedirectUrl":   "http://dummy.com/logout",
+			"loginPageUrl":              "http://dummy.com/login",
+			"idpCert":                   "cert",
+			"useMetadataInfo":           true,
+			"metadataUrl":               "http://dummy.com/md",
+			"entityId":                  "aaaa",
+			"acsUrl":                    "http://dummy.com/acs",
+			"certificate":               "cert",
+			"attributeMapping":          []any{map[string]any{"name": "n1", "type": "t1", "value": "v1"}},
+			"groupsMapping":             []any{map[string]any{"filterType": "ft1", "name": "n1", "roles": []any{map[string]any{"id": "r1", "name": "rn1"}}, "type": "t1", "value": "v1"}},
+			"acsAllowedCallbacks":       []any{"http://dummy.com/acsallow"},
+			"idpMetadataUrl":            "http://dummy.com/ssomd",
+			"idpEntityId":               "eId1",
+			"idpSsoUrl":                 "http://dummy.com/sso",
+			"defaultRelayState":         "rs",
+			"idpInitiatedUrl":           "http://dummy.com/idpinit",
+			"subjectNameIdType":         "email",
+			"subjectNameIdFormat":       "",
+			"forceAuthentication":       true,
+			"idpLogoutUrl":              "http://dummy.com/idplogout",
+			"logoutRedirectUrl":         "http://dummy.com/logout",
+			"defaultSignatureAlgorithm": "sha256",
 		},
 	}
 
@@ -410,6 +415,7 @@ func TestSSOApplicationLoadSAMLSuccess(t *testing.T) {
 	require.True(t, res.SAMLSettings.ForceAuthentication)
 	require.Equal(t, "http://dummy.com/idplogout", res.SAMLSettings.IdpLogoutURL)
 	require.Equal(t, "http://dummy.com/logout", res.SAMLSettings.LogoutRedirectURL)
+	require.Equal(t, "sha256", res.SAMLSettings.DefaultSignatureAlgorithm)
 }
 
 func TestSSOApplicationLoadError(t *testing.T) {

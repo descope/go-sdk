@@ -814,6 +814,10 @@ type SSOApplicationSAMLSettings struct {
 	ForceAuthentication bool                          `json:"forceAuthentication"`
 	IdpLogoutURL        string                        `json:"idpLogoutUrl"`
 	LogoutRedirectURL   string                        `json:"logoutRedirectUrl"`
+	// The signature algorithm used to sign SAML responses. Only applies to IdP-initiated flows —
+	// SP-initiated flows use the algorithm from the SP's SAML request. Use "sha256" for SHA-256;
+	// leave empty for the default (SHA-1).
+	DefaultSignatureAlgorithm string `json:"defaultSignatureAlgorithm"`
 }
 
 type SSOApplicationOIDCSettings struct {
@@ -868,6 +872,10 @@ type SAMLApplicationRequest struct {
 	SubjectNameIDFormat string                        `json:"subjectNameIdFormat"`
 	ForceAuthentication bool                          `json:"forceAuthentication"`
 	LogoutRedirectURL   string                        `json:"logoutRedirectUrl"`
+	// The signature algorithm used to sign SAML responses. Only applies to IdP-initiated flows —
+	// SP-initiated flows use the algorithm from the SP's SAML request. Use "sha256" for SHA-256;
+	// leave empty for the default (SHA-1).
+	DefaultSignatureAlgorithm string `json:"defaultSignatureAlgorithm"`
 }
 
 type SSOApplicationSearchOptions struct {
