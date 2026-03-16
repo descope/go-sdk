@@ -1624,7 +1624,7 @@ type ClientParams struct {
 	CertificateVerify    CertificateVerifyMode
 	RequestTimeout       time.Duration
 	// RetryConfig enables automatic retries on transient errors (503/522/530).
-	// If nil (default), no retries are performed.
+	// If nil (default), DefaultRetryConfig() is used. Set MaxRetries to 0 to disable retries.
 	RetryConfig *RetryConfig
 }
 
@@ -1781,6 +1781,7 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 
 	// Only buffer body when retries are enabled
 	var bodyBytes []byte
+	bodyBuffered := false
 	if retriesEnabled {
 		if options.Request == nil {
 			// Read body from the body parameter
@@ -1794,6 +1795,7 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 				if err != nil {
 					return nil, err
 				}
+				bodyBuffered = true
 			}
 		} else if options.Request.Body != nil {
 			// Buffer body from the pre-built request so it can be replayed on retries
@@ -1806,11 +1808,12 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 			// Restore body for the first attempt
 			options.Request.Body = io.NopCloser(bytes.NewReader(bodyBytes))
 			options.Request.ContentLength = int64(len(bodyBytes))
+			bodyBuffered = true
 		}
 	}
 
 	var bodyReader io.Reader
-	if retriesEnabled && len(bodyBytes) > 0 {
+	if bodyBuffered {
 		bodyReader = bytes.NewReader(bodyBytes)
 	} else {
 		bodyReader = body
@@ -1899,7 +1902,7 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 				time.Sleep(delay)
 			}
 			logger.LogInfo("Retrying request to [%s] (attempt %d/%d)", url, attempt+1, maxAttempts)
-			if len(bodyBytes) > 0 {
+			if bodyBuffered {
 				req.Body = io.NopCloser(bytes.NewReader(bodyBytes))
 				req.ContentLength = int64(len(bodyBytes))
 			}
@@ -1907,6 +1910,9 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 
 		response, err = c.httpClient.Do(req)
 		if err != nil {
+			if response != nil && response.Body != nil {
+				_ = response.Body.Close()
+			}
 			break
 		}
 		if !isRetryableStatus(response.StatusCode) {
