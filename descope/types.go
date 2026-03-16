@@ -794,26 +794,26 @@ type SAMLIDPGroupsMappingInfo struct {
 }
 
 type SSOApplicationSAMLSettings struct {
-	LoginPageURL              string                        `json:"loginPageUrl"`
-	IdpCert                   string                        `json:"idpCert"`
-	UseMetadataInfo           bool                          `json:"useMetadataInfo"`
-	MetadataURL               string                        `json:"metadataUrl"`
-	EntityID                  string                        `json:"entityId"`
-	AcsURL                    string                        `json:"acsUrl"`
-	Certificate               string                        `json:"certificate"`
-	AttributeMapping          []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
-	GroupsMapping             []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
-	IdpMetadataURL            string                        `json:"idpMetadataUrl"`
-	IdpEntityID               string                        `json:"idpEntityId"`
-	IdpSSOURL                 string                        `json:"idpSsoUrl"`
-	AcsAllowedCallbacks       []string                      `json:"acsAllowedCallbacks"`
-	DefaultRelayState         string                        `json:"defaultRelayState"`
-	IdpInitiatedURL           string                        `json:"idpInitiatedUrl"`
-	SubjectNameIDType         string                        `json:"subjectNameIdType"`
-	SubjectNameIDFormat       string                        `json:"subjectNameIdFormat"`
-	ForceAuthentication       bool                          `json:"forceAuthentication"`
-	IdpLogoutURL              string                        `json:"idpLogoutUrl"`
-	LogoutRedirectURL         string                        `json:"logoutRedirectUrl"`
+	LoginPageURL        string                        `json:"loginPageUrl"`
+	IdpCert             string                        `json:"idpCert"`
+	UseMetadataInfo     bool                          `json:"useMetadataInfo"`
+	MetadataURL         string                        `json:"metadataUrl"`
+	EntityID            string                        `json:"entityId"`
+	AcsURL              string                        `json:"acsUrl"`
+	Certificate         string                        `json:"certificate"`
+	AttributeMapping    []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
+	GroupsMapping       []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
+	IdpMetadataURL      string                        `json:"idpMetadataUrl"`
+	IdpEntityID         string                        `json:"idpEntityId"`
+	IdpSSOURL           string                        `json:"idpSsoUrl"`
+	AcsAllowedCallbacks []string                      `json:"acsAllowedCallbacks"`
+	DefaultRelayState   string                        `json:"defaultRelayState"`
+	IdpInitiatedURL     string                        `json:"idpInitiatedUrl"`
+	SubjectNameIDType   string                        `json:"subjectNameIdType"`
+	SubjectNameIDFormat string                        `json:"subjectNameIdFormat"`
+	ForceAuthentication bool                          `json:"forceAuthentication"`
+	IdpLogoutURL        string                        `json:"idpLogoutUrl"`
+	LogoutRedirectURL   string                        `json:"logoutRedirectUrl"`
 	// The signature algorithm used to sign SAML responses. Only applies to IdP-initiated flows —
 	// SP-initiated flows use the algorithm from the SP's SAML request. Use "sha256" for SHA-256;
 	// leave empty for the default (SHA-1).
@@ -853,25 +853,25 @@ type OIDCApplicationRequest struct {
 }
 
 type SAMLApplicationRequest struct {
-	ID                        string                        `json:"id"`
-	Name                      string                        `json:"name"`
-	Description               string                        `json:"description"`
-	Enabled                   bool                          `json:"enabled"`
-	Logo                      string                        `json:"logo"`
-	LoginPageURL              string                        `json:"loginPageUrl"`
-	UseMetadataInfo           bool                          `json:"useMetadataInfo"`
-	MetadataURL               string                        `json:"metadataUrl"`
-	EntityID                  string                        `json:"entityId"`
-	AcsURL                    string                        `json:"acsUrl"`
-	Certificate               string                        `json:"certificate"`
-	AttributeMapping          []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
-	GroupsMapping             []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
-	AcsAllowedCallbacks       []string                      `json:"acsAllowedCallbacks"`
-	DefaultRelayState         string                        `json:"defaultRelayState"`
-	SubjectNameIDType         string                        `json:"subjectNameIdType"`
-	SubjectNameIDFormat       string                        `json:"subjectNameIdFormat"`
-	ForceAuthentication       bool                          `json:"forceAuthentication"`
-	LogoutRedirectURL string `json:"logoutRedirectUrl"`
+	ID                  string                        `json:"id"`
+	Name                string                        `json:"name"`
+	Description         string                        `json:"description"`
+	Enabled             bool                          `json:"enabled"`
+	Logo                string                        `json:"logo"`
+	LoginPageURL        string                        `json:"loginPageUrl"`
+	UseMetadataInfo     bool                          `json:"useMetadataInfo"`
+	MetadataURL         string                        `json:"metadataUrl"`
+	EntityID            string                        `json:"entityId"`
+	AcsURL              string                        `json:"acsUrl"`
+	Certificate         string                        `json:"certificate"`
+	AttributeMapping    []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
+	GroupsMapping       []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
+	AcsAllowedCallbacks []string                      `json:"acsAllowedCallbacks"`
+	DefaultRelayState   string                        `json:"defaultRelayState"`
+	SubjectNameIDType   string                        `json:"subjectNameIdType"`
+	SubjectNameIDFormat string                        `json:"subjectNameIdFormat"`
+	ForceAuthentication bool                          `json:"forceAuthentication"`
+	LogoutRedirectURL   string                        `json:"logoutRedirectUrl"`
 	// The signature algorithm used to sign SAML responses. Only applies to IdP-initiated flows —
 	// SP-initiated flows use the algorithm from the SP's SAML request. Use "sha256" for SHA-256;
 	// leave empty for the default (SHA-1).
