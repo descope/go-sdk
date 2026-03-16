@@ -603,7 +603,7 @@ func TestRetryWithNilContext(t *testing.T) {
 		}),
 	})
 
-	_, err := c.DoRequest(nil, http.MethodGet, "path", nil, nil, "")
+	_, err := c.DoRequest(nil, http.MethodGet, "path", nil, nil, "") // nolint
 	require.NoError(t, err)
 	assert.Equal(t, 2, callCount)
 }
