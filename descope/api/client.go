@@ -1780,26 +1780,30 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 	// Only buffer body when retries are enabled
 	var bodyBytes []byte
 	if retriesEnabled {
-		// Read body from the body parameter
-		if body != nil {
-			var err error
-			bodyBytes, err = io.ReadAll(body)
-			// If body is a ReadCloser, close it after reading
-			if closer, ok := body.(io.ReadCloser); ok {
-				_ = closer.Close()
+		if options.Request == nil {
+			// Read body from the body parameter
+			if body != nil {
+				var err error
+				bodyBytes, err = io.ReadAll(body)
+				// If body is a ReadCloser, close it after reading
+				if closer, ok := body.(io.ReadCloser); ok {
+					_ = closer.Close()
+				}
+				if err != nil {
+					return nil, err
+				}
 			}
-			if err != nil {
-				return nil, err
-			}
-		}
-		// Also handle body from options.Request if provided
-		if options.Request != nil && options.Request.Body != nil {
+		} else if options.Request.Body != nil {
+			// Buffer body from the pre-built request so it can be replayed on retries
 			var err error
 			bodyBytes, err = io.ReadAll(options.Request.Body)
 			_ = options.Request.Body.Close()
 			if err != nil {
 				return nil, err
 			}
+			// Restore body for the first attempt
+			options.Request.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+			options.Request.ContentLength = int64(len(bodyBytes))
 		}
 	}
 

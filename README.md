@@ -94,6 +94,12 @@ descopeClient, err := client.NewWithConfig(&client.Config{
 You can also customize the retry behavior:
 
 ```go
+import (
+    "time"
+    "github.com/descope/go-sdk/descope/api"
+    "github.com/descope/go-sdk/descope/client"
+)
+
 descopeClient, err := client.NewWithConfig(&client.Config{
     ProjectID: "project-ID",
     RetryConfig: &api.RetryConfig{
