@@ -73,9 +73,9 @@ type Config struct {
 	RequestTokensProvider sdk.RequestTokensProvider
 	// JWTLeeway (optional, 5 seconds) - used to set the acceptable time skew (leeway) for JWT validation.
 	JWTLeeway time.Duration
-	// RetryConfig (optional, nil) - enables automatic retries on transient server errors (503/522/530).
-	// Use api.DefaultRetryConfig() for the recommended settings: 2 retries with a 3-second delay.
-	// If nil (default), no retries are performed.
+	// RetryConfig (optional) - configures automatic retries on transient server errors (503/522/530).
+	// If nil (default), DefaultRetryConfig() is used: 3 retries with 100ms before the first retry
+	// and 3 seconds before each subsequent retry. Set MaxRetries to 0 to disable retries entirely.
 	RetryConfig *api.RetryConfig
 }
 

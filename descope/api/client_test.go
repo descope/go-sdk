@@ -584,7 +584,8 @@ func TestLicenseHeader_UpdatedDynamically(t *testing.T) {
 
 func TestDefaultRetryConfig(t *testing.T) {
 	cfg := DefaultRetryConfig()
-	assert.Equal(t, 2, cfg.MaxRetries)
+	assert.Equal(t, 3, cfg.MaxRetries)
+	assert.Equal(t, 100*time.Millisecond, cfg.InitialRetryDelay)
 	assert.Equal(t, 3*time.Second, cfg.RetryDelay)
 }
 
@@ -663,10 +664,11 @@ func TestRetryExhausted(t *testing.T) {
 	assert.Equal(t, 3, callCount)
 }
 
-func TestNoRetryWithoutConfig(t *testing.T) {
+func TestNoRetryWhenDisabled(t *testing.T) {
 	callCount := 0
 	c := NewClient(ClientParams{
-		ProjectID: "test",
+		ProjectID:   "test",
+		RetryConfig: &RetryConfig{MaxRetries: 0},
 		DefaultClient: mocks.NewTestClient(func(_ *http.Request) (*http.Response, error) {
 			callCount++
 			return &http.Response{StatusCode: http.StatusServiceUnavailable, Body: io.NopCloser(strings.NewReader(`{"errorCode":"E999999"}`))}, nil
@@ -676,6 +678,26 @@ func TestNoRetryWithoutConfig(t *testing.T) {
 	_, err := c.DoPostRequest(context.Background(), "path", nil, nil, "")
 	require.Error(t, err)
 	assert.Equal(t, 1, callCount)
+}
+
+func TestDefaultRetryUsedWhenConfigNil(t *testing.T) {
+	// Verify that a nil RetryConfig uses the defaults (retries are enabled)
+	// by confirming a 503 followed by a 200 succeeds (retry happened).
+	callCount := 0
+	c := NewClient(ClientParams{
+		ProjectID: "test",
+		DefaultClient: mocks.NewTestClient(func(_ *http.Request) (*http.Response, error) {
+			callCount++
+			if callCount == 1 {
+				return &http.Response{StatusCode: http.StatusServiceUnavailable, Body: io.NopCloser(strings.NewReader(""))}, nil
+			}
+			return &http.Response{StatusCode: http.StatusOK}, nil
+		}),
+	})
+
+	_, err := c.DoPostRequest(context.Background(), "path", nil, nil, "")
+	require.NoError(t, err)
+	assert.Equal(t, 2, callCount) // retried after 503
 }
 
 func TestNoRetryOnNonRetryableStatus(t *testing.T) {

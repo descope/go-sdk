@@ -1596,19 +1596,22 @@ const (
 )
 
 // RetryConfig configures automatic retry behavior on transient server errors.
-// Use DefaultRetryConfig() to get the recommended settings.
+// Retries are enabled by default using DefaultRetryConfig(). To disable retries
+// entirely, set MaxRetries to 0.
 type RetryConfig struct {
-	// MaxRetries is the number of additional attempts after the first failure.
-	// Use DefaultRetryConfig() for the recommended default of 2 retries.
+	// MaxRetries is the number of additional attempts after the first failure (default: 3).
+	// Set to 0 to disable retries.
 	MaxRetries int
-	// RetryDelay is the wait duration between retry attempts.
-	// Use DefaultRetryConfig() for the recommended default of 3 seconds.
+	// InitialRetryDelay is the wait duration before the first retry (default: 100ms).
+	InitialRetryDelay time.Duration
+	// RetryDelay is the wait duration before each subsequent retry (default: 3 seconds).
 	RetryDelay time.Duration
 }
 
-// DefaultRetryConfig returns the recommended retry settings: 2 retries with a 3-second delay.
+// DefaultRetryConfig returns the default retry settings: 3 retries, with 100ms before
+// the first retry and 3 seconds before each subsequent retry.
 func DefaultRetryConfig() *RetryConfig {
-	return &RetryConfig{MaxRetries: 2, RetryDelay: 3 * time.Second}
+	return &RetryConfig{MaxRetries: 3, InitialRetryDelay: 100 * time.Millisecond, RetryDelay: 3 * time.Second}
 }
 
 type ClientParams struct {
@@ -1767,14 +1770,13 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 
 	url := fmt.Sprintf("%s/%s", base, strings.TrimLeft(uriPath, "/"))
 
-	// Determine retry configuration
-	maxAttempts := 1
-	retryDelay := time.Duration(0)
-	if c.Conf.RetryConfig != nil {
-		// Clamp MaxRetries to >= 0 to prevent invalid maxAttempts
-		maxAttempts = 1 + max(c.Conf.RetryConfig.MaxRetries, 0)
-		retryDelay = c.Conf.RetryConfig.RetryDelay
+	// Determine retry configuration; use defaults when not explicitly set
+	retryConf := c.Conf.RetryConfig
+	if retryConf == nil {
+		retryConf = DefaultRetryConfig()
 	}
+	// Clamp MaxRetries to >= 0 to prevent invalid maxAttempts
+	maxAttempts := 1 + max(retryConf.MaxRetries, 0)
 	retriesEnabled := maxAttempts > 1
 
 	// Only buffer body when retries are enabled
@@ -1883,15 +1885,18 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 	var err error
 	for attempt := 0; attempt < maxAttempts; attempt++ {
 		if attempt > 0 {
+			delay := retryConf.RetryDelay
+			if attempt == 1 {
+				delay = retryConf.InitialRetryDelay
+			}
 			if ctx != nil {
 				select {
 				case <-ctx.Done():
 					return nil, ctx.Err()
-				case <-time.After(retryDelay):
+				case <-time.After(delay):
 				}
 			} else {
-				// notest
-				time.Sleep(retryDelay)
+				time.Sleep(delay)
 			}
 			logger.LogInfo("Retrying request to [%s] (attempt %d/%d)", url, attempt+1, maxAttempts)
 			if len(bodyBytes) > 0 {

@@ -75,9 +75,9 @@ If `JWTLeeway` is not set or set to 0, the SDK will use the default 5-second lee
 
 ### Retry Configuration
 
-The SDK can automatically retry requests that fail with transient server errors. This helps avoid request loss due to temporary service unavailability.
+The SDK automatically retries requests that fail with transient server errors. The default behavior is 3 retries: the first after 100ms, and each subsequent retry after 3 seconds.
 
-By default, no retries are performed. Use `api.DefaultRetryConfig()` for the recommended settings (2 retries with a 3-second delay between them):
+To disable retries entirely, set `MaxRetries` to `0`:
 
 ```go
 import (
@@ -87,11 +87,11 @@ import (
 
 descopeClient, err := client.NewWithConfig(&client.Config{
     ProjectID:   "project-ID",
-    RetryConfig: api.DefaultRetryConfig(), // 2 retries, 3s delay
+    RetryConfig: &api.RetryConfig{MaxRetries: 0},
 })
 ```
 
-You can also customize the retry behavior:
+To customize the retry behavior:
 
 ```go
 import (
@@ -103,8 +103,9 @@ import (
 descopeClient, err := client.NewWithConfig(&client.Config{
     ProjectID: "project-ID",
     RetryConfig: &api.RetryConfig{
-        MaxRetries: 3,
-        RetryDelay: 5 * time.Second,
+        MaxRetries:        3,
+        InitialRetryDelay: 200 * time.Millisecond,
+        RetryDelay:        5 * time.Second,
     },
 })
 ```
