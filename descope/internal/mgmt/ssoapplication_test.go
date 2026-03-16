@@ -99,6 +99,7 @@ func TestSSOApplicationCreateSAMLApplicationSuccess(t *testing.T) {
 		require.Equal(t, "", req["subjectNameIdFormat"])
 		require.True(t, req["forceAuthentication"].(bool))
 		require.Equal(t, "http://dummy.com/logout", req["logoutRedirectUrl"])
+		require.Equal(t, "sha256", req["defaultSignatureAlgorithm"])
 
 	}, response))
 
@@ -117,11 +118,12 @@ func TestSSOApplicationCreateSAMLApplicationSuccess(t *testing.T) {
 		AttributeMapping:    []descope.SAMLIDPAttributeMappingInfo{{Name: "n1", Type: "t1", Value: "v1"}},
 		GroupsMapping:       []descope.SAMLIDPGroupsMappingInfo{{Name: "n1", Type: "t1", FilterType: "ft1", Value: "v1", Roles: []descope.SAMLIDPRoleGroupMappingInfo{{ID: "r1", Name: "rn1"}}}},
 		AcsAllowedCallbacks: []string{"http://dummy.com/acsallow"},
-		DefaultRelayState:   "rs",
-		SubjectNameIDType:   "email",
-		SubjectNameIDFormat: "",
-		ForceAuthentication: true,
-		LogoutRedirectURL:   "http://dummy.com/logout",
+		DefaultRelayState:         "rs",
+		SubjectNameIDType:         "email",
+		SubjectNameIDFormat:       "",
+		ForceAuthentication:       true,
+		LogoutRedirectURL:         "http://dummy.com/logout",
+		DefaultSignatureAlgorithm: "sha256",
 	})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)
@@ -231,6 +233,7 @@ func TestSSOApplicationUpdateSAMLApplicationSuccess(t *testing.T) {
 		require.Equal(t, "", req["subjectNameIdFormat"])
 		require.True(t, req["forceAuthentication"].(bool))
 		require.Equal(t, "http://dummy.com/logout", req["logoutRedirectUrl"])
+		require.Equal(t, "sha256", req["defaultSignatureAlgorithm"])
 
 	}, response))
 
@@ -249,11 +252,12 @@ func TestSSOApplicationUpdateSAMLApplicationSuccess(t *testing.T) {
 		AttributeMapping:    []descope.SAMLIDPAttributeMappingInfo{{Name: "n1", Type: "t1", Value: "v1"}},
 		GroupsMapping:       []descope.SAMLIDPGroupsMappingInfo{{Name: "n1", Type: "t1", FilterType: "ft1", Value: "v1", Roles: []descope.SAMLIDPRoleGroupMappingInfo{{ID: "r1", Name: "rn1"}}}},
 		AcsAllowedCallbacks: []string{"http://dummy.com/acsallow"},
-		DefaultRelayState:   "rs",
-		SubjectNameIDType:   "email",
-		SubjectNameIDFormat: "",
-		ForceAuthentication: true,
-		LogoutRedirectURL:   "http://dummy.com/logout",
+		DefaultRelayState:         "rs",
+		SubjectNameIDType:         "email",
+		SubjectNameIDFormat:       "",
+		ForceAuthentication:       true,
+		LogoutRedirectURL:         "http://dummy.com/logout",
+		DefaultSignatureAlgorithm: "sha256",
 	})
 	require.NoError(t, err)
 }
@@ -370,9 +374,10 @@ func TestSSOApplicationLoadSAMLSuccess(t *testing.T) {
 			"idpInitiatedUrl":     "http://dummy.com/idpinit",
 			"subjectNameIdType":   "email",
 			"subjectNameIdFormat": "",
-			"forceAuthentication": true,
-			"idpLogoutUrl":        "http://dummy.com/idplogout",
-			"logoutRedirectUrl":   "http://dummy.com/logout",
+			"forceAuthentication":       true,
+			"idpLogoutUrl":              "http://dummy.com/idplogout",
+			"logoutRedirectUrl":         "http://dummy.com/logout",
+			"defaultSignatureAlgorithm": "sha256",
 		},
 	}
 
@@ -410,6 +415,7 @@ func TestSSOApplicationLoadSAMLSuccess(t *testing.T) {
 	require.True(t, res.SAMLSettings.ForceAuthentication)
 	require.Equal(t, "http://dummy.com/idplogout", res.SAMLSettings.IdpLogoutURL)
 	require.Equal(t, "http://dummy.com/logout", res.SAMLSettings.LogoutRedirectURL)
+	require.Equal(t, "sha256", res.SAMLSettings.DefaultSignatureAlgorithm)
 }
 
 func TestSSOApplicationLoadError(t *testing.T) {
