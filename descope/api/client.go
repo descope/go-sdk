@@ -1801,6 +1801,7 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 			if err != nil {
 				return nil, err
 			}
+			parsedURL.Query().Encode()
 			req.URL = parsedURL
 			if bodyReader != nil {
 				req.Body = io.NopCloser(bodyReader)
