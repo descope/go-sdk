@@ -1627,9 +1627,6 @@ var retryDelays = []time.Duration{
 	5 * time.Second,
 }
 
-// retrySleep is the sleep function used between retries. It is a package-level
-// variable so tests can replace it without modifying the Client struct.
-var retrySleep = time.Sleep
 
 type Client struct {
 	httpClient        IHttpClient
@@ -1794,16 +1791,16 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 				return nil, err
 			}
 		} else {
-			req = options.Request
+			req = options.Request.Clone(ctx)
+			reqURL := url
 			query := req.URL.Query().Encode()
 			if query != "" {
-				url = fmt.Sprintf("%s?%s", url, query)
+				reqURL = fmt.Sprintf("%s?%s", reqURL, query)
 			}
-			parsedURL, err := urlpkg.Parse(url)
+			parsedURL, err := urlpkg.Parse(reqURL)
 			if err != nil {
 				return nil, err
 			}
-			parsedURL.Query().Encode()
 			req.URL = parsedURL
 			if bodyReader != nil {
 				req.Body = io.NopCloser(bodyReader)
@@ -1877,7 +1874,12 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 			_ = response.Body.Close()
 		}
 		logger.LogInfo("Retrying request to [%s] after receiving status [%d]", url, response.StatusCode)
-		retrySleep(delay)
+		// Respect context cancellation during the sleep between retries
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(delay):
+		}
 		retryReq, buildErr := buildRequest()
 		if buildErr != nil {
 			return nil, buildErr
