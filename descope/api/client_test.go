@@ -609,7 +609,7 @@ func TestRetryOnRetryableStatusCodes(t *testing.T) {
 			callCount := 0
 			c := NewClient(ClientParams{
 				ProjectID: "test",
-				DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+				DefaultClient: mocks.NewTestClient(func(_ *http.Request) (*http.Response, error) {
 					callCount++
 					if callCount == 1 {
 						return &http.Response{
@@ -638,7 +638,7 @@ func TestRetryUpToThreeTimes(t *testing.T) {
 	callCount := 0
 	c := NewClient(ClientParams{
 		ProjectID: "test",
-		DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+		DefaultClient: mocks.NewTestClient(func(_ *http.Request) (*http.Response, error) {
 			callCount++
 			return &http.Response{
 				StatusCode: 503,
@@ -663,7 +663,7 @@ func TestNoRetryOnNonRetryableStatusCodes(t *testing.T) {
 			callCount := 0
 			c := NewClient(ClientParams{
 				ProjectID: "test",
-				DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+				DefaultClient: mocks.NewTestClient(func(_ *http.Request) (*http.Response, error) {
 					callCount++
 					return &http.Response{
 						StatusCode: statusCode,
@@ -749,11 +749,15 @@ func TestRetryCancelledContext(t *testing.T) {
 	retryDelays = []time.Duration{5 * time.Second, 5 * time.Second, 5 * time.Second}
 	defer func() { retryDelays = orig }()
 
+	firstCallDone := make(chan struct{})
 	callCount := 0
 	c := NewClient(ClientParams{
 		ProjectID: "test",
-		DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+		DefaultClient: mocks.NewTestClient(func(_ *http.Request) (*http.Response, error) {
 			callCount++
+			if callCount == 1 {
+				close(firstCallDone)
+			}
 			return &http.Response{
 				StatusCode: 503,
 				Body:       io.NopCloser(strings.NewReader("")),
@@ -762,11 +766,10 @@ func TestRetryCancelledContext(t *testing.T) {
 	})
 
 	ctx, cancel := context.WithCancel(context.Background())
-	// Cancel the context immediately after the first response is received
+	defer cancel()
+	// Cancel once the first response has been received, before the retry sleep fires
 	go func() {
-		for callCount == 0 {
-			time.Sleep(time.Millisecond)
-		}
+		<-firstCallDone
 		cancel()
 	}()
 
