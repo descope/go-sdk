@@ -779,3 +779,45 @@ func TestRetryCancelledContext(t *testing.T) {
 	// Only the initial call should have been made; retry was aborted during sleep
 	assert.Equal(t, 1, callCount)
 }
+
+func TestRetryWithOptionsRequestAndBody(t *testing.T) {
+	withZeroRetryDelays(t)
+
+	callCount := 0
+	var receivedBodies []string
+	c := NewClient(ClientParams{
+		ProjectID: "test",
+		DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+			callCount++
+			if r.Body != nil {
+				b, err := io.ReadAll(r.Body)
+				require.NoError(t, err)
+				receivedBodies = append(receivedBodies, string(b))
+			}
+			if callCount == 1 {
+				return &http.Response{
+					StatusCode: 503,
+					Body:       io.NopCloser(strings.NewReader("")),
+				}, nil
+			}
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader(`"ok"`)),
+			}, nil
+		}),
+	})
+
+	// Build a base request to set options.Request, and also pass a body
+	baseReq, err := http.NewRequest(http.MethodPost, "http://example.com/path", nil)
+	require.NoError(t, err)
+
+	options := &HTTPRequest{Request: baseReq}
+	res, err := c.DoRequest(context.Background(), http.MethodPost, "path", strings.NewReader(`{"key":"value"}`), options, "")
+	require.NoError(t, err)
+	assert.EqualValues(t, `"ok"`, res.BodyStr)
+	assert.Equal(t, 2, callCount)
+	// Body should be re-sent on retry
+	require.Len(t, receivedBodies, 2)
+	assert.Equal(t, `{"key":"value"}`, receivedBodies[0])
+	assert.Equal(t, `{"key":"value"}`, receivedBodies[1])
+}
