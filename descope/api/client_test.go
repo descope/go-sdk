@@ -723,7 +723,7 @@ func TestRetrySucceedsOnThirdAttempt(t *testing.T) {
 	callCount := 0
 	c := NewClient(ClientParams{
 		ProjectID: "test",
-		DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+		DefaultClient: mocks.NewTestClient(func(_ *http.Request) (*http.Response, error) {
 			callCount++
 			if callCount < 4 {
 				return &http.Response{
