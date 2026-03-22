@@ -362,11 +362,11 @@ func (m *MockPasswordManagement) ConfigureSettings(_ context.Context, tenantID s
 
 type MockUser struct {
 	CreateAssert   func(loginID string, user *descope.UserRequest)
-	CreateResponse *descope.UserResponse
+	CreateResponse *descope.CreateUserResponse
 	CreateError    error
 
 	CreateTestUserAssert   func(loginID string, user *descope.UserRequest)
-	CreateTestUserResponse *descope.UserResponse
+	CreateTestUserResponse *descope.CreateUserResponse
 	CreateTestUserError    error
 
 	CreateBatchAssert   func(users []*descope.BatchUser)
@@ -374,7 +374,7 @@ type MockUser struct {
 	CreateBatchError    error
 
 	InviteAssert   func(loginID string, user *descope.UserRequest, options *descope.InviteOptions)
-	InviteResponse *descope.UserResponse
+	InviteResponse *descope.CreateUserResponse
 	InviteError    error
 
 	InviteBatchAssert   func(users []*descope.BatchUser, options *descope.InviteOptions)
@@ -558,14 +558,14 @@ type MockUser struct {
 	HistoryError    error
 }
 
-func (m *MockUser) Create(_ context.Context, loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
+func (m *MockUser) Create(_ context.Context, loginID string, user *descope.UserRequest) (*descope.CreateUserResponse, error) {
 	if m.CreateAssert != nil {
 		m.CreateAssert(loginID, user)
 	}
 	return m.CreateResponse, m.CreateError
 }
 
-func (m *MockUser) CreateTestUser(_ context.Context, loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
+func (m *MockUser) CreateTestUser(_ context.Context, loginID string, user *descope.UserRequest) (*descope.CreateUserResponse, error) {
 	if m.CreateTestUserAssert != nil {
 		m.CreateTestUserAssert(loginID, user)
 	}
@@ -579,7 +579,7 @@ func (m *MockUser) CreateBatch(_ context.Context, users []*descope.BatchUser) (*
 	return m.CreateBatchResponse, m.CreateBatchError
 }
 
-func (m *MockUser) Invite(_ context.Context, loginID string, user *descope.UserRequest, options *descope.InviteOptions) (*descope.UserResponse, error) {
+func (m *MockUser) Invite(_ context.Context, loginID string, user *descope.UserRequest, options *descope.InviteOptions) (*descope.CreateUserResponse, error) {
 	if m.InviteAssert != nil {
 		m.InviteAssert(loginID, user, options)
 	}

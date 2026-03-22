@@ -615,6 +615,11 @@ type UserHistoryResponse struct {
 	SelectedTenant string `json:"selectedTenant,omitempty"`
 }
 
+type CreateUserResponse struct {
+	User    *UserResponse `json:"user,omitempty"`
+	Created bool          `json:"created,omitempty"`
+}
+
 type UsersFailedResponse struct {
 	Failure string        `json:"failure,omitempty"`
 	User    *UserResponse `json:"user,omitempty"`

@@ -39,14 +39,14 @@ type createUserRequest struct {
 	ssoAppIDs          []string
 }
 
-func (u *user) Create(ctx context.Context, loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
+func (u *user) Create(ctx context.Context, loginID string, user *descope.UserRequest) (*descope.CreateUserResponse, error) {
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
 	return u.create(ctx, loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, false, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, nil, user.SSOAppIDs)
 }
 
-func (u *user) CreateTestUser(ctx context.Context, loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
+func (u *user) CreateTestUser(ctx context.Context, loginID string, user *descope.UserRequest) (*descope.CreateUserResponse, error) {
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
@@ -60,7 +60,7 @@ func (u *user) CreateBatch(ctx context.Context, users []*descope.BatchUser) (*de
 	return u.createBatch(ctx, users, nil)
 }
 
-func (u *user) Invite(ctx context.Context, loginID string, user *descope.UserRequest, options *descope.InviteOptions) (*descope.UserResponse, error) {
+func (u *user) Invite(ctx context.Context, loginID string, user *descope.UserRequest, options *descope.InviteOptions) (*descope.CreateUserResponse, error) {
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
@@ -74,7 +74,7 @@ func (u *user) InviteBatch(ctx context.Context, users []*descope.BatchUser, opti
 	return u.createBatch(ctx, users, options)
 }
 
-func (u *user) create(ctx context.Context, loginID, email, phone, displayName, givenName, middleName, familyName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, options *descope.InviteOptions, ssoAppIDs []string) (*descope.UserResponse, error) {
+func (u *user) create(ctx context.Context, loginID, email, phone, displayName, givenName, middleName, familyName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, options *descope.InviteOptions, ssoAppIDs []string) (*descope.CreateUserResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
@@ -115,7 +115,7 @@ func (u *user) create(ctx context.Context, loginID, email, phone, displayName, g
 	if err != nil {
 		return nil, err
 	}
-	return unmarshalUserResponse(res)
+	return unmarshalCreateUserResponse(res)
 }
 
 func (u *user) createBatch(ctx context.Context, users []*descope.BatchUser, options *descope.InviteOptions) (*descope.UsersBatchResponse, error) {
@@ -1121,6 +1121,15 @@ func unmarshalUserResponse(res *api.HTTPResponse) (*descope.UserResponse, error)
 		return nil, err
 	}
 	return ures.User, nil
+}
+
+func unmarshalCreateUserResponse(res *api.HTTPResponse) (*descope.CreateUserResponse, error) {
+	ures := &descope.CreateUserResponse{}
+	err := utils.Unmarshal([]byte(res.BodyStr), ures)
+	if err != nil {
+		return nil, err
+	}
+	return ures, nil
 }
 
 func unmarshalUserImportResponse(res *api.HTTPResponse) (*descope.UserImportResponse, error) {
