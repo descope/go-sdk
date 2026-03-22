@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/internal/utils"
@@ -579,4 +580,206 @@ func TestLicenseHeader_UpdatedDynamically(t *testing.T) {
 	require.NoError(t, err)
 
 	assert.EqualValues(t, 4, requestCount, "Expected 4 requests to be made")
+}
+
+func TestRetryOnRetryableStatusCodes(t *testing.T) {
+	retryableCodes := []int{503, 521, 522, 524, 530}
+
+	for _, statusCode := range retryableCodes {
+		t.Run(fmt.Sprintf("status_%d", statusCode), func(t *testing.T) {
+			var sleptDurations []time.Duration
+			origSleep := retrySleep
+			retrySleep = func(d time.Duration) { sleptDurations = append(sleptDurations, d) }
+			defer func() { retrySleep = origSleep }()
+
+			callCount := 0
+			c := NewClient(ClientParams{
+				ProjectID: "test",
+				DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+					callCount++
+					if callCount == 1 {
+						return &http.Response{
+							StatusCode: statusCode,
+							Body:       io.NopCloser(strings.NewReader("")),
+						}, nil
+					}
+					return &http.Response{
+						StatusCode: http.StatusOK,
+						Body:       io.NopCloser(strings.NewReader(`"ok"`)),
+					}, nil
+				}),
+			})
+
+			res, err := c.DoGetRequest(context.Background(), "path", nil, "")
+			require.NoError(t, err)
+			assert.EqualValues(t, `"ok"`, res.BodyStr)
+			assert.Equal(t, 2, callCount, "expected 2 calls (1 original + 1 retry)")
+			require.Len(t, sleptDurations, 1)
+			assert.Equal(t, 100*time.Millisecond, sleptDurations[0])
+		})
+	}
+}
+
+func TestRetryUpToThreeTimes(t *testing.T) {
+	var sleptDurations []time.Duration
+	origSleep := retrySleep
+	retrySleep = func(d time.Duration) { sleptDurations = append(sleptDurations, d) }
+	defer func() { retrySleep = origSleep }()
+
+	callCount := 0
+	c := NewClient(ClientParams{
+		ProjectID: "test",
+		DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+			callCount++
+			return &http.Response{
+				StatusCode: 503,
+				Body:       io.NopCloser(strings.NewReader("")),
+			}, nil
+		}),
+	})
+
+	_, err := c.DoGetRequest(context.Background(), "path", nil, "")
+	require.Error(t, err)
+	// Original + 3 retries = 4 total calls
+	assert.Equal(t, 4, callCount, "expected 4 calls (1 original + 3 retries)")
+	require.Len(t, sleptDurations, 3)
+	assert.Equal(t, 100*time.Millisecond, sleptDurations[0])
+	assert.Equal(t, 5*time.Second, sleptDurations[1])
+	assert.Equal(t, 5*time.Second, sleptDurations[2])
+}
+
+func TestRetryDelays(t *testing.T) {
+	var sleptDurations []time.Duration
+	origSleep := retrySleep
+	retrySleep = func(d time.Duration) { sleptDurations = append(sleptDurations, d) }
+	defer func() { retrySleep = origSleep }()
+
+	callCount := 0
+	c := NewClient(ClientParams{
+		ProjectID: "test",
+		DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+			callCount++
+			if callCount < 3 {
+				return &http.Response{
+					StatusCode: 503,
+					Body:       io.NopCloser(strings.NewReader("")),
+				}, nil
+			}
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader(`"ok"`)),
+			}, nil
+		}),
+	})
+
+	res, err := c.DoGetRequest(context.Background(), "path", nil, "")
+	require.NoError(t, err)
+	assert.EqualValues(t, `"ok"`, res.BodyStr)
+	assert.Equal(t, 3, callCount)
+	require.Len(t, sleptDurations, 2)
+	assert.Equal(t, 100*time.Millisecond, sleptDurations[0])
+	assert.Equal(t, 5*time.Second, sleptDurations[1])
+}
+
+func TestNoRetryOnNonRetryableStatusCodes(t *testing.T) {
+	nonRetryableCodes := []int{400, 401, 403, 404, 500, 502}
+
+	for _, statusCode := range nonRetryableCodes {
+		t.Run(fmt.Sprintf("status_%d", statusCode), func(t *testing.T) {
+			var slept bool
+			origSleep := retrySleep
+			retrySleep = func(d time.Duration) { slept = true }
+			defer func() { retrySleep = origSleep }()
+
+			callCount := 0
+			c := NewClient(ClientParams{
+				ProjectID: "test",
+				DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+					callCount++
+					return &http.Response{
+						StatusCode: statusCode,
+						Body:       io.NopCloser(strings.NewReader(`{"errorCode":"E011001"}`)),
+					}, nil
+				}),
+			})
+
+			_, err := c.DoGetRequest(context.Background(), "path", nil, "")
+			require.Error(t, err)
+			assert.Equal(t, 1, callCount, "should not retry on status %d", statusCode)
+			assert.False(t, slept, "should not sleep on status %d", statusCode)
+		})
+	}
+}
+
+func TestRetryWithRequestBody(t *testing.T) {
+	origSleep := retrySleep
+	retrySleep = func(d time.Duration) {}
+	defer func() { retrySleep = origSleep }()
+
+	callCount := 0
+	var receivedBodies []string
+	c := NewClient(ClientParams{
+		ProjectID: "test",
+		DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+			callCount++
+			if r.Body != nil {
+				b, _ := io.ReadAll(r.Body)
+				receivedBodies = append(receivedBodies, string(b))
+			}
+			if callCount == 1 {
+				return &http.Response{
+					StatusCode: 503,
+					Body:       io.NopCloser(strings.NewReader("")),
+				}, nil
+			}
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader(`"ok"`)),
+			}, nil
+		}),
+	})
+
+	// Use DoRequest directly with an io.Reader body to test body buffering on retry
+	res, err := c.DoRequest(context.Background(), http.MethodPost, "path", strings.NewReader(`{"key":"value"}`), nil, "")
+	require.NoError(t, err)
+	assert.EqualValues(t, `"ok"`, res.BodyStr)
+	assert.Equal(t, 2, callCount)
+	// Verify request body was sent correctly in both the original and retry request
+	require.Len(t, receivedBodies, 2)
+	assert.Equal(t, `{"key":"value"}`, receivedBodies[0])
+	assert.Equal(t, `{"key":"value"}`, receivedBodies[1])
+}
+
+func TestRetrySucceedsOnThirdAttempt(t *testing.T) {
+	var sleptDurations []time.Duration
+	origSleep := retrySleep
+	retrySleep = func(d time.Duration) { sleptDurations = append(sleptDurations, d) }
+	defer func() { retrySleep = origSleep }()
+
+	callCount := 0
+	c := NewClient(ClientParams{
+		ProjectID: "test",
+		DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+			callCount++
+			if callCount < 4 {
+				return &http.Response{
+					StatusCode: 530,
+					Body:       io.NopCloser(strings.NewReader("")),
+				}, nil
+			}
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader(`"ok"`)),
+			}, nil
+		}),
+	})
+
+	res, err := c.DoGetRequest(context.Background(), "path", nil, "")
+	require.NoError(t, err)
+	assert.EqualValues(t, `"ok"`, res.BodyStr)
+	assert.Equal(t, 4, callCount)
+	require.Len(t, sleptDurations, 3)
+	assert.Equal(t, 100*time.Millisecond, sleptDurations[0])
+	assert.Equal(t, 5*time.Second, sleptDurations[1])
+	assert.Equal(t, 5*time.Second, sleptDurations[2])
 }
