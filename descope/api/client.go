@@ -1627,7 +1627,6 @@ var retryDelays = []time.Duration{
 	5 * time.Second,
 }
 
-
 type Client struct {
 	httpClient        IHttpClient
 	uri               string
