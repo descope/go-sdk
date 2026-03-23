@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.14.0](https://github.com/descope/go-sdk/compare/v1.13.0...v1.14.0) (2026-03-22)
+
+
+### Features
+
+* **http:** retry requests on transient error status codes ([#717](https://github.com/descope/go-sdk/issues/717)) ([71677c7](https://github.com/descope/go-sdk/commit/71677c72da6d64e1cfc4349d92ec1bd749f1dc94))
+* **sso-app:** add default signature method ([#712](https://github.com/descope/go-sdk/issues/712)) ([9e27984](https://github.com/descope/go-sdk/commit/9e279846d1f34ea40c066d405ac3db7862e16721))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.13.0 ([#709](https://github.com/descope/go-sdk/issues/709)) ([9ff4a2d](https://github.com/descope/go-sdk/commit/9ff4a2db6fb1542af1bf813d4c67e8012ba247c9))
+
 ## [1.13.0](https://github.com/descope/go-sdk/compare/v1.12.0...v1.13.0) (2026-03-12)
 
 
