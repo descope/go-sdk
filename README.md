@@ -114,8 +114,8 @@ These sections show how to use the SDK to perform API management functions. Befo
 14. [Manage Project](#manage-project)
 15. [Manage SSO Applications](#manage-sso-applications)
 16. [Manage Lists](#manage-lists)
-17. [Manage Descopers](#manage-descopers)
-18. [Manage Management Keys](#manage-management-keys)
+17. [Manage Management Keys](#manage-management-keys)
+18. [Manage Descopers](#manage-descopers)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
