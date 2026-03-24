@@ -114,6 +114,8 @@ These sections show how to use the SDK to perform API management functions. Befo
 14. [Manage Project](#manage-project)
 15. [Manage SSO Applications](#manage-sso-applications)
 16. [Manage Lists](#manage-lists)
+17. [Manage Management Keys](#manage-management-keys)
+18. [Manage Descopers](#manage-descopers)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -1894,6 +1896,122 @@ if err == nil && exists {
 // Clear all data from a list
 // The list metadata (name, description, type) is preserved.
 err := descopeClient.Management.List().Clear(context.Background(), "list-id")
+```
+
+### Manage Management Keys
+
+You can create, update, delete, get, or search management keys:
+
+```go
+// Create a new management key.
+// The name is required, other fields are optional.
+// expiresIn is the expiration time in seconds (0 for no expiration).
+// permittedIPs is an optional list of IP addresses or CIDR ranges allowed to use this key.
+// reBac specifies the role-based access control configuration for the key.
+reBac := &descope.MgmtKeyReBac{
+    CompanyRoles: []string{"company-full-access"},
+    ProjectRoles: []*descope.MgmtKeyProjectRole{
+        {
+            ProjectIDs: []string{"project-id-1", "project-id-2"},
+            Roles:      []string{"project-admin"},
+        },
+    },
+    TagRoles: []*descope.MgmtKeyTagRole{
+        {
+            Tags:  []string{"production"},
+            Roles: []string{"read-only"},
+        },
+    },
+}
+key, cleartext, err := descopeClient.Management.ManagementKey().Create(
+    context.Background(),
+    "My Management Key",
+    "Optional description",
+    0, // expires in seconds (0 = no expiration)
+    []string{"10.0.0.1", "192.168.1.0/24"}, // optional permitted IPs
+    reBac,
+)
+// Save the cleartext token securely — it will not be returned again!
+
+// Get a management key by ID
+key, err := descopeClient.Management.ManagementKey().Get(context.Background(), "key-id")
+
+// Search all management keys
+keys, err := descopeClient.Management.ManagementKey().Search(context.Background(), nil)
+if err == nil {
+    for _, key := range keys {
+        // Do something
+    }
+}
+
+// Update an existing management key.
+// IMPORTANT: All parameters will override existing values. Use carefully.
+updatedKey, err := descopeClient.Management.ManagementKey().Update(
+    context.Background(),
+    "key-id",
+    "Updated Key Name",
+    "Updated description",
+    []string{"10.0.0.2"},
+    descope.MgmtKeyActive, // MgmtKeyActive or MgmtKeyInactive
+)
+
+// Delete management keys by IDs.
+// IMPORTANT: This action is irreversible. Use carefully.
+total, err := descopeClient.Management.ManagementKey().Delete(context.Background(), []string{"key-id-1", "key-id-2"})
+```
+
+### Manage Descopers
+
+You can create, update, delete, get, or list descopers (users who have access to the Descope console):
+
+```go
+// Create one or more descopers. Each descoper must have a LoginID.
+// Optionally set attributes (DisplayName, Email, Phone) and RBAC configuration.
+// Set SendInvite to true to send an invitation email.
+descopersToCreate := []*descope.DescoperCreate{
+    {
+        LoginID: "user@example.com",
+        Attributes: &descope.DescoperAttributes{
+            DisplayName: "John Doe",
+            Email:       "user@example.com",
+            Phone:       "+1234567890",
+        },
+        SendInvite: true,
+        ReBac: &descope.DescoperRBAC{
+            // Set exactly one of: IsCompanyAdmin, Projects, or Tags
+            Projects: []*descope.DescoperProjectRole{
+                {
+                    ProjectIDs: []string{"project-id-1"},
+                    Role:       descope.DescoperRoleAdmin, // Admin | Developer | Support | Auditor
+                },
+            },
+        },
+    },
+}
+descopers, total, err := descopeClient.Management.Descoper().Create(context.Background(), descopersToCreate)
+
+// Get a specific descoper by ID
+descoper, err := descopeClient.Management.Descoper().Get(context.Background(), "descoper-id")
+
+// Update a descoper's attributes and/or RBAC configuration
+// Note: all fields that are set will override existing values
+updatedDescoper, err := descopeClient.Management.Descoper().Update(
+    context.Background(),
+    "descoper-id",
+    &descope.DescoperAttributes{DisplayName: "Updated Name"},
+    &descope.DescoperRBAC{IsCompanyAdmin: true},
+)
+
+// List all descopers
+descopers, total, err := descopeClient.Management.Descoper().List(context.Background(), nil)
+if err == nil {
+    for _, descoper := range descopers {
+        // Do something
+    }
+}
+
+// Delete a descoper. Descoper deletion cannot be undone. Use carefully.
+err := descopeClient.Management.Descoper().Delete(context.Background(), "descoper-id")
 ```
 
 ## Code Examples

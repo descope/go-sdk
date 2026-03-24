@@ -1610,6 +1610,23 @@ type IHttpClient interface {
 	Do(req *http.Request) (*http.Response, error)
 }
 
+// retryableStatusCodes are HTTP status codes that should trigger an automatic retry
+var retryableStatusCodes = map[int]bool{
+	503: true, // Service Unavailable
+	521: true, // Web Server Is Down (Cloudflare)
+	522: true, // Connection Timed Out (Cloudflare)
+	524: true, // A Timeout Occurred (Cloudflare)
+	530: true, // Cloudflare error
+}
+
+// retryDelays defines the wait duration before each retry attempt.
+// First retry after 100ms, subsequent retries after 5 seconds each.
+var retryDelays = []time.Duration{
+	100 * time.Millisecond,
+	5 * time.Second,
+	5 * time.Second,
+}
+
 type Client struct {
 	httpClient        IHttpClient
 	uri               string
@@ -1747,74 +1764,131 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 	}
 
 	url := fmt.Sprintf("%s/%s", base, strings.TrimLeft(uriPath, "/"))
-	req := options.Request
-	if req == nil {
-		var err error
-		req, err = http.NewRequest(method, url, body)
-		if err != nil {
-			return nil, err
+
+	// Buffer body bytes upfront to allow retrying requests with a body
+	var bodyBytes []byte
+	if body != nil {
+		var readErr error
+		bodyBytes, readErr = io.ReadAll(body)
+		if readErr != nil {
+			return nil, readErr
 		}
-	} else {
-		query := req.URL.Query().Encode()
-		if query != "" {
-			url = fmt.Sprintf("%s?%s", url, query)
+	}
+
+	// buildRequest creates a fresh HTTP request with all headers/cookies set
+	buildRequest := func() (*http.Request, error) {
+		var bodyReader io.Reader
+		if bodyBytes != nil {
+			bodyReader = bytes.NewReader(bodyBytes)
 		}
-		parsedURL, err := urlpkg.Parse(url)
-		if err != nil {
-			return nil, err
+
+		var req *http.Request
+		if options.Request == nil {
+			var err error
+			req, err = http.NewRequest(method, url, bodyReader)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			req = options.Request.Clone(ctx)
+			reqURL := url
+			query := req.URL.Query().Encode()
+			if query != "" {
+				reqURL = fmt.Sprintf("%s?%s", reqURL, query)
+			}
+			parsedURL, err := urlpkg.Parse(reqURL)
+			if err != nil {
+				return nil, err
+			}
+			parsedURL.Query().Encode()
+			req.URL = parsedURL
+			if bodyReader != nil {
+				req.Body = io.NopCloser(bodyReader)
+			}
 		}
-		parsedURL.Query().Encode()
-		req.URL = parsedURL
+
+		queryString := req.URL.Query()
+		for key, value := range options.QueryParams {
+			queryString.Set(key, value)
+		}
+		req.URL.RawQuery = queryString.Encode()
+
+		for key, value := range c.headers {
+			req.Header.Add(key, value)
+		}
+
+		if c.externalRequestID != nil {
+			req.Header.Add("x-external-rid", c.externalRequestID(ctx))
+		}
+
+		for key, value := range options.Headers {
+			req.Header.Add(key, value)
+		}
+		for _, cookie := range options.Cookies {
+			req.AddCookie(cookie)
+		}
+
+		bearerParts := []string{}
+		if len(c.Conf.ProjectID) > 0 {
+			bearerParts = append(bearerParts, c.Conf.ProjectID)
+		}
+		if len(pswd) > 0 {
+			bearerParts = append(bearerParts, pswd)
+		}
+		if mgmtKey := c.Conf.ManagementKey; len(mgmtKey) > 0 {
+			// append a management key if available, this is true for both management and authentication requests
+			// only using the different provided keys in the client initialization
+			bearerParts = append(bearerParts, mgmtKey)
+		}
+		if len(bearerParts) > 0 {
+			req.Header.Set(AuthorizationHeaderName, BearerAuthorizationPrefix+strings.Join(bearerParts, ":"))
+		}
+
+		c.addDescopeHeaders(req)
+
+		if ctx != nil {
+			req = req.WithContext(ctx)
+		}
+		return req, nil
 	}
 
-	queryString := req.URL.Query()
-	for key, value := range options.QueryParams {
-		queryString.Set(key, value)
+	req, err := buildRequest()
+	if err != nil {
+		return nil, err
 	}
-	req.URL.RawQuery = queryString.Encode()
-
-	for key, value := range c.headers {
-		req.Header.Add(key, value)
-	}
-
-	if c.externalRequestID != nil {
-		req.Header.Add("x-external-rid", c.externalRequestID(ctx))
-	}
-
-	for key, value := range options.Headers {
-		req.Header.Add(key, value)
-	}
-	for _, cookie := range options.Cookies {
-		req.AddCookie(cookie)
-	}
-
-	bearerParts := []string{}
-	if len(c.Conf.ProjectID) > 0 {
-		bearerParts = append(bearerParts, c.Conf.ProjectID)
-	}
-	if len(pswd) > 0 {
-		bearerParts = append(bearerParts, pswd)
-	}
-	if mgmtKey := c.Conf.ManagementKey; len(mgmtKey) > 0 {
-		// append a management key if available, this is true for both management and authentication requests
-		// only using the different provided keys in the client initialization
-		bearerParts = append(bearerParts, mgmtKey)
-	}
-	if len(bearerParts) > 0 {
-		req.Header.Set(AuthorizationHeaderName, BearerAuthorizationPrefix+strings.Join(bearerParts, ":"))
-	}
-
-	c.addDescopeHeaders(req)
 
 	logger.LogDebug("Sending request to [%s]", url)
 
-	if ctx != nil {
-		req = req.WithContext(ctx)
-	}
 	response, err := c.httpClient.Do(req)
 	if err != nil {
 		logger.LogError("Failed sending request to [%s]", err, url)
 		return nil, err
+	}
+
+	// Retry on specific status codes with configured delays
+	for _, delay := range retryDelays {
+		if !retryableStatusCodes[response.StatusCode] {
+			break
+		}
+		if response.Body != nil {
+			_ = response.Body.Close()
+		}
+		logger.LogInfo("Retrying request to [%s] after receiving status [%d]", url, response.StatusCode)
+		// Respect context cancellation during the sleep between retries
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(delay):
+		}
+		retryReq, buildErr := buildRequest()
+		if buildErr != nil {
+			return nil, buildErr
+		}
+		response, err = c.httpClient.Do(retryReq)
+		if err != nil {
+			logger.LogError("Failed sending request to [%s]", err, url)
+			return nil, err
+		}
 	}
 
 	if response.Body != nil {
