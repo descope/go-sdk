@@ -175,19 +175,20 @@ type User interface {
 
 	// Create a new user and invite via an email / text message.
 	//
-	// Functions exactly the same as the Create function with the additional invitation
-	// behavior. See the documentation above for the general creation behavior.
+	// When loginIDOrUserID is a loginId, a new user is created if one doesn't already exist.
+	// When loginIDOrUserID is a userId, the user must already exist; no new user is created,
+	// and the invite is sent to the existing user (useful for re-inviting).
 	//
 	// IMPORTANT: Since the invitation is sent by email / phone, make sure either
 	// the email / phone is explicitly set, or the loginID itself is an email address / phone number.
 	// You must configure the invitation URL in the Descope console prior to
 	// calling the method.
-	Invite(ctx context.Context, loginID string, user *descope.UserRequest, options *descope.InviteOptions) (*descope.UserResponse, error)
+	Invite(ctx context.Context, loginIDOrUserID string, user *descope.UserRequest, options *descope.InviteOptions) (*descope.UserResponse, error)
 
 	// Create users in batch and invite them via an email / text message.
 	//
-	// Functions exactly the same as the Create function with the additional invitation
-	// behavior. See the documentation above for the general creation behavior.
+	// When a BatchUser's LoginID is a userId, the user must already exist; no new user is created,
+	// and the invite is sent to the existing user (useful for re-inviting).
 	//
 	// IMPORTANT: Since the invitation is sent by email / phone, make sure either
 	// the email / phone is explicitly set, or the loginID itself is an email address / phone number.
