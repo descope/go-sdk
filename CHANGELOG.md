@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.15.0](https://github.com/descope/go-sdk/compare/v1.14.0...v1.15.0) (2026-04-04)
+
+
+### Features
+
+* **user:** support userId in Invite and InviteBatch ([#713](https://github.com/descope/go-sdk/issues/713)) ([27fe5bc](https://github.com/descope/go-sdk/commit/27fe5bc712cd58ee7bbfafeea6f805f3839deb52))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.14.0 ([#718](https://github.com/descope/go-sdk/issues/718)) ([9c0a3e3](https://github.com/descope/go-sdk/commit/9c0a3e3762198bca53cc16d66ca72b901d44e0ed))
+
 ## [1.14.0](https://github.com/descope/go-sdk/compare/v1.13.0...v1.14.0) (2026-03-22)
 
 
