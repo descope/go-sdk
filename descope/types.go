@@ -830,12 +830,12 @@ type SSOApplicationOIDCSettings struct {
 }
 
 type SSOApplication struct {
-	ID           string                      `json:"id"`
-	Name         string                      `json:"name"`
-	Description  string                      `json:"description"`
-	Enabled      bool                        `json:"enabled"`
-	Logo         string                      `json:"logo"`
-	AppType      string                      `json:"appType"`
+	ID            string                       `json:"id"`
+	Name          string                       `json:"name"`
+	Description   string                       `json:"description"`
+	Enabled       bool                         `json:"enabled"`
+	Logo          string                       `json:"logo"`
+	AppType       string                       `json:"appType"`
 	SAMLSettings  *SSOApplicationSAMLSettings  `json:"samlSettings"`
 	OIDCSettings  *SSOApplicationOIDCSettings  `json:"oidcSettings"`
 	WSFedSettings *SSOApplicationWSFedSettings `json:"wsFedSettings"`

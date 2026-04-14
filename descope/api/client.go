@@ -376,15 +376,15 @@ type mgmtEndpoints struct {
 	tenantGenerateSSOConfigurationLink string
 	tenantRevokeSSOConfigurationLink   string
 
-	ssoApplicationOIDCCreate string
+	ssoApplicationOIDCCreate  string
 	ssoApplicationSAMLCreate  string
 	ssoApplicationWSFedCreate string
 	ssoApplicationOIDCUpdate  string
 	ssoApplicationSAMLUpdate  string
 	ssoApplicationWSFedUpdate string
-	ssoApplicationDelete     string
-	ssoApplicationLoad       string
-	ssoApplicationLoadAll    string
+	ssoApplicationDelete      string
+	ssoApplicationLoad        string
+	ssoApplicationLoadAll     string
 
 	userCreate                string
 	testUserCreate            string
