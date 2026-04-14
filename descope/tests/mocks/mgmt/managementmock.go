@@ -1153,14 +1153,16 @@ func (m *MockTenant) UpdateDefaultRoles(_ context.Context, tenantID string, defa
 // Mock SSOApplication
 
 type MockSSOApplication struct {
-	CreateOIDCApplicationAssert func(appRequest *descope.OIDCApplicationRequest)
-	CreateSAMLApplicationAssert func(appRequest *descope.SAMLApplicationRequest)
-	CreateResponse              string
-	CreateError                 error
+	CreateOIDCApplicationAssert  func(appRequest *descope.OIDCApplicationRequest)
+	CreateSAMLApplicationAssert  func(appRequest *descope.SAMLApplicationRequest)
+	CreateWSFedApplicationAssert func(appRequest *descope.WSFedApplicationRequest)
+	CreateResponse               string
+	CreateError                  error
 
-	UpdateOIDCApplicationAssert func(appRequest *descope.OIDCApplicationRequest)
-	UpdateSAMLApplicationAssert func(appRequest *descope.SAMLApplicationRequest)
-	UpdateError                 error
+	UpdateOIDCApplicationAssert  func(appRequest *descope.OIDCApplicationRequest)
+	UpdateSAMLApplicationAssert  func(appRequest *descope.SAMLApplicationRequest)
+	UpdateWSFedApplicationAssert func(appRequest *descope.WSFedApplicationRequest)
+	UpdateError                  error
 
 	DeleteAssert func(id string)
 	DeleteError  error
@@ -1197,6 +1199,20 @@ func (m *MockSSOApplication) UpdateOIDCApplication(_ context.Context, appRequest
 func (m *MockSSOApplication) UpdateSAMLApplication(_ context.Context, appRequest *descope.SAMLApplicationRequest) error {
 	if m.UpdateSAMLApplicationAssert != nil {
 		m.UpdateSAMLApplicationAssert(appRequest)
+	}
+	return m.UpdateError
+}
+
+func (m *MockSSOApplication) CreateWSFedApplication(_ context.Context, appRequest *descope.WSFedApplicationRequest) (id string, err error) {
+	if m.CreateWSFedApplicationAssert != nil {
+		m.CreateWSFedApplicationAssert(appRequest)
+	}
+	return m.CreateResponse, m.CreateError
+}
+
+func (m *MockSSOApplication) UpdateWSFedApplication(_ context.Context, appRequest *descope.WSFedApplicationRequest) error {
+	if m.UpdateWSFedApplicationAssert != nil {
+		m.UpdateWSFedApplicationAssert(appRequest)
 	}
 	return m.UpdateError
 }

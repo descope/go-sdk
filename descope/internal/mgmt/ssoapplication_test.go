@@ -278,6 +278,125 @@ func TestSSOApplicationUpdateSAMLApplicationError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestSSOApplicationCreateWSFedApplicationSuccess(t *testing.T) {
+	response := map[string]any{"id": "qux"}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "id1", req["id"])
+		require.Equal(t, "abc", req["name"])
+		require.Equal(t, "desc", req["description"])
+		require.Equal(t, true, req["enabled"])
+		require.Equal(t, "logo", req["logo"])
+
+		require.Equal(t, "http://dummy.com/login", req["loginPageUrl"])
+		require.Equal(t, "urn:example:realm", req["realm"])
+		require.Equal(t, "http://dummy.com/reply", req["replyUrl"])
+		require.Equal(t, "cert", req["certificate"])
+		require.Equal(t, []any{map[string]any{"name": "n1", "type": "t1", "value": "v1"}}, req["attributeMapping"])
+		require.Equal(t, []any{map[string]any{"filterType": "ft1", "name": "n1", "roles": []any{map[string]any{"id": "r1", "name": "rn1"}}, "type": "t1", "value": "v1"}}, req["groupsMapping"])
+		require.Equal(t, "email", req["subjectNameIdType"])
+		require.Equal(t, "", req["subjectNameIdFormat"])
+		require.True(t, req["forceAuthentication"].(bool))
+		require.Equal(t, "http://dummy.com/logout", req["logoutRedirectUrl"])
+		require.Equal(t, "http://dummy.com/error", req["errorRedirectUrl"])
+
+	}, response))
+
+	id, err := mgmt.SSOApplication().CreateWSFedApplication(context.Background(), &descope.WSFedApplicationRequest{
+		ID:                  "id1",
+		Name:                "abc",
+		Description:         "desc",
+		Enabled:             true,
+		Logo:                "logo",
+		LoginPageURL:        "http://dummy.com/login",
+		Realm:               "urn:example:realm",
+		ReplyURL:            "http://dummy.com/reply",
+		AttributeMapping:    []descope.SAMLIDPAttributeMappingInfo{{Name: "n1", Type: "t1", Value: "v1"}},
+		GroupsMapping:       []descope.SAMLIDPGroupsMappingInfo{{Name: "n1", Type: "t1", FilterType: "ft1", Value: "v1", Roles: []descope.SAMLIDPRoleGroupMappingInfo{{ID: "r1", Name: "rn1"}}}},
+		ForceAuthentication: true,
+		LogoutRedirectURL:   "http://dummy.com/logout",
+		ErrorRedirectURL:    "http://dummy.com/error",
+	})
+	require.NoError(t, err)
+	require.Equal(t, "qux", id)
+}
+
+func TestSSOApplicationCreateWSFedApplicationError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+
+	// Empty application
+	id, err := mgmt.SSOApplication().CreateWSFedApplication(context.Background(), nil)
+	require.Error(t, err)
+	require.Empty(t, id)
+
+	// Empty application Name
+	id, err = mgmt.SSOApplication().CreateWSFedApplication(context.Background(), &descope.WSFedApplicationRequest{ID: "id1"})
+	require.Error(t, err)
+	require.Empty(t, id)
+}
+
+func TestSSOApplicationUpdateWSFedApplicationSuccess(t *testing.T) {
+	response := map[string]any{"id": "qux"}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "id1", req["id"])
+		require.Equal(t, "abc", req["name"])
+		require.Equal(t, "desc", req["description"])
+		require.Equal(t, true, req["enabled"])
+		require.Equal(t, "logo", req["logo"])
+
+		require.Equal(t, "http://dummy.com/login", req["loginPageUrl"])
+		require.Equal(t, "urn:example:realm", req["realm"])
+		require.Equal(t, "http://dummy.com/reply", req["replyUrl"])
+		require.Equal(t, "cert", req["certificate"])
+		require.Equal(t, []any{map[string]any{"name": "n1", "type": "t1", "value": "v1"}}, req["attributeMapping"])
+		require.Equal(t, []any{map[string]any{"filterType": "ft1", "name": "n1", "roles": []any{map[string]any{"id": "r1", "name": "rn1"}}, "type": "t1", "value": "v1"}}, req["groupsMapping"])
+		require.Equal(t, "email", req["subjectNameIdType"])
+		require.Equal(t, "", req["subjectNameIdFormat"])
+		require.True(t, req["forceAuthentication"].(bool))
+		require.Equal(t, "http://dummy.com/logout", req["logoutRedirectUrl"])
+		require.Equal(t, "http://dummy.com/error", req["errorRedirectUrl"])
+
+	}, response))
+
+	err := mgmt.SSOApplication().UpdateWSFedApplication(context.Background(), &descope.WSFedApplicationRequest{
+		ID:                  "id1",
+		Name:                "abc",
+		Description:         "desc",
+		Enabled:             true,
+		Logo:                "logo",
+		LoginPageURL:        "http://dummy.com/login",
+		Realm:               "urn:example:realm",
+		ReplyURL:            "http://dummy.com/reply",
+		AttributeMapping:    []descope.SAMLIDPAttributeMappingInfo{{Name: "n1", Type: "t1", Value: "v1"}},
+		GroupsMapping:       []descope.SAMLIDPGroupsMappingInfo{{Name: "n1", Type: "t1", FilterType: "ft1", Value: "v1", Roles: []descope.SAMLIDPRoleGroupMappingInfo{{ID: "r1", Name: "rn1"}}}},
+		ForceAuthentication: true,
+		LogoutRedirectURL:   "http://dummy.com/logout",
+		ErrorRedirectURL:    "http://dummy.com/error",
+	})
+	require.NoError(t, err)
+}
+
+func TestSSOApplicationUpdateWSFedApplicationError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+
+	// Empty application
+	err := mgmt.SSOApplication().UpdateWSFedApplication(context.Background(), nil)
+	require.Error(t, err)
+
+	// Empty application ID
+	err = mgmt.SSOApplication().UpdateWSFedApplication(context.Background(), &descope.WSFedApplicationRequest{})
+	require.Error(t, err)
+
+	// Empty application Name
+	err = mgmt.SSOApplication().UpdateWSFedApplication(context.Background(), &descope.WSFedApplicationRequest{ID: "id1"})
+	require.Error(t, err)
+}
+
 func TestSSOApplicationDeleteSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")

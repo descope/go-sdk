@@ -836,8 +836,9 @@ type SSOApplication struct {
 	Enabled      bool                        `json:"enabled"`
 	Logo         string                      `json:"logo"`
 	AppType      string                      `json:"appType"`
-	SAMLSettings *SSOApplicationSAMLSettings `json:"samlSettings"`
-	OIDCSettings *SSOApplicationOIDCSettings `json:"oidcSettings"`
+	SAMLSettings  *SSOApplicationSAMLSettings  `json:"samlSettings"`
+	OIDCSettings  *SSOApplicationOIDCSettings  `json:"oidcSettings"`
+	WSFedSettings *SSOApplicationWSFedSettings `json:"wsFedSettings"`
 }
 
 type OIDCApplicationRequest struct {
@@ -876,6 +877,36 @@ type SAMLApplicationRequest struct {
 	// SP-initiated flows use the algorithm from the SP's SAML request. Use "sha256" for SHA-256;
 	// leave empty for the default (SHA-1).
 	DefaultSignatureAlgorithm string `json:"defaultSignatureAlgorithm"`
+}
+
+type WSFedApplicationRequest struct {
+	ID                  string                        `json:"id"`
+	Name                string                        `json:"name"`
+	Description         string                        `json:"description"`
+	Enabled             bool                          `json:"enabled"`
+	Logo                string                        `json:"logo"`
+	LoginPageURL        string                        `json:"loginPageUrl"`
+	Realm               string                        `json:"realm"`
+	ReplyURL            string                        `json:"replyUrl"`
+	AttributeMapping    []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
+	GroupsMapping       []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
+	ForceAuthentication bool                          `json:"forceAuthentication"`
+	LogoutRedirectURL   string                        `json:"logoutRedirectUrl"`
+	ErrorRedirectURL    string                        `json:"errorRedirectUrl"`
+}
+
+type SSOApplicationWSFedSettings struct {
+	LoginPageURL        string                        `json:"loginPageUrl"`
+	Realm               string                        `json:"realm"`
+	ReplyURL            string                        `json:"replyUrl"`
+	AttributeMapping    []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
+	GroupsMapping       []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
+	ForceAuthentication bool                          `json:"forceAuthentication"`
+	LogoutRedirectURL   string                        `json:"logoutRedirectUrl"`
+	ErrorRedirectURL    string                        `json:"errorRedirectUrl"`
+	IdpInitiatedURL     string                        `json:"idpInitiatedUrl"`
+	IdpMetadataURL      string                        `json:"idpMetadataUrl"`
+	IdpCert             string                        `json:"idpCert"`
 }
 
 type SSOApplicationSearchOptions struct {

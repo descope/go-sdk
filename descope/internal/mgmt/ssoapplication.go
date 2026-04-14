@@ -91,6 +91,44 @@ func (s *ssoApplication) UpdateSAMLApplication(ctx context.Context, appRequest *
 	return err
 }
 
+func (s *ssoApplication) CreateWSFedApplication(ctx context.Context, appRequest *descope.WSFedApplicationRequest) (id string, err error) {
+	if appRequest == nil {
+		return "", utils.NewInvalidArgumentError("appRequest")
+	}
+	if appRequest.Name == "" {
+		return "", utils.NewInvalidArgumentError("appRequest.Name")
+	}
+
+	req := makeCreateUpdateWSFedApplicationRequest(appRequest)
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationWSFedCreate(), req, nil, "")
+	if err != nil {
+		return "", err
+	}
+	res := &struct {
+		ID string `json:"id"`
+	}{}
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), res); err != nil {
+		return "", err
+	}
+	return res.ID, nil
+}
+
+func (s *ssoApplication) UpdateWSFedApplication(ctx context.Context, appRequest *descope.WSFedApplicationRequest) error {
+	if appRequest == nil {
+		return utils.NewInvalidArgumentError("appRequest")
+	}
+	if appRequest.ID == "" {
+		return utils.NewInvalidArgumentError("appRequest.id")
+	}
+	if appRequest.Name == "" {
+		return utils.NewInvalidArgumentError("appRequest.Name")
+	}
+
+	req := makeCreateUpdateWSFedApplicationRequest(appRequest)
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationWSFedUpdate(), req, nil, "")
+	return err
+}
+
 func (s *ssoApplication) Delete(ctx context.Context, id string) error {
 	if id == "" {
 		return utils.NewInvalidArgumentError("id")
@@ -158,6 +196,24 @@ func makeCreateUpdateSAMLApplicationRequest(appRequest *descope.SAMLApplicationR
 		"forceAuthentication":       appRequest.ForceAuthentication,
 		"logoutRedirectUrl":         appRequest.LogoutRedirectURL,
 		"defaultSignatureAlgorithm": appRequest.DefaultSignatureAlgorithm,
+	}
+}
+
+func makeCreateUpdateWSFedApplicationRequest(appRequest *descope.WSFedApplicationRequest) map[string]any {
+	return map[string]any{
+		"id":                  appRequest.ID,
+		"name":                appRequest.Name,
+		"description":         appRequest.Description,
+		"enabled":             appRequest.Enabled,
+		"logo":                appRequest.Logo,
+		"loginPageUrl":        appRequest.LoginPageURL,
+		"realm":               appRequest.Realm,
+		"replyUrl":            appRequest.ReplyURL,
+		"attributeMapping":    appRequest.AttributeMapping,
+		"groupsMapping":       appRequest.GroupsMapping,
+		"forceAuthentication": appRequest.ForceAuthentication,
+		"logoutRedirectUrl":   appRequest.LogoutRedirectURL,
+		"errorRedirectUrl":    appRequest.ErrorRedirectURL,
 	}
 }
 

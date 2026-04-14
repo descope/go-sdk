@@ -131,6 +131,33 @@ type SSOApplication interface {
 	// set in the existing sso application. Use carefully.
 	UpdateSAMLApplication(ctx context.Context, appRequest *descope.SAMLApplicationRequest) error
 
+	// Create a new WS-Fed SSO application with the given name.
+	//
+	// WSFedApplicationRequest fields:
+	// ID: Optional sso application ID.
+	// Name: The sso application's name.
+	// Description: Optional sso application description.
+	// Enabled: Optional set the sso application as enabled or disabled.
+	// Logo: Optional sso application logo.
+	// LoginPageURL: The URL where login page is hosted.
+	// Realm: The WS-Fed realm identifier.
+	// ReplyURL: The WS-Fed reply URL.
+	// AttributeMapping: Optional list of Descope (IdP) attributes to SP mapping.
+	// GroupsMapping: Optional list of Descope (IdP) roles that will be mapped to SP groups.
+	// ForceAuthentication: Optional determine if the IdP should force the user to re-authenticate.
+	// LogoutRedirectURL: Optional Target URL to which the user will be redirected upon logout completion.
+	// ErrorRedirectURL: Optional Target URL to which the user will be redirected upon error.
+	//
+	// The argument appRequest.Id value is optional and will be auto generated if provided with empty value
+	// The argument appRequest.Id and appRequest.Name must be unique per project.
+	CreateWSFedApplication(ctx context.Context, appRequest *descope.WSFedApplicationRequest) (id string, err error)
+
+	// Update an existing WS-Fed sso application.
+	//
+	// IMPORTANT: All parameters are required and will override whatever value is currently
+	// set in the existing sso application. Use carefully.
+	UpdateWSFedApplication(ctx context.Context, appRequest *descope.WSFedApplicationRequest) error
+
 	// Delete an existing sso application.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.

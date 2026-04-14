@@ -101,8 +101,10 @@ var (
 			tenantRevokeSSOConfigurationLink:         "mgmt/tenant/adminlinks/sso/revoke",
 			ssoApplicationOIDCCreate:                 "mgmt/sso/idp/app/oidc/create",
 			ssoApplicationSAMLCreate:                 "mgmt/sso/idp/app/saml/create",
+			ssoApplicationWSFedCreate:                "mgmt/sso/idp/app/wsfed/create",
 			ssoApplicationOIDCUpdate:                 "mgmt/sso/idp/app/oidc/update",
 			ssoApplicationSAMLUpdate:                 "mgmt/sso/idp/app/saml/update",
+			ssoApplicationWSFedUpdate:                "mgmt/sso/idp/app/wsfed/update",
 			ssoApplicationDelete:                     "mgmt/sso/idp/app/delete",
 			ssoApplicationLoad:                       "mgmt/sso/idp/app/load",
 			ssoApplicationLoadAll:                    "mgmt/sso/idp/apps/load",
@@ -375,9 +377,11 @@ type mgmtEndpoints struct {
 	tenantRevokeSSOConfigurationLink   string
 
 	ssoApplicationOIDCCreate string
-	ssoApplicationSAMLCreate string
-	ssoApplicationOIDCUpdate string
-	ssoApplicationSAMLUpdate string
+	ssoApplicationSAMLCreate  string
+	ssoApplicationWSFedCreate string
+	ssoApplicationOIDCUpdate  string
+	ssoApplicationSAMLUpdate  string
+	ssoApplicationWSFedUpdate string
 	ssoApplicationDelete     string
 	ssoApplicationLoad       string
 	ssoApplicationLoadAll    string
@@ -862,6 +866,14 @@ func (e *endpoints) ManagementSSOApplicationOIDCUpdate() string {
 
 func (e *endpoints) ManagementSSOApplicationSAMLUpdate() string {
 	return path.Join(e.version, e.mgmt.ssoApplicationSAMLUpdate)
+}
+
+func (e *endpoints) ManagementSSOApplicationWSFedCreate() string {
+	return path.Join(e.version, e.mgmt.ssoApplicationWSFedCreate)
+}
+
+func (e *endpoints) ManagementSSOApplicationWSFedUpdate() string {
+	return path.Join(e.version, e.mgmt.ssoApplicationWSFedUpdate)
 }
 
 func (e *endpoints) ManagementSSOApplicationDelete() string {
