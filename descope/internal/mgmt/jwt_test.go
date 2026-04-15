@@ -123,6 +123,48 @@ func TestImpersonateMissingImpersonator(t *testing.T) {
 	require.Empty(t, jwtRes)
 }
 
+func TestImpersonateStepup(t *testing.T) {
+	impID := "id1"
+	loginID := "id2"
+	expectedJWT := "res"
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.EqualValues(t, impID, req["impersonatorId"])
+		require.EqualValues(t, loginID, req["loginId"])
+		require.EqualValues(t, true, req["validateConsent"])
+		require.EqualValues(t, "t1", req["selectedTenant"])
+		require.EqualValues(t, map[string]any{"k1": "v1"}, req["customClaims"])
+
+	}, map[string]any{"jwt": expectedJWT}))
+	jwtRes, err := mgmt.JWT().ImpersonateStepup(context.Background(), impID, loginID, true, map[string]any{"k1": "v1"}, "t1", 0)
+	require.NoError(t, err)
+	require.EqualValues(t, expectedJWT, jwtRes)
+}
+
+func TestImpersonateStepupMissingLoginID(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+	jwtRes, err := mgmt.JWT().ImpersonateStepup(context.Background(), "test", "", true, map[string]any{"k1": "v1"}, "t1", 0)
+	require.Error(t, err)
+	require.False(t, called)
+	require.Empty(t, jwtRes)
+}
+
+func TestImpersonateStepupMissingImpersonator(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+	jwtRes, err := mgmt.JWT().ImpersonateStepup(context.Background(), "", "test", true, map[string]any{"k1": "v1"}, "t1", 0)
+	require.Error(t, err)
+	require.False(t, called)
+	require.Empty(t, jwtRes)
+}
+
 const jwtTokenValid = `eyJhbGciOiJFUzM4NCIsImtpZCI6InRlc3RrZXkiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOlsidGVzdCJdLCJkcm4iOiJEUyIsImV4cCI6MzY1OTU2MTQzMCwiaWF0IjoxNjU5NTYxNDMwLCJpc3MiOiJ0ZXN0Iiwic3ViIjoic29tZXVzZXIiLCJ0ZXN0IjoidGVzdCJ9.tE6hXIuH74drymm6DSAs4FkaQSzf3MQ0D7pjC-9SaBRnqHoRuDOIJd3mIRsxzfb2nS6NX_tk6H1na6kFEKsJdMsUG-LbCqqib98z9tHtq-Jh6Axl5Qe9RITfIOwzOssw`    // nolint:gosec
 const jwtRTokenValid = `eyJhbGciOiJFUzM4NCIsImtpZCI6InRlc3RrZXkiLCJ0eXAiOiJKV1QifQ.eyJhdWQiOlsidGVzdCJdLCJkcm4iOiJEU1IiLCJleHAiOjM2NTk1NjE0MzAsImlhdCI6MTY1OTU2MTQzMCwiaXNzIjoidGVzdCIsInN1YiI6InNvbWV1c2VyIiwidGVzdCI6InRlc3QifQ.zKbJKuGo9Q9NsvI_SdrH1pDH8uuTRnTcT4eMJe237Lr6ZrtRGbw2a0U0aEwgNrox2RXupkmD3vfQtZiD3AiU9xHY8X3xwTGsDwA497eT6RrA13zNufrhSMNjF6V5-xVl` // nolint:gosec
 

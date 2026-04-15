@@ -564,6 +564,7 @@ type BatchUserPasswordMd5 struct {
 type BatchUserPasswordSha struct {
 	Hash string `json:"hash"` // the SHA hash in hex format, for example "68f724c9ad..."
 	Type string `json:"type"` // the type of SHA hash (sha1, sha256, sha512)
+	Salt string `json:"salt"` // the salt in hex format, for example "5d41402abc4b2a76b9719d911017c592"
 }
 
 type BatchUserPasswordArgon2 struct {
