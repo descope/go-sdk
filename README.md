@@ -1737,7 +1737,6 @@ req = &descope.WSFedApplicationRequest{
 	LoginPageURL: "http://dummyyyy.com",
 	Realm:        "realm",
 	ReplyURL:     "http://dummy.com/reply",
-	Certificate:  "cert",
 }
 err = tc.DescopeClient().Management.SSOApplication().UpdateWSFedApplication(context.Background(), req)
 

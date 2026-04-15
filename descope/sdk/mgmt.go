@@ -148,8 +148,8 @@ type SSOApplication interface {
 	// LogoutRedirectURL: Optional Target URL to which the user will be redirected upon logout completion.
 	// ErrorRedirectURL: Optional Target URL to which the user will be redirected upon error.
 	//
-	// The argument appRequest.Id value is optional and will be auto generated if provided with empty value
-	// The argument appRequest.Id and appRequest.Name must be unique per project.
+	// The argument appRequest.ID value is optional and will be auto generated if provided with empty value
+	// The argument appRequest.ID and appRequest.Name must be unique per project.
 	CreateWSFedApplication(ctx context.Context, appRequest *descope.WSFedApplicationRequest) (id string, err error)
 
 	// Update an existing WS-Fed sso application.
