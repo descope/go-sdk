@@ -906,6 +906,8 @@ type SSOApplicationWSFedSettings struct {
 	ErrorRedirectURL    string                        `json:"errorRedirectUrl"`
 	IdpInitiatedURL     string                        `json:"idpInitiatedUrl"`
 	IdpMetadataURL      string                        `json:"idpMetadataUrl"`
+	IdpEntityID         string                        `json:"idpEntityId"`
+	IdpSSOURL           string                        `json:"idpSsoUrl"`
 	IdpCert             string                        `json:"idpCert"`
 }
 
