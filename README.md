@@ -1689,6 +1689,28 @@ req := &descope.SAMLApplicationRequest{
 }
 appID, err = descopeClient.Management.SSOApplication().CreateSAMLApplication(context.Background(), req)
 
+// Create WS-Fed SSO application
+req := &descope.WSFedApplicationRequest{
+	ID:               wsFedAppID,
+	Name:             "wsFedApp",
+	Enabled:          true,
+	LoginPageURL:     "http://dummy.com",
+	Realm:            "realm",
+	ReplyURL:         "http://dummy.com/reply",
+	AttributeMapping: []descope.SAMLIDPAttributeMappingInfo{{Name: "attrName1", Type: "attrType1", Value: "attrValue1"}},
+	GroupsMapping: []descope.SAMLIDPGroupsMappingInfo{
+		{
+			Name:       "grpName1",
+			Type:       "grpType1",
+			FilterType: "grpFilterType1",
+			Value:      "grpValue1",
+			Roles:      []descope.SAMLIDPRoleGroupMappingInfo{{ID: "rl1", Name: "rlName1"}},
+		},
+	},
+	LogoutRedirectURL: "http://dummy.com/logout",
+}
+appID, err = descopeClient.Management.SSOApplication().CreateWSFedApplication(context.Background(), req)
+
 // Update OIDC SSO application
 // Update will override all fields as is. Use carefully.
 err = tc.DescopeClient().Management.SSOApplication().UpdateOIDCApplication(context.TODO(),
@@ -1706,6 +1728,17 @@ req = &descope.SAMLApplicationRequest{
 	Certificate:  "cert",
 }
 err = tc.DescopeClient().Management.SSOApplication().UpdateSAMLApplication(context.Background(), req)
+
+// Update WS-Fed SSO application
+// Update will override all fields as is. Use carefully.
+req = &descope.WSFedApplicationRequest{
+	ID: wsFedAppID, Name: "wsFedNewAppName",
+	Enabled:      false,
+	LoginPageURL: "http://dummyyyy.com",
+	Realm:        "realm",
+	ReplyURL:     "http://dummy.com/reply",
+}
+err = tc.DescopeClient().Management.SSOApplication().UpdateWSFedApplication(context.Background(), req)
 
 // Load SSO application by id
 app, err = tc.DescopeClient().Management.SSOApplication().Load(context.Background(), "appId")
