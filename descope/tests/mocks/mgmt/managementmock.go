@@ -127,6 +127,10 @@ type MockJWT struct {
 	ImpersonateResponse string
 	ImpersonateError    error
 
+	ImpersonateStepupAssert   func(impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string, refreshDuration int32)
+	ImpersonateStepupResponse string
+	ImpersonateStepupError    error
+
 	StopImpersonationAssert   func(jwt string, customClaims map[string]any, tenantID string, refreshDuration int32)
 	StopImpersonationResponse string
 	StopImpersonationError    error
@@ -160,6 +164,13 @@ func (m *MockJWT) Impersonate(_ context.Context, impersonatorID string, loginID 
 		m.ImpersonateAssert(impersonatorID, loginID, validateConcent, customClaims, tenantID, refreshDuration)
 	}
 	return m.ImpersonateResponse, m.ImpersonateError
+}
+
+func (m *MockJWT) ImpersonateStepup(_ context.Context, impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string, refreshDuration int32) (string, error) {
+	if m.ImpersonateStepupAssert != nil {
+		m.ImpersonateStepupAssert(impersonatorID, loginID, validateConcent, customClaims, tenantID, refreshDuration)
+	}
+	return m.ImpersonateStepupResponse, m.ImpersonateStepupError
 }
 
 func (m *MockJWT) StopImpersonation(_ context.Context, jwt string, customClaims map[string]any, tenantID string, refreshDuration int32) (string, error) {
