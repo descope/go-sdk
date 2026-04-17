@@ -1816,6 +1816,10 @@ type MockFGA struct {
 	CheckResponse []*descope.FGACheck
 	CheckError    error
 
+	CheckWithContextAssert   func(relations []*descope.FGARelation, extraContext map[string]any)
+	CheckWithContextResponse []*descope.FGACheck
+	CheckWithContextError    error
+
 	LoadMappableSchemaAssert   func(tenantID string, options *descope.FGAMappableResourcesOptions)
 	LoadMappableSchemaResponse *descope.FGAMappableSchema
 	LoadMappableSchemaError    error
@@ -1869,6 +1873,13 @@ func (m *MockFGA) Check(_ context.Context, relations []*descope.FGARelation) ([]
 		m.CheckAssert(relations)
 	}
 	return m.CheckResponse, m.CheckError
+}
+
+func (m *MockFGA) CheckWithContext(_ context.Context, relations []*descope.FGARelation, extraContext map[string]any) ([]*descope.FGACheck, error) {
+	if m.CheckWithContextAssert != nil {
+		m.CheckWithContextAssert(relations, extraContext)
+	}
+	return m.CheckWithContextResponse, m.CheckWithContextError
 }
 
 func (m *MockFGA) LoadMappableSchema(_ context.Context, tenantID string, options *descope.FGAMappableResourcesOptions) (*descope.FGAMappableSchema, error) {
