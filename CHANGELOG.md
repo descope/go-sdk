@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.16.0](https://github.com/descope/go-sdk/compare/v1.15.0...v1.16.0) (2026-04-19)
+
+
+### Features
+
+* **fga:** add CheckWithContext for ABAC/CEL evaluation ([#729](https://github.com/descope/go-sdk/issues/729)) ([55ccf7c](https://github.com/descope/go-sdk/commit/55ccf7c32f2071f96e7ab4ea08d34159511025fa))
+* **sso:** add WS-Fed SSO application management ([#727](https://github.com/descope/go-sdk/issues/727)) ([4544ea8](https://github.com/descope/go-sdk/commit/4544ea81bae18132bd8de48bd68bde3784904022))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.15.0 ([#725](https://github.com/descope/go-sdk/issues/725)) ([b64cdd1](https://github.com/descope/go-sdk/commit/b64cdd1197b7546e964256cb5e054a821c444646))
+
 ## [1.15.0](https://github.com/descope/go-sdk/compare/v1.14.0...v1.15.0) (2026-04-04)
 
 
