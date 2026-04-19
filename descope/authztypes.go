@@ -118,6 +118,14 @@ type FGACheckInfo struct {
 	// A relation is considered "direct" if, based solely on the schema, its "allowed" state can only be
 	// changed by creating or deleting relations involving its resource, its target, or both (including itself)
 	Direct bool `json:"direct,omitempty"`
+	// Conditional is true when the result was decided by evaluating a CEL condition in the schema.
+	Conditional bool `json:"conditional,omitempty"`
+	// MissingContext lists context variable names that were referenced by a condition but not supplied
+	// to CheckWithContext (and not known to the backend), causing partial evaluation.
+	MissingContext []string `json:"missingContext,omitempty"`
+	// ConditionalErr holds the CEL evaluation error message when a condition could not be evaluated
+	// (e.g. wrong context value type). Allowed will be false in that case.
+	ConditionalErr string `json:"conditionalErr,omitempty"`
 }
 
 type FGAMappableResourcesOptions struct {

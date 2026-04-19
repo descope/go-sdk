@@ -111,12 +111,19 @@ type checkResponse struct {
 }
 
 func (f *fga) Check(ctx context.Context, relations []*descope.FGARelation) ([]*descope.FGACheck, error) {
+	return f.CheckWithContext(ctx, relations, nil)
+}
+
+func (f *fga) CheckWithContext(ctx context.Context, relations []*descope.FGARelation, extraContext map[string]any) ([]*descope.FGACheck, error) {
 	if len(relations) == 0 {
 		return nil, utils.NewInvalidArgumentError("relations")
 	}
 
 	body := map[string]any{
 		"tuples": relations,
+	}
+	if len(extraContext) > 0 {
+		body["context"] = extraContext
 	}
 
 	options := &api.HTTPRequest{}
@@ -134,14 +141,14 @@ func (f *fga) Check(ctx context.Context, relations []*descope.FGARelation) ([]*d
 
 	checks := make([]*descope.FGACheck, len(response.CheckResponseTuple))
 	for i, tuple := range response.CheckResponseTuple {
-		var direct bool
-		if tuple.Info != nil {
-			direct = tuple.Info.Direct
+		info := tuple.Info
+		if info == nil {
+			info = &descope.FGACheckInfo{}
 		}
 		checks[i] = &descope.FGACheck{
 			Relation: tuple.Tuple,
 			Allowed:  tuple.Allowed,
-			Info:     &descope.FGACheckInfo{Direct: direct},
+			Info:     info,
 		}
 	}
 

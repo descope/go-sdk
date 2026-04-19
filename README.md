@@ -1559,6 +1559,21 @@ relations, err := descopeClient.Management.FGA().Check(context.Background(), []*
 		TargetType: "user"
     }
 })
+
+// Supply a context map for CEL condition evaluation (ABAC). The backend may
+// also have attributes of its own; this map is merged on top for evaluation.
+checks, err := descopeClient.Management.FGA().CheckWithContext(
+    context.Background(),
+    []*descope.FGARelation{{Resource: "some-doc", ResourceType: "doc", Relation: "can_view", Target: "u1", TargetType: "user"}},
+    map[string]any{"ip": "10.0.0.1", "role": "admin"},
+)
+info := checks[0].Info
+if info.Conditional && len(info.MissingContext) > 0 {
+    // supply the missing context variables and retry
+}
+if info.ConditionalErr != "" {
+    // CEL evaluation failed; checks[0].Allowed is false
+}
 ```
 
 Response times of repeated FGA `Check` calls, especially in high volume scenarios, can be reduced to sub-millisecond scales by re-directing the calls to a Descope FGA Cache Proxy running in the same backend cluster as your application.
