@@ -33,9 +33,9 @@ type AuthenticationInfo struct {
 
 // IDPResponse contains IDP groups, SAML attributes, and OIDC claims returned from SSO authentication.
 type IDPResponse struct {
-	IDPGroups         []string               `json:"idpGroups,omitempty"`
-	IDPSAMLAttributes map[string]interface{} `json:"idpSAMLAttributes,omitempty"`
-	IDPOIDCClaims     map[string]interface{} `json:"idpOIDCClaims,omitempty"`
+	IDPGroups         []string       `json:"idpGroups,omitempty"`
+	IDPSAMLAttributes map[string]any `json:"idpSAMLAttributes,omitempty"`
+	IDPOIDCClaims     map[string]any `json:"idpOIDCClaims,omitempty"`
 }
 
 type AnonymousAuthenticationInfo struct {

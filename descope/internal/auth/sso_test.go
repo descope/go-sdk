@@ -139,8 +139,8 @@ func TestExchangeTokenSSOWithIDPResponse(t *testing.T) {
 	code := "code"
 	expectedIDPResponse := &descope.IDPResponse{
 		IDPGroups:         []string{"group1", "group2"},
-		IDPSAMLAttributes: map[string]interface{}{"attr1": "value1", "attr2": "value2"},
-		IDPOIDCClaims:     map[string]interface{}{"claim1": "claimValue1", "sub": "user123"},
+		IDPSAMLAttributes: map[string]any{"attr1": "value1", "attr2": "value2"},
+		IDPOIDCClaims:     map[string]any{"claim1": "claimValue1", "sub": "user123"},
 	}
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		req := exchangeTokenBody{}
@@ -177,6 +177,10 @@ func TestExchangeTokenSSOWithIDPResponse(t *testing.T) {
 func TestExchangeTokenSSOWithoutIDPResponse(t *testing.T) {
 	code := "code"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		req := exchangeTokenBody{}
+		err := readBody(r, &req)
+		require.NoError(t, err)
+		assert.EqualValues(t, code, req.Code)
 		resp := &descope.JWTResponse{
 			RefreshJwt: jwtTokenValid,
 			User: &descope.UserResponse{
@@ -204,6 +208,10 @@ func TestExchangeTokenSSOWithPartialIDPResponse(t *testing.T) {
 		IDPGroups: []string{"admins"},
 	}
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		req := exchangeTokenBody{}
+		err := readBody(r, &req)
+		require.NoError(t, err)
+		assert.EqualValues(t, code, req.Code)
 		resp := &descope.JWTResponse{
 			RefreshJwt: jwtTokenValid,
 			User: &descope.UserResponse{

@@ -217,7 +217,7 @@ func TestExchangeTokenSAMLWithIDPResponse(t *testing.T) {
 	code := "code"
 	expectedIDPResponse := &descope.IDPResponse{
 		IDPGroups:         []string{"engineering", "devops"},
-		IDPSAMLAttributes: map[string]interface{}{"department": "engineering", "title": "Staff Engineer"},
+		IDPSAMLAttributes: map[string]any{"department": "engineering", "title": "Staff Engineer"},
 	}
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		req := exchangeTokenBody{}
@@ -255,7 +255,7 @@ func TestExchangeTokenOAuthWithIDPResponse(t *testing.T) {
 	code := "code"
 	expectedIDPResponse := &descope.IDPResponse{
 		IDPGroups:     []string{"users"},
-		IDPOIDCClaims: map[string]interface{}{"email_verified": true, "locale": "en-US"},
+		IDPOIDCClaims: map[string]any{"email_verified": true, "locale": "en-US"},
 	}
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
 		req := exchangeTokenBody{}
