@@ -134,3 +134,105 @@ func TestExchangeTokenSSO(t *testing.T) {
 	assert.EqualValues(t, "name", authInfo.User.Name)
 	assert.True(t, authInfo.FirstSeen)
 }
+
+func TestExchangeTokenSSOWithIDPResponse(t *testing.T) {
+	code := "code"
+	expectedIDPResponse := &descope.IDPResponse{
+		IDPGroups:         []string{"group1", "group2"},
+		IDPSAMLAttributes: map[string]any{"attr1": "value1", "attr2": "value2"},
+		IDPOIDCClaims:     map[string]any{"claim1": "claimValue1", "sub": "user123"},
+	}
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		req := exchangeTokenBody{}
+		err := readBody(r, &req)
+		require.NoError(t, err)
+		assert.EqualValues(t, code, req.Code)
+		resp := &descope.JWTResponse{
+			RefreshJwt: jwtTokenValid,
+			User: &descope.UserResponse{
+				User: descope.User{
+					Name: "name",
+				},
+			},
+			FirstSeen:   true,
+			IDPResponse: expectedIDPResponse,
+		}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	authInfo, err := a.SSO().ExchangeToken(context.Background(), code, w)
+	require.NoError(t, err)
+	require.NotNil(t, authInfo)
+	assert.EqualValues(t, "name", authInfo.User.Name)
+	assert.True(t, authInfo.FirstSeen)
+	require.NotNil(t, authInfo.IDPResponse)
+	assert.EqualValues(t, expectedIDPResponse.IDPGroups, authInfo.IDPResponse.IDPGroups)
+	assert.EqualValues(t, expectedIDPResponse.IDPSAMLAttributes, authInfo.IDPResponse.IDPSAMLAttributes)
+	assert.EqualValues(t, expectedIDPResponse.IDPOIDCClaims, authInfo.IDPResponse.IDPOIDCClaims)
+}
+
+func TestExchangeTokenSSOWithoutIDPResponse(t *testing.T) {
+	code := "code"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		req := exchangeTokenBody{}
+		err := readBody(r, &req)
+		require.NoError(t, err)
+		assert.EqualValues(t, code, req.Code)
+		resp := &descope.JWTResponse{
+			RefreshJwt: jwtTokenValid,
+			User: &descope.UserResponse{
+				User: descope.User{
+					Name: "name",
+				},
+			},
+			FirstSeen: true,
+		}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	authInfo, err := a.SSO().ExchangeToken(context.Background(), code, w)
+	require.NoError(t, err)
+	require.NotNil(t, authInfo)
+	assert.Nil(t, authInfo.IDPResponse)
+}
+
+func TestExchangeTokenSSOWithPartialIDPResponse(t *testing.T) {
+	code := "code"
+	expectedIDPResponse := &descope.IDPResponse{
+		IDPGroups: []string{"admins"},
+	}
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		req := exchangeTokenBody{}
+		err := readBody(r, &req)
+		require.NoError(t, err)
+		assert.EqualValues(t, code, req.Code)
+		resp := &descope.JWTResponse{
+			RefreshJwt: jwtTokenValid,
+			User: &descope.UserResponse{
+				User: descope.User{
+					Name: "name",
+				},
+			},
+			FirstSeen:   true,
+			IDPResponse: expectedIDPResponse,
+		}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	w := httptest.NewRecorder()
+	authInfo, err := a.SSO().ExchangeToken(context.Background(), code, w)
+	require.NoError(t, err)
+	require.NotNil(t, authInfo)
+	require.NotNil(t, authInfo.IDPResponse)
+	assert.EqualValues(t, []string{"admins"}, authInfo.IDPResponse.IDPGroups)
+	assert.Nil(t, authInfo.IDPResponse.IDPSAMLAttributes)
+	assert.Nil(t, authInfo.IDPResponse.IDPOIDCClaims)
+}

@@ -28,6 +28,14 @@ type AuthenticationInfo struct {
 	RefreshToken *Token        `json:"refreshToken,omitempty"`
 	User         *UserResponse `json:"user,omitempty"`
 	FirstSeen    bool          `json:"firstSeen,omitempty"`
+	IDPResponse  *IDPResponse  `json:"idpResponse,omitempty"`
+}
+
+// IDPResponse contains IDP groups, SAML attributes, and OIDC claims returned from SSO authentication.
+type IDPResponse struct {
+	IDPGroups         []string       `json:"idpGroups,omitempty"`
+	IDPSAMLAttributes map[string]any `json:"idpSAMLAttributes,omitempty"`
+	IDPOIDCClaims     map[string]any `json:"idpOIDCClaims,omitempty"`
 }
 
 type AnonymousAuthenticationInfo struct {
@@ -398,6 +406,7 @@ type JWTResponse struct {
 	CookieExpiration int32         `json:"cookieExpiration,omitempty"`
 	User             *UserResponse `json:"user,omitempty"`
 	FirstSeen        bool          `json:"firstSeen,omitempty"`
+	IDPResponse      *IDPResponse  `json:"idpResponse,omitempty"`
 }
 
 type EnchantedLinkResponse struct {
@@ -420,6 +429,7 @@ func NewAuthenticationInfo(jRes *JWTResponse, sessionToken, refreshToken *Token)
 		RefreshToken: refreshToken,
 		User:         jRes.User,
 		FirstSeen:    jRes.FirstSeen,
+		IDPResponse:  jRes.IDPResponse,
 	}
 }
 
