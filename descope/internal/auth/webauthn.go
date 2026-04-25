@@ -48,7 +48,11 @@ func (auth *webAuthn) SignInStart(ctx context.Context, loginID string, origin st
 		}
 	}
 
-	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnSignInStart(), authenticationWebAuthnSignInRequestBody{LoginID: loginID, Origin: origin, LoginOptions: loginOptions}, nil, pswd)
+	var tenantID string
+	if loginOptions != nil {
+		tenantID = loginOptions.TenantID
+	}
+	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnSignInStart(), authenticationWebAuthnSignInRequestBody{LoginID: loginID, TenantID: tenantID, Origin: origin, LoginOptions: loginOptions}, nil, pswd)
 	if err != nil {
 		return nil, err
 	}

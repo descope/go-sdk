@@ -99,7 +99,7 @@ type OTP interface {
 	// In case the request cookie can be renewed an automatic renewal is called and returns a new set of cookies to use.
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	// returns a list of cookies or an error upon failure.
-	VerifyCode(ctx context.Context, method descope.DeliveryMethod, loginID string, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error)
+	VerifyCode(ctx context.Context, method descope.DeliveryMethod, loginID string, code string, loginOptions *descope.LoginOptions, w http.ResponseWriter) (*descope.AuthenticationInfo, error)
 
 	// UpdateUserEmail - Use to a update email, and verify via OTP
 	// LoginID of user whom we want to update

@@ -303,7 +303,7 @@ func TestEmptyEmailVerifyCodeEmail(t *testing.T) {
 	email := ""
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCode(context.Background(), descope.MethodEmail, email, "4444", nil)
+	_, err = a.OTP().VerifyCode(context.Background(), descope.MethodEmail, email, "4444", nil, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
@@ -312,7 +312,7 @@ func TestInvalidVerifyCode(t *testing.T) {
 	email := "a"
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCode(context.Background(), "", email, "4444", nil)
+	_, err = a.OTP().VerifyCode(context.Background(), "", email, "4444", nil, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
@@ -327,7 +327,7 @@ func TestVerifyCodeDetectEmail(t *testing.T) {
 		assert.EqualValues(t, email, body["loginId"])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCode(context.Background(), "", email, "555", nil)
+	_, err = a.OTP().VerifyCode(context.Background(), "", email, "555", nil, nil)
 	require.NoError(t, err)
 }
 
@@ -341,7 +341,7 @@ func TestVerifyCodeDetectPhone(t *testing.T) {
 		assert.EqualValues(t, phone, body["loginId"])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCode(context.Background(), "", phone, "555", nil)
+	_, err = a.OTP().VerifyCode(context.Background(), "", phone, "555", nil, nil)
 	require.NoError(t, err)
 }
 
@@ -356,7 +356,7 @@ func TestVerifyCodeWithPhone(t *testing.T) {
 		assert.EqualValues(t, "4444", body["code"])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCode(context.Background(), descope.MethodSMS, phone, "4444", nil)
+	_, err = a.OTP().VerifyCode(context.Background(), descope.MethodSMS, phone, "4444", nil, nil)
 	require.NoError(t, err)
 }
 
@@ -372,7 +372,7 @@ func TestVerifyCodeEmail(t *testing.T) {
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCode(context.Background(), descope.MethodEmail, email, code, nil)
+	_, err = a.OTP().VerifyCode(context.Background(), descope.MethodEmail, email, code, nil, nil)
 	require.NoError(t, err)
 }
 
@@ -388,7 +388,7 @@ func TestVerifyCodeSMS(t *testing.T) {
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCode(context.Background(), descope.MethodSMS, phone, code, nil)
+	_, err = a.OTP().VerifyCode(context.Background(), descope.MethodSMS, phone, code, nil, nil)
 	require.NoError(t, err)
 }
 
@@ -404,7 +404,7 @@ func TestVerifyCodeWhatsApp(t *testing.T) {
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCode(context.Background(), descope.MethodWhatsApp, phone, code, nil)
+	_, err = a.OTP().VerifyCode(context.Background(), descope.MethodWhatsApp, phone, code, nil, nil)
 	require.NoError(t, err)
 }
 
@@ -420,7 +420,7 @@ func TestVerifyCodeVoice(t *testing.T) {
 		assert.EqualValues(t, code, body["code"])
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCode(context.Background(), descope.MethodVoice, phone, code, nil)
+	_, err = a.OTP().VerifyCode(context.Background(), descope.MethodVoice, phone, code, nil, nil)
 	require.NoError(t, err)
 }
 
@@ -455,7 +455,7 @@ func TestVerifyCodeEmailResponseOption(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	authInfo, err := a.OTP().VerifyCode(context.Background(), descope.MethodEmail, email, code, w)
+	authInfo, err := a.OTP().VerifyCode(context.Background(), descope.MethodEmail, email, code, nil, w)
 	require.NoError(t, err)
 	require.Len(t, w.Result().Cookies(), 0)
 	assert.Equal(t, firstSeen, authInfo.FirstSeen)
@@ -478,7 +478,7 @@ func TestVerifyCodeEmailResponseNil(t *testing.T) {
 	})
 	require.NoError(t, err)
 	w := httptest.NewRecorder()
-	info, err := a.OTP().VerifyCode(context.Background(), descope.MethodEmail, email, code, nil)
+	info, err := a.OTP().VerifyCode(context.Background(), descope.MethodEmail, email, code, nil, nil)
 	require.NoError(t, err)
 	assert.Len(t, w.Result().Cookies(), 0)
 	require.NotEmpty(t, info)

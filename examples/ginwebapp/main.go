@@ -90,7 +90,7 @@ func handleOTPVerify(c *gin.Context) {
 		setError(c, "code is empty")
 		return
 	}
-	authInfo, err := descopeClient.Auth.OTP().VerifyCode(c.Request.Context(), method, loginID, code, c.Writer)
+	authInfo, err := descopeClient.Auth.OTP().VerifyCode(c.Request.Context(), method, loginID, code, nil, c.Writer)
 	if err != nil {
 		setError(c, err.Error())
 		return

@@ -8,6 +8,7 @@ import (
 
 type authenticationRequestBody struct {
 	LoginID      string                `json:"loginId,omitempty"`
+	TenantID     string                `json:"tenantId,omitempty"`
 	LoginOptions *descope.LoginOptions `json:"loginOptions,omitempty"`
 }
 
@@ -16,18 +17,21 @@ type authenticationSignUpRequestBody struct {
 	Phone        string                `json:"phone,omitempty"`
 	Email        string                `json:"email,omitempty"`
 	LoginID      string                `json:"loginId,omitempty"`
+	TenantID     string                `json:"tenantId,omitempty"`
 	User         *descope.User         `json:"user"`
 	LoginOptions *descope.LoginOptions `json:"loginOptions,omitempty"`
 }
 
 type authenticationWebAuthnSignUpRequestBody struct {
-	LoginID string        `json:"loginId,omitempty"`
-	Origin  string        `json:"origin"`
-	User    *descope.User `json:"user"`
+	LoginID  string        `json:"loginId,omitempty"`
+	TenantID string        `json:"tenantId,omitempty"`
+	Origin   string        `json:"origin"`
+	User     *descope.User `json:"user"`
 }
 
 type authenticationWebAuthnSignInRequestBody struct {
 	LoginID      string                `json:"loginId,omitempty"`
+	TenantID     string                `json:"tenantId,omitempty"`
 	Origin       string                `json:"origin"`
 	LoginOptions *descope.LoginOptions `json:"loginOptions,omitempty"`
 }
@@ -39,12 +43,14 @@ type authenticationWebAuthnAddDeviceRequestBody struct {
 
 type authenticationPasswordSignUpRequestBody struct {
 	LoginID  string        `json:"loginId,omitempty"`
+	TenantID string        `json:"tenantId,omitempty"`
 	Password string        `json:"password"`
 	User     *descope.User `json:"user"`
 }
 
 type authenticationPasswordSignInRequestBody struct {
 	LoginID  string `json:"loginId,omitempty"`
+	TenantID string `json:"tenantId,omitempty"`
 	Password string `json:"password"`
 }
 
@@ -150,7 +156,11 @@ type exchangeTokenBody struct {
 }
 
 func newSignInRequestBody(loginID string, loginOptions *descope.LoginOptions) *authenticationRequestBody {
-	return &authenticationRequestBody{LoginID: loginID, LoginOptions: loginOptions}
+	var tenantID string
+	if loginOptions != nil {
+		tenantID = loginOptions.TenantID
+	}
+	return &authenticationRequestBody{LoginID: loginID, TenantID: tenantID, LoginOptions: loginOptions}
 }
 
 func newSignUpRequestBody(method descope.DeliveryMethod, user *descope.User) *authenticationSignUpRequestBody {
@@ -185,6 +195,7 @@ func newNOTPAuthenticationSignUpRequestBody(loginID string, user *descope.User, 
 	if signUpOptions == nil {
 		signUpOptions = &descope.SignUpOptions{}
 	}
+	res.TenantID = signUpOptions.TenantID
 	res.LoginOptions = &descope.LoginOptions{
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
@@ -220,6 +231,7 @@ func newMagicLinkAuthenticationSignUpRequestBody(method descope.DeliveryMethod, 
 	if signUpOptions == nil {
 		signUpOptions = &descope.SignUpOptions{}
 	}
+	b.TenantID = signUpOptions.TenantID
 	b.LoginOptions = &descope.LoginOptions{
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
@@ -239,6 +251,7 @@ func newAuthenticationSignUpRequestBody(method descope.DeliveryMethod, loginID s
 	if signUpOptions == nil {
 		signUpOptions = &descope.SignUpOptions{}
 	}
+	b.TenantID = signUpOptions.TenantID
 	b.LoginOptions = &descope.LoginOptions{
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
@@ -247,12 +260,12 @@ func newAuthenticationSignUpRequestBody(method descope.DeliveryMethod, loginID s
 	return b
 }
 
-func newAuthenticationVerifyRequestBody(value string, code string) *authenticationVerifyRequestBody {
-	return &authenticationVerifyRequestBody{authenticationRequestBody: newSignInRequestBody(value, nil), Code: code}
+func newAuthenticationVerifyRequestBody(value string, code string, loginOptions *descope.LoginOptions) *authenticationVerifyRequestBody {
+	return &authenticationVerifyRequestBody{authenticationRequestBody: newSignInRequestBody(value, loginOptions), Code: code}
 }
 
 func newAuthenticationVerifyTOTPRequestBody(value string, code string, loginOptions *descope.LoginOptions) *authenticationVerifyTOTPRequestBody {
-	return &authenticationVerifyTOTPRequestBody{authenticationVerifyRequestBody: newAuthenticationVerifyRequestBody(value, code), LoginOptions: loginOptions}
+	return &authenticationVerifyTOTPRequestBody{authenticationVerifyRequestBody: newAuthenticationVerifyRequestBody(value, code, loginOptions), LoginOptions: loginOptions}
 }
 
 func newMagicLinkUpdateEmailRequestBody(loginID, email string, URI string, crossDevice bool, updateOptions *descope.UpdateOptions) *magicLinkUpdateEmailRequestBody {

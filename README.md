@@ -90,9 +90,10 @@ These sections show how to use the SDK to perform various authentication/authori
 9. [Session Validation](#session-validation)
 10. [Roles & Permission Validation](#roles--permission-validation)
 11. [Tenant selection](#tenant-selection)
-12. [Logging Out](#logging-out)
-13. [History](#history)
-14. [My Tenants](#my-tenants)
+12. [Tenant User Isolation](#tenant-user-isolation)
+13. [Logging Out](#logging-out)
+14. [History](#history)
+15. [My Tenants](#my-tenants)
 
 ### Management Functions
 
@@ -704,6 +705,31 @@ if err != nil {
     // failed to select a tenant
 }
 ```
+
+### Tenant User Isolation
+
+When a project has Tenant User Isolation enabled, users with the same login ID in different tenants are treated as completely separate identities. To associate a sign-up or sign-in with a specific tenant in this mode, pass `TenantID` in the options struct for both the initiation and the verification step:
+
+```go
+// Sign up alice scoped to tenant A — creates a tenant-isolated identity
+signUpOptions := &descope.SignUpOptions{TenantID: "tenant-A"}
+maskedAddress, err := descopeClient.Auth.OTP().SignUp(context.Background(), descope.MethodEmail, loginID, user, signUpOptions)
+if err != nil {
+    // handle error
+}
+
+// Verify the OTP code with the same tenant context
+loginOptions := &descope.LoginOptions{TenantID: "tenant-A"}
+authInfo, err := descopeClient.Auth.OTP().VerifyCode(context.Background(), descope.MethodEmail, loginID, code, loginOptions, w)
+if err != nil {
+    // handle error
+}
+```
+
+A few things to keep in mind:
+- Both the sign-up/sign-in **and** the verify call must use the same `TenantID` — the tenant context must be consistent throughout the flow.
+- If `TenantID` is omitted, the request uses the non-isolated (shared) identity, as if tenant isolation were not enabled.
+- This is different from [`SelectTenant`](#tenant-selection), which switches the active tenant on an already-authenticated session. `TenantID` in `LoginOptions`/`SignUpOptions` scopes identity resolution at authentication time.
 
 ### Logging Out
 
