@@ -8,7 +8,6 @@ import (
 
 type authenticationRequestBody struct {
 	LoginID      string                `json:"loginId,omitempty"`
-	TenantID     string                `json:"tenantId,omitempty"`
 	LoginOptions *descope.LoginOptions `json:"loginOptions,omitempty"`
 }
 
@@ -17,21 +16,19 @@ type authenticationSignUpRequestBody struct {
 	Phone        string                `json:"phone,omitempty"`
 	Email        string                `json:"email,omitempty"`
 	LoginID      string                `json:"loginId,omitempty"`
-	TenantID     string                `json:"tenantId,omitempty"`
 	User         *descope.User         `json:"user"`
 	LoginOptions *descope.LoginOptions `json:"loginOptions,omitempty"`
 }
 
 type authenticationWebAuthnSignUpRequestBody struct {
-	LoginID  string        `json:"loginId,omitempty"`
-	TenantID string        `json:"tenantId,omitempty"`
-	Origin   string        `json:"origin"`
-	User     *descope.User `json:"user"`
+	LoginID      string                `json:"loginId,omitempty"`
+	Origin       string                `json:"origin"`
+	User         *descope.User         `json:"user"`
+	LoginOptions *descope.LoginOptions `json:"loginOptions,omitempty"`
 }
 
 type authenticationWebAuthnSignInRequestBody struct {
 	LoginID      string                `json:"loginId,omitempty"`
-	TenantID     string                `json:"tenantId,omitempty"`
 	Origin       string                `json:"origin"`
 	LoginOptions *descope.LoginOptions `json:"loginOptions,omitempty"`
 }
@@ -42,16 +39,16 @@ type authenticationWebAuthnAddDeviceRequestBody struct {
 }
 
 type authenticationPasswordSignUpRequestBody struct {
-	LoginID  string        `json:"loginId,omitempty"`
-	TenantID string        `json:"tenantId,omitempty"`
-	Password string        `json:"password"`
-	User     *descope.User `json:"user"`
+	LoginID      string                `json:"loginId,omitempty"`
+	Password     string                `json:"password"`
+	User         *descope.User         `json:"user"`
+	LoginOptions *descope.LoginOptions `json:"loginOptions,omitempty"`
 }
 
 type authenticationPasswordSignInRequestBody struct {
-	LoginID  string `json:"loginId,omitempty"`
-	TenantID string `json:"tenantId,omitempty"`
-	Password string `json:"password"`
+	LoginID      string                `json:"loginId,omitempty"`
+	Password     string                `json:"password"`
+	LoginOptions *descope.LoginOptions `json:"loginOptions,omitempty"`
 }
 
 type authenticationPasswordResetRequestBody struct {
@@ -156,11 +153,7 @@ type exchangeTokenBody struct {
 }
 
 func newSignInRequestBody(loginID string, loginOptions *descope.LoginOptions) *authenticationRequestBody {
-	var tenantID string
-	if loginOptions != nil {
-		tenantID = loginOptions.TenantID
-	}
-	return &authenticationRequestBody{LoginID: loginID, TenantID: tenantID, LoginOptions: loginOptions}
+	return &authenticationRequestBody{LoginID: loginID, LoginOptions: loginOptions}
 }
 
 func newSignUpRequestBody(method descope.DeliveryMethod, user *descope.User) *authenticationSignUpRequestBody {
@@ -195,8 +188,8 @@ func newNOTPAuthenticationSignUpRequestBody(loginID string, user *descope.User, 
 	if signUpOptions == nil {
 		signUpOptions = &descope.SignUpOptions{}
 	}
-	res.TenantID = signUpOptions.TenantID
 	res.LoginOptions = &descope.LoginOptions{
+		TenantID:        signUpOptions.TenantID,
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
 	}
@@ -231,8 +224,8 @@ func newMagicLinkAuthenticationSignUpRequestBody(method descope.DeliveryMethod, 
 	if signUpOptions == nil {
 		signUpOptions = &descope.SignUpOptions{}
 	}
-	b.TenantID = signUpOptions.TenantID
 	b.LoginOptions = &descope.LoginOptions{
+		TenantID:        signUpOptions.TenantID,
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
 		TemplateID:      signUpOptions.TemplateID,
@@ -251,8 +244,8 @@ func newAuthenticationSignUpRequestBody(method descope.DeliveryMethod, loginID s
 	if signUpOptions == nil {
 		signUpOptions = &descope.SignUpOptions{}
 	}
-	b.TenantID = signUpOptions.TenantID
 	b.LoginOptions = &descope.LoginOptions{
+		TenantID:        signUpOptions.TenantID,
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
 		TemplateID:      signUpOptions.TemplateID,

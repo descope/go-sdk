@@ -17,11 +17,11 @@ func (auth *webAuthn) SignUpStart(ctx context.Context, loginID string, user *des
 	if user == nil {
 		user = &descope.User{}
 	}
-	var tenantID string
-	if signUpOptions != nil {
-		tenantID = signUpOptions.TenantID
+	var loginOpts *descope.LoginOptions
+	if signUpOptions != nil && signUpOptions.TenantID != "" {
+		loginOpts = &descope.LoginOptions{TenantID: signUpOptions.TenantID}
 	}
-	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnSignUpStart(), authenticationWebAuthnSignUpRequestBody{LoginID: loginID, TenantID: tenantID, User: user, Origin: origin}, nil, "")
+	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnSignUpStart(), authenticationWebAuthnSignUpRequestBody{LoginID: loginID, User: user, Origin: origin, LoginOptions: loginOpts}, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -52,11 +52,7 @@ func (auth *webAuthn) SignInStart(ctx context.Context, loginID string, origin st
 		}
 	}
 
-	var tenantID string
-	if loginOptions != nil {
-		tenantID = loginOptions.TenantID
-	}
-	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnSignInStart(), authenticationWebAuthnSignInRequestBody{LoginID: loginID, TenantID: tenantID, Origin: origin, LoginOptions: loginOptions}, nil, pswd)
+	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnSignInStart(), authenticationWebAuthnSignInRequestBody{LoginID: loginID, Origin: origin, LoginOptions: loginOptions}, nil, pswd)
 	if err != nil {
 		return nil, err
 	}
@@ -80,11 +76,7 @@ func (auth *webAuthn) SignUpOrInStart(ctx context.Context, loginID string, origi
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 
-	var tenantID string
-	if loginOptions != nil {
-		tenantID = loginOptions.TenantID
-	}
-	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnSignUpOrInStart(), authenticationWebAuthnSignInRequestBody{LoginID: loginID, TenantID: tenantID, Origin: origin}, nil, "")
+	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnSignUpOrInStart(), authenticationWebAuthnSignInRequestBody{LoginID: loginID, Origin: origin, LoginOptions: loginOptions}, nil, "")
 	if err != nil {
 		return nil, err
 	}

@@ -708,7 +708,7 @@ if err != nil {
 
 ### Tenant User Isolation
 
-When a project has Tenant User Isolation enabled, users with the same login ID in different tenants are treated as completely separate identities. To associate a sign-up or sign-in with a specific tenant in this mode, pass `TenantID` in the options struct for both the initiation and the verification step:
+When a project has Tenant User Isolation enabled, users with the same login ID in different tenants are treated as completely separate identities. To associate a sign-up or sign-in with a specific tenant in this mode, pass `TenantID` in the options struct:
 
 ```go
 // Sign up alice scoped to tenant A — creates a tenant-isolated identity
@@ -718,16 +718,15 @@ if err != nil {
     // handle error
 }
 
-// Verify the OTP code with the same tenant context
-loginOptions := &descope.LoginOptions{TenantID: "tenant-A"}
-authInfo, err := descopeClient.Auth.OTP().VerifyCode(context.Background(), descope.MethodEmail, loginID, code, loginOptions, w)
+// Verify the OTP code — tenant context is carried from the sign-up step
+authInfo, err := descopeClient.Auth.OTP().VerifyCode(context.Background(), descope.MethodEmail, loginID, code, nil, w)
 if err != nil {
     // handle error
 }
 ```
 
 A few things to keep in mind:
-- Both the sign-up/sign-in **and** the verify call must use the same `TenantID` — the tenant context must be consistent throughout the flow.
+- Only the sign-up/sign-in step requires `TenantID` — the verify step carries the tenant context automatically.
 - If `TenantID` is omitted, the request uses the non-isolated (shared) identity, as if tenant isolation were not enabled.
 - This is different from [`SelectTenant`](#tenant-selection), which switches the active tenant on an already-authenticated session. `TenantID` in `LoginOptions`/`SignUpOptions` scopes identity resolution at authentication time.
 

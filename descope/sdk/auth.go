@@ -96,7 +96,6 @@ type OTP interface {
 
 	// VerifyCode - Use to verify a SignIn/SignUp based on the given loginID either an email or a phone
 	// followed by the code used to verify and authenticate the user.
-	// loginOptions can be used to set optional parameters such as TenantID for tenant user isolation.
 	// In case the request cookie can be renewed an automatic renewal is called and returns a new set of cookies to use.
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	// returns a list of cookies or an error upon failure.
