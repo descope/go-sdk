@@ -13,11 +13,15 @@ type webAuthn struct {
 	authenticationsBase
 }
 
-func (auth *webAuthn) SignUpStart(ctx context.Context, loginID string, user *descope.User, origin string) (*descope.WebAuthnTransactionResponse, error) {
+func (auth *webAuthn) SignUpStart(ctx context.Context, loginID string, user *descope.User, origin string, signUpOptions *descope.SignUpOptions) (*descope.WebAuthnTransactionResponse, error) {
 	if user == nil {
 		user = &descope.User{}
 	}
-	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnSignUpStart(), authenticationWebAuthnSignUpRequestBody{LoginID: loginID, User: user, Origin: origin}, nil, "")
+	var tenantID string
+	if signUpOptions != nil {
+		tenantID = signUpOptions.TenantID
+	}
+	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnSignUpStart(), authenticationWebAuthnSignUpRequestBody{LoginID: loginID, TenantID: tenantID, User: user, Origin: origin}, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -71,12 +75,16 @@ func (auth *webAuthn) SignInFinish(ctx context.Context, request *descope.WebAuth
 	return auth.generateAuthenticationInfo(res, w)
 }
 
-func (auth *webAuthn) SignUpOrInStart(ctx context.Context, loginID string, origin string) (*descope.WebAuthnTransactionResponse, error) {
+func (auth *webAuthn) SignUpOrInStart(ctx context.Context, loginID string, origin string, loginOptions *descope.LoginOptions) (*descope.WebAuthnTransactionResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
 
-	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnSignUpOrInStart(), authenticationWebAuthnSignInRequestBody{LoginID: loginID, Origin: origin}, nil, "")
+	var tenantID string
+	if loginOptions != nil {
+		tenantID = loginOptions.TenantID
+	}
+	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnSignUpOrInStart(), authenticationWebAuthnSignInRequestBody{LoginID: loginID, TenantID: tenantID, Origin: origin}, nil, "")
 	if err != nil {
 		return nil, err
 	}

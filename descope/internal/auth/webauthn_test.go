@@ -23,7 +23,21 @@ func TestSignUpStart(t *testing.T) {
 		assert.EqualValues(t, "test2@test.com", req.User.Name)
 	}, expectedResponse))
 	require.NoError(t, err)
-	res, err := a.WebAuthn().SignUpStart(context.Background(), "test@test.com", &descope.User{Name: "test2@test.com"}, "https://example.com")
+	res, err := a.WebAuthn().SignUpStart(context.Background(), "test@test.com", &descope.User{Name: "test2@test.com"}, "https://example.com", nil)
+	require.NoError(t, err)
+	assert.EqualValues(t, expectedResponse.TransactionID, res.TransactionID)
+}
+
+func TestSignUpStartWithTenantID(t *testing.T) {
+	expectedResponse := descope.WebAuthnTransactionResponse{TransactionID: "a"}
+	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, "test@test.com", body["loginId"])
+		assert.EqualValues(t, "tenant1", body["tenantId"])
+	}, expectedResponse))
+	require.NoError(t, err)
+	res, err := a.WebAuthn().SignUpStart(context.Background(), "test@test.com", &descope.User{Name: "test"}, "https://example.com", &descope.SignUpOptions{TenantID: "tenant1"})
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedResponse.TransactionID, res.TransactionID)
 }
@@ -37,7 +51,7 @@ func TestSignUpStartNilUser(t *testing.T) {
 		assert.EqualValues(t, "test@test.com", req.LoginID)
 	}, expectedResponse))
 	require.NoError(t, err)
-	res, err := a.WebAuthn().SignUpStart(context.Background(), "test@test.com", nil, "https://example.com")
+	res, err := a.WebAuthn().SignUpStart(context.Background(), "test@test.com", nil, "https://example.com", nil)
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedResponse.TransactionID, res.TransactionID)
 }
@@ -131,16 +145,30 @@ func TestSignUpOrInStart(t *testing.T) {
 		assert.EqualValues(t, "https://example.com", req.Origin)
 	}, expectedResponse))
 	require.NoError(t, err)
-	res, err := a.WebAuthn().SignUpOrInStart(context.Background(), "test@test.com", "https://example.com")
+	res, err := a.WebAuthn().SignUpOrInStart(context.Background(), "test@test.com", "https://example.com", nil)
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedResponse.TransactionID, res.TransactionID)
 	assert.EqualValues(t, expectedResponse.Create, res.Create)
 }
 
+func TestSignUpOrInStartWithTenantID(t *testing.T) {
+	expectedResponse := descope.WebAuthnTransactionResponse{TransactionID: "a", Create: true}
+	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, "test@test.com", body["loginId"])
+		assert.EqualValues(t, "tenant1", body["tenantId"])
+	}, expectedResponse))
+	require.NoError(t, err)
+	res, err := a.WebAuthn().SignUpOrInStart(context.Background(), "test@test.com", "https://example.com", &descope.LoginOptions{TenantID: "tenant1"})
+	require.NoError(t, err)
+	assert.EqualValues(t, expectedResponse.TransactionID, res.TransactionID)
+}
+
 func TestSignUpOrInStartEmpty(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)
-	res, err := a.WebAuthn().SignUpOrInStart(context.Background(), "", "https://example.com")
+	res, err := a.WebAuthn().SignUpOrInStart(context.Background(), "", "https://example.com", nil)
 	require.Error(t, err)
 	assert.Nil(t, res)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)

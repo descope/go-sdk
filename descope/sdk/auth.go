@@ -96,6 +96,7 @@ type OTP interface {
 
 	// VerifyCode - Use to verify a SignIn/SignUp based on the given loginID either an email or a phone
 	// followed by the code used to verify and authenticate the user.
+	// loginOptions can be used to set optional parameters such as TenantID for tenant user isolation.
 	// In case the request cookie can be renewed an automatic renewal is called and returns a new set of cookies to use.
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	// returns a list of cookies or an error upon failure.
@@ -277,8 +278,9 @@ type WebAuthn interface {
 	// SignUpStart - Use to start an authentication process with webauthn for the new user argument.
 	// Origin is the origin of the URL for the web page where the webauthn operation is taking place, as returned
 	// by calling document.location.origin via javascript.
+	// signUpOptions can be used to set optional parameters such as TenantID for tenant user isolation.
 	// returns a transaction id response on success and error upon failure.
-	SignUpStart(ctx context.Context, loginID string, user *descope.User, origin string) (*descope.WebAuthnTransactionResponse, error)
+	SignUpStart(ctx context.Context, loginID string, user *descope.User, origin string, signUpOptions *descope.SignUpOptions) (*descope.WebAuthnTransactionResponse, error)
 
 	// SignUpFinish - Use to finish an authentication process with a given transaction id and credentials after been signed
 	// by the credentials navigator.
@@ -302,8 +304,9 @@ type WebAuthn interface {
 	// Create is true) or SignInFinish (if Create is false) later to finalize the operation.
 	// Origin is the origin of the URL for the web page where the webauthn operation is taking place, as returned
 	// by calling document.location.origin via javascript.
+	// loginOptions can be used to set optional parameters such as TenantID for tenant user isolation.
 	// returns a transaction id response on successs and error upon failure.
-	SignUpOrInStart(ctx context.Context, loginID string, origin string) (*descope.WebAuthnTransactionResponse, error)
+	SignUpOrInStart(ctx context.Context, loginID string, origin string, loginOptions *descope.LoginOptions) (*descope.WebAuthnTransactionResponse, error)
 
 	// UpdateUserDeviceStart - Use to start an add webauthn device process for an existing user with the given loginID.
 	// Request is needed to obtain JWT and send it to Descope, for verification.

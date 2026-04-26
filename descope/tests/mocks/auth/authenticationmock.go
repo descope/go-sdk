@@ -546,7 +546,7 @@ func (m *MockSSO) ExchangeToken(_ context.Context, code string, w http.ResponseW
 // Mock WebAuthn
 
 type MockWebAuthn struct {
-	SignUpStartAssert   func(loginID string, user *descope.User, origin string)
+	SignUpStartAssert   func(loginID string, user *descope.User, origin string, signUpOptions *descope.SignUpOptions)
 	SignUpStartError    error
 	SignUpStartResponse *descope.WebAuthnTransactionResponse
 
@@ -562,7 +562,7 @@ type MockWebAuthn struct {
 	SignInFinishError    error
 	SignInFinishResponse *descope.AuthenticationInfo
 
-	SignUpOrInStartAssert   func(loginID string, origin string)
+	SignUpOrInStartAssert   func(loginID string, origin string, loginOptions *descope.LoginOptions)
 	SignUpOrInStartError    error
 	SignUpOrInStartResponse *descope.WebAuthnTransactionResponse
 
@@ -574,9 +574,9 @@ type MockWebAuthn struct {
 	UpdateUserDeviceFinishError  error
 }
 
-func (m *MockWebAuthn) SignUpStart(_ context.Context, loginID string, user *descope.User, origin string) (*descope.WebAuthnTransactionResponse, error) {
+func (m *MockWebAuthn) SignUpStart(_ context.Context, loginID string, user *descope.User, origin string, signUpOptions *descope.SignUpOptions) (*descope.WebAuthnTransactionResponse, error) {
 	if m.SignUpStartAssert != nil {
-		m.SignUpStartAssert(loginID, user, origin)
+		m.SignUpStartAssert(loginID, user, origin, signUpOptions)
 	}
 	return m.SignUpStartResponse, m.SignUpStartError
 }
@@ -602,9 +602,9 @@ func (m *MockWebAuthn) SignInFinish(_ context.Context, finishRequest *descope.We
 	return m.SignInFinishResponse, m.SignInFinishError
 }
 
-func (m *MockWebAuthn) SignUpOrInStart(_ context.Context, loginID string, origin string) (*descope.WebAuthnTransactionResponse, error) {
+func (m *MockWebAuthn) SignUpOrInStart(_ context.Context, loginID string, origin string, loginOptions *descope.LoginOptions) (*descope.WebAuthnTransactionResponse, error) {
 	if m.SignUpOrInStartAssert != nil {
-		m.SignUpOrInStartAssert(loginID, origin)
+		m.SignUpOrInStartAssert(loginID, origin, loginOptions)
 	}
 	return m.SignUpOrInStartResponse, m.SignUpOrInStartError
 }
