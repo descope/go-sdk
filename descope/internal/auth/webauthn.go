@@ -18,8 +18,13 @@ func (auth *webAuthn) SignUpStart(ctx context.Context, loginID string, user *des
 		user = &descope.User{}
 	}
 	var loginOpts *descope.LoginOptions
-	if signUpOptions != nil && signUpOptions.TenantID != "" {
-		loginOpts = &descope.LoginOptions{TenantID: signUpOptions.TenantID}
+	if signUpOptions != nil {
+		loginOpts = &descope.LoginOptions{
+			TenantID:        signUpOptions.TenantID,
+			CustomClaims:    signUpOptions.CustomClaims,
+			TemplateOptions: signUpOptions.TemplateOptions,
+			TemplateID:      signUpOptions.TemplateID,
+		}
 	}
 	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnSignUpStart(), authenticationWebAuthnSignUpRequestBody{LoginID: loginID, User: user, Origin: origin, LoginOptions: loginOpts}, nil, "")
 	if err != nil {

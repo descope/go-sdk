@@ -299,6 +299,20 @@ func TestInvalidSignInStepupNoJWT(t *testing.T) {
 	assert.ErrorIs(t, err, descope.ErrInvalidStepUpJWT)
 }
 
+func TestSignInEmailWithTenantID(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, "test@test.com", body["loginId"])
+		loginOpts, ok := body["loginOptions"].(map[string]any)
+		require.True(t, ok, "loginOptions should be a map")
+		assert.EqualValues(t, "tenant1", loginOpts["tenantId"])
+	}))
+	require.NoError(t, err)
+	_, err = a.OTP().SignIn(context.Background(), descope.MethodEmail, "test@test.com", nil, &descope.LoginOptions{TenantID: "tenant1"})
+	require.NoError(t, err)
+}
+
 func TestEmptyEmailVerifyCodeEmail(t *testing.T) {
 	email := ""
 	a, err := newTestAuth(nil, nil)
