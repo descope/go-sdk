@@ -195,7 +195,7 @@ func handleVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	authInfo, err := descopeClient.Auth.OTP().VerifyCode(r.Context(), method, loginID, code, nil, w)
+	authInfo, err := descopeClient.Auth.OTP().VerifyCode(r.Context(), method, loginID, code, w)
 	if err != nil {
 		setError(w, err.Error())
 		return
@@ -455,7 +455,7 @@ func handleStepupConfVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	authInfo, err := descopeClient.Auth.OTP().VerifyCode(r.Context(), method, loginID, code, nil, w)
+	authInfo, err := descopeClient.Auth.OTP().VerifyCode(r.Context(), method, loginID, code, w)
 	if err != nil {
 		setError(w, err.Error())
 		return
@@ -490,7 +490,7 @@ func handleStepupConfUpdateVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	authInfo, err := descopeClient.Auth.OTP().VerifyCode(r.Context(), method, loginID, code, nil, nil)
+	authInfo, err := descopeClient.Auth.OTP().VerifyCode(r.Context(), method, loginID, code, nil)
 	if err != nil {
 		setErrorWithSignUpIn(w, err.Error(), method, loginID)
 		return
@@ -521,7 +521,7 @@ func handleStepupLoginVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	authInfo, err := descopeClient.Auth.OTP().VerifyCode(r.Context(), method, loginID, code, nil, w)
+	authInfo, err := descopeClient.Auth.OTP().VerifyCode(r.Context(), method, loginID, code, w)
 	if err != nil {
 		setError(w, err.Error())
 		return
@@ -554,7 +554,7 @@ func handleStepupStepupVerify(w http.ResponseWriter, r *http.Request) {
 		setError(w, "code is empty")
 		return
 	}
-	authInfo, err := descopeClient.Auth.OTP().VerifyCode(r.Context(), method, loginID, code, nil, w)
+	authInfo, err := descopeClient.Auth.OTP().VerifyCode(r.Context(), method, loginID, code, w)
 	if err != nil {
 		setError(w, err.Error())
 		return

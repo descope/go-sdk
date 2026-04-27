@@ -253,12 +253,12 @@ func newAuthenticationSignUpRequestBody(method descope.DeliveryMethod, loginID s
 	return b
 }
 
-func newAuthenticationVerifyRequestBody(value string, code string, loginOptions *descope.LoginOptions) *authenticationVerifyRequestBody {
-	return &authenticationVerifyRequestBody{authenticationRequestBody: newSignInRequestBody(value, loginOptions), Code: code}
+func newAuthenticationVerifyRequestBody(value string, code string) *authenticationVerifyRequestBody {
+	return &authenticationVerifyRequestBody{authenticationRequestBody: newSignInRequestBody(value, nil), Code: code}
 }
 
 func newAuthenticationVerifyTOTPRequestBody(value string, code string, loginOptions *descope.LoginOptions) *authenticationVerifyTOTPRequestBody {
-	return &authenticationVerifyTOTPRequestBody{authenticationVerifyRequestBody: newAuthenticationVerifyRequestBody(value, code, loginOptions), LoginOptions: loginOptions}
+	return &authenticationVerifyTOTPRequestBody{authenticationVerifyRequestBody: newAuthenticationVerifyRequestBody(value, code), LoginOptions: loginOptions}
 }
 
 func newMagicLinkUpdateEmailRequestBody(loginID, email string, URI string, crossDevice bool, updateOptions *descope.UpdateOptions) *magicLinkUpdateEmailRequestBody {

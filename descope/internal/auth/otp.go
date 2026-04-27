@@ -64,7 +64,7 @@ func (auth *otp) SignUpOrIn(ctx context.Context, method descope.DeliveryMethod, 
 	return masked.GetMasked(), err
 }
 
-func (auth *otp) VerifyCode(ctx context.Context, method descope.DeliveryMethod, loginID string, code string, loginOptions *descope.LoginOptions, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (auth *otp) VerifyCode(ctx context.Context, method descope.DeliveryMethod, loginID string, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
@@ -81,7 +81,7 @@ func (auth *otp) VerifyCode(ctx context.Context, method descope.DeliveryMethod, 
 			return nil, utils.NewInvalidArgumentError("method")
 		}
 	}
-	httpResponse, err := auth.client.DoPostRequest(ctx, composeVerifyCodeURL(method), newAuthenticationVerifyRequestBody(loginID, code, loginOptions), nil, "")
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeVerifyCodeURL(method), newAuthenticationVerifyRequestBody(loginID, code), nil, "")
 	if err != nil {
 		return nil, err
 	}

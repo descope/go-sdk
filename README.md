@@ -719,7 +719,7 @@ if err != nil {
 }
 
 // Verify the OTP code — tenant context is carried from the sign-up step
-authInfo, err := descopeClient.Auth.OTP().VerifyCode(context.Background(), descope.MethodEmail, loginID, code, nil, w)
+authInfo, err := descopeClient.Auth.OTP().VerifyCode(context.Background(), descope.MethodEmail, loginID, code, w)
 if err != nil {
     // handle error
 }

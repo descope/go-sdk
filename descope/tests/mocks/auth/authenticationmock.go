@@ -208,7 +208,7 @@ type MockOTP struct {
 	SignUpOrInAssert func(method descope.DeliveryMethod, loginID string, signUpOptions *descope.SignUpOptions)
 	SignUpOrInError  error
 
-	VerifyCodeAssert   func(method descope.DeliveryMethod, loginID string, code string, loginOptions *descope.LoginOptions, w http.ResponseWriter)
+	VerifyCodeAssert   func(method descope.DeliveryMethod, loginID string, code string, w http.ResponseWriter)
 	VerifyCodeError    error
 	VerifyCodeResponse *descope.AuthenticationInfo
 
@@ -240,9 +240,9 @@ func (m *MockOTP) SignUpOrIn(_ context.Context, method descope.DeliveryMethod, l
 	return "", m.SignUpOrInError
 }
 
-func (m *MockOTP) VerifyCode(_ context.Context, method descope.DeliveryMethod, loginID string, code string, loginOptions *descope.LoginOptions, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+func (m *MockOTP) VerifyCode(_ context.Context, method descope.DeliveryMethod, loginID string, code string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.VerifyCodeAssert != nil {
-		m.VerifyCodeAssert(method, loginID, code, loginOptions, w)
+		m.VerifyCodeAssert(method, loginID, code, w)
 	}
 	return m.VerifyCodeResponse, m.VerifyCodeError
 }

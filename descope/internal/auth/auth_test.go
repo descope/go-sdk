@@ -229,7 +229,7 @@ func TestAuthDefaultURL(t *testing.T) {
 		assert.Contains(t, r.URL.String(), url)
 	}))
 	require.NoError(t, err)
-	_, err = a.OTP().VerifyCode(context.Background(), descope.MethodWhatsApp, "4444", "444", nil, nil)
+	_, err = a.OTP().VerifyCode(context.Background(), descope.MethodWhatsApp, "4444", "444", nil)
 	require.NoError(t, err)
 }
 
