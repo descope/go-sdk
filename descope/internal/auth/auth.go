@@ -47,6 +47,8 @@ func (d *defaultRequestTokensProvider) ProvideTokens(r *http.Request) (sessionTo
 	reqToken := r.Header.Get(api.AuthorizationHeaderName)
 	if splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix); len(splitToken) == 2 {
 		sessionToken = splitToken[1]
+	} else if splitToken := strings.Split(reqToken, api.DPoPAuthorizationPrefix); len(splitToken) == 2 {
+		sessionToken = splitToken[1]
 	}
 
 	if sessionToken == "" {
@@ -420,7 +422,17 @@ func (auth *authenticationService) ValidateSessionWithRequest(request *http.Requ
 	if sessionToken == "" {
 		return false, nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain session token")
 	}
-	return auth.validateSession(request.Context(), sessionToken)
+	ok, token, err := auth.validateSession(request.Context(), sessionToken)		
+	if err != nil || !ok {
+		return ok, token, err
+	}
+	if jkt := token.GetDPoPThumbprint(); jkt != "" {
+		proof := request.Header.Get(api.DPoPHeaderName)
+		if err := ValidateDPoPProof(proof, request.Method, dpopRequestURL(request), sessionToken, jkt); err != nil {
+			return false, nil, err
+		}
+	}
+	return true, token, nil
 }
 
 func (auth *authenticationService) ValidateSessionWithToken(ctx context.Context, sessionToken string) (bool, *descope.Token, error) {
