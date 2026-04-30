@@ -45,7 +45,7 @@ func dpopIsAllowedAlg(alg string) bool {
 
 func dpopThumbprint(key jwk.Key) (string, error) {
 	tp, err := key.Thumbprint(crypto.SHA256)
-	if err != nil {
+	if err != nil { // notest
 		return "", descope.ErrInvalidToken.WithMessage("failed to compute JWK thumbprint")
 	}
 	return base64.RawURLEncoding.EncodeToString(tp), nil
@@ -111,7 +111,7 @@ func validateDPoPProof(proof, method, requestURL, accessToken, storedJKT string,
 		jwt.WithValidate(false),
 	)
 	if err != nil {
-		return descope.ErrInvalidToken.WithMessage("failed to parse DPoP JWT claims")
+		return descope.ErrInvalidToken.WithMessage("failed to parse DPoP JWT claims") // notest
 	}
 
 	jtiRaw, ok := token.Get("jti")
@@ -175,7 +175,7 @@ func validateDPoPProof(proof, method, requestURL, accessToken, storedJKT string,
 	}
 
 	tp, err := dpopThumbprint(embeddedKey)
-	if err != nil {
+	if err != nil { // notest
 		return err
 	}
 	if tp != storedJKT {

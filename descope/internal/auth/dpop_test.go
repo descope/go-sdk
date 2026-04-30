@@ -685,3 +685,116 @@ func TestValidateSessionWithRequest_DPoPBoundToken_WrongKey_Rejected(t *testing.
 	require.Error(t, err)
 	assert.False(t, ok)
 }
+
+// "expected exactly one JWS signature" — JWS JSON General Serialization with two signatures.
+// jws.Parse succeeds and returns len(sigs)==2, which must be rejected.
+func TestDPoP_MultipleSignatures_Rejected(t *testing.T) {
+	priv, _ := dpopNewKeyPair(t)
+	// Build a valid compact JWS then re-serialize it as JSON with 2 signature entries.
+	compact := dpopMakeProof(t, priv, dpopValidOpts("GET", dpopTestURL, dpopTestToken))
+	parts := strings.SplitN(compact, ".", 3)
+	require.Len(t, parts, 3)
+	// JSON General Serialization: payload is the second segment; each entry repeats the same header+sig.
+	jwsJSON := fmt.Sprintf(
+		`{"payload":%q,"signatures":[{"protected":%q,"signature":%q},{"protected":%q,"signature":%q}]}`,
+		parts[1], parts[0], parts[2], parts[0], parts[2],
+	)
+	err := ValidateDPoPProof(jwsJSON, "GET", dpopTestURL, dpopTestToken, "any-jkt")
+	require.Error(t, err)
+}
+
+// "jwk must not contain a private key" — OKP (Ed25519) private key embedded in JWK header,
+// proof signed with RS256 (an allowed algorithm) so the private-key check is reached.
+func TestDPoP_OKPPrivateKeyInJWK_Rejected(t *testing.T) {
+	rsaRaw, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+	rsaPrivJWK, err := jwk.FromRaw(rsaRaw)
+	require.NoError(t, err)
+
+	_, edPrivRaw, err := ed25519.GenerateKey(rand.Reader)
+	require.NoError(t, err)
+	edPrivJWK, err := jwk.FromRaw(edPrivRaw)
+	require.NoError(t, err)
+
+	tok := jwt.New()
+	require.NoError(t, tok.Set("jti", dpopRandomJTI()))
+	require.NoError(t, tok.Set("htm", "GET"))
+	require.NoError(t, tok.Set("htu", dpopTestURL))
+	require.NoError(t, tok.Set(jwt.IssuedAtKey, time.Now()))
+	require.NoError(t, tok.Set("ath", dpopAthFor(dpopTestToken)))
+
+	hdrs := jws.NewHeaders()
+	require.NoError(t, hdrs.Set(jws.TypeKey, "dpop+jwt"))
+	require.NoError(t, hdrs.Set(jws.AlgorithmKey, jwa.RS256))
+	require.NoError(t, hdrs.Set(jws.JWKKey, edPrivJWK)) // OKP private key in header
+
+	signed, err := jwt.Sign(tok, jwt.WithKey(jwa.RS256, rsaPrivJWK, jws.WithProtectedHeaders(hdrs)))
+	require.NoError(t, err)
+
+	err = ValidateDPoPProof(string(signed), "GET", dpopTestURL, dpopTestToken, "any-jkt")
+	require.Error(t, err)
+}
+
+// "symmetric key not allowed in DPoP proof" — OctetSeq key embedded in JWK header,
+// proof signed with RS256 (an allowed algorithm) so the OctetSeq check is reached.
+func TestDPoP_OctetSeqKeyWithAllowedAlg_Rejected(t *testing.T) {
+	rsaRaw, err := rsa.GenerateKey(rand.Reader, 2048)
+	require.NoError(t, err)
+	rsaPrivJWK, err := jwk.FromRaw(rsaRaw)
+	require.NoError(t, err)
+
+	rawSecret := make([]byte, 32)
+	_, err = rand.Read(rawSecret)
+	require.NoError(t, err)
+	symKey, err := jwk.FromRaw(rawSecret)
+	require.NoError(t, err)
+
+	tok := jwt.New()
+	require.NoError(t, tok.Set("jti", dpopRandomJTI()))
+	require.NoError(t, tok.Set("htm", "GET"))
+	require.NoError(t, tok.Set("htu", dpopTestURL))
+	require.NoError(t, tok.Set(jwt.IssuedAtKey, time.Now()))
+	require.NoError(t, tok.Set("ath", dpopAthFor(dpopTestToken)))
+
+	hdrs := jws.NewHeaders()
+	require.NoError(t, hdrs.Set(jws.TypeKey, "dpop+jwt"))
+	require.NoError(t, hdrs.Set(jws.AlgorithmKey, jwa.RS256))
+	require.NoError(t, hdrs.Set(jws.JWKKey, symKey)) // OctetSeq key in header
+
+	signed, err := jwt.Sign(tok, jwt.WithKey(jwa.RS256, rsaPrivJWK, jws.WithProtectedHeaders(hdrs)))
+	require.NoError(t, err)
+
+	err = ValidateDPoPProof(string(signed), "GET", dpopTestURL, dpopTestToken, "any-jkt")
+	require.Error(t, err)
+}
+
+// ---- dpopHtuMatches unit tests ----
+
+func TestDPoPHtuMatches_PathOnlyHTU_Rejected(t *testing.T) {
+	// htu without scheme/host must be rejected (not an absolute URI)
+	assert.False(t, dpopHtuMatches("/just/a/path", "https://api.example.com/just/a/path"))
+}
+
+func TestDPoPHtuMatches_PathOnlyRequestURL_Rejected(t *testing.T) {
+	// requestURL without scheme/host must be rejected
+	assert.False(t, dpopHtuMatches("https://api.example.com/just/a/path", "/just/a/path"))
+}
+
+func TestDPoPHtuMatches_InvalidHTU_Rejected(t *testing.T) {
+	// Invalid percent-encoding causes url.Parse to return an error
+	assert.False(t, dpopHtuMatches("https://api.example.com/%zz/path", "https://api.example.com/path"))
+}
+
+func TestDPoPHtuMatches_InvalidRequestURL_Rejected(t *testing.T) {
+	// Invalid percent-encoding in requestURL causes url.Parse to return an error
+	assert.False(t, dpopHtuMatches("https://api.example.com/path", "https://api.example.com/%zz/path"))
+}
+
+// HTTP default port 80 stripping in dpopNormalizeHost.
+func TestDPoP_HTU_HTTP_DefaultPort80Stripped_Matches(t *testing.T) {
+	priv, pub := dpopNewKeyPair(t)
+	storedJKT := dpopJKTOf(t, pub)
+	opts := dpopValidOpts("GET", "http://api.example.com:80/v1/resource", dpopTestToken)
+	proof := dpopMakeProof(t, priv, opts)
+	require.NoError(t, ValidateDPoPProof(proof, "GET", "http://api.example.com/v1/resource", dpopTestToken, storedJKT))
+}
