@@ -422,11 +422,16 @@ func (auth *authenticationService) ValidateSessionWithRequest(request *http.Requ
 	if sessionToken == "" {
 		return false, nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain session token")
 	}
-	ok, token, err := auth.validateSession(request.Context(), sessionToken)		
+	ok, token, err := auth.validateSession(request.Context(), sessionToken)
 	if err != nil || !ok {
 		return ok, token, err
 	}
-	if jkt := token.GetDPoPThumbprint(); jkt != "" {
+	isDPoPScheme := strings.HasPrefix(request.Header.Get(api.AuthorizationHeaderName), api.DPoPAuthorizationPrefix)
+	jkt := token.GetDPoPThumbprint()
+	if isDPoPScheme && jkt == "" {
+		return false, nil, descope.ErrInvalidToken.WithMessage("DPoP scheme used but token is not DPoP-bound (missing cnf.jkt)")
+	}
+	if jkt != "" {
 		proof := request.Header.Get(api.DPoPHeaderName)
 		if err := ValidateDPoPProof(proof, request.Method, dpopRequestURL(request), sessionToken, jkt); err != nil {
 			return false, nil, err

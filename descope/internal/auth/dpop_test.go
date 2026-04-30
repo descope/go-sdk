@@ -598,9 +598,10 @@ func dpopSignSessionJWT(t *testing.T, priv jwk.Key, extraClaims map[string]any) 
 	return string(signed)
 }
 
-func TestValidateSessionWithRequest_DPoPPrefix_PlainBearerToken_Accepted(t *testing.T) {
-	// "Authorization: DPoP <token>" where the token has no cnf.jkt → DPoP not enforced,
-	// treated as plain Bearer. The prefix handling must be transparent.
+func TestValidateSessionWithRequest_DPoPScheme_NoCnfJKT_Rejected(t *testing.T) {
+	// "Authorization: DPoP <token>" where the token has no cnf.jkt → rejected.
+	// The DPoP scheme signals the client intends DPoP; a token without cnf.jkt is not DPoP-bound
+	// and must not be accepted under the DPoP scheme.
 	sessionPriv, _ := dpopNewKeyPair(t)
 	a := dpopNewAuthForKey(t, sessionPriv)
 	sessionToken := dpopSignSessionJWT(t, sessionPriv, nil)
@@ -608,10 +609,10 @@ func TestValidateSessionWithRequest_DPoPPrefix_PlainBearerToken_Accepted(t *test
 	req := httptest.NewRequest(http.MethodGet, "/resource", nil)
 	req.Header.Set("Authorization", "DPoP "+sessionToken)
 
-	ok, token, err := a.ValidateSessionWithRequest(req)
-	require.NoError(t, err)
-	require.True(t, ok)
-	require.NotNil(t, token)
+	ok, _, err := a.ValidateSessionWithRequest(req)
+	require.Error(t, err)
+	assert.False(t, ok)
+	assert.ErrorIs(t, err, descope.ErrInvalidToken)
 }
 
 func TestValidateSessionWithRequest_DPoPBoundToken_ValidProof_Accepted(t *testing.T) {
