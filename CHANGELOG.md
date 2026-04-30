@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.17.0](https://github.com/descope/go-sdk/compare/v1.16.0...v1.17.0) (2026-04-20)
+
+
+### Features
+
+* add IDPResponse to AuthenticationInfo for SSO exchange ([#733](https://github.com/descope/go-sdk/issues/733)) ([fdf2e9a](https://github.com/descope/go-sdk/commit/fdf2e9ad29cd49335e561a5f2659d5b8464a81b1))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.16.0 ([#730](https://github.com/descope/go-sdk/issues/730)) ([c3b476d](https://github.com/descope/go-sdk/commit/c3b476df0dd5222f5a66c1f9f999570c92913ca3))
+
 ## [1.16.0](https://github.com/descope/go-sdk/compare/v1.15.0...v1.16.0) (2026-04-19)
 
 
