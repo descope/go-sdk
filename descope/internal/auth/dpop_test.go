@@ -61,13 +61,13 @@ type dpopProofOpts struct {
 	ath        string // "" = omit claim; use emptyATH to include an empty value
 
 	// Fine-grained claim control
-	omitJTI        bool // omit the jti claim entirely
-	emptyJTI       bool // include jti="" (present but empty)
-	omitHTM        bool // omit the htm claim entirely
-	emptyHTM       bool // include htm=""
-	omitHTU        bool // omit the htu claim entirely
-	emptyHTU       bool // include htu=""
-	omitIAT        bool // omit the iat claim entirely
+	omitJTI         bool // omit the jti claim entirely
+	emptyJTI        bool // include jti="" (present but empty)
+	omitHTM         bool // omit the htm claim entirely
+	emptyHTM        bool // include htm=""
+	omitHTU         bool // omit the htu claim entirely
+	emptyHTU        bool // include htu=""
+	omitIAT         bool // omit the iat claim entirely
 	includeEmptyATH bool // include ath="" (present but empty)
 
 	// Key override: embed this key in the JWK header instead of the derived public key.
@@ -508,8 +508,8 @@ func TestDPoP_EmptyATH_Rejected(t *testing.T) {
 	priv, pub := dpopNewKeyPair(t)
 	storedJKT := dpopJKTOf(t, pub)
 	opts := dpopValidOpts("GET", dpopTestURL, dpopTestToken)
-	opts.ath = ""                  // clear the valid ath
-	opts.includeEmptyATH = true    // include ath="" (present but empty)
+	opts.ath = ""               // clear the valid ath
+	opts.includeEmptyATH = true // include ath="" (present but empty)
 	proof := dpopMakeProof(t, priv, opts)
 	require.Error(t, ValidateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT))
 }
