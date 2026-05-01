@@ -798,3 +798,249 @@ func TestDPoP_HTU_HTTP_DefaultPort80Stripped_Matches(t *testing.T) {
 	proof := dpopMakeProof(t, priv, opts)
 	require.NoError(t, ValidateDPoPProof(proof, "GET", "http://api.example.com/v1/resource", dpopTestToken, storedJKT))
 }
+
+// ---- Fix 1: ValidateAndRefreshSessionWithRequest DPoP enforcement ----
+
+func TestValidateAndRefreshSessionWithRequest_DPoPBoundToken_ValidProof_Accepted(t *testing.T) {
+	sessionPriv, _ := dpopNewKeyPair(t)
+	a := dpopNewAuthForKey(t, sessionPriv)
+	dpopPriv, dpopPub := dpopNewKeyPair(t)
+	storedJKT := dpopJKTOf(t, dpopPub)
+	sessionToken := dpopSignSessionJWT(t, sessionPriv, map[string]any{
+		"cnf": map[string]any{"jkt": storedJKT},
+	})
+	const reqURL = "http://example.test/resource"
+	proof := dpopMakeProof(t, dpopPriv, dpopValidOpts("GET", reqURL, sessionToken))
+
+	req := httptest.NewRequest(http.MethodGet, reqURL, nil)
+	req.Header.Set("Authorization", "DPoP "+sessionToken)
+	req.Header.Set("DPoP", proof)
+
+	ok, token, err := a.ValidateAndRefreshSessionWithRequest(req, nil)
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.NotNil(t, token)
+}
+
+func TestValidateAndRefreshSessionWithRequest_DPoPBoundToken_MissingProof_Rejected(t *testing.T) {
+	sessionPriv, _ := dpopNewKeyPair(t)
+	a := dpopNewAuthForKey(t, sessionPriv)
+	_, dpopPub := dpopNewKeyPair(t)
+	storedJKT := dpopJKTOf(t, dpopPub)
+	sessionToken := dpopSignSessionJWT(t, sessionPriv, map[string]any{
+		"cnf": map[string]any{"jkt": storedJKT},
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/resource", nil)
+	req.Header.Set("Authorization", "DPoP "+sessionToken)
+
+	ok, _, err := a.ValidateAndRefreshSessionWithRequest(req, nil)
+	require.Error(t, err)
+	assert.False(t, ok)
+}
+
+func TestValidateAndRefreshSessionWithRequest_DPoPBoundToken_WrongKey_Rejected(t *testing.T) {
+	sessionPriv, _ := dpopNewKeyPair(t)
+	a := dpopNewAuthForKey(t, sessionPriv)
+	dpopPriv1, _ := dpopNewKeyPair(t)
+	_, dpopPub2 := dpopNewKeyPair(t)
+	storedJKT := dpopJKTOf(t, dpopPub2)
+	sessionToken := dpopSignSessionJWT(t, sessionPriv, map[string]any{
+		"cnf": map[string]any{"jkt": storedJKT},
+	})
+	const reqURL = "http://example.test/resource"
+	proof := dpopMakeProof(t, dpopPriv1, dpopValidOpts("GET", reqURL, sessionToken))
+
+	req := httptest.NewRequest(http.MethodGet, reqURL, nil)
+	req.Header.Set("Authorization", "DPoP "+sessionToken)
+	req.Header.Set("DPoP", proof)
+
+	ok, _, err := a.ValidateAndRefreshSessionWithRequest(req, nil)
+	require.Error(t, err)
+	assert.False(t, ok)
+}
+
+func TestValidateAndRefreshSessionWithRequest_DPoPScheme_NoCnfJKT_Rejected(t *testing.T) {
+	sessionPriv, _ := dpopNewKeyPair(t)
+	a := dpopNewAuthForKey(t, sessionPriv)
+	sessionToken := dpopSignSessionJWT(t, sessionPriv, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/resource", nil)
+	req.Header.Set("Authorization", "DPoP "+sessionToken)
+
+	ok, _, err := a.ValidateAndRefreshSessionWithRequest(req, nil)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, descope.ErrInvalidToken)
+	assert.False(t, ok)
+}
+
+// ---- Fix 3: case-insensitive auth-scheme matching ----
+
+func TestProvideTokens_DPoPSchemeLowercase_Extracted(t *testing.T) {
+	provider := &defaultRequestTokensProvider{}
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("Authorization", "dpop my-token")
+	sessionToken, _ := provider.ProvideTokens(req)
+	assert.Equal(t, "my-token", sessionToken)
+}
+
+func TestProvideTokens_BearerSchemeMixedCase_Extracted(t *testing.T) {
+	provider := &defaultRequestTokensProvider{}
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Header.Set("Authorization", "BEARER my-token")
+	sessionToken, _ := provider.ProvideTokens(req)
+	assert.Equal(t, "my-token", sessionToken)
+}
+
+func TestValidateSessionWithRequest_DPoPSchemeLowercase_NoCnfJKT_Rejected(t *testing.T) {
+	sessionPriv, _ := dpopNewKeyPair(t)
+	a := dpopNewAuthForKey(t, sessionPriv)
+	sessionToken := dpopSignSessionJWT(t, sessionPriv, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/resource", nil)
+	req.Header.Set("Authorization", "dpop "+sessionToken) // lowercase scheme
+
+	ok, _, err := a.ValidateSessionWithRequest(req)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, descope.ErrInvalidToken)
+	assert.False(t, ok)
+}
+
+// ---- Fix 4: multiple DPoP headers rejected ----
+
+func TestValidateSessionWithRequest_MultipleDPoPHeaders_Rejected(t *testing.T) {
+	sessionPriv, _ := dpopNewKeyPair(t)
+	a := dpopNewAuthForKey(t, sessionPriv)
+	dpopPriv, dpopPub := dpopNewKeyPair(t)
+	storedJKT := dpopJKTOf(t, dpopPub)
+	sessionToken := dpopSignSessionJWT(t, sessionPriv, map[string]any{
+		"cnf": map[string]any{"jkt": storedJKT},
+	})
+	const reqURL = "http://example.test/resource"
+	proof := dpopMakeProof(t, dpopPriv, dpopValidOpts("GET", reqURL, sessionToken))
+
+	req := httptest.NewRequest(http.MethodGet, reqURL, nil)
+	req.Header.Set("Authorization", "DPoP "+sessionToken)
+	req.Header.Add("DPoP", proof)
+	req.Header.Add("DPoP", proof) // duplicate
+
+	ok, _, err := a.ValidateSessionWithRequest(req)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, descope.ErrInvalidToken)
+	assert.False(t, ok)
+}
+
+func TestDPoP_EnforceDPoP_UnboundToken_Noop(t *testing.T) {
+	// Token with no cnf.jkt → no DPoP check, no proof needed.
+	tok := &descope.Token{Claims: map[string]any{}}
+	req := httptest.NewRequest(http.MethodGet, "http://example.test/resource", nil)
+	require.NoError(t, enforceDPoP(req, "any-token", tok))
+}
+
+// ---- Fix 5a: X-Forwarded-Proto / X-Forwarded-Host in dpopRequestURL ----
+
+func TestDPoPRequestURL_AbsoluteURL_Untouched(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "https://api.example.com/resource", nil)
+	req.Header.Set("X-Forwarded-Proto", "http")
+	req.Header.Set("X-Forwarded-Host", "other.example.com")
+	// Absolute URL should be returned as-is, ignoring forwarded headers.
+	assert.Equal(t, "https://api.example.com/resource", dpopRequestURL(req))
+}
+
+func TestDPoPRequestURL_NoForwardedHeaders_FallsBackToTLS(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/resource", nil)
+	req.Host = "api.example.com"
+	// No TLS, no forwarded headers → http.
+	assert.Equal(t, "http://api.example.com/resource", dpopRequestURL(req))
+}
+
+func TestDPoPRequestURL_ForwardedProto_Used(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/resource", nil)
+	req.Host = "api.example.com"
+	req.Header.Set("X-Forwarded-Proto", "https")
+	assert.Equal(t, "https://api.example.com/resource", dpopRequestURL(req))
+}
+
+func TestDPoPRequestURL_ForwardedProtoCommaList_FirstValueUsed(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/resource", nil)
+	req.Host = "api.example.com"
+	req.Header.Set("X-Forwarded-Proto", "https, http")
+	assert.Equal(t, "https://api.example.com/resource", dpopRequestURL(req))
+}
+
+func TestDPoPRequestURL_ForwardedHost_Used(t *testing.T) {
+	req := httptest.NewRequest(http.MethodGet, "/resource", nil)
+	req.Host = "internal.svc"
+	req.Header.Set("X-Forwarded-Proto", "https")
+	req.Header.Set("X-Forwarded-Host", "api.example.com")
+	assert.Equal(t, "https://api.example.com/resource", dpopRequestURL(req))
+}
+
+func TestDPoPRequestURL_ForwardedProtoAndHost_EndToEnd_Accepted(t *testing.T) {
+	// Proof signed with https://api.example.com/resource; request comes in
+	// over plain HTTP behind a TLS-terminating proxy that sets X-Forwarded-*.
+	priv, pub := dpopNewKeyPair(t)
+	storedJKT := dpopJKTOf(t, pub)
+	const proofURL = "https://api.example.com/resource"
+	const accessToken = "my-access-token"
+	proof := dpopMakeProof(t, priv, dpopValidOpts("GET", proofURL, accessToken))
+
+	req := httptest.NewRequest(http.MethodGet, "/resource", nil)
+	req.Host = "api.example.com"
+	req.Header.Set("X-Forwarded-Proto", "https")
+	req.Header.Set("DPoP", proof)
+
+	err := ValidateDPoPProof(proof, "GET", dpopRequestURL(req), accessToken, storedJKT)
+	require.NoError(t, err)
+}
+
+// ---- Fix 6: htu path normalization ----
+
+func TestDPoP_HTU_DotSegmentsNormalized(t *testing.T) {
+	// /a/./b and /a/b are equivalent after dot-segment removal.
+	priv, pub := dpopNewKeyPair(t)
+	storedJKT := dpopJKTOf(t, pub)
+	opts := dpopValidOpts("GET", "https://api.example.com/a/./b", dpopTestToken)
+	proof := dpopMakeProof(t, priv, opts)
+	require.NoError(t, ValidateDPoPProof(proof, "GET", "https://api.example.com/a/b", dpopTestToken, storedJKT))
+}
+
+func TestDPoP_HTU_DoubleDotResolved(t *testing.T) {
+	priv, pub := dpopNewKeyPair(t)
+	storedJKT := dpopJKTOf(t, pub)
+	opts := dpopValidOpts("GET", "https://api.example.com/a/c/../b", dpopTestToken)
+	proof := dpopMakeProof(t, priv, opts)
+	require.NoError(t, ValidateDPoPProof(proof, "GET", "https://api.example.com/a/b", dpopTestToken, storedJKT))
+}
+
+func TestDPoP_HTU_PercentEncodedUnreservedNormalized(t *testing.T) {
+	// %2D is '-', an unreserved char → decoded to '-'.
+	priv, pub := dpopNewKeyPair(t)
+	storedJKT := dpopJKTOf(t, pub)
+	opts := dpopValidOpts("GET", "https://api.example.com/foo%2Dbar", dpopTestToken)
+	proof := dpopMakeProof(t, priv, opts)
+	require.NoError(t, ValidateDPoPProof(proof, "GET", "https://api.example.com/foo-bar", dpopTestToken, storedJKT))
+}
+
+func TestDPoP_HTU_PercentEncodedReservedPreserved(t *testing.T) {
+	// %2F is '/', a reserved char — must not be decoded; /foo%2Fbar ≠ /foo/bar.
+	priv, pub := dpopNewKeyPair(t)
+	storedJKT := dpopJKTOf(t, pub)
+	opts := dpopValidOpts("GET", "https://api.example.com/foo%2Fbar", dpopTestToken)
+	proof := dpopMakeProof(t, priv, opts)
+	require.Error(t, ValidateDPoPProof(proof, "GET", "https://api.example.com/foo/bar", dpopTestToken, storedJKT))
+}
+
+func TestDPoP_HTU_HexCaseNormalized(t *testing.T) {
+	// %2f (lowercase) and %2F (uppercase) are equivalent.
+	assert.True(t, dpopHtuMatches("https://api.example.com/foo%2fbar", "https://api.example.com/foo%2Fbar"))
+}
+
+func TestDPoP_HTU_TrailingSlashPreserved(t *testing.T) {
+	// /foo/ and /foo are not equivalent — trailing slash is preserved.
+	priv, pub := dpopNewKeyPair(t)
+	storedJKT := dpopJKTOf(t, pub)
+	opts := dpopValidOpts("GET", "https://api.example.com/foo/", dpopTestToken)
+	proof := dpopMakeProof(t, priv, opts)
+	require.Error(t, ValidateDPoPProof(proof, "GET", "https://api.example.com/foo", dpopTestToken, storedJKT))
+}
