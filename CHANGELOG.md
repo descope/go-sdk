@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.17.1](https://github.com/descope/go-sdk/compare/v1.17.0...v1.17.1) (2026-05-02)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.17.0 ([#734](https://github.com/descope/go-sdk/issues/734)) ([1245b29](https://github.com/descope/go-sdk/commit/1245b297c94c80178b5d254227733547ccde3ebc))
+
 ## [1.17.0](https://github.com/descope/go-sdk/compare/v1.16.0...v1.17.0) (2026-04-20)
 
 
