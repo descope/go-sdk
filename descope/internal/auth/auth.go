@@ -41,12 +41,9 @@ func (d *defaultRequestTokensProvider) ProvideTokens(r *http.Request) (sessionTo
 	if r == nil {
 		return "", ""
 	}
-	sessionToken = ""
-	// First, check the header for Bearer token
-	// Header takes precedence over cookie
-	reqToken := r.Header.Get(api.AuthorizationHeaderName)
-	if splitToken := strings.Split(reqToken, api.BearerAuthorizationPrefix); len(splitToken) == 2 {
-		sessionToken = splitToken[1]
+	// Header takes precedence over cookie; auth-scheme is case-insensitive (RFC 9110 §11.1).
+	if scheme, tok, ok := parseAuthScheme(r.Header.Get(api.AuthorizationHeaderName)); ok && (scheme == api.BearerAuthScheme || scheme == api.DPopAuthScheme) {
+		sessionToken = tok
 	}
 
 	if sessionToken == "" {
@@ -65,6 +62,24 @@ func (d *defaultRequestTokensProvider) ProvideTokens(r *http.Request) (sessionTo
 		}
 	}
 	return sessionToken, ""
+}
+
+func parseAuthScheme(header string) (scheme, token string, ok bool) {
+	header = strings.TrimSpace(header)
+	if header == "" {
+		return "", "", false
+	}
+	// The HTTP spec (RFC 7235) allows either a space or a tab as the delimiter between the auth scheme and the token, so checking for both characters ensures correct handling of any compliant header value.
+	idx := strings.IndexAny(header, " \t")
+	if idx < 0 {
+		return "", "", false
+	}
+	scheme = strings.ToLower(header[:idx])
+	token = strings.TrimSpace(header[idx+1:])
+	if token == "" {
+		return "", "", false
+	}
+	return scheme, token, true
 }
 
 func (ap *AuthParams) SetCookieNames(refreshCookieName string, fallBackRefreshCookieNames []string, sessionCookieName string, fallBackSessionCookieNames []string) {
@@ -420,7 +435,38 @@ func (auth *authenticationService) ValidateSessionWithRequest(request *http.Requ
 	if sessionToken == "" {
 		return false, nil, descope.ErrMissingArguments.WithMessage("Request doesn't contain session token")
 	}
-	return auth.validateSession(request.Context(), sessionToken)
+	ok, token, err := auth.validateSession(request.Context(), sessionToken)
+	if err != nil || !ok {
+		return ok, token, err
+	}
+	if err := enforceDPoP(request, sessionToken, token); err != nil {
+		return false, nil, err
+	}
+	return true, token, nil
+}
+
+// enforceDPoP rejects DPoP-scheme requests presenting an unbound token and validates
+// the DPoP proof when the token has a cnf.jkt claim. Safe to call for any token
+// (session or refresh); when called for a refresh token the scheme check guards against
+// a client declaring DPoP intent while omitting the binding on the refresh token.
+func enforceDPoP(r *http.Request, tokenString string, token *descope.Token) error {
+	scheme, _, ok := parseAuthScheme(r.Header.Get(api.AuthorizationHeaderName))
+	jkt := token.GetDPoPThumbprint()
+	if ok && scheme == api.DPopAuthScheme && jkt == "" {
+		return descope.ErrInvalidToken.WithMessage("DPoP scheme used but token is not DPoP-bound (missing cnf.jkt)")
+	}
+	if jkt == "" {
+		return nil
+	}
+	dpopValues := r.Header.Values(api.DPopAuthScheme)
+	if len(dpopValues) > 1 {
+		return descope.ErrInvalidToken.WithMessage("multiple DPoP headers not allowed")
+	}
+	proof := ""
+	if len(dpopValues) == 1 {
+		proof = dpopValues[0]
+	}
+	return ValidateDPoPProof(proof, r.Method, dpopRequestURL(r), tokenString, jkt)
 }
 
 func (auth *authenticationService) ValidateSessionWithToken(ctx context.Context, sessionToken string) (bool, *descope.Token, error) {
@@ -495,19 +541,24 @@ func (auth *authenticationService) ValidateAndRefreshSessionWithRequest(request 
 		return false, nil, utils.NewInvalidArgumentError("request")
 	}
 	sessionToken, refreshToken := auth.provideTokens(request)
-	return auth.validateAndRefreshSessionWithTokens(request.Context(), sessionToken, refreshToken, w)
+	return auth.validateAndRefreshSessionWithTokens(request.Context(), sessionToken, refreshToken, w, request)
 }
 
 func (auth *authenticationService) ValidateAndRefreshSessionWithTokens(ctx context.Context, sessionToken, refreshToken string) (bool, *descope.Token, error) {
-	return auth.validateAndRefreshSessionWithTokens(ctx, sessionToken, refreshToken, nil)
+	return auth.validateAndRefreshSessionWithTokens(ctx, sessionToken, refreshToken, nil, nil)
 }
 
-func (auth *authenticationService) validateAndRefreshSessionWithTokens(ctx context.Context, sessionToken, refreshToken string, w http.ResponseWriter) (valid bool, token *descope.Token, err error) {
+func (auth *authenticationService) validateAndRefreshSessionWithTokens(ctx context.Context, sessionToken, refreshToken string, w http.ResponseWriter, r *http.Request) (valid bool, token *descope.Token, err error) {
 	if sessionToken == "" && refreshToken == "" {
 		return false, nil, descope.ErrMissingArguments.WithMessage("Both sessionToken and refreshToken are empty")
 	}
 	if sessionToken != "" {
 		if valid, token, err = auth.validateSession(ctx, sessionToken); valid {
+			if r != nil {
+				if dpopErr := enforceDPoP(r, sessionToken, token); dpopErr != nil {
+					return false, nil, dpopErr
+				}
+			}
 			return
 		}
 	}

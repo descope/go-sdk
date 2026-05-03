@@ -630,7 +630,7 @@ func TestValidateSessionFetchKeyMalformed(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf(`{"keys":[%s]}`, unknownPublicKey)))}, nil
 	}))
 	require.NoError(t, err)
-	ok, _, err := a.validateAndRefreshSessionWithTokens(context.Background(), jwtTokenValid, jwtTokenValid, nil)
+	ok, _, err := a.validateAndRefreshSessionWithTokens(context.Background(), jwtTokenValid, jwtTokenValid, nil, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrPublicKey)
 	assert.Contains(t, err.Error(), "does not exist")
@@ -656,7 +656,7 @@ func TestValidateSessionFailWithInvalidAlgorithm(t *testing.T) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(fmt.Sprintf(`{"keys":[%s]}`, badKey)))}, nil
 	}))
 	require.NoError(t, err)
-	ok, _, err := a.validateAndRefreshSessionWithTokens(context.Background(), jwtTokenValid, jwtTokenValid, nil)
+	ok, _, err := a.validateAndRefreshSessionWithTokens(context.Background(), jwtTokenValid, jwtTokenValid, nil, nil)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrPublicKey)
 	assert.Contains(t, err.Error(), "Invalid signature algorithm")
