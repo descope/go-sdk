@@ -1812,6 +1812,9 @@ type MockFGA struct {
 	DeleteRelationsAssert func(relations []*descope.FGARelation)
 	DeleteRelationsError  error
 
+	DeleteAndCreateRelationsAssert func(deleteRelations, createRelations []*descope.FGARelation)
+	DeleteAndCreateRelationsError  error
+
 	CheckAssert   func(relations []*descope.FGARelation)
 	CheckResponse []*descope.FGACheck
 	CheckError    error
@@ -1866,6 +1869,13 @@ func (m *MockFGA) DeleteRelations(_ context.Context, relations []*descope.FGARel
 		m.DeleteRelationsAssert(relations)
 	}
 	return m.DeleteRelationsError
+}
+
+func (m *MockFGA) DeleteAndCreateRelations(_ context.Context, deleteRelations, createRelations []*descope.FGARelation) error {
+	if m.DeleteAndCreateRelationsAssert != nil {
+		m.DeleteAndCreateRelationsAssert(deleteRelations, createRelations)
+	}
+	return m.DeleteAndCreateRelationsError
 }
 
 func (m *MockFGA) Check(_ context.Context, relations []*descope.FGARelation) ([]*descope.FGACheck, error) {

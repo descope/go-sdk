@@ -100,6 +100,22 @@ func (f *fga) DeleteRelations(ctx context.Context, relations []*descope.FGARelat
 	return err
 }
 
+func (f *fga) DeleteAndCreateRelations(ctx context.Context, deleteRelations, createRelations []*descope.FGARelation) error {
+	if len(deleteRelations) == 0 && len(createRelations) == 0 {
+		return utils.NewInvalidArgumentError("relations")
+	}
+
+	body := map[string]any{
+		"deleteTuples": deleteRelations,
+		"createTuples": createRelations,
+	}
+
+	options := &api.HTTPRequest{}
+	options.BaseURL = f.fgaCacheURL
+	_, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGADeleteAndCreateRelations(), body, options, "")
+	return err
+}
+
 type CheckResponseTuple struct {
 	Allowed bool                  `json:"allowed"`
 	Tuple   *descope.FGARelation  `json:"tuple"`

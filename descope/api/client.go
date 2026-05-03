@@ -234,6 +234,7 @@ var (
 			fgaLoadSchema:                            "mgmt/fga/schema",
 			fgaCreateRelations:                       "mgmt/fga/relations",
 			fgaDeleteRelations:                       "mgmt/fga/relations/delete",
+			fgaDeleteAndCreateRelations:              "mgmt/fga/relations/delete-and-create",
 			fgaCheck:                                 "mgmt/fga/check",
 			fgaLoadMappableSchema:                    "mgmt/fga/mappable/schema",
 			fgaSearchMappableResources:               "mgmt/fga/mappable/resources",
@@ -527,8 +528,9 @@ type mgmtEndpoints struct {
 	fgaSaveSchema              string
 	fgaSchemaDryRun            string
 	fgaLoadSchema              string
-	fgaCreateRelations         string
-	fgaDeleteRelations         string
+	fgaCreateRelations              string
+	fgaDeleteRelations              string
+	fgaDeleteAndCreateRelations     string
 	fgaCheck                   string
 	fgaLoadMappableSchema      string
 	fgaSearchMappableResources string
@@ -1393,6 +1395,10 @@ func (e *endpoints) ManagementFGACreateRelations() string {
 
 func (e *endpoints) ManagementFGADeleteRelations() string {
 	return path.Join(e.version, e.mgmt.fgaDeleteRelations)
+}
+
+func (e *endpoints) ManagementFGADeleteAndCreateRelations() string {
+	return path.Join(e.version, e.mgmt.fgaDeleteAndCreateRelations)
 }
 
 func (e *endpoints) ManagementFGALoadMappableSchema() string {

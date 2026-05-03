@@ -978,6 +978,9 @@ type FGA interface {
 	// DeleteRelations deletes relations for the project.
 	DeleteRelations(ctx context.Context, relations []*descope.FGARelation) error
 
+	// DeleteAndCreateRelations atomically deletes deleteRelations and creates createRelations in one server-side transaction.
+	DeleteAndCreateRelations(ctx context.Context, deleteRelations, createRelations []*descope.FGARelation) error
+
 	// Check checks if the given relations are satisfied. Conditions in the schema are evaluated
 	// against any attributes the backend already has on hand.
 	Check(ctx context.Context, relations []*descope.FGARelation) ([]*descope.FGACheck, error)
