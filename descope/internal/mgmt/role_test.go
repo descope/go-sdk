@@ -61,6 +61,30 @@ func TestRoleUpdateError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestRoleUpdateWithIDSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "ROL3D57zwRsVJhImuBMdlYSg88To4W0", req["id"])
+		require.Equal(t, "def", req["newName"])
+		require.Equal(t, "description", req["description"])
+		require.Equal(t, "t1", req["tenantId"])
+		require.Equal(t, true, req["default"])
+		require.Equal(t, true, req["private"])
+		require.Nil(t, req["name"])
+	}))
+	err := mgmt.Role().UpdateWithID(context.Background(), "ROL3D57zwRsVJhImuBMdlYSg88To4W0", "t1", "def", "description", []string{"foo"}, true, true)
+	require.NoError(t, err)
+}
+
+func TestRoleUpdateWithIDError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.Role().UpdateWithID(context.Background(), "", "t1", "def", "description", nil, false, false)
+	require.Error(t, err)
+	err = mgmt.Role().UpdateWithID(context.Background(), "ROL3D57zwRsVJhImuBMdlYSg88To4W0", "t1", "", "description", nil, false, false)
+	require.Error(t, err)
+}
+
 func TestRoleDeleteSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -79,9 +103,28 @@ func TestRoleDeleteError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestRoleDeleteWithIDSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "ROL3D57zwRsVJhImuBMdlYSg88To4W0", req["id"])
+		require.Equal(t, "t1", req["tenantId"])
+		require.Nil(t, req["name"])
+	}))
+	err := mgmt.Role().DeleteWithID(context.Background(), "ROL3D57zwRsVJhImuBMdlYSg88To4W0", "t1")
+	require.NoError(t, err)
+}
+
+func TestRoleDeleteWithIDError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.Role().DeleteWithID(context.Background(), "", "t1")
+	require.Error(t, err)
+}
+
 func TestRoleLoadSuccess(t *testing.T) {
 	response := map[string]any{
 		"roles": []map[string]any{{
+			"id":      "ROL3D57zwRsVJhImuBMdlYSg88To4W0",
 			"name":    "abc",
 			"default": true,
 		}}}
@@ -94,6 +137,7 @@ func TestRoleLoadSuccess(t *testing.T) {
 	require.Len(t, res, 1)
 	require.Equal(t, "abc", res[0].Name)
 	require.Equal(t, true, res[0].Default)
+	require.Equal(t, "ROL3D57zwRsVJhImuBMdlYSg88To4W0", res[0].ID)
 }
 
 func TestRoleLoadError(t *testing.T) {
@@ -134,4 +178,24 @@ func TestRoleSearchError(t *testing.T) {
 	res, err := mgmt.Role().Search(context.Background(), &descope.RoleSearchOptions{})
 	require.Error(t, err)
 	require.Nil(t, res)
+}
+
+func TestRoleSearchWithIDsSuccess(t *testing.T) {
+	response := map[string]any{
+		"roles": []map[string]any{{
+			"id":   "ROL3D57zwRsVJhImuBMdlYSg88To4W0",
+			"name": "abc",
+		}}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.ElementsMatch(t, []string{"ROL3D57zwRsVJhImuBMdlYSg88To4W0"}, req["roleIds"])
+	}, response))
+	res, err := mgmt.Role().Search(context.Background(), &descope.RoleSearchOptions{
+		RoleIDs: []string{"ROL3D57zwRsVJhImuBMdlYSg88To4W0"},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Len(t, res, 1)
+	require.Equal(t, "ROL3D57zwRsVJhImuBMdlYSg88To4W0", res[0].ID)
 }

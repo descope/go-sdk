@@ -51,12 +51,44 @@ func (r *role) Update(ctx context.Context, name, tenantID, newName, description 
 	return err
 }
 
+func (r *role) UpdateWithID(ctx context.Context, id, tenantID, newName, description string, permissionNames []string, defaultRole bool, private bool) error {
+	if id == "" {
+		return utils.NewInvalidArgumentError("id")
+	}
+	if newName == "" {
+		return utils.NewInvalidArgumentError("newName")
+	}
+	body := map[string]any{
+		"id":              id,
+		"newName":         newName,
+		"description":     description,
+		"permissionNames": permissionNames,
+		"tenantId":        tenantID,
+		"default":         defaultRole,
+		"private":         private,
+	}
+	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleUpdate(), body, nil, "")
+	return err
+}
+
 func (r *role) Delete(ctx context.Context, name, tenantID string) error {
 	if name == "" {
 		return utils.NewInvalidArgumentError("name")
 	}
 	body := map[string]any{
 		"name":     name,
+		"tenantId": tenantID,
+	}
+	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleDelete(), body, nil, "")
+	return err
+}
+
+func (r *role) DeleteWithID(ctx context.Context, id, tenantID string) error {
+	if id == "" {
+		return utils.NewInvalidArgumentError("id")
+	}
+	body := map[string]any{
+		"id":       id,
 		"tenantId": tenantID,
 	}
 	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleDelete(), body, nil, "")
