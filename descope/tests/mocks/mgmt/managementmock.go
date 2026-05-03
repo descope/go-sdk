@@ -1255,8 +1255,14 @@ type MockPermission struct {
 	UpdateAssert func(name, newName, description string)
 	UpdateError  error
 
+	UpdateWithIDAssert func(id, newName, description string)
+	UpdateWithIDError  error
+
 	DeleteAssert func(name string)
 	DeleteError  error
+
+	DeleteWithIDAssert func(id string)
+	DeleteWithIDError  error
 
 	LoadAllResponse []*descope.Permission
 	LoadAllError    error
@@ -1276,11 +1282,25 @@ func (m *MockPermission) Update(_ context.Context, name, newName, description st
 	return m.UpdateError
 }
 
+func (m *MockPermission) UpdateWithID(_ context.Context, id, newName, description string) error {
+	if m.UpdateWithIDAssert != nil {
+		m.UpdateWithIDAssert(id, newName, description)
+	}
+	return m.UpdateWithIDError
+}
+
 func (m *MockPermission) Delete(_ context.Context, name string) error {
 	if m.DeleteAssert != nil {
 		m.DeleteAssert(name)
 	}
 	return m.DeleteError
+}
+
+func (m *MockPermission) DeleteWithID(_ context.Context, id string) error {
+	if m.DeleteWithIDAssert != nil {
+		m.DeleteWithIDAssert(id)
+	}
+	return m.DeleteWithIDError
 }
 
 func (m *MockPermission) LoadAll(_ context.Context) ([]*descope.Permission, error) {
@@ -1296,8 +1316,14 @@ type MockRole struct {
 	UpdateAssert func(name, tenantID, newName, description string, permissionNames []string, defaultRole bool, private bool)
 	UpdateError  error
 
+	UpdateWithIDAssert func(id, tenantID, newName, description string, permissionNames []string, defaultRole bool, private bool)
+	UpdateWithIDError  error
+
 	DeleteAssert func(name, tenantID string)
 	DeleteError  error
+
+	DeleteWithIDAssert func(id, tenantID string)
+	DeleteWithIDError  error
 
 	LoadAllResponse []*descope.Role
 	LoadAllError    error
@@ -1320,11 +1346,25 @@ func (m *MockRole) Update(_ context.Context, name, tenantID string, newName, des
 	return m.UpdateError
 }
 
+func (m *MockRole) UpdateWithID(_ context.Context, id, tenantID, newName, description string, permissionNames []string, defaultRole bool, private bool) error {
+	if m.UpdateWithIDAssert != nil {
+		m.UpdateWithIDAssert(id, tenantID, newName, description, permissionNames, defaultRole, private)
+	}
+	return m.UpdateWithIDError
+}
+
 func (m *MockRole) Delete(_ context.Context, name, tenantID string) error {
 	if m.DeleteAssert != nil {
 		m.DeleteAssert(name, tenantID)
 	}
 	return m.DeleteError
+}
+
+func (m *MockRole) DeleteWithID(_ context.Context, id, tenantID string) error {
+	if m.DeleteWithIDAssert != nil {
+		m.DeleteWithIDAssert(id, tenantID)
+	}
+	return m.DeleteWithIDError
 }
 
 func (m *MockRole) LoadAll(_ context.Context) ([]*descope.Role, error) {

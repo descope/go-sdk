@@ -48,6 +48,27 @@ func TestPermissionUpdateError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestPermissionUpdateWithIDSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "PERM3D57zwRsVJhImuBMdlYSg88To4W0", req["id"])
+		require.Equal(t, "def", req["newName"])
+		require.Equal(t, "description", req["description"])
+		require.Nil(t, req["name"])
+	}))
+	err := mgmt.Permission().UpdateWithID(context.Background(), "PERM3D57zwRsVJhImuBMdlYSg88To4W0", "def", "description")
+	require.NoError(t, err)
+}
+
+func TestPermissionUpdateWithIDError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.Permission().UpdateWithID(context.Background(), "", "def", "description")
+	require.Error(t, err)
+	err = mgmt.Permission().UpdateWithID(context.Background(), "PERM3D57zwRsVJhImuBMdlYSg88To4W0", "", "description")
+	require.Error(t, err)
+}
+
 func TestPermissionDeleteSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -65,9 +86,27 @@ func TestPermissionDeleteError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestPermissionDeleteWithIDSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "PERM3D57zwRsVJhImuBMdlYSg88To4W0", req["id"])
+		require.Nil(t, req["name"])
+	}))
+	err := mgmt.Permission().DeleteWithID(context.Background(), "PERM3D57zwRsVJhImuBMdlYSg88To4W0")
+	require.NoError(t, err)
+}
+
+func TestPermissionDeleteWithIDError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.Permission().DeleteWithID(context.Background(), "")
+	require.Error(t, err)
+}
+
 func TestPermissionLoadSuccess(t *testing.T) {
 	response := map[string]any{
 		"permissions": []map[string]any{{
+			"id":   "PERM3D57zwRsVJhImuBMdlYSg88To4W0",
 			"name": "abc",
 		}}}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -78,6 +117,7 @@ func TestPermissionLoadSuccess(t *testing.T) {
 	require.NotNil(t, res)
 	require.Len(t, res, 1)
 	require.Equal(t, "abc", res[0].Name)
+	require.Equal(t, "PERM3D57zwRsVJhImuBMdlYSg88To4W0", res[0].ID)
 }
 
 func TestPermissionLoadError(t *testing.T) {

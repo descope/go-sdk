@@ -43,11 +43,36 @@ func (p *permission) Update(ctx context.Context, name, newName, description stri
 	return err
 }
 
+func (p *permission) UpdateWithID(ctx context.Context, id, newName, description string) error {
+	if id == "" {
+		return utils.NewInvalidArgumentError("id")
+	}
+	if newName == "" {
+		return utils.NewInvalidArgumentError("newName")
+	}
+	body := map[string]any{
+		"id":          id,
+		"newName":     newName,
+		"description": description,
+	}
+	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementPermissionUpdate(), body, nil, "")
+	return err
+}
+
 func (p *permission) Delete(ctx context.Context, name string) error {
 	if name == "" {
 		return utils.NewInvalidArgumentError("name")
 	}
 	body := map[string]any{"name": name}
+	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementPermissionDelete(), body, nil, "")
+	return err
+}
+
+func (p *permission) DeleteWithID(ctx context.Context, id string) error {
+	if id == "" {
+		return utils.NewInvalidArgumentError("id")
+	}
+	body := map[string]any{"id": id}
 	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementPermissionDelete(), body, nil, "")
 	return err
 }
