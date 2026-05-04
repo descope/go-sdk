@@ -525,17 +525,17 @@ type mgmtEndpoints struct {
 	authzRETargetWithRelation string
 	authzGetModified          string
 
-	fgaSaveSchema              string
-	fgaSchemaDryRun            string
-	fgaLoadSchema              string
-	fgaCreateRelations              string
-	fgaDeleteRelations              string
-	fgaDeleteAndCreateRelations     string
-	fgaCheck                   string
-	fgaLoadMappableSchema      string
-	fgaSearchMappableResources string
-	fgaResourcesLoad           string
-	fgaResourcesSave           string
+	fgaSaveSchema               string
+	fgaSchemaDryRun             string
+	fgaLoadSchema               string
+	fgaCreateRelations          string
+	fgaDeleteRelations          string
+	fgaDeleteAndCreateRelations string
+	fgaCheck                    string
+	fgaLoadMappableSchema       string
+	fgaSearchMappableResources  string
+	fgaResourcesLoad            string
+	fgaResourcesSave            string
 
 	outboundApplicationCreate           string
 	outboundApplicationUpdate           string
