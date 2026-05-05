@@ -375,6 +375,7 @@ type LoginOptions struct {
 	CustomClaims             map[string]any    `json:"customClaims,omitempty"`
 	TemplateID               string            `json:"templateId,omitempty"`      // for overriding the default messaging template
 	TemplateOptions          map[string]string `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
+	TenantID                 string            `json:"tenantId,omitempty"`        // for associating the authentication with a specific tenant
 }
 
 func (lo *LoginOptions) IsJWTRequired() bool {
@@ -390,6 +391,7 @@ type SignUpOptions struct {
 	CustomClaims    map[string]any    `json:"customClaims,omitempty"`
 	TemplateID      string            `json:"templateId,omitempty"`      // for overriding the default messaging template
 	TemplateOptions map[string]string `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
+	TenantID        string            `json:"-"`                         // for associating the authentication with a specific tenant
 }
 
 type EmbeddedLinkLoginOptions struct {

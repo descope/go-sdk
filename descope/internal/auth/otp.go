@@ -59,6 +59,7 @@ func (auth *otp) SignUpOrIn(ctx context.Context, method descope.DeliveryMethod, 
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
 		TemplateID:      signUpOptions.TemplateID,
+		TenantID:        signUpOptions.TenantID,
 	}), options, "")
 	return masked.GetMasked(), err
 }
