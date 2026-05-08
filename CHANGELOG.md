@@ -1,5 +1,67 @@
 # Changelog
 
+## [1.17.0](https://github.com/descope/go-sdk/compare/v1.16.0...v1.17.0) (2026-04-20)
+
+
+### Features
+
+* add IDPResponse to AuthenticationInfo for SSO exchange ([#733](https://github.com/descope/go-sdk/issues/733)) ([fdf2e9a](https://github.com/descope/go-sdk/commit/fdf2e9ad29cd49335e561a5f2659d5b8464a81b1))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.16.0 ([#730](https://github.com/descope/go-sdk/issues/730)) ([c3b476d](https://github.com/descope/go-sdk/commit/c3b476df0dd5222f5a66c1f9f999570c92913ca3))
+
+## [1.16.0](https://github.com/descope/go-sdk/compare/v1.15.0...v1.16.0) (2026-04-19)
+
+
+### Features
+
+* **fga:** add CheckWithContext for ABAC/CEL evaluation ([#729](https://github.com/descope/go-sdk/issues/729)) ([55ccf7c](https://github.com/descope/go-sdk/commit/55ccf7c32f2071f96e7ab4ea08d34159511025fa))
+* **sso:** add WS-Fed SSO application management ([#727](https://github.com/descope/go-sdk/issues/727)) ([4544ea8](https://github.com/descope/go-sdk/commit/4544ea81bae18132bd8de48bd68bde3784904022))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.15.0 ([#725](https://github.com/descope/go-sdk/issues/725)) ([b64cdd1](https://github.com/descope/go-sdk/commit/b64cdd1197b7546e964256cb5e054a821c444646))
+
+## [1.15.0](https://github.com/descope/go-sdk/compare/v1.14.0...v1.15.0) (2026-04-04)
+
+
+### Features
+
+* **user:** support userId in Invite and InviteBatch ([#713](https://github.com/descope/go-sdk/issues/713)) ([27fe5bc](https://github.com/descope/go-sdk/commit/27fe5bc712cd58ee7bbfafeea6f805f3839deb52))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.14.0 ([#718](https://github.com/descope/go-sdk/issues/718)) ([9c0a3e3](https://github.com/descope/go-sdk/commit/9c0a3e3762198bca53cc16d66ca72b901d44e0ed))
+
+## [1.14.0](https://github.com/descope/go-sdk/compare/v1.13.0...v1.14.0) (2026-03-22)
+
+
+### Features
+
+* **http:** retry requests on transient error status codes ([#717](https://github.com/descope/go-sdk/issues/717)) ([71677c7](https://github.com/descope/go-sdk/commit/71677c72da6d64e1cfc4349d92ec1bd749f1dc94))
+* **sso-app:** add default signature method ([#712](https://github.com/descope/go-sdk/issues/712)) ([9e27984](https://github.com/descope/go-sdk/commit/9e279846d1f34ea40c066d405ac3db7862e16721))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.13.0 ([#709](https://github.com/descope/go-sdk/issues/709)) ([9ff4a2d](https://github.com/descope/go-sdk/commit/9ff4a2db6fb1542af1bf813d4c67e8012ba247c9))
+
+## [1.13.0](https://github.com/descope/go-sdk/compare/v1.12.0...v1.13.0) (2026-03-12)
+
+
+### Features
+
+* add lists exclude option in project import ([#706](https://github.com/descope/go-sdk/issues/706)) ([817111f](https://github.com/descope/go-sdk/commit/817111fb1cd2bd6c54a182d9b5f84d4833a58531))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.12.0 ([#704](https://github.com/descope/go-sdk/issues/704)) ([d5a5777](https://github.com/descope/go-sdk/commit/d5a5777fa461e85d7bbb9e9945942546b57f162f))
+
 ## [1.12.0](https://github.com/descope/go-sdk/compare/v1.11.0...v1.12.0) (2026-03-10)
 
 

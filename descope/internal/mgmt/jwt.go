@@ -71,6 +71,33 @@ func (j *jwt) Impersonate(ctx context.Context, impersonatorID string, loginID st
 	return jRes.JWT, nil
 }
 
+func (j *jwt) ImpersonateStepup(ctx context.Context, impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string, refreshDuration int32) (string, error) {
+	if loginID == "" {
+		return "", utils.NewInvalidArgumentError("loginID")
+	}
+	if impersonatorID == "" {
+		return "", utils.NewInvalidArgumentError("impersonatorID")
+	}
+	req := map[string]any{
+		"loginId":         loginID,
+		"impersonatorId":  impersonatorID,
+		"validateConsent": validateConcent,
+		"customClaims":    customClaims,
+		"selectedTenant":  tenantID,
+		"refreshDuration": refreshDuration,
+	}
+	res, err := j.client.DoPostRequest(ctx, api.Routes.ManagementImpersonateStepup(), req, nil, "")
+	if err != nil {
+		return "", err
+	}
+	jRes := &jwtRes{}
+	err = utils.Unmarshal([]byte(res.BodyStr), jRes)
+	if err != nil {
+		return "", err //notest
+	}
+	return jRes.JWT, nil
+}
+
 func (j *jwt) StopImpersonation(ctx context.Context, jwt string, customClaims map[string]any, tenantID string, refreshDuration int32) (string, error) {
 	if jwt == "" {
 		return "", utils.NewInvalidArgumentError("jwt")

@@ -127,6 +127,10 @@ type MockJWT struct {
 	ImpersonateResponse string
 	ImpersonateError    error
 
+	ImpersonateStepupAssert   func(impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string, refreshDuration int32)
+	ImpersonateStepupResponse string
+	ImpersonateStepupError    error
+
 	StopImpersonationAssert   func(jwt string, customClaims map[string]any, tenantID string, refreshDuration int32)
 	StopImpersonationResponse string
 	StopImpersonationError    error
@@ -160,6 +164,13 @@ func (m *MockJWT) Impersonate(_ context.Context, impersonatorID string, loginID 
 		m.ImpersonateAssert(impersonatorID, loginID, validateConcent, customClaims, tenantID, refreshDuration)
 	}
 	return m.ImpersonateResponse, m.ImpersonateError
+}
+
+func (m *MockJWT) ImpersonateStepup(_ context.Context, impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string, refreshDuration int32) (string, error) {
+	if m.ImpersonateStepupAssert != nil {
+		m.ImpersonateStepupAssert(impersonatorID, loginID, validateConcent, customClaims, tenantID, refreshDuration)
+	}
+	return m.ImpersonateStepupResponse, m.ImpersonateStepupError
 }
 
 func (m *MockJWT) StopImpersonation(_ context.Context, jwt string, customClaims map[string]any, tenantID string, refreshDuration int32) (string, error) {
@@ -373,7 +384,7 @@ type MockUser struct {
 	CreateBatchResponse *descope.UsersBatchResponse
 	CreateBatchError    error
 
-	InviteAssert   func(loginID string, user *descope.UserRequest, options *descope.InviteOptions)
+	InviteAssert   func(loginIDOrUserID string, user *descope.UserRequest, options *descope.InviteOptions)
 	InviteResponse *descope.UserResponse
 	InviteError    error
 
@@ -579,9 +590,9 @@ func (m *MockUser) CreateBatch(_ context.Context, users []*descope.BatchUser) (*
 	return m.CreateBatchResponse, m.CreateBatchError
 }
 
-func (m *MockUser) Invite(_ context.Context, loginID string, user *descope.UserRequest, options *descope.InviteOptions) (*descope.UserResponse, error) {
+func (m *MockUser) Invite(_ context.Context, loginIDOrUserID string, user *descope.UserRequest, options *descope.InviteOptions) (*descope.UserResponse, error) {
 	if m.InviteAssert != nil {
-		m.InviteAssert(loginID, user, options)
+		m.InviteAssert(loginIDOrUserID, user, options)
 	}
 	return m.InviteResponse, m.InviteError
 }
@@ -1153,14 +1164,16 @@ func (m *MockTenant) UpdateDefaultRoles(_ context.Context, tenantID string, defa
 // Mock SSOApplication
 
 type MockSSOApplication struct {
-	CreateOIDCApplicationAssert func(appRequest *descope.OIDCApplicationRequest)
-	CreateSAMLApplicationAssert func(appRequest *descope.SAMLApplicationRequest)
-	CreateResponse              string
-	CreateError                 error
+	CreateOIDCApplicationAssert  func(appRequest *descope.OIDCApplicationRequest)
+	CreateSAMLApplicationAssert  func(appRequest *descope.SAMLApplicationRequest)
+	CreateWSFedApplicationAssert func(appRequest *descope.WSFedApplicationRequest)
+	CreateResponse               string
+	CreateError                  error
 
-	UpdateOIDCApplicationAssert func(appRequest *descope.OIDCApplicationRequest)
-	UpdateSAMLApplicationAssert func(appRequest *descope.SAMLApplicationRequest)
-	UpdateError                 error
+	UpdateOIDCApplicationAssert  func(appRequest *descope.OIDCApplicationRequest)
+	UpdateSAMLApplicationAssert  func(appRequest *descope.SAMLApplicationRequest)
+	UpdateWSFedApplicationAssert func(appRequest *descope.WSFedApplicationRequest)
+	UpdateError                  error
 
 	DeleteAssert func(id string)
 	DeleteError  error
@@ -1197,6 +1210,20 @@ func (m *MockSSOApplication) UpdateOIDCApplication(_ context.Context, appRequest
 func (m *MockSSOApplication) UpdateSAMLApplication(_ context.Context, appRequest *descope.SAMLApplicationRequest) error {
 	if m.UpdateSAMLApplicationAssert != nil {
 		m.UpdateSAMLApplicationAssert(appRequest)
+	}
+	return m.UpdateError
+}
+
+func (m *MockSSOApplication) CreateWSFedApplication(_ context.Context, appRequest *descope.WSFedApplicationRequest) (id string, err error) {
+	if m.CreateWSFedApplicationAssert != nil {
+		m.CreateWSFedApplicationAssert(appRequest)
+	}
+	return m.CreateResponse, m.CreateError
+}
+
+func (m *MockSSOApplication) UpdateWSFedApplication(_ context.Context, appRequest *descope.WSFedApplicationRequest) error {
+	if m.UpdateWSFedApplicationAssert != nil {
+		m.UpdateWSFedApplicationAssert(appRequest)
 	}
 	return m.UpdateError
 }
@@ -1789,6 +1816,10 @@ type MockFGA struct {
 	CheckResponse []*descope.FGACheck
 	CheckError    error
 
+	CheckWithContextAssert   func(relations []*descope.FGARelation, extraContext map[string]any)
+	CheckWithContextResponse []*descope.FGACheck
+	CheckWithContextError    error
+
 	LoadMappableSchemaAssert   func(tenantID string, options *descope.FGAMappableResourcesOptions)
 	LoadMappableSchemaResponse *descope.FGAMappableSchema
 	LoadMappableSchemaError    error
@@ -1842,6 +1873,13 @@ func (m *MockFGA) Check(_ context.Context, relations []*descope.FGARelation) ([]
 		m.CheckAssert(relations)
 	}
 	return m.CheckResponse, m.CheckError
+}
+
+func (m *MockFGA) CheckWithContext(_ context.Context, relations []*descope.FGARelation, extraContext map[string]any) ([]*descope.FGACheck, error) {
+	if m.CheckWithContextAssert != nil {
+		m.CheckWithContextAssert(relations, extraContext)
+	}
+	return m.CheckWithContextResponse, m.CheckWithContextError
 }
 
 func (m *MockFGA) LoadMappableSchema(_ context.Context, tenantID string, options *descope.FGAMappableResourcesOptions) (*descope.FGAMappableSchema, error) {

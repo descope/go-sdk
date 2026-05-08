@@ -216,6 +216,127 @@ func TestCheckFGARelationsMissingTuples(t *testing.T) {
 	require.ErrorContains(t, err, utils.NewInvalidArgumentError("relations").Message)
 }
 
+func TestCheckFGAWithContextPassthrough(t *testing.T) {
+	response := map[string]any{
+		"tuples": []*descope.FGACheck{
+			{
+				Allowed:  true,
+				Relation: &descope.FGARelation{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"},
+				Info:     &descope.FGACheckInfo{Direct: true},
+			},
+		}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.NotNil(t, req["tuples"])
+		ctx, ok := req["context"].(map[string]any)
+		require.True(t, ok)
+		require.Equal(t, "1.2.3.4", ctx["ip"])
+		require.Equal(t, "admin", ctx["role"])
+	}, response))
+	checks, err := mgmt.FGA().CheckWithContext(context.Background(),
+		[]*descope.FGARelation{{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"}},
+		map[string]any{"ip": "1.2.3.4", "role": "admin"},
+	)
+	require.NoError(t, err)
+	require.Len(t, checks, 1)
+	require.True(t, checks[0].Allowed)
+	require.True(t, checks[0].Info.Direct)
+}
+
+func TestCheckFGAWithContextNil(t *testing.T) {
+	response := map[string]any{
+		"tuples": []*descope.FGACheck{
+			{
+				Allowed:  true,
+				Relation: &descope.FGARelation{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"},
+			},
+		}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.NotNil(t, req["tuples"])
+		_, hasContext := req["context"]
+		require.False(t, hasContext)
+	}, response))
+	checks, err := mgmt.FGA().CheckWithContext(context.Background(),
+		[]*descope.FGARelation{{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"}},
+		nil,
+	)
+	require.NoError(t, err)
+	require.Len(t, checks, 1)
+}
+
+func TestCheckFGAWithContextEmpty(t *testing.T) {
+	response := map[string]any{
+		"tuples": []*descope.FGACheck{
+			{
+				Allowed:  true,
+				Relation: &descope.FGARelation{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"},
+			},
+		}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		_, hasContext := req["context"]
+		require.False(t, hasContext)
+	}, response))
+	checks, err := mgmt.FGA().CheckWithContext(context.Background(),
+		[]*descope.FGARelation{{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"}},
+		map[string]any{},
+	)
+	require.NoError(t, err)
+	require.Len(t, checks, 1)
+}
+
+func TestCheckFGAWithContextMissingTuples(t *testing.T) {
+	mgmt := newTestMgmt(nil, nil)
+	_, err := mgmt.FGA().CheckWithContext(context.Background(), nil, map[string]any{"k": "v"})
+	require.Error(t, err)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("relations").Message)
+}
+
+func TestCheckFGAConditionalResult(t *testing.T) {
+	response := map[string]any{
+		"tuples": []*descope.FGACheck{
+			{
+				Allowed:  true,
+				Relation: &descope.FGARelation{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"},
+				Info:     &descope.FGACheckInfo{Conditional: true, MissingContext: []string{"user.dept"}},
+			},
+		}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, response))
+	checks, err := mgmt.FGA().CheckWithContext(context.Background(),
+		[]*descope.FGARelation{{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"}},
+		map[string]any{"ip": "1.2.3.4"},
+	)
+	require.NoError(t, err)
+	require.Len(t, checks, 1)
+	require.True(t, checks[0].Allowed)
+	require.True(t, checks[0].Info.Conditional)
+	require.Equal(t, []string{"user.dept"}, checks[0].Info.MissingContext)
+}
+
+func TestCheckFGAConditionalErr(t *testing.T) {
+	response := map[string]any{
+		"tuples": []*descope.FGACheck{
+			{
+				Allowed:  false,
+				Relation: &descope.FGARelation{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"},
+				Info:     &descope.FGACheckInfo{ConditionalErr: "no such attribute"},
+			},
+		}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, response))
+	checks, err := mgmt.FGA().CheckWithContext(context.Background(),
+		[]*descope.FGARelation{{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"}},
+		nil,
+	)
+	require.NoError(t, err)
+	require.Len(t, checks, 1)
+	require.False(t, checks[0].Allowed)
+	require.Equal(t, "no such attribute", checks[0].Info.ConditionalErr)
+}
+
 func TestLoadMappableSchemaSuccess(t *testing.T) {
 	response := &descope.FGAMappableSchema{
 		Schema: &descope.AuthzSchema{

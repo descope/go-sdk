@@ -28,6 +28,14 @@ type AuthenticationInfo struct {
 	RefreshToken *Token        `json:"refreshToken,omitempty"`
 	User         *UserResponse `json:"user,omitempty"`
 	FirstSeen    bool          `json:"firstSeen,omitempty"`
+	IDPResponse  *IDPResponse  `json:"idpResponse,omitempty"`
+}
+
+// IDPResponse contains IDP groups, SAML attributes, and OIDC claims returned from SSO authentication.
+type IDPResponse struct {
+	IDPGroups         []string       `json:"idpGroups,omitempty"`
+	IDPSAMLAttributes map[string]any `json:"idpSAMLAttributes,omitempty"`
+	IDPOIDCClaims     map[string]any `json:"idpOIDCClaims,omitempty"`
 }
 
 type AnonymousAuthenticationInfo struct {
@@ -398,6 +406,7 @@ type JWTResponse struct {
 	CookieExpiration int32         `json:"cookieExpiration,omitempty"`
 	User             *UserResponse `json:"user,omitempty"`
 	FirstSeen        bool          `json:"firstSeen,omitempty"`
+	IDPResponse      *IDPResponse  `json:"idpResponse,omitempty"`
 }
 
 type EnchantedLinkResponse struct {
@@ -420,6 +429,7 @@ func NewAuthenticationInfo(jRes *JWTResponse, sessionToken, refreshToken *Token)
 		RefreshToken: refreshToken,
 		User:         jRes.User,
 		FirstSeen:    jRes.FirstSeen,
+		IDPResponse:  jRes.IDPResponse,
 	}
 }
 
@@ -564,6 +574,7 @@ type BatchUserPasswordMd5 struct {
 type BatchUserPasswordSha struct {
 	Hash string `json:"hash"` // the SHA hash in hex format, for example "68f724c9ad..."
 	Type string `json:"type"` // the type of SHA hash (sha1, sha256, sha512)
+	Salt string `json:"salt"` // the salt in hex format, for example "5d41402abc4b2a76b9719d911017c592"
 }
 
 type BatchUserPasswordArgon2 struct {
@@ -814,6 +825,10 @@ type SSOApplicationSAMLSettings struct {
 	ForceAuthentication bool                          `json:"forceAuthentication"`
 	IdpLogoutURL        string                        `json:"idpLogoutUrl"`
 	LogoutRedirectURL   string                        `json:"logoutRedirectUrl"`
+	// The signature algorithm used to sign SAML responses. Only applies to IdP-initiated flows —
+	// SP-initiated flows use the algorithm from the SP's SAML request. Use "sha256" for SHA-256;
+	// leave empty for the default (SHA-1).
+	DefaultSignatureAlgorithm string `json:"defaultSignatureAlgorithm"`
 }
 
 type SSOApplicationOIDCSettings struct {
@@ -826,14 +841,15 @@ type SSOApplicationOIDCSettings struct {
 }
 
 type SSOApplication struct {
-	ID           string                      `json:"id"`
-	Name         string                      `json:"name"`
-	Description  string                      `json:"description"`
-	Enabled      bool                        `json:"enabled"`
-	Logo         string                      `json:"logo"`
-	AppType      string                      `json:"appType"`
-	SAMLSettings *SSOApplicationSAMLSettings `json:"samlSettings"`
-	OIDCSettings *SSOApplicationOIDCSettings `json:"oidcSettings"`
+	ID            string                       `json:"id"`
+	Name          string                       `json:"name"`
+	Description   string                       `json:"description"`
+	Enabled       bool                         `json:"enabled"`
+	Logo          string                       `json:"logo"`
+	AppType       string                       `json:"appType"`
+	SAMLSettings  *SSOApplicationSAMLSettings  `json:"samlSettings"`
+	OIDCSettings  *SSOApplicationOIDCSettings  `json:"oidcSettings"`
+	WSFedSettings *SSOApplicationWSFedSettings `json:"wsFedSettings"`
 }
 
 type OIDCApplicationRequest struct {
@@ -868,6 +884,42 @@ type SAMLApplicationRequest struct {
 	SubjectNameIDFormat string                        `json:"subjectNameIdFormat"`
 	ForceAuthentication bool                          `json:"forceAuthentication"`
 	LogoutRedirectURL   string                        `json:"logoutRedirectUrl"`
+	// The signature algorithm used to sign SAML responses. Only applies to IdP-initiated flows —
+	// SP-initiated flows use the algorithm from the SP's SAML request. Use "sha256" for SHA-256;
+	// leave empty for the default (SHA-1).
+	DefaultSignatureAlgorithm string `json:"defaultSignatureAlgorithm"`
+}
+
+type WSFedApplicationRequest struct {
+	ID                  string                        `json:"id"`
+	Name                string                        `json:"name"`
+	Description         string                        `json:"description"`
+	Enabled             bool                          `json:"enabled"`
+	Logo                string                        `json:"logo"`
+	LoginPageURL        string                        `json:"loginPageUrl"`
+	Realm               string                        `json:"realm"`
+	ReplyURL            string                        `json:"replyUrl"`
+	AttributeMapping    []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
+	GroupsMapping       []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
+	ForceAuthentication bool                          `json:"forceAuthentication"`
+	LogoutRedirectURL   string                        `json:"logoutRedirectUrl"`
+	ErrorRedirectURL    string                        `json:"errorRedirectUrl"`
+}
+
+type SSOApplicationWSFedSettings struct {
+	LoginPageURL        string                        `json:"loginPageUrl"`
+	Realm               string                        `json:"realm"`
+	ReplyURL            string                        `json:"replyUrl"`
+	AttributeMapping    []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
+	GroupsMapping       []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
+	ForceAuthentication bool                          `json:"forceAuthentication"`
+	LogoutRedirectURL   string                        `json:"logoutRedirectUrl"`
+	ErrorRedirectURL    string                        `json:"errorRedirectUrl"`
+	IdpInitiatedURL     string                        `json:"idpInitiatedUrl"`
+	IdpMetadataURL      string                        `json:"idpMetadataUrl"`
+	IdpEntityID         string                        `json:"idpEntityId"`
+	IdpSSOURL           string                        `json:"idpSsoUrl"`
+	IdpCert             string                        `json:"idpCert"`
 }
 
 type SSOApplicationSearchOptions struct {
@@ -1114,6 +1166,14 @@ type AuditFilters struct {
 	Values     []string   `json:"values,omitempty"`
 }
 
+// SnapshotExclude represents a resource type that can be excluded from snapshot import.
+type SnapshotExclude string
+
+const (
+	// SnapshotExcludeLists excludes lists from the snapshot import.
+	SnapshotExcludeLists SnapshotExclude = "lists"
+)
+
 type ExportSnapshotRequest struct {
 	// An optional string to set the output format (leave empty for default)
 	Format string `json:"format"`
@@ -1130,6 +1190,8 @@ type ImportSnapshotRequest struct {
 	// An optional map of project entities and their secrets that will be
 	// injected into the snapshot before import (see below)
 	InputSecrets *SnapshotSecrets `json:"inputSecrets,omitempty"`
+	// An optional list of resource types to exclude from the import
+	Excludes []SnapshotExclude `json:"excludes,omitempty"`
 }
 
 type ValidateSnapshotRequest struct {

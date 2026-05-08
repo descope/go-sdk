@@ -131,6 +131,33 @@ type SSOApplication interface {
 	// set in the existing sso application. Use carefully.
 	UpdateSAMLApplication(ctx context.Context, appRequest *descope.SAMLApplicationRequest) error
 
+	// Create a new WS-Fed SSO application with the given name.
+	//
+	// WSFedApplicationRequest fields:
+	// ID: Optional sso application ID.
+	// Name: The sso application's name.
+	// Description: Optional sso application description.
+	// Enabled: Optional set the sso application as enabled or disabled.
+	// Logo: Optional sso application logo.
+	// LoginPageURL: The URL where login page is hosted.
+	// Realm: The WS-Fed realm identifier.
+	// ReplyURL: The WS-Fed reply URL.
+	// AttributeMapping: Optional list of Descope (IdP) attributes to SP mapping.
+	// GroupsMapping: Optional list of Descope (IdP) roles that will be mapped to SP groups.
+	// ForceAuthentication: Optional determine if the IdP should force the user to re-authenticate.
+	// LogoutRedirectURL: Optional Target URL to which the user will be redirected upon logout completion.
+	// ErrorRedirectURL: Optional Target URL to which the user will be redirected upon error.
+	//
+	// The argument appRequest.ID value is optional and will be auto generated if provided with empty value
+	// The argument appRequest.ID and appRequest.Name must be unique per project.
+	CreateWSFedApplication(ctx context.Context, appRequest *descope.WSFedApplicationRequest) (id string, err error)
+
+	// Update an existing WS-Fed sso application.
+	//
+	// IMPORTANT: All parameters are required and will override whatever value is currently
+	// set in the existing sso application. Use carefully.
+	UpdateWSFedApplication(ctx context.Context, appRequest *descope.WSFedApplicationRequest) error
+
 	// Delete an existing sso application.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
@@ -175,19 +202,20 @@ type User interface {
 
 	// Create a new user and invite via an email / text message.
 	//
-	// Functions exactly the same as the Create function with the additional invitation
-	// behavior. See the documentation above for the general creation behavior.
+	// When loginIDOrUserID is a loginId, a new user is created if one doesn't already exist.
+	// When loginIDOrUserID is a userId, the user must already exist; no new user is created,
+	// and the invite is sent to the existing user (useful for re-inviting).
 	//
 	// IMPORTANT: Since the invitation is sent by email / phone, make sure either
 	// the email / phone is explicitly set, or the loginID itself is an email address / phone number.
 	// You must configure the invitation URL in the Descope console prior to
 	// calling the method.
-	Invite(ctx context.Context, loginID string, user *descope.UserRequest, options *descope.InviteOptions) (*descope.UserResponse, error)
+	Invite(ctx context.Context, loginIDOrUserID string, user *descope.UserRequest, options *descope.InviteOptions) (*descope.UserResponse, error)
 
 	// Create users in batch and invite them via an email / text message.
 	//
-	// Functions exactly the same as the Create function with the additional invitation
-	// behavior. See the documentation above for the general creation behavior.
+	// When a BatchUser's LoginID is a userId, the user must already exist; no new user is created,
+	// and the invite is sent to the existing user (useful for re-inviting).
 	//
 	// IMPORTANT: Since the invitation is sent by email / phone, make sure either
 	// the email / phone is explicitly set, or the loginID itself is an email address / phone number.
@@ -637,6 +665,10 @@ type JWT interface {
 	// The impersonator user must have `impersonation` permission in order for this request to work
 	// The response would be a refresh JWT of the impersonated user
 	Impersonate(ctx context.Context, impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string, refreshDuration int32) (string, error)
+	// Impersonate another user via step-up
+	// The impersonator user must have `impersonation` permission in order for this request to work
+	// The response would be a session JWT of the impersonated user
+	ImpersonateStepup(ctx context.Context, impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string, refreshDuration int32) (string, error)
 	// Stop impersonation
 	// Provide an impersonation JWT, and get back a refresh JWT of the actor
 	StopImpersonation(ctx context.Context, jwt string, customClaims map[string]any, tenantID string, refreshDuration int32) (string, error)
@@ -946,8 +978,15 @@ type FGA interface {
 	// DeleteRelations deletes relations for the project.
 	DeleteRelations(ctx context.Context, relations []*descope.FGARelation) error
 
-	// Check checks if the given relations are satisfied.
+	// Check checks if the given relations are satisfied. Conditions in the schema are evaluated
+	// against any attributes the backend already has on hand.
 	Check(ctx context.Context, relations []*descope.FGARelation) ([]*descope.FGACheck, error)
+
+	// CheckWithContext is like Check but additionally threads a caller-supplied context map to CEL
+	// conditions defined in the schema. Keys become available as context variables during evaluation
+	// (merged on top of any attributes the backend already has); values must be JSON-marshalable.
+	// Pass a nil or empty map if you do not need to supply any extra context.
+	CheckWithContext(ctx context.Context, relations []*descope.FGARelation, extraContext map[string]any) ([]*descope.FGACheck, error)
 
 	// LoadMappableSchema loads the mappable schema for the project (only listing the RDs for a Namespace), along with a list of mappable resources.
 	LoadMappableSchema(ctx context.Context, tenantID string, options *descope.FGAMappableResourcesOptions) (*descope.FGAMappableSchema, error)
