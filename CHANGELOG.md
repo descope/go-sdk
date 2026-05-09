@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.18.0](https://github.com/descope/go-sdk/compare/v1.17.0...v1.18.0) (2026-05-09)
+
+
+### Features
+
+* add TenantUserIsolation support with TenantID in auth options ([#736](https://github.com/descope/go-sdk/issues/736)) ([1e1ef92](https://github.com/descope/go-sdk/commit/1e1ef9279a67d73b22fd37222b113dc09a1154d2))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.17.0 ([#734](https://github.com/descope/go-sdk/issues/734)) ([1245b29](https://github.com/descope/go-sdk/commit/1245b297c94c80178b5d254227733547ccde3ebc))
+
 ## [1.17.0](https://github.com/descope/go-sdk/compare/v1.16.0...v1.17.0) (2026-04-20)
 
 
