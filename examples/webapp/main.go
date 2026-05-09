@@ -382,7 +382,7 @@ func handleWebauthnSignupStart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	res, err := descopeClient.Auth.WebAuthn().SignUpStart(r.Context(), t.Email, t, getQuery(r, "origin"))
+	res, err := descopeClient.Auth.WebAuthn().SignUpStart(r.Context(), t.Email, t, getQuery(r, "origin"), nil)
 	if err != nil {
 		setError(w, err.Error())
 	}
