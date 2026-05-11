@@ -21,9 +21,10 @@ type authenticationSignUpRequestBody struct {
 }
 
 type authenticationWebAuthnSignUpRequestBody struct {
-	LoginID string        `json:"loginId,omitempty"`
-	Origin  string        `json:"origin"`
-	User    *descope.User `json:"user"`
+	LoginID      string                `json:"loginId,omitempty"`
+	Origin       string                `json:"origin"`
+	User         *descope.User         `json:"user"`
+	LoginOptions *descope.LoginOptions `json:"loginOptions,omitempty"`
 }
 
 type authenticationWebAuthnSignInRequestBody struct {
@@ -38,14 +39,16 @@ type authenticationWebAuthnAddDeviceRequestBody struct {
 }
 
 type authenticationPasswordSignUpRequestBody struct {
-	LoginID  string        `json:"loginId,omitempty"`
-	Password string        `json:"password"`
-	User     *descope.User `json:"user"`
+	LoginID      string                `json:"loginId,omitempty"`
+	Password     string                `json:"password"`
+	User         *descope.User         `json:"user"`
+	LoginOptions *descope.LoginOptions `json:"loginOptions,omitempty"`
 }
 
 type authenticationPasswordSignInRequestBody struct {
-	LoginID  string `json:"loginId,omitempty"`
-	Password string `json:"password"`
+	LoginID      string                `json:"loginId,omitempty"`
+	Password     string                `json:"password"`
+	LoginOptions *descope.LoginOptions `json:"loginOptions,omitempty"`
 }
 
 type authenticationPasswordResetRequestBody struct {
@@ -186,6 +189,7 @@ func newNOTPAuthenticationSignUpRequestBody(loginID string, user *descope.User, 
 		signUpOptions = &descope.SignUpOptions{}
 	}
 	res.LoginOptions = &descope.LoginOptions{
+		TenantID:        signUpOptions.TenantID,
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
 	}
@@ -221,6 +225,7 @@ func newMagicLinkAuthenticationSignUpRequestBody(method descope.DeliveryMethod, 
 		signUpOptions = &descope.SignUpOptions{}
 	}
 	b.LoginOptions = &descope.LoginOptions{
+		TenantID:        signUpOptions.TenantID,
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
 		TemplateID:      signUpOptions.TemplateID,
@@ -240,6 +245,7 @@ func newAuthenticationSignUpRequestBody(method descope.DeliveryMethod, loginID s
 		signUpOptions = &descope.SignUpOptions{}
 	}
 	b.LoginOptions = &descope.LoginOptions{
+		TenantID:        signUpOptions.TenantID,
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
 		TemplateID:      signUpOptions.TemplateID,
