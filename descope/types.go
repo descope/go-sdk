@@ -945,11 +945,13 @@ type SSOApplicationSearchOptions struct {
 }
 
 type Permission struct {
+	ID          string `json:"id,omitempty"`
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
 }
 
 type Role struct {
+	ID              string   `json:"id,omitempty"`
 	Name            string   `json:"name"`
 	Description     string   `json:"description,omitempty"`
 	PermissionNames []string `json:"permissionNames,omitempty"`
@@ -968,6 +970,7 @@ type RoleSearchOptions struct {
 	RoleNames           []string `json:"roleNames,omitempty"`
 	RoleNameLike        string   `json:"roleNameLike,omitempty"`
 	PermissionNames     []string `json:"permissionNames,omitempty"`
+	RoleIDs             []string `json:"roleIds,omitempty"`
 	IncludeProjectRoles *bool    `json:"includeProjectRoles,omitempty"`
 }
 
