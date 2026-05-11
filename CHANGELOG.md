@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.19.0](https://github.com/descope/go-sdk/compare/v1.18.0...v1.19.0) (2026-05-11)
+
+
+### Features
+
+* add UpdateWithID and DeleteWithID for roles and permissions ([#740](https://github.com/descope/go-sdk/issues/740)) ([3586dc6](https://github.com/descope/go-sdk/commit/3586dc6cd225b5a393d11534b5eb65412a3692d9))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.18.0 ([#744](https://github.com/descope/go-sdk/issues/744)) ([f35b1a8](https://github.com/descope/go-sdk/commit/f35b1a8cbabf647190b0049be353a033f3574a8d))
+
 ## [1.18.0](https://github.com/descope/go-sdk/compare/v1.17.0...v1.18.0) (2026-05-09)
 
 
