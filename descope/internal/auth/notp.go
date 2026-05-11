@@ -48,6 +48,7 @@ func (auth *notp) SignUpOrIn(ctx context.Context, loginID string, signUpOptions 
 		signUpOptions = &descope.SignUpOptions{}
 	}
 	httpResponse, err := auth.client.DoPostRequest(ctx, composeNOTPSignUpOrInURL(), newNOTPAuthenticationRequestBody(loginID, &descope.LoginOptions{
+		TenantID:        signUpOptions.TenantID,
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
 	}), nil, "")

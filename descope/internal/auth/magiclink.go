@@ -57,6 +57,7 @@ func (auth *magicLink) SignUpOrIn(ctx context.Context, method descope.DeliveryMe
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
 		TemplateID:      signUpOptions.TemplateID,
+		TenantID:        signUpOptions.TenantID,
 	}), options, "")
 	return masked.GetMasked(), err
 }

@@ -60,6 +60,7 @@ func (auth *enchantedLink) SignUpOrIn(ctx context.Context, loginID, URI string, 
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
 		TemplateID:      signUpOptions.TemplateID,
+		TenantID:        signUpOptions.TenantID,
 	}), nil, "")
 	if err != nil {
 		return nil, err
