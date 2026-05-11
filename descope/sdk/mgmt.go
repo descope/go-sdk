@@ -703,10 +703,21 @@ type Permission interface {
 	// in the existing permission. Use carefully.
 	Update(ctx context.Context, name, newName, description string) error
 
+	// UpdateWithID updates an existing permission identified by its ID.
+	//
+	// IMPORTANT: All parameters will override whatever values are currently set
+	// in the existing permission. Use carefully.
+	UpdateWithID(ctx context.Context, id, newName, description string) error
+
 	// Delete an existing permission.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	Delete(ctx context.Context, name string) error
+
+	// DeleteWithID deletes an existing permission identified by its ID.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteWithID(ctx context.Context, id string) error
 
 	// Load all permissions.
 	LoadAll(ctx context.Context) ([]*descope.Permission, error)
@@ -734,10 +745,21 @@ type Role interface {
 	// in the existing role. Use carefully.
 	Update(ctx context.Context, name, tenantID, newName, description string, permissionNames []string, defaultRole bool, private bool) error
 
+	// UpdateWithID updates an existing role identified by its ID.
+	//
+	// IMPORTANT: All parameters will override whatever values are currently set
+	// in the existing role. Use carefully.
+	UpdateWithID(ctx context.Context, id, tenantID, newName, description string, permissionNames []string, defaultRole bool, private bool) error
+
 	// Delete an existing role.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	Delete(ctx context.Context, name, tenantID string) error
+
+	// DeleteWithID deletes an existing role identified by its ID.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteWithID(ctx context.Context, id, tenantID string) error
 
 	// Load all roles.
 	LoadAll(ctx context.Context) ([]*descope.Role, error)
