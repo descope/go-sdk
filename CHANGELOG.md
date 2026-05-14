@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.20.0](https://github.com/descope/go-sdk/compare/v1.19.0...v1.20.0) (2026-05-14)
+
+
+### Features
+
+* update license handshake to use rateLimitTier ([#692](https://github.com/descope/go-sdk/issues/692)) ([eaee953](https://github.com/descope/go-sdk/commit/eaee953029cbb0c1579f0311bef265bad2cc87bd))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.19.0 ([#746](https://github.com/descope/go-sdk/issues/746)) ([91cb456](https://github.com/descope/go-sdk/commit/91cb45671d6d95025862e8c4a2856411e8331db7))
+
 ## [1.19.0](https://github.com/descope/go-sdk/compare/v1.18.0...v1.19.0) (2026-05-11)
 
 
