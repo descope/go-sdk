@@ -1652,7 +1652,7 @@ type Client struct {
 	externalRequestID func(context.Context) string
 	Conf              ClientParams
 	sdkInfo           *sdkInfo
-	rateLimitTier    string // Rate limit tier from handshake (tier1/tier2/tier3/tier4)
+	rateLimitTier     string // Rate limit tier from handshake (tier1/tier2/tier3/tier4)
 }
 type HTTPResponse struct {
 	Req     *http.Request
