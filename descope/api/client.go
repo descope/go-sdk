@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -1622,6 +1623,8 @@ type ClientParams struct {
 	ExternalRequestID    func(context.Context) string
 	CertificateVerify    CertificateVerifyMode
 	RequestTimeout       time.Duration
+	// MinTLSVersion (optional) - minimum TLS version for connections. Defaults to TLS 1.2. Set to tls.VersionTLS13 for stricter security.
+	MinTLSVersion uint16
 }
 
 type IHttpClient interface {
@@ -1686,7 +1689,25 @@ func NewClient(conf ClientParams) *Client {
 			t.MaxIdleConns = 100
 			t.MaxConnsPerHost = 100
 			t.MaxIdleConnsPerHost = 100
-			t.TLSClientConfig.InsecureSkipVerify = conf.CertificateVerify.SkipVerifyValue(conf.BaseURL)
+
+			// Enforce TLS 1.2+ by default for security
+			minTLSVersion := conf.MinTLSVersion
+			if minTLSVersion == 0 {
+				minTLSVersion = tls.VersionTLS12
+			}
+
+			// Ensure TLS config exists with MinVersion set (satisfies gosec G402)
+			if t.TLSClientConfig == nil {
+				t.TLSClientConfig = &tls.Config{MinVersion: minTLSVersion} // #nosec G402
+			} else {
+				t.TLSClientConfig.MinVersion = minTLSVersion
+			}
+
+			// Log warning if insecure TLS version is used
+			if minTLSVersion < tls.VersionTLS12 {
+				logger.LogInfo("WARNING: Using TLS version below 1.2 (MinVersion: 0x%04X). This is insecure and should only be used for testing/debugging.", minTLSVersion)
+			}
+
 			rt = t
 		} else {
 			// App has set a different transport layer, we will not change its attributes, and use it as is
@@ -1709,8 +1730,18 @@ func NewClient(conf ClientParams) *Client {
 
 	maps.Copy(defaultHeaders, conf.CustomDefaultHeaders)
 
+	// Set default BaseURL if not provided
 	if conf.BaseURL == "" {
 		conf.BaseURL = baseURLForProjectID(conf.ProjectID)
+	}
+
+	// Now set certificate verification using the effective BaseURL
+	if httpClient != nil {
+		if t, ok := httpClient.(*http.Client); ok {
+			if transport, ok := t.Transport.(*http.Transport); ok && transport.TLSClientConfig != nil {
+				transport.TLSClientConfig.InsecureSkipVerify = conf.CertificateVerify.SkipVerifyValue(conf.BaseURL)
+			}
+		}
 	}
 
 	return &Client{
