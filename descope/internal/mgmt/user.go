@@ -623,6 +623,56 @@ func (u *user) RemoveAllPasskeys(ctx context.Context, loginID string) error {
 	return err
 }
 
+func (u *user) RemovePasskey(ctx context.Context, loginID, credentialID string) error {
+	if loginID == "" {
+		return utils.NewInvalidArgumentError("loginID")
+	}
+	if credentialID == "" {
+		return utils.NewInvalidArgumentError("credentialID")
+	}
+
+	req := map[string]any{"loginId": loginID, "credentialId": credentialID}
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemovePasskey(), req, nil, "")
+	return err
+}
+
+type userPasskeyRaw struct {
+	ID          string `json:"id,omitempty"`
+	RpID        string `json:"rpId,omitempty"`
+	Kind        string `json:"kind,omitempty"`
+	DisplayName string `json:"displayName,omitempty"`
+	CreatedTime int32  `json:"createdTime,omitempty"`
+}
+
+func (u *user) ListUserPasskeys(ctx context.Context, loginID string) ([]*descope.UserPasskey, error) {
+	if loginID == "" {
+		return nil, utils.NewInvalidArgumentError("loginID")
+	}
+
+	req := map[string]any{"loginId": loginID}
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserListPasskeys(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	outRaw := struct {
+		Passkeys []*userPasskeyRaw `json:"passkeys"`
+	}{}
+	if err := utils.Unmarshal([]byte(res.BodyStr), &outRaw); err != nil {
+		return nil, err
+	}
+	out := make([]*descope.UserPasskey, len(outRaw.Passkeys))
+	for i, p := range outRaw.Passkeys {
+		out[i] = &descope.UserPasskey{
+			ID:          p.ID,
+			RPID:        p.RpID,
+			Kind:        p.Kind,
+			DisplayName: p.DisplayName,
+			CreatedTime: time.Unix(int64(p.CreatedTime), 0).UTC(),
+		}
+	}
+	return out, nil
+}
+
 func (u *user) RemoveTOTPSeed(ctx context.Context, loginID string) error {
 	if loginID == "" {
 		return utils.NewInvalidArgumentError("loginID")
