@@ -53,6 +53,15 @@ type UserTrustedDevice struct {
 	LastLocation   string    `json:"lastLocation,omitempty"`
 }
 
+// UserPasskey represents a registered passkey (WebAuthn credential) for a user.
+type UserPasskey struct {
+	ID          string    `json:"id,omitempty"`
+	RPID        string    `json:"rpId,omitempty"`
+	Kind        string    `json:"kind,omitempty"`
+	DisplayName string    `json:"displayName,omitempty"`
+	CreatedTime time.Time `json:"createdTime,omitempty"`
+}
+
 type WebAuthnTransactionResponse struct {
 	TransactionID string `json:"transactionId,omitempty"`
 	Options       string `json:"options,omitempty"`
