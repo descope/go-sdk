@@ -644,7 +644,7 @@ type userPasskeyRaw struct {
 	CreatedTime int32  `json:"createdTime,omitempty"`
 }
 
-func (u *user) ListUserPasskeys(ctx context.Context, loginID string) ([]*descope.UserPasskey, error) {
+func (u *user) ListPasskeys(ctx context.Context, loginID string) ([]*descope.UserPasskey, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}

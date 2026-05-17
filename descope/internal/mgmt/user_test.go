@@ -2103,7 +2103,7 @@ func TestUserListUserPasskeysSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "abc", req["loginId"])
 	}, response))
-	res, err := m.User().ListUserPasskeys(context.Background(), "abc")
+	res, err := m.User().ListPasskeys(context.Background(), "abc")
 	require.NoError(t, err)
 	require.Len(t, res, 2)
 	require.Equal(t, "cred-1", res[0].ID)
@@ -2116,13 +2116,13 @@ func TestUserListUserPasskeysSuccess(t *testing.T) {
 
 func TestUserListUserPasskeysBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	_, err := m.User().ListUserPasskeys(context.Background(), "")
+	_, err := m.User().ListPasskeys(context.Background(), "")
 	require.Error(t, err)
 }
 
 func TestUserListUserPasskeysError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	_, err := m.User().ListUserPasskeys(context.Background(), "abc")
+	_, err := m.User().ListPasskeys(context.Background(), "abc")
 	require.Error(t, err)
 }
 

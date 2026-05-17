@@ -426,8 +426,8 @@ type User interface {
 	// Removes a single registered passkey identified by its credential ID for the user with the given login ID.
 	RemovePasskey(ctx context.Context, loginID, credentialID string) error
 
-	// ListUserPasskeys returns the registered passkeys (WebAuthn devices) for the user with the given login ID.
-	ListUserPasskeys(ctx context.Context, loginID string) ([]*descope.UserPasskey, error)
+	// ListPasskeys returns the registered passkeys (WebAuthn devices) for the user with the given login ID.
+	ListPasskeys(ctx context.Context, loginID string) ([]*descope.UserPasskey, error)
 
 	// Removes TOTP seed for the user with the given login ID.
 	// Note: The user might not be able to login anymore if they have no other authentication
