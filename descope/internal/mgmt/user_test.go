@@ -2079,7 +2079,7 @@ func TestUserRemoveUserPasskeySuccess(t *testing.T) {
 
 func TestUserRemoveUserPasskeyBadInput(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOk(nil))
-	err := m.User().RemovePasskey(context.Background(), "", "cred-123")
+	err := m.User().RemovePasskey(context.Background(), "", "cred-abc")
 	require.Error(t, err)
 	err = m.User().RemovePasskey(context.Background(), "abc", "")
 	require.Error(t, err)
