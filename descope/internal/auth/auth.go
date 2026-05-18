@@ -464,7 +464,7 @@ func enforceDPoP(r *http.Request, tokenString string, token *descope.Token) erro
 	}
 	proof := ""
 	if len(dpopValues) == 1 {
-		proof = dpopValues[0]
+		proof = strings.TrimSpace(dpopValues[0])
 	}
 	return ValidateDPoPProof(proof, r.Method, dpopRequestURL(r), tokenString, jkt)
 }

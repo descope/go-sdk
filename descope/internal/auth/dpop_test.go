@@ -357,32 +357,41 @@ func TestDPoP_SymmetricKeyInJWK_Rejected(t *testing.T) {
 	require.Error(t, err)
 }
 
-// "rejected algorithm in DPoP proof" — end-to-end: EdDSA is not in the allow-list.
-func TestDPoP_RejectedAlg_EdDSA_EndToEnd_Rejected(t *testing.T) {
-	// ed25519.GenerateKey returns (PublicKey, PrivateKey, error)
+func dpopNewEd25519KeyPair(t *testing.T) (priv jwk.Key, pub jwk.Key) {
+	t.Helper()
 	edPubRaw, edPrivRaw, err := ed25519.GenerateKey(rand.Reader)
 	require.NoError(t, err)
 	edPrivJWK, err := jwk.FromRaw(edPrivRaw)
 	require.NoError(t, err)
 	edPubJWK, err := jwk.FromRaw(edPubRaw)
 	require.NoError(t, err)
+	return edPrivJWK, edPubJWK
+}
 
+func dpopMakeEdDSAProof(t *testing.T, priv, pub jwk.Key, opts dpopProofOpts) string {
+	t.Helper()
 	tok := jwt.New()
-	require.NoError(t, tok.Set("jti", dpopRandomJTI()))
-	require.NoError(t, tok.Set("htm", "GET"))
-	require.NoError(t, tok.Set("htu", dpopTestURL))
-	require.NoError(t, tok.Set(jwt.IssuedAtKey, time.Now()))
-	require.NoError(t, tok.Set("ath", dpopAthFor(dpopTestToken)))
+	require.NoError(t, tok.Set("jti", opts.jti))
+	require.NoError(t, tok.Set("htm", opts.htm))
+	require.NoError(t, tok.Set("htu", opts.htu))
+	require.NoError(t, tok.Set(jwt.IssuedAtKey, opts.iat))
+	require.NoError(t, tok.Set("ath", opts.ath))
 
 	hdrs := jws.NewHeaders()
 	require.NoError(t, hdrs.Set(jws.TypeKey, "dpop+jwt"))
-	require.NoError(t, hdrs.Set(jws.JWKKey, edPubJWK))
+	require.NoError(t, hdrs.Set(jws.JWKKey, pub))
 
-	signed, err := jwt.Sign(tok, jwt.WithKey(jwa.EdDSA, edPrivJWK, jws.WithProtectedHeaders(hdrs)))
+	signed, err := jwt.Sign(tok, jwt.WithKey(jwa.EdDSA, priv, jws.WithProtectedHeaders(hdrs)))
 	require.NoError(t, err)
+	return string(signed)
+}
 
-	err = ValidateDPoPProof(string(signed), "GET", dpopTestURL, dpopTestToken, "any-jkt")
-	require.Error(t, err)
+func TestDPoP_EdDSA_Accepted(t *testing.T) {
+	priv, pub := dpopNewEd25519KeyPair(t)
+	storedJKT := dpopJKTOf(t, pub)
+	opts := dpopValidOpts("GET", dpopTestURL, dpopTestToken)
+	proof := dpopMakeEdDSAProof(t, priv, pub, opts)
+	require.NoError(t, ValidateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT))
 }
 
 // "jwk must not contain a private key" — RSA private key embedded in JWK header.
@@ -515,13 +524,12 @@ func TestDPoP_EmptyATH_Rejected(t *testing.T) {
 }
 
 func TestDPoP_RejectedAlgs(t *testing.T) {
-	// Fix #4: allow-list — only RS*/PS*/ES* are permitted
 	assert.False(t, dpopIsAllowedAlg("none"))
 	assert.False(t, dpopIsAllowedAlg("HS256"))
 	assert.False(t, dpopIsAllowedAlg("HS384"))
 	assert.False(t, dpopIsAllowedAlg("HS512"))
-	assert.False(t, dpopIsAllowedAlg("EdDSA"))   // not in allow-list
-	assert.False(t, dpopIsAllowedAlg("unknown")) // unknown alg rejected by default
+	assert.False(t, dpopIsAllowedAlg("unknown"))
+	assert.True(t, dpopIsAllowedAlg("EdDSA"))
 	assert.True(t, dpopIsAllowedAlg("ES256"))
 	assert.True(t, dpopIsAllowedAlg("ES384"))
 	assert.True(t, dpopIsAllowedAlg("ES512"))
@@ -531,6 +539,32 @@ func TestDPoP_RejectedAlgs(t *testing.T) {
 	assert.True(t, dpopIsAllowedAlg("PS256"))
 	assert.True(t, dpopIsAllowedAlg("PS384"))
 	assert.True(t, dpopIsAllowedAlg("PS512"))
+}
+
+func TestDPoP_ProofWhitespaceTrimmed_Accepted(t *testing.T) {
+	priv, pub := dpopNewKeyPair(t)
+	storedJKT := dpopJKTOf(t, pub)
+	proof := dpopMakeProof(t, priv, dpopValidOpts("GET", dpopTestURL, dpopTestToken))
+	require.NoError(t, ValidateDPoPProof("  "+proof+"  ", "GET", dpopTestURL, dpopTestToken, storedJKT))
+}
+
+func TestDPoP_ProofExceedsMaxLength_Rejected(t *testing.T) {
+	oversized := strings.Repeat("x", maxDPoPProofLen+1)
+	err := ValidateDPoPProof(oversized, "GET", dpopTestURL, dpopTestToken, "some-jkt")
+	require.Error(t, err)
+	assert.ErrorIs(t, err, descope.ErrInvalidToken)
+}
+
+func TestDPoPSanitizeProof_TrimsAndPasses(t *testing.T) {
+	proof, err := dpopSanitizeProof("  jwt-body  ")
+	require.NoError(t, err)
+	assert.Equal(t, "jwt-body", proof)
+}
+
+func TestDPoPSanitizeProof_RejectsOversized(t *testing.T) {
+	_, err := dpopSanitizeProof(strings.Repeat("a", maxDPoPProofLen+1))
+	require.Error(t, err)
+	assert.ErrorIs(t, err, descope.ErrInvalidToken)
 }
 
 // ---- descope.Token.GetDPoPThumbprint ----
@@ -780,14 +814,8 @@ func TestDPoPHtuMatches_PathOnlyRequestURL_Rejected(t *testing.T) {
 	assert.False(t, dpopHtuMatches("https://api.example.com/just/a/path", "/just/a/path"))
 }
 
-func TestDPoPHtuMatches_InvalidHTU_Rejected(t *testing.T) {
-	// Invalid percent-encoding causes url.Parse to return an error
-	assert.False(t, dpopHtuMatches("https://api.example.com/%zz/path", "https://api.example.com/path"))
-}
-
-func TestDPoPHtuMatches_InvalidRequestURL_Rejected(t *testing.T) {
-	// Invalid percent-encoding in requestURL causes url.Parse to return an error
-	assert.False(t, dpopHtuMatches("https://api.example.com/path", "https://api.example.com/%zz/path"))
+func TestDPoPHtuMatches_DifferentPaths_Rejected(t *testing.T) {
+	assert.False(t, dpopHtuMatches("https://api.example.com/foo", "https://api.example.com/bar"))
 }
 
 // HTTP default port 80 stripping in dpopNormalizeHost.
@@ -876,6 +904,33 @@ func TestValidateAndRefreshSessionWithRequest_DPoPScheme_NoCnfJKT_Rejected(t *te
 
 // ---- Fix 3: case-insensitive auth-scheme matching ----
 
+func TestParseAuthScheme_NoDelimiter_Rejected(t *testing.T) {
+	_, _, ok := parseAuthScheme("BearerTokenWithNoSeparator")
+	assert.False(t, ok)
+}
+
+func TestParseAuthScheme_EmptyToken_Rejected(t *testing.T) {
+	_, _, ok := parseAuthScheme("Bearer ")
+	assert.False(t, ok)
+}
+
+func TestParseAuthScheme_TabDelimiter_Accepted(t *testing.T) {
+	scheme, token, ok := parseAuthScheme("DPoP\tmy-token")
+	require.True(t, ok)
+	assert.Equal(t, "dpop", scheme)
+	assert.Equal(t, "my-token", token)
+}
+
+func TestValidateSessionWithRequest_InvalidJWT_ReturnsError(t *testing.T) {
+	sessionPriv, _ := dpopNewKeyPair(t)
+	a := dpopNewAuthForKey(t, sessionPriv)
+	req := httptest.NewRequest(http.MethodGet, "/resource", nil)
+	req.Header.Set("Authorization", "Bearer not-a-valid-jwt")
+	ok, _, err := a.ValidateSessionWithRequest(req)
+	require.Error(t, err)
+	assert.False(t, ok)
+}
+
 func TestProvideTokens_DPoPSchemeLowercase_Extracted(t *testing.T) {
 	provider := &defaultRequestTokensProvider{}
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -907,6 +962,26 @@ func TestValidateSessionWithRequest_DPoPSchemeLowercase_NoCnfJKT_Rejected(t *tes
 }
 
 // ---- Fix 4: multiple DPoP headers rejected ----
+
+func TestValidateSessionWithRequest_DPoPProofTrimmed_Accepted(t *testing.T) {
+	sessionPriv, _ := dpopNewKeyPair(t)
+	a := dpopNewAuthForKey(t, sessionPriv)
+	dpopPriv, dpopPub := dpopNewKeyPair(t)
+	storedJKT := dpopJKTOf(t, dpopPub)
+	sessionToken := dpopSignSessionJWT(t, sessionPriv, map[string]any{
+		"cnf": map[string]any{"jkt": storedJKT},
+	})
+	const reqURL = "http://example.test/resource"
+	proof := dpopMakeProof(t, dpopPriv, dpopValidOpts("GET", reqURL, sessionToken))
+
+	req := httptest.NewRequest(http.MethodGet, reqURL, nil)
+	req.Header.Set("Authorization", "DPoP "+sessionToken)
+	req.Header.Set("DPoP", "  "+proof+"  ")
+
+	ok, _, err := a.ValidateSessionWithRequest(req)
+	require.NoError(t, err)
+	require.True(t, ok)
+}
 
 func TestValidateSessionWithRequest_MultipleDPoPHeaders_Rejected(t *testing.T) {
 	sessionPriv, _ := dpopNewKeyPair(t)
@@ -994,46 +1069,31 @@ func TestDPoPRequestURL_ForwardedProtoAndHost_EndToEnd_Accepted(t *testing.T) {
 	require.NoError(t, err)
 }
 
-// ---- Fix 6: htu path normalization ----
+// htu comparison matches backend: no dot-segment or percent-encoding normalization.
 
-func TestDPoP_HTU_DotSegmentsNormalized(t *testing.T) {
-	// /a/./b and /a/b are equivalent after dot-segment removal.
+func TestDPoP_HTU_DotSegments_NotEquivalent(t *testing.T) {
 	priv, pub := dpopNewKeyPair(t)
 	storedJKT := dpopJKTOf(t, pub)
 	opts := dpopValidOpts("GET", "https://api.example.com/a/./b", dpopTestToken)
 	proof := dpopMakeProof(t, priv, opts)
-	require.NoError(t, ValidateDPoPProof(proof, "GET", "https://api.example.com/a/b", dpopTestToken, storedJKT))
+	require.Error(t, ValidateDPoPProof(proof, "GET", "https://api.example.com/a/b", dpopTestToken, storedJKT))
 }
 
-func TestDPoP_HTU_DoubleDotResolved(t *testing.T) {
-	priv, pub := dpopNewKeyPair(t)
-	storedJKT := dpopJKTOf(t, pub)
-	opts := dpopValidOpts("GET", "https://api.example.com/a/c/../b", dpopTestToken)
-	proof := dpopMakeProof(t, priv, opts)
-	require.NoError(t, ValidateDPoPProof(proof, "GET", "https://api.example.com/a/b", dpopTestToken, storedJKT))
-}
-
-func TestDPoP_HTU_PercentEncodedUnreservedNormalized(t *testing.T) {
-	// %2D is '-', an unreserved char → decoded to '-'.
+func TestDPoP_HTU_PercentEncodedUnreserved_NotEquivalent(t *testing.T) {
 	priv, pub := dpopNewKeyPair(t)
 	storedJKT := dpopJKTOf(t, pub)
 	opts := dpopValidOpts("GET", "https://api.example.com/foo%2Dbar", dpopTestToken)
 	proof := dpopMakeProof(t, priv, opts)
-	require.NoError(t, ValidateDPoPProof(proof, "GET", "https://api.example.com/foo-bar", dpopTestToken, storedJKT))
+	require.Error(t, ValidateDPoPProof(proof, "GET", "https://api.example.com/foo-bar", dpopTestToken, storedJKT))
 }
 
 func TestDPoP_HTU_PercentEncodedReservedPreserved(t *testing.T) {
-	// %2F is '/', a reserved char — must not be decoded; /foo%2Fbar ≠ /foo/bar.
+	// %2F is '/', a reserved char — /foo%2Fbar ≠ /foo/bar.
 	priv, pub := dpopNewKeyPair(t)
 	storedJKT := dpopJKTOf(t, pub)
 	opts := dpopValidOpts("GET", "https://api.example.com/foo%2Fbar", dpopTestToken)
 	proof := dpopMakeProof(t, priv, opts)
 	require.Error(t, ValidateDPoPProof(proof, "GET", "https://api.example.com/foo/bar", dpopTestToken, storedJKT))
-}
-
-func TestDPoP_HTU_HexCaseNormalized(t *testing.T) {
-	// %2f (lowercase) and %2F (uppercase) are equivalent.
-	assert.True(t, dpopHtuMatches("https://api.example.com/foo%2fbar", "https://api.example.com/foo%2Fbar"))
 }
 
 func TestDPoP_HTU_TrailingSlashPreserved(t *testing.T) {
