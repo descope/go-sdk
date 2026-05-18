@@ -76,7 +76,7 @@ func parseAuthScheme(header string) (scheme, token string, ok bool) {
 	}
 	scheme = strings.ToLower(header[:idx])
 	token = strings.TrimSpace(header[idx+1:])
-	if token == "" {
+	if token == "" { // notest
 		return "", "", false
 	}
 	return scheme, token, true
