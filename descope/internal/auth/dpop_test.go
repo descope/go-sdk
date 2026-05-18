@@ -588,6 +588,16 @@ func TestToken_GetDPoPThumbprint_NilClaims(t *testing.T) {
 	assert.Equal(t, "", tok.GetDPoPThumbprint())
 }
 
+func TestToken_GetDPoPThumbprint_InvalidCnfType(t *testing.T) {
+	tok := &descope.Token{Claims: map[string]any{"cnf": "not-a-map"}}
+	assert.Equal(t, "", tok.GetDPoPThumbprint())
+}
+
+func TestToken_GetDPoPThumbprint_InvalidJKTType(t *testing.T) {
+	tok := &descope.Token{Claims: map[string]any{"cnf": map[string]any{"jkt": 123}}}
+	assert.Equal(t, "", tok.GetDPoPThumbprint())
+}
+
 // ---- ValidateSessionWithRequest DPoP integration tests ----
 
 // dpopNewAuthForKey creates an authenticationService that accepts JWTs signed
