@@ -234,9 +234,9 @@ func TestCheckFGAWithContextPassthrough(t *testing.T) {
 		require.Equal(t, "1.2.3.4", ctx["ip"])
 		require.Equal(t, "admin", ctx["role"])
 	}, response))
-	checks, err := mgmt.FGA().CheckWithContext(context.Background(),
+	checks, err := mgmt.FGA().CheckWithABAC(context.Background(),
 		[]*descope.FGARelation{{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"}},
-		map[string]any{"ip": "1.2.3.4", "role": "admin"},
+		&descope.ABACContext{ExtraContext: map[string]any{"ip": "1.2.3.4", "role": "admin"}},
 	)
 	require.NoError(t, err)
 	require.Len(t, checks, 1)
@@ -259,7 +259,7 @@ func TestCheckFGAWithContextNil(t *testing.T) {
 		_, hasContext := req["context"]
 		require.False(t, hasContext)
 	}, response))
-	checks, err := mgmt.FGA().CheckWithContext(context.Background(),
+	checks, err := mgmt.FGA().CheckWithABAC(context.Background(),
 		[]*descope.FGARelation{{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"}},
 		nil,
 	)
@@ -281,9 +281,9 @@ func TestCheckFGAWithContextEmpty(t *testing.T) {
 		_, hasContext := req["context"]
 		require.False(t, hasContext)
 	}, response))
-	checks, err := mgmt.FGA().CheckWithContext(context.Background(),
+	checks, err := mgmt.FGA().CheckWithABAC(context.Background(),
 		[]*descope.FGARelation{{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"}},
-		map[string]any{},
+		&descope.ABACContext{ExtraContext: map[string]any{}},
 	)
 	require.NoError(t, err)
 	require.Len(t, checks, 1)
@@ -291,7 +291,7 @@ func TestCheckFGAWithContextEmpty(t *testing.T) {
 
 func TestCheckFGAWithContextMissingTuples(t *testing.T) {
 	mgmt := newTestMgmt(nil, nil)
-	_, err := mgmt.FGA().CheckWithContext(context.Background(), nil, map[string]any{"k": "v"})
+	_, err := mgmt.FGA().CheckWithABAC(context.Background(), nil, &descope.ABACContext{ExtraContext: map[string]any{"k": "v"}})
 	require.Error(t, err)
 	require.ErrorContains(t, err, utils.NewInvalidArgumentError("relations").Message)
 }
@@ -414,9 +414,9 @@ func TestCheckFGAConditionalResult(t *testing.T) {
 			},
 		}}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, response))
-	checks, err := mgmt.FGA().CheckWithContext(context.Background(),
+	checks, err := mgmt.FGA().CheckWithABAC(context.Background(),
 		[]*descope.FGARelation{{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"}},
-		map[string]any{"ip": "1.2.3.4"},
+		&descope.ABACContext{ExtraContext: map[string]any{"ip": "1.2.3.4"}},
 	)
 	require.NoError(t, err)
 	require.Len(t, checks, 1)
@@ -435,7 +435,7 @@ func TestCheckFGAConditionalErr(t *testing.T) {
 			},
 		}}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, response))
-	checks, err := mgmt.FGA().CheckWithContext(context.Background(),
+	checks, err := mgmt.FGA().CheckWithABAC(context.Background(),
 		[]*descope.FGARelation{{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"}},
 		nil,
 	)
