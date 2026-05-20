@@ -1011,8 +1011,8 @@ type FGA interface {
 	CheckWithContext(ctx context.Context, relations []*descope.FGARelation, extraContext map[string]any) ([]*descope.FGACheck, error)
 
 	// CheckWithABAC is like Check but accepts an ABACContext that can carry both a caller-supplied
-	// ExtraContext map (CEL condition variables) and a DescopeContext (Descope-resolved inputs such as
-	// userIdentifier for the UserExists builtin). Either field may be nil. Pass a nil ABACContext to
+	// ExtraContext map (constraint/condition variables) and a DescopeContext (Descope-resolved inputs such as
+	// userIdentifier). Either field may be nil. Pass a nil ABACContext to
 	// behave identically to Check.
 	CheckWithABAC(ctx context.Context, relations []*descope.FGARelation, abacContext *descope.ABACContext) ([]*descope.FGACheck, error)
 
