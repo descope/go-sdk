@@ -134,18 +134,17 @@ func (f *fga) CheckWithABAC(ctx context.Context, relations []*descope.FGARelatio
 	body := map[string]any{
 		"tuples": relations,
 	}
-	if abacContext != nil {
-		if len(abacContext.ExtraContext) > 0 {
-			body["context"] = abacContext.ExtraContext
-		}
-		if abacContext.DescopeContext != nil && abacContext.DescopeContext.UserIdentifier != "" {
-			body["descopeContext"] = abacContext.DescopeContext
-		}
+	if abacContext != nil && len(abacContext.ExtraContext) > 0 {
+		body["context"] = abacContext.ExtraContext
+	}
+	sendDescopeContext := abacContext != nil && abacContext.DescopeContext != nil && abacContext.DescopeContext.UserIdentifier != ""
+	if sendDescopeContext {
+		body["descopeContext"] = abacContext.DescopeContext
 	}
 
 	options := &api.HTTPRequest{}
-	if abacContext == nil || abacContext.DescopeContext == nil {
-		// Bypass fgaCacheURL only when DescopeContext is set — see field comment for why.
+	if !sendDescopeContext {
+		// Use fgaCacheURL unless we are actually sending descopeContext — the proxy doesn't forward it.
 		options.BaseURL = f.fgaCacheURL
 	}
 	res, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGACheck(), body, options, "")
