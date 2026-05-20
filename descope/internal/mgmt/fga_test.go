@@ -319,7 +319,7 @@ func TestCheckFGAWithABACBothContexts(t *testing.T) {
 	checks, err := mgmt.FGA().CheckWithABAC(context.Background(),
 		[]*descope.FGARelation{{Resource: "doc1", ResourceType: "document", Relation: "viewer", Target: "U2abc", TargetType: "user"}},
 		&descope.ABACContext{
-			DescopeContext: &descope.FGADescopeContext{UserIdentifier: "U2abc"},
+			DescopeContext: &descope.ABACDescopeContext{UserIdentifier: "U2abc"},
 			ExtraContext:   map[string]any{"role": "admin"},
 		},
 	)
@@ -344,7 +344,7 @@ func TestCheckFGAWithABACDescopeContextOnly(t *testing.T) {
 	}, response))
 	checks, err := mgmt.FGA().CheckWithABAC(context.Background(),
 		[]*descope.FGARelation{{Resource: "doc1", ResourceType: "document", Relation: "viewer", Target: "U2abc", TargetType: "user"}},
-		&descope.ABACContext{DescopeContext: &descope.FGADescopeContext{UserIdentifier: "U2abc"}},
+		&descope.ABACContext{DescopeContext: &descope.ABACDescopeContext{UserIdentifier: "U2abc"}},
 	)
 	require.NoError(t, err)
 	require.Len(t, checks, 1)
@@ -384,7 +384,7 @@ func TestCheckFGAWithABACCacheBypass(t *testing.T) {
 			require.True(t, strings.HasPrefix(r.URL.String(), "https://api.descope.co"), "expected authzservice URL, got %s", r.URL.String())
 		}, response))
 		_, err := mgmt.FGA().CheckWithABAC(context.Background(), rel,
-			&descope.ABACContext{DescopeContext: &descope.FGADescopeContext{UserIdentifier: "U2abc"}})
+			&descope.ABACContext{DescopeContext: &descope.ABACDescopeContext{UserIdentifier: "U2abc"}})
 		require.NoError(t, err)
 	})
 
@@ -399,7 +399,7 @@ func TestCheckFGAWithABACCacheBypass(t *testing.T) {
 
 func TestCheckFGAWithABACMissingTuples(t *testing.T) {
 	mgmt := newTestMgmt(nil, nil)
-	_, err := mgmt.FGA().CheckWithABAC(context.Background(), nil, &descope.ABACContext{DescopeContext: &descope.FGADescopeContext{UserIdentifier: "U2abc"}})
+	_, err := mgmt.FGA().CheckWithABAC(context.Background(), nil, &descope.ABACContext{DescopeContext: &descope.ABACDescopeContext{UserIdentifier: "U2abc"}})
 	require.Error(t, err)
 	require.ErrorContains(t, err, utils.NewInvalidArgumentError("relations").Message)
 }
