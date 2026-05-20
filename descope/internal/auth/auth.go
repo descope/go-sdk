@@ -77,16 +77,12 @@ func parseAuthScheme(header string) (scheme, token string, ok bool) {
 	if header == "" {
 		return "", "", false
 	}
-	// The HTTP spec (RFC 7235) allows either a space or a tab as the delimiter between the auth scheme and the token, so checking for both characters ensures correct handling of any compliant header value.
-	idx := strings.IndexAny(header, " \t")
-	if idx < 0 {
+	// RFC 9110 §11.4 defines credentials as: auth-scheme 1*SP token68/params — SP only, no tab.
+	rawScheme, token, ok := strings.Cut(header, " ")
+	if !ok || token == "" { // notest
 		return "", "", false
 	}
-	scheme = strings.ToLower(header[:idx])
-	token = strings.TrimSpace(header[idx+1:])
-	if token == "" { // notest
-		return "", "", false
-	}
+	scheme = strings.ToLower(rawScheme)
 	return scheme, token, true
 }
 

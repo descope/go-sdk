@@ -988,12 +988,6 @@ func TestParseAuthScheme_EmptyToken_Rejected(t *testing.T) {
 	assert.False(t, ok)
 }
 
-func TestParseAuthScheme_TabDelimiter_Accepted(t *testing.T) {
-	scheme, token, ok := parseAuthScheme("DPoP\tmy-token")
-	require.True(t, ok)
-	assert.Equal(t, "dpop", scheme)
-	assert.Equal(t, "my-token", token)
-}
 
 func TestValidateSessionWithRequest_InvalidJWT_ReturnsError(t *testing.T) {
 	sessionPriv, _ := dpopNewKeyPair(t)
