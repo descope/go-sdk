@@ -107,6 +107,18 @@ type FGARelation struct {
 	TargetType   string `json:"targetType"`
 }
 
+// ABACContext bundles all ABAC inputs for an FGA check. Future fields (session, tenant, request, ...)
+// can be added without breaking callers.
+type ABACContext struct {
+	DescopeContext *ABACDescopeContext `json:"descopeContext,omitempty"`
+	ExtraContext   map[string]any      `json:"context,omitempty"`
+}
+
+// ABACDescopeContext holds Descope-resolved inputs for ABAC condition evaluation.
+type ABACDescopeContext struct {
+	UserIdentifier string `json:"userIdentifier,omitempty"`
+}
+
 // FGACheck holds the result of a check
 type FGACheck struct {
 	Allowed  bool          `json:"allowed"`

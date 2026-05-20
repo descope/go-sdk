@@ -111,10 +111,15 @@ type checkResponse struct {
 }
 
 func (f *fga) Check(ctx context.Context, relations []*descope.FGARelation) ([]*descope.FGACheck, error) {
-	return f.CheckWithContext(ctx, relations, nil)
+	return f.CheckWithABAC(ctx, relations, nil)
 }
 
+// Deprecated: use CheckWithABAC.
 func (f *fga) CheckWithContext(ctx context.Context, relations []*descope.FGARelation, extraContext map[string]any) ([]*descope.FGACheck, error) {
+	return f.CheckWithABAC(ctx, relations, &descope.ABACContext{ExtraContext: extraContext})
+}
+
+func (f *fga) CheckWithABAC(ctx context.Context, relations []*descope.FGARelation, abacContext *descope.ABACContext) ([]*descope.FGACheck, error) {
 	if len(relations) == 0 {
 		return nil, utils.NewInvalidArgumentError("relations")
 	}
@@ -122,8 +127,11 @@ func (f *fga) CheckWithContext(ctx context.Context, relations []*descope.FGARela
 	body := map[string]any{
 		"tuples": relations,
 	}
-	if len(extraContext) > 0 {
-		body["context"] = extraContext
+	if abacContext != nil && len(abacContext.ExtraContext) > 0 {
+		body["context"] = abacContext.ExtraContext
+	}
+	if abacContext != nil && abacContext.DescopeContext != nil {
+		body["descopeContext"] = abacContext.DescopeContext
 	}
 
 	options := &api.HTTPRequest{}
