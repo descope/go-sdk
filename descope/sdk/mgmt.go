@@ -1005,8 +1005,8 @@ type FGA interface {
 	Check(ctx context.Context, relations []*descope.FGARelation) ([]*descope.FGACheck, error)
 
 	// Deprecated: CheckWithContext only supports request-set context (the caller-supplied extraContext map)
-	// and cannot carry Descope-resolved context surfaces (e.g. descopeContext.userIdentifier) needed by
-	// builtins like UserExists. Use CheckWithABAC and pass an ABACContext, which supports both and is
+	// and cannot carry Descope-resolved context surfaces (e.g. descopeContext.userIdentifier)
+	// Use CheckWithABAC and pass an ABACContext, which supports both and is
 	// forward-compatible with future context surfaces.
 	CheckWithContext(ctx context.Context, relations []*descope.FGARelation, extraContext map[string]any) ([]*descope.FGACheck, error)
 
