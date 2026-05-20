@@ -77,7 +77,7 @@ func parseAuthScheme(header string) (scheme, token string, ok bool) {
 	if header == "" {
 		return "", "", false
 	}
-	// RFC 9110 §11.4 defines credentials as: auth-scheme 1*SP token68/params — SP only, no tab.
+
 	rawScheme, token, ok := strings.Cut(header, " ")
 	if !ok || token == "" { // notest
 		return "", "", false
