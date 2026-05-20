@@ -265,6 +265,20 @@ type Token struct {
 	Claims            map[string]any `json:"claims,omitempty"`
 }
 
+// GetDPoPThumbprint returns the cnf.jkt claim from the token, or empty string if absent.
+// A non-empty value means the token is DPoP-bound and a matching proof must be validated.
+func (to *Token) GetDPoPThumbprint() string {
+	if to.Claims == nil {
+		return ""
+	}
+	cnf, ok := to.Claims["cnf"].(map[string]any)
+	if !ok {
+		return ""
+	}
+	jkt, _ := cnf["jkt"].(string)
+	return jkt
+}
+
 func (to *Token) GetTenants() []string {
 	tenants := to.getTenants()
 	if len(tenants) == 0 && to.Claims != nil && to.Claims[ClaimDescopeCurrentTenant] != nil {
