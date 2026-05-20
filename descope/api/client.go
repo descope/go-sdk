@@ -29,9 +29,6 @@ const (
 	defaultURL                = defaultAPIPrefix + "." + defaultDomainName
 	AuthorizationHeaderName   = "Authorization"
 	BearerAuthorizationPrefix = "Bearer "
-	BearerAuthScheme          = "bearer"
-	DPoPAuthorizationPrefix   = "DPoP "
-	DPopAuthScheme            = "dpop"
 	nullString                = "null"
 )
 

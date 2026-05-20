@@ -19,6 +19,11 @@ import (
 
 const SKEW = time.Second * 5
 
+const (
+	bearerAuthScheme = "bearer"
+	dpopAuthScheme   = "dpop"
+)
+
 type AuthParams struct {
 	ProjectID                  string
 	PublicKey                  string
@@ -42,7 +47,7 @@ func (d *defaultRequestTokensProvider) ProvideTokens(r *http.Request) (sessionTo
 		return "", ""
 	}
 	// Header takes precedence over cookie; auth-scheme is case-insensitive (RFC 9110 §11.1).
-	if scheme, tok, ok := parseAuthScheme(r.Header.Get(api.AuthorizationHeaderName)); ok && (scheme == api.BearerAuthScheme || scheme == api.DPopAuthScheme) {
+	if scheme, tok, ok := parseAuthScheme(r.Header.Get(api.AuthorizationHeaderName)); ok && (scheme == bearerAuthScheme || scheme == dpopAuthScheme) {
 		sessionToken = tok
 	}
 
@@ -452,13 +457,13 @@ func (auth *authenticationService) ValidateSessionWithRequest(request *http.Requ
 func enforceDPoP(r *http.Request, tokenString string, token *descope.Token) error {
 	scheme, _, ok := parseAuthScheme(r.Header.Get(api.AuthorizationHeaderName))
 	jkt := token.GetDPoPThumbprint()
-	if ok && scheme == api.DPopAuthScheme && jkt == "" {
+	if ok && scheme == dpopAuthScheme && jkt == "" {
 		return descope.ErrInvalidToken.WithMessage("DPoP scheme used but token is not DPoP-bound (missing cnf.jkt)")
 	}
 	if jkt == "" {
 		return nil
 	}
-	dpopValues := r.Header.Values(api.DPopAuthScheme)
+	dpopValues := r.Header.Values(dpopAuthScheme)
 	if len(dpopValues) > 1 {
 		return descope.ErrInvalidToken.WithMessage("multiple DPoP headers not allowed")
 	}
