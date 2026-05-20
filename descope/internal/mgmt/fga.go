@@ -12,6 +12,13 @@ import (
 
 type fga struct {
 	managementBase
+	// fgaCacheURL is the base URL of the authzcache proxy — a caching layer that
+	// sits in front of authzservice and speeds up relation checks. When set, most
+	// FGA write and check operations are routed through it. Operations that rely on
+	// authzservice-only features (e.g. CheckWithABAC with DescopeContext, which
+	// requires server-side user resolution) must bypass fgaCacheURL and hit
+	// authzservice directly, because the proxy does not forward the descopeContext
+	// field and therefore cannot evaluate UserExists() or similar builtins.
 	fgaCacheURL string
 }
 
@@ -111,10 +118,15 @@ type checkResponse struct {
 }
 
 func (f *fga) Check(ctx context.Context, relations []*descope.FGARelation) ([]*descope.FGACheck, error) {
-	return f.CheckWithContext(ctx, relations, nil)
+	return f.CheckWithABAC(ctx, relations, nil)
 }
 
+// Deprecated: use CheckWithABAC.
 func (f *fga) CheckWithContext(ctx context.Context, relations []*descope.FGARelation, extraContext map[string]any) ([]*descope.FGACheck, error) {
+	return f.CheckWithABAC(ctx, relations, &descope.ABACContext{ExtraContext: extraContext})
+}
+
+func (f *fga) CheckWithABAC(ctx context.Context, relations []*descope.FGARelation, abacContext *descope.ABACContext) ([]*descope.FGACheck, error) {
 	if len(relations) == 0 {
 		return nil, utils.NewInvalidArgumentError("relations")
 	}
@@ -122,12 +134,20 @@ func (f *fga) CheckWithContext(ctx context.Context, relations []*descope.FGARela
 	body := map[string]any{
 		"tuples": relations,
 	}
-	if len(extraContext) > 0 {
-		body["context"] = extraContext
+	if abacContext != nil {
+		if len(abacContext.ExtraContext) > 0 {
+			body["context"] = abacContext.ExtraContext
+		}
+		if abacContext.DescopeContext != nil && abacContext.DescopeContext.UserIdentifier != "" {
+			body["descopeContext"] = abacContext.DescopeContext
+		}
 	}
 
 	options := &api.HTTPRequest{}
-	options.BaseURL = f.fgaCacheURL
+	if abacContext == nil || abacContext.DescopeContext == nil {
+		// Bypass fgaCacheURL only when DescopeContext is set — see field comment for why.
+		options.BaseURL = f.fgaCacheURL
+	}
 	res, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFGACheck(), body, options, "")
 	if err != nil {
 		return nil, err

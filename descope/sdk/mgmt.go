@@ -1004,11 +1004,17 @@ type FGA interface {
 	// against any attributes the backend already has on hand.
 	Check(ctx context.Context, relations []*descope.FGARelation) ([]*descope.FGACheck, error)
 
-	// CheckWithContext is like Check but additionally threads a caller-supplied context map to CEL
-	// conditions defined in the schema. Keys become available as context variables during evaluation
-	// (merged on top of any attributes the backend already has); values must be JSON-marshalable.
-	// Pass a nil or empty map if you do not need to supply any extra context.
+	// Deprecated: CheckWithContext only supports request-set context (the caller-supplied extraContext map)
+	// and cannot carry Descope-resolved context surfaces (e.g. descopeContext.userIdentifier) needed by
+	// builtins like UserExists. Use CheckWithABAC and pass an ABACContext, which supports both and is
+	// forward-compatible with future context surfaces.
 	CheckWithContext(ctx context.Context, relations []*descope.FGARelation, extraContext map[string]any) ([]*descope.FGACheck, error)
+
+	// CheckWithABAC is like Check but accepts an ABACContext that can carry both a caller-supplied
+	// ExtraContext map (CEL condition variables) and a DescopeContext (Descope-resolved inputs such as
+	// userIdentifier for the UserExists builtin). Either field may be nil. Pass a nil ABACContext to
+	// behave identically to Check.
+	CheckWithABAC(ctx context.Context, relations []*descope.FGARelation, abacContext *descope.ABACContext) ([]*descope.FGACheck, error)
 
 	// LoadMappableSchema loads the mappable schema for the project (only listing the RDs for a Namespace), along with a list of mappable resources.
 	LoadMappableSchema(ctx context.Context, tenantID string, options *descope.FGAMappableResourcesOptions) (*descope.FGAMappableSchema, error)

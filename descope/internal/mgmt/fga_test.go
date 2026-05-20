@@ -296,6 +296,89 @@ func TestCheckFGAWithContextMissingTuples(t *testing.T) {
 	require.ErrorContains(t, err, utils.NewInvalidArgumentError("relations").Message)
 }
 
+func TestCheckFGAWithABACBothContexts(t *testing.T) {
+	response := map[string]any{
+		"tuples": []*descope.FGACheck{
+			{
+				Allowed:  true,
+				Relation: &descope.FGARelation{Resource: "doc1", ResourceType: "document", Relation: "viewer", Target: "U2abc", TargetType: "user"},
+				Info:     &descope.FGACheckInfo{Conditional: true},
+			},
+		}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.NotNil(t, req["tuples"])
+		ctx, ok := req["context"].(map[string]any)
+		require.True(t, ok)
+		require.Equal(t, "admin", ctx["role"])
+		dc, ok := req["descopeContext"].(map[string]any)
+		require.True(t, ok)
+		require.Equal(t, "U2abc", dc["userIdentifier"])
+	}, response))
+	checks, err := mgmt.FGA().CheckWithABAC(context.Background(),
+		[]*descope.FGARelation{{Resource: "doc1", ResourceType: "document", Relation: "viewer", Target: "U2abc", TargetType: "user"}},
+		&descope.ABACContext{
+			DescopeContext: &descope.FGADescopeContext{UserIdentifier: "U2abc"},
+			ExtraContext:   map[string]any{"role": "admin"},
+		},
+	)
+	require.NoError(t, err)
+	require.Len(t, checks, 1)
+	require.True(t, checks[0].Allowed)
+}
+
+func TestCheckFGAWithABACDescopeContextOnly(t *testing.T) {
+	response := map[string]any{
+		"tuples": []*descope.FGACheck{
+			{Allowed: true, Relation: &descope.FGARelation{Resource: "doc1", ResourceType: "document", Relation: "viewer", Target: "U2abc", TargetType: "user"}},
+		}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		_, hasContext := req["context"]
+		require.False(t, hasContext)
+		dc, ok := req["descopeContext"].(map[string]any)
+		require.True(t, ok)
+		require.Equal(t, "U2abc", dc["userIdentifier"])
+	}, response))
+	checks, err := mgmt.FGA().CheckWithABAC(context.Background(),
+		[]*descope.FGARelation{{Resource: "doc1", ResourceType: "document", Relation: "viewer", Target: "U2abc", TargetType: "user"}},
+		&descope.ABACContext{DescopeContext: &descope.FGADescopeContext{UserIdentifier: "U2abc"}},
+	)
+	require.NoError(t, err)
+	require.Len(t, checks, 1)
+	require.True(t, checks[0].Allowed)
+}
+
+func TestCheckFGAWithABACNilContext(t *testing.T) {
+	response := map[string]any{
+		"tuples": []*descope.FGACheck{
+			{Allowed: true, Relation: &descope.FGARelation{Resource: "doc1", ResourceType: "document", Relation: "viewer", Target: "U2abc", TargetType: "user"}},
+		}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		_, hasContext := req["context"]
+		require.False(t, hasContext)
+		_, hasDescopeContext := req["descopeContext"]
+		require.False(t, hasDescopeContext)
+	}, response))
+	checks, err := mgmt.FGA().CheckWithABAC(context.Background(),
+		[]*descope.FGARelation{{Resource: "doc1", ResourceType: "document", Relation: "viewer", Target: "U2abc", TargetType: "user"}},
+		nil,
+	)
+	require.NoError(t, err)
+	require.Len(t, checks, 1)
+}
+
+func TestCheckFGAWithABACMissingTuples(t *testing.T) {
+	mgmt := newTestMgmt(nil, nil)
+	_, err := mgmt.FGA().CheckWithABAC(context.Background(), nil, &descope.ABACContext{DescopeContext: &descope.FGADescopeContext{UserIdentifier: "U2abc"}})
+	require.Error(t, err)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("relations").Message)
+}
+
 func TestCheckFGAConditionalResult(t *testing.T) {
 	response := map[string]any{
 		"tuples": []*descope.FGACheck{
