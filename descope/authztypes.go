@@ -111,7 +111,7 @@ type FGARelation struct {
 // can be added without breaking callers.
 type ABACContext struct {
 	DescopeContext *ABACDescopeContext `json:"descopeContext,omitempty"`
-	ExtraContext   map[string]any     `json:"context,omitempty"`
+	ExtraContext   map[string]any      `json:"context,omitempty"`
 }
 
 // ABACDescopeContext holds Descope-resolved inputs for ABAC condition evaluation.
