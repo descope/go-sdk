@@ -444,17 +444,17 @@ func (auth *authenticationService) ValidateSessionWithRequest(request *http.Requ
 	if err != nil || !ok {
 		return ok, token, err
 	}
-	if err := enforceDPoP(request, sessionToken, token); err != nil {
+	if err := enforceDPoPIfNeeded(request, sessionToken, token); err != nil {
 		return false, nil, err
 	}
 	return true, token, nil
 }
 
-// enforceDPoP rejects DPoP-scheme requests presenting an unbound token and validates
+// enforceDPoPIfNeeded rejects DPoP-scheme requests presenting an unbound token and validates
 // the DPoP proof when the token has a cnf.jkt claim. Safe to call for any token
 // (session or refresh); when called for a refresh token the scheme check guards against
 // a client declaring DPoP intent while omitting the binding on the refresh token.
-func enforceDPoP(r *http.Request, tokenString string, token *descope.Token) error {
+func enforceDPoPIfNeeded(r *http.Request, tokenString string, token *descope.Token) error {
 	scheme, _, ok := parseAuthScheme(r.Header.Get(api.AuthorizationHeaderName))
 	jkt := token.GetDPoPThumbprint()
 	if ok && scheme == dpopAuthScheme && jkt == "" {
@@ -546,24 +546,25 @@ func (auth *authenticationService) ValidateAndRefreshSessionWithRequest(request 
 		return false, nil, utils.NewInvalidArgumentError("request")
 	}
 	sessionToken, refreshToken := auth.provideTokens(request)
-	return auth.validateAndRefreshSessionWithTokens(request.Context(), sessionToken, refreshToken, w, request)
+	valid, token, err := auth.validateAndRefreshSessionWithTokens(request.Context(), sessionToken, refreshToken, w)
+	if valid && sessionToken != "" {
+		if dpopErr := enforceDPoPIfNeeded(request, sessionToken, token); dpopErr != nil {
+			return false, nil, dpopErr
+		}
+	}
+	return valid, token, err
 }
 
 func (auth *authenticationService) ValidateAndRefreshSessionWithTokens(ctx context.Context, sessionToken, refreshToken string) (bool, *descope.Token, error) {
-	return auth.validateAndRefreshSessionWithTokens(ctx, sessionToken, refreshToken, nil, nil)
+	return auth.validateAndRefreshSessionWithTokens(ctx, sessionToken, refreshToken, nil)
 }
 
-func (auth *authenticationService) validateAndRefreshSessionWithTokens(ctx context.Context, sessionToken, refreshToken string, w http.ResponseWriter, r *http.Request) (valid bool, token *descope.Token, err error) {
+func (auth *authenticationService) validateAndRefreshSessionWithTokens(ctx context.Context, sessionToken, refreshToken string, w http.ResponseWriter) (valid bool, token *descope.Token, err error) {
 	if sessionToken == "" && refreshToken == "" {
 		return false, nil, descope.ErrMissingArguments.WithMessage("Both sessionToken and refreshToken are empty")
 	}
 	if sessionToken != "" {
 		if valid, token, err = auth.validateSession(ctx, sessionToken); valid {
-			if r != nil {
-				if dpopErr := enforceDPoP(r, sessionToken, token); dpopErr != nil {
-					return false, nil, dpopErr
-				}
-			}
 			return
 		}
 	}

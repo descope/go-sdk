@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"bytes"
 	"crypto/ecdsa"
 	"crypto/ed25519"
 	"crypto/elliptic"
@@ -10,6 +11,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -18,6 +20,7 @@ import (
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
+	"github.com/descope/go-sdk/descope/tests/mocks"
 	"github.com/lestrrat-go/jwx/v2/jwa"
 	"github.com/lestrrat-go/jwx/v2/jwk"
 	"github.com/lestrrat-go/jwx/v2/jws"
@@ -907,6 +910,72 @@ func TestValidateAndRefreshSessionWithRequest_DPoPScheme_NoCnfJKT_Rejected(t *te
 	assert.False(t, ok)
 }
 
+// TestValidateAndRefreshSessionWithRequest_DPoPBoundToken_AfterRefresh_NoDPoPHeader_Rejected
+// proves the security fix: when an expired DPoP-bound session token is presented in the
+// Authorization header and a refresh is performed, the presented session token must still
+// be subject to DPoP enforcement — no DPoP proof means the request is rejected.
+func TestValidateAndRefreshSessionWithRequest_DPoPBoundToken_AfterRefresh_NoDPoPHeader_Rejected(t *testing.T) {
+	// Create a key pair used to sign both the refresh token and the response session token.
+	sessionPriv, sessionPub := dpopNewKeyPair(t)
+
+	// DPoP client key pair: both the presented (expired) and the refreshed session token
+	// are bound to this key.
+	_, dpopPub := dpopNewKeyPair(t)
+	storedJKT := dpopJKTOf(t, dpopPub)
+
+	// Build the expired DPoP-bound session JWT that will be presented in the Authorization header.
+	// It is already expired, so validateSession will fail and a refresh will be triggered.
+	expiredSessionJWT := dpopSignSessionJWT(t, sessionPriv, map[string]any{
+		"cnf": map[string]any{"jkt": storedJKT},
+		// Override expiry to put it in the past.
+		jwt.ExpirationKey: time.Now().Add(-time.Hour),
+	})
+
+	// Build the DPoP-bound session JWT that the refresh endpoint will return.
+	dpopBoundSessionJWT := dpopSignSessionJWT(t, sessionPriv, map[string]any{
+		"cnf": map[string]any{"jkt": storedJKT},
+	})
+
+	// Build a valid refresh token signed with the same key (drn=DSR marks it as a refresh token).
+	refreshToken := dpopSignSessionJWT(t, sessionPriv, map[string]any{"drn": "DSR"})
+
+	// Serialize the public key so that newTestAuthConf can be configured with it.
+	pub, err := sessionPriv.PublicKey()
+	require.NoError(t, err)
+	require.NoError(t, pub.Set(jwk.KeyIDKey, "dpop-test"))
+	_ = sessionPub // already derived above
+	pubBytes, err := json.Marshal(pub)
+	require.NoError(t, err)
+
+	// HTTP mock: simulates a successful /refresh response with a DPoP-bound session token.
+	refreshBody := fmt.Sprintf(`{"sessionJwt":%q,"refreshJwt":"","cookiePath":"/","cookieDomain":""}`, dpopBoundSessionJWT)
+	a, err := newTestAuthConf(
+		&AuthParams{ProjectID: "a", PublicKey: string(pubBytes)},
+		&api.ClientParams{ProjectID: "a"},
+		mocks.Do(func(_ *http.Request) (*http.Response, error) {
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(bytes.NewBufferString(refreshBody)),
+			}, nil
+		}),
+	)
+	require.NoError(t, err)
+
+	// Request: carries the expired DPoP-bound session token in the Authorization header
+	// and the refresh token in a cookie, but deliberately omits the DPoP proof header
+	// to simulate a downgrade attack.
+	req := httptest.NewRequest(http.MethodGet, "/resource", nil)
+	req.Header.Set("Authorization", "DPoP "+expiredSessionJWT)
+	req.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: refreshToken})
+	// No DPoP proof header — this is the attack vector.
+
+	ok, tok, authErr := a.ValidateAndRefreshSessionWithRequest(req, nil)
+	require.Error(t, authErr, "expected DPoP enforcement to reject because no proof was provided for the presented DPoP-bound session token")
+	assert.False(t, ok)
+	assert.Nil(t, tok)
+	assert.ErrorIs(t, authErr, descope.ErrInvalidToken)
+}
+
 // ---- Fix 3: case-insensitive auth-scheme matching ----
 
 func TestParseAuthScheme_NoDelimiter_Rejected(t *testing.T) {
@@ -1014,7 +1083,7 @@ func TestDPoP_EnforceDPoP_UnboundToken_Noop(t *testing.T) {
 	// Token with no cnf.jkt → no DPoP check, no proof needed.
 	tok := &descope.Token{Claims: map[string]any{}}
 	req := httptest.NewRequest(http.MethodGet, "http://example.test/resource", nil)
-	require.NoError(t, enforceDPoP(req, "any-token", tok))
+	require.NoError(t, enforceDPoPIfNeeded(req, "any-token", tok))
 }
 
 // ---- Fix 5a: X-Forwarded-Proto / X-Forwarded-Host in dpopRequestURL ----
