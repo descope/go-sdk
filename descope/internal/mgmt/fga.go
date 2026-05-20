@@ -12,13 +12,6 @@ import (
 
 type fga struct {
 	managementBase
-	// fgaCacheURL is the base URL of the authzcache proxy — a caching layer that
-	// sits in front of authzservice and speeds up relation checks. When set, most
-	// FGA write and check operations are routed through it. Operations that rely on
-	// authzservice-only features (e.g. CheckWithABAC with DescopeContext, which
-	// requires server-side user resolution) must bypass fgaCacheURL and hit
-	// authzservice directly, because the proxy does not forward the descopeContext
-	// field and therefore cannot evaluate UserExists() or similar builtins.
 	fgaCacheURL string
 }
 
