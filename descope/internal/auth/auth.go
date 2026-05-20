@@ -46,7 +46,10 @@ func (d *defaultRequestTokensProvider) ProvideTokens(r *http.Request) (sessionTo
 	if r == nil {
 		return "", ""
 	}
-	// Header takes precedence over cookie. Auth-scheme comparison is case-insensitive per RFC 9110.
+
+	// Header takes precedence over cookie.
+	// If a client sends the same session token in both the Authorization header AND a cookie simultaneously, the header value wins
+	// Auth-scheme comparison is case-insensitive per RFC 9110 11.1
 	if scheme, tok, ok := parseAuthScheme(r.Header.Get(api.AuthorizationHeaderName)); ok && (scheme == bearerAuthScheme || scheme == dpopAuthScheme) {
 		sessionToken = tok
 	}
