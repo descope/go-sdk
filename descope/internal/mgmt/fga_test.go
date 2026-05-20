@@ -372,16 +372,16 @@ func TestCheckFGAWithABACNilContext(t *testing.T) {
 	require.Len(t, checks, 1)
 }
 
-func TestCheckFGAWithABACCacheBypass(t *testing.T) {
+func TestCheckFGAWithABACUsesCacheURL(t *testing.T) {
 	response := map[string]any{
 		"tuples": []*descope.FGACheck{
 			{Allowed: true, Relation: &descope.FGARelation{Resource: "doc1", ResourceType: "document", Relation: "viewer", Target: "U2abc", TargetType: "user"}},
 		}}
 	rel := []*descope.FGARelation{{Resource: "doc1", ResourceType: "document", Relation: "viewer", Target: "U2abc", TargetType: "user"}}
 
-	t.Run("with_descope_context_bypasses_cache_url", func(t *testing.T) {
+	t.Run("with_descope_context_uses_cache_url", func(t *testing.T) {
 		mgmt := newTestMgmtConf(&ManagementParams{FGACacheURL: "https://my.auth"}, nil, helpers.DoOkWithBody(func(r *http.Request) {
-			require.True(t, strings.HasPrefix(r.URL.String(), "https://api.descope.co"), "expected authzservice URL, got %s", r.URL.String())
+			require.True(t, strings.HasPrefix(r.URL.String(), "https://my.auth"), "expected fgaCacheURL, got %s", r.URL.String())
 		}, response))
 		_, err := mgmt.FGA().CheckWithABAC(context.Background(), rel,
 			&descope.ABACContext{DescopeContext: &descope.ABACDescopeContext{UserIdentifier: "U2abc"}})
