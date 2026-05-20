@@ -988,7 +988,6 @@ func TestParseAuthScheme_EmptyToken_Rejected(t *testing.T) {
 	assert.False(t, ok)
 }
 
-
 func TestValidateSessionWithRequest_InvalidJWT_ReturnsError(t *testing.T) {
 	sessionPriv, _ := dpopNewKeyPair(t)
 	a := dpopNewAuthForKey(t, sessionPriv)
