@@ -46,7 +46,7 @@ func (d *defaultRequestTokensProvider) ProvideTokens(r *http.Request) (sessionTo
 	if r == nil {
 		return "", ""
 	}
-	// Header takes precedence over cookie; auth-scheme is case-insensitive (RFC 9110 §11.1).
+	// Header takes precedence over cookie. Auth-scheme comparison is case-insensitive per RFC 9110.
 	if scheme, tok, ok := parseAuthScheme(r.Header.Get(api.AuthorizationHeaderName)); ok && (scheme == bearerAuthScheme || scheme == dpopAuthScheme) {
 		sessionToken = tok
 	}
@@ -463,6 +463,8 @@ func enforceDPoPIfNeeded(r *http.Request, tokenString string, token *descope.Tok
 	if jkt == "" {
 		return nil
 	}
+	// If the token is DPoP-bound (jkt present), a valid DPoP proof is required
+	// regardless of whether the Authorization scheme is "Bearer" or "DPoP".
 	dpopValues := r.Header.Values(dpopAuthScheme)
 	if len(dpopValues) > 1 {
 		return descope.ErrInvalidToken.WithMessage("multiple DPoP headers not allowed")
