@@ -216,6 +216,27 @@ func TestCheckFGARelationsMissingTuples(t *testing.T) {
 	require.ErrorContains(t, err, utils.NewInvalidArgumentError("relations").Message)
 }
 
+func TestCheckFGAWithContextDeprecatedDelegates(t *testing.T) {
+	response := map[string]any{
+		"tuples": []*descope.FGACheck{
+			{Allowed: true, Relation: &descope.FGARelation{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"}},
+		}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		ctx, ok := req["context"].(map[string]any)
+		require.True(t, ok)
+		require.Equal(t, "v", ctx["k"])
+	}, response))
+	//nolint:staticcheck
+	checks, err := mgmt.FGA().CheckWithContext(context.Background(),
+		[]*descope.FGARelation{{Resource: "g1", ResourceType: "group", Relation: "member", Target: "u1", TargetType: "user"}},
+		map[string]any{"k": "v"},
+	)
+	require.NoError(t, err)
+	require.Len(t, checks, 1)
+}
+
 func TestCheckFGAWithContextPassthrough(t *testing.T) {
 	response := map[string]any{
 		"tuples": []*descope.FGACheck{
