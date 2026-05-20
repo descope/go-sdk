@@ -130,7 +130,7 @@ func (f *fga) CheckWithABAC(ctx context.Context, relations []*descope.FGARelatio
 	if abacContext != nil && len(abacContext.ExtraContext) > 0 {
 		body["context"] = abacContext.ExtraContext
 	}
-	sendDescopeContext := abacContext != nil && abacContext.DescopeContext != nil && abacContext.DescopeContext.UserIdentifier != ""
+	sendDescopeContext := abacContext != nil && abacContext.DescopeContext != nil
 	if sendDescopeContext {
 		body["descopeContext"] = abacContext.DescopeContext
 	}
