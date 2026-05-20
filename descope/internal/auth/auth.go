@@ -471,7 +471,7 @@ func enforceDPoP(r *http.Request, tokenString string, token *descope.Token) erro
 	if len(dpopValues) == 1 {
 		proof = strings.TrimSpace(dpopValues[0])
 	}
-	return ValidateDPoPProof(proof, r.Method, dpopRequestURL(r), tokenString, jkt)
+	return validateDPoPProof(proof, r.Method, dpopRequestURL(r), tokenString, jkt, time.Now)
 }
 
 func (auth *authenticationService) ValidateSessionWithToken(ctx context.Context, sessionToken string) (bool, *descope.Token, error) {

@@ -64,18 +64,10 @@ func dpopSanitizeProof(proof string) (string, error) {
 	return proof, nil
 }
 
-// ValidateDPoPProof validates a DPoP proof at the resource server (RFC 9449 §7.1–7.2).
-// storedJKT is the cnf.jkt value from the validated access token.
-// If storedJKT is empty, returns nil — plain Bearer token, no DPoP required.
-// If storedJKT is non-empty and proof is empty, returns ErrInvalidToken (downgrade attack).
-func ValidateDPoPProof(proof, method, requestURL, accessToken, storedJKT string) error {
-	return validateDPoPProof(proof, method, requestURL, accessToken, storedJKT, time.Now)
-}
-
+// validateDPoPProof validates a DPoP proof at the resource server (RFC 9449 §7.1–7.2).
+// storedJKT must be non-empty (the cnf.jkt from the validated access token).
+// If proof is empty, returns ErrInvalidToken (downgrade attack prevention).
 func validateDPoPProof(proof, method, requestURL, accessToken, storedJKT string, clock func() time.Time) error {
-	if storedJKT == "" {
-		return nil
-	}
 
 	var err error
 	proof, err = dpopSanitizeProof(proof)

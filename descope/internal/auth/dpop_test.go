@@ -157,16 +157,11 @@ func dpopJKTOf(t *testing.T, pub jwk.Key) string {
 const dpopTestURL = "https://api.example.com/v1/resource"
 const dpopTestToken = "the-access-token" //nolint:gosec
 
-// ---- ValidateDPoPProof tests ----
-
-func TestDPoP_PlainBearer_EmptyJKT_Accepted(t *testing.T) {
-	// storedJKT empty → plain Bearer, DPoP not required
-	require.NoError(t, ValidateDPoPProof("", "GET", dpopTestURL, dpopTestToken, ""))
-}
+// ---- validateDPoPProof tests ----
 
 func TestDPoP_BoundToken_MissingProof_Rejected(t *testing.T) {
 	// storedJKT present but no proof → downgrade attack
-	err := ValidateDPoPProof("", "GET", dpopTestURL, dpopTestToken, "some-jkt")
+	err := validateDPoPProof("", "GET", dpopTestURL, dpopTestToken, "some-jkt", time.Now)
 	require.Error(t, err)
 }
 
@@ -175,7 +170,7 @@ func TestDPoP_ValidProof_Accepted(t *testing.T) {
 	storedJKT := dpopJKTOf(t, pub)
 	opts := dpopValidOpts("GET", dpopTestURL, dpopTestToken)
 	proof := dpopMakeProof(t, priv, opts)
-	require.NoError(t, ValidateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT))
+	require.NoError(t, validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_KeyMismatch_Rejected(t *testing.T) {
@@ -184,7 +179,7 @@ func TestDPoP_KeyMismatch_Rejected(t *testing.T) {
 	storedJKT := dpopJKTOf(t, pub2) // token bound to key2
 	opts := dpopValidOpts("GET", dpopTestURL, dpopTestToken)
 	proof := dpopMakeProof(t, priv1, opts) // but proof signed by key1
-	require.Error(t, ValidateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_WrongHTM_Rejected(t *testing.T) {
@@ -192,7 +187,7 @@ func TestDPoP_WrongHTM_Rejected(t *testing.T) {
 	storedJKT := dpopJKTOf(t, pub)
 	opts := dpopValidOpts("POST", dpopTestURL, dpopTestToken) // proof says POST
 	proof := dpopMakeProof(t, priv, opts)
-	require.Error(t, ValidateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT)) // request is GET
+	require.Error(t, validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now)) // request is GET
 }
 
 // Fix #1: htm comparison must be case-sensitive (RFC 7230 §3.1.1)
@@ -202,7 +197,7 @@ func TestDPoP_HTM_CaseSensitive_Rejected(t *testing.T) {
 	opts := dpopValidOpts("post", dpopTestURL, dpopTestToken) // lowercase htm
 	proof := dpopMakeProof(t, priv, opts)
 	// "post" must NOT match "POST" — HTTP methods are case-sensitive
-	require.Error(t, ValidateDPoPProof(proof, "POST", dpopTestURL, dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(proof, "POST", dpopTestURL, dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_WrongHTU_Rejected(t *testing.T) {
@@ -210,7 +205,7 @@ func TestDPoP_WrongHTU_Rejected(t *testing.T) {
 	storedJKT := dpopJKTOf(t, pub)
 	opts := dpopValidOpts("GET", "https://evil.example.com/steal", dpopTestToken)
 	proof := dpopMakeProof(t, priv, opts)
-	require.Error(t, ValidateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_HTU_IgnoresQueryString(t *testing.T) {
@@ -219,7 +214,7 @@ func TestDPoP_HTU_IgnoresQueryString(t *testing.T) {
 	opts := dpopValidOpts("GET", dpopTestURL, dpopTestToken) // htu without query
 	proof := dpopMakeProof(t, priv, opts)
 	// request URL has query — should still match
-	require.NoError(t, ValidateDPoPProof(proof, "GET", dpopTestURL+"?foo=bar", dpopTestToken, storedJKT))
+	require.NoError(t, validateDPoPProof(proof, "GET", dpopTestURL+"?foo=bar", dpopTestToken, storedJKT, time.Now))
 }
 
 // Fix #5: htu matching strips default ports (443/80)
@@ -229,7 +224,7 @@ func TestDPoP_HTU_DefaultPortStripped_Matches(t *testing.T) {
 	// proof htu includes explicit :443, request URL omits it — must match
 	opts := dpopValidOpts("GET", "https://api.example.com:443/v1/resource", dpopTestToken)
 	proof := dpopMakeProof(t, priv, opts)
-	require.NoError(t, ValidateDPoPProof(proof, "GET", "https://api.example.com/v1/resource", dpopTestToken, storedJKT))
+	require.NoError(t, validateDPoPProof(proof, "GET", "https://api.example.com/v1/resource", dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_HTU_DefaultPortOmitted_Matches(t *testing.T) {
@@ -238,7 +233,7 @@ func TestDPoP_HTU_DefaultPortOmitted_Matches(t *testing.T) {
 	// proof htu omits :443, request URL includes it — must match
 	opts := dpopValidOpts("GET", "https://api.example.com/v1/resource", dpopTestToken)
 	proof := dpopMakeProof(t, priv, opts)
-	require.NoError(t, ValidateDPoPProof(proof, "GET", "https://api.example.com:443/v1/resource", dpopTestToken, storedJKT))
+	require.NoError(t, validateDPoPProof(proof, "GET", "https://api.example.com:443/v1/resource", dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_HTU_NonDefaultPort_Rejected(t *testing.T) {
@@ -247,7 +242,7 @@ func TestDPoP_HTU_NonDefaultPort_Rejected(t *testing.T) {
 	// proof htu uses :8443, request URL uses default port — must NOT match
 	opts := dpopValidOpts("GET", "https://api.example.com:8443/v1/resource", dpopTestToken)
 	proof := dpopMakeProof(t, priv, opts)
-	require.Error(t, ValidateDPoPProof(proof, "GET", "https://api.example.com/v1/resource", dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(proof, "GET", "https://api.example.com/v1/resource", dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_ExpiredIAT_Rejected(t *testing.T) {
@@ -256,7 +251,7 @@ func TestDPoP_ExpiredIAT_Rejected(t *testing.T) {
 	opts := dpopValidOpts("GET", dpopTestURL, dpopTestToken)
 	opts.iat = time.Now().Add(-2 * time.Minute)
 	proof := dpopMakeProof(t, priv, opts)
-	require.Error(t, ValidateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now))
 }
 
 // Fix #2: forward iat tolerance is 5s, not 60s
@@ -292,7 +287,7 @@ func TestDPoP_MissingAth_Rejected(t *testing.T) {
 	opts := dpopValidOpts("GET", dpopTestURL, dpopTestToken)
 	opts.ath = "" // omit ath claim
 	proof := dpopMakeProof(t, priv, opts)
-	require.Error(t, ValidateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_WrongAth_Rejected(t *testing.T) {
@@ -300,11 +295,11 @@ func TestDPoP_WrongAth_Rejected(t *testing.T) {
 	storedJKT := dpopJKTOf(t, pub)
 	opts := dpopValidOpts("GET", dpopTestURL, "wrong-token") // ath for wrong token
 	proof := dpopMakeProof(t, priv, opts)
-	require.Error(t, ValidateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_MalformedProof_Rejected(t *testing.T) {
-	require.Error(t, ValidateDPoPProof("not-a-jwt", "GET", dpopTestURL, dpopTestToken, "some-jkt"))
+	require.Error(t, validateDPoPProof("not-a-jwt", "GET", dpopTestURL, dpopTestToken, "some-jkt", time.Now))
 }
 
 func TestDPoP_WrongTypHeader_Rejected(t *testing.T) {
@@ -313,7 +308,7 @@ func TestDPoP_WrongTypHeader_Rejected(t *testing.T) {
 	opts := dpopValidOpts("GET", dpopTestURL, dpopTestToken)
 	opts.typ = "at+jwt"
 	proof := dpopMakeProof(t, priv, opts)
-	require.Error(t, ValidateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_MissingJWKHeader_Rejected(t *testing.T) {
@@ -322,7 +317,7 @@ func TestDPoP_MissingJWKHeader_Rejected(t *testing.T) {
 	opts := dpopValidOpts("GET", dpopTestURL, dpopTestToken)
 	opts.includeJWK = false
 	proof := dpopMakeProof(t, priv, opts)
-	require.Error(t, ValidateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now))
 }
 
 // Fix #3: symmetric (OctetSeq) key in the JWK header must be rejected
@@ -353,7 +348,7 @@ func TestDPoP_SymmetricKeyInJWK_Rejected(t *testing.T) {
 
 	// HS256 is not in the allow-list, so it will be rejected at the alg check.
 	// Even if alg were somehow allowed, OctetSeq key type must also be rejected.
-	err = ValidateDPoPProof(string(signed), "GET", dpopTestURL, dpopTestToken, "any-jkt")
+	err = validateDPoPProof(string(signed), "GET", dpopTestURL, dpopTestToken, "any-jkt", time.Now)
 	require.Error(t, err)
 }
 
@@ -391,7 +386,7 @@ func TestDPoP_EdDSA_Accepted(t *testing.T) {
 	storedJKT := dpopJKTOf(t, pub)
 	opts := dpopValidOpts("GET", dpopTestURL, dpopTestToken)
 	proof := dpopMakeEdDSAProof(t, priv, pub, opts)
-	require.NoError(t, ValidateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT))
+	require.NoError(t, validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now))
 }
 
 // "jwk must not contain a private key" — RSA private key embedded in JWK header.
@@ -415,7 +410,7 @@ func TestDPoP_RSAPrivateKeyInJWK_Rejected(t *testing.T) {
 	signed, err := jwt.Sign(tok, jwt.WithKey(jwa.RS256, rsaPrivJWK, jws.WithProtectedHeaders(hdrs)))
 	require.NoError(t, err)
 
-	err = ValidateDPoPProof(string(signed), "GET", dpopTestURL, dpopTestToken, "any-jkt")
+	err = validateDPoPProof(string(signed), "GET", dpopTestURL, dpopTestToken, "any-jkt", time.Now)
 	require.Error(t, err)
 }
 
@@ -426,7 +421,7 @@ func TestDPoP_ECDSAPrivateKeyInJWK_Rejected(t *testing.T) {
 	opts := dpopValidOpts("GET", dpopTestURL, dpopTestToken)
 	opts.jwkOverride = priv
 	proof := dpopMakeProof(t, priv, opts)
-	err := ValidateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, "any-jkt")
+	err := validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, "any-jkt", time.Now)
 	require.Error(t, err)
 }
 
@@ -447,7 +442,7 @@ func TestDPoP_TamperedSignature_Rejected(t *testing.T) {
 	}
 	tampered := parts[0] + "." + parts[1] + "." + string(sig)
 
-	require.Error(t, ValidateDPoPProof(tampered, "GET", dpopTestURL, dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(tampered, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_MissingJTI_Rejected(t *testing.T) {
@@ -456,7 +451,7 @@ func TestDPoP_MissingJTI_Rejected(t *testing.T) {
 	opts := dpopValidOpts("GET", dpopTestURL, dpopTestToken)
 	opts.omitJTI = true
 	proof := dpopMakeProof(t, priv, opts)
-	require.Error(t, ValidateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_EmptyJTI_Rejected(t *testing.T) {
@@ -465,7 +460,7 @@ func TestDPoP_EmptyJTI_Rejected(t *testing.T) {
 	opts := dpopValidOpts("GET", dpopTestURL, dpopTestToken)
 	opts.emptyJTI = true
 	proof := dpopMakeProof(t, priv, opts)
-	require.Error(t, ValidateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_MissingHTM_Rejected(t *testing.T) {
@@ -474,7 +469,7 @@ func TestDPoP_MissingHTM_Rejected(t *testing.T) {
 	opts := dpopValidOpts("GET", dpopTestURL, dpopTestToken)
 	opts.omitHTM = true
 	proof := dpopMakeProof(t, priv, opts)
-	require.Error(t, ValidateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_EmptyHTM_Rejected(t *testing.T) {
@@ -483,7 +478,7 @@ func TestDPoP_EmptyHTM_Rejected(t *testing.T) {
 	opts := dpopValidOpts("GET", dpopTestURL, dpopTestToken)
 	opts.emptyHTM = true
 	proof := dpopMakeProof(t, priv, opts)
-	require.Error(t, ValidateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_MissingHTU_Rejected(t *testing.T) {
@@ -492,7 +487,7 @@ func TestDPoP_MissingHTU_Rejected(t *testing.T) {
 	opts := dpopValidOpts("GET", dpopTestURL, dpopTestToken)
 	opts.omitHTU = true
 	proof := dpopMakeProof(t, priv, opts)
-	require.Error(t, ValidateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_EmptyHTU_Rejected(t *testing.T) {
@@ -501,7 +496,7 @@ func TestDPoP_EmptyHTU_Rejected(t *testing.T) {
 	opts := dpopValidOpts("GET", dpopTestURL, dpopTestToken)
 	opts.emptyHTU = true
 	proof := dpopMakeProof(t, priv, opts)
-	require.Error(t, ValidateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_MissingIAT_Rejected(t *testing.T) {
@@ -510,7 +505,7 @@ func TestDPoP_MissingIAT_Rejected(t *testing.T) {
 	opts := dpopValidOpts("GET", dpopTestURL, dpopTestToken)
 	opts.omitIAT = true
 	proof := dpopMakeProof(t, priv, opts)
-	require.Error(t, ValidateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_EmptyATH_Rejected(t *testing.T) {
@@ -520,7 +515,7 @@ func TestDPoP_EmptyATH_Rejected(t *testing.T) {
 	opts.ath = ""               // clear the valid ath
 	opts.includeEmptyATH = true // include ath="" (present but empty)
 	proof := dpopMakeProof(t, priv, opts)
-	require.Error(t, ValidateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_RejectedAlgs(t *testing.T) {
@@ -545,12 +540,12 @@ func TestDPoP_ProofWhitespaceTrimmed_Accepted(t *testing.T) {
 	priv, pub := dpopNewKeyPair(t)
 	storedJKT := dpopJKTOf(t, pub)
 	proof := dpopMakeProof(t, priv, dpopValidOpts("GET", dpopTestURL, dpopTestToken))
-	require.NoError(t, ValidateDPoPProof("  "+proof+"  ", "GET", dpopTestURL, dpopTestToken, storedJKT))
+	require.NoError(t, validateDPoPProof("  "+proof+"  ", "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_ProofExceedsMaxLength_Rejected(t *testing.T) {
 	oversized := strings.Repeat("x", maxDPoPProofLen+1)
-	err := ValidateDPoPProof(oversized, "GET", dpopTestURL, dpopTestToken, "some-jkt")
+	err := validateDPoPProof(oversized, "GET", dpopTestURL, dpopTestToken, "some-jkt", time.Now)
 	require.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrInvalidToken)
 }
@@ -743,7 +738,7 @@ func TestDPoP_MultipleSignatures_Rejected(t *testing.T) {
 		`{"payload":%q,"signatures":[{"protected":%q,"signature":%q},{"protected":%q,"signature":%q}]}`,
 		parts[1], parts[0], parts[2], parts[0], parts[2],
 	)
-	err := ValidateDPoPProof(jwsJSON, "GET", dpopTestURL, dpopTestToken, "any-jkt")
+	err := validateDPoPProof(jwsJSON, "GET", dpopTestURL, dpopTestToken, "any-jkt", time.Now)
 	require.Error(t, err)
 }
 
@@ -775,7 +770,7 @@ func TestDPoP_OKPPrivateKeyInJWK_Rejected(t *testing.T) {
 	signed, err := jwt.Sign(tok, jwt.WithKey(jwa.RS256, rsaPrivJWK, jws.WithProtectedHeaders(hdrs)))
 	require.NoError(t, err)
 
-	err = ValidateDPoPProof(string(signed), "GET", dpopTestURL, dpopTestToken, "any-jkt")
+	err = validateDPoPProof(string(signed), "GET", dpopTestURL, dpopTestToken, "any-jkt", time.Now)
 	require.Error(t, err)
 }
 
@@ -808,7 +803,7 @@ func TestDPoP_OctetSeqKeyWithAllowedAlg_Rejected(t *testing.T) {
 	signed, err := jwt.Sign(tok, jwt.WithKey(jwa.RS256, rsaPrivJWK, jws.WithProtectedHeaders(hdrs)))
 	require.NoError(t, err)
 
-	err = ValidateDPoPProof(string(signed), "GET", dpopTestURL, dpopTestToken, "any-jkt")
+	err = validateDPoPProof(string(signed), "GET", dpopTestURL, dpopTestToken, "any-jkt", time.Now)
 	require.Error(t, err)
 }
 
@@ -834,7 +829,7 @@ func TestDPoP_HTU_HTTP_DefaultPort80Stripped_Matches(t *testing.T) {
 	storedJKT := dpopJKTOf(t, pub)
 	opts := dpopValidOpts("GET", "http://api.example.com:80/v1/resource", dpopTestToken)
 	proof := dpopMakeProof(t, priv, opts)
-	require.NoError(t, ValidateDPoPProof(proof, "GET", "http://api.example.com/v1/resource", dpopTestToken, storedJKT))
+	require.NoError(t, validateDPoPProof(proof, "GET", "http://api.example.com/v1/resource", dpopTestToken, storedJKT, time.Now))
 }
 
 // ---- Fix 1: ValidateAndRefreshSessionWithRequest DPoP enforcement ----
@@ -1075,7 +1070,7 @@ func TestDPoPRequestURL_ForwardedProtoAndHost_EndToEnd_Accepted(t *testing.T) {
 	req.Header.Set("X-Forwarded-Proto", "https")
 	req.Header.Set("DPoP", proof)
 
-	err := ValidateDPoPProof(proof, "GET", dpopRequestURL(req), accessToken, storedJKT)
+	err := validateDPoPProof(proof, "GET", dpopRequestURL(req), accessToken, storedJKT, time.Now)
 	require.NoError(t, err)
 }
 
@@ -1086,7 +1081,7 @@ func TestDPoP_HTU_DotSegments_NotEquivalent(t *testing.T) {
 	storedJKT := dpopJKTOf(t, pub)
 	opts := dpopValidOpts("GET", "https://api.example.com/a/./b", dpopTestToken)
 	proof := dpopMakeProof(t, priv, opts)
-	require.Error(t, ValidateDPoPProof(proof, "GET", "https://api.example.com/a/b", dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(proof, "GET", "https://api.example.com/a/b", dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_HTU_PercentEncodedUnreserved_NotEquivalent(t *testing.T) {
@@ -1094,7 +1089,7 @@ func TestDPoP_HTU_PercentEncodedUnreserved_NotEquivalent(t *testing.T) {
 	storedJKT := dpopJKTOf(t, pub)
 	opts := dpopValidOpts("GET", "https://api.example.com/foo%2Dbar", dpopTestToken)
 	proof := dpopMakeProof(t, priv, opts)
-	require.Error(t, ValidateDPoPProof(proof, "GET", "https://api.example.com/foo-bar", dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(proof, "GET", "https://api.example.com/foo-bar", dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_HTU_PercentEncodedReservedPreserved(t *testing.T) {
@@ -1103,7 +1098,7 @@ func TestDPoP_HTU_PercentEncodedReservedPreserved(t *testing.T) {
 	storedJKT := dpopJKTOf(t, pub)
 	opts := dpopValidOpts("GET", "https://api.example.com/foo%2Fbar", dpopTestToken)
 	proof := dpopMakeProof(t, priv, opts)
-	require.Error(t, ValidateDPoPProof(proof, "GET", "https://api.example.com/foo/bar", dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(proof, "GET", "https://api.example.com/foo/bar", dpopTestToken, storedJKT, time.Now))
 }
 
 func TestDPoP_HTU_TrailingSlashPreserved(t *testing.T) {
@@ -1112,5 +1107,5 @@ func TestDPoP_HTU_TrailingSlashPreserved(t *testing.T) {
 	storedJKT := dpopJKTOf(t, pub)
 	opts := dpopValidOpts("GET", "https://api.example.com/foo/", dpopTestToken)
 	proof := dpopMakeProof(t, priv, opts)
-	require.Error(t, ValidateDPoPProof(proof, "GET", "https://api.example.com/foo", dpopTestToken, storedJKT))
+	require.Error(t, validateDPoPProof(proof, "GET", "https://api.example.com/foo", dpopTestToken, storedJKT, time.Now))
 }
