@@ -141,7 +141,8 @@ type SSOApplication interface {
 	// Logo: Optional sso application logo.
 	// LoginPageURL: The URL where login page is hosted.
 	// Realm: The WS-Fed realm identifier.
-	// ReplyURL: The WS-Fed reply URL.
+	// ReplyURL: The default WS-Fed reply URL. Used for IdP-initiated flows and as the fallback when the RP doesn't supply a wreply.
+	// ReplyAllowedCallbacks: Optional list of additional allowed wreply URLs (supports * wildcards). Used in addition to ReplyURL when the RP supplies a wreply.
 	// AttributeMapping: Optional list of Descope (IdP) attributes to SP mapping.
 	// GroupsMapping: Optional list of Descope (IdP) roles that will be mapped to SP groups.
 	// ForceAuthentication: Optional determine if the IdP should force the user to re-authenticate.
