@@ -893,35 +893,37 @@ type SAMLApplicationRequest struct {
 }
 
 type WSFedApplicationRequest struct {
-	ID                  string                        `json:"id"`
-	Name                string                        `json:"name"`
-	Description         string                        `json:"description"`
-	Enabled             bool                          `json:"enabled"`
-	Logo                string                        `json:"logo"`
-	LoginPageURL        string                        `json:"loginPageUrl"`
-	Realm               string                        `json:"realm"`
-	ReplyURL            string                        `json:"replyUrl"`
-	AttributeMapping    []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
-	GroupsMapping       []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
-	ForceAuthentication bool                          `json:"forceAuthentication"`
-	LogoutRedirectURL   string                        `json:"logoutRedirectUrl"`
-	ErrorRedirectURL    string                        `json:"errorRedirectUrl"`
+	ID                    string                        `json:"id"`
+	Name                  string                        `json:"name"`
+	Description           string                        `json:"description"`
+	Enabled               bool                          `json:"enabled"`
+	Logo                  string                        `json:"logo"`
+	LoginPageURL          string                        `json:"loginPageUrl"`
+	Realm                 string                        `json:"realm"`
+	ReplyURL              string                        `json:"replyUrl"`
+	ReplyAllowedCallbacks []string                      `json:"replyAllowedCallbacks"`
+	AttributeMapping      []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
+	GroupsMapping         []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
+	ForceAuthentication   bool                          `json:"forceAuthentication"`
+	LogoutRedirectURL     string                        `json:"logoutRedirectUrl"`
+	ErrorRedirectURL      string                        `json:"errorRedirectUrl"`
 }
 
 type SSOApplicationWSFedSettings struct {
-	LoginPageURL        string                        `json:"loginPageUrl"`
-	Realm               string                        `json:"realm"`
-	ReplyURL            string                        `json:"replyUrl"`
-	AttributeMapping    []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
-	GroupsMapping       []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
-	ForceAuthentication bool                          `json:"forceAuthentication"`
-	LogoutRedirectURL   string                        `json:"logoutRedirectUrl"`
-	ErrorRedirectURL    string                        `json:"errorRedirectUrl"`
-	IdpInitiatedURL     string                        `json:"idpInitiatedUrl"`
-	IdpMetadataURL      string                        `json:"idpMetadataUrl"`
-	IdpEntityID         string                        `json:"idpEntityId"`
-	IdpSSOURL           string                        `json:"idpSsoUrl"`
-	IdpCert             string                        `json:"idpCert"`
+	LoginPageURL          string                        `json:"loginPageUrl"`
+	Realm                 string                        `json:"realm"`
+	ReplyURL              string                        `json:"replyUrl"`
+	ReplyAllowedCallbacks []string                      `json:"replyAllowedCallbacks"`
+	AttributeMapping      []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
+	GroupsMapping         []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
+	ForceAuthentication   bool                          `json:"forceAuthentication"`
+	LogoutRedirectURL     string                        `json:"logoutRedirectUrl"`
+	ErrorRedirectURL      string                        `json:"errorRedirectUrl"`
+	IdpInitiatedURL       string                        `json:"idpInitiatedUrl"`
+	IdpMetadataURL        string                        `json:"idpMetadataUrl"`
+	IdpEntityID           string                        `json:"idpEntityId"`
+	IdpSSOURL             string                        `json:"idpSsoUrl"`
+	IdpCert               string                        `json:"idpCert"`
 }
 
 type SSOApplicationSearchOptions struct {

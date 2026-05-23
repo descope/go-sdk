@@ -293,6 +293,7 @@ func TestSSOApplicationCreateWSFedApplicationSuccess(t *testing.T) {
 		require.Equal(t, "http://dummy.com/login", req["loginPageUrl"])
 		require.Equal(t, "urn:example:realm", req["realm"])
 		require.Equal(t, "http://dummy.com/reply", req["replyUrl"])
+		require.Equal(t, []any{"http://qa.example.com/reply", "http://*.staging.example.com/reply"}, req["replyAllowedCallbacks"])
 		require.Equal(t, []any{map[string]any{"name": "n1", "type": "t1", "value": "v1"}}, req["attributeMapping"])
 		require.Equal(t, []any{map[string]any{"filterType": "ft1", "name": "n1", "roles": []any{map[string]any{"id": "r1", "name": "rn1"}}, "type": "t1", "value": "v1"}}, req["groupsMapping"])
 		require.True(t, req["forceAuthentication"].(bool))
@@ -302,19 +303,20 @@ func TestSSOApplicationCreateWSFedApplicationSuccess(t *testing.T) {
 	}, response))
 
 	id, err := mgmt.SSOApplication().CreateWSFedApplication(context.Background(), &descope.WSFedApplicationRequest{
-		ID:                  "id1",
-		Name:                "abc",
-		Description:         "desc",
-		Enabled:             true,
-		Logo:                "logo",
-		LoginPageURL:        "http://dummy.com/login",
-		Realm:               "urn:example:realm",
-		ReplyURL:            "http://dummy.com/reply",
-		AttributeMapping:    []descope.SAMLIDPAttributeMappingInfo{{Name: "n1", Type: "t1", Value: "v1"}},
-		GroupsMapping:       []descope.SAMLIDPGroupsMappingInfo{{Name: "n1", Type: "t1", FilterType: "ft1", Value: "v1", Roles: []descope.SAMLIDPRoleGroupMappingInfo{{ID: "r1", Name: "rn1"}}}},
-		ForceAuthentication: true,
-		LogoutRedirectURL:   "http://dummy.com/logout",
-		ErrorRedirectURL:    "http://dummy.com/error",
+		ID:                    "id1",
+		Name:                  "abc",
+		Description:           "desc",
+		Enabled:               true,
+		Logo:                  "logo",
+		LoginPageURL:          "http://dummy.com/login",
+		Realm:                 "urn:example:realm",
+		ReplyURL:              "http://dummy.com/reply",
+		ReplyAllowedCallbacks: []string{"http://qa.example.com/reply", "http://*.staging.example.com/reply"},
+		AttributeMapping:      []descope.SAMLIDPAttributeMappingInfo{{Name: "n1", Type: "t1", Value: "v1"}},
+		GroupsMapping:         []descope.SAMLIDPGroupsMappingInfo{{Name: "n1", Type: "t1", FilterType: "ft1", Value: "v1", Roles: []descope.SAMLIDPRoleGroupMappingInfo{{ID: "r1", Name: "rn1"}}}},
+		ForceAuthentication:   true,
+		LogoutRedirectURL:     "http://dummy.com/logout",
+		ErrorRedirectURL:      "http://dummy.com/error",
 	})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)
@@ -349,6 +351,7 @@ func TestSSOApplicationUpdateWSFedApplicationSuccess(t *testing.T) {
 		require.Equal(t, "http://dummy.com/login", req["loginPageUrl"])
 		require.Equal(t, "urn:example:realm", req["realm"])
 		require.Equal(t, "http://dummy.com/reply", req["replyUrl"])
+		require.Equal(t, []any{"http://qa.example.com/reply", "http://*.staging.example.com/reply"}, req["replyAllowedCallbacks"])
 		require.Equal(t, []any{map[string]any{"name": "n1", "type": "t1", "value": "v1"}}, req["attributeMapping"])
 		require.Equal(t, []any{map[string]any{"filterType": "ft1", "name": "n1", "roles": []any{map[string]any{"id": "r1", "name": "rn1"}}, "type": "t1", "value": "v1"}}, req["groupsMapping"])
 		require.True(t, req["forceAuthentication"].(bool))
@@ -358,19 +361,20 @@ func TestSSOApplicationUpdateWSFedApplicationSuccess(t *testing.T) {
 	}, response))
 
 	err := mgmt.SSOApplication().UpdateWSFedApplication(context.Background(), &descope.WSFedApplicationRequest{
-		ID:                  "id1",
-		Name:                "abc",
-		Description:         "desc",
-		Enabled:             true,
-		Logo:                "logo",
-		LoginPageURL:        "http://dummy.com/login",
-		Realm:               "urn:example:realm",
-		ReplyURL:            "http://dummy.com/reply",
-		AttributeMapping:    []descope.SAMLIDPAttributeMappingInfo{{Name: "n1", Type: "t1", Value: "v1"}},
-		GroupsMapping:       []descope.SAMLIDPGroupsMappingInfo{{Name: "n1", Type: "t1", FilterType: "ft1", Value: "v1", Roles: []descope.SAMLIDPRoleGroupMappingInfo{{ID: "r1", Name: "rn1"}}}},
-		ForceAuthentication: true,
-		LogoutRedirectURL:   "http://dummy.com/logout",
-		ErrorRedirectURL:    "http://dummy.com/error",
+		ID:                    "id1",
+		Name:                  "abc",
+		Description:           "desc",
+		Enabled:               true,
+		Logo:                  "logo",
+		LoginPageURL:          "http://dummy.com/login",
+		Realm:                 "urn:example:realm",
+		ReplyURL:              "http://dummy.com/reply",
+		ReplyAllowedCallbacks: []string{"http://qa.example.com/reply", "http://*.staging.example.com/reply"},
+		AttributeMapping:      []descope.SAMLIDPAttributeMappingInfo{{Name: "n1", Type: "t1", Value: "v1"}},
+		GroupsMapping:         []descope.SAMLIDPGroupsMappingInfo{{Name: "n1", Type: "t1", FilterType: "ft1", Value: "v1", Roles: []descope.SAMLIDPRoleGroupMappingInfo{{ID: "r1", Name: "rn1"}}}},
+		ForceAuthentication:   true,
+		LogoutRedirectURL:     "http://dummy.com/logout",
+		ErrorRedirectURL:      "http://dummy.com/error",
 	})
 	require.NoError(t, err)
 }
