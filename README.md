@@ -616,6 +616,25 @@ if authorized, sessionToken, err := descopeClient.Auth.ValidateAndRefreshSession
 
 Choose the right session validation and refresh combination that suits your needs.
 
+#### DPoP (Sender-Constrained Tokens)
+
+If your authorization server issues [DPoP-bound access tokens](https://www.rfc-editor.org/rfc/rfc9449) (tokens that contain a `cnf.jkt` claim), the Descope SDK automatically enforces proof-of-possession on every request.
+
+No configuration is needed. When `ValidateSessionWithRequest` or `ValidateAndRefreshSessionWithRequest` is called:
+
+- If the session token has a `cnf.jkt` claim, the `DPoP` header in the incoming request is validated (RFC 9449 §7.1–7.2).
+- Plain Bearer tokens without `cnf.jkt` are unaffected — the check is skipped entirely.
+- If a `DPoP`-scheme `Authorization` header is present but the token has no `cnf.jkt`, the request is rejected (downgrade-attack prevention).
+
+```go
+// DPoP enforcement is automatic — use the same session validation calls as usual.
+if authorized, sessionToken, err := descopeClient.Auth.ValidateSessionWithRequest(r, w); !authorized {
+    // unauthorized (also rejects invalid or missing DPoP proofs for DPoP-bound tokens)
+}
+```
+
+Token validation without an `http.Request` (`ValidateSessionWithToken`, `ValidateAndRefreshSessionWithTokens`) does **not** validate the DPoP proof, since the HTTP request context is unavailable. Use the request-based variants whenever DPoP enforcement is required.
+
 Refreshed sessions return the same response as is returned when users first sign up / log in,
 Make sure to return the session token from the response to the client if tokens are validated directly.
 
