@@ -1245,3 +1245,18 @@ func TestDPoP_HTU_TrailingSlashPreserved(t *testing.T) {
 	proof := dpopMakeProof(t, priv, opts)
 	require.Error(t, validateDPoPProof(proof, "GET", "https://api.example.com/foo", dpopTestToken, storedJKT, time.Now, nil))
 }
+
+func TestDPoP_JTIStore_ExpiredEntriesEvicted(t *testing.T) {
+	store := newDPoPJTIStore()
+	t0 := time.Now()
+
+	// Record jti1 at t0 — expires at t0+dpopJTITTL.
+	require.False(t, store.seenOrAdd("jti1", t0))
+
+	// Advance past TTL; the next seenOrAdd write triggers lazy eviction of jti1.
+	t1 := t0.Add(dpopJTITTL + time.Second)
+	require.False(t, store.seenOrAdd("jti2", t1))
+
+	// jti1 was evicted — adding it again must succeed (not a replay).
+	require.False(t, store.seenOrAdd("jti1", t1))
+}
