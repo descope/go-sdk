@@ -201,19 +201,20 @@ func makeCreateUpdateSAMLApplicationRequest(appRequest *descope.SAMLApplicationR
 
 func makeCreateUpdateWSFedApplicationRequest(appRequest *descope.WSFedApplicationRequest) map[string]any {
 	return map[string]any{
-		"id":                  appRequest.ID,
-		"name":                appRequest.Name,
-		"description":         appRequest.Description,
-		"enabled":             appRequest.Enabled,
-		"logo":                appRequest.Logo,
-		"loginPageUrl":        appRequest.LoginPageURL,
-		"realm":               appRequest.Realm,
-		"replyUrl":            appRequest.ReplyURL,
-		"attributeMapping":    appRequest.AttributeMapping,
-		"groupsMapping":       appRequest.GroupsMapping,
-		"forceAuthentication": appRequest.ForceAuthentication,
-		"logoutRedirectUrl":   appRequest.LogoutRedirectURL,
-		"errorRedirectUrl":    appRequest.ErrorRedirectURL,
+		"id":                    appRequest.ID,
+		"name":                  appRequest.Name,
+		"description":           appRequest.Description,
+		"enabled":               appRequest.Enabled,
+		"logo":                  appRequest.Logo,
+		"loginPageUrl":          appRequest.LoginPageURL,
+		"realm":                 appRequest.Realm,
+		"replyUrl":              appRequest.ReplyURL,
+		"replyAllowedCallbacks": appRequest.ReplyAllowedCallbacks,
+		"attributeMapping":      appRequest.AttributeMapping,
+		"groupsMapping":         appRequest.GroupsMapping,
+		"forceAuthentication":   appRequest.ForceAuthentication,
+		"logoutRedirectUrl":     appRequest.LogoutRedirectURL,
+		"errorRedirectUrl":      appRequest.ErrorRedirectURL,
 	}
 }
 
