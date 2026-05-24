@@ -131,6 +131,7 @@ type authenticationsBase struct {
 	publicKeysProvider *Provider
 
 	requestTokensProvider sdk.RequestTokensProvider
+	dpopJTIStore          *dpopJTIStore
 }
 
 type authenticationService struct {
@@ -153,7 +154,7 @@ func NewAuth(conf AuthParams, c *api.Client, requestTokensProvider sdk.RequestTo
 }
 
 func NewAuthWithProvider(conf AuthParams, provider *Provider, c *api.Client, requestTokensProvider sdk.RequestTokensProvider) (*authenticationService, error) {
-	base := authenticationsBase{conf: &conf, client: c}
+	base := authenticationsBase{conf: &conf, client: c, dpopJTIStore: newDPoPJTIStore()}
 	base.publicKeysProvider = provider
 	if len(conf.GetSessionCookieNameWithFallback()) == 0 || len(conf.GetRefreshCookieNameWithFallback()) == 0 {
 		conf.SetCookieNames("", nil, "", nil)
@@ -443,7 +444,7 @@ func (auth *authenticationService) ValidateSessionWithRequest(request *http.Requ
 	if err != nil || !ok {
 		return ok, token, err
 	}
-	if err := enforceDPoPIfNeeded(request, sessionToken, token); err != nil {
+	if err := enforceDPoPIfNeeded(request, sessionToken, token, auth.dpopJTIStore); err != nil {
 		return false, nil, err
 	}
 	return true, token, nil
@@ -453,7 +454,7 @@ func (auth *authenticationService) ValidateSessionWithRequest(request *http.Requ
 // the DPoP proof when the token has a cnf.jkt claim. Safe to call for any token
 // (session or refresh); when called for a refresh token the scheme check guards against
 // a client declaring DPoP intent while omitting the binding on the refresh token.
-func enforceDPoPIfNeeded(r *http.Request, tokenString string, token *descope.Token) error {
+func enforceDPoPIfNeeded(r *http.Request, tokenString string, token *descope.Token, jtiStore *dpopJTIStore) error {
 	scheme, _, ok := parseAuthScheme(r.Header.Get(api.AuthorizationHeaderName))
 	jkt := token.GetDPoPThumbprint()
 	if ok && scheme == dpopAuthScheme && jkt == "" {
@@ -472,7 +473,7 @@ func enforceDPoPIfNeeded(r *http.Request, tokenString string, token *descope.Tok
 	if len(dpopValues) == 1 {
 		proof = strings.TrimSpace(dpopValues[0])
 	}
-	return validateDPoPProof(proof, r.Method, dpopRequestURL(r), tokenString, jkt, time.Now)
+	return validateDPoPProof(proof, r.Method, dpopRequestURL(r), tokenString, jkt, time.Now, jtiStore)
 }
 
 func (auth *authenticationService) ValidateSessionWithToken(ctx context.Context, sessionToken string) (bool, *descope.Token, error) {
@@ -549,7 +550,7 @@ func (auth *authenticationService) ValidateAndRefreshSessionWithRequest(request 
 	sessionToken, refreshToken := auth.provideTokens(request)
 	valid, token, err := auth.validateAndRefreshSessionWithTokens(request.Context(), sessionToken, refreshToken, w)
 	if valid && sessionToken != "" {
-		if dpopErr := enforceDPoPIfNeeded(request, sessionToken, token); dpopErr != nil {
+		if dpopErr := enforceDPoPIfNeeded(request, sessionToken, token, auth.dpopJTIStore); dpopErr != nil {
 			return false, nil, dpopErr
 		}
 	}

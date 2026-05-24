@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/descope/go-sdk/descope"
@@ -16,6 +17,37 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jws"
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
+
+// dpopJTIStore tracks recently seen DPoP proof JTIs for replay detection (RFC 9449 §11.1).
+// JTIs are retained for dpopIATWindow so that any proof whose iat is still within the
+// acceptance window can be checked. Entries are evicted lazily on each access.
+type dpopJTIStore struct {
+	mu      sync.Mutex
+	entries map[string]time.Time // jti → expiry
+}
+
+func newDPoPJTIStore() *dpopJTIStore {
+	return &dpopJTIStore{entries: make(map[string]time.Time)}
+}
+
+// seenOrAdd returns true (replay detected) if jti was already recorded, otherwise
+// records it with an expiry of now+dpopIATWindow and returns false.
+func (s *dpopJTIStore) seenOrAdd(jti string, now time.Time) bool {
+	expiry := now.Add(dpopIATWindow)
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	// Lazy eviction: purge expired entries on each write.
+	for k, exp := range s.entries {
+		if now.After(exp) {
+			delete(s.entries, k)
+		}
+	}
+	if _, seen := s.entries[jti]; seen {
+		return true
+	}
+	s.entries[jti] = expiry
+	return false
+}
 
 // dpopIATWindow is the backward tolerance for the DPoP proof iat claim (RFC 9449 §4.3 step 11).
 const dpopIATWindow = 60 * time.Second
@@ -67,7 +99,8 @@ func dpopSanitizeProof(proof string) (string, error) {
 // validateDPoPProof validates a DPoP proof at the resource server (RFC 9449 §7.1–7.2).
 // storedJKT must be non-empty (the cnf.jkt from the validated access token).
 // If proof is empty, returns ErrInvalidToken (downgrade attack prevention).
-func validateDPoPProof(proof, method, requestURL, accessToken, storedJKT string, clock func() time.Time) error {
+// jtiStore, when non-nil, enforces replay protection by tracking seen JTI values.
+func validateDPoPProof(proof, method, requestURL, accessToken, storedJKT string, clock func() time.Time, jtiStore *dpopJTIStore) error {
 
 	var err error
 	proof, err = dpopSanitizeProof(proof)
@@ -133,6 +166,9 @@ func validateDPoPProof(proof, method, requestURL, accessToken, storedJKT string,
 	jti, ok := jtiRaw.(string)
 	if !ok || jti == "" {
 		return descope.ErrInvalidToken.WithMessage("jti must be non-empty string")
+	}
+	if jtiStore != nil && jtiStore.seenOrAdd(jti, clock()) {
+		return descope.ErrInvalidToken.WithMessage("Cannot use the same DPoP header twice (replay protection).")
 	}
 
 	htmRaw, ok := token.Get("htm")
