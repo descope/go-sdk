@@ -162,6 +162,66 @@ const dpopTestToken = "the-access-token" //nolint:gosec
 
 // ---- validateDPoPProof tests ----
 
+// Fix: JTI length capped at 128 chars (matching backend maxJTILen).
+func TestDPoP_OversizedJTI_Rejected(t *testing.T) {
+	priv, pub := dpopNewKeyPair(t)
+	storedJKT := dpopJKTOf(t, pub)
+	opts := dpopValidOpts("GET", dpopTestURL, dpopTestToken)
+	opts.jti = strings.Repeat("a", 129) // 129 chars — one over the 128 limit
+	proof := dpopMakeProof(t, priv, opts)
+	err := validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now, nil)
+	require.Error(t, err)
+	require.ErrorIs(t, err, descope.ErrInvalidToken)
+}
+
+// Fix: JTI must not be burned when subsequent claim validation fails (e.g. ath mismatch).
+// A proof that fails ath after a valid JTI should allow retry with the same JTI.
+func TestDPoP_JTINotBurnedOnAthFailure(t *testing.T) {
+	priv, pub := dpopNewKeyPair(t)
+	storedJKT := dpopJKTOf(t, pub)
+	jti := dpopRandomJTI()
+	store := newDPoPJTIStore()
+
+	// First attempt: valid JTI but wrong access token → ath mismatch.
+	opts1 := dpopValidOpts("GET", dpopTestURL, "wrong-access-token")
+	opts1.jti = jti
+	proof1 := dpopMakeProof(t, priv, opts1)
+	err := validateDPoPProof(proof1, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now, store)
+	require.Error(t, err)
+	require.NotContains(t, err.Error(), "replay") // must fail on ath, not replay
+
+	// Second attempt: same JTI, correct ath → must succeed (JTI was not burned).
+	opts2 := dpopValidOpts("GET", dpopTestURL, dpopTestToken)
+	opts2.jti = jti
+	proof2 := dpopMakeProof(t, priv, opts2)
+	require.NoError(t, validateDPoPProof(proof2, "GET", dpopTestURL, dpopTestToken, storedJKT, time.Now, store))
+}
+
+// Fix: JTI store TTL must be 2×iatWindow (120s) not 1×iatWindow (60s).
+// A proof with iat near the future boundary is valid for iatWindow+iatFutureWindow = 65s;
+// the JTI must remain in the store for the entire validity period.
+func TestDPoP_JTIStillProtectedAfterOneIATWindow(t *testing.T) {
+	priv, pub := dpopNewKeyPair(t)
+	storedJKT := dpopJKTOf(t, pub)
+
+	base := time.Now()
+	opts := dpopValidOpts("GET", dpopTestURL, dpopTestToken)
+	opts.iat = base.Add(3 * time.Second) // iat 3s in future — within 5s forward tolerance
+	proof := dpopMakeProof(t, priv, opts)
+
+	store := newDPoPJTIStore()
+	clock0 := func() time.Time { return base }
+	require.NoError(t, validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, clock0, store))
+
+	// At base+61s: diff = 61s - 3s = 58s < 60s → iat still within window → proof structurally valid.
+	// With 1×TTL (wrong): JTI expired at base+60s → replay not detected.
+	// With 2×TTL (correct): JTI expires at base+120s → replay detected.
+	clock61 := func() time.Time { return base.Add(61 * time.Second) }
+	err := validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, clock61, store)
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "replay")
+}
+
 func TestDPoP_ReplayedProof_Rejected(t *testing.T) {
 	priv, pub := dpopNewKeyPair(t)
 	storedJKT := dpopJKTOf(t, pub)

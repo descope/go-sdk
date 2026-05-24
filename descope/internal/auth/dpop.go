@@ -19,8 +19,9 @@ import (
 )
 
 // dpopJTIStore tracks recently seen DPoP proof JTIs for replay detection (RFC 9449 §11.1).
-// JTIs are retained for dpopIATWindow so that any proof whose iat is still within the
-// acceptance window can be checked. Entries are evicted lazily on each access.
+// JTIs are retained for dpopJTITTL. The TTL must be at least iatWindow+iatFutureWindow (65s)
+// to cover the full proof acceptance window; we use 2×iatWindow (120s) matching the backend.
+// Entries are evicted lazily on each write.
 type dpopJTIStore struct {
 	mu      sync.Mutex
 	entries map[string]time.Time // jti → expiry
@@ -31,14 +32,14 @@ func newDPoPJTIStore() *dpopJTIStore {
 }
 
 // seenOrAdd returns true (replay detected) if jti was already recorded, otherwise
-// records it with an expiry of now+dpopIATWindow and returns false.
+// records it with an expiry of now+dpopJTITTL and returns false.
 func (s *dpopJTIStore) seenOrAdd(jti string, now time.Time) bool {
-	expiry := now.Add(dpopIATWindow)
+	expiry := now.Add(dpopJTITTL)
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	// Lazy eviction: purge expired entries on each write.
+	// Lazy eviction: purge entries that have expired (inclusive boundary).
 	for k, exp := range s.entries {
-		if now.After(exp) {
+		if !now.Before(exp) {
 			delete(s.entries, k)
 		}
 	}
@@ -55,6 +56,17 @@ const dpopIATWindow = 60 * time.Second
 // dpopIATFutureWindow is the forward tolerance for the iat claim.
 // A tight window prevents pre-generated proofs from extending their effective lifetime.
 const dpopIATFutureWindow = 5 * time.Second
+
+// dpopJTITTL is the retention window for seen JTI values in the replay store.
+// Must be ≥ iatWindow+iatFutureWindow (65s): a proof with iat near the future boundary
+// is accepted for iatFutureWindow, then accepted again for the full iatWindow after the
+// clock catches up — total exposure is 65s. 2×iatWindow (120s) safely covers this,
+// matching the backend's JTITTL constant.
+const dpopJTITTL = 2 * dpopIATWindow
+
+// maxDPoPJTILen caps the jti claim length to prevent map-key memory inflation (RFC 9449 §11.1).
+// Matches the backend's maxJTILen constant.
+const maxDPoPJTILen = 128
 
 // maxDPoPProofLen caps an incoming DPoP proof (RFC 9449 §11.1 — limit memory exposure).
 const maxDPoPProofLen = 8192
@@ -101,6 +113,7 @@ func dpopSanitizeProof(proof string) (string, error) {
 // If proof is empty, returns ErrInvalidToken (downgrade attack prevention).
 // jtiStore, when non-nil, enforces replay protection by tracking seen JTI values.
 func validateDPoPProof(proof, method, requestURL, accessToken, storedJKT string, clock func() time.Time, jtiStore *dpopJTIStore) error {
+	now := clock() // capture once; used for both replay-store and iat window checks
 
 	var err error
 	proof, err = dpopSanitizeProof(proof)
@@ -167,8 +180,8 @@ func validateDPoPProof(proof, method, requestURL, accessToken, storedJKT string,
 	if !ok || jti == "" {
 		return descope.ErrInvalidToken.WithMessage("jti must be non-empty string")
 	}
-	if jtiStore != nil && jtiStore.seenOrAdd(jti, clock()) {
-		return descope.ErrInvalidToken.WithMessage("Cannot use the same DPoP header twice (replay protection).")
+	if len(jti) > maxDPoPJTILen {
+		return descope.ErrInvalidToken.WithMessage("jti exceeds maximum length")
 	}
 
 	htmRaw, ok := token.Get("htm")
@@ -201,7 +214,7 @@ func validateDPoPProof(proof, method, requestURL, accessToken, storedJKT string,
 	if iat.IsZero() {
 		return descope.ErrInvalidToken.WithMessage("missing iat claim")
 	}
-	diff := clock().Sub(iat)
+	diff := now.Sub(iat)
 	// Asymmetric window: 60s backward tolerance, 5s forward tolerance.
 	// The tight forward window prevents pre-generated proofs from extending their effective lifetime.
 	if diff <= -dpopIATFutureWindow || diff >= dpopIATWindow {
@@ -228,6 +241,13 @@ func validateDPoPProof(proof, method, requestURL, accessToken, storedJKT string,
 	}
 	if tp != storedJKT {
 		return descope.ErrInvalidToken.WithMessage("DPoP proof key does not match cnf.jkt in access token")
+	}
+
+	// Burn the JTI only after all other checks pass (matching backend ordering):
+	// burning early would let an attacker consume a legitimate client's JTI by
+	// submitting a proof that fails a later check (e.g. ath mismatch).
+	if jtiStore != nil && jtiStore.seenOrAdd(jti, now) {
+		return descope.ErrInvalidToken.WithMessage("Cannot use the same DPoP header twice (replay protection).")
 	}
 
 	return nil
