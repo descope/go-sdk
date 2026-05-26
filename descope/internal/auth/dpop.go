@@ -18,10 +18,7 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
-// dpopJTIStore tracks recently seen DPoP proof JTIs for replay detection (RFC 9449 §11.1).
-// JTIs are retained for dpopJTITTL. The TTL must be at least iatWindow+iatFutureWindow (65s)
-// to cover the full proof acceptance window; we use 2×iatWindow (120s) matching the backend.
-// Entries are evicted lazily on each write.
+// dpopJTIStore tracks recently seen DPoP proof JTIs for replay detection (RFC 9449 §11.1)
 type dpopJTIStore struct {
 	mu      sync.Mutex
 	entries map[string]time.Time // jti → expiry
@@ -31,8 +28,7 @@ func newDPoPJTIStore() *dpopJTIStore {
 	return &dpopJTIStore{entries: make(map[string]time.Time)}
 }
 
-// seenOrAdd returns true (replay detected) if jti was already recorded, otherwise
-// records it with an expiry of now+dpopJTITTL and returns false.
+// seenOrAdd returns true (replay detected) if jti was already recorded
 func (s *dpopJTIStore) seenOrAdd(jti string, now time.Time) bool {
 	expiry := now.Add(dpopJTITTL)
 	s.mu.Lock()
@@ -58,14 +54,9 @@ const dpopIATWindow = 60 * time.Second
 const dpopIATFutureWindow = 5 * time.Second
 
 // dpopJTITTL is the retention window for seen JTI values in the replay store.
-// Must be ≥ iatWindow+iatFutureWindow (65s): a proof with iat near the future boundary
-// is accepted for iatFutureWindow, then accepted again for the full iatWindow after the
-// clock catches up — total exposure is 65s. 2×iatWindow (120s) safely covers this,
-// matching the backend's JTITTL constant.
 const dpopJTITTL = 2 * dpopIATWindow
 
 // maxDPoPJTILen caps the jti claim length to prevent map-key memory inflation (RFC 9449 §11.1).
-// Matches the backend's maxJTILen constant.
 const maxDPoPJTILen = 128
 
 // maxDPoPProofLen caps an incoming DPoP proof (RFC 9449 §11.1 — limit memory exposure).
@@ -111,7 +102,6 @@ func dpopSanitizeProof(proof string) (string, error) {
 // validateDPoPProof validates a DPoP proof at the resource server (RFC 9449 §7.1–7.2).
 // storedJKT must be non-empty (the cnf.jkt from the validated access token).
 // If proof is empty, returns ErrInvalidToken (downgrade attack prevention).
-// jtiStore, when non-nil, enforces replay protection by tracking seen JTI values.
 func validateDPoPProof(proof, method, requestURL, accessToken, storedJKT string, clock func() time.Time, jtiStore *dpopJTIStore) error {
 	now := clock() // capture once; used for both replay-store and iat window checks
 
@@ -243,11 +233,9 @@ func validateDPoPProof(proof, method, requestURL, accessToken, storedJKT string,
 		return descope.ErrInvalidToken.WithMessage("DPoP proof key does not match cnf.jkt in access token")
 	}
 
-	// Burn the JTI only after all other checks pass (matching backend ordering):
-	// burning early would let an attacker consume a legitimate client's JTI by
-	// submitting a proof that fails a later check (e.g. ath mismatch).
+	// Burn the JTI only after all other checks pass, to avoid DoS via forced JTI store pollution with invalid proofs.
 	if jtiStore != nil && jtiStore.seenOrAdd(jti, now) {
-		return descope.ErrInvalidToken.WithMessage("Cannot use the same DPoP header twice (replay protection).")
+		return descope.ErrInvalidToken.WithMessage("DPoP proof replayed: jti already seen")
 	}
 
 	return nil
