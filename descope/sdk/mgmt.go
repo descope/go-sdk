@@ -169,6 +169,13 @@ type SSOApplication interface {
 
 	// Load all project sso applications
 	LoadAll(ctx context.Context) ([]*descope.SSOApplication, error)
+
+	// Get the dedicated OIDC client secret of an SSO application by its id.
+	// Only relevant for OIDC apps configured with dedicated client credentials (ClientType "confidential").
+	GetApplicationSecret(ctx context.Context, id string) (string, error)
+
+	// Rotate the dedicated OIDC client secret of an SSO application by its id, returning the new cleartext secret.
+	RotateApplicationSecret(ctx context.Context, id string) (string, error)
 }
 
 // Provides functions for managing users in a project.

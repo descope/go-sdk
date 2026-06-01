@@ -604,3 +604,77 @@ func TestAllSSOApplicationsLoadError(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, res)
 }
+
+func TestSSOApplicationGetSecretSuccess(t *testing.T) {
+	response := map[string]any{"cleartext": "secret-123"}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.Equal(t, "id1", r.URL.Query().Get("id"))
+	}, response))
+	res, err := mgmt.SSOApplication().GetApplicationSecret(context.Background(), "id1")
+	require.NoError(t, err)
+	require.Equal(t, "secret-123", res)
+}
+
+func TestSSOApplicationGetSecretErrorEmpty(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.SSOApplication().GetApplicationSecret(context.Background(), "")
+	require.Error(t, err)
+	require.Empty(t, res)
+}
+
+func TestSSOApplicationGetSecretError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := mgmt.SSOApplication().GetApplicationSecret(context.Background(), "test")
+	require.Error(t, err)
+	require.Empty(t, res)
+}
+
+func TestSSOApplicationRotateSecretSuccess(t *testing.T) {
+	response := map[string]any{"cleartext": "rotated-456"}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "id1", req["id"])
+	}, response))
+	res, err := mgmt.SSOApplication().RotateApplicationSecret(context.Background(), "id1")
+	require.NoError(t, err)
+	require.Equal(t, "rotated-456", res)
+}
+
+func TestSSOApplicationRotateSecretErrorEmpty(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.SSOApplication().RotateApplicationSecret(context.Background(), "")
+	require.Error(t, err)
+	require.Empty(t, res)
+}
+
+func TestSSOApplicationRotateSecretError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := mgmt.SSOApplication().RotateApplicationSecret(context.Background(), "test")
+	require.Error(t, err)
+	require.Empty(t, res)
+}
+
+func TestSSOApplicationCreateOIDCApplicationWithDedicatedClientConfig(t *testing.T) {
+	response := map[string]any{"id": "qux"}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "confidential", req["clientType"])
+		require.ElementsMatch(t, []any{"https://app.example.com/cb"}, req["approvedRedirectUrls"])
+		require.Equal(t, true, req["clientCredentialsDisabled"])
+		require.Equal(t, false, req["authorizationCodeDisabled"])
+		require.Equal(t, true, req["deviceCodeDisabled"])
+	}, response))
+	id, err := mgmt.SSOApplication().CreateOIDCApplication(context.Background(), &descope.OIDCApplicationRequest{
+		Name:                      "abc",
+		ClientType:                "confidential",
+		ApprovedRedirectURLs:      []string{"https://app.example.com/cb"},
+		ClientCredentialsDisabled: true,
+		DeviceCodeDisabled:        true,
+	})
+	require.NoError(t, err)
+	require.Equal(t, "qux", id)
+}

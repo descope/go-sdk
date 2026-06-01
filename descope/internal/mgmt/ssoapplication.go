@@ -162,16 +162,61 @@ func (s *ssoApplication) LoadAll(ctx context.Context) ([]*descope.SSOApplication
 
 func makeCreateUpdateOIDCApplicationRequest(appRequest *descope.OIDCApplicationRequest) map[string]any {
 	return map[string]any{
-		"id":                   appRequest.ID,
-		"name":                 appRequest.Name,
-		"description":          appRequest.Description,
-		"enabled":              appRequest.Enabled,
-		"logo":                 appRequest.Logo,
-		"loginPageUrl":         appRequest.LoginPageURL,
-		"forceAuthentication":  appRequest.ForceAuthentication,
-		"jwtBearerSettings":    appRequest.JWTBearerSettings,
-		"backChannelLogoutUrl": appRequest.BackChannelLogoutURL,
+		"id":                        appRequest.ID,
+		"name":                      appRequest.Name,
+		"description":               appRequest.Description,
+		"enabled":                   appRequest.Enabled,
+		"logo":                      appRequest.Logo,
+		"loginPageUrl":              appRequest.LoginPageURL,
+		"forceAuthentication":       appRequest.ForceAuthentication,
+		"jwtBearerSettings":         appRequest.JWTBearerSettings,
+		"backChannelLogoutUrl":      appRequest.BackChannelLogoutURL,
+		"clientType":                appRequest.ClientType,
+		"approvedRedirectUrls":      appRequest.ApprovedRedirectURLs,
+		"authorizationCodeDisabled": appRequest.AuthorizationCodeDisabled,
+		"clientCredentialsDisabled": appRequest.ClientCredentialsDisabled,
+		"refreshTokenDisabled":      appRequest.RefreshTokenDisabled,
+		"jwtBearerDisabled":         appRequest.JWTBearerDisabled,
+		"deviceCodeDisabled":        appRequest.DeviceCodeDisabled,
 	}
+}
+
+func (s *ssoApplication) GetApplicationSecret(ctx context.Context, id string) (string, error) {
+	if id == "" {
+		return "", utils.NewInvalidArgumentError("id")
+	}
+	req := &api.HTTPRequest{
+		QueryParams: map[string]string{"id": id},
+	}
+	httpRes, err := s.client.DoGetRequest(ctx, api.Routes.ManagementSSOApplicationSecret(), req, "")
+	if err != nil {
+		return "", err
+	}
+	res := struct {
+		Cleartext string `json:"cleartext"`
+	}{}
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), &res); err != nil {
+		return "", err
+	}
+	return res.Cleartext, nil
+}
+
+func (s *ssoApplication) RotateApplicationSecret(ctx context.Context, id string) (string, error) {
+	if id == "" {
+		return "", utils.NewInvalidArgumentError("id")
+	}
+	req := map[string]any{"id": id}
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationRotate(), req, nil, "")
+	if err != nil {
+		return "", err
+	}
+	res := struct {
+		Cleartext string `json:"cleartext"`
+	}{}
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), &res); err != nil {
+		return "", err
+	}
+	return res.Cleartext, nil
 }
 
 func makeCreateUpdateSAMLApplicationRequest(appRequest *descope.SAMLApplicationRequest) map[string]any {

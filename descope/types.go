@@ -855,6 +855,17 @@ type SSOApplicationOIDCSettings struct {
 	ForceAuthentication  bool               `json:"forceAuthentication"`
 	JWTBearerSettings    *JWTBearerSettings `json:"jwtBearerSettings,omitempty"`
 	BackChannelLogoutURL string             `json:"backChannelLogoutUrl,omitempty"`
+	// Dedicated client credentials and per-app policy. ClientID is computed; ClientSecret is returned
+	// only on create/rotate responses (never on load). Empty values preserve legacy access-key behavior.
+	ClientID                  string   `json:"clientId,omitempty"`
+	ClientSecret              string   `json:"clientSecret,omitempty"`
+	ClientType                string   `json:"clientType,omitempty"` // "", "confidential", or "public"
+	ApprovedRedirectURLs      []string `json:"approvedRedirectUrls,omitempty"`
+	AuthorizationCodeDisabled bool     `json:"authorizationCodeDisabled,omitempty"`
+	ClientCredentialsDisabled bool     `json:"clientCredentialsDisabled,omitempty"`
+	RefreshTokenDisabled      bool     `json:"refreshTokenDisabled,omitempty"`
+	JWTBearerDisabled         bool     `json:"jwtBearerDisabled,omitempty"`
+	DeviceCodeDisabled        bool     `json:"deviceCodeDisabled,omitempty"`
 }
 
 type SSOApplication struct {
@@ -879,6 +890,15 @@ type OIDCApplicationRequest struct {
 	ForceAuthentication  bool               `json:"forceAuthentication"`
 	JWTBearerSettings    *JWTBearerSettings `json:"jwtBearerSettings,omitempty"`
 	BackChannelLogoutURL string             `json:"backChannelLogoutUrl,omitempty"`
+	// Dedicated client credentials and per-app policy (all optional; empty preserves legacy behavior).
+	// The client secret is generated server-side (set ClientType to "confidential" to get one on create).
+	ClientType                string   `json:"clientType,omitempty"`
+	ApprovedRedirectURLs      []string `json:"approvedRedirectUrls,omitempty"`
+	AuthorizationCodeDisabled bool     `json:"authorizationCodeDisabled,omitempty"`
+	ClientCredentialsDisabled bool     `json:"clientCredentialsDisabled,omitempty"`
+	RefreshTokenDisabled      bool     `json:"refreshTokenDisabled,omitempty"`
+	JWTBearerDisabled         bool     `json:"jwtBearerDisabled,omitempty"`
+	DeviceCodeDisabled        bool     `json:"deviceCodeDisabled,omitempty"`
 }
 
 type SAMLApplicationRequest struct {
