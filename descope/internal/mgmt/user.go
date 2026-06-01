@@ -892,6 +892,9 @@ func makeCreateUserRequest(createReq *createUserRequest) map[string]any {
 		if options.TemplateOptions != nil {
 			req["templateOptions"] = options.TemplateOptions
 		}
+		if len(options.Locale) > 0 {
+			req["locale"] = options.Locale
+		}
 	}
 	return req
 }
@@ -953,6 +956,9 @@ func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.In
 		}
 		if options.SendSMS != nil {
 			req["sendSMS"] = *options.SendSMS
+		}
+		if len(options.Locale) > 0 {
+			req["locale"] = options.Locale
 		}
 	}
 
