@@ -855,10 +855,10 @@ type SSOApplicationOIDCSettings struct {
 	ForceAuthentication  bool               `json:"forceAuthentication"`
 	JWTBearerSettings    *JWTBearerSettings `json:"jwtBearerSettings,omitempty"`
 	BackChannelLogoutURL string             `json:"backChannelLogoutUrl,omitempty"`
-	// Dedicated client credentials and per-app policy. ClientID is computed; ClientSecret is returned
-	// only on create/rotate responses (never on load). Empty values preserve legacy access-key behavior.
+	// Dedicated client credentials and per-app policy. ClientID is computed (populated on load).
+	// The client secret is obtained via GetApplicationSecret / RotateApplicationSecret, not this struct.
+	// Empty values preserve legacy access-key behavior.
 	ClientID                  string   `json:"clientId,omitempty"`
-	ClientSecret              string   `json:"clientSecret,omitempty"`
 	ClientType                string   `json:"clientType,omitempty"` // "", "confidential", or "public"
 	ApprovedRedirectURLs      []string `json:"approvedRedirectUrls,omitempty"`
 	AuthorizationCodeDisabled bool     `json:"authorizationCodeDisabled,omitempty"`
