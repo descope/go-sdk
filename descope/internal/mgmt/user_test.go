@@ -90,6 +90,7 @@ func TestUserCreateSuccessWithOptions(t *testing.T) {
 		assert.EqualValues(t, ca, req["customAttributes"])
 		assert.EqualValues(t, "https://some.domain.com", req["inviteUrl"])
 		assert.EqualValues(t, map[string]any{"k1": "v1"}, req["templateOptions"])
+		assert.EqualValues(t, "en-US", req["locale"])
 		assert.Nil(t, req["sendMail"])
 		assert.Nil(t, req["sendSMS"])
 	}, response))
@@ -101,6 +102,7 @@ func TestUserCreateSuccessWithOptions(t *testing.T) {
 	res, err := m.User().Invite(context.Background(), "abc", user, &descope.InviteOptions{
 		InviteURL:       "https://some.domain.com",
 		TemplateOptions: map[string]string{"k1": "v1"},
+		Locale:          "en-US",
 	})
 	require.NoError(t, err)
 	require.NotNil(t, res)
@@ -166,6 +168,7 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 				assert.EqualValues(t, "https://some.domain.com", req["inviteUrl"])
 				assert.Nil(t, req["sendMail"])
 				assert.EqualValues(t, true, req["sendSMS"])
+				assert.EqualValues(t, "fr-FR", req["locale"])
 			} else if sendMail {
 				assert.EqualValues(t, true, req["invite"])
 				assert.EqualValues(t, "https://some.domain.com", req["inviteUrl"])
@@ -210,6 +213,7 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 	res, err := m.User().InviteBatch(context.Background(), users, &descope.InviteOptions{
 		InviteURL: "https://some.domain.com",
 		SendSMS:   &sendSMS,
+		Locale:    "fr-FR",
 	})
 	require.True(t, called)
 	require.NoError(t, err)
