@@ -90,9 +90,10 @@ These sections show how to use the SDK to perform various authentication/authori
 9. [Session Validation](#session-validation)
 10. [Roles & Permission Validation](#roles--permission-validation)
 11. [Tenant selection](#tenant-selection)
-12. [Logging Out](#logging-out)
-13. [History](#history)
-14. [My Tenants](#my-tenants)
+12. [Tenant User Isolation](#tenant-user-isolation)
+13. [Logging Out](#logging-out)
+14. [History](#history)
+15. [My Tenants](#my-tenants)
 
 ### Management Functions
 
@@ -615,6 +616,25 @@ if authorized, sessionToken, err := descopeClient.Auth.ValidateAndRefreshSession
 
 Choose the right session validation and refresh combination that suits your needs.
 
+#### DPoP (Sender-Constrained Tokens)
+
+If your authorization server issues [DPoP-bound access tokens](https://www.rfc-editor.org/rfc/rfc9449) (tokens that contain a `cnf.jkt` claim), the Descope SDK automatically enforces proof-of-possession on every request.
+
+No configuration is needed. When `ValidateSessionWithRequest` or `ValidateAndRefreshSessionWithRequest` is called:
+
+- If the session token has a `cnf.jkt` claim, the `DPoP` header in the incoming request is validated (RFC 9449 §7.1–7.2).
+- Plain Bearer tokens without `cnf.jkt` are unaffected — the check is skipped entirely.
+- If a `DPoP`-scheme `Authorization` header is present but the token has no `cnf.jkt`, the request is rejected (downgrade-attack prevention).
+
+```go
+// DPoP enforcement is automatic — use the same session validation calls as usual.
+if authorized, sessionToken, err := descopeClient.Auth.ValidateSessionWithRequest(r, w); !authorized {
+    // unauthorized (also rejects invalid or missing DPoP proofs for DPoP-bound tokens)
+}
+```
+
+Token validation without an `http.Request` (`ValidateSessionWithToken`, `ValidateAndRefreshSessionWithTokens`) does **not** validate the DPoP proof, since the HTTP request context is unavailable. Use the request-based variants whenever DPoP enforcement is required.
+
 Refreshed sessions return the same response as is returned when users first sign up / log in,
 Make sure to return the session token from the response to the client if tokens are validated directly.
 
@@ -704,6 +724,30 @@ if err != nil {
     // failed to select a tenant
 }
 ```
+
+### Tenant User Isolation
+
+When a project has Tenant User Isolation enabled, users with the same login ID in different tenants are treated as completely separate identities. To associate a sign-up or sign-in with a specific tenant in this mode, pass `TenantID` in the options struct:
+
+```go
+// Sign up alice scoped to tenant A — creates a tenant-isolated identity
+signUpOptions := &descope.SignUpOptions{TenantID: "tenant-A"}
+maskedAddress, err := descopeClient.Auth.OTP().SignUp(context.Background(), descope.MethodEmail, loginID, user, signUpOptions)
+if err != nil {
+    // handle error
+}
+
+// Verify the OTP code — tenant context is carried from the sign-up step
+authInfo, err := descopeClient.Auth.OTP().VerifyCode(context.Background(), descope.MethodEmail, loginID, code, w)
+if err != nil {
+    // handle error
+}
+```
+
+A few things to keep in mind:
+- Only the sign-up/sign-in step requires `TenantID` — the verify step carries the tenant context automatically.
+- If `TenantID` is omitted, the request uses the non-isolated (shared) identity, as if tenant isolation were not enabled.
+- This is different from [`SelectTenant`](#tenant-selection), which switches the active tenant on an already-authenticated session. `TenantID` in `LoginOptions`/`SignUpOptions` scopes identity resolution at authentication time.
 
 ### Logging Out
 

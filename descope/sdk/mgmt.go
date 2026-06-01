@@ -141,7 +141,8 @@ type SSOApplication interface {
 	// Logo: Optional sso application logo.
 	// LoginPageURL: The URL where login page is hosted.
 	// Realm: The WS-Fed realm identifier.
-	// ReplyURL: The WS-Fed reply URL.
+	// ReplyURL: The default WS-Fed reply URL. Used for IdP-initiated flows and as the fallback when the RP doesn't supply a wreply.
+	// ReplyAllowedCallbacks: Optional list of additional allowed wreply URLs (supports * wildcards). Used in addition to ReplyURL when the RP supplies a wreply.
 	// AttributeMapping: Optional list of Descope (IdP) attributes to SP mapping.
 	// GroupsMapping: Optional list of Descope (IdP) roles that will be mapped to SP groups.
 	// ForceAuthentication: Optional determine if the IdP should force the user to re-authenticate.
@@ -703,10 +704,21 @@ type Permission interface {
 	// in the existing permission. Use carefully.
 	Update(ctx context.Context, name, newName, description string) error
 
+	// UpdateWithID updates an existing permission identified by its ID.
+	//
+	// IMPORTANT: All parameters will override whatever values are currently set
+	// in the existing permission. Use carefully.
+	UpdateWithID(ctx context.Context, id, newName, description string) error
+
 	// Delete an existing permission.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	Delete(ctx context.Context, name string) error
+
+	// DeleteWithID deletes an existing permission identified by its ID.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteWithID(ctx context.Context, id string) error
 
 	// Load all permissions.
 	LoadAll(ctx context.Context) ([]*descope.Permission, error)
@@ -734,10 +746,21 @@ type Role interface {
 	// in the existing role. Use carefully.
 	Update(ctx context.Context, name, tenantID, newName, description string, permissionNames []string, defaultRole bool, private bool) error
 
+	// UpdateWithID updates an existing role identified by its ID.
+	//
+	// IMPORTANT: All parameters will override whatever values are currently set
+	// in the existing role. Use carefully.
+	UpdateWithID(ctx context.Context, id, tenantID, newName, description string, permissionNames []string, defaultRole bool, private bool) error
+
 	// Delete an existing role.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	Delete(ctx context.Context, name, tenantID string) error
+
+	// DeleteWithID deletes an existing role identified by its ID.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteWithID(ctx context.Context, id, tenantID string) error
 
 	// Load all roles.
 	LoadAll(ctx context.Context) ([]*descope.Role, error)

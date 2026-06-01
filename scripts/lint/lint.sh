@@ -68,7 +68,7 @@ lint_run_golangci() {
 	INSTALLED_GOLANG_CLI_VERSION="$(golangci-lint --version)"
 	if [[ $INSTALLED_GOLANG_CLI_VERSION != *"$GOLANG_CI_SUPPORTED_VERSION"* ]]; then
 		echo "Installing golangci-lint for the first time..."
-		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -d -b "$(go env GOPATH)"/bin v$GOLANG_CI_SUPPORTED_VERSION
+		go install github.com/golangci/golangci-lint/cmd/golangci-lint@v$GOLANG_CI_SUPPORTED_VERSION
 		echo "Done downloading golangci-lint"
 	fi
 

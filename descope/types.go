@@ -28,6 +28,14 @@ type AuthenticationInfo struct {
 	RefreshToken *Token        `json:"refreshToken,omitempty"`
 	User         *UserResponse `json:"user,omitempty"`
 	FirstSeen    bool          `json:"firstSeen,omitempty"`
+	IDPResponse  *IDPResponse  `json:"idpResponse,omitempty"`
+}
+
+// IDPResponse contains IDP groups, SAML attributes, and OIDC claims returned from SSO authentication.
+type IDPResponse struct {
+	IDPGroups         []string       `json:"idpGroups,omitempty"`
+	IDPSAMLAttributes map[string]any `json:"idpSAMLAttributes,omitempty"`
+	IDPOIDCClaims     map[string]any `json:"idpOIDCClaims,omitempty"`
 }
 
 type AnonymousAuthenticationInfo struct {
@@ -257,6 +265,20 @@ type Token struct {
 	Claims            map[string]any `json:"claims,omitempty"`
 }
 
+// GetDPoPThumbprint returns the cnf.jkt claim from the token, or empty string if absent.
+// A non-empty value means the token is DPoP-bound and a matching proof must be validated.
+func (to *Token) GetDPoPThumbprint() string {
+	if to.Claims == nil {
+		return ""
+	}
+	cnf, ok := to.Claims["cnf"].(map[string]any)
+	if !ok {
+		return ""
+	}
+	jkt, _ := cnf["jkt"].(string)
+	return jkt
+}
+
 func (to *Token) GetTenants() []string {
 	tenants := to.getTenants()
 	if len(tenants) == 0 && to.Claims != nil && to.Claims[ClaimDescopeCurrentTenant] != nil {
@@ -367,6 +389,7 @@ type LoginOptions struct {
 	CustomClaims             map[string]any    `json:"customClaims,omitempty"`
 	TemplateID               string            `json:"templateId,omitempty"`      // for overriding the default messaging template
 	TemplateOptions          map[string]string `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
+	TenantID                 string            `json:"tenantId,omitempty"`        // for associating the authentication with a specific tenant
 }
 
 func (lo *LoginOptions) IsJWTRequired() bool {
@@ -382,6 +405,7 @@ type SignUpOptions struct {
 	CustomClaims    map[string]any    `json:"customClaims,omitempty"`
 	TemplateID      string            `json:"templateId,omitempty"`      // for overriding the default messaging template
 	TemplateOptions map[string]string `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
+	TenantID        string            `json:"-"`                         // for associating the authentication with a specific tenant
 }
 
 type EmbeddedLinkLoginOptions struct {
@@ -398,6 +422,7 @@ type JWTResponse struct {
 	CookieExpiration int32         `json:"cookieExpiration,omitempty"`
 	User             *UserResponse `json:"user,omitempty"`
 	FirstSeen        bool          `json:"firstSeen,omitempty"`
+	IDPResponse      *IDPResponse  `json:"idpResponse,omitempty"`
 }
 
 type EnchantedLinkResponse struct {
@@ -420,6 +445,7 @@ func NewAuthenticationInfo(jRes *JWTResponse, sessionToken, refreshToken *Token)
 		RefreshToken: refreshToken,
 		User:         jRes.User,
 		FirstSeen:    jRes.FirstSeen,
+		IDPResponse:  jRes.IDPResponse,
 	}
 }
 
@@ -882,35 +908,37 @@ type SAMLApplicationRequest struct {
 }
 
 type WSFedApplicationRequest struct {
-	ID                  string                        `json:"id"`
-	Name                string                        `json:"name"`
-	Description         string                        `json:"description"`
-	Enabled             bool                          `json:"enabled"`
-	Logo                string                        `json:"logo"`
-	LoginPageURL        string                        `json:"loginPageUrl"`
-	Realm               string                        `json:"realm"`
-	ReplyURL            string                        `json:"replyUrl"`
-	AttributeMapping    []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
-	GroupsMapping       []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
-	ForceAuthentication bool                          `json:"forceAuthentication"`
-	LogoutRedirectURL   string                        `json:"logoutRedirectUrl"`
-	ErrorRedirectURL    string                        `json:"errorRedirectUrl"`
+	ID                    string                        `json:"id"`
+	Name                  string                        `json:"name"`
+	Description           string                        `json:"description"`
+	Enabled               bool                          `json:"enabled"`
+	Logo                  string                        `json:"logo"`
+	LoginPageURL          string                        `json:"loginPageUrl"`
+	Realm                 string                        `json:"realm"`
+	ReplyURL              string                        `json:"replyUrl"`
+	ReplyAllowedCallbacks []string                      `json:"replyAllowedCallbacks"`
+	AttributeMapping      []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
+	GroupsMapping         []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
+	ForceAuthentication   bool                          `json:"forceAuthentication"`
+	LogoutRedirectURL     string                        `json:"logoutRedirectUrl"`
+	ErrorRedirectURL      string                        `json:"errorRedirectUrl"`
 }
 
 type SSOApplicationWSFedSettings struct {
-	LoginPageURL        string                        `json:"loginPageUrl"`
-	Realm               string                        `json:"realm"`
-	ReplyURL            string                        `json:"replyUrl"`
-	AttributeMapping    []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
-	GroupsMapping       []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
-	ForceAuthentication bool                          `json:"forceAuthentication"`
-	LogoutRedirectURL   string                        `json:"logoutRedirectUrl"`
-	ErrorRedirectURL    string                        `json:"errorRedirectUrl"`
-	IdpInitiatedURL     string                        `json:"idpInitiatedUrl"`
-	IdpMetadataURL      string                        `json:"idpMetadataUrl"`
-	IdpEntityID         string                        `json:"idpEntityId"`
-	IdpSSOURL           string                        `json:"idpSsoUrl"`
-	IdpCert             string                        `json:"idpCert"`
+	LoginPageURL          string                        `json:"loginPageUrl"`
+	Realm                 string                        `json:"realm"`
+	ReplyURL              string                        `json:"replyUrl"`
+	ReplyAllowedCallbacks []string                      `json:"replyAllowedCallbacks"`
+	AttributeMapping      []SAMLIDPAttributeMappingInfo `json:"attributeMapping"`
+	GroupsMapping         []SAMLIDPGroupsMappingInfo    `json:"groupsMapping"`
+	ForceAuthentication   bool                          `json:"forceAuthentication"`
+	LogoutRedirectURL     string                        `json:"logoutRedirectUrl"`
+	ErrorRedirectURL      string                        `json:"errorRedirectUrl"`
+	IdpInitiatedURL       string                        `json:"idpInitiatedUrl"`
+	IdpMetadataURL        string                        `json:"idpMetadataUrl"`
+	IdpEntityID           string                        `json:"idpEntityId"`
+	IdpSSOURL             string                        `json:"idpSsoUrl"`
+	IdpCert               string                        `json:"idpCert"`
 }
 
 type SSOApplicationSearchOptions struct {
@@ -920,11 +948,13 @@ type SSOApplicationSearchOptions struct {
 }
 
 type Permission struct {
+	ID          string `json:"id,omitempty"`
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
 }
 
 type Role struct {
+	ID              string   `json:"id,omitempty"`
 	Name            string   `json:"name"`
 	Description     string   `json:"description,omitempty"`
 	PermissionNames []string `json:"permissionNames,omitempty"`
@@ -943,6 +973,7 @@ type RoleSearchOptions struct {
 	RoleNames           []string `json:"roleNames,omitempty"`
 	RoleNameLike        string   `json:"roleNameLike,omitempty"`
 	PermissionNames     []string `json:"permissionNames,omitempty"`
+	RoleIDs             []string `json:"roleIds,omitempty"`
 	IncludeProjectRoles *bool    `json:"includeProjectRoles,omitempty"`
 }
 

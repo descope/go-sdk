@@ -137,7 +137,7 @@ func TestFetchLicenseSuccess(t *testing.T) {
 	mockClient := mocks.NewTestClient(func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{
 			StatusCode: 200,
-			Body:       io.NopCloser(strings.NewReader(`{"licenseType":"enterprise"}`)),
+			Body:       io.NopCloser(strings.NewReader(`{"rateLimitTier":"tier4"}`)),
 			Header:     make(http.Header),
 		}, nil
 	})

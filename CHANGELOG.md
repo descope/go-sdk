@@ -1,5 +1,53 @@
 # Changelog
 
+## [1.20.0](https://github.com/descope/go-sdk/compare/v1.19.0...v1.20.0) (2026-05-14)
+
+
+### Features
+
+* update license handshake to use rateLimitTier ([#692](https://github.com/descope/go-sdk/issues/692)) ([eaee953](https://github.com/descope/go-sdk/commit/eaee953029cbb0c1579f0311bef265bad2cc87bd))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.19.0 ([#746](https://github.com/descope/go-sdk/issues/746)) ([91cb456](https://github.com/descope/go-sdk/commit/91cb45671d6d95025862e8c4a2856411e8331db7))
+
+## [1.19.0](https://github.com/descope/go-sdk/compare/v1.18.0...v1.19.0) (2026-05-11)
+
+
+### Features
+
+* add UpdateWithID and DeleteWithID for roles and permissions ([#740](https://github.com/descope/go-sdk/issues/740)) ([3586dc6](https://github.com/descope/go-sdk/commit/3586dc6cd225b5a393d11534b5eb65412a3692d9))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.18.0 ([#744](https://github.com/descope/go-sdk/issues/744)) ([f35b1a8](https://github.com/descope/go-sdk/commit/f35b1a8cbabf647190b0049be353a033f3574a8d))
+
+## [1.18.0](https://github.com/descope/go-sdk/compare/v1.17.0...v1.18.0) (2026-05-09)
+
+
+### Features
+
+* add TenantUserIsolation support with TenantID in auth options ([#736](https://github.com/descope/go-sdk/issues/736)) ([1e1ef92](https://github.com/descope/go-sdk/commit/1e1ef9279a67d73b22fd37222b113dc09a1154d2))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.17.0 ([#734](https://github.com/descope/go-sdk/issues/734)) ([1245b29](https://github.com/descope/go-sdk/commit/1245b297c94c80178b5d254227733547ccde3ebc))
+
+## [1.17.0](https://github.com/descope/go-sdk/compare/v1.16.0...v1.17.0) (2026-04-20)
+
+
+### Features
+
+* add IDPResponse to AuthenticationInfo for SSO exchange ([#733](https://github.com/descope/go-sdk/issues/733)) ([fdf2e9a](https://github.com/descope/go-sdk/commit/fdf2e9ad29cd49335e561a5f2659d5b8464a81b1))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.16.0 ([#730](https://github.com/descope/go-sdk/issues/730)) ([c3b476d](https://github.com/descope/go-sdk/commit/c3b476df0dd5222f5a66c1f9f999570c92913ca3))
+
 ## [1.16.0](https://github.com/descope/go-sdk/compare/v1.15.0...v1.16.0) (2026-04-19)
 
 
