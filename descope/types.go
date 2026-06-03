@@ -866,6 +866,8 @@ type SSOApplicationOIDCSettings struct {
 	RefreshTokenDisabled      bool     `json:"refreshTokenDisabled,omitempty"`
 	JWTBearerDisabled         bool     `json:"jwtBearerDisabled,omitempty"`
 	DeviceCodeDisabled        bool     `json:"deviceCodeDisabled,omitempty"`
+	// ForcePkce requires PKCE on the authorization-code flow in addition to client authentication.
+	ForcePkce bool `json:"forcePkce,omitempty"`
 }
 
 type SSOApplication struct {
@@ -899,6 +901,8 @@ type OIDCApplicationRequest struct {
 	RefreshTokenDisabled      bool     `json:"refreshTokenDisabled,omitempty"`
 	JWTBearerDisabled         bool     `json:"jwtBearerDisabled,omitempty"`
 	DeviceCodeDisabled        bool     `json:"deviceCodeDisabled,omitempty"`
+	// ForcePkce requires PKCE on the authorization-code flow in addition to client authentication.
+	ForcePkce bool `json:"forcePkce,omitempty"`
 }
 
 type SAMLApplicationRequest struct {
@@ -1447,6 +1451,8 @@ type ThirdPartyApplication struct {
 	AttributesScopes     []*ThirdPartyApplicationScope `json:"attributesScopes"`
 	JWTBearerSettings    *JWTBearerSettings            `json:"jwtBearerSettings,omitempty"`
 	CustomAttributes     map[string]any                `json:"customAttributes,omitempty"`
+	// ForcePkce requires PKCE on the authorization-code flow in addition to client authentication.
+	ForcePkce bool `json:"forcePkce,omitempty"`
 }
 
 type ThirdPartyApplicationRequest struct {
@@ -1460,6 +1466,8 @@ type ThirdPartyApplicationRequest struct {
 	AttributesScopes     []*ThirdPartyApplicationScope `json:"attributesScopes"`
 	JWTBearerSettings    *JWTBearerSettings            `json:"jwtBearerSettings,omitempty"`
 	CustomAttributes     map[string]any                `json:"customAttributes,omitempty"`
+	// ForcePkce requires PKCE on the authorization-code flow in addition to client authentication.
+	ForcePkce bool `json:"forcePkce,omitempty"`
 }
 
 // Options for loading third party applications

@@ -178,6 +178,7 @@ func makeCreateUpdateOIDCApplicationRequest(appRequest *descope.OIDCApplicationR
 		"refreshTokenDisabled":      appRequest.RefreshTokenDisabled,
 		"jwtBearerDisabled":         appRequest.JWTBearerDisabled,
 		"deviceCodeDisabled":        appRequest.DeviceCodeDisabled,
+		"forcePkce":                 appRequest.ForcePkce,
 	}
 }
 
