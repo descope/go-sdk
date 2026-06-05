@@ -893,7 +893,11 @@ type OIDCApplicationRequest struct {
 	JWTBearerSettings    *JWTBearerSettings `json:"jwtBearerSettings,omitempty"`
 	BackChannelLogoutURL string             `json:"backChannelLogoutUrl,omitempty"`
 	// Dedicated client credentials and per-app policy (all optional; empty preserves legacy behavior).
-	// The client secret is generated server-side (set ClientType to "confidential" to get one on create).
+	// ClientID / ClientSecret let you import an existing OIDC client on create only (immutable
+	// afterward): ClientID must be unique within the project; when empty the client_id is computed and
+	// the client_secret is generated server-side (fetch/rotate it via the application secret methods).
+	ClientID                  string   `json:"clientId,omitempty"`
+	ClientSecret              string   `json:"clientSecret,omitempty"`
 	ClientType                string   `json:"clientType,omitempty"`
 	ApprovedRedirectURLs      []string `json:"approvedRedirectUrls,omitempty"`
 	AuthorizationCodeDisabled bool     `json:"authorizationCodeDisabled,omitempty"`

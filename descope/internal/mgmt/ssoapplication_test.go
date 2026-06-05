@@ -667,9 +667,14 @@ func TestSSOApplicationCreateOIDCApplicationWithDedicatedClientConfig(t *testing
 		require.Equal(t, true, req["clientCredentialsDisabled"])
 		require.Equal(t, false, req["authorizationCodeDisabled"])
 		require.Equal(t, true, req["deviceCodeDisabled"])
+		// A caller-imported client_id / client_secret must be forwarded in the create request.
+		require.Equal(t, "my-imported-client", req["clientId"])
+		require.Equal(t, "my-imported-secret", req["clientSecret"])
 	}, response))
 	id, err := mgmt.SSOApplication().CreateOIDCApplication(context.Background(), &descope.OIDCApplicationRequest{
 		Name:                      "abc",
+		ClientID:                  "my-imported-client",
+		ClientSecret:              "my-imported-secret",
 		ClientType:                "confidential",
 		ApprovedRedirectURLs:      []string{"https://app.example.com/cb"},
 		ClientCredentialsDisabled: true,

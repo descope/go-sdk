@@ -171,6 +171,8 @@ func makeCreateUpdateOIDCApplicationRequest(appRequest *descope.OIDCApplicationR
 		"forceAuthentication":       appRequest.ForceAuthentication,
 		"jwtBearerSettings":         appRequest.JWTBearerSettings,
 		"backChannelLogoutUrl":      appRequest.BackChannelLogoutURL,
+		"clientId":                  appRequest.ClientID,
+		"clientSecret":              appRequest.ClientSecret,
 		"clientType":                appRequest.ClientType,
 		"approvedRedirectUrls":      appRequest.ApprovedRedirectURLs,
 		"authorizationCodeDisabled": appRequest.AuthorizationCodeDisabled,
