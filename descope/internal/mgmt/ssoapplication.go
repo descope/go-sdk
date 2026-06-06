@@ -23,7 +23,7 @@ func (s *ssoApplication) CreateOIDCApplication(ctx context.Context, appRequest *
 		return "", utils.NewInvalidArgumentError("appRequest.Name")
 	}
 
-	req := makeCreateUpdateOIDCApplicationRequest(appRequest)
+	req := makeCreateUpdateOIDCApplicationRequest(appRequest, true)
 	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationOIDCCreate(), req, nil, "")
 	if err != nil {
 		return "", err
@@ -70,7 +70,7 @@ func (s *ssoApplication) UpdateOIDCApplication(ctx context.Context, appRequest *
 		return utils.NewInvalidArgumentError("appRequest.Name")
 	}
 
-	req := makeCreateUpdateOIDCApplicationRequest(appRequest)
+	req := makeCreateUpdateOIDCApplicationRequest(appRequest, false)
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationOIDCUpdate(), req, nil, "")
 	return err
 }
@@ -160,8 +160,8 @@ func (s *ssoApplication) LoadAll(ctx context.Context) ([]*descope.SSOApplication
 	return unmarshalLoadAllSSOApplicationsResponse(res)
 }
 
-func makeCreateUpdateOIDCApplicationRequest(appRequest *descope.OIDCApplicationRequest) map[string]any {
-	return map[string]any{
+func makeCreateUpdateOIDCApplicationRequest(appRequest *descope.OIDCApplicationRequest, forCreate bool) map[string]any {
+	req := map[string]any{
 		"id":                        appRequest.ID,
 		"name":                      appRequest.Name,
 		"description":               appRequest.Description,
@@ -171,8 +171,6 @@ func makeCreateUpdateOIDCApplicationRequest(appRequest *descope.OIDCApplicationR
 		"forceAuthentication":       appRequest.ForceAuthentication,
 		"jwtBearerSettings":         appRequest.JWTBearerSettings,
 		"backChannelLogoutUrl":      appRequest.BackChannelLogoutURL,
-		"clientId":                  appRequest.ClientID,
-		"clientSecret":              appRequest.ClientSecret,
 		"clientType":                appRequest.ClientType,
 		"approvedRedirectUrls":      appRequest.ApprovedRedirectURLs,
 		"authorizationCodeDisabled": appRequest.AuthorizationCodeDisabled,
@@ -182,6 +180,13 @@ func makeCreateUpdateOIDCApplicationRequest(appRequest *descope.OIDCApplicationR
 		"deviceCodeDisabled":        appRequest.DeviceCodeDisabled,
 		"forcePkce":                 appRequest.ForcePkce,
 	}
+	// ClientID/ClientSecret import an existing OIDC client and are immutable after create, so
+	// they are only sent on create — never on update, where they would clear the stored secret.
+	if forCreate {
+		req["clientId"] = appRequest.ClientID
+		req["clientSecret"] = appRequest.ClientSecret
+	}
+	return req
 }
 
 func (s *ssoApplication) GetApplicationSecret(ctx context.Context, id string) (string, error) {

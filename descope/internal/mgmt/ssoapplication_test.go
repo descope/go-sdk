@@ -667,6 +667,7 @@ func TestSSOApplicationCreateOIDCApplicationWithDedicatedClientConfig(t *testing
 		require.Equal(t, true, req["clientCredentialsDisabled"])
 		require.Equal(t, false, req["authorizationCodeDisabled"])
 		require.Equal(t, true, req["deviceCodeDisabled"])
+		require.Equal(t, true, req["forcePkce"])
 		// A caller-imported client_id / client_secret must be forwarded in the create request.
 		require.Equal(t, "my-imported-client", req["clientId"])
 		require.Equal(t, "my-imported-secret", req["clientSecret"])
@@ -679,7 +680,31 @@ func TestSSOApplicationCreateOIDCApplicationWithDedicatedClientConfig(t *testing
 		ApprovedRedirectURLs:      []string{"https://app.example.com/cb"},
 		ClientCredentialsDisabled: true,
 		DeviceCodeDisabled:        true,
+		ForcePkce:                 true,
 	})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)
+}
+
+func TestSSOApplicationUpdateOIDCApplicationOmitsImmutableClientCredentials(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		// ClientID/ClientSecret are create-only and immutable afterward; an update must not send
+		// them — doing so would clear the stored secret on an otherwise unrelated update.
+		require.NotContains(t, req, "clientId")
+		require.NotContains(t, req, "clientSecret")
+		// Mutable config and policy fields are still forwarded on update.
+		require.Equal(t, true, req["forcePkce"])
+		require.Equal(t, "confidential", req["clientType"])
+	}, map[string]any{"id": "id1"}))
+	err := mgmt.SSOApplication().UpdateOIDCApplication(context.Background(), &descope.OIDCApplicationRequest{
+		ID:           "id1",
+		Name:         "abc",
+		ClientID:     "should-be-dropped",
+		ClientSecret: "should-be-dropped",
+		ClientType:   "confidential",
+		ForcePkce:    true,
+	})
+	require.NoError(t, err)
 }
