@@ -668,6 +668,7 @@ func TestSSOApplicationCreateOIDCApplicationWithDedicatedClientConfig(t *testing
 		require.Equal(t, false, req["authorizationCodeDisabled"])
 		require.Equal(t, true, req["deviceCodeDisabled"])
 		require.Equal(t, true, req["forcePkce"])
+		require.Equal(t, "clientId", req["defaultAudience"])
 		// A caller-imported client_id / client_secret must be forwarded in the create request.
 		require.Equal(t, "my-imported-client", req["clientId"])
 		require.Equal(t, "my-imported-secret", req["clientSecret"])
@@ -681,6 +682,7 @@ func TestSSOApplicationCreateOIDCApplicationWithDedicatedClientConfig(t *testing
 		ClientCredentialsDisabled: true,
 		DeviceCodeDisabled:        true,
 		ForcePkce:                 true,
+		DefaultAudience:           "clientId",
 	})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)

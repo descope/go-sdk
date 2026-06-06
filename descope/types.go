@@ -868,6 +868,9 @@ type SSOApplicationOIDCSettings struct {
 	DeviceCodeDisabled        bool     `json:"deviceCodeDisabled,omitempty"`
 	// ForcePkce requires PKCE on the authorization-code flow in addition to client authentication.
 	ForcePkce bool `json:"forcePkce,omitempty"`
+	// DefaultAudience controls the default aud of issued tokens for modern apps (non-empty ClientType):
+	// "projectId", "clientId", or "" (both). Legacy apps always use the project ID; empty preserves it.
+	DefaultAudience string `json:"defaultAudience,omitempty"`
 }
 
 type SSOApplication struct {
@@ -907,6 +910,9 @@ type OIDCApplicationRequest struct {
 	DeviceCodeDisabled        bool     `json:"deviceCodeDisabled,omitempty"`
 	// ForcePkce requires PKCE on the authorization-code flow in addition to client authentication.
 	ForcePkce bool `json:"forcePkce,omitempty"`
+	// DefaultAudience controls the default aud of issued tokens for modern apps (non-empty ClientType):
+	// "projectId", "clientId", or "" (both). Legacy apps always use the project ID; empty preserves it.
+	DefaultAudience string `json:"defaultAudience,omitempty"`
 }
 
 type SAMLApplicationRequest struct {

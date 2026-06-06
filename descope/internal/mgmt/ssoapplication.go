@@ -179,6 +179,7 @@ func makeCreateUpdateOIDCApplicationRequest(appRequest *descope.OIDCApplicationR
 		"jwtBearerDisabled":         appRequest.JWTBearerDisabled,
 		"deviceCodeDisabled":        appRequest.DeviceCodeDisabled,
 		"forcePkce":                 appRequest.ForcePkce,
+		"defaultAudience":           appRequest.DefaultAudience,
 	}
 	// ClientID/ClientSecret import an existing OIDC client and are immutable after create, so
 	// they are only sent on create — never on update, where they would clear the stored secret.
