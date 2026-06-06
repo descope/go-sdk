@@ -1463,6 +1463,8 @@ type ThirdPartyApplication struct {
 	CustomAttributes     map[string]any                `json:"customAttributes,omitempty"`
 	// ForcePkce requires PKCE on the authorization-code flow in addition to client authentication.
 	ForcePkce bool `json:"forcePkce,omitempty"`
+	// DefaultAudience controls the default aud of issued tokens: "projectId", "clientId", or "" (both).
+	DefaultAudience string `json:"defaultAudience,omitempty"`
 }
 
 type ThirdPartyApplicationRequest struct {
@@ -1478,6 +1480,8 @@ type ThirdPartyApplicationRequest struct {
 	CustomAttributes     map[string]any                `json:"customAttributes,omitempty"`
 	// ForcePkce requires PKCE on the authorization-code flow in addition to client authentication.
 	ForcePkce bool `json:"forcePkce,omitempty"`
+	// DefaultAudience controls the default aud of issued tokens: "projectId", "clientId", or "" (both).
+	DefaultAudience string `json:"defaultAudience,omitempty"`
 }
 
 // Options for loading third party applications

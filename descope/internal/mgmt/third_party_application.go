@@ -227,6 +227,7 @@ func makeCreateUpdateThirdPartyApplicationRequest(appRequest *descope.ThirdParty
 		"jwtBearerSettings":    appRequest.JWTBearerSettings,
 		"customAttributes":     appRequest.CustomAttributes,
 		"forcePkce":            appRequest.ForcePkce,
+		"defaultAudience":      appRequest.DefaultAudience,
 	}
 }
 
