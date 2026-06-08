@@ -28,8 +28,8 @@ func newDPoPJTIStore() *dpopJTIStore {
 	return &dpopJTIStore{entries: make(map[string]time.Time)}
 }
 
-// seenOrAdd returns true (replay detected) if jti was already recorded
-func (s *dpopJTIStore) seenOrAdd(jti string, now time.Time) bool {
+// seenOrAdd records jti and returns nil on success
+func (s *dpopJTIStore) seenOrAdd(jti string, now time.Time) error {
 	expiry := now.Add(dpopJTITTL)
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -40,10 +40,14 @@ func (s *dpopJTIStore) seenOrAdd(jti string, now time.Time) bool {
 		}
 	}
 	if _, seen := s.entries[jti]; seen {
-		return true
+		return descope.ErrInvalidToken.WithMessage("DPoP proof replayed: jti already seen")
+	}
+
+	if len(s.entries) >= maxDPoPJTIEntries {
+		return descope.ErrInvalidToken.WithMessage("DPoP replay store at capacity; proof rejected")
 	}
 	s.entries[jti] = expiry
-	return false
+	return nil
 }
 
 // dpopIATWindow is the backward tolerance for the DPoP proof iat claim (RFC 9449 §4.3 step 11).
@@ -58,6 +62,10 @@ const dpopJTITTL = 2 * dpopIATWindow
 
 // maxDPoPJTILen caps the jti claim length to prevent map-key memory inflation (RFC 9449 §11.1).
 const maxDPoPJTILen = 128
+
+// maxDPoPJTIEntries is a fail-closed safety cap on the replay store. Reaching it requires
+// sustained ~833 accepted proofs/sec for the full dpopJTITTL window (100000 / 120s)
+const maxDPoPJTIEntries = 100_000
 
 // maxDPoPProofLen caps an incoming DPoP proof (RFC 9449 §11.1 — limit memory exposure).
 const maxDPoPProofLen = 8192
@@ -234,8 +242,10 @@ func validateDPoPProof(proof, method, requestURL, accessToken, storedJKT string,
 	}
 
 	// Burn the JTI only after all other checks pass, to avoid DoS via forced JTI store pollution with invalid proofs.
-	if jtiStore != nil && jtiStore.seenOrAdd(jti, now) {
-		return descope.ErrInvalidToken.WithMessage("DPoP proof replayed: jti already seen")
+	if jtiStore != nil {
+		if err = jtiStore.seenOrAdd(jti, now); err != nil {
+			return err
+		}
 	}
 
 	return nil

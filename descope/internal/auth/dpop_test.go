@@ -232,6 +232,29 @@ func TestDPoP_ReplayedProof_Rejected(t *testing.T) {
 	require.Contains(t, err.Error(), "replay")
 }
 
+func TestDPoP_ReplayStore_FailsClosedAtCapacity(t *testing.T) {
+	priv, pub := dpopNewKeyPair(t)
+	storedJKT := dpopJKTOf(t, pub)
+	store := newDPoPJTIStore()
+
+	// Pre-fill the store to capacity with live (unexpired) synthetic entries.
+	now := time.Now()
+	expiry := now.Add(dpopJTITTL)
+	for i := 0; i < maxDPoPJTIEntries; i++ {
+		store.entries[dpopRandomJTI()] = expiry
+	}
+
+	// A brand-new, otherwise-valid proof must now be rejected (fail closed).
+	opts := dpopValidOpts("GET", dpopTestURL, dpopTestToken)
+	opts.iat = now // pin iat to the test clock so the proof is structurally valid
+	proof := dpopMakeProof(t, priv, opts)
+	clock := func() time.Time { return now }
+	err := validateDPoPProof(proof, "GET", dpopTestURL, dpopTestToken, storedJKT, clock, store)
+	require.Error(t, err)
+	require.ErrorIs(t, err, descope.ErrInvalidToken)
+	require.Contains(t, err.Error(), "capacity")
+}
+
 func TestDPoP_BoundToken_MissingProof_Rejected(t *testing.T) {
 	// storedJKT present but no proof → downgrade attack
 	err := validateDPoPProof("", "GET", dpopTestURL, dpopTestToken, "some-jkt", time.Now, nil)
@@ -1249,12 +1272,12 @@ func TestDPoP_JTIStore_ExpiredEntriesEvicted(t *testing.T) {
 	t0 := time.Now()
 
 	// Record jti1 at t0 — expires at t0+dpopJTITTL.
-	require.False(t, store.seenOrAdd("jti1", t0))
+	require.NoError(t, store.seenOrAdd("jti1", t0))
 
 	// Advance past TTL; the next seenOrAdd write triggers lazy eviction of jti1.
 	t1 := t0.Add(dpopJTITTL + time.Second)
-	require.False(t, store.seenOrAdd("jti2", t1))
+	require.NoError(t, store.seenOrAdd("jti2", t1))
 
 	// jti1 was evicted — adding it again must succeed (not a replay).
-	require.False(t, store.seenOrAdd("jti1", t1))
+	require.NoError(t, store.seenOrAdd("jti1", t1))
 }
