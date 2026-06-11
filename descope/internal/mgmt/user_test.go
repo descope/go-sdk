@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/internal/utils"
@@ -90,6 +91,7 @@ func TestUserCreateSuccessWithOptions(t *testing.T) {
 		assert.EqualValues(t, ca, req["customAttributes"])
 		assert.EqualValues(t, "https://some.domain.com", req["inviteUrl"])
 		assert.EqualValues(t, map[string]any{"k1": "v1"}, req["templateOptions"])
+		assert.EqualValues(t, "en-US", req["locale"])
 		assert.Nil(t, req["sendMail"])
 		assert.Nil(t, req["sendSMS"])
 	}, response))
@@ -101,6 +103,7 @@ func TestUserCreateSuccessWithOptions(t *testing.T) {
 	res, err := m.User().Invite(context.Background(), "abc", user, &descope.InviteOptions{
 		InviteURL:       "https://some.domain.com",
 		TemplateOptions: map[string]string{"k1": "v1"},
+		Locale:          "en-US",
 	})
 	require.NoError(t, err)
 	require.NotNil(t, res)
@@ -166,6 +169,7 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 				assert.EqualValues(t, "https://some.domain.com", req["inviteUrl"])
 				assert.Nil(t, req["sendMail"])
 				assert.EqualValues(t, true, req["sendSMS"])
+				assert.EqualValues(t, "fr-FR", req["locale"])
 			} else if sendMail {
 				assert.EqualValues(t, true, req["invite"])
 				assert.EqualValues(t, "https://some.domain.com", req["inviteUrl"])
@@ -210,6 +214,7 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 	res, err := m.User().InviteBatch(context.Background(), users, &descope.InviteOptions{
 		InviteURL: "https://some.domain.com",
 		SendSMS:   &sendSMS,
+		Locale:    "fr-FR",
 	})
 	require.True(t, called)
 	require.NoError(t, err)
@@ -2060,6 +2065,68 @@ func TestUserRemoveAllPasskeysBadInput(t *testing.T) {
 func TestUserRemoveAllPasskeysError(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
 	err := m.User().RemoveAllPasskeys(context.Background(), "abc")
+	require.Error(t, err)
+}
+
+func TestUserRemoveUserPasskeySuccess(t *testing.T) {
+	response := map[string]any{}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+		require.Equal(t, "cred-123", req["credentialId"])
+	}, response))
+	err := m.User().RemovePasskey(context.Background(), "abc", "cred-123")
+	require.NoError(t, err)
+}
+
+func TestUserRemoveUserPasskeyBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	err := m.User().RemovePasskey(context.Background(), "", "cred-abc")
+	require.Error(t, err)
+	err = m.User().RemovePasskey(context.Background(), "abc", "")
+	require.Error(t, err)
+}
+
+func TestUserRemoveUserPasskeyError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	err := m.User().RemovePasskey(context.Background(), "abc", "cred-123")
+	require.Error(t, err)
+}
+
+func TestUserListUserPasskeysSuccess(t *testing.T) {
+	createdEpoch := int32(1700000000)
+	response := map[string]any{"passkeys": []map[string]any{
+		{"id": "cred-1", "rpId": "example.com", "kind": "apple", "displayName": "Apple Passwords", "createdTime": createdEpoch},
+		{"id": "cred-2", "rpId": "example.com", "kind": "windows", "displayName": "Windows Hello", "createdTime": createdEpoch + 60},
+	}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+	}, response))
+	res, err := m.User().ListPasskeys(context.Background(), "abc")
+	require.NoError(t, err)
+	require.Len(t, res, 2)
+	require.Equal(t, "cred-1", res[0].ID)
+	require.Equal(t, "example.com", res[0].RPID)
+	require.Equal(t, "apple", res[0].Kind)
+	require.Equal(t, "Apple Passwords", res[0].DisplayName)
+	require.Equal(t, time.Unix(int64(createdEpoch), 0).UTC(), res[0].CreatedTime)
+	require.Equal(t, "windows", res[1].Kind)
+}
+
+func TestUserListUserPasskeysBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	_, err := m.User().ListPasskeys(context.Background(), "")
+	require.Error(t, err)
+}
+
+func TestUserListUserPasskeysError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	_, err := m.User().ListPasskeys(context.Background(), "abc")
 	require.Error(t, err)
 }
 

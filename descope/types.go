@@ -53,6 +53,15 @@ type UserTrustedDevice struct {
 	LastLocation   string    `json:"lastLocation,omitempty"`
 }
 
+// UserPasskey represents a registered passkey (WebAuthn credential) for a user.
+type UserPasskey struct {
+	ID          string    `json:"id,omitempty"`
+	RPID        string    `json:"rpId,omitempty"`
+	Kind        string    `json:"kind,omitempty"`
+	DisplayName string    `json:"displayName,omitempty"`
+	CreatedTime time.Time `json:"createdTime,omitempty"`
+}
+
 type WebAuthnTransactionResponse struct {
 	TransactionID string `json:"transactionId,omitempty"`
 	Options       string `json:"options,omitempty"`
@@ -479,6 +488,7 @@ type InviteOptions struct {
 	SendSMS         *bool             `json:"sendSMS,omitempty"`         // send invite via text message, default is according to project settings
 	TemplateOptions map[string]string `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 	TemplateID      string            `json:"-"`
+	Locale          string            `json:"locale,omitempty"` // locale for the invite message
 }
 
 type User struct {
