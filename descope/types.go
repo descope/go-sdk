@@ -170,6 +170,7 @@ type SSOSAMLSettings struct {
 
 type SSOSAMLSettingsByMetadata struct {
 	IdpMetadataURL                  string                      `json:"idpMetadataUrl,omitempty"`
+	IdpEntityID                     string                      `json:"entityId,omitempty"` // IdP entity ID - set so IdP-initiated login can resolve the tenant by the SAML response issuer
 	AttributeMapping                *AttributeMapping           `json:"attributeMapping,omitempty"`
 	RoleMappings                    []*RoleMapping              `json:"roleMappings,omitempty"`
 	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"` // roles names

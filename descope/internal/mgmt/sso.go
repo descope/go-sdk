@@ -136,6 +136,7 @@ func (s *sso) ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID stri
 		"tenantId": tenantID,
 		"settings": map[string]any{
 			"idpMetadataUrl":   settings.IdpMetadataURL,
+			"entityId":         settings.IdpEntityID,
 			"roleMappings":     mappings,
 			"attributeMapping": settings.AttributeMapping,
 			"spACSUrl":         settings.SpACSUrl,
