@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/descope/go-sdk/descope"
@@ -17,12 +18,54 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jwt"
 )
 
+// dpopJTIStore tracks recently seen DPoP proof JTIs for replay detection (RFC 9449 §11.1)
+type dpopJTIStore struct {
+	mu      sync.Mutex
+	entries map[string]time.Time // jti → expiry
+}
+
+func newDPoPJTIStore() *dpopJTIStore {
+	return &dpopJTIStore{entries: make(map[string]time.Time)}
+}
+
+// seenOrAdd records jti and returns nil on success
+func (s *dpopJTIStore) seenOrAdd(jti string, now time.Time) error {
+	expiry := now.Add(dpopJTITTL)
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	// Lazy eviction: purge entries that have expired (inclusive boundary).
+	for k, exp := range s.entries {
+		if !now.Before(exp) {
+			delete(s.entries, k)
+		}
+	}
+	if _, seen := s.entries[jti]; seen {
+		return descope.ErrInvalidToken.WithMessage("DPoP proof replayed: jti already seen")
+	}
+
+	if len(s.entries) >= maxDPoPJTIEntries {
+		return descope.ErrInvalidToken.WithMessage("DPoP replay store at capacity; proof rejected")
+	}
+	s.entries[jti] = expiry
+	return nil
+}
+
 // dpopIATWindow is the backward tolerance for the DPoP proof iat claim (RFC 9449 §4.3 step 11).
 const dpopIATWindow = 60 * time.Second
 
 // dpopIATFutureWindow is the forward tolerance for the iat claim.
 // A tight window prevents pre-generated proofs from extending their effective lifetime.
 const dpopIATFutureWindow = 5 * time.Second
+
+// dpopJTITTL is the retention window for seen JTI values in the replay store.
+const dpopJTITTL = 2 * dpopIATWindow
+
+// maxDPoPJTILen caps the jti claim length to prevent map-key memory inflation (RFC 9449 §11.1).
+const maxDPoPJTILen = 128
+
+// maxDPoPJTIEntries is a fail-closed safety cap on the replay store. Reaching it requires
+// sustained ~833 accepted proofs/sec for the full dpopJTITTL window (100000 / 120s)
+const maxDPoPJTIEntries = 100_000
 
 // maxDPoPProofLen caps an incoming DPoP proof (RFC 9449 §11.1 — limit memory exposure).
 const maxDPoPProofLen = 8192
@@ -67,7 +110,8 @@ func dpopSanitizeProof(proof string) (string, error) {
 // validateDPoPProof validates a DPoP proof at the resource server (RFC 9449 §7.1–7.2).
 // storedJKT must be non-empty (the cnf.jkt from the validated access token).
 // If proof is empty, returns ErrInvalidToken (downgrade attack prevention).
-func validateDPoPProof(proof, method, requestURL, accessToken, storedJKT string, clock func() time.Time) error {
+func validateDPoPProof(proof, method, requestURL, accessToken, storedJKT string, clock func() time.Time, jtiStore *dpopJTIStore) error {
+	now := clock() // capture once; used for both replay-store and iat window checks
 
 	var err error
 	proof, err = dpopSanitizeProof(proof)
@@ -134,6 +178,9 @@ func validateDPoPProof(proof, method, requestURL, accessToken, storedJKT string,
 	if !ok || jti == "" {
 		return descope.ErrInvalidToken.WithMessage("jti must be non-empty string")
 	}
+	if len(jti) > maxDPoPJTILen {
+		return descope.ErrInvalidToken.WithMessage("jti exceeds maximum length")
+	}
 
 	htmRaw, ok := token.Get("htm")
 	if !ok {
@@ -165,7 +212,7 @@ func validateDPoPProof(proof, method, requestURL, accessToken, storedJKT string,
 	if iat.IsZero() {
 		return descope.ErrInvalidToken.WithMessage("missing iat claim")
 	}
-	diff := clock().Sub(iat)
+	diff := now.Sub(iat)
 	// Asymmetric window: 60s backward tolerance, 5s forward tolerance.
 	// The tight forward window prevents pre-generated proofs from extending their effective lifetime.
 	if diff <= -dpopIATFutureWindow || diff >= dpopIATWindow {
@@ -192,6 +239,13 @@ func validateDPoPProof(proof, method, requestURL, accessToken, storedJKT string,
 	}
 	if tp != storedJKT {
 		return descope.ErrInvalidToken.WithMessage("DPoP proof key does not match cnf.jkt in access token")
+	}
+
+	// Burn the JTI only after all other checks pass, to avoid DoS via forced JTI store pollution with invalid proofs.
+	if jtiStore != nil {
+		if err = jtiStore.seenOrAdd(jti, now); err != nil {
+			return err
+		}
 	}
 
 	return nil

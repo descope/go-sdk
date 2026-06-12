@@ -522,6 +522,13 @@ type MockUser struct {
 	RemoveAllPasskeysAssert func(loginID string)
 	RemoveAllPasskeysError  error
 
+	RemovePasskeyAssert func(loginID, credentialID string)
+	RemovePasskeyError  error
+
+	ListPasskeysAssert   func(loginID string)
+	ListPasskeysResponse []*descope.UserPasskey
+	ListPasskeysError    error
+
 	RemoveTOTPSeedAssert func(loginID string)
 	RemoveTOTPSeedError  error
 
@@ -876,6 +883,20 @@ func (m *MockUser) RemoveAllPasskeys(_ context.Context, loginID string) error {
 		m.RemoveAllPasskeysAssert(loginID)
 	}
 	return m.RemoveAllPasskeysError
+}
+
+func (m *MockUser) RemovePasskey(_ context.Context, loginID, credentialID string) error {
+	if m.RemovePasskeyAssert != nil {
+		m.RemovePasskeyAssert(loginID, credentialID)
+	}
+	return m.RemovePasskeyError
+}
+
+func (m *MockUser) ListPasskeys(_ context.Context, loginID string) ([]*descope.UserPasskey, error) {
+	if m.ListPasskeysAssert != nil {
+		m.ListPasskeysAssert(loginID)
+	}
+	return m.ListPasskeysResponse, m.ListPasskeysError
 }
 
 func (m *MockUser) RemoveTOTPSeed(_ context.Context, loginID string) error {

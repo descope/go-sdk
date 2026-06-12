@@ -966,6 +966,7 @@ func TestSSOConfigureSAMLSettingsError(t *testing.T) {
 func TestSSOConfigureSAMLSettingsByMetadataSuccess(t *testing.T) {
 	settings := &descope.SSOSAMLSettingsByMetadata{
 		IdpMetadataURL: "http://idpURL",
+		IdpEntityID:    "https://idp.example.com/entity",
 		AttributeMapping: &descope.AttributeMapping{
 			GivenName: "myGivenName",
 			CustomAttributes: map[string]string{
@@ -1011,6 +1012,7 @@ func TestSSOConfigureSAMLSettingsByMetadataSuccess(t *testing.T) {
 		sett, ok := settings.(map[string]any)
 		require.True(t, ok)
 		require.Equal(t, "http://idpURL", sett["idpMetadataUrl"])
+		require.Equal(t, "https://idp.example.com/entity", sett["entityId"])
 
 		require.Equal(t, "https://spacsurl.com", sett["spACSUrl"])
 		require.Equal(t, "spentityid", sett["spEntityId"])
