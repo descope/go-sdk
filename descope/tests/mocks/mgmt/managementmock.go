@@ -1205,6 +1205,13 @@ type MockSSOApplication struct {
 
 	LoadAllResponse []*descope.SSOApplication
 	LoadAllError    error
+
+	GetApplicationSecretAssert      func(id string)
+	GetApplicationSecretResponse    string
+	GetApplicationSecretError       error
+	RotateApplicationSecretAssert   func(id string)
+	RotateApplicationSecretResponse string
+	RotateApplicationSecretError    error
 }
 
 func (m *MockSSOApplication) CreateOIDCApplication(_ context.Context, appRequest *descope.OIDCApplicationRequest) (id string, err error) {
@@ -1265,6 +1272,20 @@ func (m *MockSSOApplication) Load(_ context.Context, id string) (*descope.SSOApp
 
 func (m *MockSSOApplication) LoadAll(_ context.Context) ([]*descope.SSOApplication, error) {
 	return m.LoadAllResponse, m.LoadAllError
+}
+
+func (m *MockSSOApplication) GetApplicationSecret(_ context.Context, id string) (string, error) {
+	if m.GetApplicationSecretAssert != nil {
+		m.GetApplicationSecretAssert(id)
+	}
+	return m.GetApplicationSecretResponse, m.GetApplicationSecretError
+}
+
+func (m *MockSSOApplication) RotateApplicationSecret(_ context.Context, id string) (string, error) {
+	if m.RotateApplicationSecretAssert != nil {
+		m.RotateApplicationSecretAssert(id)
+	}
+	return m.RotateApplicationSecretResponse, m.RotateApplicationSecretError
 }
 
 // Mock Permission

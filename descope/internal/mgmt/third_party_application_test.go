@@ -31,14 +31,18 @@ func TestThirdPartyApplicationCreateSuccess(t *testing.T) {
 		require.EqualValues(t, "RS256", d["issuer1"].(map[string]any)["signAlgorithm"])
 		require.EqualValues(t, "http://dummy.com/userinfo", d["issuer1"].(map[string]any)["userInfoUri"])
 		require.EqualValues(t, "sub", d["issuer1"].(map[string]any)["externalIdFieldName"])
+		require.Equal(t, true, req["forcePkce"])
+		require.Equal(t, "clientId", req["defaultAudience"])
 	}, response))
 
 	id, secret, err := mgmt.ThirdPartyApplication().CreateApplication(context.Background(), &descope.ThirdPartyApplicationRequest{
-		ID:           "id1",
-		Name:         "abc",
-		Description:  "desc",
-		Logo:         "logo",
-		LoginPageURL: "http://dummy.com",
+		ID:              "id1",
+		Name:            "abc",
+		Description:     "desc",
+		Logo:            "logo",
+		LoginPageURL:    "http://dummy.com",
+		ForcePkce:       true,
+		DefaultAudience: "clientId",
 		JWTBearerSettings: &descope.JWTBearerSettings{
 			Issuers: map[string]*descope.IssuerSettings{
 				"issuer1": {

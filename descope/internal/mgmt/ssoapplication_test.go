@@ -604,3 +604,109 @@ func TestAllSSOApplicationsLoadError(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, res)
 }
+
+func TestSSOApplicationGetSecretSuccess(t *testing.T) {
+	response := map[string]any{"cleartext": "secret-123"}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.Equal(t, "id1", r.URL.Query().Get("id"))
+	}, response))
+	res, err := mgmt.SSOApplication().GetApplicationSecret(context.Background(), "id1")
+	require.NoError(t, err)
+	require.Equal(t, "secret-123", res)
+}
+
+func TestSSOApplicationGetSecretErrorEmpty(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.SSOApplication().GetApplicationSecret(context.Background(), "")
+	require.Error(t, err)
+	require.Empty(t, res)
+}
+
+func TestSSOApplicationGetSecretError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := mgmt.SSOApplication().GetApplicationSecret(context.Background(), "test")
+	require.Error(t, err)
+	require.Empty(t, res)
+}
+
+func TestSSOApplicationRotateSecretSuccess(t *testing.T) {
+	response := map[string]any{"cleartext": "rotated-456"}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "id1", req["id"])
+	}, response))
+	res, err := mgmt.SSOApplication().RotateApplicationSecret(context.Background(), "id1")
+	require.NoError(t, err)
+	require.Equal(t, "rotated-456", res)
+}
+
+func TestSSOApplicationRotateSecretErrorEmpty(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.SSOApplication().RotateApplicationSecret(context.Background(), "")
+	require.Error(t, err)
+	require.Empty(t, res)
+}
+
+func TestSSOApplicationRotateSecretError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := mgmt.SSOApplication().RotateApplicationSecret(context.Background(), "test")
+	require.Error(t, err)
+	require.Empty(t, res)
+}
+
+func TestSSOApplicationCreateOIDCApplicationWithDedicatedClientConfig(t *testing.T) {
+	response := map[string]any{"id": "qux"}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "confidential", req["clientType"])
+		require.ElementsMatch(t, []any{"https://app.example.com/cb"}, req["approvedRedirectUrls"])
+		require.Equal(t, true, req["clientCredentialsDisabled"])
+		require.Equal(t, false, req["authorizationCodeDisabled"])
+		require.Equal(t, true, req["deviceCodeDisabled"])
+		require.Equal(t, true, req["forcePkce"])
+		require.Equal(t, "clientId", req["defaultAudience"])
+		// A caller-imported client_id / client_secret must be forwarded in the create request.
+		require.Equal(t, "my-imported-client", req["clientId"])
+		require.Equal(t, "my-imported-secret", req["clientSecret"])
+	}, response))
+	id, err := mgmt.SSOApplication().CreateOIDCApplication(context.Background(), &descope.OIDCApplicationRequest{
+		Name:                      "abc",
+		ClientID:                  "my-imported-client",
+		ClientSecret:              "my-imported-secret",
+		ClientType:                "confidential",
+		ApprovedRedirectURLs:      []string{"https://app.example.com/cb"},
+		ClientCredentialsDisabled: true,
+		DeviceCodeDisabled:        true,
+		ForcePkce:                 true,
+		DefaultAudience:           "clientId",
+	})
+	require.NoError(t, err)
+	require.Equal(t, "qux", id)
+}
+
+func TestSSOApplicationUpdateOIDCApplicationOmitsImmutableClientCredentials(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		// ClientID/ClientSecret are create-only and immutable afterward; an update must not send
+		// them — doing so would clear the stored secret on an otherwise unrelated update.
+		require.NotContains(t, req, "clientId")
+		require.NotContains(t, req, "clientSecret")
+		// Mutable config and policy fields are still forwarded on update.
+		require.Equal(t, true, req["forcePkce"])
+		require.Equal(t, "confidential", req["clientType"])
+	}, map[string]any{"id": "id1"}))
+	err := mgmt.SSOApplication().UpdateOIDCApplication(context.Background(), &descope.OIDCApplicationRequest{
+		ID:           "id1",
+		Name:         "abc",
+		ClientID:     "should-be-dropped",
+		ClientSecret: "should-be-dropped",
+		ClientType:   "confidential",
+		ForcePkce:    true,
+	})
+	require.NoError(t, err)
+}

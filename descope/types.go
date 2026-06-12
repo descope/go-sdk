@@ -865,6 +865,22 @@ type SSOApplicationOIDCSettings struct {
 	ForceAuthentication  bool               `json:"forceAuthentication"`
 	JWTBearerSettings    *JWTBearerSettings `json:"jwtBearerSettings,omitempty"`
 	BackChannelLogoutURL string             `json:"backChannelLogoutUrl,omitempty"`
+	// Dedicated client credentials and per-app policy. ClientID is computed (populated on load).
+	// The client secret is obtained via GetApplicationSecret / RotateApplicationSecret, not this struct.
+	// Empty values preserve legacy access-key behavior.
+	ClientID                  string   `json:"clientId,omitempty"`
+	ClientType                string   `json:"clientType,omitempty"` // "", "confidential", or "public"
+	ApprovedRedirectURLs      []string `json:"approvedRedirectUrls,omitempty"`
+	AuthorizationCodeDisabled bool     `json:"authorizationCodeDisabled,omitempty"`
+	ClientCredentialsDisabled bool     `json:"clientCredentialsDisabled,omitempty"`
+	RefreshTokenDisabled      bool     `json:"refreshTokenDisabled,omitempty"`
+	JWTBearerDisabled         bool     `json:"jwtBearerDisabled,omitempty"`
+	DeviceCodeDisabled        bool     `json:"deviceCodeDisabled,omitempty"`
+	// ForcePkce requires PKCE on the authorization-code flow in addition to client authentication.
+	ForcePkce bool `json:"forcePkce,omitempty"`
+	// DefaultAudience controls the default aud of issued tokens for modern apps (non-empty ClientType):
+	// "projectId", "clientId", or "" (both). Legacy apps always use the project ID; empty preserves it.
+	DefaultAudience string `json:"defaultAudience,omitempty"`
 }
 
 type SSOApplication struct {
@@ -889,6 +905,24 @@ type OIDCApplicationRequest struct {
 	ForceAuthentication  bool               `json:"forceAuthentication"`
 	JWTBearerSettings    *JWTBearerSettings `json:"jwtBearerSettings,omitempty"`
 	BackChannelLogoutURL string             `json:"backChannelLogoutUrl,omitempty"`
+	// Dedicated client credentials and per-app policy (all optional; empty preserves legacy behavior).
+	// ClientID / ClientSecret let you import an existing OIDC client on create only (immutable
+	// afterward): ClientID must be unique within the project; when empty the client_id is computed and
+	// the client_secret is generated server-side (fetch/rotate it via the application secret methods).
+	ClientID                  string   `json:"clientId,omitempty"`
+	ClientSecret              string   `json:"clientSecret,omitempty"`
+	ClientType                string   `json:"clientType,omitempty"`
+	ApprovedRedirectURLs      []string `json:"approvedRedirectUrls,omitempty"`
+	AuthorizationCodeDisabled bool     `json:"authorizationCodeDisabled,omitempty"`
+	ClientCredentialsDisabled bool     `json:"clientCredentialsDisabled,omitempty"`
+	RefreshTokenDisabled      bool     `json:"refreshTokenDisabled,omitempty"`
+	JWTBearerDisabled         bool     `json:"jwtBearerDisabled,omitempty"`
+	DeviceCodeDisabled        bool     `json:"deviceCodeDisabled,omitempty"`
+	// ForcePkce requires PKCE on the authorization-code flow in addition to client authentication.
+	ForcePkce bool `json:"forcePkce,omitempty"`
+	// DefaultAudience controls the default aud of issued tokens for modern apps (non-empty ClientType):
+	// "projectId", "clientId", or "" (both). Legacy apps always use the project ID; empty preserves it.
+	DefaultAudience string `json:"defaultAudience,omitempty"`
 }
 
 type SAMLApplicationRequest struct {
@@ -1437,6 +1471,10 @@ type ThirdPartyApplication struct {
 	AttributesScopes     []*ThirdPartyApplicationScope `json:"attributesScopes"`
 	JWTBearerSettings    *JWTBearerSettings            `json:"jwtBearerSettings,omitempty"`
 	CustomAttributes     map[string]any                `json:"customAttributes,omitempty"`
+	// ForcePkce requires PKCE on the authorization-code flow in addition to client authentication.
+	ForcePkce bool `json:"forcePkce,omitempty"`
+	// DefaultAudience controls the default aud of issued tokens: "projectId", "clientId", or "" (both).
+	DefaultAudience string `json:"defaultAudience,omitempty"`
 }
 
 type ThirdPartyApplicationRequest struct {
@@ -1450,6 +1488,10 @@ type ThirdPartyApplicationRequest struct {
 	AttributesScopes     []*ThirdPartyApplicationScope `json:"attributesScopes"`
 	JWTBearerSettings    *JWTBearerSettings            `json:"jwtBearerSettings,omitempty"`
 	CustomAttributes     map[string]any                `json:"customAttributes,omitempty"`
+	// ForcePkce requires PKCE on the authorization-code flow in addition to client authentication.
+	ForcePkce bool `json:"forcePkce,omitempty"`
+	// DefaultAudience controls the default aud of issued tokens: "projectId", "clientId", or "" (both).
+	DefaultAudience string `json:"defaultAudience,omitempty"`
 }
 
 // Options for loading third party applications

@@ -108,6 +108,8 @@ var (
 			ssoApplicationDelete:                     "mgmt/sso/idp/app/delete",
 			ssoApplicationLoad:                       "mgmt/sso/idp/app/load",
 			ssoApplicationLoadAll:                    "mgmt/sso/idp/apps/load",
+			ssoApplicationSecret:                     "mgmt/sso/idp/app/secret",
+			ssoApplicationRotate:                     "mgmt/sso/idp/app/rotate",
 			userCreate:                               "mgmt/user/create",
 			testUserCreate:                           "mgmt/user/create/test",
 			userCreateBatch:                          "mgmt/user/create/batch",
@@ -388,6 +390,8 @@ type mgmtEndpoints struct {
 	ssoApplicationDelete      string
 	ssoApplicationLoad        string
 	ssoApplicationLoadAll     string
+	ssoApplicationSecret      string
+	ssoApplicationRotate      string
 
 	userCreate                string
 	testUserCreate            string
@@ -892,6 +896,14 @@ func (e *endpoints) ManagementSSOApplicationLoad() string {
 
 func (e *endpoints) ManagementSSOApplicationLoadAll() string {
 	return path.Join(e.version, e.mgmt.ssoApplicationLoadAll)
+}
+
+func (e *endpoints) ManagementSSOApplicationSecret() string {
+	return path.Join(e.version, e.mgmt.ssoApplicationSecret)
+}
+
+func (e *endpoints) ManagementSSOApplicationRotate() string {
+	return path.Join(e.version, e.mgmt.ssoApplicationRotate)
 }
 
 func (e *endpoints) ManagementUserCreate() string {

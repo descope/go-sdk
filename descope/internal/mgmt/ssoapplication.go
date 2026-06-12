@@ -23,7 +23,7 @@ func (s *ssoApplication) CreateOIDCApplication(ctx context.Context, appRequest *
 		return "", utils.NewInvalidArgumentError("appRequest.Name")
 	}
 
-	req := makeCreateUpdateOIDCApplicationRequest(appRequest)
+	req := makeCreateUpdateOIDCApplicationRequest(appRequest, true)
 	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationOIDCCreate(), req, nil, "")
 	if err != nil {
 		return "", err
@@ -70,7 +70,7 @@ func (s *ssoApplication) UpdateOIDCApplication(ctx context.Context, appRequest *
 		return utils.NewInvalidArgumentError("appRequest.Name")
 	}
 
-	req := makeCreateUpdateOIDCApplicationRequest(appRequest)
+	req := makeCreateUpdateOIDCApplicationRequest(appRequest, false)
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationOIDCUpdate(), req, nil, "")
 	return err
 }
@@ -160,18 +160,72 @@ func (s *ssoApplication) LoadAll(ctx context.Context) ([]*descope.SSOApplication
 	return unmarshalLoadAllSSOApplicationsResponse(res)
 }
 
-func makeCreateUpdateOIDCApplicationRequest(appRequest *descope.OIDCApplicationRequest) map[string]any {
-	return map[string]any{
-		"id":                   appRequest.ID,
-		"name":                 appRequest.Name,
-		"description":          appRequest.Description,
-		"enabled":              appRequest.Enabled,
-		"logo":                 appRequest.Logo,
-		"loginPageUrl":         appRequest.LoginPageURL,
-		"forceAuthentication":  appRequest.ForceAuthentication,
-		"jwtBearerSettings":    appRequest.JWTBearerSettings,
-		"backChannelLogoutUrl": appRequest.BackChannelLogoutURL,
+func makeCreateUpdateOIDCApplicationRequest(appRequest *descope.OIDCApplicationRequest, forCreate bool) map[string]any {
+	req := map[string]any{
+		"id":                        appRequest.ID,
+		"name":                      appRequest.Name,
+		"description":               appRequest.Description,
+		"enabled":                   appRequest.Enabled,
+		"logo":                      appRequest.Logo,
+		"loginPageUrl":              appRequest.LoginPageURL,
+		"forceAuthentication":       appRequest.ForceAuthentication,
+		"jwtBearerSettings":         appRequest.JWTBearerSettings,
+		"backChannelLogoutUrl":      appRequest.BackChannelLogoutURL,
+		"clientType":                appRequest.ClientType,
+		"approvedRedirectUrls":      appRequest.ApprovedRedirectURLs,
+		"authorizationCodeDisabled": appRequest.AuthorizationCodeDisabled,
+		"clientCredentialsDisabled": appRequest.ClientCredentialsDisabled,
+		"refreshTokenDisabled":      appRequest.RefreshTokenDisabled,
+		"jwtBearerDisabled":         appRequest.JWTBearerDisabled,
+		"deviceCodeDisabled":        appRequest.DeviceCodeDisabled,
+		"forcePkce":                 appRequest.ForcePkce,
+		"defaultAudience":           appRequest.DefaultAudience,
 	}
+	// ClientID/ClientSecret import an existing OIDC client and are immutable after create, so
+	// they are only sent on create — never on update, where they would clear the stored secret.
+	if forCreate {
+		req["clientId"] = appRequest.ClientID
+		req["clientSecret"] = appRequest.ClientSecret
+	}
+	return req
+}
+
+func (s *ssoApplication) GetApplicationSecret(ctx context.Context, id string) (string, error) {
+	if id == "" {
+		return "", utils.NewInvalidArgumentError("id")
+	}
+	req := &api.HTTPRequest{
+		QueryParams: map[string]string{"id": id},
+	}
+	httpRes, err := s.client.DoGetRequest(ctx, api.Routes.ManagementSSOApplicationSecret(), req, "")
+	if err != nil {
+		return "", err
+	}
+	res := struct {
+		Cleartext string `json:"cleartext"`
+	}{}
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), &res); err != nil {
+		return "", err
+	}
+	return res.Cleartext, nil
+}
+
+func (s *ssoApplication) RotateApplicationSecret(ctx context.Context, id string) (string, error) {
+	if id == "" {
+		return "", utils.NewInvalidArgumentError("id")
+	}
+	req := map[string]any{"id": id}
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationRotate(), req, nil, "")
+	if err != nil {
+		return "", err
+	}
+	res := struct {
+		Cleartext string `json:"cleartext"`
+	}{}
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), &res); err != nil {
+		return "", err
+	}
+	return res.Cleartext, nil
 }
 
 func makeCreateUpdateSAMLApplicationRequest(appRequest *descope.SAMLApplicationRequest) map[string]any {
