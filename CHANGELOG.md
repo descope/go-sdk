@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.21.0](https://github.com/descope/go-sdk/compare/v1.20.0...v1.21.0) (2026-06-12)
+
+
+### Features
+
+* add DPoP Proof Validation (RFC 9449) ([#737](https://github.com/descope/go-sdk/issues/737)) ([11a3361](https://github.com/descope/go-sdk/commit/11a3361fffd9f008583f330e93c63b3a7f518e8b))
+* add new passkey management APIs ([#751](https://github.com/descope/go-sdk/issues/751)) ([781ae78](https://github.com/descope/go-sdk/commit/781ae7800fa89577f2a9d81242344beb8a7698a8))
+* **mgmt:** add ReplyAllowedCallbacks to WS-Fed application request ([#755](https://github.com/descope/go-sdk/issues/755)) ([0f05b50](https://github.com/descope/go-sdk/commit/0f05b501a465db2621c4cd373c35655489a655c9))
+* **security:** dpop JTI replay protection ([#757](https://github.com/descope/go-sdk/issues/757)) ([9423f21](https://github.com/descope/go-sdk/commit/9423f217e12eaac40c2cf3fcf565f1e38be76940))
+* **sso:** add IdP entityId to ConfigureSAMLSettingsByMetadata ([#764](https://github.com/descope/go-sdk/issues/764)) ([78c5891](https://github.com/descope/go-sdk/commit/78c5891b0cea74abe589335ed573a91ba57280e6))
+* **user:** add locale option to invite and invite-batch ([#758](https://github.com/descope/go-sdk/issues/758)) ([5537f8c](https://github.com/descope/go-sdk/commit/5537f8ceaea43d4a7b089a8ba5e6c7cfaa7aff7f))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.20.0 ([#749](https://github.com/descope/go-sdk/issues/749)) ([08119bd](https://github.com/descope/go-sdk/commit/08119bd686e0d55e296a382b23d7b0ae7aaa9af1))
+* **deps:** update module github.com/gin-gonic/gin to v1.12.0 ([#715](https://github.com/descope/go-sdk/issues/715)) ([5452d07](https://github.com/descope/go-sdk/commit/5452d07ffc023b7f9f48d82811b4ac81c862e9b7))
+
 ## [1.20.0](https://github.com/descope/go-sdk/compare/v1.19.0...v1.20.0) (2026-05-14)
 
 
