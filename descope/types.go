@@ -625,6 +625,7 @@ type UserResponse struct {
 	Test             bool                            `json:"test,omitempty"`
 	CustomAttributes map[string]any                  `json:"customAttributes,omitempty"`
 	CreatedTime      int32                           `json:"createdTime,omitempty"`
+	ModifiedTime     int32                           `json:"modifiedTime,omitempty"`
 	TOTP             bool                            `json:"totp,omitempty"`
 	WebAuthn         bool                            `json:"webauthn,omitempty"`
 	Password         bool                            `json:"password,omitempty"`
