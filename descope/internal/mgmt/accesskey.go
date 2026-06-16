@@ -109,6 +109,18 @@ func (a *accessKey) Delete(ctx context.Context, id string) error {
 	return err
 }
 
+func (a *accessKey) Rotate(ctx context.Context, id string) (string, *descope.AccessKeyResponse, error) {
+	if id == "" {
+		return "", nil, utils.NewInvalidArgumentError("id")
+	}
+	body := map[string]any{"id": id}
+	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyRotate(), body, nil, "")
+	if err != nil {
+		return "", nil, err
+	}
+	return unmarshalCreatedAccessKeyResponse(res)
+}
+
 func makeCreateAccessKeyBody(name string, expireTime int64, roleNames []string, tenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, description string, permittedIPs []string, customAttributes map[string]any) map[string]any {
 	return map[string]any{
 		"name":             name,
