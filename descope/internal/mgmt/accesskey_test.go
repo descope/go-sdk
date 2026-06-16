@@ -246,3 +246,35 @@ func TestAccessKeyDeleteError(t *testing.T) {
 	err := mgmt.AccessKey().Delete(context.Background(), "")
 	require.Error(t, err)
 }
+
+func TestAccessKeyRotateSuccess(t *testing.T) {
+	response := map[string]any{
+		"cleartext": "new-cleartext",
+		"key": map[string]any{
+			"id":   "ak1",
+			"name": "abc",
+		}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "ak1", req["id"])
+	}, response))
+	cleartext, key, err := mgmt.AccessKey().Rotate(context.Background(), "ak1")
+	require.NoError(t, err)
+	require.Equal(t, "new-cleartext", cleartext)
+	require.Equal(t, "ak1", key.ID)
+	require.Equal(t, "abc", key.Name)
+}
+
+func TestAccessKeyRotateBadInput(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	_, _, err := mgmt.AccessKey().Rotate(context.Background(), "")
+	require.Error(t, err)
+}
+
+func TestAccessKeyRotateError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	_, _, err := mgmt.AccessKey().Rotate(context.Background(), "ak1")
+	require.Error(t, err)
+}

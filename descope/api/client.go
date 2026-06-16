@@ -163,6 +163,7 @@ var (
 			accessKeyDeactivate:                      "mgmt/accesskey/deactivate",
 			accessKeyActivate:                        "mgmt/accesskey/activate",
 			accessKeyDelete:                          "mgmt/accesskey/delete",
+			accessKeyRotate:                          "mgmt/accesskey/rotate",
 			ssoSettings:                              "mgmt/sso/settings",
 			ssoLoadSettings:                          "mgmt/sso/settings",     // v2 only
 			ssoLoadAllSettings:                       "mgmt/sso/settings/all", // v2 only
@@ -449,6 +450,7 @@ type mgmtEndpoints struct {
 	accessKeyDeactivate string
 	accessKeyActivate   string
 	accessKeyDelete     string
+	accessKeyRotate     string
 
 	//* Deprecated (use the below value instead) *//
 	ssoSettings string
@@ -1108,6 +1110,10 @@ func (e *endpoints) ManagementAccessKeyActivate() string {
 
 func (e *endpoints) ManagementAccessKeyDelete() string {
 	return path.Join(e.version, e.mgmt.accessKeyDelete)
+}
+
+func (e *endpoints) ManagementAccessKeyRotate() string {
+	return path.Join(e.version, e.mgmt.accessKeyRotate)
 }
 
 func (e *endpoints) ManagementSSOLoadSettings() string {

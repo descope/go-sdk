@@ -552,6 +552,17 @@ type AccessKey interface {
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	Delete(ctx context.Context, id string) error
+
+	// Rotate an existing access key — regenerates the secret while preserving
+	// the same access key ID, name, roles, tenants, expiry, and metadata.
+	//
+	// The returned cleartext is the new secret and is only visible once;
+	// save it immediately. The previous secret stops working as soon as
+	// this call returns.
+	//
+	// Only active, non-expired keys can be rotated. Tenant-scoped callers
+	// cannot rotate keys that span more than one tenant.
+	Rotate(ctx context.Context, id string) (string, *descope.AccessKeyResponse, error)
 }
 
 // Provides functions for configuring SSO for a project.

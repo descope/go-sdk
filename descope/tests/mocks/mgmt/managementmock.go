@@ -1003,6 +1003,10 @@ type MockAccessKey struct {
 
 	DeleteAssert func(id string)
 	DeleteError  error
+
+	RotateAssert     func(id string)
+	RotateResponseFn func() (string, *descope.AccessKeyResponse)
+	RotateError      error
 }
 
 func (m *MockAccessKey) Create(_ context.Context, name string, description string, expireTime int64, roles []string, tenants []*descope.AssociatedTenant, userID string, customClaims map[string]any, permittedIPs []string, customAttributes map[string]any) (string, *descope.AccessKeyResponse, error) {
@@ -1057,6 +1061,18 @@ func (m *MockAccessKey) Delete(_ context.Context, id string) error {
 		m.DeleteAssert(id)
 	}
 	return m.DeleteError
+}
+
+func (m *MockAccessKey) Rotate(_ context.Context, id string) (string, *descope.AccessKeyResponse, error) {
+	if m.RotateAssert != nil {
+		m.RotateAssert(id)
+	}
+	var cleartext string
+	var key *descope.AccessKeyResponse
+	if m.RotateResponseFn != nil {
+		cleartext, key = m.RotateResponseFn()
+	}
+	return cleartext, key, m.RotateError
 }
 
 // Mock Tenant
