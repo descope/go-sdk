@@ -235,6 +235,15 @@ type GenerateSSOConfigurationLinkResponse struct {
 	AdminSSOConfigurationLink string `json:"adminSSOConfigurationLink,omitempty"`
 }
 
+// GenerateSSOConfigurationLinkOptions are optional settings for GenerateSSOConfigurationLink.
+// When a user is provided, the SSO Setup Suite session is attributed to that real user so
+// actions taken inside the suite are audited against them instead of a temporary user.
+// The user must exist and belong to the tenant. UserID takes precedence over LoginID.
+type GenerateSSOConfigurationLinkOptions struct {
+	UserID  string `json:"userId,omitempty"`
+	LoginID string `json:"loginId,omitempty"`
+}
+
 type RecalculateSSOMappingsRequest struct {
 	TenantID string `json:"tenantId,omitempty"`
 	SSOID    string `json:"ssoId,omitempty"`

@@ -63,7 +63,10 @@ type Tenant interface {
 	// ssoID - Optional, in case provided, the specified sso configuration will be used
 	// email - Optional, in case provided, email will be sent according to the given email
 	// templateID - Optional, in case provided, the specified email's template will be used
-	GenerateSSOConfigurationLink(ctx context.Context, tenantID string, expireDuration int64, ssoID string, email string, templateID string) (string, error)
+	// options - Optional, in case provided with a user (UserID or LoginID), the SSO Setup Suite
+	//           session is attributed to that real user so actions are audited against them
+	//           instead of a temporary user. The user must exist and belong to the tenant.
+	GenerateSSOConfigurationLink(ctx context.Context, tenantID string, expireDuration int64, ssoID string, email string, templateID string, options ...*descope.GenerateSSOConfigurationLinkOptions) (string, error)
 
 	// Revoke tenant admin self service SSO configuration link
 	// ssoID - Optional, in case provided, the specified sso configuration will be used

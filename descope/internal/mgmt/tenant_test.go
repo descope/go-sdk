@@ -340,6 +340,23 @@ func TestTenantGenerateSSOConfigurationLinkSuccessWithSSOID(t *testing.T) {
 	assert.EqualValues(t, "some link", link)
 }
 
+func TestTenantGenerateSSOConfigurationLinkWithActor(t *testing.T) {
+	response := map[string]any{
+		"adminSSOConfigurationLink": "some link",
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "tenant", req["tenantId"])
+		require.Equal(t, "user-1", req["userId"])
+		require.Equal(t, "admin@a.com", req["loginId"])
+	}, response))
+	link, err := mgmt.Tenant().GenerateSSOConfigurationLink(context.Background(), "tenant", 60*60*24, "", "", "",
+		&descope.GenerateSSOConfigurationLinkOptions{UserID: "user-1", LoginID: "admin@a.com"})
+	require.NoError(t, err)
+	assert.EqualValues(t, "some link", link)
+}
+
 func TestTenantGenerateSSOConfigurationLinkError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoBadRequest(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
