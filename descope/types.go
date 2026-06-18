@@ -235,14 +235,6 @@ type GenerateSSOConfigurationLinkResponse struct {
 	AdminSSOConfigurationLink string `json:"adminSSOConfigurationLink,omitempty"`
 }
 
-// GenerateSSOConfigurationLinkOptions are optional settings for GenerateSSOConfigurationLink.
-// When ActorID is provided, it is recorded as the audit actor for actions performed inside the
-// SSO Setup Suite (instead of the temporary user). It is used as-is for audit attribution and
-// is not validated against existing users.
-type GenerateSSOConfigurationLinkOptions struct {
-	ActorID string `json:"actorId,omitempty"`
-}
-
 type RecalculateSSOMappingsRequest struct {
 	TenantID string `json:"tenantId,omitempty"`
 	SSOID    string `json:"ssoId,omitempty"`
