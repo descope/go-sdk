@@ -63,10 +63,10 @@ type Tenant interface {
 	// ssoID - Optional, in case provided, the specified sso configuration will be used
 	// email - Optional, in case provided, email will be sent according to the given email
 	// templateID - Optional, in case provided, the specified email's template will be used
-	// actorID - Optional, in case provided, that id is recorded as the audit actor for actions
-	//           performed inside the SSO Setup Suite (instead of the temporary user). It is used
-	//           as-is for audit attribution and is not validated.
-	GenerateSSOConfigurationLink(ctx context.Context, tenantID string, expireDuration int64, ssoID string, email string, templateID string, actorID ...string) (string, error)
+	// actorID - Optional (pass "" for none). When provided, that id is recorded as the audit
+	//           actor for actions performed inside the SSO Setup Suite (instead of the temporary
+	//           user). It is used as-is for audit attribution and is not validated.
+	GenerateSSOConfigurationLink(ctx context.Context, tenantID string, expireDuration int64, ssoID string, email string, templateID string, actorID string) (string, error)
 
 	// Revoke tenant admin self service SSO configuration link
 	// ssoID - Optional, in case provided, the specified sso configuration will be used

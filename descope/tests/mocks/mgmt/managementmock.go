@@ -1109,7 +1109,7 @@ type MockTenant struct {
 	ConfigureSettingsResponse *descope.TenantSettings
 	ConfigureSettingsError    error
 
-	GenerateSSOConfigurationLinkAssert   func(tenantID string, expireDuration int64, ssoID string, email string, templateID string, actorID ...string)
+	GenerateSSOConfigurationLinkAssert   func(tenantID string, expireDuration int64, ssoID string, email string, templateID string, actorID string)
 	GenerateSSOConfigurationLinkResponse string
 	GenerateSSOConfigurationLinkError    error
 
@@ -1177,9 +1177,9 @@ func (m *MockTenant) ConfigureSettings(_ context.Context, tenantID string, setti
 	return m.ConfigureSettingsError
 }
 
-func (m *MockTenant) GenerateSSOConfigurationLink(_ context.Context, tenantID string, expireDuration int64, ssoID string, email string, templateID string, actorID ...string) (string, error) {
+func (m *MockTenant) GenerateSSOConfigurationLink(_ context.Context, tenantID string, expireDuration int64, ssoID string, email string, templateID string, actorID string) (string, error) {
 	if m.GenerateSSOConfigurationLinkAssert != nil {
-		m.GenerateSSOConfigurationLinkAssert(tenantID, expireDuration, ssoID, email, templateID, actorID...)
+		m.GenerateSSOConfigurationLinkAssert(tenantID, expireDuration, ssoID, email, templateID, actorID)
 	}
 	return m.GenerateSSOConfigurationLinkResponse, m.GenerateSSOConfigurationLinkError
 }

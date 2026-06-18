@@ -907,7 +907,7 @@ err := descopeClient.Management.Tenant().ConfigureSettings(context.Background(),
 // Generate tenant admin self service link for SSO Suite (valid for 24 hours)
 // sso id can be provided for a specific sso configuration
 // email can be provided to send the link to (email's templateID can be provided as well)
-link, err := descopeClient.Management.Tenant().GenerateSSOConfigurationLink(context.Background(), "My Tenant", 60 * 60 * 24, "", "", "")
+link, err := descopeClient.Management.Tenant().GenerateSSOConfigurationLink(context.Background(), "My Tenant", 60 * 60 * 24, "", "", "", "")
 
 // Optionally pass an actor id as the last argument. When set it is recorded as the audit actor
 // for actions taken inside the SSO Suite (instead of the temporary user). It is used as-is for
