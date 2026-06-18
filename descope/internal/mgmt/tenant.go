@@ -160,8 +160,7 @@ func (t *tenant) GenerateSSOConfigurationLink(ctx context.Context, tenantID stri
 		"templateId": templateID,
 	}
 	if len(options) > 0 && options[0] != nil {
-		req["userId"] = options[0].UserID
-		req["loginId"] = options[0].LoginID
+		req["actorId"] = options[0].ActorID
 	}
 
 	res, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantGenerateSSOConfigurationLink(), req, nil, "")

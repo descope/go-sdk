@@ -348,11 +348,10 @@ func TestTenantGenerateSSOConfigurationLinkWithActor(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "tenant", req["tenantId"])
-		require.Equal(t, "user-1", req["userId"])
-		require.Equal(t, "admin@a.com", req["loginId"])
+		require.Equal(t, "admin-actor-1", req["actorId"])
 	}, response))
 	link, err := mgmt.Tenant().GenerateSSOConfigurationLink(context.Background(), "tenant", 60*60*24, "", "", "",
-		&descope.GenerateSSOConfigurationLinkOptions{UserID: "user-1", LoginID: "admin@a.com"})
+		&descope.GenerateSSOConfigurationLinkOptions{ActorID: "admin-actor-1"})
 	require.NoError(t, err)
 	assert.EqualValues(t, "some link", link)
 }

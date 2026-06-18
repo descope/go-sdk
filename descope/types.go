@@ -236,12 +236,11 @@ type GenerateSSOConfigurationLinkResponse struct {
 }
 
 // GenerateSSOConfigurationLinkOptions are optional settings for GenerateSSOConfigurationLink.
-// When a user is provided, the SSO Setup Suite session is attributed to that real user so
-// actions taken inside the suite are audited against them instead of a temporary user.
-// The user must exist and belong to the tenant. UserID takes precedence over LoginID.
+// When ActorID is provided, it is recorded as the audit actor for actions performed inside the
+// SSO Setup Suite (instead of the temporary user). It is used as-is for audit attribution and
+// is not validated against existing users.
 type GenerateSSOConfigurationLinkOptions struct {
-	UserID  string `json:"userId,omitempty"`
-	LoginID string `json:"loginId,omitempty"`
+	ActorID string `json:"actorId,omitempty"`
 }
 
 type RecalculateSSOMappingsRequest struct {
