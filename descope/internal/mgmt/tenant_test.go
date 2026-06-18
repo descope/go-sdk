@@ -316,7 +316,7 @@ func TestTenantGenerateSSOConfigurationLinkSuccess(t *testing.T) {
 		require.Equal(t, "", req["ssoId"])
 		require.Equal(t, float64(60*60*24), req["expireTime"])
 	}, response))
-	link, err := mgmt.Tenant().GenerateSSOConfigurationLink(context.Background(), "tenant", 60*60*24, "", "", "")
+	link, err := mgmt.Tenant().GenerateSSOConfigurationLink(context.Background(), "tenant", 60*60*24, "", "", "", "")
 	require.NoError(t, err)
 	assert.EqualValues(t, "some link", link)
 }
@@ -335,7 +335,22 @@ func TestTenantGenerateSSOConfigurationLinkSuccessWithSSOID(t *testing.T) {
 		require.Equal(t, "a@a.com", req["email"])
 		require.Equal(t, "template-id", req["templateId"])
 	}, response))
-	link, err := mgmt.Tenant().GenerateSSOConfigurationLink(context.Background(), "tenant", 60*60*24, "bla", "a@a.com", "template-id")
+	link, err := mgmt.Tenant().GenerateSSOConfigurationLink(context.Background(), "tenant", 60*60*24, "bla", "a@a.com", "template-id", "")
+	require.NoError(t, err)
+	assert.EqualValues(t, "some link", link)
+}
+
+func TestTenantGenerateSSOConfigurationLinkWithActor(t *testing.T) {
+	response := map[string]any{
+		"adminSSOConfigurationLink": "some link",
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "tenant", req["tenantId"])
+		require.Equal(t, "admin-actor-1", req["actorId"])
+	}, response))
+	link, err := mgmt.Tenant().GenerateSSOConfigurationLink(context.Background(), "tenant", 60*60*24, "", "", "", "admin-actor-1")
 	require.NoError(t, err)
 	assert.EqualValues(t, "some link", link)
 }
@@ -349,7 +364,7 @@ func TestTenantGenerateSSOConfigurationLinkError(t *testing.T) {
 		require.Equal(t, "", req["ssoId"])
 		require.Equal(t, float64(60*60*24), req["expireTime"])
 	}))
-	link, err := mgmt.Tenant().GenerateSSOConfigurationLink(context.Background(), "tenant", 60*60*24, "", "", "")
+	link, err := mgmt.Tenant().GenerateSSOConfigurationLink(context.Background(), "tenant", 60*60*24, "", "", "", "")
 	require.Error(t, err)
 	assert.Empty(t, link)
 }
@@ -363,7 +378,7 @@ func TestTenantGenerateSSOConfigurationLinkNoTenantID(t *testing.T) {
 		require.Equal(t, "ssoId", "")
 		require.Equal(t, float64(60*60*24), req["expireTime"])
 	}))
-	link, err := mgmt.Tenant().GenerateSSOConfigurationLink(context.Background(), "", 60*60*24, "", "", "")
+	link, err := mgmt.Tenant().GenerateSSOConfigurationLink(context.Background(), "", 60*60*24, "", "", "", "")
 	require.ErrorIs(t, err, utils.NewInvalidArgumentError("tenantId"))
 	assert.Empty(t, link)
 }

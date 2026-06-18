@@ -147,7 +147,7 @@ func (t *tenant) ConfigureSettings(ctx context.Context, tenantID string, setting
 	return err
 }
 
-func (t *tenant) GenerateSSOConfigurationLink(ctx context.Context, tenantID string, expireDuration int64, ssoID string, email string, templateID string) (string, error) {
+func (t *tenant) GenerateSSOConfigurationLink(ctx context.Context, tenantID string, expireDuration int64, ssoID string, email string, templateID string, actorID string) (string, error) {
 	if tenantID == "" {
 		return "", utils.NewInvalidArgumentError("tenantID")
 	}
@@ -158,6 +158,7 @@ func (t *tenant) GenerateSSOConfigurationLink(ctx context.Context, tenantID stri
 		"ssoId":      ssoID,
 		"email":      email,
 		"templateId": templateID,
+		"actorId":    actorID,
 	}
 
 	res, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantGenerateSSOConfigurationLink(), req, nil, "")
