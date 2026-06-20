@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.22.0](https://github.com/descope/go-sdk/compare/v1.21.0...v1.22.0) (2026-06-18)
+
+
+### Features
+
+* add SSO OIDC dedicated client config, secret get/rotate, and force-PKCE ([#759](https://github.com/descope/go-sdk/issues/759)) ([84d1056](https://github.com/descope/go-sdk/commit/84d105604d567629f811c2e46e2951a275d81395))
+* **tenant:** bind a real user to GenerateSSOConfigurationLink for correct audit actor ([#769](https://github.com/descope/go-sdk/issues/769)) ([af00fa5](https://github.com/descope/go-sdk/commit/af00fa501761eb8ab04d207a2b7276c443da450c))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.21.0 ([#766](https://github.com/descope/go-sdk/issues/766)) ([3920559](https://github.com/descope/go-sdk/commit/39205593f57ce2bcaca325e1cdd57eeb21f2d76c))
+
 ## [1.21.0](https://github.com/descope/go-sdk/compare/v1.20.0...v1.21.0) (2026-06-12)
 
 
