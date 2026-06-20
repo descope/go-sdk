@@ -690,6 +690,11 @@ type UpdateOptions struct {
 	TemplateOptions    map[string]string `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 	TemplateID         string            `json:"templateId,omitempty"`
 	ProviderID         string            `json:"providerId,omitempty"`
+	// MFA, when true, preserves the auth methods already on the refresh token and adds the
+	// updated factor to them (so the resulting amr keeps the previously-passed factors)
+	// instead of replacing it with a single factor. Requires a valid refresh token on the
+	// request. Currently applies to the OTP update phone / email flows.
+	MFA bool `json:"mfa,omitempty"`
 }
 
 type NOTPTemplates struct {
