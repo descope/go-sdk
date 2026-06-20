@@ -540,6 +540,54 @@ func TestUpdateEmailOTP(t *testing.T) {
 	require.EqualValues(t, maskedEmail, me)
 }
 
+func TestUpdateEmailOTPWithMFA(t *testing.T) {
+	loginID := "943248329844"
+	email := "test@test.com"
+	maskedEmail := "t***@test.com"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeUpdateUserEmailOTP(), r.URL.RequestURI())
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, loginID, body["loginId"])
+		assert.EqualValues(t, email, body["email"])
+		assert.EqualValues(t, true, body["mfa"])
+		resp := MaskedEmailRes{MaskedEmail: maskedEmail}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	me, err := a.OTP().UpdateUserEmail(context.Background(), loginID, email, &descope.UpdateOptions{MFA: true}, r)
+	require.NoError(t, err)
+	require.EqualValues(t, maskedEmail, me)
+}
+
+func TestUpdatePhoneOTPWithMFA(t *testing.T) {
+	loginID := "943248329844"
+	phone := "+111111111111"
+	maskedPhone := "+*******111"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeUpdateUserPhoneOTP(descope.MethodSMS), r.URL.RequestURI())
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, loginID, body["loginId"])
+		assert.EqualValues(t, phone, body["phone"])
+		assert.EqualValues(t, true, body["mfa"])
+		resp := MaskedPhoneRes{MaskedPhone: maskedPhone}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	mp, err := a.OTP().UpdateUserPhone(context.Background(), descope.MethodSMS, loginID, phone, &descope.UpdateOptions{MFA: true}, r)
+	require.NoError(t, err)
+	require.EqualValues(t, maskedPhone, mp)
+}
+
 func TestUpdateEmailOTPWithTemplateOptions(t *testing.T) {
 	loginID := "943248329844"
 	email := "test@test.com"
