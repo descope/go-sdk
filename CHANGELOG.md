@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.23.0](https://github.com/descope/go-sdk/compare/v1.22.0...v1.23.0) (2026-06-20)
+
+
+### Features
+
+* **otp:** add MFA option to OTP update phone/email ([#772](https://github.com/descope/go-sdk/issues/772)) ([dc36a25](https://github.com/descope/go-sdk/commit/dc36a257b9ed8f336fe0dde753a6ef8c3d4b2a1e))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.22.0 ([#770](https://github.com/descope/go-sdk/issues/770)) ([9e63c56](https://github.com/descope/go-sdk/commit/9e63c56da318db6918ea63eea1c72c714f40a888))
+
 ## [1.22.0](https://github.com/descope/go-sdk/compare/v1.21.0...v1.22.0) (2026-06-18)
 
 
