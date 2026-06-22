@@ -1661,6 +1661,7 @@ type IHttpClient interface {
 // retryableStatusCodes are HTTP status codes that should trigger an automatic retry
 var retryableStatusCodes = map[int]bool{
 	503: true, // Service Unavailable
+	520: true, // Web Server Returned an Unknown Error (Cloudflare)
 	521: true, // Web Server Is Down (Cloudflare)
 	522: true, // Connection Timed Out (Cloudflare)
 	524: true, // A Timeout Occurred (Cloudflare)

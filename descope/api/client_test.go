@@ -600,7 +600,7 @@ func TestRetryDelayConfig(t *testing.T) {
 }
 
 func TestRetryOnRetryableStatusCodes(t *testing.T) {
-	retryableCodes := []int{503, 521, 522, 524, 530}
+	retryableCodes := []int{503, 520, 521, 522, 524, 530}
 
 	for _, statusCode := range retryableCodes {
 		t.Run(fmt.Sprintf("status_%d", statusCode), func(t *testing.T) {
