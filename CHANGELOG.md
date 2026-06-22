@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.24.0](https://github.com/descope/go-sdk/compare/v1.23.0...v1.24.0) (2026-06-22)
+
+
+### Features
+
+* **http:** also retry on transient status code 520 ([#775](https://github.com/descope/go-sdk/issues/775)) ([403ad61](https://github.com/descope/go-sdk/commit/403ad6165b0d581d578cfea51c1ad9f5b39560f0))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.23.0 ([#773](https://github.com/descope/go-sdk/issues/773)) ([6559106](https://github.com/descope/go-sdk/commit/655910643b3bbe0b7031658f43bb115799eec038))
+
 ## [1.23.0](https://github.com/descope/go-sdk/compare/v1.22.0...v1.23.0) (2026-06-20)
 
 
