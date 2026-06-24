@@ -96,6 +96,22 @@ type AuthzModified struct {
 // FGASchema holds the schema for a project
 type FGASchema struct {
 	Schema string `json:"schema"`
+	// Conditions are the CEL conditions defined in the schema (user-defined plus expanded
+	// built-in constraints). They let an edge cache compile and evaluate conditions directly.
+	Conditions []*FGACondition `json:"conditions,omitempty"`
+}
+
+// FGACondition is a named CEL condition with its typed parameters and raw expression.
+type FGACondition struct {
+	Name       string               `json:"name"`
+	Params     []*FGAConditionParam `json:"params,omitempty"`
+	Expression string               `json:"expression"`
+}
+
+// FGAConditionParam is a single typed parameter of an FGACondition.
+type FGAConditionParam struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
 }
 
 // FGARelation defines a relation between resource and target
@@ -126,6 +142,12 @@ type FGACheckInfo struct {
 	// ConditionalErr holds the CEL evaluation error message when a condition could not be evaluated
 	// (e.g. wrong context value type). Allowed will be false in that case.
 	ConditionalErr string `json:"conditionalErr,omitempty"`
+	// InvolvedConditions lists the CEL condition names that gated this result, letting an edge
+	// cache re-evaluate them against the current request context. Populated only for conditional results.
+	InvolvedConditions []string `json:"involvedConditions,omitempty"`
+	// InvolvesFact is true when a backend-resolved fact participated in deciding this result.
+	// Such results depend on mutable backend state and must not be cached at the edge.
+	InvolvesFact bool `json:"involvesFact,omitempty"`
 }
 
 type FGAMappableResourcesOptions struct {
