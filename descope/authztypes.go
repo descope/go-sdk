@@ -141,10 +141,10 @@ type FGACheckInfo struct {
 	// ConditionalErr holds the CEL evaluation error message when a condition could not be evaluated
 	// (e.g. wrong context value type). Allowed will be false in that case.
 	ConditionalErr string `json:"conditionalErr,omitempty"`
-	// InvolvedConditions are the CEL condition names that gated this result, for an edge cache to re-evaluate.
-	InvolvedConditions []string `json:"involvedConditions,omitempty"`
-	// InvolvesFact is true when a backend fact decided this result; such results must not be cached at the edge.
-	InvolvesFact bool `json:"involvesFact,omitempty"`
+	// Conditions are the CEL condition names that gated this result, for an edge cache to re-evaluate.
+	Conditions []string `json:"conditions,omitempty"`
+	// FactGated is true when a backend fact decided this result; such results must not be cached at the edge.
+	FactGated bool `json:"factGated,omitempty"`
 }
 
 type FGAMappableResourcesOptions struct {
