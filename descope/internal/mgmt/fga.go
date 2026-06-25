@@ -57,29 +57,17 @@ func (f *fga) SaveSchema(ctx context.Context, schema *descope.FGASchema) error {
 	return err
 }
 
-// fgaLoadSchemaResponse mirrors LoadDSLSchemaResponse: the raw DSL plus the schema's conditions for the edge.
-type fgaLoadSchemaResponse struct {
-	DSL    string `json:"dsl"`
-	Schema *struct {
-		Conditions []*descope.FGACondition `json:"conditions"`
-	} `json:"schema"`
-}
-
 func (f *fga) LoadSchema(ctx context.Context) (*descope.FGASchema, error) {
 	res, err := f.client.DoGetRequest(ctx, api.Routes.ManagementFGALoadSchema(), nil, "")
 	if err != nil {
 		return nil, err
 	}
-	var response *fgaLoadSchemaResponse
-	err = utils.Unmarshal([]byte(res.BodyStr), &response)
+	var dslSchema *DSLSchema
+	err = utils.Unmarshal([]byte(res.BodyStr), &dslSchema)
 	if err != nil {
 		return nil, err // notest
 	}
-	schema := &descope.FGASchema{Schema: response.DSL}
-	if response.Schema != nil {
-		schema.Conditions = response.Schema.Conditions
-	}
-	return schema, nil
+	return &descope.FGASchema{Schema: dslSchema.DSL}, nil
 }
 
 func (f *fga) CreateRelations(ctx context.Context, relations []*descope.FGARelation) error {

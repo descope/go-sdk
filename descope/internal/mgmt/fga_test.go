@@ -64,30 +64,13 @@ func TestSaveFGASchemaMissingSchema(t *testing.T) {
 }
 
 func TestLoadFGASchemaSuccess(t *testing.T) {
-	response := map[string]any{
-		"dsl": "some schema",
-		"schema": map[string]any{
-			"conditions": []map[string]any{
-				{
-					"name":       "DuringShift",
-					"expression": "ctx.role == \"admin\"",
-					"params":     []map[string]any{{"name": "role", "type": "string"}},
-				},
-			},
-		},
-	}
+	response := map[string]any{"dsl": "some schema"}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 	}, response))
 	schema, err := mgmt.FGA().LoadSchema(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, "some schema", schema.Schema)
-	require.Len(t, schema.Conditions, 1)
-	require.Equal(t, "DuringShift", schema.Conditions[0].Name)
-	require.Equal(t, "ctx.role == \"admin\"", schema.Conditions[0].Expression)
-	require.Len(t, schema.Conditions[0].Params, 1)
-	require.Equal(t, "role", schema.Conditions[0].Params[0].Name)
-	require.Equal(t, "string", schema.Conditions[0].Params[0].Type)
 }
 
 func TestLoadFGASchemaError(t *testing.T) {
