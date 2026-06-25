@@ -144,9 +144,7 @@ type FGACheckInfo struct {
 	ConditionalErr string `json:"conditionalErr,omitempty"`
 	// FactGated is true when a backend fact decided this result; such results must not be cached at the edge.
 	FactGated bool `json:"factGated,omitempty"`
-	// EvaluatedConditions maps each leaf condition evaluated on the deciding path to its raw boolean value
-	// (before any NOT). An edge cache uses it as a certificate: a cached result stays valid for a new context
-	// only while every listed condition re-evaluates to the same value. Empty when FactGated.
+	// EvaluatedConditions maps each deciding-path leaf condition to its raw value (pre-NOT) for an edge cache certificate; empty when FactGated.
 	EvaluatedConditions map[string]bool `json:"evaluatedConditions,omitempty"`
 }
 
