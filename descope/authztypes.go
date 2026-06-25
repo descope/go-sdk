@@ -96,8 +96,7 @@ type AuthzModified struct {
 // FGASchema holds the schema for a project
 type FGASchema struct {
 	Schema string `json:"schema"`
-	// Conditions are the CEL conditions defined in the schema (user-defined plus expanded
-	// built-in constraints). They let an edge cache compile and evaluate conditions directly.
+	// Conditions are the schema's CEL conditions (user-defined + expanded built-in constraints), for an edge cache to evaluate.
 	Conditions []*FGACondition `json:"conditions,omitempty"`
 }
 
@@ -142,11 +141,9 @@ type FGACheckInfo struct {
 	// ConditionalErr holds the CEL evaluation error message when a condition could not be evaluated
 	// (e.g. wrong context value type). Allowed will be false in that case.
 	ConditionalErr string `json:"conditionalErr,omitempty"`
-	// InvolvedConditions lists the CEL condition names that gated this result, letting an edge
-	// cache re-evaluate them against the current request context. Populated only for conditional results.
+	// InvolvedConditions are the CEL condition names that gated this result, for an edge cache to re-evaluate.
 	InvolvedConditions []string `json:"involvedConditions,omitempty"`
-	// InvolvesFact is true when a backend-resolved fact participated in deciding this result.
-	// Such results depend on mutable backend state and must not be cached at the edge.
+	// InvolvesFact is true when a backend fact decided this result; such results must not be cached at the edge.
 	InvolvesFact bool `json:"involvesFact,omitempty"`
 }
 

@@ -57,8 +57,7 @@ func (f *fga) SaveSchema(ctx context.Context, schema *descope.FGASchema) error {
 	return err
 }
 
-// fgaLoadSchemaResponse mirrors LoadDSLSchemaResponse: the raw DSL plus the structured schema
-// whose conditions (name, typed params, CEL expression) the edge compiles and evaluates.
+// fgaLoadSchemaResponse mirrors LoadDSLSchemaResponse: the raw DSL plus the schema's conditions for the edge.
 type fgaLoadSchemaResponse struct {
 	DSL    string `json:"dsl"`
 	Schema *struct {
