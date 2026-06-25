@@ -64,13 +64,26 @@ func TestSaveFGASchemaMissingSchema(t *testing.T) {
 }
 
 func TestLoadFGASchemaSuccess(t *testing.T) {
-	response := map[string]any{"dsl": "some schema"}
+	response := map[string]any{
+		"dsl": "some schema",
+		"schema": map[string]any{
+			"conditions": []map[string]any{
+				{"name": "DuringShift", "expression": "now >= begin", "params": []map[string]any{{"name": "now", "type": "int"}, {"name": "begin", "type": "int"}}},
+			},
+		},
+	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 	}, response))
 	schema, err := mgmt.FGA().LoadSchema(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, "some schema", schema.Schema)
+	require.Len(t, schema.Conditions, 1)
+	require.Equal(t, "DuringShift", schema.Conditions[0].Name)
+	require.Equal(t, "now >= begin", schema.Conditions[0].Expression)
+	require.Len(t, schema.Conditions[0].Params, 2)
+	require.Equal(t, "now", schema.Conditions[0].Params[0].Name)
+	require.Equal(t, "int", schema.Conditions[0].Params[0].Type)
 }
 
 func TestLoadFGASchemaError(t *testing.T) {
@@ -207,6 +220,25 @@ func TestCheckFGARelationsSuccess(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCheckFGARelationsEvaluatedConditions(t *testing.T) {
+	response := map[string]any{
+		"tuples": []*descope.FGACheck{
+			{
+				Allowed:  true,
+				Relation: &descope.FGARelation{Resource: "doc1", ResourceType: "doc", Relation: "viewer", Target: "u1", TargetType: "user"},
+				Info:     &descope.FGACheckInfo{Conditional: true, EvaluatedConditions: map[string]bool{"IsAdmin": true}},
+			},
+		}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, response))
+	checks, err := mgmt.FGA().Check(context.Background(), []*descope.FGARelation{
+		{Resource: "doc1", ResourceType: "doc", Relation: "viewer", Target: "u1", TargetType: "user"},
+	})
+	require.NoError(t, err)
+	require.Len(t, checks, 1)
+	require.True(t, checks[0].Info.Conditional)
+	require.Equal(t, map[string]bool{"IsAdmin": true}, checks[0].Info.EvaluatedConditions)
 }
 
 func TestCheckFGARelationsMissingTuples(t *testing.T) {
