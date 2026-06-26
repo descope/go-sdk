@@ -276,6 +276,35 @@ func TestCheckFGAWithContextPassthrough(t *testing.T) {
 	require.True(t, checks[0].Info.Direct)
 }
 
+func TestCheckFGAIncludeEvaluatedConditions(t *testing.T) {
+	response := map[string]any{
+		"tuples": []*descope.FGACheck{
+			{Allowed: true, Relation: &descope.FGARelation{Resource: "doc1", ResourceType: "doc", Relation: "viewer", Target: "u1", TargetType: "user"}, Info: &descope.FGACheckInfo{Conditional: true}},
+		}}
+	rel := []*descope.FGARelation{{Resource: "doc1", ResourceType: "doc", Relation: "viewer", Target: "u1", TargetType: "user"}}
+
+	t.Run("enabled - flag sent", func(t *testing.T) {
+		mgmt := newTestMgmtConf(&ManagementParams{FGAIncludeEvaluatedConditions: true}, nil, helpers.DoOkWithBody(func(r *http.Request) {
+			req := map[string]any{}
+			require.NoError(t, helpers.ReadBody(r, &req))
+			require.Equal(t, true, req["includeEvaluatedConditions"])
+		}, response))
+		_, err := mgmt.FGA().Check(context.Background(), rel)
+		require.NoError(t, err)
+	})
+
+	t.Run("default off - flag omitted", func(t *testing.T) {
+		mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+			req := map[string]any{}
+			require.NoError(t, helpers.ReadBody(r, &req))
+			_, present := req["includeEvaluatedConditions"]
+			require.False(t, present, "flag must be omitted unless opted in")
+		}, response))
+		_, err := mgmt.FGA().Check(context.Background(), rel)
+		require.NoError(t, err)
+	})
+}
+
 func TestCheckFGAWithContextNil(t *testing.T) {
 	response := map[string]any{
 		"tuples": []*descope.FGACheck{

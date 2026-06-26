@@ -13,6 +13,9 @@ import (
 type fga struct {
 	managementBase
 	fgaCacheURL string
+	// includeEvaluatedConditions, when set, asks the backend to return per-condition evaluation results on
+	// Check (for an edge cache building condition certificates). Off for normal callers.
+	includeEvaluatedConditions bool
 }
 
 var _ sdk.FGA = &fga{} // Ensure that the fga struct implements the sdk.FGA interface
@@ -137,6 +140,9 @@ func (f *fga) CheckWithContext(ctx context.Context, relations []*descope.FGARela
 	}
 	if len(extraContext) > 0 {
 		body["context"] = extraContext
+	}
+	if f.includeEvaluatedConditions {
+		body["includeEvaluatedConditions"] = true
 	}
 
 	options := &api.HTTPRequest{}
