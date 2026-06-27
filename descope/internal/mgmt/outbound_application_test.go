@@ -220,6 +220,321 @@ func TestOutboundApplicationFetchUserTokenError(t *testing.T) {
 	require.False(t, called)
 }
 
+func TestOutboundApplicationFetchLatestUserTokenSuccess(t *testing.T) {
+	response := map[string]any{"token": map[string]any{"id": "token-id", "appId": "app-id", "userId": "user-id"}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		assert.Equal(t, "/v1/mgmt/outbound/app/user/token/latest", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, "app-id", req["appId"])
+		assert.Equal(t, "user-id", req["userId"])
+	}, response))
+
+	token, err := mgmt.OutboundApplication().FetchLatestUserToken(context.Background(), &descope.FetchOutboundAppUserTokenRequest{
+		AppID:  "app-id",
+		UserID: "user-id",
+	})
+	require.NoError(t, err)
+	require.NotNil(t, token)
+	assert.Equal(t, "token-id", token.ID)
+}
+
+func TestOutboundApplicationFetchLatestUserTokenError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+
+	token, err := mgmt.OutboundApplication().FetchLatestUserToken(context.Background(), nil)
+	require.Error(t, err)
+	require.Nil(t, token)
+
+	token, err = mgmt.OutboundApplication().FetchLatestUserToken(context.Background(), &descope.FetchOutboundAppUserTokenRequest{AppID: "app-id"})
+	require.Error(t, err)
+	require.Nil(t, token)
+	require.False(t, called)
+}
+
+func TestOutboundApplicationFetchTenantTokenSuccess(t *testing.T) {
+	response := map[string]any{"token": map[string]any{"id": "token-id", "appId": "app-id", "tenantId": "tenant-id"}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		assert.Equal(t, "/v1/mgmt/outbound/app/tenant/token", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, "app-id", req["appId"])
+		assert.Equal(t, "tenant-id", req["tenantId"])
+		assert.Equal(t, []any{"read"}, req["scopes"])
+	}, response))
+
+	token, err := mgmt.OutboundApplication().FetchTenantToken(context.Background(), &descope.FetchOutboundAppTenantTokenRequest{
+		AppID:    "app-id",
+		TenantID: "tenant-id",
+		Scopes:   []string{"read"},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, token)
+	assert.Equal(t, "token-id", token.ID)
+}
+
+func TestOutboundApplicationFetchTenantTokenError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+
+	token, err := mgmt.OutboundApplication().FetchTenantToken(context.Background(), nil)
+	require.Error(t, err)
+	require.Nil(t, token)
+
+	token, err = mgmt.OutboundApplication().FetchTenantToken(context.Background(), &descope.FetchOutboundAppTenantTokenRequest{AppID: "app-id"})
+	require.Error(t, err)
+	require.Nil(t, token)
+	require.False(t, called)
+}
+
+func TestOutboundApplicationFetchLatestTenantTokenSuccess(t *testing.T) {
+	response := map[string]any{"token": map[string]any{"id": "token-id", "appId": "app-id", "tenantId": "tenant-id"}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		assert.Equal(t, "/v1/mgmt/outbound/app/tenant/token/latest", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, "app-id", req["appId"])
+		assert.Equal(t, "tenant-id", req["tenantId"])
+	}, response))
+
+	token, err := mgmt.OutboundApplication().FetchLatestTenantToken(context.Background(), &descope.FetchOutboundAppTenantTokenRequest{
+		AppID:    "app-id",
+		TenantID: "tenant-id",
+	})
+	require.NoError(t, err)
+	require.NotNil(t, token)
+	assert.Equal(t, "token-id", token.ID)
+}
+
+func TestOutboundApplicationListAppsWithUserTokenSuccess(t *testing.T) {
+	response := map[string]any{"appIds": []string{"app1", "app2"}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		assert.Equal(t, "/v1/mgmt/outbound/apps-with-user-token", r.URL.Path)
+		assert.Equal(t, "user-id", r.URL.Query().Get("userId"))
+		assert.Equal(t, "tenant-id", r.URL.Query().Get("tenantId"))
+	}, response))
+
+	appIDs, err := mgmt.OutboundApplication().ListAppsWithUserToken(context.Background(), "user-id", "tenant-id")
+	require.NoError(t, err)
+	require.Equal(t, []string{"app1", "app2"}, appIDs)
+}
+
+func TestOutboundApplicationListAppsWithUserTokenNoTenant(t *testing.T) {
+	response := map[string]any{"appIds": []string{"app1"}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		assert.Equal(t, "user-id", r.URL.Query().Get("userId"))
+		assert.Equal(t, "", r.URL.Query().Get("tenantId"))
+	}, response))
+
+	appIDs, err := mgmt.OutboundApplication().ListAppsWithUserToken(context.Background(), "user-id", "")
+	require.NoError(t, err)
+	require.Equal(t, []string{"app1"}, appIDs)
+}
+
+func TestOutboundApplicationListAppsWithUserTokenError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+
+	appIDs, err := mgmt.OutboundApplication().ListAppsWithUserToken(context.Background(), "", "")
+	require.Error(t, err)
+	require.Nil(t, appIDs)
+	require.False(t, called)
+}
+
+func TestOutboundApplicationUploadUserAPIKeySuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		assert.Equal(t, "/v1/mgmt/outbound/app/user/apikey/upload", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, "app-id", req["appId"])
+		assert.Equal(t, "user-id", req["userId"])
+		assert.Equal(t, "secret-key", req["apiKey"])
+		assert.Equal(t, "tenant-id", req["tenantId"])
+	}))
+
+	err := mgmt.OutboundApplication().UploadUserAPIKey(context.Background(), &descope.UploadOutboundAppUserAPIKeyRequest{
+		AppID:    "app-id",
+		UserID:   "user-id",
+		APIKey:   "secret-key",
+		TenantID: "tenant-id",
+	})
+	require.NoError(t, err)
+}
+
+func TestOutboundApplicationUploadUserAPIKeyError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+
+	require.Error(t, mgmt.OutboundApplication().UploadUserAPIKey(context.Background(), nil))
+	require.Error(t, mgmt.OutboundApplication().UploadUserAPIKey(context.Background(), &descope.UploadOutboundAppUserAPIKeyRequest{UserID: "u", APIKey: "k"}))
+	require.Error(t, mgmt.OutboundApplication().UploadUserAPIKey(context.Background(), &descope.UploadOutboundAppUserAPIKeyRequest{AppID: "a", APIKey: "k"}))
+	require.Error(t, mgmt.OutboundApplication().UploadUserAPIKey(context.Background(), &descope.UploadOutboundAppUserAPIKeyRequest{AppID: "a", UserID: "u"}))
+	require.False(t, called)
+}
+
+func TestOutboundApplicationUploadTenantAPIKeySuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		assert.Equal(t, "/v1/mgmt/outbound/app/tenant/apikey/upload", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, "app-id", req["appId"])
+		assert.Equal(t, "tenant-id", req["tenantId"])
+		assert.Equal(t, "secret-key", req["apiKey"])
+	}))
+
+	err := mgmt.OutboundApplication().UploadTenantAPIKey(context.Background(), &descope.UploadOutboundAppTenantAPIKeyRequest{
+		AppID:    "app-id",
+		TenantID: "tenant-id",
+		APIKey:   "secret-key",
+	})
+	require.NoError(t, err)
+}
+
+func TestOutboundApplicationUploadTenantAPIKeyError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+
+	require.Error(t, mgmt.OutboundApplication().UploadTenantAPIKey(context.Background(), nil))
+	require.Error(t, mgmt.OutboundApplication().UploadTenantAPIKey(context.Background(), &descope.UploadOutboundAppTenantAPIKeyRequest{TenantID: "t", APIKey: "k"}))
+	require.Error(t, mgmt.OutboundApplication().UploadTenantAPIKey(context.Background(), &descope.UploadOutboundAppTenantAPIKeyRequest{AppID: "a", APIKey: "k"}))
+	require.Error(t, mgmt.OutboundApplication().UploadTenantAPIKey(context.Background(), &descope.UploadOutboundAppTenantAPIKeyRequest{AppID: "a", TenantID: "t"}))
+	require.False(t, called)
+}
+
+func TestOutboundApplicationUploadUserTokenSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		assert.Equal(t, "/v1/mgmt/outbound/app/user/oauthtoken/upload", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, "app-id", req["appId"])
+		assert.Equal(t, "user-id", req["userId"])
+		assert.Equal(t, "refresh", req["refreshToken"])
+		assert.Equal(t, true, req["verifyRefresh"])
+	}))
+
+	err := mgmt.OutboundApplication().UploadUserToken(context.Background(), &descope.UploadOutboundAppUserTokenRequest{
+		OutboundAppUserTokenToUpload: descope.OutboundAppUserTokenToUpload{
+			AppID:        "app-id",
+			UserID:       "user-id",
+			RefreshToken: "refresh",
+			Scopes:       []string{"read"},
+		},
+		VerifyRefresh: true,
+	})
+	require.NoError(t, err)
+}
+
+func TestOutboundApplicationUploadUserTokenError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+
+	require.Error(t, mgmt.OutboundApplication().UploadUserToken(context.Background(), nil))
+	// missing both refresh and access token
+	require.Error(t, mgmt.OutboundApplication().UploadUserToken(context.Background(), &descope.UploadOutboundAppUserTokenRequest{
+		OutboundAppUserTokenToUpload: descope.OutboundAppUserTokenToUpload{AppID: "a", UserID: "u"},
+	}))
+	require.False(t, called)
+}
+
+func TestOutboundApplicationUploadTenantTokenSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		assert.Equal(t, "/v1/mgmt/outbound/app/tenant/oauthtoken/upload", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, "app-id", req["appId"])
+		assert.Equal(t, "tenant-id", req["tenantId"])
+		assert.Equal(t, "access", req["accessToken"])
+	}))
+
+	err := mgmt.OutboundApplication().UploadTenantToken(context.Background(), &descope.UploadOutboundAppTenantTokenRequest{
+		OutboundAppTenantTokenToUpload: descope.OutboundAppTenantTokenToUpload{
+			AppID:       "app-id",
+			TenantID:    "tenant-id",
+			AccessToken: "access",
+		},
+	})
+	require.NoError(t, err)
+}
+
+func TestOutboundApplicationUploadTenantTokenError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+
+	require.Error(t, mgmt.OutboundApplication().UploadTenantToken(context.Background(), nil))
+	require.Error(t, mgmt.OutboundApplication().UploadTenantToken(context.Background(), &descope.UploadOutboundAppTenantTokenRequest{
+		OutboundAppTenantTokenToUpload: descope.OutboundAppTenantTokenToUpload{AppID: "a"},
+	}))
+	require.False(t, called)
+}
+
+func TestOutboundApplicationBatchUploadUserTokensSuccess(t *testing.T) {
+	response := map[string]any{"failures": []map[string]any{
+		{"appId": "app-id", "userId": "user-2", "errorCode": "E152110", "reason": "bad token"},
+	}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		assert.Equal(t, "/v1/mgmt/outbound/app/user/oauthtoken/batch/upload", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		tokens := req["tokens"].([]any)
+		require.Len(t, tokens, 2)
+		assert.Equal(t, "app-id", tokens[0].(map[string]any)["appId"])
+	}, response))
+
+	res, err := mgmt.OutboundApplication().BatchUploadUserTokens(context.Background(), []*descope.OutboundAppUserTokenToUpload{
+		{AppID: "app-id", UserID: "user-1", AccessToken: "a1"},
+		{AppID: "app-id", UserID: "user-2", AccessToken: "a2"},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Len(t, res.Failures, 1)
+	assert.Equal(t, "E152110", res.Failures[0].ErrorCode)
+	assert.Equal(t, "user-2", res.Failures[0].UserID)
+}
+
+func TestOutboundApplicationBatchUploadUserTokensError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+
+	res, err := mgmt.OutboundApplication().BatchUploadUserTokens(context.Background(), nil)
+	require.Error(t, err)
+	require.Nil(t, res)
+	require.False(t, called)
+}
+
+func TestOutboundApplicationBatchUploadTenantTokensSuccess(t *testing.T) {
+	response := map[string]any{"failures": []map[string]any{}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		assert.Equal(t, "/v1/mgmt/outbound/app/tenant/oauthtoken/batch/upload", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Len(t, req["tokens"].([]any), 1)
+	}, response))
+
+	res, err := mgmt.OutboundApplication().BatchUploadTenantTokens(context.Background(), []*descope.OutboundAppTenantTokenToUpload{
+		{AppID: "app-id", TenantID: "tenant-1", AccessToken: "a1"},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Empty(t, res.Failures)
+}
+
 func TestOutboundApplicationDeleteUserTokensSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		assert.Equal(t, "/v1/mgmt/outbound/user/tokens", r.URL.Path)

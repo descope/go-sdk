@@ -1134,6 +1134,43 @@ type OutboundApplication interface {
 	// The token can be used to access external resources on behalf of the user.
 	FetchUserToken(ctx context.Context, request *descope.FetchOutboundAppUserTokenRequest) (*descope.OutboundAppUserToken, error)
 
+	// Fetch the last created outbound application user token (ignores scopes).
+	// The token can be used to access external resources on behalf of the user.
+	FetchLatestUserToken(ctx context.Context, request *descope.FetchOutboundAppUserTokenRequest) (*descope.OutboundAppUserToken, error)
+
+	// Fetch an outbound application tenant token with the specified scopes.
+	// The token can be used to access external resources on behalf of the tenant.
+	FetchTenantToken(ctx context.Context, request *descope.FetchOutboundAppTenantTokenRequest) (*descope.OutboundAppUserToken, error)
+
+	// Fetch the last created outbound application tenant token (ignores scopes).
+	// The token can be used to access external resources on behalf of the tenant.
+	FetchLatestTenantToken(ctx context.Context, request *descope.FetchOutboundAppTenantTokenRequest) (*descope.OutboundAppUserToken, error)
+
+	// List the IDs of the outbound applications the given user currently holds a valid token for.
+	// An optional tenantID scopes the lookup to tokens associated with that tenant.
+	ListAppsWithUserToken(ctx context.Context, userID, tenantID string) ([]string, error)
+
+	// Upload (set) a static API key for a user on an apikey-type outbound application.
+	UploadUserAPIKey(ctx context.Context, request *descope.UploadOutboundAppUserAPIKeyRequest) error
+
+	// Upload (set) a static API key for a tenant on an apikey-type outbound application.
+	UploadTenantAPIKey(ctx context.Context, request *descope.UploadOutboundAppTenantAPIKeyRequest) error
+
+	// Upload (migrate) an existing OAuth token for a user on an oauth-type outbound application.
+	// Used to import tokens managed outside of Descope without requiring the user to re-run the OAuth flow.
+	UploadUserToken(ctx context.Context, request *descope.UploadOutboundAppUserTokenRequest) error
+
+	// Upload (migrate) an existing OAuth token for a tenant on an oauth-type outbound application.
+	UploadTenantToken(ctx context.Context, request *descope.UploadOutboundAppTenantTokenRequest) error
+
+	// Batch upload (migrate) existing OAuth tokens for users. All-or-nothing: if any item fails
+	// per-item validation, the returned failures are populated and no tokens are committed.
+	BatchUploadUserTokens(ctx context.Context, tokens []*descope.OutboundAppUserTokenToUpload) (*descope.BatchUploadOutboundAppTokensResponse, error)
+
+	// Batch upload (migrate) existing OAuth tokens for tenants. All-or-nothing: if any item fails
+	// per-item validation, the returned failures are populated and no tokens are committed.
+	BatchUploadTenantTokens(ctx context.Context, tokens []*descope.OutboundAppTenantTokenToUpload) (*descope.BatchUploadOutboundAppTokensResponse, error)
+
 	// Delete outbound application user tokens by appID or userID.
 	// At least one of appID or userID must be provided.
 	DeleteUserTokens(ctx context.Context, appID, userID string) error

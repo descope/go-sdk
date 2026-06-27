@@ -2152,6 +2152,42 @@ type MockOutboundApplication struct {
 	FetchUserTokenResponse *descope.OutboundAppUserToken
 	FetchUserTokenError    error
 
+	FetchLatestUserTokenAssert   func(request *descope.FetchOutboundAppUserTokenRequest)
+	FetchLatestUserTokenResponse *descope.OutboundAppUserToken
+	FetchLatestUserTokenError    error
+
+	FetchTenantTokenAssert   func(request *descope.FetchOutboundAppTenantTokenRequest)
+	FetchTenantTokenResponse *descope.OutboundAppUserToken
+	FetchTenantTokenError    error
+
+	FetchLatestTenantTokenAssert   func(request *descope.FetchOutboundAppTenantTokenRequest)
+	FetchLatestTenantTokenResponse *descope.OutboundAppUserToken
+	FetchLatestTenantTokenError    error
+
+	ListAppsWithUserTokenAssert   func(userID, tenantID string)
+	ListAppsWithUserTokenResponse []string
+	ListAppsWithUserTokenError    error
+
+	UploadUserAPIKeyAssert func(request *descope.UploadOutboundAppUserAPIKeyRequest)
+	UploadUserAPIKeyError  error
+
+	UploadTenantAPIKeyAssert func(request *descope.UploadOutboundAppTenantAPIKeyRequest)
+	UploadTenantAPIKeyError  error
+
+	UploadUserTokenAssert func(request *descope.UploadOutboundAppUserTokenRequest)
+	UploadUserTokenError  error
+
+	UploadTenantTokenAssert func(request *descope.UploadOutboundAppTenantTokenRequest)
+	UploadTenantTokenError  error
+
+	BatchUploadUserTokensAssert   func(tokens []*descope.OutboundAppUserTokenToUpload)
+	BatchUploadUserTokensResponse *descope.BatchUploadOutboundAppTokensResponse
+	BatchUploadUserTokensError    error
+
+	BatchUploadTenantTokensAssert   func(tokens []*descope.OutboundAppTenantTokenToUpload)
+	BatchUploadTenantTokensResponse *descope.BatchUploadOutboundAppTokensResponse
+	BatchUploadTenantTokensError    error
+
 	DeleteUserTokensAssert func(appID, userID string)
 	DeleteUserTokensError  error
 
@@ -2196,6 +2232,76 @@ func (m *MockOutboundApplication) FetchUserToken(_ context.Context, request *des
 		m.FetchUserTokenAssert(request)
 	}
 	return m.FetchUserTokenResponse, m.FetchUserTokenError
+}
+
+func (m *MockOutboundApplication) FetchLatestUserToken(_ context.Context, request *descope.FetchOutboundAppUserTokenRequest) (*descope.OutboundAppUserToken, error) {
+	if m.FetchLatestUserTokenAssert != nil {
+		m.FetchLatestUserTokenAssert(request)
+	}
+	return m.FetchLatestUserTokenResponse, m.FetchLatestUserTokenError
+}
+
+func (m *MockOutboundApplication) FetchTenantToken(_ context.Context, request *descope.FetchOutboundAppTenantTokenRequest) (*descope.OutboundAppUserToken, error) {
+	if m.FetchTenantTokenAssert != nil {
+		m.FetchTenantTokenAssert(request)
+	}
+	return m.FetchTenantTokenResponse, m.FetchTenantTokenError
+}
+
+func (m *MockOutboundApplication) FetchLatestTenantToken(_ context.Context, request *descope.FetchOutboundAppTenantTokenRequest) (*descope.OutboundAppUserToken, error) {
+	if m.FetchLatestTenantTokenAssert != nil {
+		m.FetchLatestTenantTokenAssert(request)
+	}
+	return m.FetchLatestTenantTokenResponse, m.FetchLatestTenantTokenError
+}
+
+func (m *MockOutboundApplication) ListAppsWithUserToken(_ context.Context, userID, tenantID string) ([]string, error) {
+	if m.ListAppsWithUserTokenAssert != nil {
+		m.ListAppsWithUserTokenAssert(userID, tenantID)
+	}
+	return m.ListAppsWithUserTokenResponse, m.ListAppsWithUserTokenError
+}
+
+func (m *MockOutboundApplication) UploadUserAPIKey(_ context.Context, request *descope.UploadOutboundAppUserAPIKeyRequest) error {
+	if m.UploadUserAPIKeyAssert != nil {
+		m.UploadUserAPIKeyAssert(request)
+	}
+	return m.UploadUserAPIKeyError
+}
+
+func (m *MockOutboundApplication) UploadTenantAPIKey(_ context.Context, request *descope.UploadOutboundAppTenantAPIKeyRequest) error {
+	if m.UploadTenantAPIKeyAssert != nil {
+		m.UploadTenantAPIKeyAssert(request)
+	}
+	return m.UploadTenantAPIKeyError
+}
+
+func (m *MockOutboundApplication) UploadUserToken(_ context.Context, request *descope.UploadOutboundAppUserTokenRequest) error {
+	if m.UploadUserTokenAssert != nil {
+		m.UploadUserTokenAssert(request)
+	}
+	return m.UploadUserTokenError
+}
+
+func (m *MockOutboundApplication) UploadTenantToken(_ context.Context, request *descope.UploadOutboundAppTenantTokenRequest) error {
+	if m.UploadTenantTokenAssert != nil {
+		m.UploadTenantTokenAssert(request)
+	}
+	return m.UploadTenantTokenError
+}
+
+func (m *MockOutboundApplication) BatchUploadUserTokens(_ context.Context, tokens []*descope.OutboundAppUserTokenToUpload) (*descope.BatchUploadOutboundAppTokensResponse, error) {
+	if m.BatchUploadUserTokensAssert != nil {
+		m.BatchUploadUserTokensAssert(tokens)
+	}
+	return m.BatchUploadUserTokensResponse, m.BatchUploadUserTokensError
+}
+
+func (m *MockOutboundApplication) BatchUploadTenantTokens(_ context.Context, tokens []*descope.OutboundAppTenantTokenToUpload) (*descope.BatchUploadOutboundAppTokensResponse, error) {
+	if m.BatchUploadTenantTokensAssert != nil {
+		m.BatchUploadTenantTokensAssert(tokens)
+	}
+	return m.BatchUploadTenantTokensResponse, m.BatchUploadTenantTokensError
 }
 
 func (m *MockOutboundApplication) DeleteUserTokens(_ context.Context, appID, userID string) error {
