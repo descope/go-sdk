@@ -228,11 +228,17 @@ func TestOutboundApplicationFetchLatestUserTokenSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		assert.Equal(t, "app-id", req["appId"])
 		assert.Equal(t, "user-id", req["userId"])
+		assert.Equal(t, "tenant-id", req["tenantId"])
+		// scopes must NOT be sent to the latest endpoint
+		_, hasScopes := req["scopes"]
+		assert.False(t, hasScopes)
 	}, response))
 
 	token, err := mgmt.OutboundApplication().FetchLatestUserToken(context.Background(), &descope.FetchOutboundAppUserTokenRequest{
-		AppID:  "app-id",
-		UserID: "user-id",
+		AppID:    "app-id",
+		UserID:   "user-id",
+		TenantID: "tenant-id",
+		Options:  &descope.OutboundAppUserTokenOptions{ForceRefresh: true},
 	})
 	require.NoError(t, err)
 	require.NotNil(t, token)
@@ -249,6 +255,12 @@ func TestOutboundApplicationFetchLatestUserTokenError(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, token)
 
+	// empty AppID
+	token, err = mgmt.OutboundApplication().FetchLatestUserToken(context.Background(), &descope.FetchOutboundAppUserTokenRequest{UserID: "user-id"})
+	require.Error(t, err)
+	require.Nil(t, token)
+
+	// empty UserID
 	token, err = mgmt.OutboundApplication().FetchLatestUserToken(context.Background(), &descope.FetchOutboundAppUserTokenRequest{AppID: "app-id"})
 	require.Error(t, err)
 	require.Nil(t, token)
@@ -286,6 +298,12 @@ func TestOutboundApplicationFetchTenantTokenError(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, token)
 
+	// empty AppID
+	token, err = mgmt.OutboundApplication().FetchTenantToken(context.Background(), &descope.FetchOutboundAppTenantTokenRequest{TenantID: "tenant-id"})
+	require.Error(t, err)
+	require.Nil(t, token)
+
+	// empty TenantID
 	token, err = mgmt.OutboundApplication().FetchTenantToken(context.Background(), &descope.FetchOutboundAppTenantTokenRequest{AppID: "app-id"})
 	require.Error(t, err)
 	require.Nil(t, token)
@@ -300,15 +318,40 @@ func TestOutboundApplicationFetchLatestTenantTokenSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		assert.Equal(t, "app-id", req["appId"])
 		assert.Equal(t, "tenant-id", req["tenantId"])
+		_, hasScopes := req["scopes"]
+		assert.False(t, hasScopes)
 	}, response))
 
 	token, err := mgmt.OutboundApplication().FetchLatestTenantToken(context.Background(), &descope.FetchOutboundAppTenantTokenRequest{
 		AppID:    "app-id",
 		TenantID: "tenant-id",
+		Options:  &descope.OutboundAppUserTokenOptions{ForceRefresh: true},
 	})
 	require.NoError(t, err)
 	require.NotNil(t, token)
 	assert.Equal(t, "token-id", token.ID)
+}
+
+func TestOutboundApplicationFetchLatestTenantTokenError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+
+	token, err := mgmt.OutboundApplication().FetchLatestTenantToken(context.Background(), nil)
+	require.Error(t, err)
+	require.Nil(t, token)
+
+	// empty AppID
+	token, err = mgmt.OutboundApplication().FetchLatestTenantToken(context.Background(), &descope.FetchOutboundAppTenantTokenRequest{TenantID: "tenant-id"})
+	require.Error(t, err)
+	require.Nil(t, token)
+
+	// empty TenantID
+	token, err = mgmt.OutboundApplication().FetchLatestTenantToken(context.Background(), &descope.FetchOutboundAppTenantTokenRequest{AppID: "app-id"})
+	require.Error(t, err)
+	require.Nil(t, token)
+	require.False(t, called)
 }
 
 func TestOutboundApplicationListAppsWithUserTokenSuccess(t *testing.T) {
@@ -442,6 +485,14 @@ func TestOutboundApplicationUploadUserTokenError(t *testing.T) {
 	}))
 
 	require.Error(t, mgmt.OutboundApplication().UploadUserToken(context.Background(), nil))
+	// missing AppID
+	require.Error(t, mgmt.OutboundApplication().UploadUserToken(context.Background(), &descope.UploadOutboundAppUserTokenRequest{
+		OutboundAppUserTokenToUpload: descope.OutboundAppUserTokenToUpload{UserID: "u", AccessToken: "x"},
+	}))
+	// missing UserID
+	require.Error(t, mgmt.OutboundApplication().UploadUserToken(context.Background(), &descope.UploadOutboundAppUserTokenRequest{
+		OutboundAppUserTokenToUpload: descope.OutboundAppUserTokenToUpload{AppID: "a", AccessToken: "x"},
+	}))
 	// missing both refresh and access token
 	require.Error(t, mgmt.OutboundApplication().UploadUserToken(context.Background(), &descope.UploadOutboundAppUserTokenRequest{
 		OutboundAppUserTokenToUpload: descope.OutboundAppUserTokenToUpload{AppID: "a", UserID: "u"},
@@ -476,8 +527,17 @@ func TestOutboundApplicationUploadTenantTokenError(t *testing.T) {
 	}))
 
 	require.Error(t, mgmt.OutboundApplication().UploadTenantToken(context.Background(), nil))
+	// missing AppID
+	require.Error(t, mgmt.OutboundApplication().UploadTenantToken(context.Background(), &descope.UploadOutboundAppTenantTokenRequest{
+		OutboundAppTenantTokenToUpload: descope.OutboundAppTenantTokenToUpload{TenantID: "t", AccessToken: "x"},
+	}))
+	// missing TenantID
 	require.Error(t, mgmt.OutboundApplication().UploadTenantToken(context.Background(), &descope.UploadOutboundAppTenantTokenRequest{
 		OutboundAppTenantTokenToUpload: descope.OutboundAppTenantTokenToUpload{AppID: "a"},
+	}))
+	// missing both refresh and access token
+	require.Error(t, mgmt.OutboundApplication().UploadTenantToken(context.Background(), &descope.UploadOutboundAppTenantTokenRequest{
+		OutboundAppTenantTokenToUpload: descope.OutboundAppTenantTokenToUpload{AppID: "a", TenantID: "t"},
 	}))
 	require.False(t, called)
 }
@@ -533,6 +593,18 @@ func TestOutboundApplicationBatchUploadTenantTokensSuccess(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Empty(t, res.Failures)
+}
+
+func TestOutboundApplicationBatchUploadTenantTokensError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+
+	res, err := mgmt.OutboundApplication().BatchUploadTenantTokens(context.Background(), nil)
+	require.Error(t, err)
+	require.Nil(t, res)
+	require.False(t, called)
 }
 
 func TestOutboundApplicationDeleteUserTokensSuccess(t *testing.T) {
