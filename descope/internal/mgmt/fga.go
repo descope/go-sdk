@@ -67,6 +67,7 @@ type fgaLoadSchemaResponse struct {
 	Schema *struct {
 		Conditions []*descope.FGACondition `json:"conditions"`
 	} `json:"schema"`
+	SchemaVersion int32 `json:"schemaVersion"`
 }
 
 func (f *fga) LoadSchema(ctx context.Context) (*descope.FGASchema, error) {
@@ -79,7 +80,7 @@ func (f *fga) LoadSchema(ctx context.Context) (*descope.FGASchema, error) {
 	if err != nil {
 		return nil, err // notest
 	}
-	schema := &descope.FGASchema{Schema: response.DSL}
+	schema := &descope.FGASchema{Schema: response.DSL, Version: response.SchemaVersion}
 	if response.Schema != nil {
 		schema.Conditions = response.Schema.Conditions
 	}
@@ -125,7 +126,7 @@ type CheckResponseTuple struct {
 type checkResponse struct {
 	CheckResponseTuple []*CheckResponseTuple `json:"tuples"`
 	// SchemaVersion is response-level (the schema that assigned the condition IDs); copied onto each info below.
-	SchemaVersion string `json:"schemaVersion"`
+	SchemaVersion int32 `json:"schemaVersion"`
 }
 
 func (f *fga) Check(ctx context.Context, relations []*descope.FGARelation) ([]*descope.FGACheck, error) {

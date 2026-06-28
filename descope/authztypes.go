@@ -99,6 +99,9 @@ type FGASchema struct {
 	// Conditions are the CEL conditions defined in the schema (user-defined plus expanded
 	// built-in constraints). They let an edge cache compile and evaluate conditions directly.
 	Conditions []*FGACondition `json:"conditions,omitempty"`
+	// Version is the schema's monotonic version (bumped on every change). An edge cache stores it and only
+	// trusts Check responses whose schemaVersion matches. Populated by LoadSchema from the response.
+	Version int32 `json:"version,omitempty"`
 }
 
 // FGACondition is a named CEL condition with its typed parameters and raw expression.
@@ -155,9 +158,9 @@ type FGACheckInfo struct {
 	// the response schema version. Empty when FactGated or uncacheable.
 	TrueConditions  []int32 `json:"trueConditions,omitempty"`
 	FalseConditions []int32 `json:"falseConditions,omitempty"`
-	// SchemaVersion is the version of the schema that assigned the condition IDs above. It is a response-level
-	// value (CheckResponse.schemaVersion) that the SDK copies onto each check's info; it is not per-tuple on the wire.
-	SchemaVersion string `json:"-"`
+	// SchemaVersion is the monotonic version of the schema that assigned the condition IDs above. It is a
+	// response-level value (CheckResponse.schemaVersion) the SDK copies onto each check's info; not per-tuple on the wire.
+	SchemaVersion int32 `json:"-"`
 }
 
 type FGAMappableResourcesOptions struct {
