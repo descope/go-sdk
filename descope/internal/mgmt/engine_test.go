@@ -11,15 +11,12 @@ import (
 )
 
 func TestEngineCreateSuccess(t *testing.T) {
-	// createdTime/version are int64 in the proto, so the management gateway serializes them
-	// as JSON strings — the response below uses strings to exercise the ",string" tags.
+	// createdTime is int32 epoch seconds in the mgmt proto, so it arrives as a JSON number.
 	response := map[string]any{"engine": map[string]any{
 		"id":          "eng1",
 		"name":        "my-engine",
 		"secret":      "s3cret",
-		"projectId":   "p1",
-		"createdTime": "1719571200",
-		"version":     "1",
+		"createdTime": 1719571200,
 	}}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		assert.Equal(t, "/v1/mgmt/engine/create", r.URL.Path)
@@ -34,8 +31,7 @@ func TestEngineCreateSuccess(t *testing.T) {
 	assert.Equal(t, "eng1", engine.ID)
 	assert.Equal(t, "my-engine", engine.Name)
 	assert.Equal(t, "s3cret", engine.Secret)
-	assert.Equal(t, int64(1719571200), engine.CreatedTime)
-	assert.Equal(t, int64(1), engine.Version)
+	assert.Equal(t, int32(1719571200), engine.CreatedTime)
 }
 
 func TestEngineCreateMissingName(t *testing.T) {

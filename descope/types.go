@@ -1411,19 +1411,12 @@ type CreateOutboundAppRequest struct {
 }
 
 // Engine represents an engine resource. Secret is only populated on Create and RotateSecret;
-// it is always empty on Load/LoadAll. The int64 fields are tagged ",string" because the
-// management API serializes proto int64 values as JSON strings.
+// it is always empty on Load/LoadAll.
 type Engine struct {
-	ID             string `json:"id,omitempty"`
-	Name           string `json:"name,omitempty"`
-	ProjectID      string `json:"projectId,omitempty"`
-	Secret         string `json:"secret,omitempty"`
-	ImageVersion   string `json:"imageVersion,omitempty"`
-	ContentVersion string `json:"contentVersion,omitempty"`
-	Version        int64  `json:"version,omitempty,string"`
-	CreatedTime    int64  `json:"createdTime,omitempty,string"`
-	ModifiedTime   int64  `json:"modifiedTime,omitempty,string"`
-	LastSync       int64  `json:"lastSync,omitempty,string"`
+	ID          string `json:"id,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Secret      string `json:"secret,omitempty"`
+	CreatedTime int32  `json:"createdTime,omitempty"` // epoch seconds
 }
 
 // FetchOutboundAppUserTokenRequest represents a request to fetch an outbound app user token
