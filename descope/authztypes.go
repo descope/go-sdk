@@ -109,6 +109,9 @@ type FGACondition struct {
 	// CheckedExpr is the serialized type-checked CEL program (exprpb.CheckedExpr). An edge cache runs it
 	// directly instead of re-parsing Expression. Transported as base64 over JSON.
 	CheckedExpr []byte `json:"checkedExpr,omitempty"`
+	// ID is the condition's stable 1-based number for this schema version; Check responses reference
+	// conditions by this ID (see FGACheckInfo.TrueConditions/FalseConditions).
+	ID int32 `json:"id,omitempty"`
 }
 
 // FGAConditionParam is a single typed parameter of an FGACondition.
@@ -147,8 +150,14 @@ type FGACheckInfo struct {
 	ConditionalErr string `json:"conditionalErr,omitempty"`
 	// FactGated is true when a backend fact decided this result; such results must not be cached at the edge.
 	FactGated bool `json:"factGated,omitempty"`
-	// EvaluatedConditions maps each deciding-path leaf condition to its raw value (pre-NOT) for an edge cache certificate; empty when FactGated.
-	EvaluatedConditions map[string]bool `json:"evaluatedConditions,omitempty"`
+	// TrueConditions / FalseConditions are the IDs (see FGACondition.ID) of the deciding-path leaf conditions
+	// that evaluated true / false (raw, pre-NOT). An edge cache uses them as a certificate, resolving IDs via
+	// the response schema version. Empty when FactGated or uncacheable.
+	TrueConditions  []int32 `json:"trueConditions,omitempty"`
+	FalseConditions []int32 `json:"falseConditions,omitempty"`
+	// SchemaVersion is the version of the schema that assigned the condition IDs above. It is a response-level
+	// value (CheckResponse.schemaVersion) that the SDK copies onto each check's info; it is not per-tuple on the wire.
+	SchemaVersion string `json:"-"`
 }
 
 type FGAMappableResourcesOptions struct {

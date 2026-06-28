@@ -124,6 +124,8 @@ type CheckResponseTuple struct {
 
 type checkResponse struct {
 	CheckResponseTuple []*CheckResponseTuple `json:"tuples"`
+	// SchemaVersion is response-level (the schema that assigned the condition IDs); copied onto each info below.
+	SchemaVersion string `json:"schemaVersion"`
 }
 
 func (f *fga) Check(ctx context.Context, relations []*descope.FGARelation) ([]*descope.FGACheck, error) {
@@ -164,6 +166,9 @@ func (f *fga) CheckWithContext(ctx context.Context, relations []*descope.FGARela
 		if info == nil {
 			info = &descope.FGACheckInfo{}
 		}
+		// the schema version is sent once per response; surface it on each info so callers (the edge cache)
+		// can validate the condition IDs without a separate response object.
+		info.SchemaVersion = response.SchemaVersion
 		checks[i] = &descope.FGACheck{
 			Relation: tuple.Tuple,
 			Allowed:  tuple.Allowed,

@@ -225,11 +225,12 @@ func TestCheckFGARelationsSuccess(t *testing.T) {
 
 func TestCheckFGARelationsEvaluatedConditions(t *testing.T) {
 	response := map[string]any{
+		"schemaVersion": "v-abc",
 		"tuples": []*descope.FGACheck{
 			{
 				Allowed:  true,
 				Relation: &descope.FGARelation{Resource: "doc1", ResourceType: "doc", Relation: "viewer", Target: "u1", TargetType: "user"},
-				Info:     &descope.FGACheckInfo{Conditional: true, EvaluatedConditions: map[string]bool{"IsAdmin": true}},
+				Info:     &descope.FGACheckInfo{Conditional: true, TrueConditions: []int32{1}, FalseConditions: []int32{2}},
 			},
 		}}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, response))
@@ -239,7 +240,10 @@ func TestCheckFGARelationsEvaluatedConditions(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, checks, 1)
 	require.True(t, checks[0].Info.Conditional)
-	require.Equal(t, map[string]bool{"IsAdmin": true}, checks[0].Info.EvaluatedConditions)
+	require.Equal(t, []int32{1}, checks[0].Info.TrueConditions)
+	require.Equal(t, []int32{2}, checks[0].Info.FalseConditions)
+	// the response-level schema version is surfaced on each check's info
+	require.Equal(t, "v-abc", checks[0].Info.SchemaVersion)
 }
 
 func TestCheckFGARelationsMissingTuples(t *testing.T) {
