@@ -248,3 +248,25 @@ func TestWebAuthnUpdateUserDeviceFinishWithMFA(t *testing.T) {
 	require.NotNil(t, info)
 	assert.EqualValues(t, jwtTokenValid, info.SessionToken.JWT)
 }
+
+func TestWebAuthnUpdateUserDeviceFinishEmptyBody(t *testing.T) {
+	// an empty response body (the credential was enrolled, no session minted) returns no session, not an error
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(""))}, nil
+	})
+	require.NoError(t, err)
+	info, err := a.WebAuthn().UpdateUserDeviceFinish(context.Background(), &descope.WebAuthnFinishRequest{TransactionID: "a"}, nil)
+	require.NoError(t, err)
+	assert.Nil(t, info)
+}
+
+func TestWebAuthnUpdateUserDeviceFinishBadBody(t *testing.T) {
+	// a malformed response body surfaces as an error
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString("{not-json"))}, nil
+	})
+	require.NoError(t, err)
+	info, err := a.WebAuthn().UpdateUserDeviceFinish(context.Background(), &descope.WebAuthnFinishRequest{TransactionID: "a"}, nil)
+	require.Error(t, err)
+	assert.Nil(t, info)
+}
