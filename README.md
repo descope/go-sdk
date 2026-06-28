@@ -117,6 +117,7 @@ These sections show how to use the SDK to perform API management functions. Befo
 16. [Manage Lists](#manage-lists)
 17. [Manage Management Keys](#manage-management-keys)
 18. [Manage Descopers](#manage-descopers)
+19. [Manage Engines](#manage-engines)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -2173,6 +2174,42 @@ if err == nil {
 
 // Delete a descoper. Descoper deletion cannot be undone. Use carefully.
 err := descopeClient.Management.Descoper().Delete(context.Background(), "descoper-id")
+```
+
+### Manage Engines
+
+You can create, update, delete, load, and rotate the secret of engines:
+
+```go
+// Create a new engine. The returned engine includes its generated ID and secret.
+// The secret is ONLY returned on Create (and RotateSecret) — store it securely,
+// as it cannot be retrieved again afterwards.
+engine, err := descopeClient.Management.Engine().Create(context.Background(), "my-engine")
+if err == nil {
+    fmt.Println("engine id:", engine.ID)
+    fmt.Println("engine secret (store securely!):", engine.Secret)
+}
+
+// Update an existing engine's name. The returned engine does not include the secret.
+engine, err = descopeClient.Management.Engine().Update(context.Background(), "engine-id", "renamed-engine")
+
+// Load an engine by ID. The returned engine's secret is always empty.
+engine, err = descopeClient.Management.Engine().Load(context.Background(), "engine-id")
+
+// Load all engines for the project. The returned engines' secrets are always empty.
+engines, err := descopeClient.Management.Engine().LoadAll(context.Background())
+if err == nil {
+    for _, e := range engines {
+        // Do something
+    }
+}
+
+// Rotate an engine's secret. The previous secret is immediately invalidated and the
+// new secret is returned in cleartext — store it securely, as it cannot be retrieved again.
+newSecret, err := descopeClient.Management.Engine().RotateSecret(context.Background(), "engine-id")
+
+// Delete an engine by ID.
+err = descopeClient.Management.Engine().Delete(context.Background(), "engine-id")
 ```
 
 ## Code Examples

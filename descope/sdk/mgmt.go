@@ -1179,6 +1179,30 @@ type OutboundApplication interface {
 	DeleteTokenByID(ctx context.Context, id string) error
 }
 
+// Provides functions for managing engines in a project.
+type Engine interface {
+	// Create a new engine with the given name. The returned engine includes its generated
+	// ID and secret. The secret is only returned here (and on RotateSecret) — store it
+	// securely, as it cannot be retrieved again afterwards.
+	Create(ctx context.Context, name string) (*descope.Engine, error)
+
+	// Update an existing engine's name. Returns the updated engine (secret not included).
+	Update(ctx context.Context, id, name string) (*descope.Engine, error)
+
+	// Delete an engine by ID.
+	Delete(ctx context.Context, id string) error
+
+	// Load an engine by ID. The returned engine's secret is always empty.
+	Load(ctx context.Context, id string) (*descope.Engine, error)
+
+	// Load all engines for the project. The returned engines' secrets are always empty.
+	LoadAll(ctx context.Context) ([]*descope.Engine, error)
+
+	// RotateSecret generates a new secret for the engine, invalidating the previous one,
+	// and returns the new secret in cleartext. Store it securely — it cannot be retrieved again.
+	RotateSecret(ctx context.Context, id string) (string, error)
+}
+
 // Provides functions for managing management keys in a project.
 type ManagementKey interface {
 	// Create a new management key.
@@ -1387,4 +1411,7 @@ type Management interface {
 
 	// Provides functions for managing lists in a project.
 	List() List
+
+	// Provides functions for managing engines in a project.
+	Engine() Engine
 }

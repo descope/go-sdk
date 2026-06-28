@@ -1410,6 +1410,15 @@ type CreateOutboundAppRequest struct {
 	ClientSecret string `json:"clientSecret,omitempty"`
 }
 
+// Engine represents an engine resource. Secret is only populated on Create and RotateSecret;
+// it is always empty on Load/LoadAll.
+type Engine struct {
+	ID          string `json:"id,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Secret      string `json:"secret,omitempty"`
+	CreatedTime int32  `json:"createdTime,omitempty"` // epoch seconds
+}
+
 // FetchOutboundAppUserTokenRequest represents a request to fetch an outbound app user token
 type FetchOutboundAppUserTokenRequest struct {
 	AppID    string                       `json:"appId"`
