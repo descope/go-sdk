@@ -68,7 +68,7 @@ func TestLoadFGASchemaSuccess(t *testing.T) {
 		"dsl": "some schema",
 		"schema": map[string]any{
 			"conditions": []map[string]any{
-				{"name": "DuringShift", "expression": "now >= begin", "params": []map[string]any{{"name": "now", "type": "int"}, {"name": "begin", "type": "int"}}},
+				{"name": "DuringShift", "expression": "now >= begin", "checkedExpr": []byte("checked-program-bytes"), "params": []map[string]any{{"name": "now", "type": "int"}, {"name": "begin", "type": "int"}}},
 			},
 		},
 	}
@@ -81,6 +81,7 @@ func TestLoadFGASchemaSuccess(t *testing.T) {
 	require.Len(t, schema.Conditions, 1)
 	require.Equal(t, "DuringShift", schema.Conditions[0].Name)
 	require.Equal(t, "now >= begin", schema.Conditions[0].Expression)
+	require.Equal(t, []byte("checked-program-bytes"), schema.Conditions[0].CheckedExpr, "checkedExpr must round-trip (base64 over JSON)")
 	require.Len(t, schema.Conditions[0].Params, 2)
 	require.Equal(t, "now", schema.Conditions[0].Params[0].Name)
 	require.Equal(t, "int", schema.Conditions[0].Params[0].Type)
