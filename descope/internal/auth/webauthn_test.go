@@ -239,7 +239,7 @@ func TestWebAuthnUpdateUserDeviceFinish(t *testing.T) {
 func TestWebAuthnUpdateUserDeviceFinishWithMFA(t *testing.T) {
 	// mfa enrollment: finish returns the merged-amr session nested under "jwt"
 	body := fmt.Sprintf(`{"jwt": %s}`, mockAuthSessionBody)
-	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
 		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(body))}, nil
 	})
 	require.NoError(t, err)

@@ -128,7 +128,11 @@ func (auth *webAuthn) UpdateUserDeviceFinish(ctx context.Context, request *desco
 	if err != nil {
 		return nil, err
 	}
-	// the merged-amr session, if any, is nested under "jwt" so the default (no-mfa) response stays empty
+	// the merged-amr session, if any, is nested under "jwt" so the default (no-mfa) response stays empty.
+	// guard the empty-body case (the credential was enrolled, no session minted) before unmarshalling.
+	if res.BodyStr == "" {
+		return nil, nil
+	}
 	var wrapper struct {
 		JWT *descope.JWTResponse `json:"jwt,omitempty"`
 	}
