@@ -1448,6 +1448,96 @@ type FetchOutboundAppUserTokenResponse struct {
 	Token *OutboundAppUserToken `json:"token"`
 }
 
+// FetchOutboundAppTenantTokenRequest represents a request to fetch an outbound app tenant token
+type FetchOutboundAppTenantTokenRequest struct {
+	AppID    string                       `json:"appId"`
+	TenantID string                       `json:"tenantId"`
+	Scopes   []string                     `json:"scopes,omitempty"`
+	Options  *OutboundAppUserTokenOptions `json:"options,omitempty"`
+}
+
+// UploadOutboundAppUserAPIKeyRequest represents a request to upload/set a static API key for a user
+// on an apikey-type outbound application.
+type UploadOutboundAppUserAPIKeyRequest struct {
+	AppID    string `json:"appId"`
+	UserID   string `json:"userId"`
+	APIKey   string `json:"apiKey"`
+	TenantID string `json:"tenantId,omitempty"`
+}
+
+// UploadOutboundAppTenantAPIKeyRequest represents a request to upload/set a static API key for a tenant
+// on an apikey-type outbound application.
+type UploadOutboundAppTenantAPIKeyRequest struct {
+	AppID    string `json:"appId"`
+	TenantID string `json:"tenantId"`
+	APIKey   string `json:"apiKey"`
+}
+
+// OutboundAppUserTokenToUpload is a single OAuth token to migrate for a user. At least one of
+// RefreshToken or AccessToken must be set. AccessTokenExpiry is in epoch seconds (0 means unknown).
+// Used as a batch item and embedded into UploadOutboundAppUserTokenRequest.
+type OutboundAppUserTokenToUpload struct {
+	AppID              string   `json:"appId"`
+	UserID             string   `json:"userId"`
+	TenantID           string   `json:"tenantId,omitempty"`
+	RefreshToken       string   `json:"refreshToken,omitempty"`
+	AccessToken        string   `json:"accessToken,omitempty"`
+	AccessTokenExpiry  int32    `json:"accessTokenExpiry,omitempty"`
+	AccessTokenType    string   `json:"accessTokenType,omitempty"`
+	Scopes             []string `json:"scopes,omitempty"`
+	ExternalIdentifier string   `json:"externalIdentifier,omitempty"`
+	IDToken            string   `json:"idToken,omitempty"`
+	GrantedBy          string   `json:"grantedBy,omitempty"`
+}
+
+// OutboundAppTenantTokenToUpload is a single OAuth token to migrate for a tenant. At least one of
+// RefreshToken or AccessToken must be set. AccessTokenExpiry is in epoch seconds (0 means unknown).
+// Used as a batch item and embedded into UploadOutboundAppTenantTokenRequest.
+type OutboundAppTenantTokenToUpload struct {
+	AppID              string   `json:"appId"`
+	TenantID           string   `json:"tenantId"`
+	RefreshToken       string   `json:"refreshToken,omitempty"`
+	AccessToken        string   `json:"accessToken,omitempty"`
+	AccessTokenExpiry  int32    `json:"accessTokenExpiry,omitempty"`
+	AccessTokenType    string   `json:"accessTokenType,omitempty"`
+	Scopes             []string `json:"scopes,omitempty"`
+	ExternalIdentifier string   `json:"externalIdentifier,omitempty"`
+	IDToken            string   `json:"idToken,omitempty"`
+	GrantedBy          string   `json:"grantedBy,omitempty"`
+}
+
+// UploadOutboundAppUserTokenRequest uploads a single OAuth token for a user. When VerifyRefresh is
+// true, the refresh token is verified against the provider before persisting; nothing is written if
+// the verification fails.
+type UploadOutboundAppUserTokenRequest struct {
+	OutboundAppUserTokenToUpload
+	VerifyRefresh bool `json:"verifyRefresh,omitempty"`
+}
+
+// UploadOutboundAppTenantTokenRequest uploads a single OAuth token for a tenant. When VerifyRefresh is
+// true, the refresh token is verified against the provider before persisting; nothing is written if
+// the verification fails.
+type UploadOutboundAppTenantTokenRequest struct {
+	OutboundAppTenantTokenToUpload
+	VerifyRefresh bool `json:"verifyRefresh,omitempty"`
+}
+
+// OutboundAppTokenUploadFailure describes a single per-item failure from a batch upload. Only the
+// identifier relevant to the variant is populated (UserID for the user batch, TenantID for the tenant batch).
+type OutboundAppTokenUploadFailure struct {
+	AppID     string `json:"appId"`
+	UserID    string `json:"userId,omitempty"`
+	TenantID  string `json:"tenantId,omitempty"`
+	ErrorCode string `json:"errorCode"`
+	Reason    string `json:"reason"`
+}
+
+// BatchUploadOutboundAppTokensResponse is returned by the batch upload endpoints. Batch upload is
+// all-or-nothing: a non-empty Failures slice means no tokens were committed.
+type BatchUploadOutboundAppTokensResponse struct {
+	Failures []*OutboundAppTokenUploadFailure `json:"failures"`
+}
+
 type ThirdPartyApplicationScope struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`

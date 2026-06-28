@@ -1892,6 +1892,70 @@ app, err := descopeClient.Management.OutboundApplication().LoadApplication(conte
 apps, err := descopeClient.Management.OutboundApplication().LoadAllApplications(context.Background())
 ```
 
+You can fetch tokens for a user or a tenant, by scopes or the latest one:
+
+```go
+// Fetch a user token with specific scopes
+token, err := descopeClient.Management.OutboundApplication().FetchUserToken(context.Background(), &descope.FetchOutboundAppUserTokenRequest{
+    AppID:  "app-id",
+    UserID: "user-id",
+    Scopes: []string{"read", "write"},
+})
+
+// Fetch the latest user token (ignores scopes)
+token, err = descopeClient.Management.OutboundApplication().FetchLatestUserToken(context.Background(), &descope.FetchOutboundAppUserTokenRequest{
+    AppID:  "app-id",
+    UserID: "user-id",
+})
+
+// Fetch a tenant token with specific scopes / the latest tenant token
+token, err = descopeClient.Management.OutboundApplication().FetchTenantToken(context.Background(), &descope.FetchOutboundAppTenantTokenRequest{
+    AppID:    "app-id",
+    TenantID: "tenant-id",
+    Scopes:   []string{"read"},
+})
+token, err = descopeClient.Management.OutboundApplication().FetchLatestTenantToken(context.Background(), &descope.FetchOutboundAppTenantTokenRequest{
+    AppID:    "app-id",
+    TenantID: "tenant-id",
+})
+
+// List the IDs of the outbound apps a user currently holds a valid token for
+appIDs, err := descopeClient.Management.OutboundApplication().ListAppsWithUserToken(context.Background(), "user-id", "" /* optional tenantId */)
+```
+
+For apikey-type outbound apps you can store a static API key, and for oauth-type apps you can
+migrate (upload) existing tokens without requiring the user to re-run the OAuth flow:
+
+```go
+// Store a static API key for a user / tenant on an apikey-type app
+err := descopeClient.Management.OutboundApplication().UploadUserAPIKey(context.Background(), &descope.UploadOutboundAppUserAPIKeyRequest{
+    AppID:  "app-id",
+    UserID: "user-id",
+    APIKey: "the-users-api-key",
+})
+err = descopeClient.Management.OutboundApplication().UploadTenantAPIKey(context.Background(), &descope.UploadOutboundAppTenantAPIKeyRequest{
+    AppID:    "app-id",
+    TenantID: "tenant-id",
+    APIKey:   "the-tenants-api-key",
+})
+
+// Upload (migrate) an existing OAuth token for a user / tenant
+err = descopeClient.Management.OutboundApplication().UploadUserToken(context.Background(), &descope.UploadOutboundAppUserTokenRequest{
+    OutboundAppUserTokenToUpload: descope.OutboundAppUserTokenToUpload{
+        AppID:        "app-id",
+        UserID:       "user-id",
+        RefreshToken: "the-refresh-token",
+        Scopes:       []string{"read", "write"},
+    },
+})
+
+// Batch upload (all-or-nothing): inspect res.Failures to see which items were rejected
+res, err := descopeClient.Management.OutboundApplication().BatchUploadUserTokens(context.Background(), []*descope.OutboundAppUserTokenToUpload{
+    {AppID: "app-id", UserID: "user-1", AccessToken: "token-1"},
+    {AppID: "app-id", UserID: "user-2", AccessToken: "token-2"},
+})
+```
+
 ### Manage Lists
 
 You can create, update, delete, or load lists, as well as perform IP-specific operations:
