@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.26.0](https://github.com/descope/go-sdk/compare/v1.25.0...v1.26.0) (2026-06-28)
+
+
+### Features
+
+* **mgmt:** add engine management API ([#786](https://github.com/descope/go-sdk/issues/786)) ([0494397](https://github.com/descope/go-sdk/commit/049439759bd8209e83797c4748c04f3d3723d463))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.25.0 ([#784](https://github.com/descope/go-sdk/issues/784)) ([f1cdb0d](https://github.com/descope/go-sdk/commit/f1cdb0ddf3d84f37c8a102ab4304a7fee2ed52b8))
+
 ## [1.25.0](https://github.com/descope/go-sdk/compare/v1.24.0...v1.25.0) (2026-06-28)
 
 
