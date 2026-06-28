@@ -1,7 +1,10 @@
 package auth
 
 import (
+	"bytes"
 	"context"
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -205,10 +208,43 @@ func TestWebAuthnUpdateUserDeviceStartEmpty(t *testing.T) {
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
 
+func TestWebAuthnUpdateUserDeviceStartWithMFA(t *testing.T) {
+	expectedResponse := descope.WebAuthnTransactionResponse{TransactionID: "a"}
+	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
+		req := authenticationWebAuthnAddDeviceRequestBody{}
+		err := readBody(r, &req)
+		require.NoError(t, err)
+		assert.EqualValues(t, "test@test.com", req.LoginID)
+		require.NotNil(t, req.LoginOptions)
+		assert.True(t, req.LoginOptions.MFA)
+	}, expectedResponse))
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	res, err := a.WebAuthn().UpdateUserDeviceStart(context.Background(), "test@test.com", "https://example.com", r, &descope.LoginOptions{MFA: true})
+	require.NoError(t, err)
+	assert.EqualValues(t, expectedResponse.TransactionID, res.TransactionID)
+}
+
 func TestWebAuthnUpdateUserDeviceFinish(t *testing.T) {
+	// default (no mfa) flow: finish returns no session token
 	expectedResponse := &descope.WebAuthnFinishRequest{TransactionID: "a"}
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	err = a.WebAuthn().UpdateUserDeviceFinish(context.Background(), expectedResponse)
+	info, err := a.WebAuthn().UpdateUserDeviceFinish(context.Background(), expectedResponse, nil)
 	require.NoError(t, err)
+	assert.Nil(t, info)
+}
+
+func TestWebAuthnUpdateUserDeviceFinishWithMFA(t *testing.T) {
+	// mfa enrollment: finish returns the merged-amr session nested under "jwt"
+	body := fmt.Sprintf(`{"jwt": %s}`, mockAuthSessionBody)
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(body))}, nil
+	})
+	require.NoError(t, err)
+	info, err := a.WebAuthn().UpdateUserDeviceFinish(context.Background(), &descope.WebAuthnFinishRequest{TransactionID: "a"}, nil)
+	require.NoError(t, err)
+	require.NotNil(t, info)
+	assert.EqualValues(t, jwtTokenValid, info.SessionToken.JWT)
 }

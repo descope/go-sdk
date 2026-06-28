@@ -91,7 +91,11 @@ func (auth *webAuthn) SignUpOrInStart(ctx context.Context, loginID string, origi
 	return webAuthnResponse, err
 }
 
-func (auth *webAuthn) UpdateUserDeviceStart(ctx context.Context, loginID string, origin string, r *http.Request) (*descope.WebAuthnTransactionResponse, error) {
+// UpdateUserDeviceStart starts a passkey enrollment for an existing, logged-in user.
+// Pass a loginOptions with MFA (or Stepup) set to have UpdateUserDeviceFinish return a single
+// session whose amr merges the user's previously-passed factors with the newly-enrolled passkey,
+// instead of having to run a separate sign-in ceremony afterwards.
+func (auth *webAuthn) UpdateUserDeviceStart(ctx context.Context, loginID string, origin string, r *http.Request, loginOptions ...*descope.LoginOptions) (*descope.WebAuthnTransactionResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
@@ -101,7 +105,11 @@ func (auth *webAuthn) UpdateUserDeviceStart(ctx context.Context, loginID string,
 		return nil, err
 	}
 
-	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnUpdateUserDeviceStart(), authenticationWebAuthnAddDeviceRequestBody{LoginID: loginID, Origin: origin}, nil, pswd)
+	var loginOpts *descope.LoginOptions
+	if len(loginOptions) > 0 {
+		loginOpts = loginOptions[0]
+	}
+	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnUpdateUserDeviceStart(), authenticationWebAuthnAddDeviceRequestBody{LoginID: loginID, Origin: origin, LoginOptions: loginOpts}, nil, pswd)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +119,29 @@ func (auth *webAuthn) UpdateUserDeviceStart(ctx context.Context, loginID string,
 	return webAuthnResponse, err
 }
 
-func (auth *webAuthn) UpdateUserDeviceFinish(ctx context.Context, request *descope.WebAuthnFinishRequest) error {
-	_, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnUpdateUserDeviceFinish(), request, nil, "")
-	return err
+// UpdateUserDeviceFinish completes a passkey enrollment. When the matching UpdateUserDeviceStart
+// opted into MFA/Stepup, the returned AuthenticationInfo carries a session whose amr merges the
+// previously-passed factors with the new passkey; otherwise it returns (nil, nil) - the credential
+// is enrolled but no new session is minted (the default flow).
+func (auth *webAuthn) UpdateUserDeviceFinish(ctx context.Context, request *descope.WebAuthnFinishRequest, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnUpdateUserDeviceFinish(), request, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	// the merged-amr session, if any, is nested under "jwt" so the default (no-mfa) response stays empty
+	var wrapper struct {
+		JWT *descope.JWTResponse `json:"jwt,omitempty"`
+	}
+	if err := utils.Unmarshal([]byte(res.BodyStr), &wrapper); err != nil {
+		return nil, err
+	}
+	if wrapper.JWT == nil || wrapper.JWT.SessionJwt == "" {
+		return nil, nil
+	}
+	flat, err := utils.Marshal(wrapper.JWT)
+	if err != nil {
+		return nil, err
+	}
+	res.BodyStr = string(flat)
+	return auth.generateAuthenticationInfo(res, w)
 }

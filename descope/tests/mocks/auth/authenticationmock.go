@@ -566,12 +566,13 @@ type MockWebAuthn struct {
 	SignUpOrInStartError    error
 	SignUpOrInStartResponse *descope.WebAuthnTransactionResponse
 
-	UpdateUserDeviceStartAssert   func(loginID string, origin string, r *http.Request)
+	UpdateUserDeviceStartAssert   func(loginID string, origin string, r *http.Request, loginOptions ...*descope.LoginOptions)
 	UpdateUserDeviceStartError    error
 	UpdateUserDeviceStartResponse *descope.WebAuthnTransactionResponse
 
-	UpdateUserDeviceFinishAssert func(finishRequest *descope.WebAuthnFinishRequest)
-	UpdateUserDeviceFinishError  error
+	UpdateUserDeviceFinishAssert   func(finishRequest *descope.WebAuthnFinishRequest, w http.ResponseWriter)
+	UpdateUserDeviceFinishError    error
+	UpdateUserDeviceFinishResponse *descope.AuthenticationInfo
 }
 
 func (m *MockWebAuthn) SignUpStart(_ context.Context, loginID string, user *descope.User, origin string, signUpOptions *descope.SignUpOptions) (*descope.WebAuthnTransactionResponse, error) {
@@ -609,18 +610,18 @@ func (m *MockWebAuthn) SignUpOrInStart(_ context.Context, loginID string, origin
 	return m.SignUpOrInStartResponse, m.SignUpOrInStartError
 }
 
-func (m *MockWebAuthn) UpdateUserDeviceStart(_ context.Context, loginID string, origin string, r *http.Request) (*descope.WebAuthnTransactionResponse, error) {
+func (m *MockWebAuthn) UpdateUserDeviceStart(_ context.Context, loginID string, origin string, r *http.Request, loginOptions ...*descope.LoginOptions) (*descope.WebAuthnTransactionResponse, error) {
 	if m.UpdateUserDeviceStartAssert != nil {
-		m.UpdateUserDeviceStartAssert(loginID, origin, r)
+		m.UpdateUserDeviceStartAssert(loginID, origin, r, loginOptions...)
 	}
 	return m.UpdateUserDeviceStartResponse, m.UpdateUserDeviceStartError
 }
 
-func (m *MockWebAuthn) UpdateUserDeviceFinish(_ context.Context, finishRequest *descope.WebAuthnFinishRequest) error {
+func (m *MockWebAuthn) UpdateUserDeviceFinish(_ context.Context, finishRequest *descope.WebAuthnFinishRequest, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	if m.UpdateUserDeviceFinishAssert != nil {
-		m.UpdateUserDeviceFinishAssert(finishRequest)
+		m.UpdateUserDeviceFinishAssert(finishRequest, w)
 	}
-	return m.UpdateUserDeviceFinishError
+	return m.UpdateUserDeviceFinishResponse, m.UpdateUserDeviceFinishError
 }
 
 // Mock Session
