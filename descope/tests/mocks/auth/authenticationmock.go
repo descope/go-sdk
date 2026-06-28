@@ -566,7 +566,7 @@ type MockWebAuthn struct {
 	SignUpOrInStartError    error
 	SignUpOrInStartResponse *descope.WebAuthnTransactionResponse
 
-	UpdateUserDeviceStartAssert   func(loginID string, origin string, r *http.Request, loginOptions ...*descope.LoginOptions)
+	UpdateUserDeviceStartAssert   func(loginID string, origin string, r *http.Request, mfa ...bool)
 	UpdateUserDeviceStartError    error
 	UpdateUserDeviceStartResponse *descope.WebAuthnTransactionResponse
 
@@ -610,9 +610,9 @@ func (m *MockWebAuthn) SignUpOrInStart(_ context.Context, loginID string, origin
 	return m.SignUpOrInStartResponse, m.SignUpOrInStartError
 }
 
-func (m *MockWebAuthn) UpdateUserDeviceStart(_ context.Context, loginID string, origin string, r *http.Request, loginOptions ...*descope.LoginOptions) (*descope.WebAuthnTransactionResponse, error) {
+func (m *MockWebAuthn) UpdateUserDeviceStart(_ context.Context, loginID string, origin string, r *http.Request, mfa ...bool) (*descope.WebAuthnTransactionResponse, error) {
 	if m.UpdateUserDeviceStartAssert != nil {
-		m.UpdateUserDeviceStartAssert(loginID, origin, r, loginOptions...)
+		m.UpdateUserDeviceStartAssert(loginID, origin, r, mfa...)
 	}
 	return m.UpdateUserDeviceStartResponse, m.UpdateUserDeviceStartError
 }

@@ -215,13 +215,12 @@ func TestWebAuthnUpdateUserDeviceStartWithMFA(t *testing.T) {
 		err := readBody(r, &req)
 		require.NoError(t, err)
 		assert.EqualValues(t, "test@test.com", req.LoginID)
-		require.NotNil(t, req.LoginOptions)
-		assert.True(t, req.LoginOptions.MFA)
+		assert.True(t, req.MFA)
 	}, expectedResponse))
 	require.NoError(t, err)
 	r := &http.Request{Header: http.Header{}}
 	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
-	res, err := a.WebAuthn().UpdateUserDeviceStart(context.Background(), "test@test.com", "https://example.com", r, &descope.LoginOptions{MFA: true})
+	res, err := a.WebAuthn().UpdateUserDeviceStart(context.Background(), "test@test.com", "https://example.com", r, true)
 	require.NoError(t, err)
 	assert.EqualValues(t, expectedResponse.TransactionID, res.TransactionID)
 }

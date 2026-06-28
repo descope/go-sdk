@@ -92,10 +92,10 @@ func (auth *webAuthn) SignUpOrInStart(ctx context.Context, loginID string, origi
 }
 
 // UpdateUserDeviceStart starts a passkey enrollment for an existing, logged-in user.
-// Pass a loginOptions with MFA (or Stepup) set to have UpdateUserDeviceFinish return a single
-// session whose amr merges the user's previously-passed factors with the newly-enrolled passkey,
-// instead of having to run a separate sign-in ceremony afterwards.
-func (auth *webAuthn) UpdateUserDeviceStart(ctx context.Context, loginID string, origin string, r *http.Request, loginOptions ...*descope.LoginOptions) (*descope.WebAuthnTransactionResponse, error) {
+// Pass mfa=true to have UpdateUserDeviceFinish return a single session whose amr merges the user's
+// previously-passed factors with the newly-enrolled passkey, instead of having to run a separate
+// sign-in ceremony afterwards.
+func (auth *webAuthn) UpdateUserDeviceStart(ctx context.Context, loginID string, origin string, r *http.Request, mfa ...bool) (*descope.WebAuthnTransactionResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
@@ -105,11 +105,11 @@ func (auth *webAuthn) UpdateUserDeviceStart(ctx context.Context, loginID string,
 		return nil, err
 	}
 
-	var loginOpts *descope.LoginOptions
-	if len(loginOptions) > 0 {
-		loginOpts = loginOptions[0]
+	var mfaVal bool
+	if len(mfa) > 0 {
+		mfaVal = mfa[0]
 	}
-	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnUpdateUserDeviceStart(), authenticationWebAuthnAddDeviceRequestBody{LoginID: loginID, Origin: origin, LoginOptions: loginOpts}, nil, pswd)
+	res, err := auth.client.DoPostRequest(ctx, api.Routes.WebAuthnUpdateUserDeviceStart(), authenticationWebAuthnAddDeviceRequestBody{LoginID: loginID, Origin: origin, MFA: mfaVal}, nil, pswd)
 	if err != nil {
 		return nil, err
 	}
