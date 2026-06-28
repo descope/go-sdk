@@ -42,6 +42,7 @@ type managementService struct {
 	managementKey         sdk.ManagementKey
 	descoper              sdk.Descoper
 	list                  sdk.List
+	engine                sdk.Engine
 }
 
 func NewManagement(conf ManagementParams, provider *auth.Provider, c *api.Client) *managementService {
@@ -68,6 +69,7 @@ func NewManagement(conf ManagementParams, provider *auth.Provider, c *api.Client
 	service.managementKey = &mgmtkey{managementBase: base}
 	service.descoper = &descoper{managementBase: base}
 	service.list = &lists{managementBase: base}
+	service.engine = &engine{managementBase: base}
 	return service
 }
 
@@ -174,6 +176,11 @@ func (mgmt *managementService) Descoper() sdk.Descoper {
 func (mgmt *managementService) List() sdk.List {
 	mgmt.ensureManagementKey()
 	return mgmt.list
+}
+
+func (mgmt *managementService) Engine() sdk.Engine {
+	mgmt.ensureManagementKey()
+	return mgmt.engine
 }
 
 func (mgmt *managementService) ensureManagementKey() {

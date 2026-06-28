@@ -30,6 +30,7 @@ type MockManagement struct {
 	*MockManagementKey
 	*MockDescoper
 	*MockList
+	*MockEngine
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -114,6 +115,10 @@ func (m *MockManagement) Descoper() sdk.Descoper {
 
 func (m *MockManagement) List() sdk.List {
 	return m.MockList
+}
+
+func (m *MockManagement) Engine() sdk.Engine {
+	return m.MockEngine
 }
 
 // Mock JWT
@@ -2583,4 +2588,69 @@ func (m *MockList) Clear(_ context.Context, id string) error {
 		m.ClearAssert(id)
 	}
 	return m.ClearError
+}
+
+// Mock Engine
+
+type MockEngine struct {
+	CreateAssert   func(name string)
+	CreateResponse *descope.Engine
+	CreateError    error
+
+	UpdateAssert   func(id, name string)
+	UpdateResponse *descope.Engine
+	UpdateError    error
+
+	DeleteAssert func(id string)
+	DeleteError  error
+
+	LoadAssert   func(id string)
+	LoadResponse *descope.Engine
+	LoadError    error
+
+	LoadAllResponse []*descope.Engine
+	LoadAllError    error
+
+	RotateSecretAssert   func(id string)
+	RotateSecretResponse string
+	RotateSecretError    error
+}
+
+func (m *MockEngine) Create(_ context.Context, name string) (*descope.Engine, error) {
+	if m.CreateAssert != nil {
+		m.CreateAssert(name)
+	}
+	return m.CreateResponse, m.CreateError
+}
+
+func (m *MockEngine) Update(_ context.Context, id, name string) (*descope.Engine, error) {
+	if m.UpdateAssert != nil {
+		m.UpdateAssert(id, name)
+	}
+	return m.UpdateResponse, m.UpdateError
+}
+
+func (m *MockEngine) Delete(_ context.Context, id string) error {
+	if m.DeleteAssert != nil {
+		m.DeleteAssert(id)
+	}
+	return m.DeleteError
+}
+
+func (m *MockEngine) Load(_ context.Context, id string) (*descope.Engine, error) {
+	if m.LoadAssert != nil {
+		m.LoadAssert(id)
+	}
+	return m.LoadResponse, m.LoadError
+}
+
+func (m *MockEngine) LoadAll(_ context.Context) ([]*descope.Engine, error) {
+	return m.LoadAllResponse, m.LoadAllError
+}
+
+func (m *MockEngine) RotateSecret(_ context.Context, id string) (string, error) {
+	if m.RotateSecretAssert != nil {
+		m.RotateSecretAssert(id)
+	}
+	return m.RotateSecretResponse, m.RotateSecretError
 }

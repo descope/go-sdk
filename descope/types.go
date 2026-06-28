@@ -1410,6 +1410,22 @@ type CreateOutboundAppRequest struct {
 	ClientSecret string `json:"clientSecret,omitempty"`
 }
 
+// Engine represents an engine resource. Secret is only populated on Create and RotateSecret;
+// it is always empty on Load/LoadAll. The int64 fields are tagged ",string" because the
+// management API serializes proto int64 values as JSON strings.
+type Engine struct {
+	ID             string `json:"id,omitempty"`
+	Name           string `json:"name,omitempty"`
+	ProjectID      string `json:"projectId,omitempty"`
+	Secret         string `json:"secret,omitempty"`
+	ImageVersion   string `json:"imageVersion,omitempty"`
+	ContentVersion string `json:"contentVersion,omitempty"`
+	Version        int64  `json:"version,omitempty,string"`
+	CreatedTime    int64  `json:"createdTime,omitempty,string"`
+	ModifiedTime   int64  `json:"modifiedTime,omitempty,string"`
+	LastSync       int64  `json:"lastSync,omitempty,string"`
+}
+
 // FetchOutboundAppUserTokenRequest represents a request to fetch an outbound app user token
 type FetchOutboundAppUserTokenRequest struct {
 	AppID    string                       `json:"appId"`

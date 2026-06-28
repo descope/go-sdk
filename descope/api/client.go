@@ -297,6 +297,12 @@ var (
 			listRemoveTexts:                            "mgmt/list/text/remove",
 			listCheckText:                              "mgmt/list/text/check",
 			listClear:                                  "mgmt/list/clear",
+			engineCreate:                               "mgmt/engine/create",
+			engineUpdate:                               "mgmt/engine/update",
+			engineDelete:                               "mgmt/engine/delete",
+			engineLoad:                                 "mgmt/engine/load",
+			engineLoadAll:                              "mgmt/engines/load",
+			engineRotateSecret:                         "mgmt/engine/rotate",
 		},
 		logout:       "auth/logout",
 		logoutAll:    "auth/logoutall",
@@ -612,6 +618,13 @@ type mgmtEndpoints struct {
 	listRemoveTexts string
 	listCheckText   string
 	listClear       string
+
+	engineCreate       string
+	engineUpdate       string
+	engineDelete       string
+	engineLoad         string
+	engineLoadAll      string
+	engineRotateSecret string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -1675,6 +1688,30 @@ func (e *endpoints) ManagementListCheckText() string {
 
 func (e *endpoints) ManagementListClear() string {
 	return path.Join(e.version, e.mgmt.listClear)
+}
+
+func (e *endpoints) ManagementEngineCreate() string {
+	return path.Join(e.version, e.mgmt.engineCreate)
+}
+
+func (e *endpoints) ManagementEngineUpdate() string {
+	return path.Join(e.version, e.mgmt.engineUpdate)
+}
+
+func (e *endpoints) ManagementEngineDelete() string {
+	return path.Join(e.version, e.mgmt.engineDelete)
+}
+
+func (e *endpoints) ManagementEngineLoad() string {
+	return path.Join(e.version, e.mgmt.engineLoad)
+}
+
+func (e *endpoints) ManagementEngineLoadAll() string {
+	return path.Join(e.version, e.mgmt.engineLoadAll)
+}
+
+func (e *endpoints) ManagementEngineRotateSecret() string {
+	return path.Join(e.version, e.mgmt.engineRotateSecret)
 }
 
 func (e *endpoints) ManagementLicense() string {
