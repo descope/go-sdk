@@ -1013,6 +1013,24 @@ func TestUserLoadSuccess(t *testing.T) {
 	require.Equal(t, "a@b.c", res.Email)
 }
 
+func TestUserLoadParsesRoleIds(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"email":   "a@b.c",
+			"roleIds": []string{"gid1"},
+			"userTenants": []map[string]any{
+				{"tenantId": "t1", "roleNames": []string{"role1"}, "roleIds": []string{"rid1"}},
+			},
+		}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {}, response))
+	res, err := m.User().Load(context.Background(), "abc")
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.EqualValues(t, []string{"gid1"}, res.RoleIDs)
+	require.Len(t, res.UserTenants, 1)
+	require.EqualValues(t, []string{"rid1"}, res.UserTenants[0].RoleIDs)
+}
+
 func TestUsersLoad(t *testing.T) {
 	response := map[string]any{
 		"users": []map[string]any{{
