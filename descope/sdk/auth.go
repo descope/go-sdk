@@ -311,12 +311,16 @@ type WebAuthn interface {
 	// Request is needed to obtain JWT and send it to Descope, for verification.
 	// Origin is the origin of the URL for the web page where the webauthn operation is taking place, as returned
 	// by calling document.location.origin via javascript.
+	// Optionally pass mfa=true so that UpdateUserDeviceFinish returns a single session whose amr merges
+	// the user's previously-passed factors with the newly-enrolled passkey.
 	// returns a transaction id response on success and error upon failure.
-	UpdateUserDeviceStart(ctx context.Context, loginID string, origin string, request *http.Request) (*descope.WebAuthnTransactionResponse, error)
+	UpdateUserDeviceStart(ctx context.Context, loginID string, origin string, request *http.Request, mfa ...bool) (*descope.WebAuthnTransactionResponse, error)
 
 	// UpdateUserDeviceFinish - Use to finish an add webauthn device process with a given transaction id and credentials after been signed
 	// by the credentials navigator.
-	UpdateUserDeviceFinish(ctx context.Context, finishRequest *descope.WebAuthnFinishRequest) error
+	// When the matching UpdateUserDeviceStart opted into MFA/Stepup, the returned AuthenticationInfo carries a
+	// session whose amr merges the prior factors with the new passkey; otherwise it returns (nil, nil).
+	UpdateUserDeviceFinish(ctx context.Context, finishRequest *descope.WebAuthnFinishRequest, w http.ResponseWriter) (*descope.AuthenticationInfo, error)
 }
 
 type Authentication interface {

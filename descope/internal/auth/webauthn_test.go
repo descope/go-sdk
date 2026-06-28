@@ -1,7 +1,10 @@
 package auth
 
 import (
+	"bytes"
 	"context"
+	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -205,10 +208,64 @@ func TestWebAuthnUpdateUserDeviceStartEmpty(t *testing.T) {
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
 
+func TestWebAuthnUpdateUserDeviceStartWithMFA(t *testing.T) {
+	expectedResponse := descope.WebAuthnTransactionResponse{TransactionID: "a"}
+	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
+		req := authenticationWebAuthnAddDeviceRequestBody{}
+		err := readBody(r, &req)
+		require.NoError(t, err)
+		assert.EqualValues(t, "test@test.com", req.LoginID)
+		assert.True(t, req.MFA)
+	}, expectedResponse))
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	res, err := a.WebAuthn().UpdateUserDeviceStart(context.Background(), "test@test.com", "https://example.com", r, true)
+	require.NoError(t, err)
+	assert.EqualValues(t, expectedResponse.TransactionID, res.TransactionID)
+}
+
 func TestWebAuthnUpdateUserDeviceFinish(t *testing.T) {
+	// default (no mfa) flow: finish returns no session token
 	expectedResponse := &descope.WebAuthnFinishRequest{TransactionID: "a"}
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	err = a.WebAuthn().UpdateUserDeviceFinish(context.Background(), expectedResponse)
+	info, err := a.WebAuthn().UpdateUserDeviceFinish(context.Background(), expectedResponse, nil)
 	require.NoError(t, err)
+	assert.Nil(t, info)
+}
+
+func TestWebAuthnUpdateUserDeviceFinishWithMFA(t *testing.T) {
+	// mfa enrollment: finish returns the merged-amr session nested under "jwt"
+	body := fmt.Sprintf(`{"jwt": %s}`, mockAuthSessionBody)
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(body))}, nil
+	})
+	require.NoError(t, err)
+	info, err := a.WebAuthn().UpdateUserDeviceFinish(context.Background(), &descope.WebAuthnFinishRequest{TransactionID: "a"}, nil)
+	require.NoError(t, err)
+	require.NotNil(t, info)
+	assert.EqualValues(t, jwtTokenValid, info.SessionToken.JWT)
+}
+
+func TestWebAuthnUpdateUserDeviceFinishEmptyBody(t *testing.T) {
+	// an empty response body (the credential was enrolled, no session minted) returns no session, not an error
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(""))}, nil
+	})
+	require.NoError(t, err)
+	info, err := a.WebAuthn().UpdateUserDeviceFinish(context.Background(), &descope.WebAuthnFinishRequest{TransactionID: "a"}, nil)
+	require.NoError(t, err)
+	assert.Nil(t, info)
+}
+
+func TestWebAuthnUpdateUserDeviceFinishBadBody(t *testing.T) {
+	// a malformed response body surfaces as an error
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString("{not-json"))}, nil
+	})
+	require.NoError(t, err)
+	info, err := a.WebAuthn().UpdateUserDeviceFinish(context.Background(), &descope.WebAuthnFinishRequest{TransactionID: "a"}, nil)
+	require.Error(t, err)
+	assert.Nil(t, info)
 }
