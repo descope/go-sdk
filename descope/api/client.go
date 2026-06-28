@@ -249,44 +249,54 @@ var (
 			outboundApplicationDelete:                "mgmt/outbound/app/delete",
 			outboundApplicationLoad:                  "mgmt/outbound/app",
 			outboundApplicationLoadAll:               "mgmt/outbound/apps",
+			outboundApplicationListAppsWithUserToken: "mgmt/outbound/apps-with-user-token",
 			outboundApplicationFetchUserToken:        "mgmt/outbound/app/user/token",
-			outboundApplicationDeleteUserTokens:      "mgmt/outbound/user/tokens",
-			outboundApplicationDeleteTokenByID:       "mgmt/outbound/token",
-			thirdPartyApplicationCreate:              "mgmt/thirdparty/app/create",
-			thirdPartyApplicationUpdate:              "mgmt/thirdparty/app/update",
-			thirdPartyApplicationPatch:               "mgmt/thirdparty/app/patch",
-			thirdPartyApplicationDelete:              "mgmt/thirdparty/app/delete",
-			thirdPartyApplicationLoad:                "mgmt/thirdparty/app/load",
-			thirdPartyApplicationLoadAll:             "mgmt/thirdparty/apps/load",
-			thirdPartyApplicationSecret:              "mgmt/thirdparty/app/secret",
-			thirdPartyApplicationRotate:              "mgmt/thirdparty/app/rotate",
-			thirdPartyApplicationConsentDelete:       "mgmt/thirdparty/consents/delete",
-			thirdPartyApplicationTenantConsentDelete: "mgmt/thirdparty/consents/delete/tenant",
-			thirdPartyApplicationConsentsSearch:      "mgmt/thirdparty/consents/search",
-			mgmtKeyCreate:                            "mgmt/managementkey",
-			mgmtKeyUpdate:                            "mgmt/managementkey",
-			mgmtKeyGet:                               "mgmt/managementkey",
-			mgmtKeyDelete:                            "mgmt/managementkey/delete",
-			mgmtKeySearch:                            "mgmt/managementkey/search",
-			descoperCreate:                           "mgmt/descoper",
-			descoperUpdate:                           "mgmt/descoper",
-			descoperGet:                              "mgmt/descoper",
-			descoperDelete:                           "mgmt/descoper",
-			descoperSearch:                           "mgmt/descoper/list",
-			listCreate:                               "mgmt/list",
-			listUpdate:                               "mgmt/list/update",
-			listDelete:                               "mgmt/list/delete",
-			listLoad:                                 "mgmt/list",
-			listLoadByName:                           "mgmt/list/name",
-			listLoadAll:                              "mgmt/list/all",
-			listImport:                               "mgmt/list/import",
-			listAddIPs:                               "mgmt/list/ip/add",
-			listRemoveIPs:                            "mgmt/list/ip/remove",
-			listCheckIP:                              "mgmt/list/ip/check",
-			listAddTexts:                             "mgmt/list/text/add",
-			listRemoveTexts:                          "mgmt/list/text/remove",
-			listCheckText:                            "mgmt/list/text/check",
-			listClear:                                "mgmt/list/clear",
+			outboundApplicationFetchLatestUserToken:  "mgmt/outbound/app/user/token/latest",
+			outboundApplicationFetchTenantToken:      "mgmt/outbound/app/tenant/token",
+			outboundApplicationFetchLatestTenantToken:  "mgmt/outbound/app/tenant/token/latest",
+			outboundApplicationDeleteUserTokens:        "mgmt/outbound/user/tokens",
+			outboundApplicationDeleteTokenByID:         "mgmt/outbound/token",
+			outboundApplicationUploadUserAPIKey:        "mgmt/outbound/app/user/apikey/upload",
+			outboundApplicationUploadTenantAPIKey:      "mgmt/outbound/app/tenant/apikey/upload",
+			outboundApplicationUploadUserToken:         "mgmt/outbound/app/user/oauthtoken/upload",
+			outboundApplicationUploadTenantToken:       "mgmt/outbound/app/tenant/oauthtoken/upload",
+			outboundApplicationBatchUploadUserTokens:   "mgmt/outbound/app/user/oauthtoken/batch/upload",
+			outboundApplicationBatchUploadTenantTokens: "mgmt/outbound/app/tenant/oauthtoken/batch/upload",
+			thirdPartyApplicationCreate:                "mgmt/thirdparty/app/create",
+			thirdPartyApplicationUpdate:                "mgmt/thirdparty/app/update",
+			thirdPartyApplicationPatch:                 "mgmt/thirdparty/app/patch",
+			thirdPartyApplicationDelete:                "mgmt/thirdparty/app/delete",
+			thirdPartyApplicationLoad:                  "mgmt/thirdparty/app/load",
+			thirdPartyApplicationLoadAll:               "mgmt/thirdparty/apps/load",
+			thirdPartyApplicationSecret:                "mgmt/thirdparty/app/secret",
+			thirdPartyApplicationRotate:                "mgmt/thirdparty/app/rotate",
+			thirdPartyApplicationConsentDelete:         "mgmt/thirdparty/consents/delete",
+			thirdPartyApplicationTenantConsentDelete:   "mgmt/thirdparty/consents/delete/tenant",
+			thirdPartyApplicationConsentsSearch:        "mgmt/thirdparty/consents/search",
+			mgmtKeyCreate:                              "mgmt/managementkey",
+			mgmtKeyUpdate:                              "mgmt/managementkey",
+			mgmtKeyGet:                                 "mgmt/managementkey",
+			mgmtKeyDelete:                              "mgmt/managementkey/delete",
+			mgmtKeySearch:                              "mgmt/managementkey/search",
+			descoperCreate:                             "mgmt/descoper",
+			descoperUpdate:                             "mgmt/descoper",
+			descoperGet:                                "mgmt/descoper",
+			descoperDelete:                             "mgmt/descoper",
+			descoperSearch:                             "mgmt/descoper/list",
+			listCreate:                                 "mgmt/list",
+			listUpdate:                                 "mgmt/list/update",
+			listDelete:                                 "mgmt/list/delete",
+			listLoad:                                   "mgmt/list",
+			listLoadByName:                             "mgmt/list/name",
+			listLoadAll:                                "mgmt/list/all",
+			listImport:                                 "mgmt/list/import",
+			listAddIPs:                                 "mgmt/list/ip/add",
+			listRemoveIPs:                              "mgmt/list/ip/remove",
+			listCheckIP:                                "mgmt/list/ip/check",
+			listAddTexts:                               "mgmt/list/text/add",
+			listRemoveTexts:                            "mgmt/list/text/remove",
+			listCheckText:                              "mgmt/list/text/check",
+			listClear:                                  "mgmt/list/clear",
 		},
 		logout:       "auth/logout",
 		logoutAll:    "auth/logoutall",
@@ -545,14 +555,24 @@ type mgmtEndpoints struct {
 	fgaResourcesLoad           string
 	fgaResourcesSave           string
 
-	outboundApplicationCreate           string
-	outboundApplicationUpdate           string
-	outboundApplicationDelete           string
-	outboundApplicationLoad             string
-	outboundApplicationLoadAll          string
-	outboundApplicationFetchUserToken   string
-	outboundApplicationDeleteUserTokens string
-	outboundApplicationDeleteTokenByID  string
+	outboundApplicationCreate                  string
+	outboundApplicationUpdate                  string
+	outboundApplicationDelete                  string
+	outboundApplicationLoad                    string
+	outboundApplicationLoadAll                 string
+	outboundApplicationListAppsWithUserToken   string
+	outboundApplicationFetchUserToken          string
+	outboundApplicationFetchLatestUserToken    string
+	outboundApplicationFetchTenantToken        string
+	outboundApplicationFetchLatestTenantToken  string
+	outboundApplicationDeleteUserTokens        string
+	outboundApplicationDeleteTokenByID         string
+	outboundApplicationUploadUserAPIKey        string
+	outboundApplicationUploadTenantAPIKey      string
+	outboundApplicationUploadUserToken         string
+	outboundApplicationUploadTenantToken       string
+	outboundApplicationBatchUploadUserTokens   string
+	outboundApplicationBatchUploadTenantTokens string
 
 	thirdPartyApplicationCreate              string
 	thirdPartyApplicationUpdate              string
@@ -1475,6 +1495,46 @@ func (e *endpoints) ManagementOutboundApplicationDeleteUserTokens() string {
 
 func (e *endpoints) ManagementOutboundApplicationDeleteTokenByID() string {
 	return path.Join(e.version, e.mgmt.outboundApplicationDeleteTokenByID)
+}
+
+func (e *endpoints) ManagementOutboundApplicationListAppsWithUserToken() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationListAppsWithUserToken)
+}
+
+func (e *endpoints) ManagementOutboundApplicationFetchLatestUserToken() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationFetchLatestUserToken)
+}
+
+func (e *endpoints) ManagementOutboundApplicationFetchTenantToken() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationFetchTenantToken)
+}
+
+func (e *endpoints) ManagementOutboundApplicationFetchLatestTenantToken() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationFetchLatestTenantToken)
+}
+
+func (e *endpoints) ManagementOutboundApplicationUploadUserAPIKey() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationUploadUserAPIKey)
+}
+
+func (e *endpoints) ManagementOutboundApplicationUploadTenantAPIKey() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationUploadTenantAPIKey)
+}
+
+func (e *endpoints) ManagementOutboundApplicationUploadUserToken() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationUploadUserToken)
+}
+
+func (e *endpoints) ManagementOutboundApplicationUploadTenantToken() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationUploadTenantToken)
+}
+
+func (e *endpoints) ManagementOutboundApplicationBatchUploadUserTokens() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationBatchUploadUserTokens)
+}
+
+func (e *endpoints) ManagementOutboundApplicationBatchUploadTenantTokens() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationBatchUploadTenantTokens)
 }
 
 func (e *endpoints) ManagementThirdPartyApplicationCreate() string {
