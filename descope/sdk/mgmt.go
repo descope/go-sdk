@@ -259,6 +259,11 @@ type User interface {
 	// IMPORTANT: This action is irreversible. Use carefully.
 	Delete(ctx context.Context, loginIDOrUserID string) error
 
+	// DeleteBatch deletes multiple existing users by their user IDs in a single request.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteBatch(ctx context.Context, userIDs []string) error
+
 	// Delete an existing user by User ID. The user ID can be found
 	// on the user's JWT.
 	//
@@ -349,6 +354,27 @@ type User interface {
 	//
 	// The failOnConflict flag indicates whether to fail the update if the new phone number is also the login ID of another user.
 	UpdatePhone(ctx context.Context, loginIDOrUserID, phone string, isVerified bool, failOnConflict bool) (*descope.UserResponse, error)
+
+	// UpdateRecoveryEmail updates the recovery email of an existing user.
+	//
+	// The isVerified flag marks the recovery email as verified.
+	UpdateRecoveryEmail(ctx context.Context, loginIDOrUserID, recoveryEmail string, isVerified bool) (*descope.UserResponse, error)
+
+	// UpdateRecoveryPhone updates the recovery phone of an existing user.
+	//
+	// The isVerified flag marks the recovery phone as verified.
+	UpdateRecoveryPhone(ctx context.Context, loginIDOrUserID, recoveryPhone string, isVerified bool) (*descope.UserResponse, error)
+
+	// GetCustomAttributes loads all custom attribute definitions configured for users in the project.
+	GetCustomAttributes(ctx context.Context) ([]*descope.CustomAttribute, error)
+
+	// CreateCustomAttributes creates project-level custom attribute definitions for users
+	// and returns the full set of custom attributes after the change.
+	CreateCustomAttributes(ctx context.Context, attributes []*descope.CustomAttribute) ([]*descope.CustomAttribute, error)
+
+	// DeleteCustomAttributes deletes project-level user custom attribute definitions by name
+	// and returns the full set of custom attributes after the change.
+	DeleteCustomAttributes(ctx context.Context, names []string) ([]*descope.CustomAttribute, error)
 
 	// Update an existing user's display name (i.e., their full name).
 	//
@@ -545,16 +571,32 @@ type AccessKey interface {
 	// persist, and can be activated again if needed.
 	Deactivate(ctx context.Context, id string) error
 
+	// DeactivateBatch deactivates multiple existing access keys in a single request.
+	//
+	// IMPORTANT: The deactivated keys will not be usable from this stage. They will, however,
+	// persist, and can be activated again if needed.
+	DeactivateBatch(ctx context.Context, ids []string) error
+
 	// Activate an existing access key.
 	//
 	// IMPORTANT: Only deactivated keys can be activated again, and become usable once more. New access keys
 	// are active by default.
 	Activate(ctx context.Context, id string) error
 
+	// ActivateBatch activates multiple existing access keys in a single request.
+	//
+	// IMPORTANT: Only deactivated keys can be activated again, and become usable once more.
+	ActivateBatch(ctx context.Context, ids []string) error
+
 	// Delete an existing access key.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	Delete(ctx context.Context, id string) error
+
+	// DeleteBatch deletes multiple existing access keys in a single request.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteBatch(ctx context.Context, ids []string) error
 
 	// Rotate an existing access key — regenerates the secret while preserving
 	// the same access key ID, name, roles, tenants, expiry, and metadata.
@@ -721,6 +763,11 @@ type Permission interface {
 	// what this permission allows.
 	Create(ctx context.Context, name, description string) error
 
+	// CreateBatch creates multiple permissions in a single request.
+	//
+	// Each permission's Name is required to uniquely identify it.
+	CreateBatch(ctx context.Context, permissions []*descope.Permission) error
+
 	// Update an existing permission.
 	//
 	// The parameters follow the same convention as those for the Create function, with
@@ -737,6 +784,12 @@ type Permission interface {
 	// in the existing permission. Use carefully.
 	UpdateWithID(ctx context.Context, id, newName, description string) error
 
+	// UpdateBatch updates multiple permissions in a single request.
+	//
+	// Each item identifies the permission to update by Name or ID and holds
+	// the updated values, following the same override semantics as Update.
+	UpdateBatch(ctx context.Context, permissions []*descope.PermissionUpdateRequest) error
+
 	// Delete an existing permission.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
@@ -746,6 +799,11 @@ type Permission interface {
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	DeleteWithID(ctx context.Context, id string) error
+
+	// DeleteBatch deletes multiple permissions by name and/or id in a single request.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteBatch(ctx context.Context, names []string, ids []string) error
 
 	// Load all permissions.
 	LoadAll(ctx context.Context) ([]*descope.Permission, error)
@@ -763,6 +821,9 @@ type Role interface {
 	// tenantID is an optional field to tie this role to a specific tenant
 	Create(ctx context.Context, name, description string, permissionNames []string, tenantID string, defaultRole bool, private bool) error
 
+	// CreateBatch creates multiple roles in a single request and returns the created roles.
+	CreateBatch(ctx context.Context, roles []*descope.Role) ([]*descope.Role, error)
+
 	// Update an existing role.
 	//
 	// The parameters follow the same convention as those for the Create function, with
@@ -779,6 +840,12 @@ type Role interface {
 	// in the existing role. Use carefully.
 	UpdateWithID(ctx context.Context, id, tenantID, newName, description string, permissionNames []string, defaultRole bool, private bool) error
 
+	// UpdateBatch updates multiple roles in a single request and returns the updated roles.
+	//
+	// Each item identifies the role to update by Name or ID and holds the updated
+	// values, following the same override semantics as Update.
+	UpdateBatch(ctx context.Context, roles []*descope.RoleUpdateRequest) ([]*descope.Role, error)
+
 	// Delete an existing role.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
@@ -788,6 +855,12 @@ type Role interface {
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	DeleteWithID(ctx context.Context, id, tenantID string) error
+
+	// DeleteBatch deletes multiple roles by name and/or id in a single request.
+	// tenantID is an optional field to scope the deletion to a specific tenant.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteBatch(ctx context.Context, roleNames []string, tenantID string, roleIDs []string) error
 
 	// Load all roles.
 	LoadAll(ctx context.Context) ([]*descope.Role, error)
@@ -1092,6 +1165,11 @@ type ThirdPartyApplication interface {
 	// IMPORTANT: This action is irreversible. Use carefully.
 	DeleteApplication(ctx context.Context, id string) error
 
+	// DeleteApplicationBatch deletes multiple third party applications by id in a single request.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteApplicationBatch(ctx context.Context, ids []string) error
+
 	// Load a third party application by id.
 	LoadApplication(ctx context.Context, id string) (*descope.ThirdPartyApplication, error)
 
@@ -1142,12 +1220,73 @@ type OutboundApplication interface {
 	// The token can be used to access external resources on behalf of the user.
 	FetchUserToken(ctx context.Context, request *descope.FetchOutboundAppUserTokenRequest) (*descope.OutboundAppUserToken, error)
 
+	// Fetch the last created outbound application user token (ignores scopes).
+	// The token can be used to access external resources on behalf of the user.
+	FetchLatestUserToken(ctx context.Context, request *descope.FetchOutboundAppUserTokenRequest) (*descope.OutboundAppUserToken, error)
+
+	// Fetch an outbound application tenant token with the specified scopes.
+	// The token can be used to access external resources on behalf of the tenant.
+	FetchTenantToken(ctx context.Context, request *descope.FetchOutboundAppTenantTokenRequest) (*descope.OutboundAppUserToken, error)
+
+	// Fetch the last created outbound application tenant token (ignores scopes).
+	// The token can be used to access external resources on behalf of the tenant.
+	FetchLatestTenantToken(ctx context.Context, request *descope.FetchOutboundAppTenantTokenRequest) (*descope.OutboundAppUserToken, error)
+
+	// List the IDs of the outbound applications the given user currently holds a valid token for.
+	// An optional tenantID scopes the lookup to tokens associated with that tenant.
+	ListAppsWithUserToken(ctx context.Context, userID, tenantID string) ([]string, error)
+
+	// Upload (set) a static API key for a user on an apikey-type outbound application.
+	UploadUserAPIKey(ctx context.Context, request *descope.UploadOutboundAppUserAPIKeyRequest) error
+
+	// Upload (set) a static API key for a tenant on an apikey-type outbound application.
+	UploadTenantAPIKey(ctx context.Context, request *descope.UploadOutboundAppTenantAPIKeyRequest) error
+
+	// Upload (migrate) an existing OAuth token for a user on an oauth-type outbound application.
+	// Used to import tokens managed outside of Descope without requiring the user to re-run the OAuth flow.
+	UploadUserToken(ctx context.Context, request *descope.UploadOutboundAppUserTokenRequest) error
+
+	// Upload (migrate) an existing OAuth token for a tenant on an oauth-type outbound application.
+	UploadTenantToken(ctx context.Context, request *descope.UploadOutboundAppTenantTokenRequest) error
+
+	// Batch upload (migrate) existing OAuth tokens for users. All-or-nothing: if any item fails
+	// per-item validation, the returned failures are populated and no tokens are committed.
+	BatchUploadUserTokens(ctx context.Context, tokens []*descope.OutboundAppUserTokenToUpload) (*descope.BatchUploadOutboundAppTokensResponse, error)
+
+	// Batch upload (migrate) existing OAuth tokens for tenants. All-or-nothing: if any item fails
+	// per-item validation, the returned failures are populated and no tokens are committed.
+	BatchUploadTenantTokens(ctx context.Context, tokens []*descope.OutboundAppTenantTokenToUpload) (*descope.BatchUploadOutboundAppTokensResponse, error)
+
 	// Delete outbound application user tokens by appID or userID.
 	// At least one of appID or userID must be provided.
 	DeleteUserTokens(ctx context.Context, appID, userID string) error
 
 	// Delete an outbound application token by its ID.
 	DeleteTokenByID(ctx context.Context, id string) error
+}
+
+// Provides functions for managing engines in a project.
+type Engine interface {
+	// Create a new engine with the given name. The returned engine includes its generated
+	// ID and secret. The secret is only returned here (and on RotateSecret) — store it
+	// securely, as it cannot be retrieved again afterwards.
+	Create(ctx context.Context, name string) (*descope.Engine, error)
+
+	// Update an existing engine's name. Returns the updated engine (secret not included).
+	Update(ctx context.Context, id, name string) (*descope.Engine, error)
+
+	// Delete an engine by ID.
+	Delete(ctx context.Context, id string) error
+
+	// Load an engine by ID. The returned engine's secret is always empty.
+	Load(ctx context.Context, id string) (*descope.Engine, error)
+
+	// Load all engines for the project. The returned engines' secrets are always empty.
+	LoadAll(ctx context.Context) ([]*descope.Engine, error)
+
+	// RotateSecret generates a new secret for the engine, invalidating the previous one,
+	// and returns the new secret in cleartext. Store it securely — it cannot be retrieved again.
+	RotateSecret(ctx context.Context, id string) (string, error)
 }
 
 // Provides functions for managing management keys in a project.
@@ -1358,4 +1497,71 @@ type Management interface {
 
 	// Provides functions for managing lists in a project.
 	List() List
+
+	// Provides functions for managing engines in a project.
+	Engine() Engine
+
+	// Provides functions for managing the project-wide OIDC scope-to-claim mapping.
+	ScopeClaimMapping() ScopeClaimMapping
+
+	// Provides functions for managing JWT templates in a project.
+	JWTTemplate() JWTTemplate
+}
+
+// JWTTemplate provides functions for managing JWT templates in a project.
+type JWTTemplate interface {
+	// Create a new JWT template and return the created template.
+	Create(ctx context.Context, template *descope.JWTTemplate) (*descope.JWTTemplate, error)
+
+	// Update an existing JWT template (identified by its ID) and return the updated template.
+	//
+	// IMPORTANT: All fields will override whatever values are currently set
+	// in the existing template. Use carefully.
+	Update(ctx context.Context, template *descope.JWTTemplate) (*descope.JWTTemplate, error)
+
+	// Delete an existing JWT template by id.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	Delete(ctx context.Context, id string) error
+
+	// List all JWT templates in the project.
+	List(ctx context.Context) ([]*descope.JWTTemplate, error)
+
+	// Load a JWT template by id.
+	Load(ctx context.Context, id string) (*descope.JWTTemplate, error)
+
+	// Validate a JWT template. Either an existing template id or an inline template
+	// (or both) may be provided. Returns the validation result and any issues found.
+	Validate(ctx context.Context, id string, template *descope.JWTTemplate) (*descope.JWTTemplateValidationResult, error)
+
+	// ListLibrary lists the read-only starter JWT templates shipped by Descope.
+	ListLibrary(ctx context.Context) ([]*descope.JWTTemplateLibraryEntry, error)
+
+	// LoadLibraryEntry loads a single library entry by id.
+	LoadLibraryEntry(ctx context.Context, id string) (*descope.JWTTemplateLibraryEntry, error)
+
+	// ApplyFromLibrary creates a new JWT template from a library entry, applying any
+	// provided overrides, and returns the created template.
+	ApplyFromLibrary(ctx context.Context, request *descope.ApplyJWTTemplateFromLibraryRequest) (*descope.JWTTemplate, error)
+}
+
+// ScopeClaimMapping provides functions for managing the project-wide mapping of
+// OIDC scopes to JWT claims.
+type ScopeClaimMapping interface {
+	// Get returns the project-wide ordered list of scope→claim mappings.
+	//
+	// Returns an empty slice when no mapping has been configured.
+	Get(ctx context.Context) ([]*descope.ScopeClaimMappingEntry, error)
+
+	// Set replaces the project-wide scope→claim mapping with the given entries.
+	//
+	// When two entries set the same claim name, the entry appearing later in the
+	// list wins. Passing an empty slice clears the mapping, though the dedicated
+	// Delete function is preferred when fully removing it.
+	Set(ctx context.Context, mappings []*descope.ScopeClaimMappingEntry) error
+
+	// Delete removes the project-wide scope→claim mapping.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	Delete(ctx context.Context) error
 }

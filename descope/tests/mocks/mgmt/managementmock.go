@@ -30,6 +30,9 @@ type MockManagement struct {
 	*MockManagementKey
 	*MockDescoper
 	*MockList
+	*MockEngine
+	*MockScopeClaimMapping
+	*MockJWTTemplate
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -114,6 +117,18 @@ func (m *MockManagement) Descoper() sdk.Descoper {
 
 func (m *MockManagement) List() sdk.List {
 	return m.MockList
+}
+
+func (m *MockManagement) Engine() sdk.Engine {
+	return m.MockEngine
+}
+
+func (m *MockManagement) ScopeClaimMapping() sdk.ScopeClaimMapping {
+	return m.MockScopeClaimMapping
+}
+
+func (m *MockManagement) JWTTemplate() sdk.JWTTemplate {
+	return m.MockJWTTemplate
 }
 
 // Mock JWT
@@ -407,8 +422,30 @@ type MockUser struct {
 	DeleteAssert func(loginID string)
 	DeleteError  error
 
+	DeleteBatchAssert func(userIDs []string)
+	DeleteBatchError  error
+
 	DeleteAllTestUsersAssert func()
 	DeleteAllTestUsersError  error
+
+	UpdateRecoveryEmailAssert   func(loginID, recoveryEmail string, isVerified bool)
+	UpdateRecoveryEmailResponse *descope.UserResponse
+	UpdateRecoveryEmailError    error
+
+	UpdateRecoveryPhoneAssert   func(loginID, recoveryPhone string, isVerified bool)
+	UpdateRecoveryPhoneResponse *descope.UserResponse
+	UpdateRecoveryPhoneError    error
+
+	GetCustomAttributesResponse []*descope.CustomAttribute
+	GetCustomAttributesError    error
+
+	CreateCustomAttributesAssert   func(attributes []*descope.CustomAttribute)
+	CreateCustomAttributesResponse []*descope.CustomAttribute
+	CreateCustomAttributesError    error
+
+	DeleteCustomAttributesAssert   func(names []string)
+	DeleteCustomAttributesResponse []*descope.CustomAttribute
+	DeleteCustomAttributesError    error
 
 	ImportAssert   func(source string, users, hashes []byte, dryrun bool)
 	ImportResponse *descope.UserImportResponse
@@ -637,6 +674,45 @@ func (m *MockUser) Delete(_ context.Context, loginID string) error {
 		m.DeleteAssert(loginID)
 	}
 	return m.DeleteError
+}
+
+func (m *MockUser) DeleteBatch(_ context.Context, userIDs []string) error {
+	if m.DeleteBatchAssert != nil {
+		m.DeleteBatchAssert(userIDs)
+	}
+	return m.DeleteBatchError
+}
+
+func (m *MockUser) UpdateRecoveryEmail(_ context.Context, loginID, recoveryEmail string, isVerified bool) (*descope.UserResponse, error) {
+	if m.UpdateRecoveryEmailAssert != nil {
+		m.UpdateRecoveryEmailAssert(loginID, recoveryEmail, isVerified)
+	}
+	return m.UpdateRecoveryEmailResponse, m.UpdateRecoveryEmailError
+}
+
+func (m *MockUser) UpdateRecoveryPhone(_ context.Context, loginID, recoveryPhone string, isVerified bool) (*descope.UserResponse, error) {
+	if m.UpdateRecoveryPhoneAssert != nil {
+		m.UpdateRecoveryPhoneAssert(loginID, recoveryPhone, isVerified)
+	}
+	return m.UpdateRecoveryPhoneResponse, m.UpdateRecoveryPhoneError
+}
+
+func (m *MockUser) GetCustomAttributes(_ context.Context) ([]*descope.CustomAttribute, error) {
+	return m.GetCustomAttributesResponse, m.GetCustomAttributesError
+}
+
+func (m *MockUser) CreateCustomAttributes(_ context.Context, attributes []*descope.CustomAttribute) ([]*descope.CustomAttribute, error) {
+	if m.CreateCustomAttributesAssert != nil {
+		m.CreateCustomAttributesAssert(attributes)
+	}
+	return m.CreateCustomAttributesResponse, m.CreateCustomAttributesError
+}
+
+func (m *MockUser) DeleteCustomAttributes(_ context.Context, names []string) ([]*descope.CustomAttribute, error) {
+	if m.DeleteCustomAttributesAssert != nil {
+		m.DeleteCustomAttributesAssert(names)
+	}
+	return m.DeleteCustomAttributesResponse, m.DeleteCustomAttributesError
 }
 
 func (m *MockUser) DeleteByUserID(_ context.Context, userID string) error {
@@ -998,11 +1074,20 @@ type MockAccessKey struct {
 	DeactivateAssert func(id string)
 	DeactivateError  error
 
+	DeactivateBatchAssert func(ids []string)
+	DeactivateBatchError  error
+
 	ActivateAssert func(id string)
 	ActivateError  error
 
+	ActivateBatchAssert func(ids []string)
+	ActivateBatchError  error
+
 	DeleteAssert func(id string)
 	DeleteError  error
+
+	DeleteBatchAssert func(ids []string)
+	DeleteBatchError  error
 
 	RotateAssert     func(id string)
 	RotateResponseFn func() (string, *descope.AccessKeyResponse)
@@ -1049,6 +1134,13 @@ func (m *MockAccessKey) Deactivate(_ context.Context, id string) error {
 	return m.DeactivateError
 }
 
+func (m *MockAccessKey) DeactivateBatch(_ context.Context, ids []string) error {
+	if m.DeactivateBatchAssert != nil {
+		m.DeactivateBatchAssert(ids)
+	}
+	return m.DeactivateBatchError
+}
+
 func (m *MockAccessKey) Activate(_ context.Context, id string) error {
 	if m.ActivateAssert != nil {
 		m.ActivateAssert(id)
@@ -1056,11 +1148,25 @@ func (m *MockAccessKey) Activate(_ context.Context, id string) error {
 	return m.ActivateError
 }
 
+func (m *MockAccessKey) ActivateBatch(_ context.Context, ids []string) error {
+	if m.ActivateBatchAssert != nil {
+		m.ActivateBatchAssert(ids)
+	}
+	return m.ActivateBatchError
+}
+
 func (m *MockAccessKey) Delete(_ context.Context, id string) error {
 	if m.DeleteAssert != nil {
 		m.DeleteAssert(id)
 	}
 	return m.DeleteError
+}
+
+func (m *MockAccessKey) DeleteBatch(_ context.Context, ids []string) error {
+	if m.DeleteBatchAssert != nil {
+		m.DeleteBatchAssert(ids)
+	}
+	return m.DeleteBatchError
 }
 
 func (m *MockAccessKey) Rotate(_ context.Context, id string) (string, *descope.AccessKeyResponse, error) {
@@ -1310,17 +1416,26 @@ type MockPermission struct {
 	CreateAssert func(name, description string)
 	CreateError  error
 
+	CreateBatchAssert func(permissions []*descope.Permission)
+	CreateBatchError  error
+
 	UpdateAssert func(name, newName, description string)
 	UpdateError  error
 
 	UpdateWithIDAssert func(id, newName, description string)
 	UpdateWithIDError  error
 
+	UpdateBatchAssert func(permissions []*descope.PermissionUpdateRequest)
+	UpdateBatchError  error
+
 	DeleteAssert func(name string)
 	DeleteError  error
 
 	DeleteWithIDAssert func(id string)
 	DeleteWithIDError  error
+
+	DeleteBatchAssert func(names []string, ids []string)
+	DeleteBatchError  error
 
 	LoadAllResponse []*descope.Permission
 	LoadAllError    error
@@ -1331,6 +1446,13 @@ func (m *MockPermission) Create(_ context.Context, name, description string) err
 		m.CreateAssert(name, description)
 	}
 	return m.CreateError
+}
+
+func (m *MockPermission) CreateBatch(_ context.Context, permissions []*descope.Permission) error {
+	if m.CreateBatchAssert != nil {
+		m.CreateBatchAssert(permissions)
+	}
+	return m.CreateBatchError
 }
 
 func (m *MockPermission) Update(_ context.Context, name, newName, description string) error {
@@ -1347,6 +1469,13 @@ func (m *MockPermission) UpdateWithID(_ context.Context, id, newName, descriptio
 	return m.UpdateWithIDError
 }
 
+func (m *MockPermission) UpdateBatch(_ context.Context, permissions []*descope.PermissionUpdateRequest) error {
+	if m.UpdateBatchAssert != nil {
+		m.UpdateBatchAssert(permissions)
+	}
+	return m.UpdateBatchError
+}
+
 func (m *MockPermission) Delete(_ context.Context, name string) error {
 	if m.DeleteAssert != nil {
 		m.DeleteAssert(name)
@@ -1361,6 +1490,13 @@ func (m *MockPermission) DeleteWithID(_ context.Context, id string) error {
 	return m.DeleteWithIDError
 }
 
+func (m *MockPermission) DeleteBatch(_ context.Context, names []string, ids []string) error {
+	if m.DeleteBatchAssert != nil {
+		m.DeleteBatchAssert(names, ids)
+	}
+	return m.DeleteBatchError
+}
+
 func (m *MockPermission) LoadAll(_ context.Context) ([]*descope.Permission, error) {
 	return m.LoadAllResponse, m.LoadAllError
 }
@@ -1371,17 +1507,28 @@ type MockRole struct {
 	CreateAssert func(name, description string, permissionNames []string, tenantID string, defaultRole bool, private bool)
 	CreateError  error
 
+	CreateBatchAssert   func(roles []*descope.Role)
+	CreateBatchResponse []*descope.Role
+	CreateBatchError    error
+
 	UpdateAssert func(name, tenantID, newName, description string, permissionNames []string, defaultRole bool, private bool)
 	UpdateError  error
 
 	UpdateWithIDAssert func(id, tenantID, newName, description string, permissionNames []string, defaultRole bool, private bool)
 	UpdateWithIDError  error
 
+	UpdateBatchAssert   func(roles []*descope.RoleUpdateRequest)
+	UpdateBatchResponse []*descope.Role
+	UpdateBatchError    error
+
 	DeleteAssert func(name, tenantID string)
 	DeleteError  error
 
 	DeleteWithIDAssert func(id, tenantID string)
 	DeleteWithIDError  error
+
+	DeleteBatchAssert func(roleNames []string, tenantID string, roleIDs []string)
+	DeleteBatchError  error
 
 	LoadAllResponse []*descope.Role
 	LoadAllError    error
@@ -1395,6 +1542,13 @@ func (m *MockRole) Create(_ context.Context, name, description string, permissio
 		m.CreateAssert(name, description, permissionNames, tenantID, defaultRole, private)
 	}
 	return m.CreateError
+}
+
+func (m *MockRole) CreateBatch(_ context.Context, roles []*descope.Role) ([]*descope.Role, error) {
+	if m.CreateBatchAssert != nil {
+		m.CreateBatchAssert(roles)
+	}
+	return m.CreateBatchResponse, m.CreateBatchError
 }
 
 func (m *MockRole) Update(_ context.Context, name, tenantID string, newName, description string, permissionNames []string, defaultRole bool, private bool) error {
@@ -1411,6 +1565,13 @@ func (m *MockRole) UpdateWithID(_ context.Context, id, tenantID, newName, descri
 	return m.UpdateWithIDError
 }
 
+func (m *MockRole) UpdateBatch(_ context.Context, roles []*descope.RoleUpdateRequest) ([]*descope.Role, error) {
+	if m.UpdateBatchAssert != nil {
+		m.UpdateBatchAssert(roles)
+	}
+	return m.UpdateBatchResponse, m.UpdateBatchError
+}
+
 func (m *MockRole) Delete(_ context.Context, name, tenantID string) error {
 	if m.DeleteAssert != nil {
 		m.DeleteAssert(name, tenantID)
@@ -1423,6 +1584,13 @@ func (m *MockRole) DeleteWithID(_ context.Context, id, tenantID string) error {
 		m.DeleteWithIDAssert(id, tenantID)
 	}
 	return m.DeleteWithIDError
+}
+
+func (m *MockRole) DeleteBatch(_ context.Context, roleNames []string, tenantID string, roleIDs []string) error {
+	if m.DeleteBatchAssert != nil {
+		m.DeleteBatchAssert(roleNames, tenantID, roleIDs)
+	}
+	return m.DeleteBatchError
 }
 
 func (m *MockRole) LoadAll(_ context.Context) ([]*descope.Role, error) {
@@ -2031,6 +2199,9 @@ type MockThirdPartyApplication struct {
 	DeleteApplicationAssert func(id string)
 	DeleteApplicationError  error
 
+	DeleteApplicationBatchAssert func(ids []string)
+	DeleteApplicationBatchError  error
+
 	LoadApplicationAssert   func(id string)
 	LoadApplicationResponse *descope.ThirdPartyApplication
 	LoadApplicationError    error
@@ -2081,6 +2252,13 @@ func (m *MockThirdPartyApplication) DeleteApplication(_ context.Context, id stri
 		m.DeleteApplicationAssert(id)
 	}
 	return m.DeleteApplicationError
+}
+
+func (m *MockThirdPartyApplication) DeleteApplicationBatch(_ context.Context, ids []string) error {
+	if m.DeleteApplicationBatchAssert != nil {
+		m.DeleteApplicationBatchAssert(ids)
+	}
+	return m.DeleteApplicationBatchError
 }
 
 func (m *MockThirdPartyApplication) LoadApplication(_ context.Context, id string) (*descope.ThirdPartyApplication, error) {
@@ -2160,6 +2338,42 @@ type MockOutboundApplication struct {
 	FetchUserTokenResponse *descope.OutboundAppUserToken
 	FetchUserTokenError    error
 
+	FetchLatestUserTokenAssert   func(request *descope.FetchOutboundAppUserTokenRequest)
+	FetchLatestUserTokenResponse *descope.OutboundAppUserToken
+	FetchLatestUserTokenError    error
+
+	FetchTenantTokenAssert   func(request *descope.FetchOutboundAppTenantTokenRequest)
+	FetchTenantTokenResponse *descope.OutboundAppUserToken
+	FetchTenantTokenError    error
+
+	FetchLatestTenantTokenAssert   func(request *descope.FetchOutboundAppTenantTokenRequest)
+	FetchLatestTenantTokenResponse *descope.OutboundAppUserToken
+	FetchLatestTenantTokenError    error
+
+	ListAppsWithUserTokenAssert   func(userID, tenantID string)
+	ListAppsWithUserTokenResponse []string
+	ListAppsWithUserTokenError    error
+
+	UploadUserAPIKeyAssert func(request *descope.UploadOutboundAppUserAPIKeyRequest)
+	UploadUserAPIKeyError  error
+
+	UploadTenantAPIKeyAssert func(request *descope.UploadOutboundAppTenantAPIKeyRequest)
+	UploadTenantAPIKeyError  error
+
+	UploadUserTokenAssert func(request *descope.UploadOutboundAppUserTokenRequest)
+	UploadUserTokenError  error
+
+	UploadTenantTokenAssert func(request *descope.UploadOutboundAppTenantTokenRequest)
+	UploadTenantTokenError  error
+
+	BatchUploadUserTokensAssert   func(tokens []*descope.OutboundAppUserTokenToUpload)
+	BatchUploadUserTokensResponse *descope.BatchUploadOutboundAppTokensResponse
+	BatchUploadUserTokensError    error
+
+	BatchUploadTenantTokensAssert   func(tokens []*descope.OutboundAppTenantTokenToUpload)
+	BatchUploadTenantTokensResponse *descope.BatchUploadOutboundAppTokensResponse
+	BatchUploadTenantTokensError    error
+
 	DeleteUserTokensAssert func(appID, userID string)
 	DeleteUserTokensError  error
 
@@ -2204,6 +2418,76 @@ func (m *MockOutboundApplication) FetchUserToken(_ context.Context, request *des
 		m.FetchUserTokenAssert(request)
 	}
 	return m.FetchUserTokenResponse, m.FetchUserTokenError
+}
+
+func (m *MockOutboundApplication) FetchLatestUserToken(_ context.Context, request *descope.FetchOutboundAppUserTokenRequest) (*descope.OutboundAppUserToken, error) {
+	if m.FetchLatestUserTokenAssert != nil {
+		m.FetchLatestUserTokenAssert(request)
+	}
+	return m.FetchLatestUserTokenResponse, m.FetchLatestUserTokenError
+}
+
+func (m *MockOutboundApplication) FetchTenantToken(_ context.Context, request *descope.FetchOutboundAppTenantTokenRequest) (*descope.OutboundAppUserToken, error) {
+	if m.FetchTenantTokenAssert != nil {
+		m.FetchTenantTokenAssert(request)
+	}
+	return m.FetchTenantTokenResponse, m.FetchTenantTokenError
+}
+
+func (m *MockOutboundApplication) FetchLatestTenantToken(_ context.Context, request *descope.FetchOutboundAppTenantTokenRequest) (*descope.OutboundAppUserToken, error) {
+	if m.FetchLatestTenantTokenAssert != nil {
+		m.FetchLatestTenantTokenAssert(request)
+	}
+	return m.FetchLatestTenantTokenResponse, m.FetchLatestTenantTokenError
+}
+
+func (m *MockOutboundApplication) ListAppsWithUserToken(_ context.Context, userID, tenantID string) ([]string, error) {
+	if m.ListAppsWithUserTokenAssert != nil {
+		m.ListAppsWithUserTokenAssert(userID, tenantID)
+	}
+	return m.ListAppsWithUserTokenResponse, m.ListAppsWithUserTokenError
+}
+
+func (m *MockOutboundApplication) UploadUserAPIKey(_ context.Context, request *descope.UploadOutboundAppUserAPIKeyRequest) error {
+	if m.UploadUserAPIKeyAssert != nil {
+		m.UploadUserAPIKeyAssert(request)
+	}
+	return m.UploadUserAPIKeyError
+}
+
+func (m *MockOutboundApplication) UploadTenantAPIKey(_ context.Context, request *descope.UploadOutboundAppTenantAPIKeyRequest) error {
+	if m.UploadTenantAPIKeyAssert != nil {
+		m.UploadTenantAPIKeyAssert(request)
+	}
+	return m.UploadTenantAPIKeyError
+}
+
+func (m *MockOutboundApplication) UploadUserToken(_ context.Context, request *descope.UploadOutboundAppUserTokenRequest) error {
+	if m.UploadUserTokenAssert != nil {
+		m.UploadUserTokenAssert(request)
+	}
+	return m.UploadUserTokenError
+}
+
+func (m *MockOutboundApplication) UploadTenantToken(_ context.Context, request *descope.UploadOutboundAppTenantTokenRequest) error {
+	if m.UploadTenantTokenAssert != nil {
+		m.UploadTenantTokenAssert(request)
+	}
+	return m.UploadTenantTokenError
+}
+
+func (m *MockOutboundApplication) BatchUploadUserTokens(_ context.Context, tokens []*descope.OutboundAppUserTokenToUpload) (*descope.BatchUploadOutboundAppTokensResponse, error) {
+	if m.BatchUploadUserTokensAssert != nil {
+		m.BatchUploadUserTokensAssert(tokens)
+	}
+	return m.BatchUploadUserTokensResponse, m.BatchUploadUserTokensError
+}
+
+func (m *MockOutboundApplication) BatchUploadTenantTokens(_ context.Context, tokens []*descope.OutboundAppTenantTokenToUpload) (*descope.BatchUploadOutboundAppTokensResponse, error) {
+	if m.BatchUploadTenantTokensAssert != nil {
+		m.BatchUploadTenantTokensAssert(tokens)
+	}
+	return m.BatchUploadTenantTokensResponse, m.BatchUploadTenantTokensError
 }
 
 func (m *MockOutboundApplication) DeleteUserTokens(_ context.Context, appID, userID string) error {
@@ -2485,4 +2769,190 @@ func (m *MockList) Clear(_ context.Context, id string) error {
 		m.ClearAssert(id)
 	}
 	return m.ClearError
+}
+
+// Mock Engine
+
+type MockEngine struct {
+	CreateAssert   func(name string)
+	CreateResponse *descope.Engine
+	CreateError    error
+
+	UpdateAssert   func(id, name string)
+	UpdateResponse *descope.Engine
+	UpdateError    error
+
+	DeleteAssert func(id string)
+	DeleteError  error
+
+	LoadAssert   func(id string)
+	LoadResponse *descope.Engine
+	LoadError    error
+
+	LoadAllResponse []*descope.Engine
+	LoadAllError    error
+
+	RotateSecretAssert   func(id string)
+	RotateSecretResponse string
+	RotateSecretError    error
+}
+
+func (m *MockEngine) Create(_ context.Context, name string) (*descope.Engine, error) {
+	if m.CreateAssert != nil {
+		m.CreateAssert(name)
+	}
+	return m.CreateResponse, m.CreateError
+}
+
+func (m *MockEngine) Update(_ context.Context, id, name string) (*descope.Engine, error) {
+	if m.UpdateAssert != nil {
+		m.UpdateAssert(id, name)
+	}
+	return m.UpdateResponse, m.UpdateError
+}
+
+func (m *MockEngine) Delete(_ context.Context, id string) error {
+	if m.DeleteAssert != nil {
+		m.DeleteAssert(id)
+	}
+	return m.DeleteError
+}
+
+func (m *MockEngine) Load(_ context.Context, id string) (*descope.Engine, error) {
+	if m.LoadAssert != nil {
+		m.LoadAssert(id)
+	}
+	return m.LoadResponse, m.LoadError
+}
+
+func (m *MockEngine) LoadAll(_ context.Context) ([]*descope.Engine, error) {
+	return m.LoadAllResponse, m.LoadAllError
+}
+
+func (m *MockEngine) RotateSecret(_ context.Context, id string) (string, error) {
+	if m.RotateSecretAssert != nil {
+		m.RotateSecretAssert(id)
+	}
+	return m.RotateSecretResponse, m.RotateSecretError
+}
+
+// Mock ScopeClaimMapping
+
+type MockScopeClaimMapping struct {
+	GetResponse []*descope.ScopeClaimMappingEntry
+	GetError    error
+
+	SetAssert func(mappings []*descope.ScopeClaimMappingEntry)
+	SetError  error
+
+	DeleteError error
+}
+
+func (m *MockScopeClaimMapping) Get(_ context.Context) ([]*descope.ScopeClaimMappingEntry, error) {
+	return m.GetResponse, m.GetError
+}
+
+func (m *MockScopeClaimMapping) Set(_ context.Context, mappings []*descope.ScopeClaimMappingEntry) error {
+	if m.SetAssert != nil {
+		m.SetAssert(mappings)
+	}
+	return m.SetError
+}
+
+func (m *MockScopeClaimMapping) Delete(_ context.Context) error {
+	return m.DeleteError
+}
+
+// Mock JWT Template
+
+type MockJWTTemplate struct {
+	CreateAssert   func(template *descope.JWTTemplate)
+	CreateResponse *descope.JWTTemplate
+	CreateError    error
+
+	UpdateAssert   func(template *descope.JWTTemplate)
+	UpdateResponse *descope.JWTTemplate
+	UpdateError    error
+
+	DeleteAssert func(id string)
+	DeleteError  error
+
+	ListResponse []*descope.JWTTemplate
+	ListError    error
+
+	LoadAssert   func(id string)
+	LoadResponse *descope.JWTTemplate
+	LoadError    error
+
+	ValidateAssert   func(id string, template *descope.JWTTemplate)
+	ValidateResponse *descope.JWTTemplateValidationResult
+	ValidateError    error
+
+	ListLibraryResponse []*descope.JWTTemplateLibraryEntry
+	ListLibraryError    error
+
+	LoadLibraryEntryAssert   func(id string)
+	LoadLibraryEntryResponse *descope.JWTTemplateLibraryEntry
+	LoadLibraryEntryError    error
+
+	ApplyFromLibraryAssert   func(request *descope.ApplyJWTTemplateFromLibraryRequest)
+	ApplyFromLibraryResponse *descope.JWTTemplate
+	ApplyFromLibraryError    error
+}
+
+func (m *MockJWTTemplate) Create(_ context.Context, template *descope.JWTTemplate) (*descope.JWTTemplate, error) {
+	if m.CreateAssert != nil {
+		m.CreateAssert(template)
+	}
+	return m.CreateResponse, m.CreateError
+}
+
+func (m *MockJWTTemplate) Update(_ context.Context, template *descope.JWTTemplate) (*descope.JWTTemplate, error) {
+	if m.UpdateAssert != nil {
+		m.UpdateAssert(template)
+	}
+	return m.UpdateResponse, m.UpdateError
+}
+
+func (m *MockJWTTemplate) Delete(_ context.Context, id string) error {
+	if m.DeleteAssert != nil {
+		m.DeleteAssert(id)
+	}
+	return m.DeleteError
+}
+
+func (m *MockJWTTemplate) List(_ context.Context) ([]*descope.JWTTemplate, error) {
+	return m.ListResponse, m.ListError
+}
+
+func (m *MockJWTTemplate) Load(_ context.Context, id string) (*descope.JWTTemplate, error) {
+	if m.LoadAssert != nil {
+		m.LoadAssert(id)
+	}
+	return m.LoadResponse, m.LoadError
+}
+
+func (m *MockJWTTemplate) Validate(_ context.Context, id string, template *descope.JWTTemplate) (*descope.JWTTemplateValidationResult, error) {
+	if m.ValidateAssert != nil {
+		m.ValidateAssert(id, template)
+	}
+	return m.ValidateResponse, m.ValidateError
+}
+
+func (m *MockJWTTemplate) ListLibrary(_ context.Context) ([]*descope.JWTTemplateLibraryEntry, error) {
+	return m.ListLibraryResponse, m.ListLibraryError
+}
+
+func (m *MockJWTTemplate) LoadLibraryEntry(_ context.Context, id string) (*descope.JWTTemplateLibraryEntry, error) {
+	if m.LoadLibraryEntryAssert != nil {
+		m.LoadLibraryEntryAssert(id)
+	}
+	return m.LoadLibraryEntryResponse, m.LoadLibraryEntryError
+}
+
+func (m *MockJWTTemplate) ApplyFromLibrary(_ context.Context, request *descope.ApplyJWTTemplateFromLibraryRequest) (*descope.JWTTemplate, error) {
+	if m.ApplyFromLibraryAssert != nil {
+		m.ApplyFromLibraryAssert(request)
+	}
+	return m.ApplyFromLibraryResponse, m.ApplyFromLibraryError
 }

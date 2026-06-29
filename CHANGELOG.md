@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.26.0](https://github.com/descope/go-sdk/compare/v1.25.0...v1.26.0) (2026-06-28)
+
+
+### Features
+
+* **mgmt:** add engine management API ([#786](https://github.com/descope/go-sdk/issues/786)) ([0494397](https://github.com/descope/go-sdk/commit/049439759bd8209e83797c4748c04f3d3723d463))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.25.0 ([#784](https://github.com/descope/go-sdk/issues/784)) ([f1cdb0d](https://github.com/descope/go-sdk/commit/f1cdb0ddf3d84f37c8a102ab4304a7fee2ed52b8))
+
+## [1.25.0](https://github.com/descope/go-sdk/compare/v1.24.0...v1.25.0) (2026-06-28)
+
+
+### Features
+
+* **outbound:** add token/api-key upload, connection-status list, tenant fetches ([#781](https://github.com/descope/go-sdk/issues/781)) ([4d9da25](https://github.com/descope/go-sdk/commit/4d9da25d971f3857c6be05fdb2e63696b7cd2c8c))
+* **webauthn:** add mfa option to passkey enrollment (update device) ([#782](https://github.com/descope/go-sdk/issues/782)) ([3906390](https://github.com/descope/go-sdk/commit/3906390be7e8ab3f867f111cd10e77184c61e4dc))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.24.0 ([#776](https://github.com/descope/go-sdk/issues/776)) ([e47b022](https://github.com/descope/go-sdk/commit/e47b022fa1085db6e6a61ed99d16a9b2ca00d8d2))
+
 ## [1.24.0](https://github.com/descope/go-sdk/compare/v1.23.0...v1.24.0) (2026-06-22)
 
 

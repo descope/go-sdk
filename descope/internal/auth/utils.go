@@ -36,6 +36,7 @@ type authenticationWebAuthnSignInRequestBody struct {
 type authenticationWebAuthnAddDeviceRequestBody struct {
 	LoginID string `json:"loginId,omitempty"`
 	Origin  string `json:"origin"`
+	MFA     bool   `json:"mfa,omitempty"`
 }
 
 type authenticationPasswordSignUpRequestBody struct {

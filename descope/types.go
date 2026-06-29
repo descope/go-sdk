@@ -1003,6 +1003,15 @@ type Permission struct {
 	Description string `json:"description,omitempty"`
 }
 
+// PermissionUpdateRequest is a single item in a batch permission update.
+// Either Name or ID must be provided to identify the permission to update.
+type PermissionUpdateRequest struct {
+	Name        string `json:"name,omitempty"`
+	ID          string `json:"id,omitempty"`
+	NewName     string `json:"newName"`
+	Description string `json:"description,omitempty"`
+}
+
 type Role struct {
 	ID              string   `json:"id,omitempty"`
 	Name            string   `json:"name"`
@@ -1014,8 +1023,31 @@ type Role struct {
 	Private         bool     `json:"private,omitempty"`
 }
 
+// RoleUpdateRequest is a single item in a batch role update.
+// Either Name or ID must be provided to identify the role to update.
+type RoleUpdateRequest struct {
+	Name            string   `json:"name,omitempty"`
+	ID              string   `json:"id,omitempty"`
+	NewName         string   `json:"newName"`
+	Description     string   `json:"description,omitempty"`
+	PermissionNames []string `json:"permissionNames,omitempty"`
+	TenantID        string   `json:"tenantId,omitempty"`
+	Default         bool     `json:"default,omitempty"`
+	Private         bool     `json:"private,omitempty"`
+}
+
 func (r *Role) GetCreatedTime() time.Time {
 	return time.Unix(int64(r.CreatedTime), 0)
+}
+
+// ScopeClaimMappingEntry binds a single OIDC scope to the JWT claims it produces.
+// Each claim value may be a static string or a {{...}} template resolved at
+// token-generation time. Description is a free-form, human-readable note shown in
+// the console and is never used at token-generation time.
+type ScopeClaimMappingEntry struct {
+	Scope       string            `json:"scope,omitempty"`
+	Claims      map[string]string `json:"claims,omitempty"`
+	Description string            `json:"description,omitempty"`
 }
 
 type RoleSearchOptions struct {
@@ -1025,6 +1057,23 @@ type RoleSearchOptions struct {
 	PermissionNames     []string `json:"permissionNames,omitempty"`
 	RoleIDs             []string `json:"roleIds,omitempty"`
 	IncludeProjectRoles *bool    `json:"includeProjectRoles,omitempty"`
+}
+
+// CustomAttribute is a project-level custom attribute definition for users.
+type CustomAttribute struct {
+	Name            string                   `json:"name,omitempty"`
+	Type            int32                    `json:"type,omitempty"`
+	Options         []*CustomAttributeOption `json:"options,omitempty"`
+	DisplayName     string                   `json:"displayName,omitempty"`
+	DefaultValue    any                      `json:"defaultValue,omitempty"`
+	ViewPermissions []string                 `json:"viewPermissions,omitempty"`
+	EditPermissions []string                 `json:"editPermissions,omitempty"`
+}
+
+// CustomAttributeOption is a selectable value for a custom attribute of a select type.
+type CustomAttributeOption struct {
+	Value string `json:"value,omitempty"`
+	Label string `json:"label,omitempty"`
 }
 
 // Options for searching and filtering users
@@ -1410,6 +1459,15 @@ type CreateOutboundAppRequest struct {
 	ClientSecret string `json:"clientSecret,omitempty"`
 }
 
+// Engine represents an engine resource. Secret is only populated on Create and RotateSecret;
+// it is always empty on Load/LoadAll.
+type Engine struct {
+	ID          string `json:"id,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Secret      string `json:"secret,omitempty"`
+	CreatedTime int32  `json:"createdTime,omitempty"` // epoch seconds
+}
+
 // FetchOutboundAppUserTokenRequest represents a request to fetch an outbound app user token
 type FetchOutboundAppUserTokenRequest struct {
 	AppID    string                       `json:"appId"`
@@ -1446,6 +1504,96 @@ type OutboundAppUserToken struct {
 // FetchOutboundAppUserTokenResponse represents the response from fetching a user token
 type FetchOutboundAppUserTokenResponse struct {
 	Token *OutboundAppUserToken `json:"token"`
+}
+
+// FetchOutboundAppTenantTokenRequest represents a request to fetch an outbound app tenant token
+type FetchOutboundAppTenantTokenRequest struct {
+	AppID    string                       `json:"appId"`
+	TenantID string                       `json:"tenantId"`
+	Scopes   []string                     `json:"scopes,omitempty"`
+	Options  *OutboundAppUserTokenOptions `json:"options,omitempty"`
+}
+
+// UploadOutboundAppUserAPIKeyRequest represents a request to upload/set a static API key for a user
+// on an apikey-type outbound application.
+type UploadOutboundAppUserAPIKeyRequest struct {
+	AppID    string `json:"appId"`
+	UserID   string `json:"userId"`
+	APIKey   string `json:"apiKey"`
+	TenantID string `json:"tenantId,omitempty"`
+}
+
+// UploadOutboundAppTenantAPIKeyRequest represents a request to upload/set a static API key for a tenant
+// on an apikey-type outbound application.
+type UploadOutboundAppTenantAPIKeyRequest struct {
+	AppID    string `json:"appId"`
+	TenantID string `json:"tenantId"`
+	APIKey   string `json:"apiKey"`
+}
+
+// OutboundAppUserTokenToUpload is a single OAuth token to migrate for a user. At least one of
+// RefreshToken or AccessToken must be set. AccessTokenExpiry is in epoch seconds (0 means unknown).
+// Used as a batch item and embedded into UploadOutboundAppUserTokenRequest.
+type OutboundAppUserTokenToUpload struct {
+	AppID              string   `json:"appId"`
+	UserID             string   `json:"userId"`
+	TenantID           string   `json:"tenantId,omitempty"`
+	RefreshToken       string   `json:"refreshToken,omitempty"`
+	AccessToken        string   `json:"accessToken,omitempty"`
+	AccessTokenExpiry  int32    `json:"accessTokenExpiry,omitempty"`
+	AccessTokenType    string   `json:"accessTokenType,omitempty"`
+	Scopes             []string `json:"scopes,omitempty"`
+	ExternalIdentifier string   `json:"externalIdentifier,omitempty"`
+	IDToken            string   `json:"idToken,omitempty"`
+	GrantedBy          string   `json:"grantedBy,omitempty"`
+}
+
+// OutboundAppTenantTokenToUpload is a single OAuth token to migrate for a tenant. At least one of
+// RefreshToken or AccessToken must be set. AccessTokenExpiry is in epoch seconds (0 means unknown).
+// Used as a batch item and embedded into UploadOutboundAppTenantTokenRequest.
+type OutboundAppTenantTokenToUpload struct {
+	AppID              string   `json:"appId"`
+	TenantID           string   `json:"tenantId"`
+	RefreshToken       string   `json:"refreshToken,omitempty"`
+	AccessToken        string   `json:"accessToken,omitempty"`
+	AccessTokenExpiry  int32    `json:"accessTokenExpiry,omitempty"`
+	AccessTokenType    string   `json:"accessTokenType,omitempty"`
+	Scopes             []string `json:"scopes,omitempty"`
+	ExternalIdentifier string   `json:"externalIdentifier,omitempty"`
+	IDToken            string   `json:"idToken,omitempty"`
+	GrantedBy          string   `json:"grantedBy,omitempty"`
+}
+
+// UploadOutboundAppUserTokenRequest uploads a single OAuth token for a user. When VerifyRefresh is
+// true, the refresh token is verified against the provider before persisting; nothing is written if
+// the verification fails.
+type UploadOutboundAppUserTokenRequest struct {
+	OutboundAppUserTokenToUpload
+	VerifyRefresh bool `json:"verifyRefresh,omitempty"`
+}
+
+// UploadOutboundAppTenantTokenRequest uploads a single OAuth token for a tenant. When VerifyRefresh is
+// true, the refresh token is verified against the provider before persisting; nothing is written if
+// the verification fails.
+type UploadOutboundAppTenantTokenRequest struct {
+	OutboundAppTenantTokenToUpload
+	VerifyRefresh bool `json:"verifyRefresh,omitempty"`
+}
+
+// OutboundAppTokenUploadFailure describes a single per-item failure from a batch upload. Only the
+// identifier relevant to the variant is populated (UserID for the user batch, TenantID for the tenant batch).
+type OutboundAppTokenUploadFailure struct {
+	AppID     string `json:"appId"`
+	UserID    string `json:"userId,omitempty"`
+	TenantID  string `json:"tenantId,omitempty"`
+	ErrorCode string `json:"errorCode"`
+	Reason    string `json:"reason"`
+}
+
+// BatchUploadOutboundAppTokensResponse is returned by the batch upload endpoints. Batch upload is
+// all-or-nothing: a non-empty Failures slice means no tokens were committed.
+type BatchUploadOutboundAppTokensResponse struct {
+	Failures []*OutboundAppTokenUploadFailure `json:"failures"`
 }
 
 type ThirdPartyApplicationScope struct {
@@ -1761,4 +1909,71 @@ type ListTextsRequest struct {
 type ListCheckTextRequest struct {
 	ID   string `json:"id"`
 	Text string `json:"text"`
+}
+
+// JWTTemplate is a JWT template definition in a project.
+type JWTTemplate struct {
+	ID                      string         `json:"id,omitempty"`
+	Name                    string         `json:"name,omitempty"`
+	Description             string         `json:"description,omitempty"`
+	Template                map[string]any `json:"template,omitempty"`
+	Source                  string         `json:"source,omitempty"`
+	Tags                    []string       `json:"tags,omitempty"`
+	AuthSchema              string         `json:"authSchema,omitempty"`
+	Type                    string         `json:"type,omitempty"`
+	ConformanceIssuer       bool           `json:"conformanceIssuer,omitempty"`
+	AutoDCT                 bool           `json:"autoDCT,omitempty"`
+	EnforceIssuer           bool           `json:"enforceIssuer,omitempty"`
+	EmptyClaimPolicy        string         `json:"emptyClaimPolicy,omitempty"`
+	OverrideSubject         bool           `json:"overrideSubject,omitempty"`
+	IssuerType              string         `json:"issuerType,omitempty"`
+	OmitCustomClaimsFromDSR bool           `json:"omitCustomClaimsFromDSR,omitempty"`
+	AddJti                  bool           `json:"addJti,omitempty"`
+	ExcludePermissions      bool           `json:"excludePermissions,omitempty"`
+}
+
+// JWTTemplateLibraryEntry is a read-only starter JWT template shipped by Descope.
+type JWTTemplateLibraryEntry struct {
+	ID                      string         `json:"id,omitempty"`
+	Name                    string         `json:"name,omitempty"`
+	Description             string         `json:"description,omitempty"`
+	Template                map[string]any `json:"template,omitempty"`
+	Tags                    []string       `json:"tags,omitempty"`
+	AuthSchema              string         `json:"authSchema,omitempty"`
+	Type                    string         `json:"type,omitempty"`
+	ConformanceIssuer       bool           `json:"conformanceIssuer,omitempty"`
+	AutoDCT                 bool           `json:"autoDCT,omitempty"`
+	EnforceIssuer           bool           `json:"enforceIssuer,omitempty"`
+	EmptyClaimPolicy        string         `json:"emptyClaimPolicy,omitempty"`
+	OverrideSubject         bool           `json:"overrideSubject,omitempty"`
+	IssuerType              string         `json:"issuerType,omitempty"`
+	OmitCustomClaimsFromDSR bool           `json:"omitCustomClaimsFromDSR,omitempty"`
+	AddJti                  bool           `json:"addJti,omitempty"`
+	ExcludePermissions      bool           `json:"excludePermissions,omitempty"`
+	Experimental            bool           `json:"experimental,omitempty"`
+	LogoLight               string         `json:"logoLight,omitempty"`
+	LogoDark                string         `json:"logoDark,omitempty"`
+}
+
+// JWTTemplateValidationIssue is a single validation failure produced when validating a JWT template.
+type JWTTemplateValidationIssue struct {
+	Field   string `json:"field,omitempty"`
+	Code    string `json:"code,omitempty"`
+	Message string `json:"message,omitempty"`
+	Hint    string `json:"hint,omitempty"`
+}
+
+// JWTTemplateValidationResult is the result of validating a JWT template.
+type JWTTemplateValidationResult struct {
+	Valid  bool                          `json:"valid"`
+	Issues []*JWTTemplateValidationIssue `json:"issues,omitempty"`
+}
+
+// ApplyJWTTemplateFromLibraryRequest applies a library entry as a new template, with optional overrides.
+type ApplyJWTTemplateFromLibraryRequest struct {
+	LibraryEntryID      string         `json:"libraryEntryId,omitempty"`
+	NameOverride        string         `json:"nameOverride,omitempty"`
+	DescriptionOverride string         `json:"descriptionOverride,omitempty"`
+	TagsOverride        []string       `json:"tagsOverride,omitempty"`
+	TemplateOverride    map[string]any `json:"templateOverride,omitempty"`
 }

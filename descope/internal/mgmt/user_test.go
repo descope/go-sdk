@@ -2764,3 +2764,113 @@ func TestUserRemoveTrustedDevicesError(t *testing.T) {
 	err := m.User().RemoveTrustedDevices(context.Background(), "abc", []string{"id1"})
 	require.Error(t, err)
 }
+
+func TestUserDeleteBatchSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		ids, ok := req["userIds"].([]any)
+		require.True(t, ok)
+		require.Len(t, ids, 2)
+	}))
+	err := mgmt.User().DeleteBatch(context.Background(), []string{"u1", "u2"})
+	require.NoError(t, err)
+}
+
+func TestUserDeleteBatchError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.User().DeleteBatch(context.Background(), nil)
+	require.Error(t, err)
+}
+
+func TestUserUpdateRecoveryEmailSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "u1", req["loginId"])
+		require.Equal(t, "rec@test.com", req["recoveryEmail"])
+		require.Equal(t, true, req["verified"])
+	}, map[string]any{"user": map[string]any{"userId": "u1"}}))
+	res, err := mgmt.User().UpdateRecoveryEmail(context.Background(), "u1", "rec@test.com", true)
+	require.NoError(t, err)
+	require.Equal(t, "u1", res.UserID)
+}
+
+func TestUserUpdateRecoveryEmailError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	_, err := mgmt.User().UpdateRecoveryEmail(context.Background(), "", "rec@test.com", true)
+	require.Error(t, err)
+}
+
+func TestUserUpdateRecoveryPhoneSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "u1", req["loginId"])
+		require.Equal(t, "+972500000000", req["recoveryPhone"])
+		require.Equal(t, false, req["verified"])
+	}, map[string]any{"user": map[string]any{"userId": "u1"}}))
+	res, err := mgmt.User().UpdateRecoveryPhone(context.Background(), "u1", "+972500000000", false)
+	require.NoError(t, err)
+	require.Equal(t, "u1", res.UserID)
+}
+
+func TestUserUpdateRecoveryPhoneError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	_, err := mgmt.User().UpdateRecoveryPhone(context.Background(), "", "+972500000000", false)
+	require.Error(t, err)
+}
+
+func TestUserGetCustomAttributesSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+	}, map[string]any{"data": []map[string]any{
+		{"name": "tier", "type": 1, "displayName": "Tier"},
+	}, "total": "1"}))
+	res, err := mgmt.User().GetCustomAttributes(context.Background())
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Equal(t, "tier", res[0].Name)
+	require.Equal(t, "Tier", res[0].DisplayName)
+}
+
+func TestUserCreateCustomAttributesSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		attrs, ok := req["attributes"].([]any)
+		require.True(t, ok)
+		require.Len(t, attrs, 1)
+	}, map[string]any{"data": []map[string]any{{"name": "tier"}}}))
+	res, err := mgmt.User().CreateCustomAttributes(context.Background(), []*descope.CustomAttribute{
+		{Name: "tier", Type: 1},
+	})
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+}
+
+func TestUserCreateCustomAttributesError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	_, err := mgmt.User().CreateCustomAttributes(context.Background(), nil)
+	require.Error(t, err)
+}
+
+func TestUserDeleteCustomAttributesSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		names, ok := req["names"].([]any)
+		require.True(t, ok)
+		require.Len(t, names, 1)
+	}, map[string]any{"data": []map[string]any{}}))
+	res, err := mgmt.User().DeleteCustomAttributes(context.Background(), []string{"tier"})
+	require.NoError(t, err)
+	require.Len(t, res, 0)
+}
+
+func TestUserDeleteCustomAttributesError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	_, err := mgmt.User().DeleteCustomAttributes(context.Background(), nil)
+	require.Error(t, err)
+}

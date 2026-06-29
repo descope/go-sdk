@@ -278,3 +278,58 @@ func TestAccessKeyRotateError(t *testing.T) {
 	_, _, err := mgmt.AccessKey().Rotate(context.Background(), "ak1")
 	require.Error(t, err)
 }
+
+func TestAccessKeyDeactivateBatchSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		ids, ok := req["ids"].([]any)
+		require.True(t, ok)
+		require.Len(t, ids, 2)
+	}))
+	err := mgmt.AccessKey().DeactivateBatch(context.Background(), []string{"ak1", "ak2"})
+	require.NoError(t, err)
+}
+
+func TestAccessKeyDeactivateBatchError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.AccessKey().DeactivateBatch(context.Background(), nil)
+	require.Error(t, err)
+}
+
+func TestAccessKeyActivateBatchSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		ids, ok := req["ids"].([]any)
+		require.True(t, ok)
+		require.Len(t, ids, 1)
+	}))
+	err := mgmt.AccessKey().ActivateBatch(context.Background(), []string{"ak1"})
+	require.NoError(t, err)
+}
+
+func TestAccessKeyActivateBatchError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.AccessKey().ActivateBatch(context.Background(), nil)
+	require.Error(t, err)
+}
+
+func TestAccessKeyDeleteBatchSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		ids, ok := req["ids"].([]any)
+		require.True(t, ok)
+		require.Len(t, ids, 2)
+	}))
+	err := mgmt.AccessKey().DeleteBatch(context.Background(), []string{"ak1", "ak2"})
+	require.NoError(t, err)
+}
+
+func TestAccessKeyDeleteBatchError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.AccessKey().DeleteBatch(context.Background(), nil)
+	require.Error(t, err)
+}

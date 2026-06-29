@@ -117,6 +117,8 @@ These sections show how to use the SDK to perform API management functions. Befo
 16. [Manage Lists](#manage-lists)
 17. [Manage Management Keys](#manage-management-keys)
 18. [Manage Descopers](#manage-descopers)
+19. [Manage Engines](#manage-engines)
+20. [Manage JWT Templates](#manage-jwt-templates)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -1039,6 +1041,18 @@ err := descopeClient.Management.User().Delete(context.Background(), "desmond@des
 // If needed, users can be loaded using their ID as well
 err := descopeClient.Management.User().Delete(context.Background(), "<user-id>")
 
+// Multiple users can be deleted in a single request by their user IDs.
+err = descopeClient.Management.User().DeleteBatch(context.Background(), []string{"<user-id-1>", "<user-id-2>"})
+
+// Update a user's recovery email / phone (used for account recovery flows).
+userRes, err = descopeClient.Management.User().UpdateRecoveryEmail(context.Background(), "desmond@descope.com", "recovery@descope.com", true)
+userRes, err = descopeClient.Management.User().UpdateRecoveryPhone(context.Background(), "desmond@descope.com", "+15555555555", true)
+
+// Manage the project-level user custom attribute definitions.
+attrs, err := descopeClient.Management.User().GetCustomAttributes(context.Background())
+attrs, err = descopeClient.Management.User().CreateCustomAttributes(context.Background(), []*descope.CustomAttribute{{Name: "tier", DisplayName: "Tier"}})
+attrs, err = descopeClient.Management.User().DeleteCustomAttributes(context.Background(), []string{"tier"})
+
 // Load specific user
 userRes, err := descopeClient.Management.User().Load(context.Background(), "desmond@descope.com")
 // If needed, users can be loaded using their ID as well
@@ -1158,6 +1172,12 @@ err := descopeClient.Management.AccessKey().Activate(context.Background(), "acce
 
 // Access key deletion cannot be undone. Use carefully.
 err := descopeClient.Management.AccessKey().Delete(context.Background(), "access-key-id")
+
+// The deactivate, activate and delete operations also have batch variants that
+// accept multiple access key IDs in a single request.
+err = descopeClient.Management.AccessKey().DeactivateBatch(context.Background(), []string{"id1", "id2"})
+err = descopeClient.Management.AccessKey().ActivateBatch(context.Background(), []string{"id1", "id2"})
+err = descopeClient.Management.AccessKey().DeleteBatch(context.Background(), []string{"id1", "id2"})
 ```
 
 Exchange the access key and provide optional access key login options:
@@ -1305,6 +1325,16 @@ err := descopeClient.Management.Permission().Update(context.Background(), name, 
 // Permission deletion cannot be undone. Use carefully.
 descopeClient.Management.Permission().Delete(context.Background(), newName)
 
+// Bulk create, update or delete permissions in a single request.
+err := descopeClient.Management.Permission().CreateBatch(context.Background(), []*descope.Permission{
+    {Name: "Permission A", Description: "first"},
+    {Name: "Permission B"},
+})
+err = descopeClient.Management.Permission().UpdateBatch(context.Background(), []*descope.PermissionUpdateRequest{
+    {Name: "Permission A", NewName: "Permission A renamed"},
+})
+err = descopeClient.Management.Permission().DeleteBatch(context.Background(), []string{"Permission A renamed", "Permission B"}, nil)
+
 // Load all permissions
 res, err := descopeClient.Management.Permission().LoadAll(context.Background())
 if err == nil {
@@ -1335,6 +1365,17 @@ descopeClient.Management.Role().Update(context.Background(), name, tenantID, new
 // Role deletion cannot be undone. Use carefully.
 descopeClient.Management.Role().Delete(context.Background(), newName, tenantID)
 
+// Bulk create, update or delete roles in a single request.
+// CreateBatch and UpdateBatch return the affected roles.
+createdRoles, err := descopeClient.Management.Role().CreateBatch(context.Background(), []*descope.Role{
+    {Name: "Role A", PermissionNames: permissionNames},
+    {Name: "Role B"},
+})
+updatedRoles, err := descopeClient.Management.Role().UpdateBatch(context.Background(), []*descope.RoleUpdateRequest{
+    {Name: "Role A", NewName: "Role A renamed", PermissionNames: permissionNames},
+})
+err = descopeClient.Management.Role().DeleteBatch(context.Background(), []string{"Role A renamed", "Role B"}, tenantID, nil)
+
 // Load all roles
 res, err := descopeClient.Management.Role().LoadAll(context.Background())
 if err == nil {
@@ -1353,6 +1394,30 @@ if err == nil {
         // Do something
     }
 }
+```
+
+### Manage Scope Claim Mappings
+
+You can manage the project-wide mapping of OIDC scopes to JWT claims:
+
+```go
+// Set the mapping (replaces any existing mapping). Each claim value may be a
+// static string or a {{...}} template resolved at token-generation time.
+err := descopeClient.Management.ScopeClaimMapping().Set(context.Background(), []*descope.ScopeClaimMappingEntry{
+	{Scope: "email", Claims: map[string]string{"email": "{{user.email}}"}, Description: "email scope"},
+	{Scope: "profile", Claims: map[string]string{"name": "{{user.name}}"}},
+})
+
+// Get the current mapping
+mappings, err := descopeClient.Management.ScopeClaimMapping().Get(context.Background())
+if err == nil {
+    for _, entry := range mappings {
+        // Do something
+    }
+}
+
+// Delete the mapping
+err = descopeClient.Management.ScopeClaimMapping().Delete(context.Background())
 ```
 
 ### Query SSO Groups
@@ -1850,6 +1915,9 @@ apps, total, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadAll
 // Deletion cannot be undone. Use carefully.
 err = descopeClient.DescopeClient().Management.ThirdPartyApplication().DeleteApplication(context.Background(), "appId")
 
+// Multiple third party applications can be deleted in a single request.
+err = descopeClient.DescopeClient().Management.ThirdPartyApplication().DeleteApplicationBatch(context.Background(), []string{"appId1", "appId2"})
+
 // Search third party applications consents by pages using a filter options, such as application id, user id, etc.
 consents, total, err = descopeClient.DescopeClient().Management.ThirdPartyApplication().SearchConsents(context.Background(), &descope.ThirdPartyApplicationConsentSearchOptions{
 	AppID: "appId"
@@ -1890,6 +1958,70 @@ app, err := descopeClient.Management.OutboundApplication().LoadApplication(conte
 
 // Load all outbound applications
 apps, err := descopeClient.Management.OutboundApplication().LoadAllApplications(context.Background())
+```
+
+You can fetch tokens for a user or a tenant, by scopes or the latest one:
+
+```go
+// Fetch a user token with specific scopes
+token, err := descopeClient.Management.OutboundApplication().FetchUserToken(context.Background(), &descope.FetchOutboundAppUserTokenRequest{
+    AppID:  "app-id",
+    UserID: "user-id",
+    Scopes: []string{"read", "write"},
+})
+
+// Fetch the latest user token (ignores scopes)
+token, err = descopeClient.Management.OutboundApplication().FetchLatestUserToken(context.Background(), &descope.FetchOutboundAppUserTokenRequest{
+    AppID:  "app-id",
+    UserID: "user-id",
+})
+
+// Fetch a tenant token with specific scopes / the latest tenant token
+token, err = descopeClient.Management.OutboundApplication().FetchTenantToken(context.Background(), &descope.FetchOutboundAppTenantTokenRequest{
+    AppID:    "app-id",
+    TenantID: "tenant-id",
+    Scopes:   []string{"read"},
+})
+token, err = descopeClient.Management.OutboundApplication().FetchLatestTenantToken(context.Background(), &descope.FetchOutboundAppTenantTokenRequest{
+    AppID:    "app-id",
+    TenantID: "tenant-id",
+})
+
+// List the IDs of the outbound apps a user currently holds a valid token for
+appIDs, err := descopeClient.Management.OutboundApplication().ListAppsWithUserToken(context.Background(), "user-id", "" /* optional tenantId */)
+```
+
+For apikey-type outbound apps you can store a static API key, and for oauth-type apps you can
+migrate (upload) existing tokens without requiring the user to re-run the OAuth flow:
+
+```go
+// Store a static API key for a user / tenant on an apikey-type app
+err := descopeClient.Management.OutboundApplication().UploadUserAPIKey(context.Background(), &descope.UploadOutboundAppUserAPIKeyRequest{
+    AppID:  "app-id",
+    UserID: "user-id",
+    APIKey: "the-users-api-key",
+})
+err = descopeClient.Management.OutboundApplication().UploadTenantAPIKey(context.Background(), &descope.UploadOutboundAppTenantAPIKeyRequest{
+    AppID:    "app-id",
+    TenantID: "tenant-id",
+    APIKey:   "the-tenants-api-key",
+})
+
+// Upload (migrate) an existing OAuth token for a user / tenant
+err = descopeClient.Management.OutboundApplication().UploadUserToken(context.Background(), &descope.UploadOutboundAppUserTokenRequest{
+    OutboundAppUserTokenToUpload: descope.OutboundAppUserTokenToUpload{
+        AppID:        "app-id",
+        UserID:       "user-id",
+        RefreshToken: "the-refresh-token",
+        Scopes:       []string{"read", "write"},
+    },
+})
+
+// Batch upload (all-or-nothing): inspect res.Failures to see which items were rejected
+res, err := descopeClient.Management.OutboundApplication().BatchUploadUserTokens(context.Background(), []*descope.OutboundAppUserTokenToUpload{
+    {AppID: "app-id", UserID: "user-1", AccessToken: "token-1"},
+    {AppID: "app-id", UserID: "user-2", AccessToken: "token-2"},
+})
 ```
 
 ### Manage Lists
@@ -2109,6 +2241,84 @@ if err == nil {
 
 // Delete a descoper. Descoper deletion cannot be undone. Use carefully.
 err := descopeClient.Management.Descoper().Delete(context.Background(), "descoper-id")
+```
+
+### Manage Engines
+
+You can create, update, delete, load, and rotate the secret of engines:
+
+```go
+// Create a new engine. The returned engine includes its generated ID and secret.
+// The secret is ONLY returned on Create (and RotateSecret) — store it securely,
+// as it cannot be retrieved again afterwards.
+engine, err := descopeClient.Management.Engine().Create(context.Background(), "my-engine")
+if err == nil {
+    fmt.Println("engine id:", engine.ID)
+    fmt.Println("engine secret (store securely!):", engine.Secret)
+}
+
+// Update an existing engine's name. The returned engine does not include the secret.
+engine, err = descopeClient.Management.Engine().Update(context.Background(), "engine-id", "renamed-engine")
+
+// Load an engine by ID. The returned engine's secret is always empty.
+engine, err = descopeClient.Management.Engine().Load(context.Background(), "engine-id")
+
+// Load all engines for the project. The returned engines' secrets are always empty.
+engines, err := descopeClient.Management.Engine().LoadAll(context.Background())
+if err == nil {
+    for _, e := range engines {
+        // Do something
+    }
+}
+
+// Rotate an engine's secret. The previous secret is immediately invalidated and the
+// new secret is returned in cleartext — store it securely, as it cannot be retrieved again.
+newSecret, err := descopeClient.Management.Engine().RotateSecret(context.Background(), "engine-id")
+
+// Delete an engine by ID.
+err = descopeClient.Management.Engine().Delete(context.Background(), "engine-id")
+```
+
+### Manage JWT Templates
+
+You can create, update, delete, load, list and validate JWT templates, as well as
+apply Descope's read-only library templates:
+
+```go
+// Create a new JWT template. The returned template includes its generated ID.
+tmpl, err := descopeClient.Management.JWTTemplate().Create(context.Background(), &descope.JWTTemplate{
+    Name:     "my-template",
+    Template: map[string]any{"customClaim": "{{user.email}}"},
+})
+
+// Update an existing template (identified by its ID). All fields are overridden.
+tmpl, err = descopeClient.Management.JWTTemplate().Update(context.Background(), &descope.JWTTemplate{
+    ID:   "template-id",
+    Name: "renamed-template",
+})
+
+// Load a template by ID, or list all templates in the project.
+tmpl, err = descopeClient.Management.JWTTemplate().Load(context.Background(), "template-id")
+templates, err := descopeClient.Management.JWTTemplate().List(context.Background())
+
+// Validate a template by ID and/or an inline template before saving.
+result, err := descopeClient.Management.JWTTemplate().Validate(context.Background(), "template-id", nil)
+if err == nil && !result.Valid {
+    for _, issue := range result.Issues {
+        fmt.Println(issue.Field, issue.Code, issue.Message)
+    }
+}
+
+// Browse the read-only starter templates shipped by Descope and apply one as a new template.
+entries, err := descopeClient.Management.JWTTemplate().ListLibrary(context.Background())
+entry, err := descopeClient.Management.JWTTemplate().LoadLibraryEntry(context.Background(), "library-entry-id")
+tmpl, err = descopeClient.Management.JWTTemplate().ApplyFromLibrary(context.Background(), &descope.ApplyJWTTemplateFromLibraryRequest{
+    LibraryEntryID: "library-entry-id",
+    NameOverride:   "my-template-from-library",
+})
+
+// Delete a template by ID.
+err = descopeClient.Management.JWTTemplate().Delete(context.Background(), "template-id")
 ```
 
 ## Code Examples

@@ -117,6 +117,7 @@ var (
 			userPatch:                                "mgmt/user/patch",
 			userPatchBatch:                           "mgmt/user/patch/batch",
 			userDelete:                               "mgmt/user/delete",
+			userDeleteBatch:                          "mgmt/user/delete/batch",
 			userDeleteAllTestUsers:                   "mgmt/user/test/delete/all",
 			userImport:                               "mgmt/user/import",
 			userLoad:                                 "mgmt/user",
@@ -127,6 +128,11 @@ var (
 			userUpdateLoginID:                        "mgmt/user/update/loginid",
 			userUpdateEmail:                          "mgmt/user/update/email",
 			userUpdatePhone:                          "mgmt/user/update/phone",
+			userUpdateRecoveryEmail:                  "mgmt/user/update/recovery/email",
+			userUpdateRecoveryPhone:                  "mgmt/user/update/recovery/phone",
+			userCustomAttributes:                     "mgmt/user/customattributes",
+			userCustomAttributeCreate:                "mgmt/user/customattribute/create",
+			userCustomAttributeDelete:                "mgmt/user/customattribute/delete",
 			userUpdateName:                           "mgmt/user/update/name",
 			userUpdatePicture:                        "mgmt/user/update/picture",
 			userUpdateCustomAttribute:                "mgmt/user/update/customAttribute",
@@ -161,8 +167,11 @@ var (
 			accessKeySearchAll:                       "mgmt/accesskey/search",
 			accessKeyUpdate:                          "mgmt/accesskey/update",
 			accessKeyDeactivate:                      "mgmt/accesskey/deactivate",
+			accessKeyDeactivateBatch:                 "mgmt/accesskey/deactivate/batch",
 			accessKeyActivate:                        "mgmt/accesskey/activate",
+			accessKeyActivateBatch:                   "mgmt/accesskey/activate/batch",
 			accessKeyDelete:                          "mgmt/accesskey/delete",
+			accessKeyDeleteBatch:                     "mgmt/accesskey/delete/batch",
 			accessKeyRotate:                          "mgmt/accesskey/rotate",
 			ssoSettings:                              "mgmt/sso/settings",
 			ssoLoadSettings:                          "mgmt/sso/settings",     // v2 only
@@ -185,12 +194,18 @@ var (
 			mgmtSignUpOrIn:                           "mgmt/auth/signup-in",
 			anonymous:                                "mgmt/auth/anonymous",
 			permissionCreate:                         "mgmt/permission/create",
+			permissionCreateBatch:                    "mgmt/permission/create/batch",
 			permissionUpdate:                         "mgmt/permission/update",
+			permissionUpdateBatch:                    "mgmt/permission/update/batch",
 			permissionDelete:                         "mgmt/permission/delete",
+			permissionDeleteBatch:                    "mgmt/permission/delete/batch",
 			permissionLoadAll:                        "mgmt/permission/all",
 			roleCreate:                               "mgmt/role/create",
+			roleCreateBatch:                          "mgmt/role/create/batch",
 			roleUpdate:                               "mgmt/role/update",
+			roleUpdateBatch:                          "mgmt/role/update/batch",
 			roleDelete:                               "mgmt/role/delete",
+			roleDeleteBatch:                          "mgmt/role/delete/batch",
 			roleLoadAll:                              "mgmt/role/all",
 			roleSearch:                               "mgmt/role/search",
 			groupLoadAllGroups:                       "mgmt/group/all",
@@ -249,44 +264,73 @@ var (
 			outboundApplicationDelete:                "mgmt/outbound/app/delete",
 			outboundApplicationLoad:                  "mgmt/outbound/app",
 			outboundApplicationLoadAll:               "mgmt/outbound/apps",
+			outboundApplicationListAppsWithUserToken: "mgmt/outbound/apps-with-user-token",
 			outboundApplicationFetchUserToken:        "mgmt/outbound/app/user/token",
-			outboundApplicationDeleteUserTokens:      "mgmt/outbound/user/tokens",
-			outboundApplicationDeleteTokenByID:       "mgmt/outbound/token",
-			thirdPartyApplicationCreate:              "mgmt/thirdparty/app/create",
-			thirdPartyApplicationUpdate:              "mgmt/thirdparty/app/update",
-			thirdPartyApplicationPatch:               "mgmt/thirdparty/app/patch",
-			thirdPartyApplicationDelete:              "mgmt/thirdparty/app/delete",
-			thirdPartyApplicationLoad:                "mgmt/thirdparty/app/load",
-			thirdPartyApplicationLoadAll:             "mgmt/thirdparty/apps/load",
-			thirdPartyApplicationSecret:              "mgmt/thirdparty/app/secret",
-			thirdPartyApplicationRotate:              "mgmt/thirdparty/app/rotate",
-			thirdPartyApplicationConsentDelete:       "mgmt/thirdparty/consents/delete",
-			thirdPartyApplicationTenantConsentDelete: "mgmt/thirdparty/consents/delete/tenant",
-			thirdPartyApplicationConsentsSearch:      "mgmt/thirdparty/consents/search",
-			mgmtKeyCreate:                            "mgmt/managementkey",
-			mgmtKeyUpdate:                            "mgmt/managementkey",
-			mgmtKeyGet:                               "mgmt/managementkey",
-			mgmtKeyDelete:                            "mgmt/managementkey/delete",
-			mgmtKeySearch:                            "mgmt/managementkey/search",
-			descoperCreate:                           "mgmt/descoper",
-			descoperUpdate:                           "mgmt/descoper",
-			descoperGet:                              "mgmt/descoper",
-			descoperDelete:                           "mgmt/descoper",
-			descoperSearch:                           "mgmt/descoper/list",
-			listCreate:                               "mgmt/list",
-			listUpdate:                               "mgmt/list/update",
-			listDelete:                               "mgmt/list/delete",
-			listLoad:                                 "mgmt/list",
-			listLoadByName:                           "mgmt/list/name",
-			listLoadAll:                              "mgmt/list/all",
-			listImport:                               "mgmt/list/import",
-			listAddIPs:                               "mgmt/list/ip/add",
-			listRemoveIPs:                            "mgmt/list/ip/remove",
-			listCheckIP:                              "mgmt/list/ip/check",
-			listAddTexts:                             "mgmt/list/text/add",
-			listRemoveTexts:                          "mgmt/list/text/remove",
-			listCheckText:                            "mgmt/list/text/check",
-			listClear:                                "mgmt/list/clear",
+			outboundApplicationFetchLatestUserToken:  "mgmt/outbound/app/user/token/latest",
+			outboundApplicationFetchTenantToken:      "mgmt/outbound/app/tenant/token",
+			outboundApplicationFetchLatestTenantToken:  "mgmt/outbound/app/tenant/token/latest",
+			outboundApplicationDeleteUserTokens:        "mgmt/outbound/user/tokens",
+			outboundApplicationDeleteTokenByID:         "mgmt/outbound/token",
+			outboundApplicationUploadUserAPIKey:        "mgmt/outbound/app/user/apikey/upload",
+			outboundApplicationUploadTenantAPIKey:      "mgmt/outbound/app/tenant/apikey/upload",
+			outboundApplicationUploadUserToken:         "mgmt/outbound/app/user/oauthtoken/upload",
+			outboundApplicationUploadTenantToken:       "mgmt/outbound/app/tenant/oauthtoken/upload",
+			outboundApplicationBatchUploadUserTokens:   "mgmt/outbound/app/user/oauthtoken/batch/upload",
+			outboundApplicationBatchUploadTenantTokens: "mgmt/outbound/app/tenant/oauthtoken/batch/upload",
+			thirdPartyApplicationCreate:                "mgmt/thirdparty/app/create",
+			thirdPartyApplicationUpdate:                "mgmt/thirdparty/app/update",
+			thirdPartyApplicationPatch:                 "mgmt/thirdparty/app/patch",
+			thirdPartyApplicationDelete:                "mgmt/thirdparty/app/delete",
+			thirdPartyApplicationDeleteBatch:           "mgmt/thirdparty/app/delete/batch",
+			thirdPartyApplicationLoad:                  "mgmt/thirdparty/app/load",
+			thirdPartyApplicationLoadAll:               "mgmt/thirdparty/apps/load",
+			thirdPartyApplicationSecret:                "mgmt/thirdparty/app/secret",
+			thirdPartyApplicationRotate:                "mgmt/thirdparty/app/rotate",
+			thirdPartyApplicationConsentDelete:         "mgmt/thirdparty/consents/delete",
+			thirdPartyApplicationTenantConsentDelete:   "mgmt/thirdparty/consents/delete/tenant",
+			thirdPartyApplicationConsentsSearch:        "mgmt/thirdparty/consents/search",
+			mgmtKeyCreate:                              "mgmt/managementkey",
+			mgmtKeyUpdate:                              "mgmt/managementkey",
+			mgmtKeyGet:                                 "mgmt/managementkey",
+			mgmtKeyDelete:                              "mgmt/managementkey/delete",
+			mgmtKeySearch:                              "mgmt/managementkey/search",
+			descoperCreate:                             "mgmt/descoper",
+			descoperUpdate:                             "mgmt/descoper",
+			descoperGet:                                "mgmt/descoper",
+			descoperDelete:                             "mgmt/descoper",
+			descoperSearch:                             "mgmt/descoper/list",
+			listCreate:                                 "mgmt/list",
+			listUpdate:                                 "mgmt/list/update",
+			listDelete:                                 "mgmt/list/delete",
+			listLoad:                                   "mgmt/list",
+			listLoadByName:                             "mgmt/list/name",
+			listLoadAll:                                "mgmt/list/all",
+			listImport:                                 "mgmt/list/import",
+			listAddIPs:                                 "mgmt/list/ip/add",
+			listRemoveIPs:                              "mgmt/list/ip/remove",
+			listCheckIP:                                "mgmt/list/ip/check",
+			listAddTexts:                               "mgmt/list/text/add",
+			listRemoveTexts:                            "mgmt/list/text/remove",
+			listCheckText:                              "mgmt/list/text/check",
+			listClear:                                  "mgmt/list/clear",
+			engineCreate:                               "mgmt/engine/create",
+			engineUpdate:                               "mgmt/engine/update",
+			engineDelete:                               "mgmt/engine/delete",
+			engineLoad:                                 "mgmt/engine/load",
+			engineLoadAll:                              "mgmt/engines/load",
+			engineRotateSecret:                         "mgmt/engine/rotate",
+			jwtTemplateCreate:                          "mgmt/jwt/templates/create",
+			jwtTemplateUpdate:                          "mgmt/jwt/templates/update",
+			jwtTemplateDelete:                          "mgmt/jwt/templates/delete",
+			jwtTemplateList:                            "mgmt/jwt/templates/list",
+			jwtTemplateLoad:                            "mgmt/jwt/templates/load",
+			jwtTemplateValidate:                        "mgmt/jwt/templates/validate",
+			jwtTemplateLibraryList:                     "mgmt/jwt/templates/library/list",
+			jwtTemplateLibraryLoad:                     "mgmt/jwt/templates/library/load",
+			jwtTemplateLibraryApply:                    "mgmt/jwt/templates/library/apply",
+			scopeClaimMappingGet:                       "mgmt/scopeClaimMapping/get",
+			scopeClaimMappingSet:                       "mgmt/scopeClaimMapping/set",
+			scopeClaimMappingDelete:                    "mgmt/scopeClaimMapping/delete",
 		},
 		logout:       "auth/logout",
 		logoutAll:    "auth/logoutall",
@@ -401,6 +445,7 @@ type mgmtEndpoints struct {
 	userPatch                 string
 	userPatchBatch            string
 	userDelete                string
+	userDeleteBatch           string
 	userDeleteAllTestUsers    string
 	userImport                string
 	userLoad                  string
@@ -411,6 +456,11 @@ type mgmtEndpoints struct {
 	userUpdateLoginID         string
 	userUpdateEmail           string
 	userUpdatePhone           string
+	userUpdateRecoveryEmail   string
+	userUpdateRecoveryPhone   string
+	userCustomAttributes      string
+	userCustomAttributeCreate string
+	userCustomAttributeDelete string
 	userUpdateName            string
 	userUpdatePicture         string
 	userUpdateCustomAttribute string
@@ -443,14 +493,17 @@ type mgmtEndpoints struct {
 
 	userHistory string
 
-	accessKeyCreate     string
-	accessKeyLoad       string
-	accessKeySearchAll  string
-	accessKeyUpdate     string
-	accessKeyDeactivate string
-	accessKeyActivate   string
-	accessKeyDelete     string
-	accessKeyRotate     string
+	accessKeyCreate          string
+	accessKeyLoad            string
+	accessKeySearchAll       string
+	accessKeyUpdate          string
+	accessKeyDeactivate      string
+	accessKeyDeactivateBatch string
+	accessKeyActivate        string
+	accessKeyActivateBatch   string
+	accessKeyDelete          string
+	accessKeyDeleteBatch     string
+	accessKeyRotate          string
 
 	//* Deprecated (use the below value instead) *//
 	ssoSettings string
@@ -477,16 +530,22 @@ type mgmtEndpoints struct {
 
 	passwordSettings string
 
-	permissionCreate  string
-	permissionUpdate  string
-	permissionDelete  string
-	permissionLoadAll string
+	permissionCreate      string
+	permissionCreateBatch string
+	permissionUpdate      string
+	permissionUpdateBatch string
+	permissionDelete      string
+	permissionDeleteBatch string
+	permissionLoadAll     string
 
-	roleCreate  string
-	roleUpdate  string
-	roleDelete  string
-	roleLoadAll string
-	roleSearch  string
+	roleCreate      string
+	roleCreateBatch string
+	roleUpdate      string
+	roleUpdateBatch string
+	roleDelete      string
+	roleDeleteBatch string
+	roleLoadAll     string
+	roleSearch      string
 
 	groupLoadAllGroups          string
 	groupLoadAllGroupsForMember string
@@ -545,19 +604,30 @@ type mgmtEndpoints struct {
 	fgaResourcesLoad           string
 	fgaResourcesSave           string
 
-	outboundApplicationCreate           string
-	outboundApplicationUpdate           string
-	outboundApplicationDelete           string
-	outboundApplicationLoad             string
-	outboundApplicationLoadAll          string
-	outboundApplicationFetchUserToken   string
-	outboundApplicationDeleteUserTokens string
-	outboundApplicationDeleteTokenByID  string
+	outboundApplicationCreate                  string
+	outboundApplicationUpdate                  string
+	outboundApplicationDelete                  string
+	outboundApplicationLoad                    string
+	outboundApplicationLoadAll                 string
+	outboundApplicationListAppsWithUserToken   string
+	outboundApplicationFetchUserToken          string
+	outboundApplicationFetchLatestUserToken    string
+	outboundApplicationFetchTenantToken        string
+	outboundApplicationFetchLatestTenantToken  string
+	outboundApplicationDeleteUserTokens        string
+	outboundApplicationDeleteTokenByID         string
+	outboundApplicationUploadUserAPIKey        string
+	outboundApplicationUploadTenantAPIKey      string
+	outboundApplicationUploadUserToken         string
+	outboundApplicationUploadTenantToken       string
+	outboundApplicationBatchUploadUserTokens   string
+	outboundApplicationBatchUploadTenantTokens string
 
 	thirdPartyApplicationCreate              string
 	thirdPartyApplicationUpdate              string
 	thirdPartyApplicationPatch               string
 	thirdPartyApplicationDelete              string
+	thirdPartyApplicationDeleteBatch         string
 	thirdPartyApplicationLoad                string
 	thirdPartyApplicationLoadAll             string
 	thirdPartyApplicationSecret              string
@@ -592,6 +662,27 @@ type mgmtEndpoints struct {
 	listRemoveTexts string
 	listCheckText   string
 	listClear       string
+
+	engineCreate       string
+	engineUpdate       string
+	engineDelete       string
+	engineLoad         string
+	engineLoadAll      string
+	engineRotateSecret string
+
+	jwtTemplateCreate       string
+	jwtTemplateUpdate       string
+	jwtTemplateDelete       string
+	jwtTemplateList         string
+	jwtTemplateLoad         string
+	jwtTemplateValidate     string
+	jwtTemplateLibraryList  string
+	jwtTemplateLibraryLoad  string
+	jwtTemplateLibraryApply string
+
+	scopeClaimMappingGet    string
+	scopeClaimMappingSet    string
+	scopeClaimMappingDelete string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -935,6 +1026,10 @@ func (e *endpoints) ManagementUserDelete() string {
 	return path.Join(e.version, e.mgmt.userDelete)
 }
 
+func (e *endpoints) ManagementUserDeleteBatch() string {
+	return path.Join(e.version, e.mgmt.userDeleteBatch)
+}
+
 func (e *endpoints) ManagementUserDeleteAllTestUsers() string {
 	return path.Join(e.version, e.mgmt.userDeleteAllTestUsers)
 }
@@ -973,6 +1068,26 @@ func (e *endpoints) ManagementUserUpdateEmail() string {
 
 func (e *endpoints) ManagementUserUpdatePhone() string {
 	return path.Join(e.version, e.mgmt.userUpdatePhone)
+}
+
+func (e *endpoints) ManagementUserUpdateRecoveryEmail() string {
+	return path.Join(e.version, e.mgmt.userUpdateRecoveryEmail)
+}
+
+func (e *endpoints) ManagementUserUpdateRecoveryPhone() string {
+	return path.Join(e.version, e.mgmt.userUpdateRecoveryPhone)
+}
+
+func (e *endpoints) ManagementUserCustomAttributes() string {
+	return path.Join(e.version, e.mgmt.userCustomAttributes)
+}
+
+func (e *endpoints) ManagementUserCustomAttributeCreate() string {
+	return path.Join(e.version, e.mgmt.userCustomAttributeCreate)
+}
+
+func (e *endpoints) ManagementUserCustomAttributeDelete() string {
+	return path.Join(e.version, e.mgmt.userCustomAttributeDelete)
 }
 
 func (e *endpoints) ManagementUserUpdateDisplayName() string {
@@ -1104,12 +1219,24 @@ func (e *endpoints) ManagementAccessKeyDeactivate() string {
 	return path.Join(e.version, e.mgmt.accessKeyDeactivate)
 }
 
+func (e *endpoints) ManagementAccessKeyDeactivateBatch() string {
+	return path.Join(e.version, e.mgmt.accessKeyDeactivateBatch)
+}
+
 func (e *endpoints) ManagementAccessKeyActivate() string {
 	return path.Join(e.version, e.mgmt.accessKeyActivate)
 }
 
+func (e *endpoints) ManagementAccessKeyActivateBatch() string {
+	return path.Join(e.version, e.mgmt.accessKeyActivateBatch)
+}
+
 func (e *endpoints) ManagementAccessKeyDelete() string {
 	return path.Join(e.version, e.mgmt.accessKeyDelete)
+}
+
+func (e *endpoints) ManagementAccessKeyDeleteBatch() string {
+	return path.Join(e.version, e.mgmt.accessKeyDeleteBatch)
 }
 
 func (e *endpoints) ManagementAccessKeyRotate() string {
@@ -1209,12 +1336,24 @@ func (e *endpoints) ManagementPermissionCreate() string {
 	return path.Join(e.version, e.mgmt.permissionCreate)
 }
 
+func (e *endpoints) ManagementPermissionCreateBatch() string {
+	return path.Join(e.version, e.mgmt.permissionCreateBatch)
+}
+
 func (e *endpoints) ManagementPermissionUpdate() string {
 	return path.Join(e.version, e.mgmt.permissionUpdate)
 }
 
+func (e *endpoints) ManagementPermissionUpdateBatch() string {
+	return path.Join(e.version, e.mgmt.permissionUpdateBatch)
+}
+
 func (e *endpoints) ManagementPermissionDelete() string {
 	return path.Join(e.version, e.mgmt.permissionDelete)
+}
+
+func (e *endpoints) ManagementPermissionDeleteBatch() string {
+	return path.Join(e.version, e.mgmt.permissionDeleteBatch)
 }
 
 func (e *endpoints) ManagementPermissionLoadAll() string {
@@ -1225,12 +1364,24 @@ func (e *endpoints) ManagementRoleCreate() string {
 	return path.Join(e.version, e.mgmt.roleCreate)
 }
 
+func (e *endpoints) ManagementRoleCreateBatch() string {
+	return path.Join(e.version, e.mgmt.roleCreateBatch)
+}
+
 func (e *endpoints) ManagementRoleUpdate() string {
 	return path.Join(e.version, e.mgmt.roleUpdate)
 }
 
+func (e *endpoints) ManagementRoleUpdateBatch() string {
+	return path.Join(e.version, e.mgmt.roleUpdateBatch)
+}
+
 func (e *endpoints) ManagementRoleDelete() string {
 	return path.Join(e.version, e.mgmt.roleDelete)
+}
+
+func (e *endpoints) ManagementRoleDeleteBatch() string {
+	return path.Join(e.version, e.mgmt.roleDeleteBatch)
 }
 
 func (e *endpoints) ManagementRoleLoadAll() string {
@@ -1477,6 +1628,46 @@ func (e *endpoints) ManagementOutboundApplicationDeleteTokenByID() string {
 	return path.Join(e.version, e.mgmt.outboundApplicationDeleteTokenByID)
 }
 
+func (e *endpoints) ManagementOutboundApplicationListAppsWithUserToken() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationListAppsWithUserToken)
+}
+
+func (e *endpoints) ManagementOutboundApplicationFetchLatestUserToken() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationFetchLatestUserToken)
+}
+
+func (e *endpoints) ManagementOutboundApplicationFetchTenantToken() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationFetchTenantToken)
+}
+
+func (e *endpoints) ManagementOutboundApplicationFetchLatestTenantToken() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationFetchLatestTenantToken)
+}
+
+func (e *endpoints) ManagementOutboundApplicationUploadUserAPIKey() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationUploadUserAPIKey)
+}
+
+func (e *endpoints) ManagementOutboundApplicationUploadTenantAPIKey() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationUploadTenantAPIKey)
+}
+
+func (e *endpoints) ManagementOutboundApplicationUploadUserToken() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationUploadUserToken)
+}
+
+func (e *endpoints) ManagementOutboundApplicationUploadTenantToken() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationUploadTenantToken)
+}
+
+func (e *endpoints) ManagementOutboundApplicationBatchUploadUserTokens() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationBatchUploadUserTokens)
+}
+
+func (e *endpoints) ManagementOutboundApplicationBatchUploadTenantTokens() string {
+	return path.Join(e.version, e.mgmt.outboundApplicationBatchUploadTenantTokens)
+}
+
 func (e *endpoints) ManagementThirdPartyApplicationCreate() string {
 	return path.Join(e.version, e.mgmt.thirdPartyApplicationCreate)
 }
@@ -1487,6 +1678,10 @@ func (e *endpoints) ManagementThirdPartyApplicationUpdate() string {
 
 func (e *endpoints) ManagementThirdPartyApplicationDelete() string {
 	return path.Join(e.version, e.mgmt.thirdPartyApplicationDelete)
+}
+
+func (e *endpoints) ManagementThirdPartyApplicationDeleteBatch() string {
+	return path.Join(e.version, e.mgmt.thirdPartyApplicationDeleteBatch)
 }
 
 func (e *endpoints) ManagementThirdPartyApplicationLoad() string {
@@ -1615,6 +1810,78 @@ func (e *endpoints) ManagementListCheckText() string {
 
 func (e *endpoints) ManagementListClear() string {
 	return path.Join(e.version, e.mgmt.listClear)
+}
+
+func (e *endpoints) ManagementEngineCreate() string {
+	return path.Join(e.version, e.mgmt.engineCreate)
+}
+
+func (e *endpoints) ManagementEngineUpdate() string {
+	return path.Join(e.version, e.mgmt.engineUpdate)
+}
+
+func (e *endpoints) ManagementEngineDelete() string {
+	return path.Join(e.version, e.mgmt.engineDelete)
+}
+
+func (e *endpoints) ManagementEngineLoad() string {
+	return path.Join(e.version, e.mgmt.engineLoad)
+}
+
+func (e *endpoints) ManagementEngineLoadAll() string {
+	return path.Join(e.version, e.mgmt.engineLoadAll)
+}
+
+func (e *endpoints) ManagementEngineRotateSecret() string {
+	return path.Join(e.version, e.mgmt.engineRotateSecret)
+}
+
+func (e *endpoints) ManagementJWTTemplateCreate() string {
+	return path.Join(e.version, e.mgmt.jwtTemplateCreate)
+}
+
+func (e *endpoints) ManagementJWTTemplateUpdate() string {
+	return path.Join(e.version, e.mgmt.jwtTemplateUpdate)
+}
+
+func (e *endpoints) ManagementJWTTemplateDelete() string {
+	return path.Join(e.version, e.mgmt.jwtTemplateDelete)
+}
+
+func (e *endpoints) ManagementJWTTemplateList() string {
+	return path.Join(e.version, e.mgmt.jwtTemplateList)
+}
+
+func (e *endpoints) ManagementJWTTemplateLoad() string {
+	return path.Join(e.version, e.mgmt.jwtTemplateLoad)
+}
+
+func (e *endpoints) ManagementJWTTemplateValidate() string {
+	return path.Join(e.version, e.mgmt.jwtTemplateValidate)
+}
+
+func (e *endpoints) ManagementJWTTemplateLibraryList() string {
+	return path.Join(e.version, e.mgmt.jwtTemplateLibraryList)
+}
+
+func (e *endpoints) ManagementJWTTemplateLibraryLoad() string {
+	return path.Join(e.version, e.mgmt.jwtTemplateLibraryLoad)
+}
+
+func (e *endpoints) ManagementJWTTemplateLibraryApply() string {
+	return path.Join(e.version, e.mgmt.jwtTemplateLibraryApply)
+}
+
+func (e *endpoints) ManagementScopeClaimMappingGet() string {
+	return path.Join(e.version, e.mgmt.scopeClaimMappingGet)
+}
+
+func (e *endpoints) ManagementScopeClaimMappingSet() string {
+	return path.Join(e.version, e.mgmt.scopeClaimMappingSet)
+}
+
+func (e *endpoints) ManagementScopeClaimMappingDelete() string {
+	return path.Join(e.version, e.mgmt.scopeClaimMappingDelete)
 }
 
 func (e *endpoints) ManagementLicense() string {

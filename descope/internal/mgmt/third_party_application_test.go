@@ -489,3 +489,22 @@ func TestDeleteThirdPartyApplicationTenantConsentsError(t *testing.T) {
 	})
 	require.Error(t, err)
 }
+
+func TestDeleteThirdPartyApplicationBatchSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		ids, ok := req["ids"].([]any)
+		require.True(t, ok)
+		require.Len(t, ids, 2)
+	}))
+	err := mgmt.ThirdPartyApplication().DeleteApplicationBatch(context.Background(), []string{"app1", "app2"})
+	require.NoError(t, err)
+}
+
+func TestDeleteThirdPartyApplicationBatchError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.ThirdPartyApplication().DeleteApplicationBatch(context.Background(), nil)
+	require.Error(t, err)
+}
