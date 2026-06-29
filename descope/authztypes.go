@@ -153,7 +153,7 @@ type FGACheckInfo struct {
 	ConditionalErr string `json:"conditionalErr,omitempty"`
 	// FactUsed is true when a backend fact decided this result; such results must not be cached at the edge.
 	FactUsed bool `json:"factUsed,omitempty"`
-	// TrueConditions / FalseConditions are the IDs (see FGACondition.ID) of the deciding-path leaf conditions
+	// TrueConditions / FalseConditions are the IDs (see FGACondition.ID) of the deciding-path conditions
 	// that evaluated true / false (raw, pre-NOT). An edge cache uses them as a certificate, resolving IDs via
 	// the response schema version. Empty when FactUsed or uncacheable.
 	TrueConditions  []int32 `json:"trueConditions,omitempty"`
