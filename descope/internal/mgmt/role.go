@@ -31,6 +31,18 @@ func (r *role) Create(ctx context.Context, name, description string, permissionN
 	return err
 }
 
+func (r *role) CreateBatch(ctx context.Context, roles []*descope.Role) ([]*descope.Role, error) {
+	if len(roles) == 0 {
+		return nil, utils.NewInvalidArgumentError("roles")
+	}
+	body := map[string]any{"roles": roles}
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleCreateBatch(), body, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalRolesLoadAllResponse(res)
+}
+
 func (r *role) Update(ctx context.Context, name, tenantID, newName, description string, permissionNames []string, defaultRole bool, private bool) error {
 	if name == "" {
 		return utils.NewInvalidArgumentError("name")
@@ -71,6 +83,18 @@ func (r *role) UpdateWithID(ctx context.Context, id, tenantID, newName, descript
 	return err
 }
 
+func (r *role) UpdateBatch(ctx context.Context, roles []*descope.RoleUpdateRequest) ([]*descope.Role, error) {
+	if len(roles) == 0 {
+		return nil, utils.NewInvalidArgumentError("roles")
+	}
+	body := map[string]any{"roles": roles}
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleUpdateBatch(), body, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalRolesLoadAllResponse(res)
+}
+
 func (r *role) Delete(ctx context.Context, name, tenantID string) error {
 	if name == "" {
 		return utils.NewInvalidArgumentError("name")
@@ -92,6 +116,19 @@ func (r *role) DeleteWithID(ctx context.Context, id, tenantID string) error {
 		"tenantId": tenantID,
 	}
 	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleDelete(), body, nil, "")
+	return err
+}
+
+func (r *role) DeleteBatch(ctx context.Context, roleNames []string, tenantID string, roleIDs []string) error {
+	if len(roleNames) == 0 && len(roleIDs) == 0 {
+		return utils.NewInvalidArgumentError("roleNames")
+	}
+	body := map[string]any{
+		"roleNames": roleNames,
+		"tenantId":  tenantID,
+		"roleIds":   roleIDs,
+	}
+	_, err := r.client.DoPostRequest(ctx, api.Routes.ManagementRoleDeleteBatch(), body, nil, "")
 	return err
 }
 

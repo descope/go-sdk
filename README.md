@@ -1306,6 +1306,16 @@ err := descopeClient.Management.Permission().Update(context.Background(), name, 
 // Permission deletion cannot be undone. Use carefully.
 descopeClient.Management.Permission().Delete(context.Background(), newName)
 
+// Bulk create, update or delete permissions in a single request.
+err := descopeClient.Management.Permission().CreateBatch(context.Background(), []*descope.Permission{
+    {Name: "Permission A", Description: "first"},
+    {Name: "Permission B"},
+})
+err = descopeClient.Management.Permission().UpdateBatch(context.Background(), []*descope.PermissionUpdateRequest{
+    {Name: "Permission A", NewName: "Permission A renamed"},
+})
+err = descopeClient.Management.Permission().DeleteBatch(context.Background(), []string{"Permission A renamed", "Permission B"}, nil)
+
 // Load all permissions
 res, err := descopeClient.Management.Permission().LoadAll(context.Background())
 if err == nil {
@@ -1335,6 +1345,17 @@ descopeClient.Management.Role().Update(context.Background(), name, tenantID, new
 
 // Role deletion cannot be undone. Use carefully.
 descopeClient.Management.Role().Delete(context.Background(), newName, tenantID)
+
+// Bulk create, update or delete roles in a single request.
+// CreateBatch and UpdateBatch return the affected roles.
+createdRoles, err := descopeClient.Management.Role().CreateBatch(context.Background(), []*descope.Role{
+    {Name: "Role A", PermissionNames: permissionNames},
+    {Name: "Role B"},
+})
+updatedRoles, err := descopeClient.Management.Role().UpdateBatch(context.Background(), []*descope.RoleUpdateRequest{
+    {Name: "Role A", NewName: "Role A renamed", PermissionNames: permissionNames},
+})
+err = descopeClient.Management.Role().DeleteBatch(context.Background(), []string{"Role A renamed", "Role B"}, tenantID, nil)
 
 // Load all roles
 res, err := descopeClient.Management.Role().LoadAll(context.Background())

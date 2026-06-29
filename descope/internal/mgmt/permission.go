@@ -27,6 +27,15 @@ func (p *permission) Create(ctx context.Context, name, description string) error
 	return err
 }
 
+func (p *permission) CreateBatch(ctx context.Context, permissions []*descope.Permission) error {
+	if len(permissions) == 0 {
+		return utils.NewInvalidArgumentError("permissions")
+	}
+	body := map[string]any{"permissions": permissions}
+	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementPermissionCreateBatch(), body, nil, "")
+	return err
+}
+
 func (p *permission) Update(ctx context.Context, name, newName, description string) error {
 	if name == "" {
 		return utils.NewInvalidArgumentError("name")
@@ -59,6 +68,15 @@ func (p *permission) UpdateWithID(ctx context.Context, id, newName, description 
 	return err
 }
 
+func (p *permission) UpdateBatch(ctx context.Context, permissions []*descope.PermissionUpdateRequest) error {
+	if len(permissions) == 0 {
+		return utils.NewInvalidArgumentError("permissions")
+	}
+	body := map[string]any{"permissions": permissions}
+	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementPermissionUpdateBatch(), body, nil, "")
+	return err
+}
+
 func (p *permission) Delete(ctx context.Context, name string) error {
 	if name == "" {
 		return utils.NewInvalidArgumentError("name")
@@ -74,6 +92,15 @@ func (p *permission) DeleteWithID(ctx context.Context, id string) error {
 	}
 	body := map[string]any{"id": id}
 	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementPermissionDelete(), body, nil, "")
+	return err
+}
+
+func (p *permission) DeleteBatch(ctx context.Context, names []string, ids []string) error {
+	if len(names) == 0 && len(ids) == 0 {
+		return utils.NewInvalidArgumentError("names")
+	}
+	body := map[string]any{"names": names, "ids": ids}
+	_, err := p.client.DoPostRequest(ctx, api.Routes.ManagementPermissionDeleteBatch(), body, nil, "")
 	return err
 }
 

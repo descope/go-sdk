@@ -185,12 +185,18 @@ var (
 			mgmtSignUpOrIn:                           "mgmt/auth/signup-in",
 			anonymous:                                "mgmt/auth/anonymous",
 			permissionCreate:                         "mgmt/permission/create",
+			permissionCreateBatch:                    "mgmt/permission/create/batch",
 			permissionUpdate:                         "mgmt/permission/update",
+			permissionUpdateBatch:                    "mgmt/permission/update/batch",
 			permissionDelete:                         "mgmt/permission/delete",
+			permissionDeleteBatch:                    "mgmt/permission/delete/batch",
 			permissionLoadAll:                        "mgmt/permission/all",
 			roleCreate:                               "mgmt/role/create",
+			roleCreateBatch:                          "mgmt/role/create/batch",
 			roleUpdate:                               "mgmt/role/update",
+			roleUpdateBatch:                          "mgmt/role/update/batch",
 			roleDelete:                               "mgmt/role/delete",
+			roleDeleteBatch:                          "mgmt/role/delete/batch",
 			roleLoadAll:                              "mgmt/role/all",
 			roleSearch:                               "mgmt/role/search",
 			groupLoadAllGroups:                       "mgmt/group/all",
@@ -493,16 +499,22 @@ type mgmtEndpoints struct {
 
 	passwordSettings string
 
-	permissionCreate  string
-	permissionUpdate  string
-	permissionDelete  string
-	permissionLoadAll string
+	permissionCreate      string
+	permissionCreateBatch string
+	permissionUpdate      string
+	permissionUpdateBatch string
+	permissionDelete      string
+	permissionDeleteBatch string
+	permissionLoadAll     string
 
-	roleCreate  string
-	roleUpdate  string
-	roleDelete  string
-	roleLoadAll string
-	roleSearch  string
+	roleCreate      string
+	roleCreateBatch string
+	roleUpdate      string
+	roleUpdateBatch string
+	roleDelete      string
+	roleDeleteBatch string
+	roleLoadAll     string
+	roleSearch      string
 
 	groupLoadAllGroups          string
 	groupLoadAllGroupsForMember string
@@ -1242,12 +1254,24 @@ func (e *endpoints) ManagementPermissionCreate() string {
 	return path.Join(e.version, e.mgmt.permissionCreate)
 }
 
+func (e *endpoints) ManagementPermissionCreateBatch() string {
+	return path.Join(e.version, e.mgmt.permissionCreateBatch)
+}
+
 func (e *endpoints) ManagementPermissionUpdate() string {
 	return path.Join(e.version, e.mgmt.permissionUpdate)
 }
 
+func (e *endpoints) ManagementPermissionUpdateBatch() string {
+	return path.Join(e.version, e.mgmt.permissionUpdateBatch)
+}
+
 func (e *endpoints) ManagementPermissionDelete() string {
 	return path.Join(e.version, e.mgmt.permissionDelete)
+}
+
+func (e *endpoints) ManagementPermissionDeleteBatch() string {
+	return path.Join(e.version, e.mgmt.permissionDeleteBatch)
 }
 
 func (e *endpoints) ManagementPermissionLoadAll() string {
@@ -1258,12 +1282,24 @@ func (e *endpoints) ManagementRoleCreate() string {
 	return path.Join(e.version, e.mgmt.roleCreate)
 }
 
+func (e *endpoints) ManagementRoleCreateBatch() string {
+	return path.Join(e.version, e.mgmt.roleCreateBatch)
+}
+
 func (e *endpoints) ManagementRoleUpdate() string {
 	return path.Join(e.version, e.mgmt.roleUpdate)
 }
 
+func (e *endpoints) ManagementRoleUpdateBatch() string {
+	return path.Join(e.version, e.mgmt.roleUpdateBatch)
+}
+
 func (e *endpoints) ManagementRoleDelete() string {
 	return path.Join(e.version, e.mgmt.roleDelete)
+}
+
+func (e *endpoints) ManagementRoleDeleteBatch() string {
+	return path.Join(e.version, e.mgmt.roleDeleteBatch)
 }
 
 func (e *endpoints) ManagementRoleLoadAll() string {

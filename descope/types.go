@@ -1003,12 +1003,34 @@ type Permission struct {
 	Description string `json:"description,omitempty"`
 }
 
+// PermissionUpdateRequest is a single item in a batch permission update.
+// Either Name or ID must be provided to identify the permission to update.
+type PermissionUpdateRequest struct {
+	Name        string `json:"name,omitempty"`
+	ID          string `json:"id,omitempty"`
+	NewName     string `json:"newName"`
+	Description string `json:"description,omitempty"`
+}
+
 type Role struct {
 	ID              string   `json:"id,omitempty"`
 	Name            string   `json:"name"`
 	Description     string   `json:"description,omitempty"`
 	PermissionNames []string `json:"permissionNames,omitempty"`
 	CreatedTime     int32    `json:"createdTime,omitempty"`
+	TenantID        string   `json:"tenantId,omitempty"`
+	Default         bool     `json:"default,omitempty"`
+	Private         bool     `json:"private,omitempty"`
+}
+
+// RoleUpdateRequest is a single item in a batch role update.
+// Either Name or ID must be provided to identify the role to update.
+type RoleUpdateRequest struct {
+	Name            string   `json:"name,omitempty"`
+	ID              string   `json:"id,omitempty"`
+	NewName         string   `json:"newName"`
+	Description     string   `json:"description,omitempty"`
+	PermissionNames []string `json:"permissionNames,omitempty"`
 	TenantID        string   `json:"tenantId,omitempty"`
 	Default         bool     `json:"default,omitempty"`
 	Private         bool     `json:"private,omitempty"`

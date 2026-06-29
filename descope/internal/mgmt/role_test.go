@@ -121,6 +121,82 @@ func TestRoleDeleteWithIDError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestRoleCreateBatchSuccess(t *testing.T) {
+	response := map[string]any{
+		"roles": []map[string]any{
+			{"id": "ROL1", "name": "abc"},
+			{"id": "ROL2", "name": "def"},
+		}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		roles, ok := req["roles"].([]any)
+		require.True(t, ok)
+		require.Len(t, roles, 2)
+	}, response))
+	res, err := mgmt.Role().CreateBatch(context.Background(), []*descope.Role{
+		{Name: "abc"},
+		{Name: "def", PermissionNames: []string{"p1"}},
+	})
+	require.NoError(t, err)
+	require.Len(t, res, 2)
+	require.Equal(t, "abc", res[0].Name)
+}
+
+func TestRoleCreateBatchError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.Role().CreateBatch(context.Background(), nil)
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestRoleUpdateBatchSuccess(t *testing.T) {
+	response := map[string]any{
+		"roles": []map[string]any{{"id": "ROL1", "name": "def"}}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		roles, ok := req["roles"].([]any)
+		require.True(t, ok)
+		require.Len(t, roles, 1)
+	}, response))
+	res, err := mgmt.Role().UpdateBatch(context.Background(), []*descope.RoleUpdateRequest{
+		{Name: "abc", NewName: "def"},
+	})
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Equal(t, "def", res[0].Name)
+}
+
+func TestRoleUpdateBatchError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.Role().UpdateBatch(context.Background(), nil)
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestRoleDeleteBatchSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		names, ok := req["roleNames"].([]any)
+		require.True(t, ok)
+		require.Len(t, names, 2)
+		require.Equal(t, "t1", req["tenantId"])
+	}))
+	err := mgmt.Role().DeleteBatch(context.Background(), []string{"abc", "def"}, "t1", nil)
+	require.NoError(t, err)
+}
+
+func TestRoleDeleteBatchError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.Role().DeleteBatch(context.Background(), nil, "", nil)
+	require.Error(t, err)
+}
+
 func TestRoleLoadSuccess(t *testing.T) {
 	response := map[string]any{
 		"roles": []map[string]any{{
