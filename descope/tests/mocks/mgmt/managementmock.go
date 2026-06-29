@@ -32,6 +32,7 @@ type MockManagement struct {
 	*MockList
 	*MockEngine
 	*MockScopeClaimMapping
+	*MockJWTTemplate
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -124,6 +125,10 @@ func (m *MockManagement) Engine() sdk.Engine {
 
 func (m *MockManagement) ScopeClaimMapping() sdk.ScopeClaimMapping {
 	return m.MockScopeClaimMapping
+}
+
+func (m *MockManagement) JWTTemplate() sdk.JWTTemplate {
+	return m.MockJWTTemplate
 }
 
 // Mock JWT
@@ -2848,4 +2853,98 @@ func (m *MockScopeClaimMapping) Set(_ context.Context, mappings []*descope.Scope
 
 func (m *MockScopeClaimMapping) Delete(_ context.Context) error {
 	return m.DeleteError
+}
+
+// Mock JWT Template
+
+type MockJWTTemplate struct {
+	CreateAssert   func(template *descope.JWTTemplate)
+	CreateResponse *descope.JWTTemplate
+	CreateError    error
+
+	UpdateAssert   func(template *descope.JWTTemplate)
+	UpdateResponse *descope.JWTTemplate
+	UpdateError    error
+
+	DeleteAssert func(id string)
+	DeleteError  error
+
+	ListResponse []*descope.JWTTemplate
+	ListError    error
+
+	LoadAssert   func(id string)
+	LoadResponse *descope.JWTTemplate
+	LoadError    error
+
+	ValidateAssert   func(id string, template *descope.JWTTemplate)
+	ValidateResponse *descope.JWTTemplateValidationResult
+	ValidateError    error
+
+	ListLibraryResponse []*descope.JWTTemplateLibraryEntry
+	ListLibraryError    error
+
+	LoadLibraryEntryAssert   func(id string)
+	LoadLibraryEntryResponse *descope.JWTTemplateLibraryEntry
+	LoadLibraryEntryError    error
+
+	ApplyFromLibraryAssert   func(request *descope.ApplyJWTTemplateFromLibraryRequest)
+	ApplyFromLibraryResponse *descope.JWTTemplate
+	ApplyFromLibraryError    error
+}
+
+func (m *MockJWTTemplate) Create(_ context.Context, template *descope.JWTTemplate) (*descope.JWTTemplate, error) {
+	if m.CreateAssert != nil {
+		m.CreateAssert(template)
+	}
+	return m.CreateResponse, m.CreateError
+}
+
+func (m *MockJWTTemplate) Update(_ context.Context, template *descope.JWTTemplate) (*descope.JWTTemplate, error) {
+	if m.UpdateAssert != nil {
+		m.UpdateAssert(template)
+	}
+	return m.UpdateResponse, m.UpdateError
+}
+
+func (m *MockJWTTemplate) Delete(_ context.Context, id string) error {
+	if m.DeleteAssert != nil {
+		m.DeleteAssert(id)
+	}
+	return m.DeleteError
+}
+
+func (m *MockJWTTemplate) List(_ context.Context) ([]*descope.JWTTemplate, error) {
+	return m.ListResponse, m.ListError
+}
+
+func (m *MockJWTTemplate) Load(_ context.Context, id string) (*descope.JWTTemplate, error) {
+	if m.LoadAssert != nil {
+		m.LoadAssert(id)
+	}
+	return m.LoadResponse, m.LoadError
+}
+
+func (m *MockJWTTemplate) Validate(_ context.Context, id string, template *descope.JWTTemplate) (*descope.JWTTemplateValidationResult, error) {
+	if m.ValidateAssert != nil {
+		m.ValidateAssert(id, template)
+	}
+	return m.ValidateResponse, m.ValidateError
+}
+
+func (m *MockJWTTemplate) ListLibrary(_ context.Context) ([]*descope.JWTTemplateLibraryEntry, error) {
+	return m.ListLibraryResponse, m.ListLibraryError
+}
+
+func (m *MockJWTTemplate) LoadLibraryEntry(_ context.Context, id string) (*descope.JWTTemplateLibraryEntry, error) {
+	if m.LoadLibraryEntryAssert != nil {
+		m.LoadLibraryEntryAssert(id)
+	}
+	return m.LoadLibraryEntryResponse, m.LoadLibraryEntryError
+}
+
+func (m *MockJWTTemplate) ApplyFromLibrary(_ context.Context, request *descope.ApplyJWTTemplateFromLibraryRequest) (*descope.JWTTemplate, error) {
+	if m.ApplyFromLibraryAssert != nil {
+		m.ApplyFromLibraryAssert(request)
+	}
+	return m.ApplyFromLibraryResponse, m.ApplyFromLibraryError
 }

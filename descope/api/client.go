@@ -319,6 +319,15 @@ var (
 			engineLoad:                                 "mgmt/engine/load",
 			engineLoadAll:                              "mgmt/engines/load",
 			engineRotateSecret:                         "mgmt/engine/rotate",
+			jwtTemplateCreate:                          "mgmt/jwt/templates/create",
+			jwtTemplateUpdate:                          "mgmt/jwt/templates/update",
+			jwtTemplateDelete:                          "mgmt/jwt/templates/delete",
+			jwtTemplateList:                            "mgmt/jwt/templates/list",
+			jwtTemplateLoad:                            "mgmt/jwt/templates/load",
+			jwtTemplateValidate:                        "mgmt/jwt/templates/validate",
+			jwtTemplateLibraryList:                     "mgmt/jwt/templates/library/list",
+			jwtTemplateLibraryLoad:                     "mgmt/jwt/templates/library/load",
+			jwtTemplateLibraryApply:                    "mgmt/jwt/templates/library/apply",
 			scopeClaimMappingGet:                       "mgmt/scopeClaimMapping/get",
 			scopeClaimMappingSet:                       "mgmt/scopeClaimMapping/set",
 			scopeClaimMappingDelete:                    "mgmt/scopeClaimMapping/delete",
@@ -660,6 +669,16 @@ type mgmtEndpoints struct {
 	engineLoad         string
 	engineLoadAll      string
 	engineRotateSecret string
+
+	jwtTemplateCreate       string
+	jwtTemplateUpdate       string
+	jwtTemplateDelete       string
+	jwtTemplateList         string
+	jwtTemplateLoad         string
+	jwtTemplateValidate     string
+	jwtTemplateLibraryList  string
+	jwtTemplateLibraryLoad  string
+	jwtTemplateLibraryApply string
 
 	scopeClaimMappingGet    string
 	scopeClaimMappingSet    string
@@ -1815,6 +1834,42 @@ func (e *endpoints) ManagementEngineLoadAll() string {
 
 func (e *endpoints) ManagementEngineRotateSecret() string {
 	return path.Join(e.version, e.mgmt.engineRotateSecret)
+}
+
+func (e *endpoints) ManagementJWTTemplateCreate() string {
+	return path.Join(e.version, e.mgmt.jwtTemplateCreate)
+}
+
+func (e *endpoints) ManagementJWTTemplateUpdate() string {
+	return path.Join(e.version, e.mgmt.jwtTemplateUpdate)
+}
+
+func (e *endpoints) ManagementJWTTemplateDelete() string {
+	return path.Join(e.version, e.mgmt.jwtTemplateDelete)
+}
+
+func (e *endpoints) ManagementJWTTemplateList() string {
+	return path.Join(e.version, e.mgmt.jwtTemplateList)
+}
+
+func (e *endpoints) ManagementJWTTemplateLoad() string {
+	return path.Join(e.version, e.mgmt.jwtTemplateLoad)
+}
+
+func (e *endpoints) ManagementJWTTemplateValidate() string {
+	return path.Join(e.version, e.mgmt.jwtTemplateValidate)
+}
+
+func (e *endpoints) ManagementJWTTemplateLibraryList() string {
+	return path.Join(e.version, e.mgmt.jwtTemplateLibraryList)
+}
+
+func (e *endpoints) ManagementJWTTemplateLibraryLoad() string {
+	return path.Join(e.version, e.mgmt.jwtTemplateLibraryLoad)
+}
+
+func (e *endpoints) ManagementJWTTemplateLibraryApply() string {
+	return path.Join(e.version, e.mgmt.jwtTemplateLibraryApply)
 }
 
 func (e *endpoints) ManagementScopeClaimMappingGet() string {

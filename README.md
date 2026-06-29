@@ -118,6 +118,7 @@ These sections show how to use the SDK to perform API management functions. Befo
 17. [Manage Management Keys](#manage-management-keys)
 18. [Manage Descopers](#manage-descopers)
 19. [Manage Engines](#manage-engines)
+20. [Manage JWT Templates](#manage-jwt-templates)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -2276,6 +2277,48 @@ newSecret, err := descopeClient.Management.Engine().RotateSecret(context.Backgro
 
 // Delete an engine by ID.
 err = descopeClient.Management.Engine().Delete(context.Background(), "engine-id")
+```
+
+### Manage JWT Templates
+
+You can create, update, delete, load, list and validate JWT templates, as well as
+apply Descope's read-only library templates:
+
+```go
+// Create a new JWT template. The returned template includes its generated ID.
+tmpl, err := descopeClient.Management.JWTTemplate().Create(context.Background(), &descope.JWTTemplate{
+    Name:     "my-template",
+    Template: map[string]any{"customClaim": "{{user.email}}"},
+})
+
+// Update an existing template (identified by its ID). All fields are overridden.
+tmpl, err = descopeClient.Management.JWTTemplate().Update(context.Background(), &descope.JWTTemplate{
+    ID:   "template-id",
+    Name: "renamed-template",
+})
+
+// Load a template by ID, or list all templates in the project.
+tmpl, err = descopeClient.Management.JWTTemplate().Load(context.Background(), "template-id")
+templates, err := descopeClient.Management.JWTTemplate().List(context.Background())
+
+// Validate a template by ID and/or an inline template before saving.
+result, err := descopeClient.Management.JWTTemplate().Validate(context.Background(), "template-id", nil)
+if err == nil && !result.Valid {
+    for _, issue := range result.Issues {
+        fmt.Println(issue.Field, issue.Code, issue.Message)
+    }
+}
+
+// Browse the read-only starter templates shipped by Descope and apply one as a new template.
+entries, err := descopeClient.Management.JWTTemplate().ListLibrary(context.Background())
+entry, err := descopeClient.Management.JWTTemplate().LoadLibraryEntry(context.Background(), "library-entry-id")
+tmpl, err = descopeClient.Management.JWTTemplate().ApplyFromLibrary(context.Background(), &descope.ApplyJWTTemplateFromLibraryRequest{
+    LibraryEntryID: "library-entry-id",
+    NameOverride:   "my-template-from-library",
+})
+
+// Delete a template by ID.
+err = descopeClient.Management.JWTTemplate().Delete(context.Background(), "template-id")
 ```
 
 ## Code Examples

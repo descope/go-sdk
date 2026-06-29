@@ -1495,6 +1495,46 @@ type Management interface {
 
 	// Provides functions for managing the project-wide OIDC scope-to-claim mapping.
 	ScopeClaimMapping() ScopeClaimMapping
+
+	// Provides functions for managing JWT templates in a project.
+	JWTTemplate() JWTTemplate
+}
+
+// JWTTemplate provides functions for managing JWT templates in a project.
+type JWTTemplate interface {
+	// Create a new JWT template and return the created template.
+	Create(ctx context.Context, template *descope.JWTTemplate) (*descope.JWTTemplate, error)
+
+	// Update an existing JWT template (identified by its ID) and return the updated template.
+	//
+	// IMPORTANT: All fields will override whatever values are currently set
+	// in the existing template. Use carefully.
+	Update(ctx context.Context, template *descope.JWTTemplate) (*descope.JWTTemplate, error)
+
+	// Delete an existing JWT template by id.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	Delete(ctx context.Context, id string) error
+
+	// List all JWT templates in the project.
+	List(ctx context.Context) ([]*descope.JWTTemplate, error)
+
+	// Load a JWT template by id.
+	Load(ctx context.Context, id string) (*descope.JWTTemplate, error)
+
+	// Validate a JWT template. Either an existing template id or an inline template
+	// (or both) may be provided. Returns the validation result and any issues found.
+	Validate(ctx context.Context, id string, template *descope.JWTTemplate) (*descope.JWTTemplateValidationResult, error)
+
+	// ListLibrary lists the read-only starter JWT templates shipped by Descope.
+	ListLibrary(ctx context.Context) ([]*descope.JWTTemplateLibraryEntry, error)
+
+	// LoadLibraryEntry loads a single library entry by id.
+	LoadLibraryEntry(ctx context.Context, id string) (*descope.JWTTemplateLibraryEntry, error)
+
+	// ApplyFromLibrary creates a new JWT template from a library entry, applying any
+	// provided overrides, and returns the created template.
+	ApplyFromLibrary(ctx context.Context, request *descope.ApplyJWTTemplateFromLibraryRequest) (*descope.JWTTemplate, error)
 }
 
 // ScopeClaimMapping provides functions for managing the project-wide mapping of
