@@ -119,6 +119,7 @@ These sections show how to use the SDK to perform API management functions. Befo
 18. [Manage Descopers](#manage-descopers)
 19. [Manage Engines](#manage-engines)
 20. [Manage JWT Templates](#manage-jwt-templates)
+21. [Manage MCP Servers](#manage-mcp-servers)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -2319,6 +2320,62 @@ tmpl, err = descopeClient.Management.JWTTemplate().ApplyFromLibrary(context.Back
 
 // Delete a template by ID.
 err = descopeClient.Management.JWTTemplate().Delete(context.Background(), "template-id")
+```
+
+### Manage MCP Servers
+
+You can create, update, delete, load and list MCP servers, and manage their clients:
+
+```go
+// Create a new MCP server. The returned server includes its generated ID.
+server, err := descopeClient.Management.MCPServer().Create(context.Background(), &descope.MCPServer{
+    Name:        "my-mcp-server",
+    Description: "Example MCP server",
+})
+
+// Update an existing MCP server (identified by its ID). All fields are overridden.
+server, err = descopeClient.Management.MCPServer().Update(context.Background(), &descope.MCPServer{
+    ID:   "server-id",
+    Name: "renamed-server",
+})
+
+// Load a server by ID, or list all servers in the project.
+server, err = descopeClient.Management.MCPServer().Load(context.Background(), "server-id")
+servers, err := descopeClient.Management.MCPServer().LoadAll(context.Background())
+
+// Delete one or more servers by ID.
+err = descopeClient.Management.MCPServer().Delete(context.Background(), "server-id")
+err = descopeClient.Management.MCPServer().DeleteBatch(context.Background(), []string{"id1", "id2"})
+
+// Manage clients registered against an MCP server.
+// CreateClient returns the generated client secret (Cleartext) — only available at creation time.
+created, err := descopeClient.Management.MCPServer().CreateClient(context.Background(), &descope.MCPServerClientRequest{
+    MCPServerID: "server-id",
+    Name:        "my-client",
+})
+if err == nil {
+    fmt.Println("client id:", created.ClientID)
+    fmt.Println("client secret (store securely!):", created.Cleartext)
+}
+
+client, err := descopeClient.Management.MCPServer().UpdateClient(context.Background(), &descope.MCPServerClientRequest{
+    ID:          created.ID,
+    MCPServerID: "server-id",
+    Name:        "renamed-client",
+})
+
+// Load a client, fetch or rotate its secret, and search clients.
+client, err = descopeClient.Management.MCPServer().LoadClient(context.Background(), "server-id", created.ID, "")
+secret, err := descopeClient.Management.MCPServer().GetClientSecret(context.Background(), "server-id", created.ID)
+secret, err = descopeClient.Management.MCPServer().RotateClientSecret(context.Background(), "server-id", created.ID)
+clients, total, err := descopeClient.Management.MCPServer().SearchClients(context.Background(), &descope.MCPServerClientSearchOptions{
+    MCPServerID: "server-id",
+    Limit:       100,
+})
+
+// Delete one or more clients within a server.
+err = descopeClient.Management.MCPServer().DeleteClient(context.Background(), "server-id", created.ID)
+err = descopeClient.Management.MCPServer().DeleteClients(context.Background(), "server-id", []string{"id1", "id2"})
 ```
 
 ## Code Examples

@@ -33,6 +33,7 @@ type MockManagement struct {
 	*MockEngine
 	*MockScopeClaimMapping
 	*MockJWTTemplate
+	*MockMCPServer
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -129,6 +130,10 @@ func (m *MockManagement) ScopeClaimMapping() sdk.ScopeClaimMapping {
 
 func (m *MockManagement) JWTTemplate() sdk.JWTTemplate {
 	return m.MockJWTTemplate
+}
+
+func (m *MockManagement) MCPServer() sdk.MCPServer {
+	return m.MockMCPServer
 }
 
 // Mock JWT
@@ -2947,4 +2952,155 @@ func (m *MockJWTTemplate) ApplyFromLibrary(_ context.Context, request *descope.A
 		m.ApplyFromLibraryAssert(request)
 	}
 	return m.ApplyFromLibraryResponse, m.ApplyFromLibraryError
+}
+
+// Mock MCP Server
+
+type MockMCPServer struct {
+	CreateAssert   func(server *descope.MCPServer)
+	CreateResponse *descope.MCPServer
+	CreateError    error
+
+	UpdateAssert   func(server *descope.MCPServer)
+	UpdateResponse *descope.MCPServer
+	UpdateError    error
+
+	DeleteAssert func(id string)
+	DeleteError  error
+
+	DeleteBatchAssert func(ids []string)
+	DeleteBatchError  error
+
+	LoadAssert   func(id string)
+	LoadResponse *descope.MCPServer
+	LoadError    error
+
+	LoadAllResponse []*descope.MCPServer
+	LoadAllError    error
+
+	CreateClientAssert   func(client *descope.MCPServerClientRequest)
+	CreateClientResponse *descope.MCPServerClientCreateResponse
+	CreateClientError    error
+
+	UpdateClientAssert   func(client *descope.MCPServerClientRequest)
+	UpdateClientResponse *descope.MCPServerClient
+	UpdateClientError    error
+
+	DeleteClientAssert func(mcpServerID, id string)
+	DeleteClientError  error
+
+	DeleteClientsAssert func(mcpServerID string, ids []string)
+	DeleteClientsError  error
+
+	LoadClientAssert   func(mcpServerID, id, clientID string)
+	LoadClientResponse *descope.MCPServerClient
+	LoadClientError    error
+
+	GetClientSecretAssert   func(mcpServerID, id string)
+	GetClientSecretResponse string
+	GetClientSecretError    error
+
+	RotateClientSecretAssert   func(mcpServerID, id string)
+	RotateClientSecretResponse string
+	RotateClientSecretError    error
+
+	SearchClientsAssert        func(options *descope.MCPServerClientSearchOptions)
+	SearchClientsResponse      []*descope.MCPServerClient
+	SearchClientsTotalResponse int
+	SearchClientsError         error
+}
+
+func (m *MockMCPServer) Create(_ context.Context, server *descope.MCPServer) (*descope.MCPServer, error) {
+	if m.CreateAssert != nil {
+		m.CreateAssert(server)
+	}
+	return m.CreateResponse, m.CreateError
+}
+
+func (m *MockMCPServer) Update(_ context.Context, server *descope.MCPServer) (*descope.MCPServer, error) {
+	if m.UpdateAssert != nil {
+		m.UpdateAssert(server)
+	}
+	return m.UpdateResponse, m.UpdateError
+}
+
+func (m *MockMCPServer) Delete(_ context.Context, id string) error {
+	if m.DeleteAssert != nil {
+		m.DeleteAssert(id)
+	}
+	return m.DeleteError
+}
+
+func (m *MockMCPServer) DeleteBatch(_ context.Context, ids []string) error {
+	if m.DeleteBatchAssert != nil {
+		m.DeleteBatchAssert(ids)
+	}
+	return m.DeleteBatchError
+}
+
+func (m *MockMCPServer) Load(_ context.Context, id string) (*descope.MCPServer, error) {
+	if m.LoadAssert != nil {
+		m.LoadAssert(id)
+	}
+	return m.LoadResponse, m.LoadError
+}
+
+func (m *MockMCPServer) LoadAll(_ context.Context) ([]*descope.MCPServer, error) {
+	return m.LoadAllResponse, m.LoadAllError
+}
+
+func (m *MockMCPServer) CreateClient(_ context.Context, client *descope.MCPServerClientRequest) (*descope.MCPServerClientCreateResponse, error) {
+	if m.CreateClientAssert != nil {
+		m.CreateClientAssert(client)
+	}
+	return m.CreateClientResponse, m.CreateClientError
+}
+
+func (m *MockMCPServer) UpdateClient(_ context.Context, client *descope.MCPServerClientRequest) (*descope.MCPServerClient, error) {
+	if m.UpdateClientAssert != nil {
+		m.UpdateClientAssert(client)
+	}
+	return m.UpdateClientResponse, m.UpdateClientError
+}
+
+func (m *MockMCPServer) DeleteClient(_ context.Context, mcpServerID, id string) error {
+	if m.DeleteClientAssert != nil {
+		m.DeleteClientAssert(mcpServerID, id)
+	}
+	return m.DeleteClientError
+}
+
+func (m *MockMCPServer) DeleteClients(_ context.Context, mcpServerID string, ids []string) error {
+	if m.DeleteClientsAssert != nil {
+		m.DeleteClientsAssert(mcpServerID, ids)
+	}
+	return m.DeleteClientsError
+}
+
+func (m *MockMCPServer) LoadClient(_ context.Context, mcpServerID, id, clientID string) (*descope.MCPServerClient, error) {
+	if m.LoadClientAssert != nil {
+		m.LoadClientAssert(mcpServerID, id, clientID)
+	}
+	return m.LoadClientResponse, m.LoadClientError
+}
+
+func (m *MockMCPServer) GetClientSecret(_ context.Context, mcpServerID, id string) (string, error) {
+	if m.GetClientSecretAssert != nil {
+		m.GetClientSecretAssert(mcpServerID, id)
+	}
+	return m.GetClientSecretResponse, m.GetClientSecretError
+}
+
+func (m *MockMCPServer) RotateClientSecret(_ context.Context, mcpServerID, id string) (string, error) {
+	if m.RotateClientSecretAssert != nil {
+		m.RotateClientSecretAssert(mcpServerID, id)
+	}
+	return m.RotateClientSecretResponse, m.RotateClientSecretError
+}
+
+func (m *MockMCPServer) SearchClients(_ context.Context, options *descope.MCPServerClientSearchOptions) ([]*descope.MCPServerClient, int, error) {
+	if m.SearchClientsAssert != nil {
+		m.SearchClientsAssert(options)
+	}
+	return m.SearchClientsResponse, m.SearchClientsTotalResponse, m.SearchClientsError
 }
