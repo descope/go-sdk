@@ -31,6 +31,7 @@ type MockManagement struct {
 	*MockDescoper
 	*MockList
 	*MockEngine
+	*MockScopeClaimMapping
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -119,6 +120,10 @@ func (m *MockManagement) List() sdk.List {
 
 func (m *MockManagement) Engine() sdk.Engine {
 	return m.MockEngine
+}
+
+func (m *MockManagement) ScopeClaimMapping() sdk.ScopeClaimMapping {
+	return m.MockScopeClaimMapping
 }
 
 // Mock JWT
@@ -1315,17 +1320,26 @@ type MockPermission struct {
 	CreateAssert func(name, description string)
 	CreateError  error
 
+	CreateBatchAssert func(permissions []*descope.Permission)
+	CreateBatchError  error
+
 	UpdateAssert func(name, newName, description string)
 	UpdateError  error
 
 	UpdateWithIDAssert func(id, newName, description string)
 	UpdateWithIDError  error
 
+	UpdateBatchAssert func(permissions []*descope.PermissionUpdateRequest)
+	UpdateBatchError  error
+
 	DeleteAssert func(name string)
 	DeleteError  error
 
 	DeleteWithIDAssert func(id string)
 	DeleteWithIDError  error
+
+	DeleteBatchAssert func(names []string, ids []string)
+	DeleteBatchError  error
 
 	LoadAllResponse []*descope.Permission
 	LoadAllError    error
@@ -1336,6 +1350,13 @@ func (m *MockPermission) Create(_ context.Context, name, description string) err
 		m.CreateAssert(name, description)
 	}
 	return m.CreateError
+}
+
+func (m *MockPermission) CreateBatch(_ context.Context, permissions []*descope.Permission) error {
+	if m.CreateBatchAssert != nil {
+		m.CreateBatchAssert(permissions)
+	}
+	return m.CreateBatchError
 }
 
 func (m *MockPermission) Update(_ context.Context, name, newName, description string) error {
@@ -1352,6 +1373,13 @@ func (m *MockPermission) UpdateWithID(_ context.Context, id, newName, descriptio
 	return m.UpdateWithIDError
 }
 
+func (m *MockPermission) UpdateBatch(_ context.Context, permissions []*descope.PermissionUpdateRequest) error {
+	if m.UpdateBatchAssert != nil {
+		m.UpdateBatchAssert(permissions)
+	}
+	return m.UpdateBatchError
+}
+
 func (m *MockPermission) Delete(_ context.Context, name string) error {
 	if m.DeleteAssert != nil {
 		m.DeleteAssert(name)
@@ -1366,6 +1394,13 @@ func (m *MockPermission) DeleteWithID(_ context.Context, id string) error {
 	return m.DeleteWithIDError
 }
 
+func (m *MockPermission) DeleteBatch(_ context.Context, names []string, ids []string) error {
+	if m.DeleteBatchAssert != nil {
+		m.DeleteBatchAssert(names, ids)
+	}
+	return m.DeleteBatchError
+}
+
 func (m *MockPermission) LoadAll(_ context.Context) ([]*descope.Permission, error) {
 	return m.LoadAllResponse, m.LoadAllError
 }
@@ -1376,17 +1411,28 @@ type MockRole struct {
 	CreateAssert func(name, description string, permissionNames []string, tenantID string, defaultRole bool, private bool)
 	CreateError  error
 
+	CreateBatchAssert   func(roles []*descope.Role)
+	CreateBatchResponse []*descope.Role
+	CreateBatchError    error
+
 	UpdateAssert func(name, tenantID, newName, description string, permissionNames []string, defaultRole bool, private bool)
 	UpdateError  error
 
 	UpdateWithIDAssert func(id, tenantID, newName, description string, permissionNames []string, defaultRole bool, private bool)
 	UpdateWithIDError  error
 
+	UpdateBatchAssert   func(roles []*descope.RoleUpdateRequest)
+	UpdateBatchResponse []*descope.Role
+	UpdateBatchError    error
+
 	DeleteAssert func(name, tenantID string)
 	DeleteError  error
 
 	DeleteWithIDAssert func(id, tenantID string)
 	DeleteWithIDError  error
+
+	DeleteBatchAssert func(roleNames []string, tenantID string, roleIDs []string)
+	DeleteBatchError  error
 
 	LoadAllResponse []*descope.Role
 	LoadAllError    error
@@ -1400,6 +1446,13 @@ func (m *MockRole) Create(_ context.Context, name, description string, permissio
 		m.CreateAssert(name, description, permissionNames, tenantID, defaultRole, private)
 	}
 	return m.CreateError
+}
+
+func (m *MockRole) CreateBatch(_ context.Context, roles []*descope.Role) ([]*descope.Role, error) {
+	if m.CreateBatchAssert != nil {
+		m.CreateBatchAssert(roles)
+	}
+	return m.CreateBatchResponse, m.CreateBatchError
 }
 
 func (m *MockRole) Update(_ context.Context, name, tenantID string, newName, description string, permissionNames []string, defaultRole bool, private bool) error {
@@ -1416,6 +1469,13 @@ func (m *MockRole) UpdateWithID(_ context.Context, id, tenantID, newName, descri
 	return m.UpdateWithIDError
 }
 
+func (m *MockRole) UpdateBatch(_ context.Context, roles []*descope.RoleUpdateRequest) ([]*descope.Role, error) {
+	if m.UpdateBatchAssert != nil {
+		m.UpdateBatchAssert(roles)
+	}
+	return m.UpdateBatchResponse, m.UpdateBatchError
+}
+
 func (m *MockRole) Delete(_ context.Context, name, tenantID string) error {
 	if m.DeleteAssert != nil {
 		m.DeleteAssert(name, tenantID)
@@ -1428,6 +1488,13 @@ func (m *MockRole) DeleteWithID(_ context.Context, id, tenantID string) error {
 		m.DeleteWithIDAssert(id, tenantID)
 	}
 	return m.DeleteWithIDError
+}
+
+func (m *MockRole) DeleteBatch(_ context.Context, roleNames []string, tenantID string, roleIDs []string) error {
+	if m.DeleteBatchAssert != nil {
+		m.DeleteBatchAssert(roleNames, tenantID, roleIDs)
+	}
+	return m.DeleteBatchError
 }
 
 func (m *MockRole) LoadAll(_ context.Context) ([]*descope.Role, error) {
@@ -2653,4 +2720,31 @@ func (m *MockEngine) RotateSecret(_ context.Context, id string) (string, error) 
 		m.RotateSecretAssert(id)
 	}
 	return m.RotateSecretResponse, m.RotateSecretError
+}
+
+// Mock ScopeClaimMapping
+
+type MockScopeClaimMapping struct {
+	GetResponse []*descope.ScopeClaimMappingEntry
+	GetError    error
+
+	SetAssert func(mappings []*descope.ScopeClaimMappingEntry)
+	SetError  error
+
+	DeleteError error
+}
+
+func (m *MockScopeClaimMapping) Get(_ context.Context) ([]*descope.ScopeClaimMappingEntry, error) {
+	return m.GetResponse, m.GetError
+}
+
+func (m *MockScopeClaimMapping) Set(_ context.Context, mappings []*descope.ScopeClaimMappingEntry) error {
+	if m.SetAssert != nil {
+		m.SetAssert(mappings)
+	}
+	return m.SetError
+}
+
+func (m *MockScopeClaimMapping) Delete(_ context.Context) error {
+	return m.DeleteError
 }

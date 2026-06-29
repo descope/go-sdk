@@ -1003,6 +1003,15 @@ type Permission struct {
 	Description string `json:"description,omitempty"`
 }
 
+// PermissionUpdateRequest is a single item in a batch permission update.
+// Either Name or ID must be provided to identify the permission to update.
+type PermissionUpdateRequest struct {
+	Name        string `json:"name,omitempty"`
+	ID          string `json:"id,omitempty"`
+	NewName     string `json:"newName"`
+	Description string `json:"description,omitempty"`
+}
+
 type Role struct {
 	ID              string   `json:"id,omitempty"`
 	Name            string   `json:"name"`
@@ -1014,8 +1023,31 @@ type Role struct {
 	Private         bool     `json:"private,omitempty"`
 }
 
+// RoleUpdateRequest is a single item in a batch role update.
+// Either Name or ID must be provided to identify the role to update.
+type RoleUpdateRequest struct {
+	Name            string   `json:"name,omitempty"`
+	ID              string   `json:"id,omitempty"`
+	NewName         string   `json:"newName"`
+	Description     string   `json:"description,omitempty"`
+	PermissionNames []string `json:"permissionNames,omitempty"`
+	TenantID        string   `json:"tenantId,omitempty"`
+	Default         bool     `json:"default,omitempty"`
+	Private         bool     `json:"private,omitempty"`
+}
+
 func (r *Role) GetCreatedTime() time.Time {
 	return time.Unix(int64(r.CreatedTime), 0)
+}
+
+// ScopeClaimMappingEntry binds a single OIDC scope to the JWT claims it produces.
+// Each claim value may be a static string or a {{...}} template resolved at
+// token-generation time. Description is a free-form, human-readable note shown in
+// the console and is never used at token-generation time.
+type ScopeClaimMappingEntry struct {
+	Scope       string            `json:"scope,omitempty"`
+	Claims      map[string]string `json:"claims,omitempty"`
+	Description string            `json:"description,omitempty"`
 }
 
 type RoleSearchOptions struct {

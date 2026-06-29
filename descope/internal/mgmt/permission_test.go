@@ -5,9 +5,72 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/tests/helpers"
 	"github.com/stretchr/testify/require"
 )
+
+func TestPermissionCreateBatchSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		permissions, ok := req["permissions"].([]any)
+		require.True(t, ok)
+		require.Len(t, permissions, 2)
+	}))
+	err := mgmt.Permission().CreateBatch(context.Background(), []*descope.Permission{
+		{Name: "abc", Description: "first"},
+		{Name: "def", Description: "second"},
+	})
+	require.NoError(t, err)
+}
+
+func TestPermissionCreateBatchError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.Permission().CreateBatch(context.Background(), nil)
+	require.Error(t, err)
+}
+
+func TestPermissionUpdateBatchSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		permissions, ok := req["permissions"].([]any)
+		require.True(t, ok)
+		require.Len(t, permissions, 1)
+	}))
+	err := mgmt.Permission().UpdateBatch(context.Background(), []*descope.PermissionUpdateRequest{
+		{Name: "abc", NewName: "def", Description: "description"},
+	})
+	require.NoError(t, err)
+}
+
+func TestPermissionUpdateBatchError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.Permission().UpdateBatch(context.Background(), nil)
+	require.Error(t, err)
+}
+
+func TestPermissionDeleteBatchSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		names, ok := req["names"].([]any)
+		require.True(t, ok)
+		require.Len(t, names, 2)
+	}))
+	err := mgmt.Permission().DeleteBatch(context.Background(), []string{"abc", "def"}, nil)
+	require.NoError(t, err)
+}
+
+func TestPermissionDeleteBatchError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.Permission().DeleteBatch(context.Background(), nil, nil)
+	require.Error(t, err)
+}
 
 func TestPermissionCreateSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {

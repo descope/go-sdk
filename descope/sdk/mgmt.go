@@ -721,6 +721,11 @@ type Permission interface {
 	// what this permission allows.
 	Create(ctx context.Context, name, description string) error
 
+	// CreateBatch creates multiple permissions in a single request.
+	//
+	// Each permission's Name is required to uniquely identify it.
+	CreateBatch(ctx context.Context, permissions []*descope.Permission) error
+
 	// Update an existing permission.
 	//
 	// The parameters follow the same convention as those for the Create function, with
@@ -737,6 +742,12 @@ type Permission interface {
 	// in the existing permission. Use carefully.
 	UpdateWithID(ctx context.Context, id, newName, description string) error
 
+	// UpdateBatch updates multiple permissions in a single request.
+	//
+	// Each item identifies the permission to update by Name or ID and holds
+	// the updated values, following the same override semantics as Update.
+	UpdateBatch(ctx context.Context, permissions []*descope.PermissionUpdateRequest) error
+
 	// Delete an existing permission.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
@@ -746,6 +757,11 @@ type Permission interface {
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	DeleteWithID(ctx context.Context, id string) error
+
+	// DeleteBatch deletes multiple permissions by name and/or id in a single request.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteBatch(ctx context.Context, names []string, ids []string) error
 
 	// Load all permissions.
 	LoadAll(ctx context.Context) ([]*descope.Permission, error)
@@ -763,6 +779,9 @@ type Role interface {
 	// tenantID is an optional field to tie this role to a specific tenant
 	Create(ctx context.Context, name, description string, permissionNames []string, tenantID string, defaultRole bool, private bool) error
 
+	// CreateBatch creates multiple roles in a single request and returns the created roles.
+	CreateBatch(ctx context.Context, roles []*descope.Role) ([]*descope.Role, error)
+
 	// Update an existing role.
 	//
 	// The parameters follow the same convention as those for the Create function, with
@@ -779,6 +798,12 @@ type Role interface {
 	// in the existing role. Use carefully.
 	UpdateWithID(ctx context.Context, id, tenantID, newName, description string, permissionNames []string, defaultRole bool, private bool) error
 
+	// UpdateBatch updates multiple roles in a single request and returns the updated roles.
+	//
+	// Each item identifies the role to update by Name or ID and holds the updated
+	// values, following the same override semantics as Update.
+	UpdateBatch(ctx context.Context, roles []*descope.RoleUpdateRequest) ([]*descope.Role, error)
+
 	// Delete an existing role.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
@@ -788,6 +813,12 @@ type Role interface {
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	DeleteWithID(ctx context.Context, id, tenantID string) error
+
+	// DeleteBatch deletes multiple roles by name and/or id in a single request.
+	// tenantID is an optional field to scope the deletion to a specific tenant.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteBatch(ctx context.Context, roleNames []string, tenantID string, roleIDs []string) error
 
 	// Load all roles.
 	LoadAll(ctx context.Context) ([]*descope.Role, error)
@@ -1414,4 +1445,28 @@ type Management interface {
 
 	// Provides functions for managing engines in a project.
 	Engine() Engine
+
+	// Provides functions for managing the project-wide OIDC scope-to-claim mapping.
+	ScopeClaimMapping() ScopeClaimMapping
+}
+
+// ScopeClaimMapping provides functions for managing the project-wide mapping of
+// OIDC scopes to JWT claims.
+type ScopeClaimMapping interface {
+	// Get returns the project-wide ordered list of scope→claim mappings.
+	//
+	// Returns an empty slice when no mapping has been configured.
+	Get(ctx context.Context) ([]*descope.ScopeClaimMappingEntry, error)
+
+	// Set replaces the project-wide scope→claim mapping with the given entries.
+	//
+	// When two entries set the same claim name, the entry appearing later in the
+	// list wins. Passing an empty slice clears the mapping, though the dedicated
+	// Delete function is preferred when fully removing it.
+	Set(ctx context.Context, mappings []*descope.ScopeClaimMappingEntry) error
+
+	// Delete removes the project-wide scope→claim mapping.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	Delete(ctx context.Context) error
 }
