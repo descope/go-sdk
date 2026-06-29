@@ -77,6 +77,15 @@ func (s *thirdPartyApplication) DeleteApplication(ctx context.Context, id string
 	return err
 }
 
+func (s *thirdPartyApplication) DeleteApplicationBatch(ctx context.Context, ids []string) error {
+	if len(ids) == 0 {
+		return utils.NewInvalidArgumentError("ids")
+	}
+	req := map[string]any{"ids": ids}
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationDeleteBatch(), req, nil, "")
+	return err
+}
+
 func (s *thirdPartyApplication) LoadApplication(ctx context.Context, id string) (*descope.ThirdPartyApplication, error) {
 	if id == "" {
 		return nil, utils.NewInvalidArgumentError("id")

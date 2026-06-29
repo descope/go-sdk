@@ -117,6 +117,7 @@ var (
 			userPatch:                                "mgmt/user/patch",
 			userPatchBatch:                           "mgmt/user/patch/batch",
 			userDelete:                               "mgmt/user/delete",
+			userDeleteBatch:                          "mgmt/user/delete/batch",
 			userDeleteAllTestUsers:                   "mgmt/user/test/delete/all",
 			userImport:                               "mgmt/user/import",
 			userLoad:                                 "mgmt/user",
@@ -127,6 +128,11 @@ var (
 			userUpdateLoginID:                        "mgmt/user/update/loginid",
 			userUpdateEmail:                          "mgmt/user/update/email",
 			userUpdatePhone:                          "mgmt/user/update/phone",
+			userUpdateRecoveryEmail:                  "mgmt/user/update/recovery/email",
+			userUpdateRecoveryPhone:                  "mgmt/user/update/recovery/phone",
+			userCustomAttributes:                     "mgmt/user/customattributes",
+			userCustomAttributeCreate:                "mgmt/user/customattribute/create",
+			userCustomAttributeDelete:                "mgmt/user/customattribute/delete",
 			userUpdateName:                           "mgmt/user/update/name",
 			userUpdatePicture:                        "mgmt/user/update/picture",
 			userUpdateCustomAttribute:                "mgmt/user/update/customAttribute",
@@ -161,8 +167,11 @@ var (
 			accessKeySearchAll:                       "mgmt/accesskey/search",
 			accessKeyUpdate:                          "mgmt/accesskey/update",
 			accessKeyDeactivate:                      "mgmt/accesskey/deactivate",
+			accessKeyDeactivateBatch:                 "mgmt/accesskey/deactivate/batch",
 			accessKeyActivate:                        "mgmt/accesskey/activate",
+			accessKeyActivateBatch:                   "mgmt/accesskey/activate/batch",
 			accessKeyDelete:                          "mgmt/accesskey/delete",
+			accessKeyDeleteBatch:                     "mgmt/accesskey/delete/batch",
 			accessKeyRotate:                          "mgmt/accesskey/rotate",
 			ssoSettings:                              "mgmt/sso/settings",
 			ssoLoadSettings:                          "mgmt/sso/settings",     // v2 only
@@ -272,6 +281,7 @@ var (
 			thirdPartyApplicationUpdate:                "mgmt/thirdparty/app/update",
 			thirdPartyApplicationPatch:                 "mgmt/thirdparty/app/patch",
 			thirdPartyApplicationDelete:                "mgmt/thirdparty/app/delete",
+			thirdPartyApplicationDeleteBatch:           "mgmt/thirdparty/app/delete/batch",
 			thirdPartyApplicationLoad:                  "mgmt/thirdparty/app/load",
 			thirdPartyApplicationLoadAll:               "mgmt/thirdparty/apps/load",
 			thirdPartyApplicationSecret:                "mgmt/thirdparty/app/secret",
@@ -426,6 +436,7 @@ type mgmtEndpoints struct {
 	userPatch                 string
 	userPatchBatch            string
 	userDelete                string
+	userDeleteBatch           string
 	userDeleteAllTestUsers    string
 	userImport                string
 	userLoad                  string
@@ -436,6 +447,11 @@ type mgmtEndpoints struct {
 	userUpdateLoginID         string
 	userUpdateEmail           string
 	userUpdatePhone           string
+	userUpdateRecoveryEmail   string
+	userUpdateRecoveryPhone   string
+	userCustomAttributes      string
+	userCustomAttributeCreate string
+	userCustomAttributeDelete string
 	userUpdateName            string
 	userUpdatePicture         string
 	userUpdateCustomAttribute string
@@ -468,14 +484,17 @@ type mgmtEndpoints struct {
 
 	userHistory string
 
-	accessKeyCreate     string
-	accessKeyLoad       string
-	accessKeySearchAll  string
-	accessKeyUpdate     string
-	accessKeyDeactivate string
-	accessKeyActivate   string
-	accessKeyDelete     string
-	accessKeyRotate     string
+	accessKeyCreate          string
+	accessKeyLoad            string
+	accessKeySearchAll       string
+	accessKeyUpdate          string
+	accessKeyDeactivate      string
+	accessKeyDeactivateBatch string
+	accessKeyActivate        string
+	accessKeyActivateBatch   string
+	accessKeyDelete          string
+	accessKeyDeleteBatch     string
+	accessKeyRotate          string
 
 	//* Deprecated (use the below value instead) *//
 	ssoSettings string
@@ -599,6 +618,7 @@ type mgmtEndpoints struct {
 	thirdPartyApplicationUpdate              string
 	thirdPartyApplicationPatch               string
 	thirdPartyApplicationDelete              string
+	thirdPartyApplicationDeleteBatch         string
 	thirdPartyApplicationLoad                string
 	thirdPartyApplicationLoadAll             string
 	thirdPartyApplicationSecret              string
@@ -987,6 +1007,10 @@ func (e *endpoints) ManagementUserDelete() string {
 	return path.Join(e.version, e.mgmt.userDelete)
 }
 
+func (e *endpoints) ManagementUserDeleteBatch() string {
+	return path.Join(e.version, e.mgmt.userDeleteBatch)
+}
+
 func (e *endpoints) ManagementUserDeleteAllTestUsers() string {
 	return path.Join(e.version, e.mgmt.userDeleteAllTestUsers)
 }
@@ -1025,6 +1049,26 @@ func (e *endpoints) ManagementUserUpdateEmail() string {
 
 func (e *endpoints) ManagementUserUpdatePhone() string {
 	return path.Join(e.version, e.mgmt.userUpdatePhone)
+}
+
+func (e *endpoints) ManagementUserUpdateRecoveryEmail() string {
+	return path.Join(e.version, e.mgmt.userUpdateRecoveryEmail)
+}
+
+func (e *endpoints) ManagementUserUpdateRecoveryPhone() string {
+	return path.Join(e.version, e.mgmt.userUpdateRecoveryPhone)
+}
+
+func (e *endpoints) ManagementUserCustomAttributes() string {
+	return path.Join(e.version, e.mgmt.userCustomAttributes)
+}
+
+func (e *endpoints) ManagementUserCustomAttributeCreate() string {
+	return path.Join(e.version, e.mgmt.userCustomAttributeCreate)
+}
+
+func (e *endpoints) ManagementUserCustomAttributeDelete() string {
+	return path.Join(e.version, e.mgmt.userCustomAttributeDelete)
 }
 
 func (e *endpoints) ManagementUserUpdateDisplayName() string {
@@ -1156,12 +1200,24 @@ func (e *endpoints) ManagementAccessKeyDeactivate() string {
 	return path.Join(e.version, e.mgmt.accessKeyDeactivate)
 }
 
+func (e *endpoints) ManagementAccessKeyDeactivateBatch() string {
+	return path.Join(e.version, e.mgmt.accessKeyDeactivateBatch)
+}
+
 func (e *endpoints) ManagementAccessKeyActivate() string {
 	return path.Join(e.version, e.mgmt.accessKeyActivate)
 }
 
+func (e *endpoints) ManagementAccessKeyActivateBatch() string {
+	return path.Join(e.version, e.mgmt.accessKeyActivateBatch)
+}
+
 func (e *endpoints) ManagementAccessKeyDelete() string {
 	return path.Join(e.version, e.mgmt.accessKeyDelete)
+}
+
+func (e *endpoints) ManagementAccessKeyDeleteBatch() string {
+	return path.Join(e.version, e.mgmt.accessKeyDeleteBatch)
 }
 
 func (e *endpoints) ManagementAccessKeyRotate() string {
@@ -1603,6 +1659,10 @@ func (e *endpoints) ManagementThirdPartyApplicationUpdate() string {
 
 func (e *endpoints) ManagementThirdPartyApplicationDelete() string {
 	return path.Join(e.version, e.mgmt.thirdPartyApplicationDelete)
+}
+
+func (e *endpoints) ManagementThirdPartyApplicationDeleteBatch() string {
+	return path.Join(e.version, e.mgmt.thirdPartyApplicationDeleteBatch)
 }
 
 func (e *endpoints) ManagementThirdPartyApplicationLoad() string {

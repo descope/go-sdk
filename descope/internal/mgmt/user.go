@@ -198,6 +198,47 @@ func (u *user) Delete(ctx context.Context, loginIDOrUserID string) error {
 	return u.delete(ctx, loginIDOrUserID, "")
 }
 
+func (u *user) DeleteBatch(ctx context.Context, userIDs []string) error {
+	if len(userIDs) == 0 {
+		return utils.NewInvalidArgumentError("userIDs")
+	}
+	body := map[string]any{"userIds": userIDs}
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserDeleteBatch(), body, nil, "")
+	return err
+}
+
+func (u *user) GetCustomAttributes(ctx context.Context) ([]*descope.CustomAttribute, error) {
+	res, err := u.client.DoGetRequest(ctx, api.Routes.ManagementUserCustomAttributes(), nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalCustomAttributesResponse(res)
+}
+
+func (u *user) CreateCustomAttributes(ctx context.Context, attributes []*descope.CustomAttribute) ([]*descope.CustomAttribute, error) {
+	if len(attributes) == 0 {
+		return nil, utils.NewInvalidArgumentError("attributes")
+	}
+	body := map[string]any{"attributes": attributes}
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserCustomAttributeCreate(), body, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalCustomAttributesResponse(res)
+}
+
+func (u *user) DeleteCustomAttributes(ctx context.Context, names []string) ([]*descope.CustomAttribute, error) {
+	if len(names) == 0 {
+		return nil, utils.NewInvalidArgumentError("names")
+	}
+	body := map[string]any{"names": names}
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserCustomAttributeDelete(), body, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalCustomAttributesResponse(res)
+}
+
 // Deprecated
 func (u *user) DeleteByUserID(ctx context.Context, userID string) error {
 	if userID == "" {
@@ -375,6 +416,30 @@ func (u *user) UpdatePhone(ctx context.Context, loginIDOrUserID, phone string, i
 	}
 	req := map[string]any{"loginId": loginIDOrUserID, "phone": phone, "verified": isVerified, "failOnConflict": failOnConflict}
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdatePhone(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalUserResponse(res)
+}
+
+func (u *user) UpdateRecoveryEmail(ctx context.Context, loginIDOrUserID, recoveryEmail string, isVerified bool) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
+	}
+	req := map[string]any{"loginId": loginIDOrUserID, "recoveryEmail": recoveryEmail, "verified": isVerified}
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateRecoveryEmail(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalUserResponse(res)
+}
+
+func (u *user) UpdateRecoveryPhone(ctx context.Context, loginIDOrUserID, recoveryPhone string, isVerified bool) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
+	}
+	req := map[string]any{"loginId": loginIDOrUserID, "recoveryPhone": recoveryPhone, "verified": isVerified}
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdateRecoveryPhone(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -1181,6 +1246,17 @@ func unmarshalUserResponse(res *api.HTTPResponse) (*descope.UserResponse, error)
 		return nil, err
 	}
 	return ures.User, nil
+}
+
+func unmarshalCustomAttributesResponse(res *api.HTTPResponse) ([]*descope.CustomAttribute, error) {
+	cres := struct {
+		Data []*descope.CustomAttribute
+	}{}
+	err := utils.Unmarshal([]byte(res.BodyStr), &cres)
+	if err != nil {
+		return nil, err
+	}
+	return cres.Data, nil
 }
 
 func unmarshalUserImportResponse(res *api.HTTPResponse) (*descope.UserImportResponse, error) {

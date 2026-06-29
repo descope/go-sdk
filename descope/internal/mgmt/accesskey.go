@@ -91,6 +91,15 @@ func (a *accessKey) Deactivate(ctx context.Context, id string) error {
 	return err
 }
 
+func (a *accessKey) DeactivateBatch(ctx context.Context, ids []string) error {
+	if len(ids) == 0 {
+		return utils.NewInvalidArgumentError("ids")
+	}
+	body := map[string]any{"ids": ids}
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyDeactivateBatch(), body, nil, "")
+	return err
+}
+
 func (a *accessKey) Activate(ctx context.Context, id string) error {
 	if id == "" {
 		return utils.NewInvalidArgumentError("id")
@@ -100,12 +109,30 @@ func (a *accessKey) Activate(ctx context.Context, id string) error {
 	return err
 }
 
+func (a *accessKey) ActivateBatch(ctx context.Context, ids []string) error {
+	if len(ids) == 0 {
+		return utils.NewInvalidArgumentError("ids")
+	}
+	body := map[string]any{"ids": ids}
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyActivateBatch(), body, nil, "")
+	return err
+}
+
 func (a *accessKey) Delete(ctx context.Context, id string) error {
 	if id == "" {
 		return utils.NewInvalidArgumentError("id")
 	}
 	body := map[string]any{"id": id}
 	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyDelete(), body, nil, "")
+	return err
+}
+
+func (a *accessKey) DeleteBatch(ctx context.Context, ids []string) error {
+	if len(ids) == 0 {
+		return utils.NewInvalidArgumentError("ids")
+	}
+	body := map[string]any{"ids": ids}
+	_, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAccessKeyDeleteBatch(), body, nil, "")
 	return err
 }
 
