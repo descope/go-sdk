@@ -1498,6 +1498,67 @@ type Management interface {
 
 	// Provides functions for managing JWT templates in a project.
 	JWTTemplate() JWTTemplate
+
+	// Provides functions for managing MCP servers and their clients in a project.
+	MCPServer() MCPServer
+}
+
+// MCPServer provides functions for managing MCP servers and their clients in a project.
+type MCPServer interface {
+	// Create a new MCP server and return the created server.
+	Create(ctx context.Context, server *descope.MCPServer) (*descope.MCPServer, error)
+
+	// Update an existing MCP server (identified by its ID) and return the updated server.
+	//
+	// IMPORTANT: All fields will override whatever values are currently set
+	// in the existing server. Use carefully.
+	Update(ctx context.Context, server *descope.MCPServer) (*descope.MCPServer, error)
+
+	// Delete an existing MCP server by id.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	Delete(ctx context.Context, id string) error
+
+	// DeleteBatch deletes multiple MCP servers by id in a single request.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteBatch(ctx context.Context, ids []string) error
+
+	// Load an MCP server by id.
+	Load(ctx context.Context, id string) (*descope.MCPServer, error)
+
+	// LoadAll loads all MCP servers in the project.
+	LoadAll(ctx context.Context) ([]*descope.MCPServer, error)
+
+	// CreateClient creates a new client for an MCP server. The returned response includes
+	// the generated client secret (Cleartext), which is only available at creation time.
+	CreateClient(ctx context.Context, client *descope.MCPServerClientRequest) (*descope.MCPServerClientCreateResponse, error)
+
+	// UpdateClient updates an existing MCP server client and returns the updated client.
+	UpdateClient(ctx context.Context, client *descope.MCPServerClientRequest) (*descope.MCPServerClient, error)
+
+	// DeleteClient deletes an MCP server client by id within the given MCP server.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteClient(ctx context.Context, mcpServerID, id string) error
+
+	// DeleteClients deletes multiple MCP server clients by id within the given MCP server.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteClients(ctx context.Context, mcpServerID string, ids []string) error
+
+	// LoadClient loads an MCP server client by its id or client id within the given MCP server.
+	LoadClient(ctx context.Context, mcpServerID, id, clientID string) (*descope.MCPServerClient, error)
+
+	// GetClientSecret returns the cleartext secret of an MCP server client.
+	GetClientSecret(ctx context.Context, mcpServerID, id string) (string, error)
+
+	// RotateClientSecret rotates the secret of an MCP server client and returns the new
+	// cleartext secret. The previous secret is immediately invalidated.
+	RotateClientSecret(ctx context.Context, mcpServerID, id string) (string, error)
+
+	// SearchClients searches MCP server clients and returns the matching clients and the total count.
+	SearchClients(ctx context.Context, options *descope.MCPServerClientSearchOptions) ([]*descope.MCPServerClient, int, error)
 }
 
 // JWTTemplate provides functions for managing JWT templates in a project.
