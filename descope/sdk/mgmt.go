@@ -1445,4 +1445,28 @@ type Management interface {
 
 	// Provides functions for managing engines in a project.
 	Engine() Engine
+
+	// Provides functions for managing the project-wide OIDC scope-to-claim mapping.
+	ScopeClaimMapping() ScopeClaimMapping
+}
+
+// ScopeClaimMapping provides functions for managing the project-wide mapping of
+// OIDC scopes to JWT claims.
+type ScopeClaimMapping interface {
+	// Get returns the project-wide ordered list of scope→claim mappings.
+	//
+	// Returns an empty slice when no mapping has been configured.
+	Get(ctx context.Context) ([]*descope.ScopeClaimMappingEntry, error)
+
+	// Set replaces the project-wide scope→claim mapping with the given entries.
+	//
+	// When two entries set the same claim name, the entry appearing later in the
+	// list wins. Passing an empty slice clears the mapping, though the dedicated
+	// Delete function is preferred when fully removing it.
+	Set(ctx context.Context, mappings []*descope.ScopeClaimMappingEntry) error
+
+	// Delete removes the project-wide scope→claim mapping.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	Delete(ctx context.Context) error
 }

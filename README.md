@@ -1377,6 +1377,30 @@ if err == nil {
 }
 ```
 
+### Manage Scope Claim Mappings
+
+You can manage the project-wide mapping of OIDC scopes to JWT claims:
+
+```go
+// Set the mapping (replaces any existing mapping). Each claim value may be a
+// static string or a {{...}} template resolved at token-generation time.
+err := descopeClient.Management.ScopeClaimMapping().Set(context.Background(), []*descope.ScopeClaimMappingEntry{
+	{Scope: "email", Claims: map[string]string{"email": "{{user.email}}"}, Description: "email scope"},
+	{Scope: "profile", Claims: map[string]string{"name": "{{user.name}}"}},
+})
+
+// Get the current mapping
+mappings, err := descopeClient.Management.ScopeClaimMapping().Get(context.Background())
+if err == nil {
+    for _, entry := range mappings {
+        // Do something
+    }
+}
+
+// Delete the mapping
+err = descopeClient.Management.ScopeClaimMapping().Delete(context.Background())
+```
+
 ### Query SSO Groups
 
 You can query SSO groups:

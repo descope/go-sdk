@@ -1040,6 +1040,16 @@ func (r *Role) GetCreatedTime() time.Time {
 	return time.Unix(int64(r.CreatedTime), 0)
 }
 
+// ScopeClaimMappingEntry binds a single OIDC scope to the JWT claims it produces.
+// Each claim value may be a static string or a {{...}} template resolved at
+// token-generation time. Description is a free-form, human-readable note shown in
+// the console and is never used at token-generation time.
+type ScopeClaimMappingEntry struct {
+	Scope       string            `json:"scope,omitempty"`
+	Claims      map[string]string `json:"claims,omitempty"`
+	Description string            `json:"description,omitempty"`
+}
+
 type RoleSearchOptions struct {
 	TenantIDs           []string `json:"tenantIds,omitempty"`
 	RoleNames           []string `json:"roleNames,omitempty"`

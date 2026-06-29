@@ -309,6 +309,9 @@ var (
 			engineLoad:                                 "mgmt/engine/load",
 			engineLoadAll:                              "mgmt/engines/load",
 			engineRotateSecret:                         "mgmt/engine/rotate",
+			scopeClaimMappingGet:                       "mgmt/scopeClaimMapping/get",
+			scopeClaimMappingSet:                       "mgmt/scopeClaimMapping/set",
+			scopeClaimMappingDelete:                    "mgmt/scopeClaimMapping/delete",
 		},
 		logout:       "auth/logout",
 		logoutAll:    "auth/logoutall",
@@ -637,6 +640,10 @@ type mgmtEndpoints struct {
 	engineLoad         string
 	engineLoadAll      string
 	engineRotateSecret string
+
+	scopeClaimMappingGet    string
+	scopeClaimMappingSet    string
+	scopeClaimMappingDelete string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -1748,6 +1755,18 @@ func (e *endpoints) ManagementEngineLoadAll() string {
 
 func (e *endpoints) ManagementEngineRotateSecret() string {
 	return path.Join(e.version, e.mgmt.engineRotateSecret)
+}
+
+func (e *endpoints) ManagementScopeClaimMappingGet() string {
+	return path.Join(e.version, e.mgmt.scopeClaimMappingGet)
+}
+
+func (e *endpoints) ManagementScopeClaimMappingSet() string {
+	return path.Join(e.version, e.mgmt.scopeClaimMappingSet)
+}
+
+func (e *endpoints) ManagementScopeClaimMappingDelete() string {
+	return path.Join(e.version, e.mgmt.scopeClaimMappingDelete)
 }
 
 func (e *endpoints) ManagementLicense() string {

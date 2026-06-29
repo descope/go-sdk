@@ -31,6 +31,7 @@ type MockManagement struct {
 	*MockDescoper
 	*MockList
 	*MockEngine
+	*MockScopeClaimMapping
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -119,6 +120,10 @@ func (m *MockManagement) List() sdk.List {
 
 func (m *MockManagement) Engine() sdk.Engine {
 	return m.MockEngine
+}
+
+func (m *MockManagement) ScopeClaimMapping() sdk.ScopeClaimMapping {
+	return m.MockScopeClaimMapping
 }
 
 // Mock JWT
@@ -2715,4 +2720,31 @@ func (m *MockEngine) RotateSecret(_ context.Context, id string) (string, error) 
 		m.RotateSecretAssert(id)
 	}
 	return m.RotateSecretResponse, m.RotateSecretError
+}
+
+// Mock ScopeClaimMapping
+
+type MockScopeClaimMapping struct {
+	GetResponse []*descope.ScopeClaimMappingEntry
+	GetError    error
+
+	SetAssert func(mappings []*descope.ScopeClaimMappingEntry)
+	SetError  error
+
+	DeleteError error
+}
+
+func (m *MockScopeClaimMapping) Get(_ context.Context) ([]*descope.ScopeClaimMappingEntry, error) {
+	return m.GetResponse, m.GetError
+}
+
+func (m *MockScopeClaimMapping) Set(_ context.Context, mappings []*descope.ScopeClaimMappingEntry) error {
+	if m.SetAssert != nil {
+		m.SetAssert(mappings)
+	}
+	return m.SetError
+}
+
+func (m *MockScopeClaimMapping) Delete(_ context.Context) error {
+	return m.DeleteError
 }
