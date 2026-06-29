@@ -1059,6 +1059,23 @@ type RoleSearchOptions struct {
 	IncludeProjectRoles *bool    `json:"includeProjectRoles,omitempty"`
 }
 
+// CustomAttribute is a project-level custom attribute definition for users.
+type CustomAttribute struct {
+	Name            string                   `json:"name,omitempty"`
+	Type            int32                    `json:"type,omitempty"`
+	Options         []*CustomAttributeOption `json:"options,omitempty"`
+	DisplayName     string                   `json:"displayName,omitempty"`
+	DefaultValue    any                      `json:"defaultValue,omitempty"`
+	ViewPermissions []string                 `json:"viewPermissions,omitempty"`
+	EditPermissions []string                 `json:"editPermissions,omitempty"`
+}
+
+// CustomAttributeOption is a selectable value for a custom attribute of a select type.
+type CustomAttributeOption struct {
+	Value string `json:"value,omitempty"`
+	Label string `json:"label,omitempty"`
+}
+
 // Options for searching and filtering users
 //
 // Limit - limits the number of returned users. Leave at 0 to return the default amount.

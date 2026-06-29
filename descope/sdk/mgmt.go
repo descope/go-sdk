@@ -259,6 +259,11 @@ type User interface {
 	// IMPORTANT: This action is irreversible. Use carefully.
 	Delete(ctx context.Context, loginIDOrUserID string) error
 
+	// DeleteBatch deletes multiple existing users by their user IDs in a single request.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteBatch(ctx context.Context, userIDs []string) error
+
 	// Delete an existing user by User ID. The user ID can be found
 	// on the user's JWT.
 	//
@@ -349,6 +354,27 @@ type User interface {
 	//
 	// The failOnConflict flag indicates whether to fail the update if the new phone number is also the login ID of another user.
 	UpdatePhone(ctx context.Context, loginIDOrUserID, phone string, isVerified bool, failOnConflict bool) (*descope.UserResponse, error)
+
+	// UpdateRecoveryEmail updates the recovery email of an existing user.
+	//
+	// The isVerified flag marks the recovery email as verified.
+	UpdateRecoveryEmail(ctx context.Context, loginIDOrUserID, recoveryEmail string, isVerified bool) (*descope.UserResponse, error)
+
+	// UpdateRecoveryPhone updates the recovery phone of an existing user.
+	//
+	// The isVerified flag marks the recovery phone as verified.
+	UpdateRecoveryPhone(ctx context.Context, loginIDOrUserID, recoveryPhone string, isVerified bool) (*descope.UserResponse, error)
+
+	// GetCustomAttributes loads all custom attribute definitions configured for users in the project.
+	GetCustomAttributes(ctx context.Context) ([]*descope.CustomAttribute, error)
+
+	// CreateCustomAttributes creates project-level custom attribute definitions for users
+	// and returns the full set of custom attributes after the change.
+	CreateCustomAttributes(ctx context.Context, attributes []*descope.CustomAttribute) ([]*descope.CustomAttribute, error)
+
+	// DeleteCustomAttributes deletes project-level user custom attribute definitions by name
+	// and returns the full set of custom attributes after the change.
+	DeleteCustomAttributes(ctx context.Context, names []string) ([]*descope.CustomAttribute, error)
 
 	// Update an existing user's display name (i.e., their full name).
 	//
@@ -545,16 +571,32 @@ type AccessKey interface {
 	// persist, and can be activated again if needed.
 	Deactivate(ctx context.Context, id string) error
 
+	// DeactivateBatch deactivates multiple existing access keys in a single request.
+	//
+	// IMPORTANT: The deactivated keys will not be usable from this stage. They will, however,
+	// persist, and can be activated again if needed.
+	DeactivateBatch(ctx context.Context, ids []string) error
+
 	// Activate an existing access key.
 	//
 	// IMPORTANT: Only deactivated keys can be activated again, and become usable once more. New access keys
 	// are active by default.
 	Activate(ctx context.Context, id string) error
 
+	// ActivateBatch activates multiple existing access keys in a single request.
+	//
+	// IMPORTANT: Only deactivated keys can be activated again, and become usable once more.
+	ActivateBatch(ctx context.Context, ids []string) error
+
 	// Delete an existing access key.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	Delete(ctx context.Context, id string) error
+
+	// DeleteBatch deletes multiple existing access keys in a single request.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteBatch(ctx context.Context, ids []string) error
 
 	// Rotate an existing access key — regenerates the secret while preserving
 	// the same access key ID, name, roles, tenants, expiry, and metadata.
@@ -1114,6 +1156,11 @@ type ThirdPartyApplication interface {
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	DeleteApplication(ctx context.Context, id string) error
+
+	// DeleteApplicationBatch deletes multiple third party applications by id in a single request.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteApplicationBatch(ctx context.Context, ids []string) error
 
 	// Load a third party application by id.
 	LoadApplication(ctx context.Context, id string) (*descope.ThirdPartyApplication, error)

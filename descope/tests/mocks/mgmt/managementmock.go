@@ -417,8 +417,30 @@ type MockUser struct {
 	DeleteAssert func(loginID string)
 	DeleteError  error
 
+	DeleteBatchAssert func(userIDs []string)
+	DeleteBatchError  error
+
 	DeleteAllTestUsersAssert func()
 	DeleteAllTestUsersError  error
+
+	UpdateRecoveryEmailAssert   func(loginID, recoveryEmail string, isVerified bool)
+	UpdateRecoveryEmailResponse *descope.UserResponse
+	UpdateRecoveryEmailError    error
+
+	UpdateRecoveryPhoneAssert   func(loginID, recoveryPhone string, isVerified bool)
+	UpdateRecoveryPhoneResponse *descope.UserResponse
+	UpdateRecoveryPhoneError    error
+
+	GetCustomAttributesResponse []*descope.CustomAttribute
+	GetCustomAttributesError    error
+
+	CreateCustomAttributesAssert   func(attributes []*descope.CustomAttribute)
+	CreateCustomAttributesResponse []*descope.CustomAttribute
+	CreateCustomAttributesError    error
+
+	DeleteCustomAttributesAssert   func(names []string)
+	DeleteCustomAttributesResponse []*descope.CustomAttribute
+	DeleteCustomAttributesError    error
 
 	ImportAssert   func(source string, users, hashes []byte, dryrun bool)
 	ImportResponse *descope.UserImportResponse
@@ -647,6 +669,45 @@ func (m *MockUser) Delete(_ context.Context, loginID string) error {
 		m.DeleteAssert(loginID)
 	}
 	return m.DeleteError
+}
+
+func (m *MockUser) DeleteBatch(_ context.Context, userIDs []string) error {
+	if m.DeleteBatchAssert != nil {
+		m.DeleteBatchAssert(userIDs)
+	}
+	return m.DeleteBatchError
+}
+
+func (m *MockUser) UpdateRecoveryEmail(_ context.Context, loginID, recoveryEmail string, isVerified bool) (*descope.UserResponse, error) {
+	if m.UpdateRecoveryEmailAssert != nil {
+		m.UpdateRecoveryEmailAssert(loginID, recoveryEmail, isVerified)
+	}
+	return m.UpdateRecoveryEmailResponse, m.UpdateRecoveryEmailError
+}
+
+func (m *MockUser) UpdateRecoveryPhone(_ context.Context, loginID, recoveryPhone string, isVerified bool) (*descope.UserResponse, error) {
+	if m.UpdateRecoveryPhoneAssert != nil {
+		m.UpdateRecoveryPhoneAssert(loginID, recoveryPhone, isVerified)
+	}
+	return m.UpdateRecoveryPhoneResponse, m.UpdateRecoveryPhoneError
+}
+
+func (m *MockUser) GetCustomAttributes(_ context.Context) ([]*descope.CustomAttribute, error) {
+	return m.GetCustomAttributesResponse, m.GetCustomAttributesError
+}
+
+func (m *MockUser) CreateCustomAttributes(_ context.Context, attributes []*descope.CustomAttribute) ([]*descope.CustomAttribute, error) {
+	if m.CreateCustomAttributesAssert != nil {
+		m.CreateCustomAttributesAssert(attributes)
+	}
+	return m.CreateCustomAttributesResponse, m.CreateCustomAttributesError
+}
+
+func (m *MockUser) DeleteCustomAttributes(_ context.Context, names []string) ([]*descope.CustomAttribute, error) {
+	if m.DeleteCustomAttributesAssert != nil {
+		m.DeleteCustomAttributesAssert(names)
+	}
+	return m.DeleteCustomAttributesResponse, m.DeleteCustomAttributesError
 }
 
 func (m *MockUser) DeleteByUserID(_ context.Context, userID string) error {
@@ -1008,11 +1069,20 @@ type MockAccessKey struct {
 	DeactivateAssert func(id string)
 	DeactivateError  error
 
+	DeactivateBatchAssert func(ids []string)
+	DeactivateBatchError  error
+
 	ActivateAssert func(id string)
 	ActivateError  error
 
+	ActivateBatchAssert func(ids []string)
+	ActivateBatchError  error
+
 	DeleteAssert func(id string)
 	DeleteError  error
+
+	DeleteBatchAssert func(ids []string)
+	DeleteBatchError  error
 
 	RotateAssert     func(id string)
 	RotateResponseFn func() (string, *descope.AccessKeyResponse)
@@ -1059,6 +1129,13 @@ func (m *MockAccessKey) Deactivate(_ context.Context, id string) error {
 	return m.DeactivateError
 }
 
+func (m *MockAccessKey) DeactivateBatch(_ context.Context, ids []string) error {
+	if m.DeactivateBatchAssert != nil {
+		m.DeactivateBatchAssert(ids)
+	}
+	return m.DeactivateBatchError
+}
+
 func (m *MockAccessKey) Activate(_ context.Context, id string) error {
 	if m.ActivateAssert != nil {
 		m.ActivateAssert(id)
@@ -1066,11 +1143,25 @@ func (m *MockAccessKey) Activate(_ context.Context, id string) error {
 	return m.ActivateError
 }
 
+func (m *MockAccessKey) ActivateBatch(_ context.Context, ids []string) error {
+	if m.ActivateBatchAssert != nil {
+		m.ActivateBatchAssert(ids)
+	}
+	return m.ActivateBatchError
+}
+
 func (m *MockAccessKey) Delete(_ context.Context, id string) error {
 	if m.DeleteAssert != nil {
 		m.DeleteAssert(id)
 	}
 	return m.DeleteError
+}
+
+func (m *MockAccessKey) DeleteBatch(_ context.Context, ids []string) error {
+	if m.DeleteBatchAssert != nil {
+		m.DeleteBatchAssert(ids)
+	}
+	return m.DeleteBatchError
 }
 
 func (m *MockAccessKey) Rotate(_ context.Context, id string) (string, *descope.AccessKeyResponse, error) {
@@ -2095,6 +2186,9 @@ type MockThirdPartyApplication struct {
 	DeleteApplicationAssert func(id string)
 	DeleteApplicationError  error
 
+	DeleteApplicationBatchAssert func(ids []string)
+	DeleteApplicationBatchError  error
+
 	LoadApplicationAssert   func(id string)
 	LoadApplicationResponse *descope.ThirdPartyApplication
 	LoadApplicationError    error
@@ -2145,6 +2239,13 @@ func (m *MockThirdPartyApplication) DeleteApplication(_ context.Context, id stri
 		m.DeleteApplicationAssert(id)
 	}
 	return m.DeleteApplicationError
+}
+
+func (m *MockThirdPartyApplication) DeleteApplicationBatch(_ context.Context, ids []string) error {
+	if m.DeleteApplicationBatchAssert != nil {
+		m.DeleteApplicationBatchAssert(ids)
+	}
+	return m.DeleteApplicationBatchError
 }
 
 func (m *MockThirdPartyApplication) LoadApplication(_ context.Context, id string) (*descope.ThirdPartyApplication, error) {

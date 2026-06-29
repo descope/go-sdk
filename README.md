@@ -1040,6 +1040,18 @@ err := descopeClient.Management.User().Delete(context.Background(), "desmond@des
 // If needed, users can be loaded using their ID as well
 err := descopeClient.Management.User().Delete(context.Background(), "<user-id>")
 
+// Multiple users can be deleted in a single request by their user IDs.
+err = descopeClient.Management.User().DeleteBatch(context.Background(), []string{"<user-id-1>", "<user-id-2>"})
+
+// Update a user's recovery email / phone (used for account recovery flows).
+userRes, err = descopeClient.Management.User().UpdateRecoveryEmail(context.Background(), "desmond@descope.com", "recovery@descope.com", true)
+userRes, err = descopeClient.Management.User().UpdateRecoveryPhone(context.Background(), "desmond@descope.com", "+15555555555", true)
+
+// Manage the project-level user custom attribute definitions.
+attrs, err := descopeClient.Management.User().GetCustomAttributes(context.Background())
+attrs, err = descopeClient.Management.User().CreateCustomAttributes(context.Background(), []*descope.CustomAttribute{{Name: "tier", DisplayName: "Tier"}})
+attrs, err = descopeClient.Management.User().DeleteCustomAttributes(context.Background(), []string{"tier"})
+
 // Load specific user
 userRes, err := descopeClient.Management.User().Load(context.Background(), "desmond@descope.com")
 // If needed, users can be loaded using their ID as well
@@ -1159,6 +1171,12 @@ err := descopeClient.Management.AccessKey().Activate(context.Background(), "acce
 
 // Access key deletion cannot be undone. Use carefully.
 err := descopeClient.Management.AccessKey().Delete(context.Background(), "access-key-id")
+
+// The deactivate, activate and delete operations also have batch variants that
+// accept multiple access key IDs in a single request.
+err = descopeClient.Management.AccessKey().DeactivateBatch(context.Background(), []string{"id1", "id2"})
+err = descopeClient.Management.AccessKey().ActivateBatch(context.Background(), []string{"id1", "id2"})
+err = descopeClient.Management.AccessKey().DeleteBatch(context.Background(), []string{"id1", "id2"})
 ```
 
 Exchange the access key and provide optional access key login options:
@@ -1895,6 +1913,9 @@ apps, total, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadAll
 // Delete a third party application.
 // Deletion cannot be undone. Use carefully.
 err = descopeClient.DescopeClient().Management.ThirdPartyApplication().DeleteApplication(context.Background(), "appId")
+
+// Multiple third party applications can be deleted in a single request.
+err = descopeClient.DescopeClient().Management.ThirdPartyApplication().DeleteApplicationBatch(context.Background(), []string{"appId1", "appId2"})
 
 // Search third party applications consents by pages using a filter options, such as application id, user id, etc.
 consents, total, err = descopeClient.DescopeClient().Management.ThirdPartyApplication().SearchConsents(context.Background(), &descope.ThirdPartyApplicationConsentSearchOptions{
