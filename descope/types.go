@@ -1910,3 +1910,70 @@ type ListCheckTextRequest struct {
 	ID   string `json:"id"`
 	Text string `json:"text"`
 }
+
+// JWTTemplate is a JWT template definition in a project.
+type JWTTemplate struct {
+	ID                      string         `json:"id,omitempty"`
+	Name                    string         `json:"name,omitempty"`
+	Description             string         `json:"description,omitempty"`
+	Template                map[string]any `json:"template,omitempty"`
+	Source                  string         `json:"source,omitempty"`
+	Tags                    []string       `json:"tags,omitempty"`
+	AuthSchema              string         `json:"authSchema,omitempty"`
+	Type                    string         `json:"type,omitempty"`
+	ConformanceIssuer       bool           `json:"conformanceIssuer,omitempty"`
+	AutoDCT                 bool           `json:"autoDCT,omitempty"`
+	EnforceIssuer           bool           `json:"enforceIssuer,omitempty"`
+	EmptyClaimPolicy        string         `json:"emptyClaimPolicy,omitempty"`
+	OverrideSubject         bool           `json:"overrideSubject,omitempty"`
+	IssuerType              string         `json:"issuerType,omitempty"`
+	OmitCustomClaimsFromDSR bool           `json:"omitCustomClaimsFromDSR,omitempty"`
+	AddJti                  bool           `json:"addJti,omitempty"`
+	ExcludePermissions      bool           `json:"excludePermissions,omitempty"`
+}
+
+// JWTTemplateLibraryEntry is a read-only starter JWT template shipped by Descope.
+type JWTTemplateLibraryEntry struct {
+	ID                      string         `json:"id,omitempty"`
+	Name                    string         `json:"name,omitempty"`
+	Description             string         `json:"description,omitempty"`
+	Template                map[string]any `json:"template,omitempty"`
+	Tags                    []string       `json:"tags,omitempty"`
+	AuthSchema              string         `json:"authSchema,omitempty"`
+	Type                    string         `json:"type,omitempty"`
+	ConformanceIssuer       bool           `json:"conformanceIssuer,omitempty"`
+	AutoDCT                 bool           `json:"autoDCT,omitempty"`
+	EnforceIssuer           bool           `json:"enforceIssuer,omitempty"`
+	EmptyClaimPolicy        string         `json:"emptyClaimPolicy,omitempty"`
+	OverrideSubject         bool           `json:"overrideSubject,omitempty"`
+	IssuerType              string         `json:"issuerType,omitempty"`
+	OmitCustomClaimsFromDSR bool           `json:"omitCustomClaimsFromDSR,omitempty"`
+	AddJti                  bool           `json:"addJti,omitempty"`
+	ExcludePermissions      bool           `json:"excludePermissions,omitempty"`
+	Experimental            bool           `json:"experimental,omitempty"`
+	LogoLight               string         `json:"logoLight,omitempty"`
+	LogoDark                string         `json:"logoDark,omitempty"`
+}
+
+// JWTTemplateValidationIssue is a single validation failure produced when validating a JWT template.
+type JWTTemplateValidationIssue struct {
+	Field   string `json:"field,omitempty"`
+	Code    string `json:"code,omitempty"`
+	Message string `json:"message,omitempty"`
+	Hint    string `json:"hint,omitempty"`
+}
+
+// JWTTemplateValidationResult is the result of validating a JWT template.
+type JWTTemplateValidationResult struct {
+	Valid  bool                          `json:"valid"`
+	Issues []*JWTTemplateValidationIssue `json:"issues,omitempty"`
+}
+
+// ApplyJWTTemplateFromLibraryRequest applies a library entry as a new template, with optional overrides.
+type ApplyJWTTemplateFromLibraryRequest struct {
+	LibraryEntryID      string         `json:"libraryEntryId,omitempty"`
+	NameOverride        string         `json:"nameOverride,omitempty"`
+	DescriptionOverride string         `json:"descriptionOverride,omitempty"`
+	TagsOverride        []string       `json:"tagsOverride,omitempty"`
+	TemplateOverride    map[string]any `json:"templateOverride,omitempty"`
+}
