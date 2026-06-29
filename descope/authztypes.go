@@ -152,7 +152,7 @@ type FGACheckInfo struct {
 	// (e.g. wrong context value type). Allowed will be false in that case.
 	ConditionalErr string `json:"conditionalErr,omitempty"`
 	// FactGated is true when a backend fact decided this result; such results must not be cached at the edge.
-	FactGated bool `json:"factGated,omitempty"`
+	FactUsed bool `json:"factUsed,omitempty"`
 	// TrueConditions / FalseConditions are the IDs (see FGACondition.ID) of the deciding-path leaf conditions
 	// that evaluated true / false (raw, pre-NOT). An edge cache uses them as a certificate, resolving IDs via
 	// the response schema version. Empty when FactGated or uncacheable.
