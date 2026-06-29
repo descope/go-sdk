@@ -151,11 +151,11 @@ type FGACheckInfo struct {
 	// ConditionalErr holds the CEL evaluation error message when a condition could not be evaluated
 	// (e.g. wrong context value type). Allowed will be false in that case.
 	ConditionalErr string `json:"conditionalErr,omitempty"`
-	// FactGated is true when a backend fact decided this result; such results must not be cached at the edge.
+	// FactUsed is true when a backend fact decided this result; such results must not be cached at the edge.
 	FactUsed bool `json:"factUsed,omitempty"`
 	// TrueConditions / FalseConditions are the IDs (see FGACondition.ID) of the deciding-path leaf conditions
 	// that evaluated true / false (raw, pre-NOT). An edge cache uses them as a certificate, resolving IDs via
-	// the response schema version. Empty when FactGated or uncacheable.
+	// the response schema version. Empty when FactUsed or uncacheable.
 	TrueConditions  []int32 `json:"trueConditions,omitempty"`
 	FalseConditions []int32 `json:"falseConditions,omitempty"`
 	// SchemaVersion is the monotonic version of the schema that assigned the condition IDs above. It is a
