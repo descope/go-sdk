@@ -66,7 +66,7 @@ func TestSaveFGASchemaMissingSchema(t *testing.T) {
 func TestLoadFGASchemaSuccess(t *testing.T) {
 	response := map[string]any{
 		"dsl":           "some schema",
-		"schemaVersion": 7,
+		"schemaVersion": "v-abc-123",
 		"schema": map[string]any{
 			"conditions": []map[string]any{
 				{"name": "DuringShift", "expression": "now >= begin", "checkedExpr": []byte("checked-program-bytes"), "params": []map[string]any{{"name": "now", "type": "int"}, {"name": "begin", "type": "int"}}},
@@ -79,7 +79,7 @@ func TestLoadFGASchemaSuccess(t *testing.T) {
 	schema, err := mgmt.FGA().LoadSchema(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, "some schema", schema.Schema)
-	require.Equal(t, int32(7), schema.Version, "schema version must round-trip from LoadSchema")
+	require.Equal(t, "v-abc-123", schema.Version, "schema version must round-trip from LoadSchema")
 	require.Len(t, schema.Conditions, 1)
 	require.Equal(t, "DuringShift", schema.Conditions[0].Name)
 	require.Equal(t, "now >= begin", schema.Conditions[0].Expression)
@@ -227,7 +227,7 @@ func TestCheckFGARelationsSuccess(t *testing.T) {
 
 func TestCheckFGARelationsEvaluatedConditions(t *testing.T) {
 	response := map[string]any{
-		"schemaVersion": 7,
+		"schemaVersion": "v-abc-123",
 		"tuples": []*descope.FGACheck{
 			{
 				Allowed:  true,
@@ -245,7 +245,7 @@ func TestCheckFGARelationsEvaluatedConditions(t *testing.T) {
 	require.Equal(t, []int32{1}, checks[0].Info.TrueConditions)
 	require.Equal(t, []int32{2}, checks[0].Info.FalseConditions)
 	// the response-level schema version is surfaced on each check's info
-	require.Equal(t, int32(7), checks[0].Info.SchemaVersion)
+	require.Equal(t, "v-abc-123", checks[0].Info.SchemaVersion)
 }
 
 func TestCheckFGARelationsMissingTuples(t *testing.T) {
