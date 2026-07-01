@@ -108,8 +108,7 @@ type FGACondition struct {
 	Name       string               `json:"name"`
 	Params     []*FGAConditionParam `json:"params,omitempty"`
 	Expression string               `json:"expression"`
-	// CheckedExpr is the serialized type-checked CEL program (exprpb.CheckedExpr). An edge cache runs it
-	// directly instead of re-parsing Expression. Transported as base64 over JSON.
+	// CheckedExpr is the serialized type-checked CEL program (exprpb.CheckedExpr)
 	CheckedExpr []byte `json:"checkedExpr,omitempty"`
 	// ID is the condition's stable 1-based number for this schema version; Check responses reference
 	// conditions by this ID (see FGACheckInfo.TrueConditions/FalseConditions).
