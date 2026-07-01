@@ -97,7 +97,7 @@ type AuthzModified struct {
 type FGASchema struct {
 	Schema string `json:"schema"`
 	// Conditions are the CEL conditions defined in the schema (user-defined plus expanded
-	// built-in constraints). They let an edge cache compile and evaluate conditions directly.
+	// built-in constraints)
 	Conditions []*FGACondition `json:"conditions,omitempty"`
 	// Version is the schema's unique version (a fresh UUID on every change)
 	Version string `json:"version,omitempty"`
