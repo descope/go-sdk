@@ -99,8 +99,7 @@ type FGASchema struct {
 	// Conditions are the CEL conditions defined in the schema (user-defined plus expanded
 	// built-in constraints). They let an edge cache compile and evaluate conditions directly.
 	Conditions []*FGACondition `json:"conditions,omitempty"`
-	// Version is the schema's unique version (a fresh UUID on every change). An edge cache stores it and only
-	// trusts Check responses whose schemaVersion matches. Populated by LoadSchema from the response.
+	// Version is the schema's unique version (a fresh UUID on every change)
 	Version string `json:"version,omitempty"`
 }
 
