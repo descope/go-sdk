@@ -155,7 +155,7 @@ type FGACheckInfo struct {
 	// that evaluated true / false (raw, pre-NOT)
 	TrueConditions  []int32 `json:"trueConditions,omitempty"`
 	FalseConditions []int32 `json:"falseConditions,omitempty"`
-	SchemaVersion string `json:"-"`
+	SchemaVersion   string  `json:"-"`
 }
 
 type FGAMappableResourcesOptions struct {
