@@ -1062,8 +1062,7 @@ type Authz interface {
 	// WhoCanAccess the given resource returns the list of targets with the given relation definition
 	WhoCanAccess(ctx context.Context, resource, relationDefinition, namespace string) ([]string, error)
 
-	// WhoCanAccessWithContext is like WhoCanAccess but threads an ABAC context so a caching edge can
-	// re-verify condition-gated candidates against it.
+	// WhoCanAccessWithContext is like WhoCanAccess but threads an ABAC context
 	WhoCanAccessWithContext(ctx context.Context, resource, relationDefinition, namespace string, extraContext map[string]any) ([]string, error)
 
 	// ResourceRelations returns the list of all defined relations (not recursive) on the given resource, including target sets relations
