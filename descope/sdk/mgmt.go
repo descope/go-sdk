@@ -1062,6 +1062,9 @@ type Authz interface {
 	// WhoCanAccess the given resource returns the list of targets with the given relation definition
 	WhoCanAccess(ctx context.Context, resource, relationDefinition, namespace string) ([]string, error)
 
+	// WhoCanAccessWithContext is like WhoCanAccess but threads an ABAC context
+	WhoCanAccessWithContext(ctx context.Context, resource, relationDefinition, namespace string, extraContext map[string]any) ([]string, error)
+
 	// ResourceRelations returns the list of all defined relations (not recursive) on the given resource, including target sets relations
 	ResourceRelations(ctx context.Context, resource string) ([]*descope.AuthzRelation, error)
 
@@ -1076,6 +1079,9 @@ type Authz interface {
 
 	// WhatCanTargetAccess returns the list of all relations for the given target including derived relations from the schema tree.
 	WhatCanTargetAccess(ctx context.Context, target string) ([]*descope.AuthzRelation, error)
+
+	// WhatCanTargetAccessWithContext is like WhatCanTargetAccess but threads an ABAC context
+	WhatCanTargetAccessWithContext(ctx context.Context, target string, extraContext map[string]any) ([]*descope.AuthzRelation, error)
 
 	// WhatCanTargetAccessWithRelation returns the list of all resources that the target has the given relation to including all derived relations
 	WhatCanTargetAccessWithRelation(ctx context.Context, target, relationDefinition, namespace string) ([]*descope.AuthzRelation, error)

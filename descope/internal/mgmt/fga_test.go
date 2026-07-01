@@ -64,13 +64,29 @@ func TestSaveFGASchemaMissingSchema(t *testing.T) {
 }
 
 func TestLoadFGASchemaSuccess(t *testing.T) {
-	response := map[string]any{"dsl": "some schema"}
+	response := map[string]any{
+		"dsl":           "some schema",
+		"schemaVersion": "v-abc-123",
+		"schema": map[string]any{
+			"conditions": []map[string]any{
+				{"name": "DuringShift", "expression": "now >= begin", "checkedExpr": []byte("checked-program-bytes"), "params": []map[string]any{{"name": "now", "type": "int"}, {"name": "begin", "type": "int"}}},
+			},
+		},
+	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 	}, response))
 	schema, err := mgmt.FGA().LoadSchema(context.Background())
 	require.NoError(t, err)
 	require.Equal(t, "some schema", schema.Schema)
+	require.Equal(t, "v-abc-123", schema.Version, "schema version must round-trip from LoadSchema")
+	require.Len(t, schema.Conditions, 1)
+	require.Equal(t, "DuringShift", schema.Conditions[0].Name)
+	require.Equal(t, "now >= begin", schema.Conditions[0].Expression)
+	require.Equal(t, []byte("checked-program-bytes"), schema.Conditions[0].CheckedExpr, "checkedExpr must round-trip (base64 over JSON)")
+	require.Len(t, schema.Conditions[0].Params, 2)
+	require.Equal(t, "now", schema.Conditions[0].Params[0].Name)
+	require.Equal(t, "int", schema.Conditions[0].Params[0].Type)
 }
 
 func TestLoadFGASchemaError(t *testing.T) {
@@ -209,6 +225,29 @@ func TestCheckFGARelationsSuccess(t *testing.T) {
 	}
 }
 
+func TestCheckFGARelationsEvaluatedConditions(t *testing.T) {
+	response := map[string]any{
+		"schemaVersion": "v-abc-123",
+		"tuples": []*descope.FGACheck{
+			{
+				Allowed:  true,
+				Relation: &descope.FGARelation{Resource: "doc1", ResourceType: "doc", Relation: "viewer", Target: "u1", TargetType: "user"},
+				Info:     &descope.FGACheckInfo{Conditional: true, TrueConditions: []int32{1}, FalseConditions: []int32{2}},
+			},
+		}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, response))
+	checks, err := mgmt.FGA().Check(context.Background(), []*descope.FGARelation{
+		{Resource: "doc1", ResourceType: "doc", Relation: "viewer", Target: "u1", TargetType: "user"},
+	})
+	require.NoError(t, err)
+	require.Len(t, checks, 1)
+	require.True(t, checks[0].Info.Conditional)
+	require.Equal(t, []int32{1}, checks[0].Info.TrueConditions)
+	require.Equal(t, []int32{2}, checks[0].Info.FalseConditions)
+	// the response-level schema version is surfaced on each check's info
+	require.Equal(t, "v-abc-123", checks[0].Info.SchemaVersion)
+}
+
 func TestCheckFGARelationsMissingTuples(t *testing.T) {
 	mgmt := newTestMgmt(nil, nil)
 	_, err := mgmt.FGA().Check(context.Background(), nil)
@@ -242,6 +281,35 @@ func TestCheckFGAWithContextPassthrough(t *testing.T) {
 	require.Len(t, checks, 1)
 	require.True(t, checks[0].Allowed)
 	require.True(t, checks[0].Info.Direct)
+}
+
+func TestCheckFGAListConditions(t *testing.T) {
+	response := map[string]any{
+		"tuples": []*descope.FGACheck{
+			{Allowed: true, Relation: &descope.FGARelation{Resource: "doc1", ResourceType: "doc", Relation: "viewer", Target: "u1", TargetType: "user"}, Info: &descope.FGACheckInfo{Conditional: true}},
+		}}
+	rel := []*descope.FGARelation{{Resource: "doc1", ResourceType: "doc", Relation: "viewer", Target: "u1", TargetType: "user"}}
+
+	t.Run("enabled - flag sent", func(t *testing.T) {
+		mgmt := newTestMgmtConf(&ManagementParams{FGAListConditions: true}, nil, helpers.DoOkWithBody(func(r *http.Request) {
+			req := map[string]any{}
+			require.NoError(t, helpers.ReadBody(r, &req))
+			require.Equal(t, true, req["listConditions"])
+		}, response))
+		_, err := mgmt.FGA().Check(context.Background(), rel)
+		require.NoError(t, err)
+	})
+
+	t.Run("default off - flag omitted", func(t *testing.T) {
+		mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+			req := map[string]any{}
+			require.NoError(t, helpers.ReadBody(r, &req))
+			_, present := req["listConditions"]
+			require.False(t, present, "flag must be omitted unless opted in")
+		}, response))
+		_, err := mgmt.FGA().Check(context.Background(), rel)
+		require.NoError(t, err)
+	})
 }
 
 func TestCheckFGAWithContextNil(t *testing.T) {
