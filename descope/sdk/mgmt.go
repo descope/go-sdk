@@ -1080,8 +1080,7 @@ type Authz interface {
 	// WhatCanTargetAccess returns the list of all relations for the given target including derived relations from the schema tree.
 	WhatCanTargetAccess(ctx context.Context, target string) ([]*descope.AuthzRelation, error)
 
-	// WhatCanTargetAccessWithContext is like WhatCanTargetAccess but threads an ABAC context so a
-	// caching edge can re-verify condition-gated candidates against it.
+	// WhatCanTargetAccessWithContext is like WhatCanTargetAccess but threads an ABAC context
 	WhatCanTargetAccessWithContext(ctx context.Context, target string, extraContext map[string]any) ([]*descope.AuthzRelation, error)
 
 	// WhatCanTargetAccessWithRelation returns the list of all resources that the target has the given relation to including all derived relations
