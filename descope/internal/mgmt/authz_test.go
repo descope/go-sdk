@@ -495,3 +495,44 @@ func TestGetModifiedSuccess(t *testing.T) {
 	require.NoError(t, err)
 	assert.EqualValues(t, response, res)
 }
+
+func TestWhoCanAccessWithContextMissingArgument(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	_, err := mgmt.Authz().WhoCanAccessWithContext(context.Background(), "", "rel", "ns", nil)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("resource").Message)
+	_, err = mgmt.Authz().WhoCanAccessWithContext(context.Background(), "res", "", "ns", nil)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("relationDefinition").Message)
+	_, err = mgmt.Authz().WhoCanAccessWithContext(context.Background(), "res", "rel", "", nil)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("namespace").Message)
+}
+
+func TestWhatCanTargetAccessWithContextMissingArgument(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	_, err := mgmt.Authz().WhatCanTargetAccessWithContext(context.Background(), "", nil)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("target").Message)
+}
+
+func TestWhoCanAccessWithContextSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "res", req["resource"])
+		require.Equal(t, map[string]any{"role": "admin"}, req["context"])
+	}, map[string]any{"targets": []string{"u1", "u2"}}))
+	targets, err := mgmt.Authz().WhoCanAccessWithContext(context.Background(), "res", "rel", "ns", map[string]any{"role": "admin"})
+	require.NoError(t, err)
+	require.Equal(t, []string{"u1", "u2"}, targets)
+}
+
+func TestWhatCanTargetAccessWithContextSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "u1", req["target"])
+		require.Equal(t, map[string]any{"role": "admin"}, req["context"])
+	}, map[string]any{"relations": []*descope.AuthzRelation{{Resource: "doc1", RelationDefinition: "viewer", Namespace: "docs", Target: "u1"}}}))
+	relations, err := mgmt.Authz().WhatCanTargetAccessWithContext(context.Background(), "u1", map[string]any{"role": "admin"})
+	require.NoError(t, err)
+	require.Len(t, relations, 1)
+	require.Equal(t, "doc1", relations[0].Resource)
+}
