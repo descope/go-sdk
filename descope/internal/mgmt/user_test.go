@@ -170,6 +170,8 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 				assert.Nil(t, req["sendMail"])
 				assert.EqualValues(t, true, req["sendSMS"])
 				assert.EqualValues(t, "fr-FR", req["locale"])
+				assert.EqualValues(t, "tmpl-1", req["templateId"])
+				assert.EqualValues(t, map[string]any{"k1": "v1"}, req["templateOptions"])
 			} else if sendMail {
 				assert.EqualValues(t, true, req["invite"])
 				assert.EqualValues(t, "https://some.domain.com", req["inviteUrl"])
@@ -212,9 +214,11 @@ func TestUsersInviteBatchSuccess(t *testing.T) {
 	}, response))
 
 	res, err := m.User().InviteBatch(context.Background(), users, &descope.InviteOptions{
-		InviteURL: "https://some.domain.com",
-		SendSMS:   &sendSMS,
-		Locale:    "fr-FR",
+		InviteURL:       "https://some.domain.com",
+		SendSMS:         &sendSMS,
+		Locale:          "fr-FR",
+		TemplateID:      "tmpl-1",
+		TemplateOptions: map[string]string{"k1": "v1"},
 	})
 	require.True(t, called)
 	require.NoError(t, err)
