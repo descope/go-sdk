@@ -67,7 +67,7 @@ type fgaLoadSchemaResponse struct {
 	Schema *struct {
 		Conditions []*descope.FGACondition `json:"conditions"`
 	} `json:"schema"`
-	SchemaVersion string `json:"schemaVersion"`
+	Version string `json:"version"`
 }
 
 func (f *fga) LoadSchema(ctx context.Context) (*descope.FGASchema, error) {
@@ -80,7 +80,7 @@ func (f *fga) LoadSchema(ctx context.Context) (*descope.FGASchema, error) {
 	if err != nil {
 		return nil, err // notest
 	}
-	schema := &descope.FGASchema{Schema: response.DSL, Version: response.SchemaVersion}
+	schema := &descope.FGASchema{Schema: response.DSL, Version: response.Version}
 	if response.Schema != nil {
 		schema.Conditions = response.Schema.Conditions
 	}

@@ -65,8 +65,8 @@ func TestSaveFGASchemaMissingSchema(t *testing.T) {
 
 func TestLoadFGASchemaSuccess(t *testing.T) {
 	response := map[string]any{
-		"dsl":           "some schema",
-		"schemaVersion": "v-abc-123",
+		"dsl":     "some schema",
+		"version": "v-abc-123",
 		"schema": map[string]any{
 			"conditions": []map[string]any{
 				{"name": "DuringShift", "expression": "now >= begin", "checkedExpr": []byte("checked-program-bytes"), "params": []map[string]any{{"name": "now", "type": "int"}, {"name": "begin", "type": "int"}}},
