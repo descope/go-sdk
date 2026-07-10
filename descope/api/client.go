@@ -277,6 +277,12 @@ var (
 			outboundApplicationUploadTenantToken:       "mgmt/outbound/app/tenant/oauthtoken/upload",
 			outboundApplicationBatchUploadUserTokens:   "mgmt/outbound/app/user/oauthtoken/batch/upload",
 			outboundApplicationBatchUploadTenantTokens: "mgmt/outbound/app/tenant/oauthtoken/batch/upload",
+			outboundSCIMCreate:                         "mgmt/outbound/scim/create",
+			outboundSCIMUpdate:                         "mgmt/outbound/scim/update",
+			outboundSCIMDelete:                         "mgmt/outbound/scim/delete",
+			outboundSCIMLoad:                           "mgmt/outbound/scim",
+			outboundSCIMLoadAll:                        "mgmt/outbound/scim",
+			outboundSCIMSetEnabled:                     "mgmt/outbound/scim/enabled/set",
 			thirdPartyApplicationCreate:                "mgmt/thirdparty/app/create",
 			thirdPartyApplicationUpdate:                "mgmt/thirdparty/app/update",
 			thirdPartyApplicationPatch:                 "mgmt/thirdparty/app/patch",
@@ -622,6 +628,13 @@ type mgmtEndpoints struct {
 	outboundApplicationUploadTenantToken       string
 	outboundApplicationBatchUploadUserTokens   string
 	outboundApplicationBatchUploadTenantTokens string
+
+	outboundSCIMCreate     string
+	outboundSCIMUpdate     string
+	outboundSCIMDelete     string
+	outboundSCIMLoad       string
+	outboundSCIMLoadAll    string
+	outboundSCIMSetEnabled string
 
 	thirdPartyApplicationCreate              string
 	thirdPartyApplicationUpdate              string
@@ -1666,6 +1679,30 @@ func (e *endpoints) ManagementOutboundApplicationBatchUploadUserTokens() string 
 
 func (e *endpoints) ManagementOutboundApplicationBatchUploadTenantTokens() string {
 	return path.Join(e.version, e.mgmt.outboundApplicationBatchUploadTenantTokens)
+}
+
+func (e *endpoints) ManagementOutboundSCIMCreate() string {
+	return path.Join(e.version, e.mgmt.outboundSCIMCreate)
+}
+
+func (e *endpoints) ManagementOutboundSCIMUpdate() string {
+	return path.Join(e.version, e.mgmt.outboundSCIMUpdate)
+}
+
+func (e *endpoints) ManagementOutboundSCIMDelete() string {
+	return path.Join(e.version, e.mgmt.outboundSCIMDelete)
+}
+
+func (e *endpoints) ManagementOutboundSCIMLoad() string {
+	return path.Join(e.version, e.mgmt.outboundSCIMLoad)
+}
+
+func (e *endpoints) ManagementOutboundSCIMLoadAll() string {
+	return path.Join(e.version, e.mgmt.outboundSCIMLoadAll)
+}
+
+func (e *endpoints) ManagementOutboundSCIMSetEnabled() string {
+	return path.Join(e.version, e.mgmt.outboundSCIMSetEnabled)
 }
 
 func (e *endpoints) ManagementThirdPartyApplicationCreate() string {

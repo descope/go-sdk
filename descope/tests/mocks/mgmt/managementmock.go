@@ -27,6 +27,7 @@ type MockManagement struct {
 	*MockFGA
 	*MockThirdPartyApplication
 	*MockOutboundApplication
+	*MockOutboundSCIM
 	*MockManagementKey
 	*MockDescoper
 	*MockList
@@ -105,6 +106,10 @@ func (m *MockManagement) ThirdPartyApplication() sdk.ThirdPartyApplication {
 
 func (m *MockManagement) OutboundApplication() sdk.OutboundApplication {
 	return m.MockOutboundApplication
+}
+
+func (m *MockManagement) OutboundSCIM() sdk.OutboundSCIM {
+	return m.MockOutboundSCIM
 }
 
 func (m *MockManagement) ManagementKey() sdk.ManagementKey {
@@ -2494,6 +2499,71 @@ func (m *MockOutboundApplication) DeleteTokenByID(_ context.Context, id string) 
 		m.DeleteTokenByIDAssert(id)
 	}
 	return m.DeleteTokenByIDError
+}
+
+// Mock OutboundSCIM
+
+type MockOutboundSCIM struct {
+	CreateConfigurationAssert   func(request *descope.CreateOutboundSCIMConfigurationRequest)
+	CreateConfigurationResponse *descope.OutboundSCIMConfiguration
+	CreateConfigurationError    error
+
+	UpdateConfigurationAssert   func(request *descope.UpdateOutboundSCIMConfigurationRequest)
+	UpdateConfigurationResponse *descope.OutboundSCIMConfiguration
+	UpdateConfigurationError    error
+
+	DeleteConfigurationAssert func(id string)
+	DeleteConfigurationError  error
+
+	LoadConfigurationAssert   func(id string)
+	LoadConfigurationResponse *descope.OutboundSCIMConfiguration
+	LoadConfigurationError    error
+
+	LoadAllConfigurationsResponse []*descope.OutboundSCIMConfiguration
+	LoadAllConfigurationsError    error
+
+	SetEnabledAssert   func(id string, enabled bool)
+	SetEnabledResponse *descope.OutboundSCIMConfiguration
+	SetEnabledError    error
+}
+
+func (m *MockOutboundSCIM) CreateConfiguration(_ context.Context, request *descope.CreateOutboundSCIMConfigurationRequest) (*descope.OutboundSCIMConfiguration, error) {
+	if m.CreateConfigurationAssert != nil {
+		m.CreateConfigurationAssert(request)
+	}
+	return m.CreateConfigurationResponse, m.CreateConfigurationError
+}
+
+func (m *MockOutboundSCIM) UpdateConfiguration(_ context.Context, request *descope.UpdateOutboundSCIMConfigurationRequest) (*descope.OutboundSCIMConfiguration, error) {
+	if m.UpdateConfigurationAssert != nil {
+		m.UpdateConfigurationAssert(request)
+	}
+	return m.UpdateConfigurationResponse, m.UpdateConfigurationError
+}
+
+func (m *MockOutboundSCIM) DeleteConfiguration(_ context.Context, id string) error {
+	if m.DeleteConfigurationAssert != nil {
+		m.DeleteConfigurationAssert(id)
+	}
+	return m.DeleteConfigurationError
+}
+
+func (m *MockOutboundSCIM) LoadConfiguration(_ context.Context, id string) (*descope.OutboundSCIMConfiguration, error) {
+	if m.LoadConfigurationAssert != nil {
+		m.LoadConfigurationAssert(id)
+	}
+	return m.LoadConfigurationResponse, m.LoadConfigurationError
+}
+
+func (m *MockOutboundSCIM) LoadAllConfigurations(_ context.Context) ([]*descope.OutboundSCIMConfiguration, error) {
+	return m.LoadAllConfigurationsResponse, m.LoadAllConfigurationsError
+}
+
+func (m *MockOutboundSCIM) SetEnabled(_ context.Context, id string, enabled bool) (*descope.OutboundSCIMConfiguration, error) {
+	if m.SetEnabledAssert != nil {
+		m.SetEnabledAssert(id, enabled)
+	}
+	return m.SetEnabledResponse, m.SetEnabledError
 }
 
 // Mock ManagementKey

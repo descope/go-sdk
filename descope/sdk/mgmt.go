@@ -1257,6 +1257,33 @@ type OutboundApplication interface {
 	DeleteTokenByID(ctx context.Context, id string) error
 }
 
+// Provides functions for managing outbound SCIM configurations in a project.
+type OutboundSCIM interface {
+	// Create a new outbound SCIM configuration for an outbound application. The backend generates
+	// and returns the configuration ID and the initial version.
+	CreateConfiguration(ctx context.Context, request *descope.CreateOutboundSCIMConfigurationRequest) (*descope.OutboundSCIMConfiguration, error)
+
+	// Update an existing outbound SCIM configuration. The version is optimistic-concurrency
+	// versioned — pass the value returned by the last Load/Create/Update so the backend can reject
+	// stale writes. Leave Name empty to preserve the existing name.
+	UpdateConfiguration(ctx context.Context, request *descope.UpdateOutboundSCIMConfigurationRequest) (*descope.OutboundSCIMConfiguration, error)
+
+	// Delete an outbound SCIM configuration by ID.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteConfiguration(ctx context.Context, id string) error
+
+	// Load an outbound SCIM configuration by ID.
+	LoadConfiguration(ctx context.Context, id string) (*descope.OutboundSCIMConfiguration, error)
+
+	// Load all outbound SCIM configurations for the project.
+	LoadAllConfigurations(ctx context.Context) ([]*descope.OutboundSCIMConfiguration, error)
+
+	// SetEnabled enables or disables an outbound SCIM configuration by ID. Returns the updated
+	// configuration.
+	SetEnabled(ctx context.Context, id string, enabled bool) (*descope.OutboundSCIMConfiguration, error)
+}
+
 // Provides functions for managing engines in a project.
 type Engine interface {
 	// Create a new engine with the given name. The returned engine includes its generated
@@ -1480,6 +1507,9 @@ type Management interface {
 
 	// Provides functions for managing outbound applications in a project.
 	OutboundApplication() OutboundApplication
+
+	// Provides functions for managing outbound SCIM configurations in a project.
+	OutboundSCIM() OutboundSCIM
 
 	// Provides functions for management key management.
 	ManagementKey() ManagementKey
