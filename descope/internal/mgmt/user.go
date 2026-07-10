@@ -1076,6 +1076,12 @@ func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.In
 		if options.SendSMS != nil {
 			req["sendSMS"] = *options.SendSMS
 		}
+		if options.TemplateOptions != nil {
+			req["templateOptions"] = options.TemplateOptions
+		}
+		if len(options.TemplateID) > 0 {
+			req["templateId"] = options.TemplateID
+		}
 		if len(options.Locale) > 0 {
 			req["locale"] = options.Locale
 		}
