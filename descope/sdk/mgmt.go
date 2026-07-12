@@ -1117,6 +1117,11 @@ type FGA interface {
 	// Pass a nil or empty map if you do not need to supply any extra context.
 	CheckWithContext(ctx context.Context, relations []*descope.FGARelation, extraContext map[string]any) ([]*descope.FGACheck, error)
 
+	// SetListConditions toggles whether Check requests per-condition evaluation results (the deciding-path
+	// condition IDs and schema version). Off by default; only an edge cache that builds condition
+	// certificates needs it — normal callers should leave it disabled.
+	SetListConditions(listConditions bool)
+
 	// LoadMappableSchema loads the mappable schema for the project (only listing the RDs for a Namespace), along with a list of mappable resources.
 	LoadMappableSchema(ctx context.Context, tenantID string, options *descope.FGAMappableResourcesOptions) (*descope.FGAMappableSchema, error)
 

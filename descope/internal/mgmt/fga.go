@@ -20,6 +20,10 @@ type fga struct {
 
 var _ sdk.FGA = &fga{} // Ensure that the fga struct implements the sdk.FGA interface
 
+func (f *fga) SetListConditions(listConditions bool) {
+	f.listConditions = listConditions
+}
+
 type DSLSchema struct {
 	DSL string `json:"dsl"`
 }

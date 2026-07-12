@@ -35,9 +35,6 @@ type Config struct {
 	DescopeBaseURL string
 	// FGACacheURL (optional, "") - pass FGA calls through a cache service, if set.
 	FGACacheURL string
-	// FGAListConditions (optional, false) - request per-condition evaluation results on FGA Check.
-	// Intended for an FGA edge cache that builds condition certificates; normal callers leave it false.
-	FGAListConditions bool
 	// DefaultClient (optional, http.DefaultClient) - override the default client used to Do the actual http request.
 	DefaultClient api.IHttpClient
 	// CertificateVerifyMode (optional, CertificateVerifyAutomatic) - override the server certificate verification behavior when using the default client.

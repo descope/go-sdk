@@ -290,12 +290,13 @@ func TestCheckFGAListConditions(t *testing.T) {
 		}}
 	rel := []*descope.FGARelation{{Resource: "doc1", ResourceType: "doc", Relation: "viewer", Target: "u1", TargetType: "user"}}
 
-	t.Run("enabled - flag sent", func(t *testing.T) {
-		mgmt := newTestMgmtConf(&ManagementParams{FGAListConditions: true}, nil, helpers.DoOkWithBody(func(r *http.Request) {
+	t.Run("enabled via setter - flag sent", func(t *testing.T) {
+		mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 			req := map[string]any{}
 			require.NoError(t, helpers.ReadBody(r, &req))
 			require.Equal(t, true, req["listConditions"])
 		}, response))
+		mgmt.FGA().SetListConditions(true)
 		_, err := mgmt.FGA().Check(context.Background(), rel)
 		require.NoError(t, err)
 	})
