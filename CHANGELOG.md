@@ -1,5 +1,21 @@
 # Changelog
 
+## [1.27.0](https://github.com/descope/go-sdk/compare/v1.26.0...v1.27.0) (2026-07-12)
+
+
+### Features
+
+* **fga:** abac info support for authzcache ([#780](https://github.com/descope/go-sdk/issues/780)) ([e768507](https://github.com/descope/go-sdk/commit/e7685071d0dd0710a291b010895e5267deb79554))
+* **mgmt:** add access key, user, and third-party batch & recovery endpoints ([#790](https://github.com/descope/go-sdk/issues/790)) ([eb19bb0](https://github.com/descope/go-sdk/commit/eb19bb0e06fbcdfc8fc54a35f012bdf93984137d))
+* **mgmt:** add batch permission and role management endpoints ([#789](https://github.com/descope/go-sdk/issues/789)) ([d69d144](https://github.com/descope/go-sdk/commit/d69d144a40db64bb4492e4b728d11ea04671f129))
+* **mgmt:** add JWT template management API ([#791](https://github.com/descope/go-sdk/issues/791)) ([88beff9](https://github.com/descope/go-sdk/commit/88beff9a3b584e8a17e468474eede6dc2368e307))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.26.0 ([#787](https://github.com/descope/go-sdk/issues/787)) ([33258c3](https://github.com/descope/go-sdk/commit/33258c3b1ab0d33ab8b642e26699cee928beab15))
+* **mgmt:** send templateId and templateOptions in InviteBatch request ([#797](https://github.com/descope/go-sdk/issues/797)) ([c524e13](https://github.com/descope/go-sdk/commit/c524e13cc8c1ae21b7783a4d737e97fe6a4d2d5a))
+
 ## [1.26.0](https://github.com/descope/go-sdk/compare/v1.25.0...v1.26.0) (2026-06-28)
 
 
