@@ -442,6 +442,7 @@ func TestLoadSettingsSuccess(t *testing.T) {
 			},
 			"configFGATenantIDResourcePrefix": "tenant_prefix_",
 			"configFGATenantIDResourceSuffix": "_tenant_suffix",
+			"lastSuccessTestTime":             777,
 		},
 		"oidc": map[string]any{
 			"name":        "myName",
@@ -452,6 +453,7 @@ func TestLoadSettingsSuccess(t *testing.T) {
 			"userAttrMapping": map[string]any{
 				"givenName": "myGivenName",
 			},
+			"lastSuccessTestTime": 888,
 		},
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -499,6 +501,7 @@ func TestLoadSettingsSuccess(t *testing.T) {
 	assert.EqualValues(t, "ns3", res.Saml.FgaMappings["group2"].Relations[0].Namespace)
 	assert.EqualValues(t, "tenant_prefix_", res.Saml.ConfigFGATenantIDResourcePrefix)
 	assert.EqualValues(t, "_tenant_suffix", res.Saml.ConfigFGATenantIDResourceSuffix)
+	assert.EqualValues(t, 777, res.Saml.LastSuccessTestTime)
 
 	require.NotNil(t, res.Oidc)
 	assert.EqualValues(t, "myName", res.Oidc.Name)
@@ -508,6 +511,7 @@ func TestLoadSettingsSuccess(t *testing.T) {
 	assert.EqualValues(t, "http://dummy.com", res.Oidc.UserDataURL)
 	require.NotNil(t, res.Oidc.AttributeMapping)
 	assert.EqualValues(t, "myGivenName", res.Oidc.AttributeMapping.GivenName)
+	assert.EqualValues(t, 888, res.Oidc.LastSuccessTestTime)
 	require.Empty(t, res.SSOID)
 }
 
