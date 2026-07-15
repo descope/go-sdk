@@ -621,6 +621,7 @@ type UserResponse struct {
 	VerifiedEmail    bool                            `json:"verifiedEmail,omitempty"`
 	VerifiedPhone    bool                            `json:"verifiedPhone,omitempty"`
 	RoleNames        []string                        `json:"roleNames,omitempty"`
+	RoleIDs          []string                        `json:"roleIds,omitempty"`
 	UserTenants      []*UserResponseAssociatedTenant `json:"userTenants,omitempty"`
 	Status           string                          `json:"status,omitempty"`
 	Picture          string                          `json:"picture,omitempty"`
@@ -743,6 +744,7 @@ type AssociatedTenant struct {
 type UserResponseAssociatedTenant struct {
 	AssociatedTenant `json:",inline"`
 	Permissions      []string `json:"permissions,omitempty"`
+	RoleIDs          []string `json:"roleIds,omitempty"`
 }
 
 // Represents a mapping between a set of groups of users and a role that will be assigned to them.
