@@ -1062,6 +1062,9 @@ type Authz interface {
 	// WhoCanAccess the given resource returns the list of targets with the given relation definition
 	WhoCanAccess(ctx context.Context, resource, relationDefinition, namespace string) ([]string, error)
 
+	// WhoCanAccessWithContext is like WhoCanAccess but threads an ABAC context
+	WhoCanAccessWithContext(ctx context.Context, resource, relationDefinition, namespace string, extraContext map[string]any) ([]string, error)
+
 	// ResourceRelations returns the list of all defined relations (not recursive) on the given resource, including target sets relations
 	ResourceRelations(ctx context.Context, resource string) ([]*descope.AuthzRelation, error)
 
@@ -1076,6 +1079,9 @@ type Authz interface {
 
 	// WhatCanTargetAccess returns the list of all relations for the given target including derived relations from the schema tree.
 	WhatCanTargetAccess(ctx context.Context, target string) ([]*descope.AuthzRelation, error)
+
+	// WhatCanTargetAccessWithContext is like WhatCanTargetAccess but threads an ABAC context
+	WhatCanTargetAccessWithContext(ctx context.Context, target string, extraContext map[string]any) ([]*descope.AuthzRelation, error)
 
 	// WhatCanTargetAccessWithRelation returns the list of all resources that the target has the given relation to including all derived relations
 	WhatCanTargetAccessWithRelation(ctx context.Context, target, relationDefinition, namespace string) ([]*descope.AuthzRelation, error)
@@ -1110,6 +1116,11 @@ type FGA interface {
 	// (merged on top of any attributes the backend already has); values must be JSON-marshalable.
 	// Pass a nil or empty map if you do not need to supply any extra context.
 	CheckWithContext(ctx context.Context, relations []*descope.FGARelation, extraContext map[string]any) ([]*descope.FGACheck, error)
+
+	// SetListConditions toggles whether Check requests per-condition evaluation results (the deciding-path
+	// condition IDs and schema version). Off by default; only an edge cache that builds condition
+	// certificates needs it — normal callers should leave it disabled.
+	SetListConditions(listConditions bool)
 
 	// LoadMappableSchema loads the mappable schema for the project (only listing the RDs for a Namespace), along with a list of mappable resources.
 	LoadMappableSchema(ctx context.Context, tenantID string, options *descope.FGAMappableResourcesOptions) (*descope.FGAMappableSchema, error)

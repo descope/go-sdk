@@ -2023,6 +2023,10 @@ func (m *MockAuthz) WhoCanAccess(_ context.Context, resource, relationDefinition
 	return m.WhoCanAccessResponse, m.WhoCanAccessError
 }
 
+func (m *MockAuthz) WhoCanAccessWithContext(ctx context.Context, resource, relationDefinition, namespace string, _ map[string]any) ([]string, error) {
+	return m.WhoCanAccess(ctx, resource, relationDefinition, namespace)
+}
+
 func (m *MockAuthz) ResourceRelationsWithTargetSetsFilter(ctx context.Context, resource string, _ bool) ([]*descope.AuthzRelation, error) {
 	return m.ResourceRelations(ctx, resource)
 }
@@ -2050,6 +2054,10 @@ func (m *MockAuthz) WhatCanTargetAccess(_ context.Context, target string) ([]*de
 		m.WhatCanTargetAccessAssert(target)
 	}
 	return m.WhatCanTargetAccessResponse, m.WhatCanTargetAccessError
+}
+
+func (m *MockAuthz) WhatCanTargetAccessWithContext(ctx context.Context, target string, _ map[string]any) ([]*descope.AuthzRelation, error) {
+	return m.WhatCanTargetAccess(ctx, target)
 }
 
 func (m *MockAuthz) WhatCanTargetAccessWithRelation(_ context.Context, target, relationDefinition, namespace string) ([]*descope.AuthzRelation, error) {
@@ -2090,6 +2098,8 @@ type MockFGA struct {
 	CheckWithContextAssert   func(relations []*descope.FGARelation, extraContext map[string]any)
 	CheckWithContextResponse []*descope.FGACheck
 	CheckWithContextError    error
+
+	SetListConditionsAssert func(listConditions bool)
 
 	LoadMappableSchemaAssert   func(tenantID string, options *descope.FGAMappableResourcesOptions)
 	LoadMappableSchemaResponse *descope.FGAMappableSchema
@@ -2144,6 +2154,12 @@ func (m *MockFGA) Check(_ context.Context, relations []*descope.FGARelation) ([]
 		m.CheckAssert(relations)
 	}
 	return m.CheckResponse, m.CheckError
+}
+
+func (m *MockFGA) SetListConditions(listConditions bool) {
+	if m.SetListConditionsAssert != nil {
+		m.SetListConditionsAssert(listConditions)
+	}
 }
 
 func (m *MockFGA) CheckWithContext(_ context.Context, relations []*descope.FGARelation, extraContext map[string]any) ([]*descope.FGACheck, error) {

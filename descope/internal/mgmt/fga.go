@@ -13,9 +13,16 @@ import (
 type fga struct {
 	managementBase
 	fgaCacheURL string
+	// listConditions, when set, asks the backend to return per-condition evaluation results on
+	// Check (for an edge cache building condition certificates). Off for normal callers.
+	listConditions bool
 }
 
 var _ sdk.FGA = &fga{} // Ensure that the fga struct implements the sdk.FGA interface
+
+func (f *fga) SetListConditions(listConditions bool) {
+	f.listConditions = listConditions
+}
 
 type DSLSchema struct {
 	DSL string `json:"dsl"`
@@ -57,17 +64,31 @@ func (f *fga) SaveSchema(ctx context.Context, schema *descope.FGASchema) error {
 	return err
 }
 
+// fgaLoadSchemaResponse mirrors LoadDSLSchemaResponse: the raw DSL plus the structured schema
+// whose conditions (name, typed params, CEL expression) the edge compiles and evaluates.
+type fgaLoadSchemaResponse struct {
+	DSL    string `json:"dsl"`
+	Schema *struct {
+		Conditions []*descope.FGACondition `json:"conditions"`
+	} `json:"schema"`
+	Version string `json:"version"`
+}
+
 func (f *fga) LoadSchema(ctx context.Context) (*descope.FGASchema, error) {
 	res, err := f.client.DoGetRequest(ctx, api.Routes.ManagementFGALoadSchema(), nil, "")
 	if err != nil {
 		return nil, err
 	}
-	var dslSchema *DSLSchema
-	err = utils.Unmarshal([]byte(res.BodyStr), &dslSchema)
+	var response *fgaLoadSchemaResponse
+	err = utils.Unmarshal([]byte(res.BodyStr), &response)
 	if err != nil {
 		return nil, err // notest
 	}
-	return &descope.FGASchema{Schema: dslSchema.DSL}, nil
+	schema := &descope.FGASchema{Schema: response.DSL, Version: response.Version}
+	if response.Schema != nil {
+		schema.Conditions = response.Schema.Conditions
+	}
+	return schema, nil
 }
 
 func (f *fga) CreateRelations(ctx context.Context, relations []*descope.FGARelation) error {
@@ -108,6 +129,8 @@ type CheckResponseTuple struct {
 
 type checkResponse struct {
 	CheckResponseTuple []*CheckResponseTuple `json:"tuples"`
+	// SchemaVersion is response-level (the schema that assigned the condition IDs); copied onto each info below.
+	SchemaVersion string `json:"schemaVersion"`
 }
 
 func (f *fga) Check(ctx context.Context, relations []*descope.FGARelation) ([]*descope.FGACheck, error) {
@@ -124,6 +147,9 @@ func (f *fga) CheckWithContext(ctx context.Context, relations []*descope.FGARela
 	}
 	if len(extraContext) > 0 {
 		body["context"] = extraContext
+	}
+	if f.listConditions {
+		body["listConditions"] = true
 	}
 
 	options := &api.HTTPRequest{}
@@ -145,6 +171,9 @@ func (f *fga) CheckWithContext(ctx context.Context, relations []*descope.FGARela
 		if info == nil {
 			info = &descope.FGACheckInfo{}
 		}
+		// the schema version is sent once per response; surface it on each info so callers (the edge cache)
+		// can validate the condition IDs without a separate response object.
+		info.SchemaVersion = response.SchemaVersion
 		checks[i] = &descope.FGACheck{
 			Relation: tuple.Tuple,
 			Allowed:  tuple.Allowed,
