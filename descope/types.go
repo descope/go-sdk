@@ -1598,13 +1598,13 @@ type BatchUploadOutboundAppTokensResponse struct {
 	Failures []*OutboundAppTokenUploadFailure `json:"failures"`
 }
 
-// OutboundSCIMConfiguration represents an outbound SCIM configuration on an outbound application.
+// OutboundSCIMConfiguration represents an outbound SCIM configuration attached to a federated
+// SSO application. The configuration is identified end-to-end by AppID; there is no separate
+// id/name because both are derived from the SSO app.
 // LastExportTime and LastProcessingTime are epoch seconds. Version is optimistic-concurrency
 // versioning maintained by the backend — pass it back unchanged on update to detect conflicting
 // concurrent writes. Version serializes as a JSON string in proto3, so the ",string" tag is required.
 type OutboundSCIMConfiguration struct {
-	ID                 string         `json:"id,omitempty"`
-	Name               string         `json:"name,omitempty"`
 	AppID              string         `json:"appId,omitempty"`
 	Configuration      map[string]any `json:"configuration,omitempty"`
 	Enabled            bool           `json:"enabled,omitempty"`
@@ -1614,19 +1614,19 @@ type OutboundSCIMConfiguration struct {
 	Version            int64          `json:"version,string,omitempty"`
 }
 
-// CreateOutboundSCIMConfigurationRequest is the request body for creating an outbound SCIM configuration.
+// CreateOutboundSCIMConfigurationRequest is the request body for creating an outbound SCIM
+// configuration on the federated SSO app identified by AppID. The connector name is derived
+// server-side from the app.
 type CreateOutboundSCIMConfigurationRequest struct {
-	Name          string         `json:"name"`
 	AppID         string         `json:"appId"`
 	Configuration map[string]any `json:"configuration,omitempty"`
 }
 
 // UpdateOutboundSCIMConfigurationRequest is the request body for updating an outbound SCIM
-// configuration. Name is optional — leave empty to preserve the existing name. Version must be
-// the value returned by the last Load/LoadAll/Create/Update so the backend can reject stale writes.
+// configuration. AppID identifies which app's SCIM configuration to update. Version must be
+// the value returned by the last Load/Create/Update so the backend can reject stale writes.
 type UpdateOutboundSCIMConfigurationRequest struct {
-	ID            string         `json:"id"`
-	Name          string         `json:"name,omitempty"`
+	AppID         string         `json:"appId"`
 	Configuration map[string]any `json:"configuration,omitempty"`
 	Version       int64          `json:"version,string,omitempty"`
 }

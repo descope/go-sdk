@@ -2528,14 +2528,14 @@ type MockOutboundSCIM struct {
 	UpdateConfigurationResponse *descope.OutboundSCIMConfiguration
 	UpdateConfigurationError    error
 
-	DeleteConfigurationAssert func(id string)
+	DeleteConfigurationAssert func(appID string)
 	DeleteConfigurationError  error
 
-	LoadConfigurationAssert   func(id string)
+	LoadConfigurationAssert   func(appID string)
 	LoadConfigurationResponse *descope.OutboundSCIMConfiguration
 	LoadConfigurationError    error
 
-	SetEnabledAssert   func(id string, enabled bool)
+	SetEnabledAssert   func(appID string, enabled bool)
 	SetEnabledResponse *descope.OutboundSCIMConfiguration
 	SetEnabledError    error
 }
@@ -2554,23 +2554,23 @@ func (m *MockOutboundSCIM) UpdateConfiguration(_ context.Context, request *desco
 	return m.UpdateConfigurationResponse, m.UpdateConfigurationError
 }
 
-func (m *MockOutboundSCIM) DeleteConfiguration(_ context.Context, id string) error {
+func (m *MockOutboundSCIM) DeleteConfiguration(_ context.Context, appID string) error {
 	if m.DeleteConfigurationAssert != nil {
-		m.DeleteConfigurationAssert(id)
+		m.DeleteConfigurationAssert(appID)
 	}
 	return m.DeleteConfigurationError
 }
 
-func (m *MockOutboundSCIM) LoadConfiguration(_ context.Context, id string) (*descope.OutboundSCIMConfiguration, error) {
+func (m *MockOutboundSCIM) LoadConfiguration(_ context.Context, appID string) (*descope.OutboundSCIMConfiguration, error) {
 	if m.LoadConfigurationAssert != nil {
-		m.LoadConfigurationAssert(id)
+		m.LoadConfigurationAssert(appID)
 	}
 	return m.LoadConfigurationResponse, m.LoadConfigurationError
 }
 
-func (m *MockOutboundSCIM) SetEnabled(_ context.Context, id string, enabled bool) (*descope.OutboundSCIMConfiguration, error) {
+func (m *MockOutboundSCIM) SetEnabled(_ context.Context, appID string, enabled bool) (*descope.OutboundSCIMConfiguration, error) {
 	if m.SetEnabledAssert != nil {
-		m.SetEnabledAssert(id, enabled)
+		m.SetEnabledAssert(appID, enabled)
 	}
 	return m.SetEnabledResponse, m.SetEnabledError
 }

@@ -1269,27 +1269,29 @@ type OutboundApplication interface {
 }
 
 // Provides functions for managing outbound SCIM configurations in a project.
+// A project has at most one outbound SCIM configuration per federated SSO application,
+// so every operation is keyed by the federated app id.
 type OutboundSCIM interface {
-	// Create a new outbound SCIM configuration for an outbound application. The backend generates
-	// and returns the configuration ID and the initial version.
+	// Create a new outbound SCIM configuration for a federated SSO application. The connector
+	// name is derived server-side from the app.
 	CreateConfiguration(ctx context.Context, request *descope.CreateOutboundSCIMConfigurationRequest) (*descope.OutboundSCIMConfiguration, error)
 
-	// Update an existing outbound SCIM configuration. The version is optimistic-concurrency
-	// versioned — pass the value returned by the last Load/Create/Update so the backend can reject
-	// stale writes. Leave Name empty to preserve the existing name.
+	// Update the outbound SCIM configuration attached to a federated SSO app. Version is
+	// optimistic-concurrency versioned — pass the value returned by the last Load/Create/Update
+	// so the backend can reject stale writes.
 	UpdateConfiguration(ctx context.Context, request *descope.UpdateOutboundSCIMConfigurationRequest) (*descope.OutboundSCIMConfiguration, error)
 
-	// Delete an outbound SCIM configuration by ID.
+	// Delete the outbound SCIM configuration attached to the given federated SSO app.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
-	DeleteConfiguration(ctx context.Context, id string) error
+	DeleteConfiguration(ctx context.Context, appID string) error
 
-	// Load an outbound SCIM configuration by ID.
-	LoadConfiguration(ctx context.Context, id string) (*descope.OutboundSCIMConfiguration, error)
+	// Load the outbound SCIM configuration attached to the given federated SSO app.
+	LoadConfiguration(ctx context.Context, appID string) (*descope.OutboundSCIMConfiguration, error)
 
-	// SetEnabled enables or disables an outbound SCIM configuration by ID. Returns the updated
-	// configuration.
-	SetEnabled(ctx context.Context, id string, enabled bool) (*descope.OutboundSCIMConfiguration, error)
+	// SetEnabled enables or disables the outbound SCIM configuration attached to the given
+	// federated SSO app. Returns the updated configuration.
+	SetEnabled(ctx context.Context, appID string, enabled bool) (*descope.OutboundSCIMConfiguration, error)
 }
 
 // Provides functions for managing engines in a project.

@@ -19,9 +19,6 @@ func (s *outboundSCIM) CreateConfiguration(ctx context.Context, request *descope
 	if request == nil {
 		return nil, utils.NewInvalidArgumentError("request")
 	}
-	if request.Name == "" {
-		return nil, utils.NewInvalidArgumentError("request.Name")
-	}
 	if request.AppID == "" {
 		return nil, utils.NewInvalidArgumentError("request.AppID")
 	}
@@ -29,7 +26,6 @@ func (s *outboundSCIM) CreateConfiguration(ctx context.Context, request *descope
 	// Descope grpc-gateway rejects unknown JSON request fields — build the body from an explicit
 	// map so only the proto-declared fields are sent.
 	body := map[string]any{
-		"name":          request.Name,
 		"appId":         request.AppID,
 		"configuration": request.Configuration,
 	}
@@ -44,8 +40,8 @@ func (s *outboundSCIM) UpdateConfiguration(ctx context.Context, request *descope
 	if request == nil {
 		return nil, utils.NewInvalidArgumentError("request")
 	}
-	if request.ID == "" {
-		return nil, utils.NewInvalidArgumentError("request.ID")
+	if request.AppID == "" {
+		return nil, utils.NewInvalidArgumentError("request.AppID")
 	}
 
 	// Proto int64 Version must serialize as a JSON string — utils.Marshal honors the ",string"
@@ -57,31 +53,31 @@ func (s *outboundSCIM) UpdateConfiguration(ctx context.Context, request *descope
 	return s.unmarshalConfigurationResponse(httpRes)
 }
 
-func (s *outboundSCIM) DeleteConfiguration(ctx context.Context, id string) error {
-	if id == "" {
-		return utils.NewInvalidArgumentError("id")
+func (s *outboundSCIM) DeleteConfiguration(ctx context.Context, appID string) error {
+	if appID == "" {
+		return utils.NewInvalidArgumentError("appID")
 	}
-	req := map[string]any{"id": id}
+	req := map[string]any{"appId": appID}
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementOutboundSCIMDelete(), req, nil, "")
 	return err
 }
 
-func (s *outboundSCIM) LoadConfiguration(ctx context.Context, id string) (*descope.OutboundSCIMConfiguration, error) {
-	if id == "" {
-		return nil, utils.NewInvalidArgumentError("id")
+func (s *outboundSCIM) LoadConfiguration(ctx context.Context, appID string) (*descope.OutboundSCIMConfiguration, error) {
+	if appID == "" {
+		return nil, utils.NewInvalidArgumentError("appID")
 	}
-	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementOutboundSCIMLoad()+"/"+id, nil, "")
+	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementOutboundSCIMLoad()+"/"+appID, nil, "")
 	if err != nil {
 		return nil, err
 	}
 	return s.unmarshalConfigurationResponse(res)
 }
 
-func (s *outboundSCIM) SetEnabled(ctx context.Context, id string, enabled bool) (*descope.OutboundSCIMConfiguration, error) {
-	if id == "" {
-		return nil, utils.NewInvalidArgumentError("id")
+func (s *outboundSCIM) SetEnabled(ctx context.Context, appID string, enabled bool) (*descope.OutboundSCIMConfiguration, error) {
+	if appID == "" {
+		return nil, utils.NewInvalidArgumentError("appID")
 	}
-	body := map[string]any{"id": id, "enabled": enabled}
+	body := map[string]any{"appId": appID, "enabled": enabled}
 	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementOutboundSCIMSetEnabled(), body, nil, "")
 	if err != nil {
 		return nil, err

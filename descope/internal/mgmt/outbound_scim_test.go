@@ -14,8 +14,6 @@ import (
 func TestOutboundSCIMCreateSuccess(t *testing.T) {
 	// Version arrives as a JSON string in proto3 — verify the SDK unmarshals it back into int64.
 	response := map[string]any{"configuration": map[string]any{
-		"id":            "scim-1",
-		"name":          "cfg1",
 		"appId":         "app-1",
 		"configuration": map[string]any{"target": "https://scim.example.com"},
 		"enabled":       true,
@@ -25,29 +23,23 @@ func TestOutboundSCIMCreateSuccess(t *testing.T) {
 		assert.Equal(t, "/v1/mgmt/outbound/scim/create", r.URL.Path)
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		assert.Equal(t, "cfg1", req["name"])
 		assert.Equal(t, "app-1", req["appId"])
 		cfg, ok := req["configuration"].(map[string]any)
 		require.True(t, ok)
 		assert.Equal(t, "https://scim.example.com", cfg["target"])
-		// id/version/enabled must NOT be sent on create (unknown-field-rejecting gateway).
-		_, hasID := req["id"]
-		_, hasVersion := req["version"]
-		_, hasEnabled := req["enabled"]
-		assert.False(t, hasID)
-		assert.False(t, hasVersion)
-		assert.False(t, hasEnabled)
+		// id/name/version/enabled must NOT be sent on create (unknown-field-rejecting gateway).
+		for _, k := range []string{"id", "name", "version", "enabled"} {
+			_, has := req[k]
+			assert.False(t, has, "unexpected key %q on create body", k)
+		}
 	}, response))
 
 	cfg, err := mgmt.OutboundSCIM().CreateConfiguration(context.Background(), &descope.CreateOutboundSCIMConfigurationRequest{
-		Name:          "cfg1",
 		AppID:         "app-1",
 		Configuration: map[string]any{"target": "https://scim.example.com"},
 	})
 	require.NoError(t, err)
 	require.NotNil(t, cfg)
-	assert.Equal(t, "scim-1", cfg.ID)
-	assert.Equal(t, "cfg1", cfg.Name)
 	assert.Equal(t, "app-1", cfg.AppID)
 	assert.True(t, cfg.Enabled)
 	assert.Equal(t, int64(42), cfg.Version)
@@ -65,13 +57,8 @@ func TestOutboundSCIMCreateError(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, cfg)
 
-	// missing Name
-	cfg, err = mgmt.OutboundSCIM().CreateConfiguration(context.Background(), &descope.CreateOutboundSCIMConfigurationRequest{AppID: "app-1"})
-	require.Error(t, err)
-	require.Nil(t, cfg)
-
 	// missing AppID
-	cfg, err = mgmt.OutboundSCIM().CreateConfiguration(context.Background(), &descope.CreateOutboundSCIMConfigurationRequest{Name: "cfg1"})
+	cfg, err = mgmt.OutboundSCIM().CreateConfiguration(context.Background(), &descope.CreateOutboundSCIMConfigurationRequest{})
 	require.Error(t, err)
 	require.Nil(t, cfg)
 	require.False(t, called)
@@ -79,8 +66,6 @@ func TestOutboundSCIMCreateError(t *testing.T) {
 
 func TestOutboundSCIMUpdateSuccess(t *testing.T) {
 	response := map[string]any{"configuration": map[string]any{
-		"id":      "scim-1",
-		"name":    "cfg1-renamed",
 		"appId":   "app-1",
 		"version": "43",
 	}}
@@ -88,8 +73,7 @@ func TestOutboundSCIMUpdateSuccess(t *testing.T) {
 		assert.Equal(t, "/v1/mgmt/outbound/scim/update", r.URL.Path)
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		assert.Equal(t, "scim-1", req["id"])
-		assert.Equal(t, "cfg1-renamed", req["name"])
+		assert.Equal(t, "app-1", req["appId"])
 		// Version int64 must serialize as a JSON string.
 		assert.Equal(t, "42", req["version"])
 		cfg, ok := req["configuration"].(map[string]any)
@@ -98,15 +82,13 @@ func TestOutboundSCIMUpdateSuccess(t *testing.T) {
 	}, response))
 
 	cfg, err := mgmt.OutboundSCIM().UpdateConfiguration(context.Background(), &descope.UpdateOutboundSCIMConfigurationRequest{
-		ID:            "scim-1",
-		Name:          "cfg1-renamed",
+		AppID:         "app-1",
 		Configuration: map[string]any{"target": "https://scim.example.com/v2"},
 		Version:       42,
 	})
 	require.NoError(t, err)
 	require.NotNil(t, cfg)
-	assert.Equal(t, "scim-1", cfg.ID)
-	assert.Equal(t, "cfg1-renamed", cfg.Name)
+	assert.Equal(t, "app-1", cfg.AppID)
 	assert.Equal(t, int64(43), cfg.Version)
 }
 
@@ -121,8 +103,8 @@ func TestOutboundSCIMUpdateError(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, cfg)
 
-	// missing ID
-	cfg, err = mgmt.OutboundSCIM().UpdateConfiguration(context.Background(), &descope.UpdateOutboundSCIMConfigurationRequest{Name: "cfg"})
+	// missing AppID
+	cfg, err = mgmt.OutboundSCIM().UpdateConfiguration(context.Background(), &descope.UpdateOutboundSCIMConfigurationRequest{})
 	require.Error(t, err)
 	require.Nil(t, cfg)
 	require.False(t, called)
@@ -133,9 +115,9 @@ func TestOutboundSCIMDeleteSuccess(t *testing.T) {
 		assert.Equal(t, "/v1/mgmt/outbound/scim/delete", r.URL.Path)
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		assert.Equal(t, "scim-1", req["id"])
+		assert.Equal(t, "app-1", req["appId"])
 	}))
-	err := mgmt.OutboundSCIM().DeleteConfiguration(context.Background(), "scim-1")
+	err := mgmt.OutboundSCIM().DeleteConfiguration(context.Background(), "app-1")
 	require.NoError(t, err)
 }
 
@@ -152,8 +134,6 @@ func TestOutboundSCIMDeleteError(t *testing.T) {
 
 func TestOutboundSCIMLoadSuccess(t *testing.T) {
 	response := map[string]any{"configuration": map[string]any{
-		"id":                 "scim-1",
-		"name":               "cfg1",
 		"appId":              "app-1",
 		"lastExportTime":     1720000000,
 		"lastProcessingTime": 1720000500,
@@ -161,14 +141,13 @@ func TestOutboundSCIMLoadSuccess(t *testing.T) {
 		"version":            "7",
 	}}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
-		assert.Contains(t, r.URL.Path, "/v1/mgmt/outbound/scim/scim-1")
+		assert.Contains(t, r.URL.Path, "/v1/mgmt/outbound/scim/app-1")
 	}, response))
 
-	cfg, err := mgmt.OutboundSCIM().LoadConfiguration(context.Background(), "scim-1")
+	cfg, err := mgmt.OutboundSCIM().LoadConfiguration(context.Background(), "app-1")
 	require.NoError(t, err)
 	require.NotNil(t, cfg)
-	assert.Equal(t, "scim-1", cfg.ID)
-	assert.Equal(t, "cfg1", cfg.Name)
+	assert.Equal(t, "app-1", cfg.AppID)
 	assert.Equal(t, int32(1720000000), cfg.LastExportTime)
 	assert.Equal(t, int32(1720000500), cfg.LastProcessingTime)
 	assert.Equal(t, int32(3), cfg.Failures)
@@ -189,7 +168,7 @@ func TestOutboundSCIMLoadError(t *testing.T) {
 
 func TestOutboundSCIMSetEnabledSuccess(t *testing.T) {
 	response := map[string]any{"configuration": map[string]any{
-		"id":      "scim-1",
+		"appId":   "app-1",
 		"enabled": true,
 		"version": "8",
 	}}
@@ -197,28 +176,28 @@ func TestOutboundSCIMSetEnabledSuccess(t *testing.T) {
 		assert.Equal(t, "/v1/mgmt/outbound/scim/enabled/set", r.URL.Path)
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		assert.Equal(t, "scim-1", req["id"])
+		assert.Equal(t, "app-1", req["appId"])
 		assert.Equal(t, true, req["enabled"])
 	}, response))
 
-	cfg, err := mgmt.OutboundSCIM().SetEnabled(context.Background(), "scim-1", true)
+	cfg, err := mgmt.OutboundSCIM().SetEnabled(context.Background(), "app-1", true)
 	require.NoError(t, err)
 	require.NotNil(t, cfg)
-	assert.Equal(t, "scim-1", cfg.ID)
+	assert.Equal(t, "app-1", cfg.AppID)
 	assert.True(t, cfg.Enabled)
 	assert.Equal(t, int64(8), cfg.Version)
 }
 
 func TestOutboundSCIMSetEnabledFalse(t *testing.T) {
 	// Disable — verify enabled:false is transmitted.
-	response := map[string]any{"configuration": map[string]any{"id": "scim-1"}}
+	response := map[string]any{"configuration": map[string]any{"appId": "app-1"}}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		assert.Equal(t, false, req["enabled"])
 	}, response))
 
-	cfg, err := mgmt.OutboundSCIM().SetEnabled(context.Background(), "scim-1", false)
+	cfg, err := mgmt.OutboundSCIM().SetEnabled(context.Background(), "app-1", false)
 	require.NoError(t, err)
 	require.NotNil(t, cfg)
 }
