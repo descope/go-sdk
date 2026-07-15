@@ -2519,9 +2519,6 @@ type MockOutboundSCIM struct {
 	LoadConfigurationResponse *descope.OutboundSCIMConfiguration
 	LoadConfigurationError    error
 
-	LoadAllConfigurationsResponse []*descope.OutboundSCIMConfiguration
-	LoadAllConfigurationsError    error
-
 	SetEnabledAssert   func(id string, enabled bool)
 	SetEnabledResponse *descope.OutboundSCIMConfiguration
 	SetEnabledError    error
@@ -2553,10 +2550,6 @@ func (m *MockOutboundSCIM) LoadConfiguration(_ context.Context, id string) (*des
 		m.LoadConfigurationAssert(id)
 	}
 	return m.LoadConfigurationResponse, m.LoadConfigurationError
-}
-
-func (m *MockOutboundSCIM) LoadAllConfigurations(_ context.Context) ([]*descope.OutboundSCIMConfiguration, error) {
-	return m.LoadAllConfigurationsResponse, m.LoadAllConfigurationsError
 }
 
 func (m *MockOutboundSCIM) SetEnabled(_ context.Context, id string, enabled bool) (*descope.OutboundSCIMConfiguration, error) {

@@ -1276,9 +1276,6 @@ type OutboundSCIM interface {
 	// Load an outbound SCIM configuration by ID.
 	LoadConfiguration(ctx context.Context, id string) (*descope.OutboundSCIMConfiguration, error)
 
-	// Load all outbound SCIM configurations for the project.
-	LoadAllConfigurations(ctx context.Context) ([]*descope.OutboundSCIMConfiguration, error)
-
 	// SetEnabled enables or disables an outbound SCIM configuration by ID. Returns the updated
 	// configuration.
 	SetEnabled(ctx context.Context, id string, enabled bool) (*descope.OutboundSCIMConfiguration, error)

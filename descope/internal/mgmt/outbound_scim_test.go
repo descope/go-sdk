@@ -187,30 +187,6 @@ func TestOutboundSCIMLoadError(t *testing.T) {
 	require.False(t, called)
 }
 
-func TestOutboundSCIMLoadAllSuccess(t *testing.T) {
-	response := map[string]any{"configurations": []map[string]any{
-		{"id": "scim-1", "name": "cfg1", "version": "1"},
-		{"id": "scim-2", "name": "cfg2", "version": "2"},
-	}}
-	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
-		assert.Equal(t, "/v1/mgmt/outbound/scim", r.URL.Path)
-	}, response))
-
-	cfgs, err := mgmt.OutboundSCIM().LoadAllConfigurations(context.Background())
-	require.NoError(t, err)
-	require.Len(t, cfgs, 2)
-	assert.Equal(t, "scim-1", cfgs[0].ID)
-	assert.Equal(t, "cfg2", cfgs[1].Name)
-	assert.Equal(t, int64(2), cfgs[1].Version)
-}
-
-func TestOutboundSCIMLoadAllError(t *testing.T) {
-	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	cfgs, err := mgmt.OutboundSCIM().LoadAllConfigurations(context.Background())
-	require.Error(t, err)
-	require.Nil(t, cfgs)
-}
-
 func TestOutboundSCIMSetEnabledSuccess(t *testing.T) {
 	response := map[string]any{"configuration": map[string]any{
 		"id":      "scim-1",

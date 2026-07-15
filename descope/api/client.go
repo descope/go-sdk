@@ -281,7 +281,6 @@ var (
 			outboundSCIMUpdate:                         "mgmt/outbound/scim/update",
 			outboundSCIMDelete:                         "mgmt/outbound/scim/delete",
 			outboundSCIMLoad:                           "mgmt/outbound/scim",
-			outboundSCIMLoadAll:                        "mgmt/outbound/scim",
 			outboundSCIMSetEnabled:                     "mgmt/outbound/scim/enabled/set",
 			thirdPartyApplicationCreate:                "mgmt/thirdparty/app/create",
 			thirdPartyApplicationUpdate:                "mgmt/thirdparty/app/update",
@@ -633,7 +632,6 @@ type mgmtEndpoints struct {
 	outboundSCIMUpdate     string
 	outboundSCIMDelete     string
 	outboundSCIMLoad       string
-	outboundSCIMLoadAll    string
 	outboundSCIMSetEnabled string
 
 	thirdPartyApplicationCreate              string
@@ -1695,10 +1693,6 @@ func (e *endpoints) ManagementOutboundSCIMDelete() string {
 
 func (e *endpoints) ManagementOutboundSCIMLoad() string {
 	return path.Join(e.version, e.mgmt.outboundSCIMLoad)
-}
-
-func (e *endpoints) ManagementOutboundSCIMLoadAll() string {
-	return path.Join(e.version, e.mgmt.outboundSCIMLoadAll)
 }
 
 func (e *endpoints) ManagementOutboundSCIMSetEnabled() string {

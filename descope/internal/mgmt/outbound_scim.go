@@ -77,20 +77,6 @@ func (s *outboundSCIM) LoadConfiguration(ctx context.Context, id string) (*desco
 	return s.unmarshalConfigurationResponse(res)
 }
 
-func (s *outboundSCIM) LoadAllConfigurations(ctx context.Context) ([]*descope.OutboundSCIMConfiguration, error) {
-	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementOutboundSCIMLoadAll(), nil, "")
-	if err != nil {
-		return nil, err
-	}
-	tmp := &struct {
-		Configurations []*descope.OutboundSCIMConfiguration `json:"configurations"`
-	}{}
-	if err = utils.Unmarshal([]byte(res.BodyStr), tmp); err != nil {
-		return nil, err
-	}
-	return tmp.Configurations, nil
-}
-
 func (s *outboundSCIM) SetEnabled(ctx context.Context, id string, enabled bool) (*descope.OutboundSCIMConfiguration, error) {
 	if id == "" {
 		return nil, utils.NewInvalidArgumentError("id")
