@@ -1153,6 +1153,8 @@ type Group struct {
 	ID      string        `json:"id"`
 	Display string        `json:"display,omitempty"`
 	Members []GroupMember `json:"members,omitempty"`
+	// Source is the origin of the group: "scim" or "jit" (SSO SAML/OIDC assertion groups).
+	Source string `json:"source,omitempty"`
 }
 
 type FlowList struct {
