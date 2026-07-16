@@ -1600,6 +1600,150 @@ type BatchUploadOutboundAppTokensResponse struct {
 	Failures []*OutboundAppTokenUploadFailure `json:"failures"`
 }
 
+// OutboundSCIMConfiguration represents an outbound SCIM configuration attached to a federated
+// SSO application. The configuration is identified end-to-end by AppID; there is no separate
+// id/name because both are derived from the SSO app.
+// LastExportTime and LastProcessingTime are epoch seconds. Version is optimistic-concurrency
+// versioning maintained by the backend — pass it back unchanged on update to detect conflicting
+// concurrent writes. Version serializes as a JSON string in proto3, so the ",string" tag is required.
+type OutboundSCIMConfiguration struct {
+	AppID              string                         `json:"appId,omitempty"`
+	Configuration      *OutboundSCIMConfigurationData `json:"configuration,omitempty"`
+	Enabled            bool                           `json:"enabled,omitempty"`
+	LastExportTime     int32                          `json:"lastExportTime,omitempty"`
+	LastProcessingTime int32                          `json:"lastProcessingTime,omitempty"`
+	Failures           int32                          `json:"failures,omitempty"`
+	Version            int64                          `json:"version,string,omitempty"`
+}
+
+// OutboundSCIMConfigurationData is the provider-specific configuration blob for an
+// outbound SCIM connector. Field names mirror the SCIM connector template
+// (content/connectors/templates/scim/metadata.json). Secret-typed fields
+// (hmacSecret, awsAccessKeyId, awsSecretAccessKey, rfc9421PrivateKey) are stored
+// encrypted server-side; the backend returns them masked on Load — never plaintext.
+type OutboundSCIMConfigurationData struct {
+	// BaseURL is the SCIM SP root, e.g. "https://scim.example.com". Required.
+	BaseURL string `json:"baseUrl"`
+	// IgnoreUnverifiedPhones drops phone numbers that aren't verified from outgoing SCIM payloads.
+	IgnoreUnverifiedPhones bool `json:"ignoreUnverifiedPhones,omitempty"`
+	// IgnoreUnverifiedEmails drops emails that aren't verified from outgoing SCIM payloads.
+	IgnoreUnverifiedEmails bool `json:"ignoreUnverifiedEmails,omitempty"`
+	// UserMapping maps Descope user attributes to SCIM attributes.
+	UserMapping []OutboundSCIMUserMapping `json:"userMapping,omitempty"`
+	// Authentication carries HTTP auth used for every SCIM request.
+	Authentication *OutboundSCIMHTTPAuth `json:"authentication,omitempty"`
+	// Headers are extra HTTP headers sent with every SCIM request. Values may be secret-typed.
+	Headers []OutboundSCIMHeader `json:"headers,omitempty"`
+	// HMACSecret signs the base64-encoded payload; the signature is delivered in
+	// the "x-descope-webhook-s256" header. Secret-typed — returned masked on Load.
+	HMACSecret string `json:"hmacSecret,omitempty"`
+	// AWSAuthType enables AWS Signature V4 signing. One of "none" (default) | "credentials".
+	AWSAuthType string `json:"awsAuthType,omitempty"`
+	// AWSAccessKeyID is required when AWSAuthType == "credentials". Secret-typed.
+	AWSAccessKeyID string `json:"awsAccessKeyId,omitempty"`
+	// AWSSecretAccessKey is required when AWSAuthType == "credentials". Secret-typed.
+	AWSSecretAccessKey string `json:"awsSecretAccessKey,omitempty"`
+	// AWSService is the AWS service to target (e.g. "lambda", "execute-api"). Required when AWSAuthType == "credentials".
+	AWSService string `json:"awsService,omitempty"`
+	// RFC9421SigningEnabled turns on RFC 9421 HTTP Message Signatures.
+	RFC9421SigningEnabled bool `json:"rfc9421SigningEnabled,omitempty"`
+	// RFC9421PrivateKey is a PEM private key (ECDSA/Ed25519/RSA) or HMAC secret. Secret-typed.
+	RFC9421PrivateKey string `json:"rfc9421PrivateKey,omitempty"`
+	// RFC9421KeyID is the key id included in the signature metadata.
+	RFC9421KeyID string `json:"rfc9421KeyId,omitempty"`
+	// RFC9421Components lists HTTP message components covered by the signature
+	// (comma-separated, e.g. "@method,@target-uri,@authority"). Empty means defaults.
+	RFC9421Components string `json:"rfc9421Components,omitempty"`
+	// RFC9421SignatureTTL is how long the signature is valid, in seconds. Default 300.
+	RFC9421SignatureTTL int32 `json:"rfc9421SignatureTTL,omitempty"`
+	// Insecure disables TLS certificate verification. Do not use in production.
+	Insecure bool `json:"insecure,omitempty"`
+}
+
+// OutboundSCIMUserMapping maps one Descope user attribute to a SCIM SP attribute.
+// SrcKey is the Descope side (dot-path allowed, e.g. "customAttributes.foo").
+type OutboundSCIMUserMapping struct {
+	SrcKey    string `json:"srcKey"`
+	Namespace string `json:"namespace"`
+	DestKey   string `json:"destKey"`
+}
+
+// OutboundSCIMHeader is a single HTTP header sent with every SCIM request. Secret
+// headers are stored encrypted server-side and returned masked on Load.
+type OutboundSCIMHeader struct {
+	Key    string `json:"key"`
+	Value  string `json:"value"`
+	Secret bool   `json:"secret,omitempty"`
+}
+
+// OutboundSCIMHTTPAuthMethod enumerates supported HTTP auth methods.
+type OutboundSCIMHTTPAuthMethod string
+
+const (
+	OutboundSCIMAuthMethodNone                    OutboundSCIMHTTPAuthMethod = "none"
+	OutboundSCIMAuthMethodBearerToken             OutboundSCIMHTTPAuthMethod = "bearerToken"
+	OutboundSCIMAuthMethodAPIKey                  OutboundSCIMHTTPAuthMethod = "apiKey"
+	OutboundSCIMAuthMethodBasic                   OutboundSCIMHTTPAuthMethod = "basicAuth"
+	OutboundSCIMAuthMethodOAuth2ClientCredentials OutboundSCIMHTTPAuthMethod = "oauth2ClientCredentials" //nolint:gosec // enum discriminator value, not a credential
+)
+
+// OutboundSCIMHTTPAuth is a flat auth-config with a Method discriminator and the
+// method-specific credentials under the matching sub-field. Only the field
+// matching Method is used at request time; others are ignored server-side.
+type OutboundSCIMHTTPAuth struct {
+	Method                  OutboundSCIMHTTPAuthMethod           `json:"method"`
+	BearerToken             string                               `json:"bearerToken,omitempty"`
+	APIKey                  *OutboundSCIMAPIKeyAuth              `json:"apiKey,omitempty"`
+	BasicAuth               *OutboundSCIMBasicAuth               `json:"basicAuth,omitempty"`
+	OAuth2ClientCredentials *OutboundSCIMOAuth2ClientCredentials `json:"oauth2ClientCredentials,omitempty"`
+}
+
+// OutboundSCIMAPIKeyAuth carries an API key credential. Key is the header name, Token is the value.
+type OutboundSCIMAPIKeyAuth struct {
+	Key   string `json:"key"`
+	Token string `json:"token"`
+}
+
+// OutboundSCIMBasicAuth carries HTTP basic-auth credentials.
+type OutboundSCIMBasicAuth struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+// OutboundSCIMOAuth2ClientCredentials carries an OAuth2 client-credentials grant configuration.
+// Scopes is space-separated. AuthStyle is one of "header" (default) or "body".
+type OutboundSCIMOAuth2ClientCredentials struct {
+	ClientID            string                            `json:"clientId"`
+	ClientSecret        string                            `json:"clientSecret"`
+	AuthURL             string                            `json:"authUrl"`
+	Scopes              string                            `json:"scopes,omitempty"`
+	AuthStyle           string                            `json:"authStyle,omitempty"`
+	TokenRequestHeaders []OutboundSCIMOAuth2RequestHeader `json:"tokenRequestHeaders,omitempty"`
+}
+
+// OutboundSCIMOAuth2RequestHeader is one extra header sent to the OAuth2 token endpoint.
+type OutboundSCIMOAuth2RequestHeader struct {
+	Name  string `json:"name"`
+	Value string `json:"value"`
+}
+
+// CreateOutboundSCIMConfigurationRequest is the request body for creating an outbound SCIM
+// configuration on the federated SSO app identified by AppID. The connector name is derived
+// server-side from the app.
+type CreateOutboundSCIMConfigurationRequest struct {
+	AppID         string                         `json:"appId"`
+	Configuration *OutboundSCIMConfigurationData `json:"configuration,omitempty"`
+}
+
+// UpdateOutboundSCIMConfigurationRequest is the request body for updating an outbound SCIM
+// configuration. AppID identifies which app's SCIM configuration to update. Version must be
+// the value returned by the last Load/Create/Update so the backend can reject stale writes.
+type UpdateOutboundSCIMConfigurationRequest struct {
+	AppID         string                         `json:"appId"`
+	Configuration *OutboundSCIMConfigurationData `json:"configuration,omitempty"`
+	Version       int64                          `json:"version,string,omitempty"`
+}
+
 type ThirdPartyApplicationScope struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
