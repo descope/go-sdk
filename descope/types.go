@@ -1684,7 +1684,7 @@ const (
 	OutboundSCIMAuthMethodBearerToken             OutboundSCIMHTTPAuthMethod = "bearerToken"
 	OutboundSCIMAuthMethodAPIKey                  OutboundSCIMHTTPAuthMethod = "apiKey"
 	OutboundSCIMAuthMethodBasic                   OutboundSCIMHTTPAuthMethod = "basicAuth"
-	OutboundSCIMAuthMethodOAuth2ClientCredentials OutboundSCIMHTTPAuthMethod = "oauth2ClientCredentials"
+	OutboundSCIMAuthMethodOAuth2ClientCredentials OutboundSCIMHTTPAuthMethod = "oauth2ClientCredentials" //nolint:gosec // enum discriminator value, not a credential
 )
 
 // OutboundSCIMHTTPAuth is a flat auth-config with a Method discriminator and the
