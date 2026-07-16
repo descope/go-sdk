@@ -14,10 +14,14 @@ import (
 func TestOutboundSCIMCreateSuccess(t *testing.T) {
 	// Version arrives as a JSON string in proto3 — verify the SDK unmarshals it back into int64.
 	response := map[string]any{"configuration": map[string]any{
-		"appId":         "app-1",
-		"configuration": map[string]any{"target": "https://scim.example.com"},
-		"enabled":       true,
-		"version":       "42",
+		"appId": "app-1",
+		"configuration": map[string]any{
+			"baseUrl":                "https://scim.example.com",
+			"ignoreUnverifiedPhones": true,
+			"authentication":         map[string]any{"method": "bearerToken", "bearerToken": "sekret"},
+		},
+		"enabled": true,
+		"version": "42",
 	}}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		assert.Equal(t, "/v1/mgmt/outbound/scim/create", r.URL.Path)
@@ -26,7 +30,12 @@ func TestOutboundSCIMCreateSuccess(t *testing.T) {
 		assert.Equal(t, "app-1", req["appId"])
 		cfg, ok := req["configuration"].(map[string]any)
 		require.True(t, ok)
-		assert.Equal(t, "https://scim.example.com", cfg["target"])
+		assert.Equal(t, "https://scim.example.com", cfg["baseUrl"])
+		assert.Equal(t, true, cfg["ignoreUnverifiedPhones"])
+		auth, ok := cfg["authentication"].(map[string]any)
+		require.True(t, ok)
+		assert.Equal(t, "bearerToken", auth["method"])
+		assert.Equal(t, "sekret", auth["bearerToken"])
 		// id/name/version/enabled must NOT be sent on create (unknown-field-rejecting gateway).
 		for _, k := range []string{"id", "name", "version", "enabled"} {
 			_, has := req[k]
@@ -35,15 +44,27 @@ func TestOutboundSCIMCreateSuccess(t *testing.T) {
 	}, response))
 
 	cfg, err := mgmt.OutboundSCIM().CreateConfiguration(context.Background(), &descope.CreateOutboundSCIMConfigurationRequest{
-		AppID:         "app-1",
-		Configuration: map[string]any{"target": "https://scim.example.com"},
+		AppID: "app-1",
+		Configuration: &descope.OutboundSCIMConfigurationData{
+			BaseURL:                "https://scim.example.com",
+			IgnoreUnverifiedPhones: true,
+			Authentication: &descope.OutboundSCIMHTTPAuth{
+				Method:      descope.OutboundSCIMAuthMethodBearerToken,
+				BearerToken: "sekret",
+			},
+		},
 	})
 	require.NoError(t, err)
 	require.NotNil(t, cfg)
 	assert.Equal(t, "app-1", cfg.AppID)
 	assert.True(t, cfg.Enabled)
 	assert.Equal(t, int64(42), cfg.Version)
-	assert.Equal(t, "https://scim.example.com", cfg.Configuration["target"])
+	require.NotNil(t, cfg.Configuration)
+	assert.Equal(t, "https://scim.example.com", cfg.Configuration.BaseURL)
+	assert.True(t, cfg.Configuration.IgnoreUnverifiedPhones)
+	require.NotNil(t, cfg.Configuration.Authentication)
+	assert.Equal(t, descope.OutboundSCIMAuthMethodBearerToken, cfg.Configuration.Authentication.Method)
+	assert.Equal(t, "sekret", cfg.Configuration.Authentication.BearerToken)
 }
 
 func TestOutboundSCIMCreateError(t *testing.T) {
@@ -78,12 +99,12 @@ func TestOutboundSCIMUpdateSuccess(t *testing.T) {
 		assert.Equal(t, "42", req["version"])
 		cfg, ok := req["configuration"].(map[string]any)
 		require.True(t, ok)
-		assert.Equal(t, "https://scim.example.com/v2", cfg["target"])
+		assert.Equal(t, "https://scim.example.com/v2", cfg["baseUrl"])
 	}, response))
 
 	cfg, err := mgmt.OutboundSCIM().UpdateConfiguration(context.Background(), &descope.UpdateOutboundSCIMConfigurationRequest{
 		AppID:         "app-1",
-		Configuration: map[string]any{"target": "https://scim.example.com/v2"},
+		Configuration: &descope.OutboundSCIMConfigurationData{BaseURL: "https://scim.example.com/v2"},
 		Version:       42,
 	})
 	require.NoError(t, err)
@@ -133,8 +154,24 @@ func TestOutboundSCIMDeleteError(t *testing.T) {
 }
 
 func TestOutboundSCIMLoadSuccess(t *testing.T) {
+	// Load exercises the concrete configuration shape end-to-end — baseUrl,
+	// ignoreUnverifiedEmails, userMapping, authentication, headers, and awsAuthType
+	// all round-trip into the typed struct.
 	response := map[string]any{"configuration": map[string]any{
-		"appId":              "app-1",
+		"appId": "app-1",
+		"configuration": map[string]any{
+			"baseUrl":                "https://scim.example.com",
+			"ignoreUnverifiedEmails": true,
+			"userMapping": []map[string]any{
+				{"srcKey": "customAttributes.foo", "namespace": "urn:lulu", "destKey": "cstm"},
+			},
+			"authentication": map[string]any{
+				"method":    "basicAuth",
+				"basicAuth": map[string]any{"username": "u", "password": "p"},
+			},
+			"headers":     []map[string]any{{"key": "X-Trace", "value": "1", "secret": false}},
+			"awsAuthType": "none",
+		},
 		"lastExportTime":     1720000000,
 		"lastProcessingTime": 1720000500,
 		"failures":           3,
@@ -152,6 +189,23 @@ func TestOutboundSCIMLoadSuccess(t *testing.T) {
 	assert.Equal(t, int32(1720000500), cfg.LastProcessingTime)
 	assert.Equal(t, int32(3), cfg.Failures)
 	assert.Equal(t, int64(7), cfg.Version)
+	require.NotNil(t, cfg.Configuration)
+	assert.Equal(t, "https://scim.example.com", cfg.Configuration.BaseURL)
+	assert.True(t, cfg.Configuration.IgnoreUnverifiedEmails)
+	assert.Equal(t, "none", cfg.Configuration.AWSAuthType)
+	require.Len(t, cfg.Configuration.UserMapping, 1)
+	assert.Equal(t, "customAttributes.foo", cfg.Configuration.UserMapping[0].SrcKey)
+	assert.Equal(t, "urn:lulu", cfg.Configuration.UserMapping[0].Namespace)
+	assert.Equal(t, "cstm", cfg.Configuration.UserMapping[0].DestKey)
+	require.NotNil(t, cfg.Configuration.Authentication)
+	assert.Equal(t, descope.OutboundSCIMAuthMethodBasic, cfg.Configuration.Authentication.Method)
+	require.NotNil(t, cfg.Configuration.Authentication.BasicAuth)
+	assert.Equal(t, "u", cfg.Configuration.Authentication.BasicAuth.Username)
+	assert.Equal(t, "p", cfg.Configuration.Authentication.BasicAuth.Password)
+	require.Len(t, cfg.Configuration.Headers, 1)
+	assert.Equal(t, "X-Trace", cfg.Configuration.Headers[0].Key)
+	assert.Equal(t, "1", cfg.Configuration.Headers[0].Value)
+	assert.False(t, cfg.Configuration.Headers[0].Secret)
 }
 
 func TestOutboundSCIMLoadError(t *testing.T) {
