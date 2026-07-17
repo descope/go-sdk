@@ -1981,3 +1981,134 @@ type ApplyJWTTemplateFromLibraryRequest struct {
 	TagsOverride        []string       `json:"tagsOverride,omitempty"`
 	TemplateOverride    map[string]any `json:"templateOverride,omitempty"`
 }
+
+// MCPServerDynamicClientRegistration configures dynamic client registration for an MCP server.
+type MCPServerDynamicClientRegistration struct {
+	Enabled                        bool   `json:"enabled,omitempty"`
+	DisableApprovedScopesAsDefault bool   `json:"disableApprovedScopesAsDefault,omitempty"`
+	FlowID                         string `json:"flowId,omitempty"`
+}
+
+// MCPApplicationScope is a single scope offered by an MCP server.
+type MCPApplicationScope struct {
+	Name        string   `json:"name,omitempty"`
+	Description string   `json:"description,omitempty"`
+	Optional    bool     `json:"optional,omitempty"`
+	Values      []string `json:"values,omitempty"`
+}
+
+// MCPApprovedScopes groups the scopes approved for dynamically registered MCP clients.
+type MCPApprovedScopes struct {
+	PermissionsScopes []*MCPApplicationScope `json:"permissionsScopes,omitempty"`
+	AttributesScopes  []*MCPApplicationScope `json:"attributesScopes,omitempty"`
+	ConnectionsScopes []*MCPApplicationScope `json:"connectionsScopes,omitempty"`
+}
+
+// MCPSessionSettings configures session/token behavior for an MCP server.
+type MCPSessionSettings struct {
+	Enabled                       bool   `json:"enabled,omitempty"`
+	RefreshTokenExpiration        int32  `json:"refreshTokenExpiration,omitempty"`
+	RefreshTokenExpirationUnit    string `json:"refreshTokenExpirationUnit,omitempty"`
+	SessionTokenExpiration        int32  `json:"sessionTokenExpiration,omitempty"`
+	SessionTokenExpirationUnit    string `json:"sessionTokenExpirationUnit,omitempty"`
+	UserTemplateID                string `json:"userTemplateId,omitempty"`
+	KeyTemplateID                 string `json:"keyTemplateId,omitempty"`
+	KeySessionTokenExpiration     int32  `json:"keySessionTokenExpiration,omitempty"`
+	KeySessionTokenExpirationUnit string `json:"keySessionTokenExpirationUnit,omitempty"`
+}
+
+// MCPCIMDDomainPolicy is a single client-identity-managed-domain policy entry.
+type MCPCIMDDomainPolicy struct {
+	DomainPattern string `json:"domainPattern,omitempty"`
+	Enabled       bool   `json:"enabled,omitempty"`
+}
+
+// MCPCIMDDomainPolicies groups CIMD domain policies.
+type MCPCIMDDomainPolicies struct {
+	Policies []*MCPCIMDDomainPolicy `json:"policies,omitempty"`
+}
+
+// MCPCIMDSettings configures client-identity-managed-domain behavior for an MCP server.
+type MCPCIMDSettings struct {
+	Enabled        bool                   `json:"enabled,omitempty"`
+	DomainPolicies *MCPCIMDDomainPolicies `json:"domainPolicies,omitempty"`
+}
+
+// MCPServer is an MCP server definition in a project. It is used both as input to
+// Create/Update and as the value returned by Load/LoadAll.
+type MCPServer struct {
+	ID                           string                              `json:"id,omitempty"`
+	Name                         string                              `json:"name,omitempty"`
+	Description                  string                              `json:"description,omitempty"`
+	DynamicRegistration          *MCPServerDynamicClientRegistration `json:"dynamicRegistration,omitempty"`
+	AudienceWhitelist            []string                            `json:"audienceWhitelist,omitempty"`
+	ApprovedScopes               *MCPApprovedScopes                  `json:"approvedScopes,omitempty"`
+	ApprovedCallbackUrls         []string                            `json:"approvedCallbackUrls,omitempty"`
+	LoginPageURL                 string                              `json:"loginPageURL,omitempty"`
+	SessionSettings              *MCPSessionSettings                 `json:"sessionSettings,omitempty"`
+	Tags                         []string                            `json:"tags,omitempty"`
+	Logo                         string                              `json:"logo,omitempty"`
+	CIMDSettings                 *MCPCIMDSettings                    `json:"cimdSettings,omitempty"`
+	SkipConsentScreen            bool                                `json:"skipConsentScreen,omitempty"`
+	ConsentFlowID                string                              `json:"consentFlowId,omitempty"`
+	ConsentFlowHostingURL        string                              `json:"consentFlowHostingURL,omitempty"`
+	ForceAddAllAuthorizationInfo bool                                `json:"forceAddAllAuthorizationInfo,omitempty"`
+}
+
+// MCPServerClient is a client registered against an MCP server.
+type MCPServerClient struct {
+	ID                           string   `json:"id,omitempty"`
+	Name                         string   `json:"name,omitempty"`
+	ClientID                     string   `json:"clientId,omitempty"`
+	MCPServerID                  string   `json:"mcpServerId,omitempty"`
+	ApprovedCallbackUrls         []string `json:"approvedCallbackUrls,omitempty"`
+	Scopes                       []string `json:"scopes,omitempty"`
+	Tags                         []string `json:"tags,omitempty"`
+	Logo                         string   `json:"logo,omitempty"`
+	RegistrationType             string   `json:"registrationType,omitempty"`
+	Status                       string   `json:"status,omitempty"`
+	ForceAddAllAuthorizationInfo bool     `json:"forceAddAllAuthorizationInfo,omitempty"`
+	AllowedTenants               []string `json:"allowedTenants,omitempty"`
+}
+
+// MCPServerClientRequest is the input for creating or updating an MCP server client.
+// ID is required for updates and ignored on create.
+type MCPServerClientRequest struct {
+	ID                           string   `json:"id,omitempty"`
+	MCPServerID                  string   `json:"mcpServerId,omitempty"`
+	Name                         string   `json:"name,omitempty"`
+	ApprovedCallbackUrls         []string `json:"approvedCallbackUrls,omitempty"`
+	Scopes                       []string `json:"scopes,omitempty"`
+	Tags                         []string `json:"tags,omitempty"`
+	Logo                         string   `json:"logo,omitempty"`
+	ForceAddAllAuthorizationInfo bool     `json:"forceAddAllAuthorizationInfo,omitempty"`
+	AllowedTenants               []string `json:"allowedTenants,omitempty"`
+}
+
+// MCPServerClientCreateResponse is returned when creating an MCP server client.
+// Cleartext is the generated client secret and is only returned on create.
+type MCPServerClientCreateResponse struct {
+	ID        string `json:"id,omitempty"`
+	ClientID  string `json:"clientId,omitempty"`
+	Cleartext string `json:"cleartext,omitempty"`
+}
+
+// MCPSortField specifies a sort field and direction for MCP client searches.
+type MCPSortField struct {
+	Field string `json:"field,omitempty"`
+	Desc  bool   `json:"desc,omitempty"`
+}
+
+// MCPServerClientSearchOptions are the filters for searching MCP server clients.
+type MCPServerClientSearchOptions struct {
+	MCPServerID        string          `json:"mcpServerId,omitempty"`
+	Page               int32           `json:"page,omitempty"`
+	Limit              int32           `json:"limit,omitempty"`
+	Text               string          `json:"text,omitempty"`
+	Name               string          `json:"name,omitempty"`
+	ClientID           string          `json:"clientId,omitempty"`
+	Status             string          `json:"status,omitempty"`
+	RegistrationMethod string          `json:"registrationMethod,omitempty"`
+	Tag                string          `json:"tag,omitempty"`
+	Sort               []*MCPSortField `json:"sort,omitempty"`
+}

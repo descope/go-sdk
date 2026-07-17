@@ -328,6 +328,20 @@ var (
 			jwtTemplateLibraryList:                     "mgmt/jwt/templates/library/list",
 			jwtTemplateLibraryLoad:                     "mgmt/jwt/templates/library/load",
 			jwtTemplateLibraryApply:                    "mgmt/jwt/templates/library/apply",
+			mcpServerCreate:                            "mgmt/mcp/server/create",
+			mcpServerUpdate:                            "mgmt/mcp/server/update",
+			mcpServerDelete:                            "mgmt/mcp/server/delete",
+			mcpServerLoad:                              "mgmt/mcp/server/load",
+			mcpServersLoadAll:                          "mgmt/mcp/servers/all",
+			mcpServersDelete:                           "mgmt/mcp/servers/delete",
+			mcpServerClientCreate:                      "mgmt/mcp/server/client/create",
+			mcpServerClientUpdate:                      "mgmt/mcp/server/client/update",
+			mcpServerClientDelete:                      "mgmt/mcp/server/client/delete",
+			mcpServerClientLoad:                        "mgmt/mcp/server/client/load",
+			mcpServerClientSecret:                      "mgmt/mcp/server/client/secret",
+			mcpServerClientSecretRotate:                "mgmt/mcp/server/client/secret/rotate",
+			mcpServerClientsDelete:                     "mgmt/mcp/server/clients/delete",
+			mcpServerClientsSearch:                     "mgmt/mcp/server/clients/search",
 			scopeClaimMappingGet:                       "mgmt/scopeClaimMapping/get",
 			scopeClaimMappingSet:                       "mgmt/scopeClaimMapping/set",
 			scopeClaimMappingDelete:                    "mgmt/scopeClaimMapping/delete",
@@ -679,6 +693,21 @@ type mgmtEndpoints struct {
 	jwtTemplateLibraryList  string
 	jwtTemplateLibraryLoad  string
 	jwtTemplateLibraryApply string
+
+	mcpServerCreate             string
+	mcpServerUpdate             string
+	mcpServerDelete             string
+	mcpServerLoad               string
+	mcpServersLoadAll           string
+	mcpServersDelete            string
+	mcpServerClientCreate       string
+	mcpServerClientUpdate       string
+	mcpServerClientDelete       string
+	mcpServerClientLoad         string
+	mcpServerClientSecret       string
+	mcpServerClientSecretRotate string
+	mcpServerClientsDelete      string
+	mcpServerClientsSearch      string
 
 	scopeClaimMappingGet    string
 	scopeClaimMappingSet    string
@@ -1870,6 +1899,62 @@ func (e *endpoints) ManagementJWTTemplateLibraryLoad() string {
 
 func (e *endpoints) ManagementJWTTemplateLibraryApply() string {
 	return path.Join(e.version, e.mgmt.jwtTemplateLibraryApply)
+}
+
+func (e *endpoints) ManagementMCPServerCreate() string {
+	return path.Join(e.version, e.mgmt.mcpServerCreate)
+}
+
+func (e *endpoints) ManagementMCPServerUpdate() string {
+	return path.Join(e.version, e.mgmt.mcpServerUpdate)
+}
+
+func (e *endpoints) ManagementMCPServerDelete() string {
+	return path.Join(e.version, e.mgmt.mcpServerDelete)
+}
+
+func (e *endpoints) ManagementMCPServerLoad() string {
+	return path.Join(e.version, e.mgmt.mcpServerLoad)
+}
+
+func (e *endpoints) ManagementMCPServersLoadAll() string {
+	return path.Join(e.version, e.mgmt.mcpServersLoadAll)
+}
+
+func (e *endpoints) ManagementMCPServersDelete() string {
+	return path.Join(e.version, e.mgmt.mcpServersDelete)
+}
+
+func (e *endpoints) ManagementMCPServerClientCreate() string {
+	return path.Join(e.version, e.mgmt.mcpServerClientCreate)
+}
+
+func (e *endpoints) ManagementMCPServerClientUpdate() string {
+	return path.Join(e.version, e.mgmt.mcpServerClientUpdate)
+}
+
+func (e *endpoints) ManagementMCPServerClientDelete() string {
+	return path.Join(e.version, e.mgmt.mcpServerClientDelete)
+}
+
+func (e *endpoints) ManagementMCPServerClientLoad() string {
+	return path.Join(e.version, e.mgmt.mcpServerClientLoad)
+}
+
+func (e *endpoints) ManagementMCPServerClientSecret() string {
+	return path.Join(e.version, e.mgmt.mcpServerClientSecret)
+}
+
+func (e *endpoints) ManagementMCPServerClientSecretRotate() string {
+	return path.Join(e.version, e.mgmt.mcpServerClientSecretRotate)
+}
+
+func (e *endpoints) ManagementMCPServerClientsDelete() string {
+	return path.Join(e.version, e.mgmt.mcpServerClientsDelete)
+}
+
+func (e *endpoints) ManagementMCPServerClientsSearch() string {
+	return path.Join(e.version, e.mgmt.mcpServerClientsSearch)
 }
 
 func (e *endpoints) ManagementScopeClaimMappingGet() string {
