@@ -213,6 +213,37 @@ func TestValidateJWT_PlainJWS_NoRegression(t *testing.T) {
 	assert.Equal(t, "someuser", parsed.ID)
 }
 
+func TestValidateJWT_JWE_PreservesEncryptedJWT(t *testing.T) {
+	// The returned Token must carry the original *encrypted* JWT, not the decrypted inner JWS —
+	// otherwise a SessionJWTViaCookie project would rewrite its browser cookie to plaintext.
+	signing, pubJWK := buildSigningKey(t)
+	inner := signInnerJWS(t, signing)
+	encPriv, encPub, _ := genEncKey(t, jwa.RSA_OAEP_256)
+	token := wrapJWE(t, inner, jwa.RSA_OAEP_256, encPub)
+
+	a := newJWEAuth(t, pubJWK, encPriv, nil)
+	parsed, err := ValidateJWT(token, a.publicKeysProvider)
+	require.NoError(t, err)
+	assert.Equal(t, token, parsed.JWT, "returned token must keep the encrypted JWE wire format")
+	assert.NotEqual(t, inner, parsed.JWT, "token.JWT must not be the decrypted inner JWS")
+	assert.Equal(t, 4, countDots(parsed.JWT), "token.JWT must stay a 5-part JWE")
+}
+
+func TestValidateJWT_JWE_DisallowedAlgRejected(t *testing.T) {
+	// The key-wrap alg is read from the (attacker-controllable) header; anything other than what
+	// Descope issues (e.g. RSA1_5) must be refused, not attempted — otherwise it opens an algorithm
+	// downgrade and a Bleichenbacher padding-oracle probe against the recipient key.
+	signing, pubJWK := buildSigningKey(t)
+	inner := signInnerJWS(t, signing)
+	encPriv, encPub, _ := genEncKey(t, jwa.RSA_OAEP_256)
+	token := wrapJWE(t, inner, jwa.RSA1_5, encPub)
+
+	a := newJWEAuth(t, pubJWK, encPriv, nil)
+	_, err := ValidateJWT(token, a.publicKeysProvider)
+	require.Error(t, err)
+	assert.True(t, descope.ErrJWEDecrypt.Is(err), "a disallowed key-wrap alg must be refused with ErrJWEDecrypt")
+}
+
 func TestValidateJWT_JWE_NoKeyConfigured(t *testing.T) {
 	signing, pubJWK := buildSigningKey(t)
 	inner := signInnerJWS(t, signing)

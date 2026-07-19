@@ -242,6 +242,12 @@ func (p *Provider) decryptJWE(compact string) (string, error) {
 	if err := keyAlg.Accept(hdr.Alg); err != nil {
 		return "", descope.ErrJWEDecrypt.WithMessage("Unsupported JWE key algorithm %q", hdr.Alg)
 	}
+	// Pin to the key-wrap algorithms Descope actually issues. The alg is read from the (attacker-
+	// controllable) JWE header, so accepting arbitrary registered algorithms — e.g. RSA1_5 — would
+	// permit an algorithm downgrade and a Bleichenbacher padding-oracle probe against the recipient key.
+	if keyAlg != jwa.RSA_OAEP_256 && keyAlg != jwa.ECDH_ES_A256KW {
+		return "", descope.ErrJWEDecrypt.WithMessage("Disallowed JWE key algorithm %q", hdr.Alg)
+	}
 
 	key, err := p.resolveDecryptKey(hdr.Kid)
 	if err != nil {

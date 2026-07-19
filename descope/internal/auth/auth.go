@@ -797,6 +797,10 @@ func isJWE(token string) bool {
 }
 
 func ValidateJWT(JWT string, publicKeysProvider *Provider) (*descope.Token, error) {
+	// signed is the compact JWS that actually gets verified. For a JWE it's the decrypted inner token;
+	// the original (encrypted) JWT is preserved in the returned Token so cookies and downstream
+	// round-trips keep the on-the-wire format instead of leaking the decrypted plaintext JWS.
+	signed := JWT
 	if isJWE(JWT) {
 		if !publicKeysProvider.decryptionConfigured() {
 			return nil, descope.ErrJWEDecrypt.WithMessage("Received an encrypted (JWE) session token but no decryption key is configured; set Config.PrivateKey or Config.PrivateKeyProvider")
@@ -805,15 +809,14 @@ func ValidateJWT(JWT string, publicKeysProvider *Provider) (*descope.Token, erro
 		if derr != nil {
 			return nil, derr
 		}
-		// Continue with the decrypted inner signed JWS; everything downstream is unchanged.
-		JWT = inner
+		signed = inner
 	}
 
 	leeway := getLeeway(publicKeysProvider)
-	token, err := jwt.Parse([]byte(JWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true), jwt.WithAcceptableSkew(leeway))
+	token, err := jwt.Parse([]byte(signed), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true), jwt.WithAcceptableSkew(leeway))
 	if err != nil {
 		var parseErr error
-		token, parseErr = jwt.Parse([]byte(JWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(false), jwt.WithValidate(false), jwt.WithAcceptableSkew(leeway))
+		token, parseErr = jwt.Parse([]byte(signed), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(false), jwt.WithValidate(false), jwt.WithAcceptableSkew(leeway))
 		if parseErr != nil {
 			err = parseErr
 		}
