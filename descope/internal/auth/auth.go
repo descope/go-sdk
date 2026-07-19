@@ -27,6 +27,8 @@ const (
 type AuthParams struct {
 	ProjectID                  string
 	PublicKey                  string
+	PrivateKey                 string
+	PrivateKeyProvider         func(kid string) (any, error)
 	SessionJWTViaCookie        bool
 	CookieDomain               string
 	CookieSameSite             http.SameSite
@@ -789,12 +791,33 @@ func (auth *authenticationsBase) extractTokens(jRes *descope.JWTResponse) ([]*de
 	return tokens, nil
 }
 
+// isJWE reports whether a compact token is a 5-part JWE (header.encKey.iv.ciphertext.tag) rather
+// than a 3-part JWS. Encrypted session tokens must be decrypted before signature validation.
+func isJWE(token string) bool {
+	return strings.Count(token, ".") == 4
+}
+
 func ValidateJWT(JWT string, publicKeysProvider *Provider) (*descope.Token, error) {
+	// signed is the compact JWS that actually gets verified. For a JWE it's the decrypted inner token;
+	// the original (encrypted) JWT is preserved in the returned Token so cookies and downstream
+	// round-trips keep the on-the-wire format instead of leaking the decrypted plaintext JWS.
+	signed := JWT
+	if isJWE(JWT) {
+		if !publicKeysProvider.decryptionConfigured() {
+			return nil, descope.ErrJWEDecrypt.WithMessage("Received an encrypted (JWE) session token but no decryption key is configured; set Config.PrivateKey or Config.PrivateKeyProvider")
+		}
+		inner, derr := publicKeysProvider.decryptJWE(JWT)
+		if derr != nil {
+			return nil, derr
+		}
+		signed = inner
+	}
+
 	leeway := getLeeway(publicKeysProvider)
-	token, err := jwt.Parse([]byte(JWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true), jwt.WithAcceptableSkew(leeway))
+	token, err := jwt.Parse([]byte(signed), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true), jwt.WithAcceptableSkew(leeway))
 	if err != nil {
 		var parseErr error
-		token, parseErr = jwt.Parse([]byte(JWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(false), jwt.WithValidate(false), jwt.WithAcceptableSkew(leeway))
+		token, parseErr = jwt.Parse([]byte(signed), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(false), jwt.WithValidate(false), jwt.WithAcceptableSkew(leeway))
 		if parseErr != nil {
 			err = parseErr
 		}
