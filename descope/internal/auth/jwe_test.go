@@ -202,9 +202,8 @@ func TestValidateJWT_JWE_PrivateKeyProvider(t *testing.T) {
 
 func TestValidateJWT_PlainJWS_NoRegression(t *testing.T) {
 	// A plain 3-part JWS must validate exactly as before, even with a decryption key configured.
-	_, encPub, _ := genEncKey(t, jwa.RSA_OAEP_256)
-	_ = encPub
-	a, err := newTestAuthConf(&AuthParams{ProjectID: "a", PublicKey: publicKey}, nil, DoOk(nil))
+	encPriv, _, _ := genEncKey(t, jwa.RSA_OAEP_256)
+	a, err := newTestAuthConf(&AuthParams{ProjectID: "a", PublicKey: publicKey, PrivateKey: encPriv}, nil, DoOk(nil))
 	require.NoError(t, err)
 	require.Equal(t, 2, countDots(jwtTokenValid), "fixture must be a 3-part JWS")
 
