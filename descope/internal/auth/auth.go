@@ -27,6 +27,8 @@ const (
 type AuthParams struct {
 	ProjectID                  string
 	PublicKey                  string
+	PrivateKey                 string
+	PrivateKeyProvider         func(kid string) (any, error)
 	SessionJWTViaCookie        bool
 	CookieDomain               string
 	CookieSameSite             http.SameSite
@@ -788,7 +790,25 @@ func (auth *authenticationsBase) extractTokens(jRes *descope.JWTResponse) ([]*de
 	return tokens, nil
 }
 
+// isJWE reports whether a compact token is a 5-part JWE (header.encKey.iv.ciphertext.tag) rather
+// than a 3-part JWS. Encrypted session tokens must be decrypted before signature validation.
+func isJWE(token string) bool {
+	return strings.Count(token, ".") == 4
+}
+
 func ValidateJWT(JWT string, publicKeysProvider *Provider) (*descope.Token, error) {
+	if isJWE(JWT) {
+		if !publicKeysProvider.decryptionConfigured() {
+			return nil, descope.ErrJWEDecrypt.WithMessage("Received an encrypted (JWE) session token but no decryption key is configured; set Config.PrivateKey or Config.PrivateKeyProvider")
+		}
+		inner, derr := publicKeysProvider.decryptJWE(JWT)
+		if derr != nil {
+			return nil, derr
+		}
+		// Continue with the decrypted inner signed JWS; everything downstream is unchanged.
+		JWT = inner
+	}
+
 	leeway := getLeeway(publicKeysProvider)
 	token, err := jwt.Parse([]byte(JWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true), jwt.WithAcceptableSkew(leeway))
 	if err != nil {
