@@ -2,7 +2,6 @@ package mgmt
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
@@ -116,14 +115,12 @@ func (s *thirdPartyApplication) LoadAllApplications(ctx context.Context, options
 		return nil, 0, utils.NewInvalidArgumentError("page")
 	}
 
-	req := &api.HTTPRequest{
-		QueryParams: map[string]string{
-			"page":  strconv.Itoa(int(options.Page)),
-			"limit": strconv.Itoa(int(options.Limit)),
-		},
+	req := map[string]any{
+		"page":  options.Page,
+		"limit": options.Limit,
 	}
 
-	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementThirdPartyApplicationLoadAll(), req, "")
+	res, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationLoadAll(), req, nil, "")
 	if err != nil {
 		return nil, 0, err
 	}
@@ -232,7 +229,7 @@ func makeCreateUpdateThirdPartyApplicationRequest(appRequest *descope.ThirdParty
 		"loginPageUrl":         appRequest.LoginPageURL,
 		"approvedCallbackUrls": appRequest.ApprovedCallbackUrls,
 		"permissionsScopes":    appRequest.PermissionsScopes,
-		"attributesScopes":     appRequest.AttributesScopes,
+		"scopeClaimMapping":    appRequest.ScopeClaimMapping,
 		"jwtBearerSettings":    appRequest.JWTBearerSettings,
 		"customAttributes":     appRequest.CustomAttributes,
 		"forcePkce":            appRequest.ForcePkce,
