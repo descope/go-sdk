@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.28.0](https://github.com/descope/go-sdk/compare/v1.27.0...v1.28.0) (2026-07-21)
+
+
+### Features
+
+* expose lastSuccessTestTime on SSO settings load response ([#801](https://github.com/descope/go-sdk/issues/801)) ([c5eb3bb](https://github.com/descope/go-sdk/commit/c5eb3bbf900ad02db5144caddcf3c5858ec0b330))
+* expose source on external Group (scim vs jit) ([#802](https://github.com/descope/go-sdk/issues/802)) ([6b126d3](https://github.com/descope/go-sdk/commit/6b126d355df8681218b78c198f9d334608946d90))
+* support scope claim mapping for inbound apps ([#807](https://github.com/descope/go-sdk/issues/807)) ([a1710b8](https://github.com/descope/go-sdk/commit/a1710b8db7799b29b38562418b99199578234492))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.27.0 ([#799](https://github.com/descope/go-sdk/issues/799)) ([f8a29c4](https://github.com/descope/go-sdk/commit/f8a29c41f26ab58fcd7e2b0e6ae4edfec180bcfa))
+* **deps:** update module github.com/lestrrat-go/jwx/v2 to v2.1.7 ([#806](https://github.com/descope/go-sdk/issues/806)) ([516de1a](https://github.com/descope/go-sdk/commit/516de1a41516287e285dd5f157a1f25330cdbd90))
+
 ## [1.27.0](https://github.com/descope/go-sdk/compare/v1.26.0...v1.27.0) (2026-07-12)
 
 
