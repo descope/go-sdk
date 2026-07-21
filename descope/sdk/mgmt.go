@@ -179,6 +179,17 @@ type SSOApplication interface {
 
 	// Rotate the dedicated OIDC client secret of an SSO application by its id, returning the new cleartext secret.
 	RotateApplicationSecret(ctx context.Context, id string) (string, error)
+
+	// Create or update the project-wide SSO (federated) application custom attribute definitions.
+	// Returns the full, updated set of attribute definitions.
+	CreateCustomAttributes(ctx context.Context, attributes []*descope.SSOApplicationCustomAttribute) ([]*descope.SSOApplicationCustomAttribute, error)
+
+	// Delete SSO application custom attribute definitions by name.
+	// Returns the remaining attribute definitions.
+	DeleteCustomAttributes(ctx context.Context, names []string) ([]*descope.SSOApplicationCustomAttribute, error)
+
+	// Load all SSO application custom attribute definitions.
+	LoadCustomAttributes(ctx context.Context) ([]*descope.SSOApplicationCustomAttribute, error)
 }
 
 // Provides functions for managing users in a project.
@@ -1146,7 +1157,7 @@ type ThirdPartyApplication interface {
 	// LoginPageURL: The URL where login page is hosted.
 	// ApprovedCallbackUrls: List of approved callback URLs.
 	// PermissionsScopes: List of permissions scopes.
-	// AttributesScopes: List of attributes scopes.
+	// ScopeClaimMapping: List of scope→claim mapping entries.
 	// JWTBearerSettings: Optional JWT Bearer settings which used to validate external token.
 	//
 	// The argument appRequest.Name must be unique per project.

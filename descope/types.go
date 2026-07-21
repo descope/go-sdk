@@ -901,6 +901,26 @@ type SSOApplication struct {
 	SAMLSettings  *SSOApplicationSAMLSettings  `json:"samlSettings"`
 	OIDCSettings  *SSOApplicationOIDCSettings  `json:"oidcSettings"`
 	WSFedSettings *SSOApplicationWSFedSettings `json:"wsFedSettings"`
+	// CustomAttributes holds this app's per-app custom attribute values, keyed by attribute name.
+	CustomAttributes map[string]any `json:"customAttributes,omitempty"`
+}
+
+// SSOApplicationCustomAttribute defines a project-wide SSO (federated) application custom attribute
+// schema. The available types match the other entity custom attributes: 1=text, 2=number, 3=boolean,
+// 4=singleSelect, 5=multiSelect, 6=date, 7=monthDay.
+type SSOApplicationCustomAttribute struct {
+	Name            string                                 `json:"name"`
+	Type            int32                                  `json:"type"`
+	DisplayName     string                                 `json:"displayName,omitempty"`
+	Options         []*SSOApplicationCustomAttributeOption `json:"options,omitempty"`
+	DefaultValue    any                                    `json:"defaultValue,omitempty"`
+	EditPermissions []string                               `json:"editPermissions,omitempty"`
+	ViewPermissions []string                               `json:"viewPermissions,omitempty"`
+}
+
+type SSOApplicationCustomAttributeOption struct {
+	Label string `json:"label,omitempty"`
+	Value string `json:"value,omitempty"`
 }
 
 type OIDCApplicationRequest struct {
@@ -931,6 +951,8 @@ type OIDCApplicationRequest struct {
 	// DefaultAudience controls the default aud of issued tokens for modern apps (non-empty ClientType):
 	// "projectId", "clientId", or "" (both). Legacy apps always use the project ID; empty preserves it.
 	DefaultAudience string `json:"defaultAudience,omitempty"`
+	// CustomAttributes holds this app's per-app custom attribute values, keyed by attribute name.
+	CustomAttributes map[string]any `json:"customAttributes,omitempty"`
 }
 
 type SAMLApplicationRequest struct {
@@ -957,6 +979,8 @@ type SAMLApplicationRequest struct {
 	// SP-initiated flows use the algorithm from the SP's SAML request. Use "sha256" for SHA-256;
 	// leave empty for the default (SHA-1).
 	DefaultSignatureAlgorithm string `json:"defaultSignatureAlgorithm"`
+	// CustomAttributes holds this app's per-app custom attribute values, keyed by attribute name.
+	CustomAttributes map[string]any `json:"customAttributes,omitempty"`
 }
 
 type WSFedApplicationRequest struct {
@@ -974,6 +998,8 @@ type WSFedApplicationRequest struct {
 	ForceAuthentication   bool                          `json:"forceAuthentication"`
 	LogoutRedirectURL     string                        `json:"logoutRedirectUrl"`
 	ErrorRedirectURL      string                        `json:"errorRedirectUrl"`
+	// CustomAttributes holds this app's per-app custom attribute values, keyed by attribute name.
+	CustomAttributes map[string]any `json:"customAttributes,omitempty"`
 }
 
 type SSOApplicationWSFedSettings struct {
@@ -1606,6 +1632,20 @@ type ThirdPartyApplicationScope struct {
 	Values      []string `json:"values"`
 }
 
+// ThirdPartyApplicationScopeClaimMapping maps a requested OAuth scope to the JWT claims it produces.
+type ThirdPartyApplicationScopeClaimMapping struct {
+	Scope string `json:"scope"`
+	// Claims maps a claim name to a value template. Consulted only when UseProjectMapping is false.
+	Claims map[string]string `json:"claims,omitempty"`
+	// Description is shown on the consent screen for this scope.
+	Description string `json:"description,omitempty"`
+	// UseProjectMapping, when true, reuses the project-wide scope→claims mapping for this scope
+	// (the Claims field is ignored).
+	UseProjectMapping bool `json:"useProjectMapping,omitempty"`
+	// Mandatory, when true, means the scope is always granted and cannot be deselected on consent.
+	Mandatory bool `json:"mandatory,omitempty"`
+}
+
 type IssuerSettings struct {
 	JWKsURI             string `json:"jwksUri,omitempty"`
 	SignAlgorithm       string `json:"signAlgorithm,omitempty"`
@@ -1618,17 +1658,17 @@ type JWTBearerSettings struct {
 }
 
 type ThirdPartyApplication struct {
-	ID                   string                        `json:"id"`
-	Name                 string                        `json:"name"`
-	Description          string                        `json:"description"`
-	Logo                 string                        `json:"logo"`
-	LoginPageURL         string                        `json:"loginPageUrl"`
-	ClientID             string                        `json:"clientId"`
-	ApprovedCallbackUrls []string                      `json:"approvedCallbackUrls"`
-	PermissionsScopes    []*ThirdPartyApplicationScope `json:"permissionsScopes"`
-	AttributesScopes     []*ThirdPartyApplicationScope `json:"attributesScopes"`
-	JWTBearerSettings    *JWTBearerSettings            `json:"jwtBearerSettings,omitempty"`
-	CustomAttributes     map[string]any                `json:"customAttributes,omitempty"`
+	ID                   string                                    `json:"id"`
+	Name                 string                                    `json:"name"`
+	Description          string                                    `json:"description"`
+	Logo                 string                                    `json:"logo"`
+	LoginPageURL         string                                    `json:"loginPageUrl"`
+	ClientID             string                                    `json:"clientId"`
+	ApprovedCallbackUrls []string                                  `json:"approvedCallbackUrls"`
+	PermissionsScopes    []*ThirdPartyApplicationScope             `json:"permissionsScopes"`
+	ScopeClaimMapping    []*ThirdPartyApplicationScopeClaimMapping `json:"scopeClaimMapping,omitempty"`
+	JWTBearerSettings    *JWTBearerSettings                        `json:"jwtBearerSettings,omitempty"`
+	CustomAttributes     map[string]any                            `json:"customAttributes,omitempty"`
 	// ForcePkce requires PKCE on the authorization-code flow in addition to client authentication.
 	ForcePkce bool `json:"forcePkce,omitempty"`
 	// DefaultAudience controls the default aud of issued tokens: "projectId", "clientId", or "" (both).
@@ -1636,16 +1676,16 @@ type ThirdPartyApplication struct {
 }
 
 type ThirdPartyApplicationRequest struct {
-	ID                   string                        `json:"id"`
-	Name                 string                        `json:"name"`
-	Description          string                        `json:"description"`
-	Logo                 string                        `json:"logo"`
-	LoginPageURL         string                        `json:"loginPageUrl"`
-	ApprovedCallbackUrls []string                      `json:"approvedCallbackUrls"`
-	PermissionsScopes    []*ThirdPartyApplicationScope `json:"permissionsScopes"`
-	AttributesScopes     []*ThirdPartyApplicationScope `json:"attributesScopes"`
-	JWTBearerSettings    *JWTBearerSettings            `json:"jwtBearerSettings,omitempty"`
-	CustomAttributes     map[string]any                `json:"customAttributes,omitempty"`
+	ID                   string                                    `json:"id"`
+	Name                 string                                    `json:"name"`
+	Description          string                                    `json:"description"`
+	Logo                 string                                    `json:"logo"`
+	LoginPageURL         string                                    `json:"loginPageUrl"`
+	ApprovedCallbackUrls []string                                  `json:"approvedCallbackUrls"`
+	PermissionsScopes    []*ThirdPartyApplicationScope             `json:"permissionsScopes"`
+	ScopeClaimMapping    []*ThirdPartyApplicationScopeClaimMapping `json:"scopeClaimMapping,omitempty"`
+	JWTBearerSettings    *JWTBearerSettings                        `json:"jwtBearerSettings,omitempty"`
+	CustomAttributes     map[string]any                            `json:"customAttributes,omitempty"`
 	// ForcePkce requires PKCE on the authorization-code flow in addition to client authentication.
 	ForcePkce bool `json:"forcePkce,omitempty"`
 	// DefaultAudience controls the default aud of issued tokens: "projectId", "clientId", or "" (both).
