@@ -1688,11 +1688,11 @@ func (e *endpoints) ManagementOutboundApplicationBatchUploadTenantTokens() strin
 }
 
 func (e *endpoints) ManagementThirdPartyApplicationCreate() string {
-	return path.Join(e.version, e.mgmt.thirdPartyApplicationCreate)
+	return path.Join(e.versionV2, e.mgmt.thirdPartyApplicationCreate)
 }
 
 func (e *endpoints) ManagementThirdPartyApplicationUpdate() string {
-	return path.Join(e.version, e.mgmt.thirdPartyApplicationUpdate)
+	return path.Join(e.versionV2, e.mgmt.thirdPartyApplicationUpdate)
 }
 
 func (e *endpoints) ManagementThirdPartyApplicationDelete() string {
