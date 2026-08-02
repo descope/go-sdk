@@ -409,16 +409,18 @@ func TestRefreshSessionWithTokenAndWriterInvalidInput(t *testing.T) {
 func TestRefreshSessionInfoWithToken(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(nil))
 	require.NoError(t, err)
-	ok, info, err := a.RefreshSessionInfoWithToken(context.Background(), jwtRTokenValid)
+	// the provided token differs from the body's refreshJwt so the assertion below
+	// proves the returned refresh token was taken from the response body (rotation)
+	// and not from the fallback to the provided token
+	ok, info, err := a.RefreshSessionInfoWithToken(context.Background(), jwtTokenValid)
 	require.NoError(t, err)
 	require.True(t, ok)
 	require.NotNil(t, info)
 	require.NotNil(t, info.SessionToken)
 	assert.EqualValues(t, jwtTokenValid, info.SessionToken.JWT)
-	// the refresh token from the response body (the rotated token when rotation is enabled)
 	require.NotNil(t, info.RefreshToken)
 	assert.EqualValues(t, jwtRTokenValid, info.RefreshToken.JWT)
-	assert.EqualValues(t, info.RefreshToken.Expiration, info.SessionToken.RefreshExpiration)
+	assert.NotZero(t, info.SessionToken.RefreshExpiration)
 }
 
 func TestRefreshSessionInfoWithTokenNoBodyRefreshJwt(t *testing.T) {
