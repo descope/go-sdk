@@ -366,6 +366,13 @@ type Authentication interface {
 	// returns true upon success or false, the updated session token and an error upon failure.
 	RefreshSessionWithTokenAndWriter(ctx context.Context, refreshToken string, w http.ResponseWriter) (bool, *descope.Token, error)
 
+	// RefreshSessionInfoWithToken - Use to refresh an expired session with a given refresh token,
+	// returning the full authentication info rather than only the session token.
+	// When refresh token rotation is enabled for the project, the rotated refresh token is
+	// returned in AuthenticationInfo.RefreshToken and must be used for subsequent refreshes.
+	// returns true upon success or false, the authentication info and an error upon failure.
+	RefreshSessionInfoWithToken(ctx context.Context, refreshToken string) (bool, *descope.AuthenticationInfo, error)
+
 	// ValidateAndRefreshSessionWithRequest - Use to validate a session of a given request.
 	// Should be called before any private API call that requires authorization.
 	// In case the request cookie can be renewed an automatic renewal is called and returns a new set of cookies to use.

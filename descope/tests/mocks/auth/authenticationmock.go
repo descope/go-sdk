@@ -660,6 +660,11 @@ type MockSession struct {
 	RefreshSessionWithTokenAndWriterResponse *descope.Token
 	RefreshSessionWithTokenAndWriterFailure  bool
 
+	RefreshSessionInfoWithTokenAssert   func(refreshToken string)
+	RefreshSessionInfoWithTokenError    error
+	RefreshSessionInfoWithTokenResponse *descope.AuthenticationInfo
+	RefreshSessionInfoWithTokenFailure  bool
+
 	ExchangeAccessKeyAssert          func(accessKey string, loginOptions *descope.AccessKeyLoginOptions)
 	ExchangeAccessKeyError           error
 	ExchangeAccessKeyResponse        *descope.Token
@@ -790,6 +795,18 @@ func (m *MockSession) RefreshSessionWithTokenAndWriter(_ context.Context, refres
 	}
 
 	return !m.RefreshSessionWithTokenAndWriterFailure, m.RefreshSessionWithTokenAndWriterResponse, m.RefreshSessionWithTokenAndWriterError
+}
+
+func (m *MockSession) RefreshSessionInfoWithToken(_ context.Context, refreshToken string) (bool, *descope.AuthenticationInfo, error) {
+	if m.RefreshSessionInfoWithTokenFailure {
+		return false, nil, m.RefreshSessionInfoWithTokenError
+	}
+
+	if m.RefreshSessionInfoWithTokenAssert != nil {
+		m.RefreshSessionInfoWithTokenAssert(refreshToken)
+	}
+
+	return !m.RefreshSessionInfoWithTokenFailure, m.RefreshSessionInfoWithTokenResponse, m.RefreshSessionInfoWithTokenError
 }
 
 func (m *MockSession) ValidateAndRefreshSessionWithRequest(r *http.Request, w http.ResponseWriter) (bool, *descope.Token, error) {

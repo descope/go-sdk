@@ -518,27 +518,48 @@ func (auth *authenticationService) RefreshSessionWithTokenAndWriter(ctx context.
 	return auth.refreshSession(ctx, refreshToken, w)
 }
 
-func (auth *authenticationService) refreshSession(ctx context.Context, refreshToken string, w http.ResponseWriter) (bool, *descope.Token, error) {
-	token, err := auth.validateJWT(refreshToken)
+func (auth *authenticationService) RefreshSessionInfoWithToken(ctx context.Context, refreshToken string) (bool, *descope.AuthenticationInfo, error) {
+	if refreshToken == "" {
+		return false, nil, utils.NewInvalidArgumentError("refreshToken")
+	}
+	info, err := auth.refreshSessionInfo(ctx, refreshToken, nil)
 	if err != nil {
 		return false, nil, err
+	}
+	return true, info, nil
+}
+
+func (auth *authenticationService) refreshSession(ctx context.Context, refreshToken string, w http.ResponseWriter) (bool, *descope.Token, error) {
+	info, err := auth.refreshSessionInfo(ctx, refreshToken, w)
+	if err != nil {
+		return false, nil, err
+	}
+	return true, info.SessionToken, nil
+}
+
+func (auth *authenticationService) refreshSessionInfo(ctx context.Context, refreshToken string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
+	token, err := auth.validateJWT(refreshToken)
+	if err != nil {
+		return nil, err
 	}
 
 	httpResponse, err := auth.client.DoPostRequest(ctx, api.Routes.RefreshToken(), nil, &api.HTTPRequest{}, refreshToken)
 	if err != nil {
-		return false, nil, err
+		return nil, err
 	}
+	// the rotated refresh token, when refresh token rotation is enabled for the
+	// project, is extracted from the response into info.RefreshToken
 	info, err := auth.generateAuthenticationInfoWithRefreshToken(httpResponse, token, w)
 	if err != nil {
-		return false, nil, err
+		return nil, err
 	}
 
 	if info.SessionToken == nil { // notest
-		return false, nil, descope.ErrUnexpectedResponse.WithMessage("Missing session token in refresh response")
+		return nil, descope.ErrUnexpectedResponse.WithMessage("Missing session token in refresh response")
 	}
 
 	info.SessionToken.RefreshExpiration = token.Expiration
-	return true, info.SessionToken, nil
+	return info, nil
 }
 
 // Validate & Refresh Session

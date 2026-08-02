@@ -406,6 +406,44 @@ func TestRefreshSessionWithTokenAndWriterInvalidInput(t *testing.T) {
 	require.False(t, ok)
 }
 
+func TestRefreshSessionInfoWithToken(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	ok, info, err := a.RefreshSessionInfoWithToken(context.Background(), jwtRTokenValid)
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.NotNil(t, info)
+	require.NotNil(t, info.SessionToken)
+	assert.EqualValues(t, jwtTokenValid, info.SessionToken.JWT)
+	// the refresh token from the response body (the rotated token when rotation is enabled)
+	require.NotNil(t, info.RefreshToken)
+	assert.EqualValues(t, jwtRTokenValid, info.RefreshToken.JWT)
+	assert.EqualValues(t, info.RefreshToken.Expiration, info.SessionToken.RefreshExpiration)
+}
+
+func TestRefreshSessionInfoWithTokenNoBodyRefreshJwt(t *testing.T) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBodyNoRefreshJwt))}, nil
+	})
+	require.NoError(t, err)
+	ok, info, err := a.RefreshSessionInfoWithToken(context.Background(), jwtRTokenValid)
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.NotNil(t, info)
+	// without a rotated refresh token in the response, the provided refresh token is returned
+	require.NotNil(t, info.RefreshToken)
+	assert.EqualValues(t, jwtRTokenValid, info.RefreshToken.JWT)
+}
+
+func TestRefreshSessionInfoWithTokenInvalidInput(t *testing.T) {
+	a, err := newTestAuth(nil, DoOk(nil))
+	require.NoError(t, err)
+	ok, info, err := a.RefreshSessionInfoWithToken(context.Background(), "")
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.False(t, ok)
+	require.Nil(t, info)
+}
+
 func TestRefreshSessionWithTokenNoPublicKey(t *testing.T) {
 	a, err := newTestAuthConf(&AuthParams{ProjectID: "a"}, nil, DoOk(nil))
 	require.NoError(t, err)
