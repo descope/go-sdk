@@ -32,10 +32,44 @@ func TestLoadAllGroupsSuccess(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, tenantID, req["tenantId"])
+		// no ssoId filter given: the field must be absent so the request stays compatible with
+		// backends that reject unknown fields
+		_, found := req["ssoId"]
+		require.False(t, found)
 	}, response))
 	res, err := mgmt.Group().LoadAllGroups(context.Background(), tenantID)
 	require.NoError(t, err)
 	assert.EqualValues(t, response, res)
+}
+
+func TestLoadAllGroupsWithSSOIDSuccess(t *testing.T) {
+	tenantID := "abc"
+	ssoID := "sso-config-1"
+	response := []*descope.Group{
+		{
+			ID:      "some-id",
+			Display: "some-display",
+			Source:  "scim",
+			SSOID:   ssoID,
+		},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, tenantID, req["tenantId"])
+		require.Equal(t, ssoID, req["ssoId"])
+	}, response))
+	res, err := mgmt.Group().LoadAllGroupsWithSSOID(context.Background(), tenantID, ssoID)
+	require.NoError(t, err)
+	assert.EqualValues(t, response, res)
+}
+
+func TestLoadAllGroupsWithSSOIDMissingArgument(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.Group().LoadAllGroupsWithSSOID(context.Background(), "", "sso-config-1")
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("tenantID").Message)
+	assert.Nil(t, res)
 }
 
 func TestLoadAllGroupsMissingArgument(t *testing.T) {
@@ -79,6 +113,25 @@ func TestLoadAllGroupsForMembersSuccess(t *testing.T) {
 		require.Equal(t, []any{"three", "four"}, req["loginIds"])
 	}, response))
 	res, err := mgmt.Group().LoadAllGroupsForMembers(context.Background(), tenantID, userIDs, loginIDs)
+	require.NoError(t, err)
+	assert.EqualValues(t, response, res)
+}
+
+func TestLoadAllGroupsForMembersWithSSOIDSuccess(t *testing.T) {
+	tenantID := "abc"
+	ssoID := "sso-config-1"
+	userIDs := []string{"one", "two"}
+	loginIDs := []string{"three", "four"}
+	response := []*descope.Group{{ID: "some-id", Display: "some-display", SSOID: ssoID}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, []any{"one", "two"}, req["userIds"])
+		require.Equal(t, []any{"three", "four"}, req["loginIds"])
+		require.Equal(t, ssoID, req["ssoId"])
+	}, response))
+	res, err := mgmt.Group().LoadAllGroupsForMembersWithSSOID(context.Background(), tenantID, ssoID, userIDs, loginIDs)
 	require.NoError(t, err)
 	assert.EqualValues(t, response, res)
 }
@@ -136,6 +189,23 @@ func TestLoadAllGroupMembersSuccess(t *testing.T) {
 		require.Equal(t, groupID, req["groupId"])
 	}, response))
 	res, err := mgmt.Group().LoadAllGroupMembers(context.Background(), tenantID, groupID)
+	require.NoError(t, err)
+	assert.EqualValues(t, response, res)
+}
+
+func TestLoadAllGroupMembersWithSSOIDSuccess(t *testing.T) {
+	tenantID := "abc"
+	groupID := "abc"
+	ssoID := "sso-config-1"
+	response := []*descope.Group{{ID: "some-id", Display: "some-display", SSOID: ssoID}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, groupID, req["groupId"])
+		require.Equal(t, ssoID, req["ssoId"])
+	}, response))
+	res, err := mgmt.Group().LoadAllGroupMembersWithSSOID(context.Background(), tenantID, groupID, ssoID)
 	require.NoError(t, err)
 	assert.EqualValues(t, response, res)
 }
