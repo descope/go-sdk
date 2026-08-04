@@ -1639,7 +1639,7 @@ type MockGroup struct {
 	LoadAllGroupsForMembersResponse []*descope.Group
 	LoadAllGroupsForMembersError    error
 
-	LoadAllGroupsForMembersWithSSOIDAssert   func(tenantID, ssoID string, userIDs, loginIDs []string)
+	LoadAllGroupsForMembersWithSSOIDAssert   func(tenantID string, userIDs, loginIDs []string, ssoID string)
 	LoadAllGroupsForMembersWithSSOIDResponse []*descope.Group
 	LoadAllGroupsForMembersWithSSOIDError    error
 
@@ -1673,9 +1673,9 @@ func (m *MockGroup) LoadAllGroupsForMembers(_ context.Context, tenantID string, 
 	return m.LoadAllGroupsForMembersResponse, m.LoadAllGroupsForMembersError
 }
 
-func (m *MockGroup) LoadAllGroupsForMembersWithSSOID(_ context.Context, tenantID, ssoID string, userIDs, loginIDs []string) ([]*descope.Group, error) {
+func (m *MockGroup) LoadAllGroupsForMembersWithSSOID(_ context.Context, tenantID string, userIDs, loginIDs []string, ssoID string) ([]*descope.Group, error) {
 	if m.LoadAllGroupsForMembersWithSSOIDAssert != nil {
-		m.LoadAllGroupsForMembersWithSSOIDAssert(tenantID, ssoID, userIDs, loginIDs)
+		m.LoadAllGroupsForMembersWithSSOIDAssert(tenantID, userIDs, loginIDs, ssoID)
 	}
 	return m.LoadAllGroupsForMembersWithSSOIDResponse, m.LoadAllGroupsForMembersWithSSOIDError
 }

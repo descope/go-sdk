@@ -131,7 +131,7 @@ func TestLoadAllGroupsForMembersWithSSOIDSuccess(t *testing.T) {
 		require.Equal(t, []any{"three", "four"}, req["loginIds"])
 		require.Equal(t, ssoID, req["ssoId"])
 	}, response))
-	res, err := mgmt.Group().LoadAllGroupsForMembersWithSSOID(context.Background(), tenantID, ssoID, userIDs, loginIDs)
+	res, err := mgmt.Group().LoadAllGroupsForMembersWithSSOID(context.Background(), tenantID, userIDs, loginIDs, ssoID)
 	require.NoError(t, err)
 	assert.EqualValues(t, response, res)
 }

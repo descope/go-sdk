@@ -35,10 +35,10 @@ func (r *group) LoadAllGroupsWithSSOID(ctx context.Context, tenantID, ssoID stri
 }
 
 func (r *group) LoadAllGroupsForMembers(ctx context.Context, tenantID string, userIDs, loginIDs []string) ([]*descope.Group, error) {
-	return r.LoadAllGroupsForMembersWithSSOID(ctx, tenantID, "", userIDs, loginIDs)
+	return r.LoadAllGroupsForMembersWithSSOID(ctx, tenantID, userIDs, loginIDs, "")
 }
 
-func (r *group) LoadAllGroupsForMembersWithSSOID(ctx context.Context, tenantID, ssoID string, userIDs, loginIDs []string) ([]*descope.Group, error) {
+func (r *group) LoadAllGroupsForMembersWithSSOID(ctx context.Context, tenantID string, userIDs, loginIDs []string, ssoID string) ([]*descope.Group, error) {
 	if tenantID == "" {
 		return nil, utils.NewInvalidArgumentError("tenantID")
 	}

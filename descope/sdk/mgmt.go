@@ -899,7 +899,7 @@ type Group interface {
 
 	// Load all groups for the provided user IDs or login IDs, scoped to a single SSO
 	// configuration (see LoadAllGroupsWithSSOID for the ssoID semantics).
-	LoadAllGroupsForMembersWithSSOID(ctx context.Context, tenantID, ssoID string, userIDs, loginIDs []string) ([]*descope.Group, error)
+	LoadAllGroupsForMembersWithSSOID(ctx context.Context, tenantID string, userIDs, loginIDs []string, ssoID string) ([]*descope.Group, error)
 
 	// Load all members of the provided group id.
 	LoadAllGroupMembers(ctx context.Context, tenantID, groupID string) ([]*descope.Group, error)
