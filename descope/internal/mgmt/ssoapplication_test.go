@@ -710,3 +710,61 @@ func TestSSOApplicationUpdateOIDCApplicationOmitsImmutableClientCredentials(t *t
 	})
 	require.NoError(t, err)
 }
+
+func TestSSOApplicationCreateCustomAttributesSuccess(t *testing.T) {
+	response := map[string]any{"data": []map[string]any{{"name": "npi_level", "type": 1, "displayName": "NPI Level"}}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		attrs, ok := req["attributes"].([]any)
+		require.True(t, ok)
+		require.Len(t, attrs, 1)
+		require.Equal(t, "npi_level", attrs[0].(map[string]any)["name"])
+		require.EqualValues(t, 1, attrs[0].(map[string]any)["type"])
+	}, response))
+
+	res, err := mgmt.SSOApplication().CreateCustomAttributes(context.Background(), []*descope.SSOApplicationCustomAttribute{
+		{Name: "npi_level", Type: 1, DisplayName: "NPI Level"},
+	})
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Equal(t, "npi_level", res[0].Name)
+}
+
+func TestSSOApplicationCreateCustomAttributesMissingArg(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	_, err := mgmt.SSOApplication().CreateCustomAttributes(context.Background(), nil)
+	require.Error(t, err)
+}
+
+func TestSSOApplicationDeleteCustomAttributesSuccess(t *testing.T) {
+	response := map[string]any{"data": []map[string]any{}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		names, ok := req["names"].([]any)
+		require.True(t, ok)
+		require.Len(t, names, 1)
+		require.Equal(t, "npi_level", names[0])
+	}, response))
+
+	res, err := mgmt.SSOApplication().DeleteCustomAttributes(context.Background(), []string{"npi_level"})
+	require.NoError(t, err)
+	require.Empty(t, res)
+}
+
+func TestSSOApplicationDeleteCustomAttributesMissingArg(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	_, err := mgmt.SSOApplication().DeleteCustomAttributes(context.Background(), nil)
+	require.Error(t, err)
+}
+
+func TestSSOApplicationLoadCustomAttributesSuccess(t *testing.T) {
+	response := map[string]any{"data": []map[string]any{{"name": "npi_level", "type": 1}}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {}, response))
+	res, err := mgmt.SSOApplication().LoadCustomAttributes(context.Background())
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Equal(t, "npi_level", res[0].Name)
+}

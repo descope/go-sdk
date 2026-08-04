@@ -88,7 +88,7 @@ func TestThirdPartyApplicationUpdateSuccess(t *testing.T) {
 		require.Equal(t, "http://dummy.com", req["loginPageUrl"])
 		require.Equal(t, []any{"http://dummy.com/callback"}, req["approvedCallbackUrls"])
 		require.Equal(t, []any{map[string]any{"name": "scope1", "description": "desc1", "values": []any{"v1"}}}, req["permissionsScopes"])
-		require.Equal(t, []any{map[string]any{"name": "scope2", "description": "desc2", "values": []any{"v2"}}}, req["attributesScopes"])
+		require.Equal(t, []any{map[string]any{"scope": "scope2", "description": "desc2", "claims": map[string]any{"email": "{{user.email}}"}}}, req["scopeClaimMapping"])
 		d, ok := req["jwtBearerSettings"].(map[string]any)
 		require.True(t, ok)
 		d, ok = d["issuers"].(map[string]any)
@@ -108,7 +108,7 @@ func TestThirdPartyApplicationUpdateSuccess(t *testing.T) {
 		LoginPageURL:         "http://dummy.com",
 		ApprovedCallbackUrls: []string{"http://dummy.com/callback"},
 		PermissionsScopes:    []*descope.ThirdPartyApplicationScope{{Name: "scope1", Description: "desc1", Values: []string{"v1"}}},
-		AttributesScopes:     []*descope.ThirdPartyApplicationScope{{Name: "scope2", Description: "desc2", Values: []string{"v2"}}},
+		ScopeClaimMapping:    []*descope.ThirdPartyApplicationScopeClaimMapping{{Scope: "scope2", Description: "desc2", Claims: map[string]string{"email": "{{user.email}}"}}},
 		JWTBearerSettings: &descope.JWTBearerSettings{
 			Issuers: map[string]*descope.IssuerSettings{
 				"issuer1": {
@@ -148,14 +148,14 @@ func TestThirdPartyApplicationPatchSuccess(t *testing.T) {
 		require.Equal(t, "id1", req["id"])
 		require.Equal(t, "desc", req["description"])
 		require.Equal(t, []any{"http://dummy.com/callback"}, req["approvedCallbackUrls"])
-		require.Equal(t, []any{map[string]any{"name": "scope2", "description": "desc2", "values": []any{"v2"}}}, req["attributesScopes"])
+		require.Equal(t, []any{map[string]any{"scope": "scope2", "description": "desc2", "claims": map[string]any{"email": "{{user.email}}"}}}, req["scopeClaimMapping"])
 	}, response))
 
 	err := mgmt.ThirdPartyApplication().PatchApplication(context.Background(), &descope.ThirdPartyApplicationRequest{
 		ID:                   "id1",
 		Description:          "desc",
 		ApprovedCallbackUrls: []string{"http://dummy.com/callback"},
-		AttributesScopes:     []*descope.ThirdPartyApplicationScope{{Name: "scope2", Description: "desc2", Values: []string{"v2"}}},
+		ScopeClaimMapping:    []*descope.ThirdPartyApplicationScopeClaimMapping{{Scope: "scope2", Description: "desc2", Claims: map[string]string{"email": "{{user.email}}"}}},
 	})
 	require.NoError(t, err)
 }
@@ -253,8 +253,8 @@ func TestThirdPartyApplicationLoadSuccess(t *testing.T) {
 		"permissionsScopes": []map[string]any{
 			{"name": "scope1", "description": "desc1"},
 		},
-		"attributesScopes": []map[string]any{
-			{"name": "scope2", "description": "desc2"},
+		"scopeClaimMapping": []map[string]any{
+			{"scope": "scope2", "description": "desc2"},
 		},
 		"jwtBearerSettings": map[string]any{
 			"issuers": map[string]any{
@@ -282,9 +282,9 @@ func TestThirdPartyApplicationLoadSuccess(t *testing.T) {
 	require.Len(t, res.PermissionsScopes, 1)
 	require.Equal(t, "scope1", res.PermissionsScopes[0].Name)
 	require.Equal(t, "desc1", res.PermissionsScopes[0].Description)
-	require.Len(t, res.AttributesScopes, 1)
-	require.Equal(t, "scope2", res.AttributesScopes[0].Name)
-	require.Equal(t, "desc2", res.AttributesScopes[0].Description)
+	require.Len(t, res.ScopeClaimMapping, 1)
+	require.Equal(t, "scope2", res.ScopeClaimMapping[0].Scope)
+	require.Equal(t, "desc2", res.ScopeClaimMapping[0].Description)
 	require.Len(t, res.JWTBearerSettings.Issuers, 1)
 	require.EqualValues(t, "http://dummy.com/jwks", res.JWTBearerSettings.Issuers["issuer1"].JWKsURI)
 	require.EqualValues(t, "RS256", res.JWTBearerSettings.Issuers["issuer1"].SignAlgorithm)
@@ -324,16 +324,18 @@ func TestAllThirdPartyApplicationsLoadSuccess(t *testing.T) {
 				"name":         "efg",
 				"description":  "desc",
 				"loginPageUrl": "http://dummy.com",
-				"attributesScopes": []map[string]any{
-					{"name": "scope1", "description": "desc1"},
+				"scopeClaimMapping": []map[string]any{
+					{"scope": "scope1", "description": "desc1"},
 				},
 			},
 		},
 		"total": 2}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
-		require.Equal(t, "1", r.URL.Query().Get("page"))
-		require.Equal(t, "5", r.URL.Query().Get("limit"))
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.EqualValues(t, 1, req["page"])
+		require.EqualValues(t, 5, req["limit"])
 	}, response))
 	res, total, err := mgmt.ThirdPartyApplication().LoadAllApplications(context.Background(), &descope.ThirdPartyApplicationSearchOptions{Page: 1, Limit: 5})
 	require.NoError(t, err)
@@ -352,7 +354,7 @@ func TestAllThirdPartyApplicationsLoadSuccess(t *testing.T) {
 			require.Len(t, res[i].PermissionsScopes, 1)
 			require.Equal(t, "scope1", res[i].PermissionsScopes[0].Name)
 			require.Equal(t, "desc1", res[i].PermissionsScopes[0].Description)
-			require.Len(t, res[i].AttributesScopes, 0)
+			require.Len(t, res[i].ScopeClaimMapping, 0)
 		} else {
 			require.Equal(t, "id2", res[i].ID)
 			require.Equal(t, "efg", res[i].Name)
@@ -361,9 +363,9 @@ func TestAllThirdPartyApplicationsLoadSuccess(t *testing.T) {
 			require.Equal(t, "http://dummy.com", res[i].LoginPageURL)
 			require.Len(t, res[i].ApprovedCallbackUrls, 0)
 			require.Len(t, res[i].PermissionsScopes, 0)
-			require.Len(t, res[i].AttributesScopes, 1)
-			require.Equal(t, "scope1", res[i].AttributesScopes[0].Name)
-			require.Equal(t, "desc1", res[i].AttributesScopes[0].Description)
+			require.Len(t, res[i].ScopeClaimMapping, 1)
+			require.Equal(t, "scope1", res[i].ScopeClaimMapping[0].Scope)
+			require.Equal(t, "desc1", res[i].ScopeClaimMapping[0].Description)
 		}
 	}
 }

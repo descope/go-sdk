@@ -180,6 +180,7 @@ func makeCreateUpdateOIDCApplicationRequest(appRequest *descope.OIDCApplicationR
 		"deviceCodeDisabled":        appRequest.DeviceCodeDisabled,
 		"forcePkce":                 appRequest.ForcePkce,
 		"defaultAudience":           appRequest.DefaultAudience,
+		"customAttributes":          appRequest.CustomAttributes,
 	}
 	// ClientID/ClientSecret import an existing OIDC client and are immutable after create, so
 	// they are only sent on create — never on update, where they would clear the stored secret.
@@ -228,6 +229,48 @@ func (s *ssoApplication) RotateApplicationSecret(ctx context.Context, id string)
 	return res.Cleartext, nil
 }
 
+func (s *ssoApplication) CreateCustomAttributes(ctx context.Context, attributes []*descope.SSOApplicationCustomAttribute) ([]*descope.SSOApplicationCustomAttribute, error) {
+	if len(attributes) == 0 {
+		return nil, utils.NewInvalidArgumentError("attributes")
+	}
+	req := map[string]any{"attributes": attributes}
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationCreateCustomAttributes(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalSSOApplicationCustomAttributesResponse(httpRes)
+}
+
+func (s *ssoApplication) DeleteCustomAttributes(ctx context.Context, names []string) ([]*descope.SSOApplicationCustomAttribute, error) {
+	if len(names) == 0 {
+		return nil, utils.NewInvalidArgumentError("names")
+	}
+	req := map[string]any{"names": names}
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationDeleteCustomAttributes(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalSSOApplicationCustomAttributesResponse(httpRes)
+}
+
+func (s *ssoApplication) LoadCustomAttributes(ctx context.Context) ([]*descope.SSOApplicationCustomAttribute, error) {
+	httpRes, err := s.client.DoGetRequest(ctx, api.Routes.ManagementSSOApplicationCustomAttributes(), nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalSSOApplicationCustomAttributesResponse(httpRes)
+}
+
+func unmarshalSSOApplicationCustomAttributesResponse(res *api.HTTPResponse) ([]*descope.SSOApplicationCustomAttribute, error) {
+	out := &struct {
+		Data []*descope.SSOApplicationCustomAttribute `json:"data"`
+	}{}
+	if err := utils.Unmarshal([]byte(res.BodyStr), out); err != nil {
+		return nil, err
+	}
+	return out.Data, nil
+}
+
 func makeCreateUpdateSAMLApplicationRequest(appRequest *descope.SAMLApplicationRequest) map[string]any {
 	return map[string]any{
 		"id":                        appRequest.ID,
@@ -250,6 +293,7 @@ func makeCreateUpdateSAMLApplicationRequest(appRequest *descope.SAMLApplicationR
 		"forceAuthentication":       appRequest.ForceAuthentication,
 		"logoutRedirectUrl":         appRequest.LogoutRedirectURL,
 		"defaultSignatureAlgorithm": appRequest.DefaultSignatureAlgorithm,
+		"customAttributes":          appRequest.CustomAttributes,
 	}
 }
 
@@ -269,6 +313,7 @@ func makeCreateUpdateWSFedApplicationRequest(appRequest *descope.WSFedApplicatio
 		"forceAuthentication":   appRequest.ForceAuthentication,
 		"logoutRedirectUrl":     appRequest.LogoutRedirectURL,
 		"errorRedirectUrl":      appRequest.ErrorRedirectURL,
+		"customAttributes":      appRequest.CustomAttributes,
 	}
 }
 

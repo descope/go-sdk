@@ -1892,8 +1892,8 @@ req := &descope.ThirdPartyApplicationRequest{
 	PermissionsScopes: []*descope.ThirdPartyApplicationScope{
 		{Name: "read", Description: "Read all", Values: []string{"Support"}},
 	},
-	AttributesScopes: []*descope.ThirdPartyApplicationScope{
-		{Name: "base", Description: "Basic attribute requirements", Values: []string{"email", "phone"}},
+	ScopeClaimMapping: []*descope.ThirdPartyApplicationScopeClaimMapping{
+		{Scope: "base", Description: "Basic attribute requirements", Claims: map[string]string{"email": "{{user.email}}", "phone_number": "{{user.phone}}"}},
 	},
 }
 appID, secret, err = descopeClient.Management.ThirdPartyApplication().CreateApplication(context.Background(), req)

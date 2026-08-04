@@ -1334,6 +1334,11 @@ type MockSSOApplication struct {
 	RotateApplicationSecretAssert   func(id string)
 	RotateApplicationSecretResponse string
 	RotateApplicationSecretError    error
+
+	CreateCustomAttributesAssert func(attributes []*descope.SSOApplicationCustomAttribute)
+	DeleteCustomAttributesAssert func(names []string)
+	CustomAttributesResponse     []*descope.SSOApplicationCustomAttribute
+	CustomAttributesError        error
 }
 
 func (m *MockSSOApplication) CreateOIDCApplication(_ context.Context, appRequest *descope.OIDCApplicationRequest) (id string, err error) {
@@ -1408,6 +1413,24 @@ func (m *MockSSOApplication) RotateApplicationSecret(_ context.Context, id strin
 		m.RotateApplicationSecretAssert(id)
 	}
 	return m.RotateApplicationSecretResponse, m.RotateApplicationSecretError
+}
+
+func (m *MockSSOApplication) CreateCustomAttributes(_ context.Context, attributes []*descope.SSOApplicationCustomAttribute) ([]*descope.SSOApplicationCustomAttribute, error) {
+	if m.CreateCustomAttributesAssert != nil {
+		m.CreateCustomAttributesAssert(attributes)
+	}
+	return m.CustomAttributesResponse, m.CustomAttributesError
+}
+
+func (m *MockSSOApplication) DeleteCustomAttributes(_ context.Context, names []string) ([]*descope.SSOApplicationCustomAttribute, error) {
+	if m.DeleteCustomAttributesAssert != nil {
+		m.DeleteCustomAttributesAssert(names)
+	}
+	return m.CustomAttributesResponse, m.CustomAttributesError
+}
+
+func (m *MockSSOApplication) LoadCustomAttributes(_ context.Context) ([]*descope.SSOApplicationCustomAttribute, error) {
+	return m.CustomAttributesResponse, m.CustomAttributesError
 }
 
 // Mock Permission
