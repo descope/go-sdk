@@ -1115,6 +1115,10 @@ type CustomAttributeOption struct {
 // CustomAttributes map is an optional filter for custom attributes:
 // where the keys are the attribute names and the values are either a value we are searching for or list of these values in a slice.
 // We currently support string, int and bool values
+// FromCreatedTime - only include users created on or after this time (Unix epoch milliseconds). Leave at 0 to disable.
+// ToCreatedTime - only include users created on or before this time (Unix epoch milliseconds). Leave at 0 to disable.
+// FromModifiedTime - only include users modified on or after this time (Unix epoch milliseconds). Leave at 0 to disable.
+// ToModifiedTime - only include users modified on or before this time (Unix epoch milliseconds). Leave at 0 to disable.
 type UserSearchOptions struct {
 	Page              int32
 	Limit             int32
