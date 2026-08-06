@@ -432,6 +432,10 @@ authInfo, err := descopeClient.Auth.SSO().ExchangeToken(context.Background(), co
 if err != nil {
     // handle error
 }
+
+// When a tenant has multiple SSO configurations, authInfo.TenantSSOID holds the id
+// of the SSO configuration that performed the authentication
+ssoID := authInfo.TenantSSOID
 ```
 
 ```go
@@ -606,6 +610,13 @@ if authorized, sessionToken, err := descopeClient.Auth.ValidateSessionWithToken(
 
 // If ValidateSessionWithRequest raises an exception, you will need to refresh the session using
 if authorized, sessionToken, err := descopeClient.Auth.RefreshSessionWithToken(context.Background(), refreshToken); !authorized {
+    // unauthorized error
+}
+
+// If refresh token rotation is enabled for the project, use RefreshSessionInfoWithToken to
+// receive the full authentication info: the rotated refresh token is returned in
+// authInfo.RefreshToken and must be used for subsequent refreshes
+if authorized, authInfo, err := descopeClient.Auth.RefreshSessionInfoWithToken(context.Background(), refreshToken); !authorized {
     // unauthorized error
 }
 

@@ -29,6 +29,7 @@ type AuthenticationInfo struct {
 	User         *UserResponse `json:"user,omitempty"`
 	FirstSeen    bool          `json:"firstSeen,omitempty"`
 	IDPResponse  *IDPResponse  `json:"idpResponse,omitempty"`
+	TenantSSOID  string        `json:"tenantSSOID,omitempty"` // the id of the tenant SSO configuration that performed the authentication (populated on SSO exchange)
 }
 
 // IDPResponse contains IDP groups, SAML attributes, and OIDC claims returned from SSO authentication.
@@ -435,6 +436,7 @@ type JWTResponse struct {
 	User             *UserResponse `json:"user,omitempty"`
 	FirstSeen        bool          `json:"firstSeen,omitempty"`
 	IDPResponse      *IDPResponse  `json:"idpResponse,omitempty"`
+	TenantSSOID      string        `json:"tenantSSOID,omitempty"`
 }
 
 type EnchantedLinkResponse struct {
@@ -458,6 +460,7 @@ func NewAuthenticationInfo(jRes *JWTResponse, sessionToken, refreshToken *Token)
 		User:         jRes.User,
 		FirstSeen:    jRes.FirstSeen,
 		IDPResponse:  jRes.IDPResponse,
+		TenantSSOID:  jRes.TenantSSOID,
 	}
 }
 

@@ -120,7 +120,8 @@ func TestExchangeTokenSSO(t *testing.T) {
 					Name: "name",
 				},
 			},
-			FirstSeen: true,
+			FirstSeen:   true,
+			TenantSSOID: "sso-config-id",
 		}
 		respBytes, err := utils.Marshal(resp)
 		require.NoError(t, err)
@@ -133,6 +134,7 @@ func TestExchangeTokenSSO(t *testing.T) {
 	require.NotNil(t, authInfo)
 	assert.EqualValues(t, "name", authInfo.User.Name)
 	assert.True(t, authInfo.FirstSeen)
+	assert.EqualValues(t, "sso-config-id", authInfo.TenantSSOID)
 }
 
 func TestExchangeTokenSSOWithIDPResponse(t *testing.T) {
