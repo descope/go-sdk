@@ -569,6 +569,9 @@ type MockUser struct {
 	RemoveTOTPSeedAssert func(loginID string)
 	RemoveTOTPSeedError  error
 
+	RemoveRecoveryCodesAssert func(loginID string)
+	RemoveRecoveryCodesError  error
+
 	ListTrustedDevicesAssert   func(loginIDsOrUserIDs []string)
 	ListTrustedDevicesResponse []*descope.UserTrustedDevice
 	ListTrustedDevicesError    error
@@ -980,6 +983,13 @@ func (m *MockUser) RemoveTOTPSeed(_ context.Context, loginID string) error {
 		m.RemoveTOTPSeedAssert(loginID)
 	}
 	return m.RemoveTOTPSeedError
+}
+
+func (m *MockUser) RemoveRecoveryCodes(_ context.Context, loginID string) error {
+	if m.RemoveRecoveryCodesAssert != nil {
+		m.RemoveRecoveryCodesAssert(loginID)
+	}
+	return m.RemoveRecoveryCodesError
 }
 
 func (m *MockUser) ListTrustedDevices(_ context.Context, loginIDsOrUserIDs []string) ([]*descope.UserTrustedDevice, error) {
