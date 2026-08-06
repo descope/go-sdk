@@ -1631,13 +1631,25 @@ type MockGroup struct {
 	LoadAllGroupsResponse []*descope.Group
 	LoadAllGroupsError    error
 
+	LoadAllGroupsWithSSOIDAssert   func(tenantID, ssoID string)
+	LoadAllGroupsWithSSOIDResponse []*descope.Group
+	LoadAllGroupsWithSSOIDError    error
+
 	LoadAllGroupsForMembersAssert   func(tenantID string, userIDs, loginIDs []string)
 	LoadAllGroupsForMembersResponse []*descope.Group
 	LoadAllGroupsForMembersError    error
 
+	LoadAllGroupsForMembersWithSSOIDAssert   func(tenantID string, userIDs, loginIDs []string, ssoID string)
+	LoadAllGroupsForMembersWithSSOIDResponse []*descope.Group
+	LoadAllGroupsForMembersWithSSOIDError    error
+
 	LoadAllGroupMembersAssert   func(tenantID, groupID string)
 	LoadAllGroupMembersResponse []*descope.Group
 	LoadAllGroupMembersError    error
+
+	LoadAllGroupMembersWithSSOIDAssert   func(tenantID, groupID, ssoID string)
+	LoadAllGroupMembersWithSSOIDResponse []*descope.Group
+	LoadAllGroupMembersWithSSOIDError    error
 }
 
 func (m *MockGroup) LoadAllGroups(_ context.Context, tenantID string) ([]*descope.Group, error) {
@@ -1647,6 +1659,13 @@ func (m *MockGroup) LoadAllGroups(_ context.Context, tenantID string) ([]*descop
 	return m.LoadAllGroupsResponse, m.LoadAllGroupsError
 }
 
+func (m *MockGroup) LoadAllGroupsWithSSOID(_ context.Context, tenantID, ssoID string) ([]*descope.Group, error) {
+	if m.LoadAllGroupsWithSSOIDAssert != nil {
+		m.LoadAllGroupsWithSSOIDAssert(tenantID, ssoID)
+	}
+	return m.LoadAllGroupsWithSSOIDResponse, m.LoadAllGroupsWithSSOIDError
+}
+
 func (m *MockGroup) LoadAllGroupsForMembers(_ context.Context, tenantID string, userIDs, loginIDs []string) ([]*descope.Group, error) {
 	if m.LoadAllGroupsForMembersAssert != nil {
 		m.LoadAllGroupsForMembersAssert(tenantID, userIDs, loginIDs)
@@ -1654,11 +1673,25 @@ func (m *MockGroup) LoadAllGroupsForMembers(_ context.Context, tenantID string, 
 	return m.LoadAllGroupsForMembersResponse, m.LoadAllGroupsForMembersError
 }
 
+func (m *MockGroup) LoadAllGroupsForMembersWithSSOID(_ context.Context, tenantID string, userIDs, loginIDs []string, ssoID string) ([]*descope.Group, error) {
+	if m.LoadAllGroupsForMembersWithSSOIDAssert != nil {
+		m.LoadAllGroupsForMembersWithSSOIDAssert(tenantID, userIDs, loginIDs, ssoID)
+	}
+	return m.LoadAllGroupsForMembersWithSSOIDResponse, m.LoadAllGroupsForMembersWithSSOIDError
+}
+
 func (m *MockGroup) LoadAllGroupMembers(_ context.Context, tenantID, groupID string) ([]*descope.Group, error) {
 	if m.LoadAllGroupMembersAssert != nil {
 		m.LoadAllGroupMembersAssert(tenantID, groupID)
 	}
 	return m.LoadAllGroupMembersResponse, m.LoadAllGroupMembersError
+}
+
+func (m *MockGroup) LoadAllGroupMembersWithSSOID(_ context.Context, tenantID, groupID, ssoID string) ([]*descope.Group, error) {
+	if m.LoadAllGroupMembersWithSSOIDAssert != nil {
+		m.LoadAllGroupMembersWithSSOIDAssert(tenantID, groupID, ssoID)
+	}
+	return m.LoadAllGroupMembersWithSSOIDResponse, m.LoadAllGroupMembersWithSSOIDError
 }
 
 // Mock Flows
