@@ -1184,6 +1184,10 @@ type Group struct {
 	Members []GroupMember `json:"members,omitempty"`
 	// Source is the origin of the group: "scim" or "jit" (SSO SAML/OIDC assertion groups).
 	Source string `json:"source,omitempty"`
+	// SSOID is the SSO configuration the group came from (the ssoId bound to the SCIM token that
+	// created it, or the SSO configuration used at the JIT login that persisted it). Groups from
+	// the tenant's default SSO configuration report the reserved id "default_ssoid".
+	SSOID string `json:"ssoId,omitempty"`
 }
 
 type FlowList struct {

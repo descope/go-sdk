@@ -884,14 +884,29 @@ type Group interface {
 	// Load all groups for a specific tenant id.
 	LoadAllGroups(ctx context.Context, tenantID string) ([]*descope.Group, error)
 
+	// Load all groups for a specific tenant id, scoped to a single SSO configuration.
+	//
+	// ssoID returns only groups that came from the given SSO configuration (the ssoId used at
+	// SCIM provisioning or JIT login). Use the reserved id "default_ssoid" for the tenant's
+	// default SSO configuration; an empty ssoID behaves like LoadAllGroups.
+	LoadAllGroupsWithSSOID(ctx context.Context, tenantID, ssoID string) ([]*descope.Group, error)
+
 	// Load all groups for the provided user IDs or login IDs.
 	//
 	// userIDs have a format of "U2J5ES9S8TkvCgOvcrkpzUgVTEBM" (example), which can be found on the user's JWT.
 	// loginID is how the user identifies when logging in.
 	LoadAllGroupsForMembers(ctx context.Context, tenantID string, userIDs, loginIDs []string) ([]*descope.Group, error)
 
+	// Load all groups for the provided user IDs or login IDs, scoped to a single SSO
+	// configuration (see LoadAllGroupsWithSSOID for the ssoID semantics).
+	LoadAllGroupsForMembersWithSSOID(ctx context.Context, tenantID string, userIDs, loginIDs []string, ssoID string) ([]*descope.Group, error)
+
 	// Load all members of the provided group id.
 	LoadAllGroupMembers(ctx context.Context, tenantID, groupID string) ([]*descope.Group, error)
+
+	// Load all members of the provided group id, returning the group only if it came from the
+	// given SSO configuration (see LoadAllGroupsWithSSOID for the ssoID semantics).
+	LoadAllGroupMembersWithSSOID(ctx context.Context, tenantID, groupID, ssoID string) ([]*descope.Group, error)
 }
 
 // Provides functions for flow and theme management including export and import by ID.
