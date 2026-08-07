@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.29.0](https://github.com/descope/go-sdk/compare/v1.28.0...v1.29.0) (2026-08-07)
+
+
+### Features
+
+* **auth:** expose tenantSSOID on SSO exchange and rotated refresh JWT on refresh ([#815](https://github.com/descope/go-sdk/issues/815)) ([0d01fd0](https://github.com/descope/go-sdk/commit/0d01fd008c9490592e5a02c9328336eca53f8736))
+* **mgmt:** add RemoveRecoveryCodes user management method ([#818](https://github.com/descope/go-sdk/issues/818)) ([71d73ef](https://github.com/descope/go-sdk/commit/71d73ef9ecf46fab6ef5b28ed694148031190d14))
+* **mgmt:** load external groups scoped to a specific SSO config ([#816](https://github.com/descope/go-sdk/issues/816)) ([82c7cb3](https://github.com/descope/go-sdk/commit/82c7cb3da59e998c3212cfa4f04c535deaebe47b))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.28.0 ([#808](https://github.com/descope/go-sdk/issues/808)) ([474437b](https://github.com/descope/go-sdk/commit/474437bc6540cf81d2147250952bf1d65f228609))
+
 ## [1.28.0](https://github.com/descope/go-sdk/compare/v1.27.0...v1.28.0) (2026-07-21)
 
 
