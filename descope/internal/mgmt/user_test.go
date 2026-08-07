@@ -2158,6 +2158,30 @@ func TestUserTOTPSeedError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestUserRemoveRecoveryCodesSuccess(t *testing.T) {
+	response := map[string]any{}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["loginId"])
+	}, response))
+	err := m.User().RemoveRecoveryCodes(context.Background(), "abc")
+	require.NoError(t, err)
+}
+
+func TestUserRemoveRecoveryCodesBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(nil))
+	err := m.User().RemoveRecoveryCodes(context.Background(), "")
+	require.Error(t, err)
+}
+
+func TestUserRemoveRecoveryCodesError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	err := m.User().RemoveRecoveryCodes(context.Background(), "abc")
+	require.Error(t, err)
+}
+
 func TestUserProviderTokenSuccess(t *testing.T) {
 	response := map[string]any{
 		"provider":    "pro",

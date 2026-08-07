@@ -482,6 +482,9 @@ type User interface {
 	// methods or a verified email/phone.
 	RemoveTOTPSeed(ctx context.Context, loginID string) error
 
+	// Removes all recovery codes for the user with the given login ID.
+	RemoveRecoveryCodes(ctx context.Context, loginID string) error
+
 	// Get the provider token for the given login ID.
 	// Only users that sign-in using social providers will have token.
 	// Note: The 'Manage tokens from provider' setting must be enabled.

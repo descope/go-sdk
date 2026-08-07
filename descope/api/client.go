@@ -155,6 +155,7 @@ var (
 			userRemovePasskey:                          "mgmt/user/passkey/delete",
 			userListPasskeys:                           "mgmt/user/passkeys/list",
 			userRemoveTOTPSeed:                         "mgmt/user/totp/delete",
+			userRemoveRecoveryCodes:                    "mgmt/user/recovery-codes/delete",
 			userListTrustedDevices:                     "mgmt/user/trusteddevices/list",
 			userRemoveTrustedDevices:                   "mgmt/user/trusteddevices/remove",
 			userGetProviderToken:                       "mgmt/user/provider/token",
@@ -484,6 +485,7 @@ type mgmtEndpoints struct {
 	userRemovePasskey         string
 	userListPasskeys          string
 	userRemoveTOTPSeed        string
+	userRemoveRecoveryCodes   string
 	userGetProviderToken      string
 	userLogoutAllDevices      string
 	userAddSsoApps            string
@@ -1184,6 +1186,10 @@ func (e *endpoints) ManagementUserListPasskeys() string {
 
 func (e *endpoints) ManagementUserRemoveTOTPSeed() string {
 	return path.Join(e.version, e.mgmt.userRemoveTOTPSeed)
+}
+
+func (e *endpoints) ManagementUserRemoveRecoveryCodes() string {
+	return path.Join(e.version, e.mgmt.userRemoveRecoveryCodes)
 }
 
 func (e *endpoints) ManagementUserListTrustedDevices() string {

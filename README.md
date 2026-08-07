@@ -505,6 +505,14 @@ Pass the loginId to the function to remove the user's TOTP seed.
 totpResponse, err := descopeClient.Management.User().RemoveTOTPSeed(context.Background(), loginID)
 ```
 
+#### Removing Recovery Codes
+
+Pass the loginId to the function to remove all of the user's recovery codes.
+
+```go
+err := descopeClient.Management.User().RemoveRecoveryCodes(context.Background(), loginID)
+```
+
 ### Passwords
 
 The user can also authenticate with a password, though it's recommended to
