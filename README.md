@@ -507,7 +507,7 @@ totpResponse, err := descopeClient.Management.User().RemoveTOTPSeed(context.Back
 
 #### Removing Recovery Codes
 
-Pass the loginId to the function to remove all of the user's recovery codes.
+Pass a login ID or user ID to the function to remove all of the user's recovery codes.
 
 ```go
 err := descopeClient.Management.User().RemoveRecoveryCodes(context.Background(), loginID)
