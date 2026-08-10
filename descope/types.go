@@ -926,6 +926,19 @@ type SSOApplicationCustomAttributeOption struct {
 	Value string `json:"value,omitempty"`
 }
 
+// ClientSecretMeta describes a single client secret of an SSO or third party (inbound)
+// application, without the secret value itself. Name is a human-readable UI label used to
+// identify the secret; the actual authentication credential is the cleartext returned only
+// when the secret is added or revealed. Status is one of "active", "disabled" or "expired".
+// ExpireTime and CreatedTime are epoch seconds; an ExpireTime of 0 means the secret never expires.
+type ClientSecretMeta struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Status      string `json:"status"`
+	ExpireTime  int32  `json:"expireTime"`
+	CreatedTime int32  `json:"createdTime"`
+}
+
 type OIDCApplicationRequest struct {
 	ID                   string             `json:"id"`
 	Name                 string             `json:"name"`
