@@ -147,6 +147,77 @@ func (s *thirdPartyApplication) GetApplicationSecret(ctx context.Context, id str
 	return res.Cleartext, nil
 }
 
+func (s *thirdPartyApplication) AddApplicationSecret(ctx context.Context, id string, name string, expireTime int32) (*descope.ClientSecretMeta, string, error) {
+	if id == "" {
+		return nil, "", utils.NewInvalidArgumentError("id")
+	}
+	if name == "" {
+		return nil, "", utils.NewInvalidArgumentError("name")
+	}
+	req := map[string]any{
+		"id":         id,
+		"name":       name,
+		"expireTime": expireTime,
+	}
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationSecretAdd(), req, nil, "")
+	if err != nil {
+		return nil, "", err
+	}
+	res := struct {
+		Meta      *descope.ClientSecretMeta `json:"meta"`
+		Cleartext string                    `json:"cleartext"`
+	}{}
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), &res); err != nil {
+		return nil, "", err
+	}
+	return res.Meta, res.Cleartext, nil
+}
+
+func (s *thirdPartyApplication) RevealApplicationSecret(ctx context.Context, id string, secretName string) (string, error) {
+	if id == "" {
+		return "", utils.NewInvalidArgumentError("id")
+	}
+	queryParams := map[string]string{"id": id}
+	if secretName != "" {
+		queryParams["secretName"] = secretName
+	}
+	req := &api.HTTPRequest{
+		QueryParams: queryParams,
+	}
+	httpRes, err := s.client.DoGetRequest(ctx, api.Routes.ManagementThirdPartyApplicationSecret(), req, "")
+	if err != nil {
+		return "", err
+	}
+	res := struct {
+		Cleartext string `json:"cleartext"`
+	}{}
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), &res); err != nil {
+		return "", err
+	}
+	return res.Cleartext, nil
+}
+
+func (s *thirdPartyApplication) RevokeApplicationSecret(ctx context.Context, id string, name string) ([]*descope.ClientSecretMeta, error) {
+	if id == "" {
+		return nil, utils.NewInvalidArgumentError("id")
+	}
+	req := map[string]any{
+		"id":   id,
+		"name": name,
+	}
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationSecretRevoke(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	res := struct {
+		Secrets []*descope.ClientSecretMeta `json:"secrets"`
+	}{}
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), &res); err != nil {
+		return nil, err
+	}
+	return res.Secrets, nil
+}
+
 func (s *thirdPartyApplication) RotateApplicationSecret(ctx context.Context, id string) (string, error) {
 	if id == "" {
 		return "", utils.NewInvalidArgumentError("id")

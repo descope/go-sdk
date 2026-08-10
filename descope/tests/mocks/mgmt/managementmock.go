@@ -1341,6 +1341,16 @@ type MockSSOApplication struct {
 	GetApplicationSecretAssert      func(id string)
 	GetApplicationSecretResponse    string
 	GetApplicationSecretError       error
+	AddApplicationSecretAssert      func(id string, name string, expireTime int32)
+	AddApplicationSecretMeta        *descope.ClientSecretMeta
+	AddApplicationSecretResponse    string
+	AddApplicationSecretError       error
+	RevealApplicationSecretAssert   func(id string, secretName string)
+	RevealApplicationSecretResponse string
+	RevealApplicationSecretError    error
+	RevokeApplicationSecretAssert   func(id string, name string)
+	RevokeApplicationSecretResponse []*descope.ClientSecretMeta
+	RevokeApplicationSecretError    error
 	RotateApplicationSecretAssert   func(id string)
 	RotateApplicationSecretResponse string
 	RotateApplicationSecretError    error
@@ -1416,6 +1426,27 @@ func (m *MockSSOApplication) GetApplicationSecret(_ context.Context, id string) 
 		m.GetApplicationSecretAssert(id)
 	}
 	return m.GetApplicationSecretResponse, m.GetApplicationSecretError
+}
+
+func (m *MockSSOApplication) AddApplicationSecret(_ context.Context, id string, name string, expireTime int32) (*descope.ClientSecretMeta, string, error) {
+	if m.AddApplicationSecretAssert != nil {
+		m.AddApplicationSecretAssert(id, name, expireTime)
+	}
+	return m.AddApplicationSecretMeta, m.AddApplicationSecretResponse, m.AddApplicationSecretError
+}
+
+func (m *MockSSOApplication) RevealApplicationSecret(_ context.Context, id string, secretName string) (string, error) {
+	if m.RevealApplicationSecretAssert != nil {
+		m.RevealApplicationSecretAssert(id, secretName)
+	}
+	return m.RevealApplicationSecretResponse, m.RevealApplicationSecretError
+}
+
+func (m *MockSSOApplication) RevokeApplicationSecret(_ context.Context, id string, name string) ([]*descope.ClientSecretMeta, error) {
+	if m.RevokeApplicationSecretAssert != nil {
+		m.RevokeApplicationSecretAssert(id, name)
+	}
+	return m.RevokeApplicationSecretResponse, m.RevokeApplicationSecretError
 }
 
 func (m *MockSSOApplication) RotateApplicationSecret(_ context.Context, id string) (string, error) {
@@ -2287,6 +2318,19 @@ type MockThirdPartyApplication struct {
 	GetApplicationSecretResponse string
 	GetApplicationSecretError    error
 
+	AddApplicationSecretAssert   func(id string, name string, expireTime int32)
+	AddApplicationSecretMeta     *descope.ClientSecretMeta
+	AddApplicationSecretResponse string
+	AddApplicationSecretError    error
+
+	RevealApplicationSecretAssert   func(id string, secretName string)
+	RevealApplicationSecretResponse string
+	RevealApplicationSecretError    error
+
+	RevokeApplicationSecretAssert   func(id string, name string)
+	RevokeApplicationSecretResponse []*descope.ClientSecretMeta
+	RevokeApplicationSecretError    error
+
 	RotateApplicationSecretAssert   func(id string)
 	RotateApplicationSecretResponse string
 	RotateApplicationSecretError    error
@@ -2358,6 +2402,27 @@ func (m *MockThirdPartyApplication) GetApplicationSecret(_ context.Context, id s
 		m.GetApplicationSecretAssert(id)
 	}
 	return m.GetApplicationSecretResponse, m.GetApplicationSecretError
+}
+
+func (m *MockThirdPartyApplication) AddApplicationSecret(_ context.Context, id string, name string, expireTime int32) (*descope.ClientSecretMeta, string, error) {
+	if m.AddApplicationSecretAssert != nil {
+		m.AddApplicationSecretAssert(id, name, expireTime)
+	}
+	return m.AddApplicationSecretMeta, m.AddApplicationSecretResponse, m.AddApplicationSecretError
+}
+
+func (m *MockThirdPartyApplication) RevealApplicationSecret(_ context.Context, id string, secretName string) (string, error) {
+	if m.RevealApplicationSecretAssert != nil {
+		m.RevealApplicationSecretAssert(id, secretName)
+	}
+	return m.RevealApplicationSecretResponse, m.RevealApplicationSecretError
+}
+
+func (m *MockThirdPartyApplication) RevokeApplicationSecret(_ context.Context, id string, name string) ([]*descope.ClientSecretMeta, error) {
+	if m.RevokeApplicationSecretAssert != nil {
+		m.RevokeApplicationSecretAssert(id, name)
+	}
+	return m.RevokeApplicationSecretResponse, m.RevokeApplicationSecretError
 }
 
 func (m *MockThirdPartyApplication) RotateApplicationSecret(_ context.Context, id string) (string, error) {
