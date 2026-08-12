@@ -31,6 +31,16 @@ type Config struct {
 	// PublicKey (optional, "") - used to override or implicitly use a dedicated public key in order to decrypt and validate the JWT tokens
 	// during ValidateSessionRequest(). If empty, will attempt to fetch all public keys from the specified project id.
 	PublicKey string
+	// PrivateKey (optional, "") - the decryption private key used to open encrypted (JWE) session tokens before
+	// signature validation. Required only when the project has JWT encryption enabled (the session token arrives as a
+	// 5-part JWE instead of a 3-part JWS). Accepts a PEM block (PKCS8/PKCS1/SEC1), a single JWK, or a JWK Set JSON
+	// (a Set lets the SDK select the right key by the JWE header `kid`, which supports key rotation). If empty, this
+	// value is retrieved from the DESCOPE_PRIVATE_KEY environment variable instead. Plain JWS tokens are unaffected.
+	PrivateKey string
+	// PrivateKeyProvider (optional, nil) - a callback that returns the decryption private key for a given JWE header `kid`,
+	// for cases where the key lives in a KMS/secret store rather than in PrivateKey. It is consulted before PrivateKey.
+	// The returned value may be a raw crypto private key (e.g. *rsa.PrivateKey, *ecdsa.PrivateKey) or a jwk.Key.
+	PrivateKeyProvider func(kid string) (any, error)
 	// DescopeBaseURL (optional, "https://api.descope.com") - override the default base URL used to communicate with descope services.
 	DescopeBaseURL string
 	// FGACacheURL (optional, "") - pass FGA calls through a cache service, if set.
@@ -92,6 +102,17 @@ func (c *Config) setPublicKey() string {
 		}
 	}
 	return c.PublicKey
+}
+
+func (c *Config) setPrivateKey() string {
+	if c.PrivateKey == "" {
+		if privateKey := utils.GetPrivateKeyEnvVariable(); privateKey != "" {
+			c.PrivateKey = privateKey
+		} else {
+			return ""
+		}
+	}
+	return c.PrivateKey
 }
 
 func (c *Config) setManagementKey() string {
