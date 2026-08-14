@@ -109,6 +109,8 @@ var (
 			ssoApplicationLoad:                         "mgmt/sso/idp/app/load",
 			ssoApplicationLoadAll:                      "mgmt/sso/idp/apps/load",
 			ssoApplicationSecret:                       "mgmt/sso/idp/app/secret",
+			ssoApplicationSecretAdd:                    "mgmt/sso/idp/app/secret/add",
+			ssoApplicationSecretRevoke:                 "mgmt/sso/idp/app/secret/revoke",
 			ssoApplicationRotate:                       "mgmt/sso/idp/app/rotate",
 			ssoApplicationCreateCustomAttributes:       "mgmt/sso/idp/app/customattribute/create",
 			ssoApplicationDeleteCustomAttributes:       "mgmt/sso/idp/app/customattribute/delete",
@@ -155,6 +157,7 @@ var (
 			userRemovePasskey:                          "mgmt/user/passkey/delete",
 			userListPasskeys:                           "mgmt/user/passkeys/list",
 			userRemoveTOTPSeed:                         "mgmt/user/totp/delete",
+			userRemoveRecoveryCodes:                    "mgmt/user/recovery-codes/delete",
 			userListTrustedDevices:                     "mgmt/user/trusteddevices/list",
 			userRemoveTrustedDevices:                   "mgmt/user/trusteddevices/remove",
 			userGetProviderToken:                       "mgmt/user/provider/token",
@@ -288,6 +291,8 @@ var (
 			thirdPartyApplicationLoad:                  "mgmt/thirdparty/app/load",
 			thirdPartyApplicationLoadAll:               "mgmt/thirdparty/apps/load",
 			thirdPartyApplicationSecret:                "mgmt/thirdparty/app/secret",
+			thirdPartyApplicationSecretAdd:             "mgmt/thirdparty/app/secret/add",
+			thirdPartyApplicationSecretRevoke:          "mgmt/thirdparty/app/secret/revoke",
 			thirdPartyApplicationRotate:                "mgmt/thirdparty/app/rotate",
 			thirdPartyApplicationConsentDelete:         "mgmt/thirdparty/consents/delete",
 			thirdPartyApplicationTenantConsentDelete:   "mgmt/thirdparty/consents/delete/tenant",
@@ -429,17 +434,19 @@ type mgmtEndpoints struct {
 	tenantGenerateSSOConfigurationLink string
 	tenantRevokeSSOConfigurationLink   string
 
-	ssoApplicationOIDCCreate  string
-	ssoApplicationSAMLCreate  string
-	ssoApplicationWSFedCreate string
-	ssoApplicationOIDCUpdate  string
-	ssoApplicationSAMLUpdate  string
-	ssoApplicationWSFedUpdate string
-	ssoApplicationDelete      string
-	ssoApplicationLoad        string
-	ssoApplicationLoadAll     string
-	ssoApplicationSecret      string
-	ssoApplicationRotate      string
+	ssoApplicationOIDCCreate   string
+	ssoApplicationSAMLCreate   string
+	ssoApplicationWSFedCreate  string
+	ssoApplicationOIDCUpdate   string
+	ssoApplicationSAMLUpdate   string
+	ssoApplicationWSFedUpdate  string
+	ssoApplicationDelete       string
+	ssoApplicationLoad         string
+	ssoApplicationLoadAll      string
+	ssoApplicationSecret       string
+	ssoApplicationSecretAdd    string
+	ssoApplicationSecretRevoke string
+	ssoApplicationRotate       string
 
 	ssoApplicationCreateCustomAttributes string
 	ssoApplicationDeleteCustomAttributes string
@@ -484,6 +491,7 @@ type mgmtEndpoints struct {
 	userRemovePasskey         string
 	userListPasskeys          string
 	userRemoveTOTPSeed        string
+	userRemoveRecoveryCodes   string
 	userGetProviderToken      string
 	userLogoutAllDevices      string
 	userAddSsoApps            string
@@ -638,6 +646,8 @@ type mgmtEndpoints struct {
 	thirdPartyApplicationLoad                string
 	thirdPartyApplicationLoadAll             string
 	thirdPartyApplicationSecret              string
+	thirdPartyApplicationSecretAdd           string
+	thirdPartyApplicationSecretRevoke        string
 	thirdPartyApplicationRotate              string
 	thirdPartyApplicationConsentDelete       string
 	thirdPartyApplicationTenantConsentDelete string
@@ -1002,6 +1012,14 @@ func (e *endpoints) ManagementSSOApplicationSecret() string {
 	return path.Join(e.version, e.mgmt.ssoApplicationSecret)
 }
 
+func (e *endpoints) ManagementSSOApplicationSecretAdd() string {
+	return path.Join(e.version, e.mgmt.ssoApplicationSecretAdd)
+}
+
+func (e *endpoints) ManagementSSOApplicationSecretRevoke() string {
+	return path.Join(e.version, e.mgmt.ssoApplicationSecretRevoke)
+}
+
 func (e *endpoints) ManagementSSOApplicationRotate() string {
 	return path.Join(e.version, e.mgmt.ssoApplicationRotate)
 }
@@ -1184,6 +1202,10 @@ func (e *endpoints) ManagementUserListPasskeys() string {
 
 func (e *endpoints) ManagementUserRemoveTOTPSeed() string {
 	return path.Join(e.version, e.mgmt.userRemoveTOTPSeed)
+}
+
+func (e *endpoints) ManagementUserRemoveRecoveryCodes() string {
+	return path.Join(e.version, e.mgmt.userRemoveRecoveryCodes)
 }
 
 func (e *endpoints) ManagementUserListTrustedDevices() string {
@@ -1717,6 +1739,14 @@ func (e *endpoints) ManagementThirdPartyApplicationPatch() string {
 
 func (e *endpoints) ManagementThirdPartyApplicationSecret() string {
 	return path.Join(e.version, e.mgmt.thirdPartyApplicationSecret)
+}
+
+func (e *endpoints) ManagementThirdPartyApplicationSecretAdd() string {
+	return path.Join(e.version, e.mgmt.thirdPartyApplicationSecretAdd)
+}
+
+func (e *endpoints) ManagementThirdPartyApplicationSecretRevoke() string {
+	return path.Join(e.version, e.mgmt.thirdPartyApplicationSecretRevoke)
 }
 
 func (e *endpoints) ManagementThirdPartyApplicationRotate() string {

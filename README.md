@@ -432,6 +432,10 @@ authInfo, err := descopeClient.Auth.SSO().ExchangeToken(context.Background(), co
 if err != nil {
     // handle error
 }
+
+// When a tenant has multiple SSO configurations, authInfo.TenantSSOID holds the id
+// of the SSO configuration that performed the authentication
+ssoID := authInfo.TenantSSOID
 ```
 
 ```go
@@ -499,6 +503,14 @@ Pass the loginId to the function to remove the user's TOTP seed.
 
 ```go
 totpResponse, err := descopeClient.Management.User().RemoveTOTPSeed(context.Background(), loginID)
+```
+
+#### Removing Recovery Codes
+
+Pass a login ID or user ID to the function to remove all of the user's recovery codes.
+
+```go
+err := descopeClient.Management.User().RemoveRecoveryCodes(context.Background(), loginID)
 ```
 
 ### Passwords
@@ -606,6 +618,13 @@ if authorized, sessionToken, err := descopeClient.Auth.ValidateSessionWithToken(
 
 // If ValidateSessionWithRequest raises an exception, you will need to refresh the session using
 if authorized, sessionToken, err := descopeClient.Auth.RefreshSessionWithToken(context.Background(), refreshToken); !authorized {
+    // unauthorized error
+}
+
+// If refresh token rotation is enabled for the project, use RefreshSessionInfoWithToken to
+// receive the full authentication info: the rotated refresh token is returned in
+// authInfo.RefreshToken and must be used for subsequent refreshes
+if authorized, authInfo, err := descopeClient.Auth.RefreshSessionInfoWithToken(context.Background(), refreshToken); !authorized {
     // unauthorized error
 }
 
