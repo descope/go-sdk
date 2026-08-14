@@ -752,6 +752,16 @@ func (u *user) RemoveTOTPSeed(ctx context.Context, loginID string) error {
 	return err
 }
 
+func (u *user) RemoveRecoveryCodes(ctx context.Context, loginIDOrUserID string) error {
+	if loginIDOrUserID == "" {
+		return utils.NewInvalidArgumentError("loginIDOrUserID")
+	}
+
+	req := map[string]any{"loginId": loginIDOrUserID}
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveRecoveryCodes(), req, nil, "")
+	return err
+}
+
 type userTrustedDeviceRaw struct {
 	ID                    string `json:"id,omitempty"`
 	Name                  string `json:"name,omitempty"`

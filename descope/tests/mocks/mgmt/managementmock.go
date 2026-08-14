@@ -569,6 +569,9 @@ type MockUser struct {
 	RemoveTOTPSeedAssert func(loginID string)
 	RemoveTOTPSeedError  error
 
+	RemoveRecoveryCodesAssert func(loginIDOrUserID string)
+	RemoveRecoveryCodesError  error
+
 	ListTrustedDevicesAssert   func(loginIDsOrUserIDs []string)
 	ListTrustedDevicesResponse []*descope.UserTrustedDevice
 	ListTrustedDevicesError    error
@@ -982,6 +985,13 @@ func (m *MockUser) RemoveTOTPSeed(_ context.Context, loginID string) error {
 	return m.RemoveTOTPSeedError
 }
 
+func (m *MockUser) RemoveRecoveryCodes(_ context.Context, loginIDOrUserID string) error {
+	if m.RemoveRecoveryCodesAssert != nil {
+		m.RemoveRecoveryCodesAssert(loginIDOrUserID)
+	}
+	return m.RemoveRecoveryCodesError
+}
+
 func (m *MockUser) ListTrustedDevices(_ context.Context, loginIDsOrUserIDs []string) ([]*descope.UserTrustedDevice, error) {
 	if m.ListTrustedDevicesAssert != nil {
 		m.ListTrustedDevicesAssert(loginIDsOrUserIDs)
@@ -1331,6 +1341,16 @@ type MockSSOApplication struct {
 	GetApplicationSecretAssert      func(id string)
 	GetApplicationSecretResponse    string
 	GetApplicationSecretError       error
+	AddApplicationSecretAssert      func(id string, name string, expireTime int32)
+	AddApplicationSecretMeta        *descope.ClientSecretMeta
+	AddApplicationSecretResponse    string
+	AddApplicationSecretError       error
+	RevealApplicationSecretAssert   func(id string, secretName string)
+	RevealApplicationSecretResponse string
+	RevealApplicationSecretError    error
+	RevokeApplicationSecretAssert   func(id string, name string)
+	RevokeApplicationSecretResponse []*descope.ClientSecretMeta
+	RevokeApplicationSecretError    error
 	RotateApplicationSecretAssert   func(id string)
 	RotateApplicationSecretResponse string
 	RotateApplicationSecretError    error
@@ -1406,6 +1426,27 @@ func (m *MockSSOApplication) GetApplicationSecret(_ context.Context, id string) 
 		m.GetApplicationSecretAssert(id)
 	}
 	return m.GetApplicationSecretResponse, m.GetApplicationSecretError
+}
+
+func (m *MockSSOApplication) AddApplicationSecret(_ context.Context, id string, name string, expireTime int32) (*descope.ClientSecretMeta, string, error) {
+	if m.AddApplicationSecretAssert != nil {
+		m.AddApplicationSecretAssert(id, name, expireTime)
+	}
+	return m.AddApplicationSecretMeta, m.AddApplicationSecretResponse, m.AddApplicationSecretError
+}
+
+func (m *MockSSOApplication) RevealApplicationSecret(_ context.Context, id string, secretName string) (string, error) {
+	if m.RevealApplicationSecretAssert != nil {
+		m.RevealApplicationSecretAssert(id, secretName)
+	}
+	return m.RevealApplicationSecretResponse, m.RevealApplicationSecretError
+}
+
+func (m *MockSSOApplication) RevokeApplicationSecret(_ context.Context, id string, name string) ([]*descope.ClientSecretMeta, error) {
+	if m.RevokeApplicationSecretAssert != nil {
+		m.RevokeApplicationSecretAssert(id, name)
+	}
+	return m.RevokeApplicationSecretResponse, m.RevokeApplicationSecretError
 }
 
 func (m *MockSSOApplication) RotateApplicationSecret(_ context.Context, id string) (string, error) {
@@ -1631,13 +1672,25 @@ type MockGroup struct {
 	LoadAllGroupsResponse []*descope.Group
 	LoadAllGroupsError    error
 
+	LoadAllGroupsWithSSOIDAssert   func(tenantID, ssoID string)
+	LoadAllGroupsWithSSOIDResponse []*descope.Group
+	LoadAllGroupsWithSSOIDError    error
+
 	LoadAllGroupsForMembersAssert   func(tenantID string, userIDs, loginIDs []string)
 	LoadAllGroupsForMembersResponse []*descope.Group
 	LoadAllGroupsForMembersError    error
 
+	LoadAllGroupsForMembersWithSSOIDAssert   func(tenantID string, userIDs, loginIDs []string, ssoID string)
+	LoadAllGroupsForMembersWithSSOIDResponse []*descope.Group
+	LoadAllGroupsForMembersWithSSOIDError    error
+
 	LoadAllGroupMembersAssert   func(tenantID, groupID string)
 	LoadAllGroupMembersResponse []*descope.Group
 	LoadAllGroupMembersError    error
+
+	LoadAllGroupMembersWithSSOIDAssert   func(tenantID, groupID, ssoID string)
+	LoadAllGroupMembersWithSSOIDResponse []*descope.Group
+	LoadAllGroupMembersWithSSOIDError    error
 }
 
 func (m *MockGroup) LoadAllGroups(_ context.Context, tenantID string) ([]*descope.Group, error) {
@@ -1647,6 +1700,13 @@ func (m *MockGroup) LoadAllGroups(_ context.Context, tenantID string) ([]*descop
 	return m.LoadAllGroupsResponse, m.LoadAllGroupsError
 }
 
+func (m *MockGroup) LoadAllGroupsWithSSOID(_ context.Context, tenantID, ssoID string) ([]*descope.Group, error) {
+	if m.LoadAllGroupsWithSSOIDAssert != nil {
+		m.LoadAllGroupsWithSSOIDAssert(tenantID, ssoID)
+	}
+	return m.LoadAllGroupsWithSSOIDResponse, m.LoadAllGroupsWithSSOIDError
+}
+
 func (m *MockGroup) LoadAllGroupsForMembers(_ context.Context, tenantID string, userIDs, loginIDs []string) ([]*descope.Group, error) {
 	if m.LoadAllGroupsForMembersAssert != nil {
 		m.LoadAllGroupsForMembersAssert(tenantID, userIDs, loginIDs)
@@ -1654,11 +1714,25 @@ func (m *MockGroup) LoadAllGroupsForMembers(_ context.Context, tenantID string, 
 	return m.LoadAllGroupsForMembersResponse, m.LoadAllGroupsForMembersError
 }
 
+func (m *MockGroup) LoadAllGroupsForMembersWithSSOID(_ context.Context, tenantID string, userIDs, loginIDs []string, ssoID string) ([]*descope.Group, error) {
+	if m.LoadAllGroupsForMembersWithSSOIDAssert != nil {
+		m.LoadAllGroupsForMembersWithSSOIDAssert(tenantID, userIDs, loginIDs, ssoID)
+	}
+	return m.LoadAllGroupsForMembersWithSSOIDResponse, m.LoadAllGroupsForMembersWithSSOIDError
+}
+
 func (m *MockGroup) LoadAllGroupMembers(_ context.Context, tenantID, groupID string) ([]*descope.Group, error) {
 	if m.LoadAllGroupMembersAssert != nil {
 		m.LoadAllGroupMembersAssert(tenantID, groupID)
 	}
 	return m.LoadAllGroupMembersResponse, m.LoadAllGroupMembersError
+}
+
+func (m *MockGroup) LoadAllGroupMembersWithSSOID(_ context.Context, tenantID, groupID, ssoID string) ([]*descope.Group, error) {
+	if m.LoadAllGroupMembersWithSSOIDAssert != nil {
+		m.LoadAllGroupMembersWithSSOIDAssert(tenantID, groupID, ssoID)
+	}
+	return m.LoadAllGroupMembersWithSSOIDResponse, m.LoadAllGroupMembersWithSSOIDError
 }
 
 // Mock Flows
@@ -2244,6 +2318,19 @@ type MockThirdPartyApplication struct {
 	GetApplicationSecretResponse string
 	GetApplicationSecretError    error
 
+	AddApplicationSecretAssert   func(id string, name string, expireTime int32)
+	AddApplicationSecretMeta     *descope.ClientSecretMeta
+	AddApplicationSecretResponse string
+	AddApplicationSecretError    error
+
+	RevealApplicationSecretAssert   func(id string, secretName string)
+	RevealApplicationSecretResponse string
+	RevealApplicationSecretError    error
+
+	RevokeApplicationSecretAssert   func(id string, name string)
+	RevokeApplicationSecretResponse []*descope.ClientSecretMeta
+	RevokeApplicationSecretError    error
+
 	RotateApplicationSecretAssert   func(id string)
 	RotateApplicationSecretResponse string
 	RotateApplicationSecretError    error
@@ -2315,6 +2402,27 @@ func (m *MockThirdPartyApplication) GetApplicationSecret(_ context.Context, id s
 		m.GetApplicationSecretAssert(id)
 	}
 	return m.GetApplicationSecretResponse, m.GetApplicationSecretError
+}
+
+func (m *MockThirdPartyApplication) AddApplicationSecret(_ context.Context, id string, name string, expireTime int32) (*descope.ClientSecretMeta, string, error) {
+	if m.AddApplicationSecretAssert != nil {
+		m.AddApplicationSecretAssert(id, name, expireTime)
+	}
+	return m.AddApplicationSecretMeta, m.AddApplicationSecretResponse, m.AddApplicationSecretError
+}
+
+func (m *MockThirdPartyApplication) RevealApplicationSecret(_ context.Context, id string, secretName string) (string, error) {
+	if m.RevealApplicationSecretAssert != nil {
+		m.RevealApplicationSecretAssert(id, secretName)
+	}
+	return m.RevealApplicationSecretResponse, m.RevealApplicationSecretError
+}
+
+func (m *MockThirdPartyApplication) RevokeApplicationSecret(_ context.Context, id string, name string) ([]*descope.ClientSecretMeta, error) {
+	if m.RevokeApplicationSecretAssert != nil {
+		m.RevokeApplicationSecretAssert(id, name)
+	}
+	return m.RevokeApplicationSecretResponse, m.RevokeApplicationSecretError
 }
 
 func (m *MockThirdPartyApplication) RotateApplicationSecret(_ context.Context, id string) (string, error) {

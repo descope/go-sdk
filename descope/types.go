@@ -29,6 +29,7 @@ type AuthenticationInfo struct {
 	User         *UserResponse `json:"user,omitempty"`
 	FirstSeen    bool          `json:"firstSeen,omitempty"`
 	IDPResponse  *IDPResponse  `json:"idpResponse,omitempty"`
+	TenantSSOID  string        `json:"tenantSSOID,omitempty"` // the id of the tenant SSO configuration that performed the authentication (populated on SSO exchange)
 }
 
 // IDPResponse contains IDP groups, SAML attributes, and OIDC claims returned from SSO authentication.
@@ -435,6 +436,7 @@ type JWTResponse struct {
 	User             *UserResponse `json:"user,omitempty"`
 	FirstSeen        bool          `json:"firstSeen,omitempty"`
 	IDPResponse      *IDPResponse  `json:"idpResponse,omitempty"`
+	TenantSSOID      string        `json:"tenantSSOID,omitempty"`
 }
 
 type EnchantedLinkResponse struct {
@@ -458,6 +460,7 @@ func NewAuthenticationInfo(jRes *JWTResponse, sessionToken, refreshToken *Token)
 		User:         jRes.User,
 		FirstSeen:    jRes.FirstSeen,
 		IDPResponse:  jRes.IDPResponse,
+		TenantSSOID:  jRes.TenantSSOID,
 	}
 }
 
@@ -923,6 +926,19 @@ type SSOApplicationCustomAttributeOption struct {
 	Value string `json:"value,omitempty"`
 }
 
+// ClientSecretMeta describes a single client secret of an SSO or third party (inbound)
+// application, without the secret value itself. Name is a human-readable UI label used to
+// identify the secret; the actual authentication credential is the cleartext returned only
+// when the secret is added or revealed. Status is one of "active", "disabled" or "expired".
+// ExpireTime and CreatedTime are epoch seconds; an ExpireTime of 0 means the secret never expires.
+type ClientSecretMeta struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Status      string `json:"status"`
+	ExpireTime  int32  `json:"expireTime"`
+	CreatedTime int32  `json:"createdTime"`
+}
+
 type OIDCApplicationRequest struct {
 	ID                   string             `json:"id"`
 	Name                 string             `json:"name"`
@@ -1185,6 +1201,10 @@ type Group struct {
 	Members []GroupMember `json:"members,omitempty"`
 	// Source is the origin of the group: "scim" or "jit" (SSO SAML/OIDC assertion groups).
 	Source string `json:"source,omitempty"`
+	// SSOID is the SSO configuration the group came from (the ssoId bound to the SCIM token that
+	// created it, or the SSO configuration used at the JIT login that persisted it). Groups from
+	// the tenant's default SSO configuration report the reserved id "default_ssoid".
+	SSOID string `json:"ssoId,omitempty"`
 }
 
 type FlowList struct {
