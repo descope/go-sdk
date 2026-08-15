@@ -2024,6 +2024,11 @@ func baseURLForProjectID(projectID string) string {
 }
 
 func NewClient(conf ClientParams) *Client {
+	// Must be resolved before the transport is built, which derives settings from it
+	if conf.BaseURL == "" {
+		conf.BaseURL = baseURLForProjectID(conf.ProjectID)
+	}
+
 	httpClient := conf.DefaultClient
 	if httpClient == nil {
 		var rt http.RoundTripper
@@ -2055,10 +2060,6 @@ func NewClient(conf ClientParams) *Client {
 	defaultHeaders := map[string]string{}
 
 	maps.Copy(defaultHeaders, conf.CustomDefaultHeaders)
-
-	if conf.BaseURL == "" {
-		conf.BaseURL = baseURLForProjectID(conf.ProjectID)
-	}
 
 	return &Client{
 		uri:               conf.BaseURL,
