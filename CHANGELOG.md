@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.29.1](https://github.com/descope/go-sdk/compare/v1.29.0...v1.29.1) (2026-08-15)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.29.0 ([#820](https://github.com/descope/go-sdk/issues/820)) ([d72e55e](https://github.com/descope/go-sdk/commit/d72e55e552c93a379c3785c7799eb06a9795659a))
+* resolve base URL before constructing the HTTP transport ([#829](https://github.com/descope/go-sdk/issues/829)) ([97e79bd](https://github.com/descope/go-sdk/commit/97e79bdd8d00ed0cb2b00fe19a3c950b6a555acd))
+
 ## [1.29.0](https://github.com/descope/go-sdk/compare/v1.28.0...v1.29.0) (2026-08-07)
 
 
