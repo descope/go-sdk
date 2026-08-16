@@ -115,10 +115,23 @@ func TestNewSSOSettingsSuccess(t *testing.T) {
 	displayName := "somessodisplayname"
 	response := map[string]any{
 		"tenant": map[string]any{
-			"id":       tenantID,
-			"name":     "T1",
-			"authType": "saml",
-			"domains":  []string{"lulu"},
+			"id":           tenantID,
+			"name":         "T1",
+			"authType":     "saml",
+			"domains":      []string{"lulu"},
+			"idJagEnabled": true,
+			"idJagSettings": map[string]any{
+				"issuers": map[string]any{
+					"https://issuer.example.com": map[string]any{
+						"jwksUri":             "https://issuer.example.com/jwks",
+						"signAlgorithm":       "RS256",
+						"externalIdFieldName": "sub",
+					},
+				},
+				"jwtBearerGrantTypeAudienceToUse":     "aud-val",
+				"jwtBearerGrantTypeScopeToUse":        "scope-val",
+				"jwtBearerGrantTypeCustomClaimsToUse": "claims-val",
+			},
 		},
 		"saml": map[string]any{
 			"tenantID":       tenantID,
@@ -382,10 +395,23 @@ func TestLoadSettingsSuccess(t *testing.T) {
 	tenantID := "abc"
 	response := map[string]any{
 		"tenant": map[string]any{
-			"id":       tenantID,
-			"name":     "T1",
-			"authType": "saml",
-			"domains":  []string{"lulu"},
+			"id":           tenantID,
+			"name":         "T1",
+			"authType":     "saml",
+			"domains":      []string{"lulu"},
+			"idJagEnabled": true,
+			"idJagSettings": map[string]any{
+				"issuers": map[string]any{
+					"https://issuer.example.com": map[string]any{
+						"jwksUri":             "https://issuer.example.com/jwks",
+						"signAlgorithm":       "RS256",
+						"externalIdFieldName": "sub",
+					},
+				},
+				"jwtBearerGrantTypeAudienceToUse":     "aud-val",
+				"jwtBearerGrantTypeScopeToUse":        "scope-val",
+				"jwtBearerGrantTypeCustomClaimsToUse": "claims-val",
+			},
 		},
 		"saml": map[string]any{
 			"tenantID":       tenantID,
@@ -467,6 +493,15 @@ func TestLoadSettingsSuccess(t *testing.T) {
 	require.NotNil(t, res.Tenant)
 	assert.EqualValues(t, tenantID, res.Tenant.ID)
 	assert.EqualValues(t, []string{"lulu"}, res.Tenant.Domains)
+	assert.True(t, res.Tenant.IDJagEnabled)
+	require.NotNil(t, res.Tenant.IDJagSettings)
+	require.Contains(t, res.Tenant.IDJagSettings.Issuers, "https://issuer.example.com")
+	assert.EqualValues(t, "https://issuer.example.com/jwks", res.Tenant.IDJagSettings.Issuers["https://issuer.example.com"].JWKsURI)
+	assert.EqualValues(t, "RS256", res.Tenant.IDJagSettings.Issuers["https://issuer.example.com"].SignAlgorithm)
+	assert.EqualValues(t, "sub", res.Tenant.IDJagSettings.Issuers["https://issuer.example.com"].ExternalIDFieldName)
+	assert.EqualValues(t, "aud-val", res.Tenant.IDJagSettings.JWTBearerGrantTypeAudienceToUse)
+	assert.EqualValues(t, "scope-val", res.Tenant.IDJagSettings.JWTBearerGrantTypeScopeToUse)
+	assert.EqualValues(t, "claims-val", res.Tenant.IDJagSettings.JWTBearerGrantTypeCustomClaimsToUse)
 
 	require.NotNil(t, res.Saml)
 	assert.EqualValues(t, "idpEntityID", res.Saml.IdpEntityID)
@@ -520,10 +555,23 @@ func TestLoadSettingsWithSSOIDSuccess(t *testing.T) {
 	ssoID := "somessoid"
 	response := map[string]any{
 		"tenant": map[string]any{
-			"id":       tenantID,
-			"name":     "T1",
-			"authType": "saml",
-			"domains":  []string{"lulu"},
+			"id":           tenantID,
+			"name":         "T1",
+			"authType":     "saml",
+			"domains":      []string{"lulu"},
+			"idJagEnabled": true,
+			"idJagSettings": map[string]any{
+				"issuers": map[string]any{
+					"https://issuer.example.com": map[string]any{
+						"jwksUri":             "https://issuer.example.com/jwks",
+						"signAlgorithm":       "RS256",
+						"externalIdFieldName": "sub",
+					},
+				},
+				"jwtBearerGrantTypeAudienceToUse":     "aud-val",
+				"jwtBearerGrantTypeScopeToUse":        "scope-val",
+				"jwtBearerGrantTypeCustomClaimsToUse": "claims-val",
+			},
 		},
 		"saml": map[string]any{
 			"tenantID":       tenantID,
