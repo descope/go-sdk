@@ -1660,6 +1660,15 @@ type IssuerSettings struct {
 	SignAlgorithm       string `json:"signAlgorithm,omitempty"`
 	UserInfoURI         string `json:"userInfoUri,omitempty"`
 	ExternalIDFieldName string `json:"externalIdFieldName,omitempty"`
+	// Cross-App Access JIT provisioning + mapping, per trusted issuer (parity with the SSO login JIT).
+	// JITDisabled signs in only, without creating users. AttributeMapping maps assertion claims to user
+	// fields; RoleMappings/DefaultSSORoles/GroupsPriority map the assertion groups claim to roles.
+	JITDisabled        bool              `json:"jitDisabled,omitempty"`
+	AttributeMapping   *AttributeMapping `json:"attributeMapping,omitempty"`
+	RoleMappings       []*RoleMapping    `json:"roleMappings,omitempty"`
+	DefaultSSORoles    []string          `json:"defaultSSORoles,omitempty"`
+	GroupsPriority     []string          `json:"groupsPriority,omitempty"`
+	AllowOverrideRoles bool              `json:"allowOverrideRoles,omitempty"`
 }
 
 type JWTBearerSettings struct {
