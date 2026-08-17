@@ -184,6 +184,8 @@ var (
 			ssoSAMLSettingsByMetadata:                  "mgmt/sso/saml/metadata",
 			ssoRedirectURL:                             "mgmt/sso/redirect",
 			ssoOIDCSettings:                            "mgmt/sso/oidc",
+			ssoXAASettings:                             "mgmt/sso/xaa/settings",
+			ssoXAALoadAllSettings:                      "mgmt/sso/xaa/settings/all",
 			ssoMetadata:                                "mgmt/sso/metadata",
 			ssoMapping:                                 "mgmt/sso/mapping",
 			ssoRecalculateMappings:                     "mgmt/sso/recalculate-mappings",
@@ -525,6 +527,8 @@ type mgmtEndpoints struct {
 	ssoSAMLSettingsByMetadata string
 	ssoRedirectURL            string
 	ssoOIDCSettings           string
+	ssoXAASettings            string
+	ssoXAALoadAllSettings     string
 	ssoRecalculateMappings    string
 	updateJWT                 string
 	impersonate               string
@@ -1288,6 +1292,14 @@ func (e *endpoints) ManagementSSORedirectURL() string {
 
 func (e *endpoints) ManagementSSOOIDCSettings() string {
 	return path.Join(e.version, e.mgmt.ssoOIDCSettings)
+}
+
+func (e *endpoints) ManagementXAASettings() string {
+	return path.Join(e.version, e.mgmt.ssoXAASettings)
+}
+
+func (e *endpoints) ManagementXAALoadAllSettings() string {
+	return path.Join(e.version, e.mgmt.ssoXAALoadAllSettings)
 }
 
 // // Deprecated
