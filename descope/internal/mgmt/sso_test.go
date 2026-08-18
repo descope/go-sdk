@@ -1440,6 +1440,7 @@ func TestSSOConfigureXAASettingsSuccess(t *testing.T) {
 		GroupsPriority:       []string{"group1"},
 		GroupPriorityEnabled: true,
 		AllowOverrideRoles:   true,
+		ProviderID:           "prov1",
 		FgaMappings: map[string]*descope.FGAGroupMapping{
 			"group1": {
 				Relations: []*descope.FGAGroupMappingRelation{
@@ -1462,6 +1463,7 @@ func TestSSOConfigureXAASettingsSuccess(t *testing.T) {
 		require.Equal(t, true, req["enabled"])
 		require.Equal(t, true, req["groupPriorityEnabled"])
 		require.Equal(t, true, req["allowOverrideRoles"])
+		require.Equal(t, "prov1", req["providerID"])
 		require.Equal(t, []any{"defrole1", "defrole2"}, req["defaultSSORoles"])
 		require.Equal(t, []any{"group1"}, req["groupsPriority"])
 
@@ -1569,6 +1571,7 @@ func TestLoadXAASettingsSuccess(t *testing.T) {
 		"groupsPriority":       []string{"group1"},
 		"groupPriorityEnabled": true,
 		"allowOverrideRoles":   true,
+		"providerID":           "prov1",
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -1593,6 +1596,7 @@ func TestLoadXAASettingsSuccess(t *testing.T) {
 	assert.EqualValues(t, []string{"defrole1"}, res.DefaultSSORoles)
 	assert.True(t, res.GroupPriorityEnabled)
 	assert.True(t, res.AllowOverrideRoles)
+	assert.EqualValues(t, "prov1", res.ProviderID)
 }
 
 func TestLoadXAASettingsErrorMissingTenantID(t *testing.T) {

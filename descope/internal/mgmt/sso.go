@@ -427,6 +427,9 @@ func (s *sso) ConfigureXAASettings(ctx context.Context, tenantID string, ssoID s
 	if len(fgaMappings) > 0 {
 		req["fgaMappings"] = fgaMappings
 	}
+	if settings.ProviderID != "" {
+		req["providerID"] = settings.ProviderID
+	}
 
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementXAASettings(), req, nil, "")
 	return err

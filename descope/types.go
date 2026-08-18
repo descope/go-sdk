@@ -1693,6 +1693,7 @@ type SSOXAASettings struct {
 	GroupsPriority       []string                    `json:"groupsPriority,omitempty"` // list of group names in priority order (first = highest priority)
 	GroupPriorityEnabled bool                        `json:"groupPriorityEnabled,omitempty"`
 	AllowOverrideRoles   bool                        `json:"allowOverrideRoles,omitempty"`
+	ProviderID           string                      `json:"providerID,omitempty"` // selected IdP provider template id (display metadata; mirrors SSOSAMLSettings providerID)
 }
 
 // SSOXAASettingsResponse is the load-shape of a single SSO configuration's XAA (ID-JAG) settings.
@@ -1707,6 +1708,7 @@ type SSOXAASettingsResponse struct {
 	GroupsPriority       []string                    `json:"groupsPriority,omitempty"`
 	GroupPriorityEnabled bool                        `json:"groupPriorityEnabled,omitempty"`
 	AllowOverrideRoles   bool                        `json:"allowOverrideRoles,omitempty"`
+	ProviderID           string                      `json:"providerID,omitempty"` // selected IdP provider template id (display metadata; mirrors SSOSAMLSettings providerID)
 }
 
 type SSOXAAAllSettingsResponse struct {
