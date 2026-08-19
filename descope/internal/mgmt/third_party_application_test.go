@@ -226,6 +226,131 @@ func TestThirdPartyApplicationRotateSecretError(t *testing.T) {
 	require.Empty(t, res)
 }
 
+func TestThirdPartyApplicationAddSecretSuccess(t *testing.T) {
+	response := map[string]any{
+		"meta": map[string]any{
+			"id":          "secret-id",
+			"name":        "my-secret",
+			"status":      "active",
+			"expireTime":  1234,
+			"createdTime": 5678,
+		},
+		"cleartext": "secret-123",
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "id1", req["id"])
+		require.Equal(t, "my-secret", req["name"])
+		require.EqualValues(t, 1234, req["expireTime"])
+	}, response))
+	meta, cleartext, err := mgmt.ThirdPartyApplication().AddApplicationSecret(context.Background(), "id1", "my-secret", 1234)
+	require.NoError(t, err)
+	require.Equal(t, "secret-123", cleartext)
+	require.NotNil(t, meta)
+	require.Equal(t, "secret-id", meta.ID)
+	require.Equal(t, "my-secret", meta.Name)
+	require.Equal(t, "active", meta.Status)
+	require.EqualValues(t, 1234, meta.ExpireTime)
+	require.EqualValues(t, 5678, meta.CreatedTime)
+}
+
+func TestThirdPartyApplicationAddSecretErrorEmptyID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	meta, cleartext, err := mgmt.ThirdPartyApplication().AddApplicationSecret(context.Background(), "", "my-secret", 0)
+	require.Error(t, err)
+	require.Nil(t, meta)
+	require.Empty(t, cleartext)
+}
+
+func TestThirdPartyApplicationAddSecretErrorEmptyName(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	meta, cleartext, err := mgmt.ThirdPartyApplication().AddApplicationSecret(context.Background(), "id1", "", 0)
+	require.Error(t, err)
+	require.Nil(t, meta)
+	require.Empty(t, cleartext)
+}
+
+func TestThirdPartyApplicationAddSecretError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	meta, cleartext, err := mgmt.ThirdPartyApplication().AddApplicationSecret(context.Background(), "id1", "my-secret", 0)
+	require.Error(t, err)
+	require.Nil(t, meta)
+	require.Empty(t, cleartext)
+}
+
+func TestThirdPartyApplicationRevealSecretSuccess(t *testing.T) {
+	response := map[string]any{"cleartext": "secret-123"}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.Equal(t, "id1", r.URL.Query().Get("id"))
+		require.Equal(t, "my-secret", r.URL.Query().Get("secretName"))
+	}, response))
+	res, err := mgmt.ThirdPartyApplication().RevealApplicationSecret(context.Background(), "id1", "my-secret")
+	require.NoError(t, err)
+	require.Equal(t, "secret-123", res)
+}
+
+func TestThirdPartyApplicationRevealSecretEmptyName(t *testing.T) {
+	response := map[string]any{"cleartext": "secret-123"}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, "id1", r.URL.Query().Get("id"))
+		require.Empty(t, r.URL.Query().Get("secretName"))
+	}, response))
+	res, err := mgmt.ThirdPartyApplication().RevealApplicationSecret(context.Background(), "id1", "")
+	require.NoError(t, err)
+	require.Equal(t, "secret-123", res)
+}
+
+func TestThirdPartyApplicationRevealSecretErrorEmptyID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.ThirdPartyApplication().RevealApplicationSecret(context.Background(), "", "my-secret")
+	require.Error(t, err)
+	require.Empty(t, res)
+}
+
+func TestThirdPartyApplicationRevealSecretError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := mgmt.ThirdPartyApplication().RevealApplicationSecret(context.Background(), "test", "my-secret")
+	require.Error(t, err)
+	require.Empty(t, res)
+}
+
+func TestThirdPartyApplicationRevokeSecretSuccess(t *testing.T) {
+	response := map[string]any{
+		"secrets": []map[string]any{
+			{"id": "secret-id", "name": "remaining", "status": "active", "expireTime": 0, "createdTime": 5678},
+		},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "id1", req["id"])
+		require.Equal(t, "my-secret", req["name"])
+	}, response))
+	secrets, err := mgmt.ThirdPartyApplication().RevokeApplicationSecret(context.Background(), "id1", "my-secret")
+	require.NoError(t, err)
+	require.Len(t, secrets, 1)
+	require.Equal(t, "secret-id", secrets[0].ID)
+	require.Equal(t, "remaining", secrets[0].Name)
+}
+
+func TestThirdPartyApplicationRevokeSecretErrorEmptyID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	secrets, err := mgmt.ThirdPartyApplication().RevokeApplicationSecret(context.Background(), "", "my-secret")
+	require.Error(t, err)
+	require.Nil(t, secrets)
+}
+
+func TestThirdPartyApplicationRevokeSecretError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	secrets, err := mgmt.ThirdPartyApplication().RevokeApplicationSecret(context.Background(), "test", "my-secret")
+	require.Error(t, err)
+	require.Nil(t, secrets)
+}
+
 func TestThirdPartyApplicationDeleteSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")

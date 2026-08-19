@@ -211,6 +211,77 @@ func (s *ssoApplication) GetApplicationSecret(ctx context.Context, id string) (s
 	return res.Cleartext, nil
 }
 
+func (s *ssoApplication) AddApplicationSecret(ctx context.Context, id string, name string, expireTime int32) (*descope.ClientSecretMeta, string, error) {
+	if id == "" {
+		return nil, "", utils.NewInvalidArgumentError("id")
+	}
+	if name == "" {
+		return nil, "", utils.NewInvalidArgumentError("name")
+	}
+	req := map[string]any{
+		"appId":      id,
+		"name":       name,
+		"expireTime": expireTime,
+	}
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationSecretAdd(), req, nil, "")
+	if err != nil {
+		return nil, "", err
+	}
+	res := struct {
+		Meta      *descope.ClientSecretMeta `json:"meta"`
+		Cleartext string                    `json:"cleartext"`
+	}{}
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), &res); err != nil {
+		return nil, "", err
+	}
+	return res.Meta, res.Cleartext, nil
+}
+
+func (s *ssoApplication) RevealApplicationSecret(ctx context.Context, id string, secretName string) (string, error) {
+	if id == "" {
+		return "", utils.NewInvalidArgumentError("id")
+	}
+	queryParams := map[string]string{"id": id}
+	if secretName != "" {
+		queryParams["secretName"] = secretName
+	}
+	req := &api.HTTPRequest{
+		QueryParams: queryParams,
+	}
+	httpRes, err := s.client.DoGetRequest(ctx, api.Routes.ManagementSSOApplicationSecret(), req, "")
+	if err != nil {
+		return "", err
+	}
+	res := struct {
+		Cleartext string `json:"cleartext"`
+	}{}
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), &res); err != nil {
+		return "", err
+	}
+	return res.Cleartext, nil
+}
+
+func (s *ssoApplication) RevokeApplicationSecret(ctx context.Context, id string, name string) ([]*descope.ClientSecretMeta, error) {
+	if id == "" {
+		return nil, utils.NewInvalidArgumentError("id")
+	}
+	req := map[string]any{
+		"appId": id,
+		"name":  name,
+	}
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOApplicationSecretRevoke(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	res := struct {
+		Secrets []*descope.ClientSecretMeta `json:"secrets"`
+	}{}
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), &res); err != nil {
+		return nil, err
+	}
+	return res.Secrets, nil
+}
+
 func (s *ssoApplication) RotateApplicationSecret(ctx context.Context, id string) (string, error) {
 	if id == "" {
 		return "", utils.NewInvalidArgumentError("id")
