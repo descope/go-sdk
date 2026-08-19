@@ -393,7 +393,7 @@ func (s *sso) RecalculateSSOMappings(ctx context.Context, tenantID string, ssoID
 	return err
 }
 
-func (s *sso) ConfigureXAASettings(ctx context.Context, tenantID string, ssoID string, settings *descope.SSOXAASettings) error {
+func (s *sso) ConfigureXAASettings(ctx context.Context, tenantID string, settings *descope.SSOXAASettings, ssoID string) error {
 	if tenantID == "" {
 		return utils.NewInvalidArgumentError("tenantID")
 	}

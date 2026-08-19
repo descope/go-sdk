@@ -244,7 +244,7 @@ type MockSSO struct {
 	ConfigureOIDCSettingsAssert func(tenantID string, settings *descope.SSOOIDCSettings, domains []string, ssoID string)
 	ConfigureOIDCSettingsError  error
 
-	ConfigureXAASettingsAssert func(tenantID string, ssoID string, settings *descope.SSOXAASettings)
+	ConfigureXAASettingsAssert func(tenantID string, settings *descope.SSOXAASettings, ssoID string)
 	ConfigureXAASettingsError  error
 
 	LoadXAASettingsAssert   func(tenantID string, ssoID string)
@@ -324,9 +324,9 @@ func (m *MockSSO) ConfigureOIDCSettings(_ context.Context, tenantID string, sett
 	return m.ConfigureOIDCSettingsError
 }
 
-func (m *MockSSO) ConfigureXAASettings(_ context.Context, tenantID string, ssoID string, settings *descope.SSOXAASettings) error {
+func (m *MockSSO) ConfigureXAASettings(_ context.Context, tenantID string, settings *descope.SSOXAASettings, ssoID string) error {
 	if m.ConfigureXAASettingsAssert != nil {
-		m.ConfigureXAASettingsAssert(tenantID, ssoID, settings)
+		m.ConfigureXAASettingsAssert(tenantID, settings, ssoID)
 	}
 	return m.ConfigureXAASettingsError
 }

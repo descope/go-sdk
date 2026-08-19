@@ -695,7 +695,7 @@ type SSO interface {
 	// settings holds the trusted issuers + grant configuration together with the config-level shared
 	// group/role mapping. The shared mapping is shared across SAML / OIDC / SCIM / XAA for the sso_id.
 	// ssoID (optional) - pass ssoID when using multi SSO to configure a specific SSO configuration.
-	ConfigureXAASettings(ctx context.Context, tenantID string, ssoID string, settings *descope.SSOXAASettings) error
+	ConfigureXAASettings(ctx context.Context, tenantID string, settings *descope.SSOXAASettings, ssoID string) error
 
 	// Load the Cross-App Access (XAA / ID-JAG) trust settings for a single SSO configuration of a tenant.
 	//

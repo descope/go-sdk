@@ -785,11 +785,6 @@ type Tenant struct {
 	Disabled                bool            `json:"disabled,omitempty"`
 	EnforceSSOExclusions    []string        `json:"enforceSSOExclusions,omitempty"`
 	RoleInheritance         RoleInheritance `json:"roleInheritance,omitempty"`
-	// IDJagSettings is the tenant's Cross-App Access (XAA / ID-JAG) trust config: the set of
-	// trusted OIDC issuers used to validate identity-assertion authorization grants. Read-only.
-	IDJagSettings *JWTBearerSettings `json:"idJagSettings,omitempty"`
-	// IDJagEnabled reports whether Cross-App Access (ID-JAG) is enabled for the tenant. Read-only.
-	IDJagEnabled bool `json:"idJagEnabled,omitempty"`
 }
 
 type TenantRequest struct {
@@ -1676,6 +1671,19 @@ type IssuerSettings struct {
 	SignAlgorithm       string `json:"signAlgorithm,omitempty"`
 	UserInfoURI         string `json:"userInfoUri,omitempty"`
 	ExternalIDFieldName string `json:"externalIdFieldName,omitempty"`
+}
+
+type JWTBearerSettings struct {
+	Issuers map[string]*IssuerSettings `json:"issuers,omitempty"`
+}
+
+// XAAIssuerSettings is a trusted issuer for Cross-App Access (XAA / ID-JAG), extending the base issuer
+// config with per-issuer JIT provisioning (parity with the SSO login JIT).
+type XAAIssuerSettings struct {
+	JWKsURI             string `json:"jwksUri,omitempty"`
+	SignAlgorithm       string `json:"signAlgorithm,omitempty"`
+	UserInfoURI         string `json:"userInfoUri,omitempty"`
+	ExternalIDFieldName string `json:"externalIdFieldName,omitempty"`
 	// Cross-App Access JIT provisioning, per trusted issuer (parity with the SSO login JIT).
 	// JITDisabled signs in only, without creating users. AttributeMapping maps assertion claims to user
 	// fields. Group-to-role mapping reuses the tenant's shared SSO group mapping.
@@ -1683,8 +1691,10 @@ type IssuerSettings struct {
 	AttributeMapping *AttributeMapping `json:"attributeMapping,omitempty"`
 }
 
-type JWTBearerSettings struct {
-	Issuers map[string]*IssuerSettings `json:"issuers,omitempty"`
+// XAAJWTBearerSettings holds the trusted issuers and jwt-bearer grant configuration for a single SSO
+// configuration's Cross-App Access (XAA / ID-JAG) trust settings.
+type XAAJWTBearerSettings struct {
+	Issuers map[string]*XAAIssuerSettings `json:"issuers,omitempty"`
 	// JWTBearerGrantType* select which values are used when minting a jwt-bearer grant
 	// (ID-JAG / Cross-App Access). Empty means the default is used.
 	JWTBearerGrantTypeAudienceToUse     string `json:"jwtBearerGrantTypeAudienceToUse,omitempty"`
@@ -1701,7 +1711,7 @@ type SSOXAASettings struct {
 	// Enabled toggles Cross-App Access (ID-JAG) for this SSO configuration.
 	Enabled bool `json:"enabled,omitempty"`
 	// Settings holds the trusted issuers and jwt-bearer grant configuration.
-	Settings *JWTBearerSettings `json:"settings,omitempty"`
+	Settings *XAAJWTBearerSettings `json:"settings,omitempty"`
 	// RoleMappings maps IdP groups to Descope roles by role name.
 	RoleMappings         []*RoleMapping              `json:"roleMappings,omitempty"`
 	DefaultSSORoles      []string                    `json:"defaultSSORoles,omitempty"`
@@ -1717,7 +1727,7 @@ type SSOXAASettings struct {
 type SSOXAASettingsResponse struct {
 	SSOID                string                      `json:"ssoId,omitempty"`
 	Enabled              bool                        `json:"enabled,omitempty"`
-	Settings             *JWTBearerSettings          `json:"settings,omitempty"`
+	Settings             *XAAJWTBearerSettings       `json:"settings,omitempty"`
 	GroupsMapping        []*GroupsMapping            `json:"groupsMapping,omitempty"`
 	DefaultSSORoles      []string                    `json:"defaultSSORoles,omitempty"`
 	FgaMappings          map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`

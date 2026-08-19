@@ -115,23 +115,10 @@ func TestNewSSOSettingsSuccess(t *testing.T) {
 	displayName := "somessodisplayname"
 	response := map[string]any{
 		"tenant": map[string]any{
-			"id":           tenantID,
-			"name":         "T1",
-			"authType":     "saml",
-			"domains":      []string{"lulu"},
-			"idJagEnabled": true,
-			"idJagSettings": map[string]any{
-				"issuers": map[string]any{
-					"https://issuer.example.com": map[string]any{
-						"jwksUri":             "https://issuer.example.com/jwks",
-						"signAlgorithm":       "RS256",
-						"externalIdFieldName": "sub",
-					},
-				},
-				"jwtBearerGrantTypeAudienceToUse":     "aud-val",
-				"jwtBearerGrantTypeScopeToUse":        "scope-val",
-				"jwtBearerGrantTypeCustomClaimsToUse": "claims-val",
-			},
+			"id":       tenantID,
+			"name":     "T1",
+			"authType": "saml",
+			"domains":  []string{"lulu"},
 		},
 		"saml": map[string]any{
 			"tenantID":       tenantID,
@@ -395,23 +382,10 @@ func TestLoadSettingsSuccess(t *testing.T) {
 	tenantID := "abc"
 	response := map[string]any{
 		"tenant": map[string]any{
-			"id":           tenantID,
-			"name":         "T1",
-			"authType":     "saml",
-			"domains":      []string{"lulu"},
-			"idJagEnabled": true,
-			"idJagSettings": map[string]any{
-				"issuers": map[string]any{
-					"https://issuer.example.com": map[string]any{
-						"jwksUri":             "https://issuer.example.com/jwks",
-						"signAlgorithm":       "RS256",
-						"externalIdFieldName": "sub",
-					},
-				},
-				"jwtBearerGrantTypeAudienceToUse":     "aud-val",
-				"jwtBearerGrantTypeScopeToUse":        "scope-val",
-				"jwtBearerGrantTypeCustomClaimsToUse": "claims-val",
-			},
+			"id":       tenantID,
+			"name":     "T1",
+			"authType": "saml",
+			"domains":  []string{"lulu"},
 		},
 		"saml": map[string]any{
 			"tenantID":       tenantID,
@@ -493,15 +467,6 @@ func TestLoadSettingsSuccess(t *testing.T) {
 	require.NotNil(t, res.Tenant)
 	assert.EqualValues(t, tenantID, res.Tenant.ID)
 	assert.EqualValues(t, []string{"lulu"}, res.Tenant.Domains)
-	assert.True(t, res.Tenant.IDJagEnabled)
-	require.NotNil(t, res.Tenant.IDJagSettings)
-	require.Contains(t, res.Tenant.IDJagSettings.Issuers, "https://issuer.example.com")
-	assert.EqualValues(t, "https://issuer.example.com/jwks", res.Tenant.IDJagSettings.Issuers["https://issuer.example.com"].JWKsURI)
-	assert.EqualValues(t, "RS256", res.Tenant.IDJagSettings.Issuers["https://issuer.example.com"].SignAlgorithm)
-	assert.EqualValues(t, "sub", res.Tenant.IDJagSettings.Issuers["https://issuer.example.com"].ExternalIDFieldName)
-	assert.EqualValues(t, "aud-val", res.Tenant.IDJagSettings.JWTBearerGrantTypeAudienceToUse)
-	assert.EqualValues(t, "scope-val", res.Tenant.IDJagSettings.JWTBearerGrantTypeScopeToUse)
-	assert.EqualValues(t, "claims-val", res.Tenant.IDJagSettings.JWTBearerGrantTypeCustomClaimsToUse)
 
 	require.NotNil(t, res.Saml)
 	assert.EqualValues(t, "idpEntityID", res.Saml.IdpEntityID)
@@ -555,23 +520,10 @@ func TestLoadSettingsWithSSOIDSuccess(t *testing.T) {
 	ssoID := "somessoid"
 	response := map[string]any{
 		"tenant": map[string]any{
-			"id":           tenantID,
-			"name":         "T1",
-			"authType":     "saml",
-			"domains":      []string{"lulu"},
-			"idJagEnabled": true,
-			"idJagSettings": map[string]any{
-				"issuers": map[string]any{
-					"https://issuer.example.com": map[string]any{
-						"jwksUri":             "https://issuer.example.com/jwks",
-						"signAlgorithm":       "RS256",
-						"externalIdFieldName": "sub",
-					},
-				},
-				"jwtBearerGrantTypeAudienceToUse":     "aud-val",
-				"jwtBearerGrantTypeScopeToUse":        "scope-val",
-				"jwtBearerGrantTypeCustomClaimsToUse": "claims-val",
-			},
+			"id":       tenantID,
+			"name":     "T1",
+			"authType": "saml",
+			"domains":  []string{"lulu"},
 		},
 		"saml": map[string]any{
 			"tenantID":       tenantID,
@@ -1414,8 +1366,8 @@ func TestRecalculateSSOMappingsError(t *testing.T) {
 func TestSSOConfigureXAASettingsSuccess(t *testing.T) {
 	settings := &descope.SSOXAASettings{
 		Enabled: true,
-		Settings: &descope.JWTBearerSettings{
-			Issuers: map[string]*descope.IssuerSettings{
+		Settings: &descope.XAAJWTBearerSettings{
+			Issuers: map[string]*descope.XAAIssuerSettings{
 				"https://issuer.example.com": {
 					JWKsURI:             "https://issuer.example.com/jwks",
 					SignAlgorithm:       "RS256",
@@ -1502,7 +1454,7 @@ func TestSSOConfigureXAASettingsSuccess(t *testing.T) {
 		require.Equal(t, "rd1", relation["relationDefinition"])
 		require.Equal(t, "ns1", relation["namespace"])
 	}))
-	err := mgmt.SSO().ConfigureXAASettings(context.Background(), "abc", "", settings)
+	err := mgmt.SSO().ConfigureXAASettings(context.Background(), "abc", settings, "")
 	require.NoError(t, err)
 }
 
@@ -1510,8 +1462,8 @@ func TestSSOConfigureXAASettingsWithSSOIDSuccess(t *testing.T) {
 	ssoID := "somessoid"
 	settings := &descope.SSOXAASettings{
 		Enabled: true,
-		Settings: &descope.JWTBearerSettings{
-			Issuers: map[string]*descope.IssuerSettings{
+		Settings: &descope.XAAJWTBearerSettings{
+			Issuers: map[string]*descope.XAAIssuerSettings{
 				"https://issuer.example.com": {JWKsURI: "https://issuer.example.com/jwks"},
 			},
 		},
@@ -1523,7 +1475,7 @@ func TestSSOConfigureXAASettingsWithSSOIDSuccess(t *testing.T) {
 		require.Equal(t, "abc", req["tenantId"])
 		require.Equal(t, ssoID, req["ssoId"])
 	}))
-	err := mgmt.SSO().ConfigureXAASettings(context.Background(), "abc", ssoID, settings)
+	err := mgmt.SSO().ConfigureXAASettings(context.Background(), "abc", settings, ssoID)
 	require.NoError(t, err)
 }
 
@@ -1533,11 +1485,11 @@ func TestSSOConfigureXAASettingsError(t *testing.T) {
 		called = true
 	}))
 	// Missing tenantID
-	err := mgmt.SSO().ConfigureXAASettings(context.Background(), "", "", &descope.SSOXAASettings{})
+	err := mgmt.SSO().ConfigureXAASettings(context.Background(), "", &descope.SSOXAASettings{}, "")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "tenantID")
 	// Missing settings
-	err = mgmt.SSO().ConfigureXAASettings(context.Background(), "abc", "", nil)
+	err = mgmt.SSO().ConfigureXAASettings(context.Background(), "abc", nil, "")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "settings")
 	require.False(t, called)
