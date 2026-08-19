@@ -1956,10 +1956,10 @@ Cross-App Access (XAA), built on the OAuth identity-assertion authorization gran
 Configure the trusted issuers together with the config-level shared group/role mapping. Each issuer supports just-in-time (JIT) provisioning with the same attribute mapping as the SSO login JIT:
 
 ```go
-err := descopeClient.Management.SSO().ConfigureXAASettings(context.Background(), "my-tenant-id", "" /* ssoID, empty = default */, &descope.SSOXAASettings{
+err := descopeClient.Management.SSO().ConfigureXAASettings(context.Background(), "my-tenant-id", &descope.SSOXAASettings{
 	Enabled: true,
-	Settings: &descope.JWTBearerSettings{
-		Issuers: map[string]*descope.IssuerSettings{
+	Settings: &descope.XAAJWTBearerSettings{
+		Issuers: map[string]*descope.XAAIssuerSettings{
 			// The map key is the trusted issuer URL.
 			"https://issuer.example.com": {
 				JWKsURI:             "https://issuer.example.com/.well-known/jwks.json",
@@ -1980,7 +1980,7 @@ err := descopeClient.Management.SSO().ConfigureXAASettings(context.Background(),
 		{Groups: []string{"admins"}, Role: "Tenant Admin"},
 	},
 	DefaultSSORoles: []string{"Member"},
-})
+}, "" /* ssoID, empty = default */)
 
 // Load the XAA settings for a single SSO configuration.
 xaa, err := descopeClient.Management.SSO().LoadXAASettings(context.Background(), "my-tenant-id", "" /* ssoID */)
@@ -1990,13 +1990,6 @@ allXAA, err := descopeClient.Management.SSO().LoadAllXAASettings(context.Backgro
 
 // Delete the XAA settings of a single SSO configuration (removes its trusted issuers from the tenant).
 err = descopeClient.Management.SSO().DeleteXAASettings(context.Background(), "my-tenant-id", "" /* ssoID */)
-
-// The tenant's read-only Cross-App Access state is also exposed on Tenant().Load.
-tenant, err := descopeClient.Management.Tenant().Load(context.Background(), "my-tenant-id")
-if err == nil {
-	fmt.Println("XAA enabled:", tenant.IDJagEnabled)
-	fmt.Println("Trusted issuers:", tenant.IDJagSettings)
-}
 ```
 
 > Group-to-role mapping is **not** configured per issuer. Role mapping (`RoleMappings`), default SSO roles (`DefaultSSORoles`), and FGA/group grants (`FgaMappings`) passed to `ConfigureXAASettings` are the config-level shared mapping: the same mapping is shared across SAML / OIDC / SCIM / XAA for that `ssoID`. Each issuer only maps the assertion's groups claim (via `AttributeMapping.Group`); how those group names resolve to roles is defined once, per SSO configuration. On load, this shared mapping is returned as `GroupsMapping` (role references by id and name), mirroring the SAML settings load shape.
