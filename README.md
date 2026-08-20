@@ -1951,7 +1951,7 @@ err = descopeClient.DescopeClient().Management.ThirdPartyApplication().DeleteCon
 
 ### Manage Cross-App Access (XAA / ID-JAG)
 
-Cross-App Access (XAA), built on the OAuth identity-assertion authorization grant (ID-JAG), lets a tenant trust one or more external OIDC issuers so that a token minted by a trusted issuer can be exchanged for a Descope token (the RFC 7523 `jwt-bearer` grant). XAA trust is configured **per SSO configuration** of a tenant, alongside the tenant's SAML/OIDC settings, through the SSO management API. Each SSO configuration is addressed by its `ssoID` (leave it empty for the tenant's default SSO configuration). The tenant's read-only `IDJagEnabled` and `IDJagSettings` fields (returned by `Tenant().Load`) still report whether XAA is active and the effective trust config.
+Cross-App Access (XAA), built on the OAuth identity-assertion authorization grant (ID-JAG), lets a tenant trust one or more external OIDC issuers so that a token minted by a trusted issuer can be exchanged for a Descope token (the RFC 7523 `jwt-bearer` grant). XAA trust is configured **per SSO configuration** of a tenant, alongside the tenant's SAML/OIDC settings, through the SSO management API. Each SSO configuration is addressed by its `ssoID` (leave it empty for the tenant's default SSO configuration). Read the effective trust config back through the same SSO management API (`LoadXAASettings` / `LoadAllXAASettings`).
 
 Configure the trusted issuers together with the config-level shared group/role mapping. Each issuer supports just-in-time (JIT) provisioning with the same attribute mapping as the SSO login JIT:
 
