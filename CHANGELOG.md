@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.30.0](https://github.com/descope/go-sdk/compare/v1.29.1...v1.30.0) (2026-08-21)
+
+
+### Features
+
+* **xaa:** add cross-app access (ID-JAG) tenant config incl. attribute/group mapping ([#832](https://github.com/descope/go-sdk/issues/832)) ([1bf6f14](https://github.com/descope/go-sdk/commit/1bf6f145bd9ebc05140bd7c4b0508c91d320d75d))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.29.1 ([#830](https://github.com/descope/go-sdk/issues/830)) ([922282b](https://github.com/descope/go-sdk/commit/922282bea73f6402e8b745bbb9b7950df103500b))
+* **deps:** update module github.com/stretchr/testify to v1.12.0 ([#833](https://github.com/descope/go-sdk/issues/833)) ([00393da](https://github.com/descope/go-sdk/commit/00393dac4eeb0558b5ff7cd95eb2bbf5ed90c97c))
+
 ## [1.29.1](https://github.com/descope/go-sdk/compare/v1.29.0...v1.29.1) (2026-08-15)
 
 
