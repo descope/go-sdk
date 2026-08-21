@@ -1677,6 +1677,70 @@ type JWTBearerSettings struct {
 	Issuers map[string]*IssuerSettings `json:"issuers,omitempty"`
 }
 
+// XAAIssuerSettings is a trusted issuer for Cross-App Access (XAA / ID-JAG), extending the base issuer
+// config with per-issuer JIT provisioning (parity with the SSO login JIT).
+type XAAIssuerSettings struct {
+	JWKsURI             string `json:"jwksUri,omitempty"`
+	SignAlgorithm       string `json:"signAlgorithm,omitempty"`
+	UserInfoURI         string `json:"userInfoUri,omitempty"`
+	ExternalIDFieldName string `json:"externalIdFieldName,omitempty"`
+	// Cross-App Access JIT provisioning, per trusted issuer (parity with the SSO login JIT).
+	// JITDisabled signs in only, without creating users. AttributeMapping maps assertion claims to user
+	// fields. Group-to-role mapping reuses the tenant's shared SSO group mapping.
+	JITDisabled      bool              `json:"jitDisabled,omitempty"`
+	AttributeMapping *AttributeMapping `json:"attributeMapping,omitempty"`
+}
+
+// XAAJWTBearerSettings holds the trusted issuers and jwt-bearer grant configuration for a single SSO
+// configuration's Cross-App Access (XAA / ID-JAG) trust settings.
+type XAAJWTBearerSettings struct {
+	Issuers map[string]*XAAIssuerSettings `json:"issuers,omitempty"`
+	// JWTBearerGrantType* select which values are used when minting a jwt-bearer grant
+	// (ID-JAG / Cross-App Access). Empty means the default is used.
+	JWTBearerGrantTypeAudienceToUse     string `json:"jwtBearerGrantTypeAudienceToUse,omitempty"`
+	JWTBearerGrantTypeScopeToUse        string `json:"jwtBearerGrantTypeScopeToUse,omitempty"`
+	JWTBearerGrantTypeCustomClaimsToUse string `json:"jwtBearerGrantTypeCustomClaimsToUse,omitempty"`
+}
+
+// SSOXAASettings is the write payload for a single SSO configuration's Cross-App Access (XAA / ID-JAG)
+// trust settings. Settings holds the trusted issuers (keyed by issuer URL) and jwt-bearer grant
+// configuration; the remaining fields are the config-level shared group/role mapping, which is shared
+// across SAML / OIDC / SCIM / XAA for the sso_id (NOT a per-issuer mapping). Role references are by name
+// and resolved to role ids server-side.
+type SSOXAASettings struct {
+	// Enabled toggles Cross-App Access (ID-JAG) for this SSO configuration.
+	Enabled bool `json:"enabled,omitempty"`
+	// Settings holds the trusted issuers and jwt-bearer grant configuration.
+	Settings *XAAJWTBearerSettings `json:"settings,omitempty"`
+	// RoleMappings maps IdP groups to Descope roles by role name.
+	RoleMappings         []*RoleMapping              `json:"roleMappings,omitempty"`
+	DefaultSSORoles      []string                    `json:"defaultSSORoles,omitempty"`
+	FgaMappings          map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
+	GroupsPriority       []string                    `json:"groupsPriority,omitempty"` // list of group names in priority order (first = highest priority)
+	GroupPriorityEnabled bool                        `json:"groupPriorityEnabled,omitempty"`
+	AllowOverrideRoles   bool                        `json:"allowOverrideRoles,omitempty"`
+	ProviderID           string                      `json:"providerID,omitempty"` // selected IdP provider template id (display metadata; mirrors SSOSAMLSettings providerID)
+}
+
+// SSOXAASettingsResponse is the load-shape of a single SSO configuration's XAA (ID-JAG) settings.
+// GroupsMapping returns role references by id and name (mirrors SSOSAMLSettingsResponse.GroupsMapping).
+type SSOXAASettingsResponse struct {
+	SSOID                string                      `json:"ssoId,omitempty"`
+	Enabled              bool                        `json:"enabled,omitempty"`
+	Settings             *XAAJWTBearerSettings       `json:"settings,omitempty"`
+	GroupsMapping        []*GroupsMapping            `json:"groupsMapping,omitempty"`
+	DefaultSSORoles      []string                    `json:"defaultSSORoles,omitempty"`
+	FgaMappings          map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
+	GroupsPriority       []string                    `json:"groupsPriority,omitempty"`
+	GroupPriorityEnabled bool                        `json:"groupPriorityEnabled,omitempty"`
+	AllowOverrideRoles   bool                        `json:"allowOverrideRoles,omitempty"`
+	ProviderID           string                      `json:"providerID,omitempty"` // selected IdP provider template id (display metadata; mirrors SSOSAMLSettings providerID)
+}
+
+type SSOXAAAllSettingsResponse struct {
+	XAASettings []*SSOXAASettingsResponse `json:"XAASettings,omitempty"`
+}
+
 type ThirdPartyApplication struct {
 	ID                   string                                    `json:"id"`
 	Name                 string                                    `json:"name"`

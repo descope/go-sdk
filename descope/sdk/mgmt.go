@@ -689,6 +689,31 @@ type SSO interface {
 	// ssoID (optional) - you can pass ssoID in case using multi SSO and you want to configure specific SSO configuration
 	ConfigureOIDCSettings(ctx context.Context, tenantID string, settings *descope.SSOOIDCSettings, domains []string, ssoID string) error
 
+	// Configure Cross-App Access (XAA / ID-JAG) trust settings for a single SSO configuration of a tenant.
+	//
+	// tenantID and settings are required.
+	// settings holds the trusted issuers + grant configuration together with the config-level shared
+	// group/role mapping. The shared mapping is shared across SAML / OIDC / SCIM / XAA for the sso_id.
+	// ssoID (optional) - pass ssoID when using multi SSO to configure a specific SSO configuration.
+	ConfigureXAASettings(ctx context.Context, tenantID string, settings *descope.SSOXAASettings, ssoID string) error
+
+	// Load the Cross-App Access (XAA / ID-JAG) trust settings for a single SSO configuration of a tenant.
+	//
+	// tenantID is required.
+	// ssoID (optional) - pass ssoID when using multi SSO to load a specific SSO configuration.
+	LoadXAASettings(ctx context.Context, tenantID string, ssoID string) (*descope.SSOXAASettingsResponse, error)
+
+	// Load the Cross-App Access (XAA / ID-JAG) trust settings for every SSO configuration of a tenant.
+	//
+	// tenantID is required.
+	LoadAllXAASettings(ctx context.Context, tenantID string) ([]*descope.SSOXAASettingsResponse, error)
+
+	// Delete the Cross-App Access (XAA / ID-JAG) trust settings of a single SSO configuration of a tenant.
+	//
+	// tenantID is required.
+	// ssoID (optional) - pass ssoID when using multi SSO to delete a specific SSO configuration.
+	DeleteXAASettings(ctx context.Context, tenantID string, ssoID string) error
+
 	// Create new SSO configuration (aka multi SSO)
 	// tenantID is required.
 	// ssoID (optional) - the desired SSO configuration id - if not provided, default sso ID id will be generated

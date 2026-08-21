@@ -244,6 +244,20 @@ type MockSSO struct {
 	ConfigureOIDCSettingsAssert func(tenantID string, settings *descope.SSOOIDCSettings, domains []string, ssoID string)
 	ConfigureOIDCSettingsError  error
 
+	ConfigureXAASettingsAssert func(tenantID string, settings *descope.SSOXAASettings, ssoID string)
+	ConfigureXAASettingsError  error
+
+	LoadXAASettingsAssert   func(tenantID string, ssoID string)
+	LoadXAASettingsResponse *descope.SSOXAASettingsResponse
+	LoadXAASettingsError    error
+
+	LoadAllXAASettingsAssert   func(tenantID string)
+	LoadAllXAASettingsResponse []*descope.SSOXAASettingsResponse
+	LoadAllXAASettingsError    error
+
+	DeleteXAASettingsAssert func(tenantID string, ssoID string)
+	DeleteXAASettingsError  error
+
 	NewSettingsAssert   func(tenantID string, ssoID string, displayName string)
 	NewSettingsResponse *descope.SSOTenantSettingsResponse
 	NewSettingsError    error
@@ -308,6 +322,34 @@ func (m *MockSSO) ConfigureOIDCSettings(_ context.Context, tenantID string, sett
 		m.ConfigureOIDCSettingsAssert(tenantID, settings, domains, ssoID)
 	}
 	return m.ConfigureOIDCSettingsError
+}
+
+func (m *MockSSO) ConfigureXAASettings(_ context.Context, tenantID string, settings *descope.SSOXAASettings, ssoID string) error {
+	if m.ConfigureXAASettingsAssert != nil {
+		m.ConfigureXAASettingsAssert(tenantID, settings, ssoID)
+	}
+	return m.ConfigureXAASettingsError
+}
+
+func (m *MockSSO) LoadXAASettings(_ context.Context, tenantID string, ssoID string) (*descope.SSOXAASettingsResponse, error) {
+	if m.LoadXAASettingsAssert != nil {
+		m.LoadXAASettingsAssert(tenantID, ssoID)
+	}
+	return m.LoadXAASettingsResponse, m.LoadXAASettingsError
+}
+
+func (m *MockSSO) LoadAllXAASettings(_ context.Context, tenantID string) ([]*descope.SSOXAASettingsResponse, error) {
+	if m.LoadAllXAASettingsAssert != nil {
+		m.LoadAllXAASettingsAssert(tenantID)
+	}
+	return m.LoadAllXAASettingsResponse, m.LoadAllXAASettingsError
+}
+
+func (m *MockSSO) DeleteXAASettings(_ context.Context, tenantID string, ssoID string) error {
+	if m.DeleteXAASettingsAssert != nil {
+		m.DeleteXAASettingsAssert(tenantID, ssoID)
+	}
+	return m.DeleteXAASettingsError
 }
 
 func (m *MockSSO) NewSettings(_ context.Context, tenantID string, ssoID string, displayName string) (*descope.SSOTenantSettingsResponse, error) {
