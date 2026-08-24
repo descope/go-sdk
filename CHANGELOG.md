@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.31.0](https://github.com/descope/go-sdk/compare/v1.30.0...v1.31.0) (2026-08-24)
+
+
+### Features
+
+* **sso:** add ConfigureAuthType to enable or disable an SSO configuration ([#836](https://github.com/descope/go-sdk/issues/836)) ([679dad3](https://github.com/descope/go-sdk/commit/679dad3874016123bc06aa10850ffc2116892d06))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.30.0 ([#834](https://github.com/descope/go-sdk/issues/834)) ([1eb70cb](https://github.com/descope/go-sdk/commit/1eb70cbe11e1c9131e5869ff36e3d0adccedb4c8))
+
 ## [1.30.0](https://github.com/descope/go-sdk/compare/v1.29.1...v1.30.0) (2026-08-21)
 
 
