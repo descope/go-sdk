@@ -265,6 +265,9 @@ type MockSSO struct {
 	DeleteSettingsAssert func(tenantID string, ssoID string)
 	DeleteSettingsError  error
 
+	ConfigureAuthTypeAssert func(tenantID string, authType descope.SSOAuthType, ssoID string)
+	ConfigureAuthTypeError  error
+
 	GetSettingsAssert   func(tenantID string)
 	GetSettingsResponse *descope.SSOSettingsResponse
 	GetSettingsError    error
@@ -322,6 +325,13 @@ func (m *MockSSO) ConfigureOIDCSettings(_ context.Context, tenantID string, sett
 		m.ConfigureOIDCSettingsAssert(tenantID, settings, domains, ssoID)
 	}
 	return m.ConfigureOIDCSettingsError
+}
+
+func (m *MockSSO) ConfigureAuthType(_ context.Context, tenantID string, authType descope.SSOAuthType, ssoID string) error {
+	if m.ConfigureAuthTypeAssert != nil {
+		m.ConfigureAuthTypeAssert(tenantID, authType, ssoID)
+	}
+	return m.ConfigureAuthTypeError
 }
 
 func (m *MockSSO) ConfigureXAASettings(_ context.Context, tenantID string, settings *descope.SSOXAASettings, ssoID string) error {

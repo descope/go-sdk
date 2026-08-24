@@ -773,6 +773,15 @@ const RoleInheritanceDefault RoleInheritance = ""
 const RoleInheritanceNone RoleInheritance = "none"
 const RoleInheritanceUserOnly RoleInheritance = "userOnly"
 
+// SSOAuthType is the authentication type of an SSO configuration. None means the configuration is
+// disabled: it keeps its stored settings, mappings and domains, and serves no logins until it is
+// set back to Saml or Oidc.
+type SSOAuthType string
+
+const SSOAuthTypeNone SSOAuthType = "none"
+const SSOAuthTypeSaml SSOAuthType = "saml"
+const SSOAuthTypeOidc SSOAuthType = "oidc"
+
 type Tenant struct {
 	ID                      string          `json:"id"`
 	Name                    string          `json:"name"`

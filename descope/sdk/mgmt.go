@@ -724,6 +724,17 @@ type SSO interface {
 	// ssoID (optional) - you can pass ssoID in case using multi SSO and you want to delete specific SSO configuration
 	DeleteSettings(ctx context.Context, tenantID string, ssoID string) error
 
+	// Set the authentication type of a single SSO configuration, leaving its stored SAML/OIDC
+	// settings, mappings and domains untouched.
+	//
+	// tenantID and authType are required.
+	//
+	// authType - descope.SSOAuthTypeNone disables the configuration without deleting it,
+	// descope.SSOAuthTypeSaml / descope.SSOAuthTypeOidc enable it on that protocol with its stored
+	// settings, so re-enabling needs no payload.
+	// ssoID (optional) - pass ssoID when using multi SSO to change a specific SSO configuration.
+	ConfigureAuthType(ctx context.Context, tenantID string, authType descope.SSOAuthType, ssoID string) error
+
 	// *** Deprecated ***
 
 	//* Deprecated (use LoadSettings() instead) *//

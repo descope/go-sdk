@@ -263,6 +263,27 @@ func (s *sso) DeleteSettings(ctx context.Context, tenantID string, ssoID string)
 	return nil
 }
 
+func (s *sso) ConfigureAuthType(ctx context.Context, tenantID string, authType descope.SSOAuthType, ssoID string) error {
+	if tenantID == "" {
+		return utils.NewInvalidArgumentError("tenantID")
+	}
+
+	if authType == "" {
+		return utils.NewInvalidArgumentError("authType")
+	}
+
+	req := map[string]any{
+		"tenantId": tenantID,
+		"authType": authType,
+	}
+	if len(ssoID) > 0 {
+		req["ssoId"] = ssoID
+	}
+
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOAuthType(), req, nil, "")
+	return err
+}
+
 // * Deprecated (use ConfigureSAMLSettings() instead) *//
 func (s *sso) ConfigureSettings(ctx context.Context, tenantID, idpURL, idpCert, entityID, redirectURL string, domains []string) error {
 	if tenantID == "" {
