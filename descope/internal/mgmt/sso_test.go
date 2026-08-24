@@ -99,6 +99,51 @@ func TestDeleteSSOSettingsWithSSOIDSuccess(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestSSOConfigureAuthTypeDisableWithSSOIDSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["tenantId"])
+		require.Equal(t, "none", req["authType"])
+		require.Equal(t, "somessoid", req["ssoId"])
+	}))
+	err := mgmt.SSO().ConfigureAuthType(context.Background(), "abc", descope.SSOAuthTypeNone, "somessoid")
+	require.NoError(t, err)
+}
+
+func TestSSOConfigureAuthTypeDefaultConfigSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["tenantId"])
+		require.Equal(t, "saml", req["authType"])
+		require.Empty(t, req["ssoId"])
+	}))
+	err := mgmt.SSO().ConfigureAuthType(context.Background(), "abc", descope.SSOAuthTypeSaml, "")
+	require.NoError(t, err)
+}
+
+func TestSSOConfigureAuthTypeMissingTenantID(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+	err := mgmt.SSO().ConfigureAuthType(context.Background(), "", descope.SSOAuthTypeNone, "")
+	require.Error(t, err)
+	require.False(t, called)
+}
+
+func TestSSOConfigureAuthTypeMissingAuthType(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+	err := mgmt.SSO().ConfigureAuthType(context.Background(), "abc", "", "")
+	require.Error(t, err)
+	require.False(t, called)
+}
+
 func TestDeleteSSOSettingsError(t *testing.T) {
 	called := false
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {

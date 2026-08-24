@@ -183,6 +183,7 @@ var (
 			ssoLoadSettings:                            "mgmt/sso/settings",     // v2 only
 			ssoLoadAllSettings:                         "mgmt/sso/settings/all", // v2 only
 			ssoSettingsNew:                             "mgmt/sso/settings/new",
+			ssoAuthType:                                "mgmt/sso/settings/authtype",
 			ssoSAMLSettings:                            "mgmt/sso/saml",
 			ssoSAMLSettingsByMetadata:                  "mgmt/sso/saml/metadata",
 			ssoRedirectURL:                             "mgmt/sso/redirect",
@@ -531,6 +532,7 @@ type mgmtEndpoints struct {
 	ssoLoadSettings           string
 	ssoLoadAllSettings        string
 	ssoSettingsNew            string
+	ssoAuthType               string
 	ssoSAMLSettings           string
 	ssoSAMLSettingsByMetadata string
 	ssoRedirectURL            string
@@ -1298,6 +1300,10 @@ func (e *endpoints) ManagementSSOLoadAllSettings() string {
 
 func (e *endpoints) ManagementNewSSOSettings() string {
 	return path.Join(e.version, e.mgmt.ssoSettingsNew)
+}
+
+func (e *endpoints) ManagementSSOAuthType() string {
+	return path.Join(e.version, e.mgmt.ssoAuthType)
 }
 
 func (e *endpoints) ManagementSSOSAMLSettings() string {

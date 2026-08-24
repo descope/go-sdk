@@ -1289,6 +1289,13 @@ createdSSOSettings, err := descopeClient.Management.SSO().NewSettings(context.Ba
 // To delete SSO settings, call the following method
 // You can pass ssoID in case using multi SSO and you want to delete specific SSO configuration
 err := descopeClient.Management.SSO().DeleteSettings(context.Background(), "tenant-id")
+
+// To disable an SSO configuration without deleting it, set its auth type to none. Its settings,
+// mappings and domains are kept, so re-enabling it needs no payload.
+// You can pass ssoID in case using multi SSO and you want to disable a specific SSO configuration
+err := descopeClient.Management.SSO().ConfigureAuthType(context.Background(), "tenant-id", descope.SSOAuthTypeNone, ssoID)
+// Enable it again on the protocol it is configured for
+err = descopeClient.Management.SSO().ConfigureAuthType(context.Background(), "tenant-id", descope.SSOAuthTypeSaml, ssoID)
 ```
 
 Note: Certificates should have a similar structure to:
