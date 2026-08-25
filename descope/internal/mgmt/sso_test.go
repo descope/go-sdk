@@ -1569,6 +1569,7 @@ func TestLoadXAASettingsSuccess(t *testing.T) {
 		"groupPriorityEnabled": true,
 		"allowOverrideRoles":   true,
 		"providerID":           "prov1",
+		"audience":             "https://api.descope.com/v1/apps/P1",
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -1594,6 +1595,8 @@ func TestLoadXAASettingsSuccess(t *testing.T) {
 	assert.True(t, res.GroupPriorityEnabled)
 	assert.True(t, res.AllowOverrideRoles)
 	assert.EqualValues(t, "prov1", res.ProviderID)
+	// Read-only, project-level: no tenant segment - the tenant travels in the aud_tenant claim.
+	assert.EqualValues(t, "https://api.descope.com/v1/apps/P1", res.Audience)
 }
 
 func TestLoadXAASettingsErrorMissingTenantID(t *testing.T) {
