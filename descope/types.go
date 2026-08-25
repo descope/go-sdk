@@ -443,6 +443,7 @@ type EnchantedLinkResponse struct {
 	PendingRef  string `json:"pendingRef,omitempty"`  // Pending referral code used to poll enchanted link authentication status
 	LinkID      string `json:"linkId,omitempty"`      // Link id, on which link the user should click
 	MaskedEmail string `json:"maskedEmail,omitempty"` // Masked email to which the email was sent
+	MaskedPhone string `json:"maskedPhone,omitempty"` // Masked phone to which the SMS was sent
 }
 
 func NewAuthenticationInfo(jRes *JWTResponse, sessionToken, refreshToken *Token) *AuthenticationInfo {

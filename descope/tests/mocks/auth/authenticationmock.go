@@ -134,13 +134,25 @@ type MockEnchantedLink struct {
 	SignInError    error
 	SignInResponse *descope.EnchantedLinkResponse
 
+	SignInWithPhoneAssert   func(phone, URI string, r *http.Request, loginOptions *descope.LoginOptions)
+	SignInWithPhoneError    error
+	SignInWithPhoneResponse *descope.EnchantedLinkResponse
+
 	SignUpAssert   func(loginID, URI string, user *descope.User, signUpOptions *descope.SignUpOptions)
 	SignUpError    error
 	SignUpResponse *descope.EnchantedLinkResponse
 
+	SignUpWithPhoneAssert   func(phone, URI string, user *descope.User, signUpOptions *descope.SignUpOptions)
+	SignUpWithPhoneError    error
+	SignUpWithPhoneResponse *descope.EnchantedLinkResponse
+
 	SignUpOrInAssert   func(loginID string, URI string, signUpOptions *descope.SignUpOptions)
 	SignUpOrInError    error
 	SignUpOrInResponse *descope.EnchantedLinkResponse
+
+	SignUpOrInWithPhoneAssert   func(phone string, URI string, signUpOptions *descope.SignUpOptions)
+	SignUpOrInWithPhoneError    error
+	SignUpOrInWithPhoneResponse *descope.EnchantedLinkResponse
 
 	GetSessionAssert   func(pendingRef string, w http.ResponseWriter)
 	GetSessionResponse *descope.AuthenticationInfo
@@ -161,6 +173,13 @@ func (m *MockEnchantedLink) SignIn(_ context.Context, loginID, URI string, r *ht
 	return m.SignInResponse, m.SignInError
 }
 
+func (m *MockEnchantedLink) SignInWithPhone(_ context.Context, phone, URI string, r *http.Request, loginOptions *descope.LoginOptions) (*descope.EnchantedLinkResponse, error) {
+	if m.SignInWithPhoneAssert != nil {
+		m.SignInWithPhoneAssert(phone, URI, r, loginOptions)
+	}
+	return m.SignInWithPhoneResponse, m.SignInWithPhoneError
+}
+
 func (m *MockEnchantedLink) SignUp(_ context.Context, loginID, URI string, user *descope.User, signUpOptions *descope.SignUpOptions) (*descope.EnchantedLinkResponse, error) {
 	if m.SignUpAssert != nil {
 		m.SignUpAssert(loginID, URI, user, signUpOptions)
@@ -168,11 +187,25 @@ func (m *MockEnchantedLink) SignUp(_ context.Context, loginID, URI string, user 
 	return m.SignUpResponse, m.SignUpError
 }
 
+func (m *MockEnchantedLink) SignUpWithPhone(_ context.Context, phone, URI string, user *descope.User, signUpOptions *descope.SignUpOptions) (*descope.EnchantedLinkResponse, error) {
+	if m.SignUpWithPhoneAssert != nil {
+		m.SignUpWithPhoneAssert(phone, URI, user, signUpOptions)
+	}
+	return m.SignUpWithPhoneResponse, m.SignUpWithPhoneError
+}
+
 func (m *MockEnchantedLink) SignUpOrIn(_ context.Context, loginID string, URI string, signUpOptions *descope.SignUpOptions) (*descope.EnchantedLinkResponse, error) {
 	if m.SignUpOrInAssert != nil {
 		m.SignUpOrInAssert(loginID, URI, signUpOptions)
 	}
 	return m.SignUpOrInResponse, m.SignUpOrInError
+}
+
+func (m *MockEnchantedLink) SignUpOrInWithPhone(_ context.Context, phone string, URI string, signUpOptions *descope.SignUpOptions) (*descope.EnchantedLinkResponse, error) {
+	if m.SignUpOrInWithPhoneAssert != nil {
+		m.SignUpOrInWithPhoneAssert(phone, URI, signUpOptions)
+	}
+	return m.SignUpOrInWithPhoneResponse, m.SignUpOrInWithPhoneError
 }
 
 func (m *MockEnchantedLink) GetSession(_ context.Context, pendingRef string, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {

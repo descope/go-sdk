@@ -1168,16 +1168,16 @@ func composeVerifyMagicLinkURL() string {
 	return api.Routes.VerifyMagicLink()
 }
 
-func composeEnchantedLinkSignInURL() string {
-	return composeURLMethod(api.Routes.SignInEnchantedLink(), descope.MethodEmail)
+func composeEnchantedLinkSignInURL(method descope.DeliveryMethod) string {
+	return composeURLMethod(api.Routes.SignInEnchantedLink(), method)
 }
 
-func composeEnchantedLinkSignUpURL() string {
-	return composeURLMethod(api.Routes.SignUpEnchantedLink(), descope.MethodEmail)
+func composeEnchantedLinkSignUpURL(method descope.DeliveryMethod) string {
+	return composeURLMethod(api.Routes.SignUpEnchantedLink(), method)
 }
 
-func composeEnchantedLinkSignUpOrInURL() string {
-	return composeURLMethod(api.Routes.SignUpOrInEnchantedLink(), descope.MethodEmail)
+func composeEnchantedLinkSignUpOrInURL(method descope.DeliveryMethod) string {
+	return composeURLMethod(api.Routes.SignUpOrInEnchantedLink(), method)
 }
 
 func composeVerifyEnchantedLinkURL() string {

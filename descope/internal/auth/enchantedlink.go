@@ -24,7 +24,29 @@ func (auth *enchantedLink) SignIn(ctx context.Context, loginID, URI string, r *h
 			return nil, descope.ErrInvalidStepUpJWT
 		}
 	}
-	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignInURL(), newMagicLinkAuthenticationRequestBody(loginID, URI, true, loginOptions), nil, pswd)
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignInURL(descope.MethodEmail), newMagicLinkAuthenticationRequestBody(loginID, URI, true, loginOptions), nil, pswd)
+	if err != nil {
+		return nil, err
+	}
+	return getPendingRefFromResponse(httpResponse)
+}
+
+// SignInWithPhone - Use to login a user based on an enchanted link that will be sent by SMS.
+// the jwt would be returned on the getSession function at the end of the flow rather that on the verify.
+// returns an error upon failure.
+func (auth *enchantedLink) SignInWithPhone(ctx context.Context, phone, URI string, r *http.Request, loginOptions *descope.LoginOptions) (*descope.EnchantedLinkResponse, error) {
+	var pswd string
+	var err error
+	if phone == "" {
+		return nil, utils.NewInvalidArgumentError("phone")
+	}
+	if loginOptions.IsJWTRequired() {
+		pswd, err = auth.getValidRefreshToken(r)
+		if err != nil {
+			return nil, descope.ErrInvalidStepUpJWT
+		}
+	}
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignInURL(descope.MethodSMS), newMagicLinkAuthenticationRequestBody(phone, URI, true, loginOptions), nil, pswd)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +64,28 @@ func (auth *enchantedLink) SignUp(ctx context.Context, loginID, URI string, user
 		user.Email = loginID
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignUpURL(), newMagicLinkAuthenticationSignUpRequestBody(descope.MethodEmail, loginID, URI, user, true, signUpOptions), nil, "")
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignUpURL(descope.MethodEmail), newMagicLinkAuthenticationSignUpRequestBody(descope.MethodEmail, loginID, URI, user, true, signUpOptions), nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return getPendingRefFromResponse(httpResponse)
+}
+
+// SignUpWithPhone - Use to create a new user based on the given phone number, verified via an enchanted link sent by SMS.
+// optional to add user metadata for farther user details such as name and more.
+// returns an error upon failure.
+func (auth *enchantedLink) SignUpWithPhone(ctx context.Context, phone, URI string, user *descope.User, signUpOptions *descope.SignUpOptions) (*descope.EnchantedLinkResponse, error) {
+	if phone == "" {
+		return nil, utils.NewInvalidArgumentError("phone")
+	}
+	if user == nil {
+		user = &descope.User{}
+	}
+	if len(user.Phone) == 0 {
+		user.Phone = phone
+	}
+
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignUpURL(descope.MethodSMS), newMagicLinkAuthenticationSignUpRequestBody(descope.MethodSMS, phone, URI, user, true, signUpOptions), nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +99,30 @@ func (auth *enchantedLink) SignUpOrIn(ctx context.Context, loginID, URI string, 
 	if signUpOptions == nil {
 		signUpOptions = &descope.SignUpOptions{}
 	}
-	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignUpOrInURL(), newMagicLinkAuthenticationRequestBody(loginID, URI, true, &descope.LoginOptions{
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignUpOrInURL(descope.MethodEmail), newMagicLinkAuthenticationRequestBody(loginID, URI, true, &descope.LoginOptions{
+		CustomClaims:    signUpOptions.CustomClaims,
+		TemplateOptions: signUpOptions.TemplateOptions,
+		TemplateID:      signUpOptions.TemplateID,
+		TenantID:        signUpOptions.TenantID,
+	}), nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return getPendingRefFromResponse(httpResponse)
+}
+
+// SignUpOrInWithPhone - Use to login in using phone, if user does not exist, a new user will be created
+// with the given phone number.
+// optional to add user metadata for farther user details such as name and more.
+// returns an error upon failure.
+func (auth *enchantedLink) SignUpOrInWithPhone(ctx context.Context, phone string, URI string, signUpOptions *descope.SignUpOptions) (*descope.EnchantedLinkResponse, error) {
+	if phone == "" {
+		return nil, utils.NewInvalidArgumentError("phone")
+	}
+	if signUpOptions == nil {
+		signUpOptions = &descope.SignUpOptions{}
+	}
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignUpOrInURL(descope.MethodSMS), newMagicLinkAuthenticationRequestBody(phone, URI, true, &descope.LoginOptions{
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
 		TemplateID:      signUpOptions.TemplateID,
