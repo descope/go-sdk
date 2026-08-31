@@ -793,6 +793,22 @@ type TenantRequest struct {
 	RoleInheritance         RoleInheritance `json:"roleInheritance,omitempty"`
 }
 
+// PatchTenantRequest is used to partially update an existing tenant. ID is
+// required; every other field is optional and only sent (and applied) when
+// non-nil, so unset fields leave the tenant's current values untouched.
+type PatchTenantRequest struct {
+	ID                      string           `json:"id"`
+	Name                    *string          `json:"name,omitempty"`
+	SelfProvisioningDomains *[]string        `json:"selfProvisioningDomains,omitempty"`
+	CustomAttributes        map[string]any   `json:"customAttributes,omitempty"`
+	AuthType                *string          `json:"authType,omitempty"` // Deprecated: kept for backward compatibility
+	Disabled                *bool            `json:"disabled,omitempty"`
+	EnforceSSO              *bool            `json:"enforceSSO,omitempty"`
+	EnforceSSOExclusions    *[]string        `json:"enforceSSOExclusions,omitempty"`
+	FederatedAppIDs         *[]string        `json:"federatedAppIds,omitempty"`
+	RoleInheritance         *RoleInheritance `json:"roleInheritance,omitempty"`
+}
+
 type TenantSearchOptions struct {
 	IDs                     []string
 	Names                   []string

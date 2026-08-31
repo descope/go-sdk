@@ -102,6 +102,83 @@ func TestTenantUpdateError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestTenantPatchSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "123", req["id"])
+		require.Equal(t, "abc", req["name"])
+		require.True(t, req["disabled"].(bool))
+		_, ok := req["selfProvisioningDomains"]
+		require.False(t, ok)
+		_, ok = req["customAttributes"]
+		require.False(t, ok)
+		_, ok = req["authType"]
+		require.False(t, ok)
+		_, ok = req["enforceSSO"]
+		require.False(t, ok)
+		_, ok = req["enforceSSOExclusions"]
+		require.False(t, ok)
+		_, ok = req["federatedAppIds"]
+		require.False(t, ok)
+		_, ok = req["roleInheritance"]
+		require.False(t, ok)
+	}))
+	name := "abc"
+	disabled := true
+	err := mgmt.Tenant().Patch(context.Background(), &descope.PatchTenantRequest{ID: "123", Name: &name, Disabled: &disabled})
+	require.NoError(t, err)
+}
+
+func TestTenantPatchSuccessAllFields(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "123", req["id"])
+		require.Equal(t, "abc", req["name"])
+		require.EqualValues(t, []any{"foo", "bar"}, req["selfProvisioningDomains"].([]any))
+		customAttributes := req["customAttributes"].(map[string]any)
+		assert.EqualValues(t, map[string]any{"k1": "v1"}, customAttributes)
+		require.Equal(t, "saml", req["authType"])
+		require.True(t, req["disabled"].(bool))
+		require.True(t, req["enforceSSO"].(bool))
+		require.EqualValues(t, []any{"aaaa"}, req["enforceSSOExclusions"].([]any))
+		require.EqualValues(t, []any{"app1", "app2"}, req["federatedAppIds"].([]any))
+		require.Equal(t, string(descope.RoleInheritanceUserOnly), req["roleInheritance"])
+	}))
+	name := "abc"
+	domains := []string{"foo", "bar"}
+	authType := "saml"
+	disabled := true
+	enforceSSO := true
+	exclusions := []string{"aaaa"}
+	appIDs := []string{"app1", "app2"}
+	roleInheritance := descope.RoleInheritanceUserOnly
+	err := mgmt.Tenant().Patch(context.Background(), &descope.PatchTenantRequest{
+		ID:                      "123",
+		Name:                    &name,
+		SelfProvisioningDomains: &domains,
+		CustomAttributes:        map[string]any{"k1": "v1"},
+		AuthType:                &authType,
+		Disabled:                &disabled,
+		EnforceSSO:              &enforceSSO,
+		EnforceSSOExclusions:    &exclusions,
+		FederatedAppIDs:         &appIDs,
+		RoleInheritance:         &roleInheritance,
+	})
+	require.NoError(t, err)
+}
+
+func TestTenantPatchError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.Tenant().Patch(context.Background(), nil)
+	require.Error(t, err)
+	err = mgmt.Tenant().Patch(context.Background(), &descope.PatchTenantRequest{})
+	require.Error(t, err)
+}
+
 func TestTenantDeleteSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")

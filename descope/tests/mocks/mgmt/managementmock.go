@@ -1224,6 +1224,9 @@ type MockTenant struct {
 
 	UpdateDefaultRolesAssert func(tenantID string, defaultRoles []string)
 	UpdateDefaultRolesError  error
+
+	PatchAssert func(tenantRequest *descope.PatchTenantRequest)
+	PatchError  error
 }
 
 func (m *MockTenant) Create(_ context.Context, tenantRequest *descope.TenantRequest) (id string, err error) {
@@ -1245,6 +1248,13 @@ func (m *MockTenant) Update(_ context.Context, id string, tenantRequest *descope
 		m.UpdateAssert(id, tenantRequest)
 	}
 	return m.UpdateError
+}
+
+func (m *MockTenant) Patch(_ context.Context, tenantRequest *descope.PatchTenantRequest) error {
+	if m.PatchAssert != nil {
+		m.PatchAssert(tenantRequest)
+	}
+	return m.PatchError
 }
 
 func (m *MockTenant) Delete(_ context.Context, id string, cascade bool) error {

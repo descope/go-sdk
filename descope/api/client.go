@@ -91,6 +91,7 @@ var (
 			license:                                  "mgmt/license",
 			tenantCreate:                             "mgmt/tenant/create",
 			tenantUpdate:                             "mgmt/tenant/update",
+			tenantPatch:                              "mgmt/tenant/patch",
 			tenantDelete:                             "mgmt/tenant/delete",
 			tenantLoad:                               "mgmt/tenant",
 			tenantLoadAll:                            "mgmt/tenant/all",
@@ -416,6 +417,7 @@ type mgmtEndpoints struct {
 	license                  string
 	tenantCreate             string
 	tenantUpdate             string
+	tenantPatch              string
 	tenantDelete             string
 	tenantLoad               string
 	tenantLoadAll            string
@@ -921,6 +923,10 @@ func (e *endpoints) ManagementTenantCreate() string {
 
 func (e *endpoints) ManagementTenantUpdate() string {
 	return path.Join(e.version, e.mgmt.tenantUpdate)
+}
+
+func (e *endpoints) ManagementTenantPatch() string {
+	return path.Join(e.version, e.mgmt.tenantPatch)
 }
 
 func (e *endpoints) ManagementTenantDelete() string {

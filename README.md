@@ -862,6 +862,11 @@ err := descopeClient.Management.Tenant().CreateWithID(context.Background(), "my-
 // Update will override all fields as is. Use carefully.
 err := descopeClient.Management.Tenant().Update(context.Background(), "my-custom-id", "My Tenant", tenantRequest)
 
+// Patch will only change the fields that are set (non-nil), leaving everything else untouched.
+disabled := true
+tenantPatchRequest := &descope.PatchTenantRequest{ID: "my-custom-id", Disabled: &disabled}
+err := descopeClient.Management.Tenant().Patch(context.Background(), tenantPatchRequest)
+
 // Tenant deletion cannot be undone. Use carefully.
 // Pass true to cascade value, in case you want to delete all users/keys associated only with this tenant
 err := descopeClient.Management.Tenant().Delete(context.Background(), "my-custom-id", true)
