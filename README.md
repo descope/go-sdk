@@ -1281,6 +1281,11 @@ samlSettings := &descope.SSOSAMLSettingsByMetadata{
 // You can pass ssoID in case using multi SSO and you want to configure specific SSO configuration
 err = descopeClient.Management.SSO().ConfigureSAMLSettingsByMetadata(context.Background(), tenantID, samlSettings, redirectURL, domain)
 
+// Descope signs the SAML AuthnRequest it sends to the IdP. A few IdPs reject a signed request because
+// their trusted provider entry holds no signing certificate for Descope - set DisableSignRequest on the
+// settings (available on both variants above) to send the request unsigned for that configuration only.
+samlSettings.DisableSignRequest = true
+
 // You can create new SSO configuration (aka multi SSO)
 ssoID := "my-new-additional-sso-id"
 displayName := "My additional SSO configuration"

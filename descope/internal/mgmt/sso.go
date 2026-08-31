@@ -90,6 +90,9 @@ func (s *sso) ConfigureSAMLSettings(ctx context.Context, tenantID string, settin
 			"spEntityId":       settings.SpEntityID,
 			"defaultSSORoles":  settings.DefaultSSORoles,
 			"groupsPriority":   settings.GroupsPriority,
+			// always sent: the server takes the settings object as a full replacement, so omitting the
+			// flag on an update would silently turn request signing back on
+			"disableSignRequest": settings.DisableSignRequest,
 		},
 		"redirectUrl": redirectURL,
 		"domains":     domains,
@@ -143,6 +146,9 @@ func (s *sso) ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID stri
 			"spEntityId":       settings.SpEntityID,
 			"defaultSSORoles":  settings.DefaultSSORoles,
 			"groupsPriority":   settings.GroupsPriority,
+			// always sent: the server takes the settings object as a full replacement, so omitting the
+			// flag on an update would silently turn request signing back on
+			"disableSignRequest": settings.DisableSignRequest,
 		},
 		"redirectUrl": redirectURL,
 		"domains":     domains,
