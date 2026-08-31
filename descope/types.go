@@ -794,6 +794,7 @@ type Tenant struct {
 	Disabled                bool            `json:"disabled,omitempty"`
 	EnforceSSOExclusions    []string        `json:"enforceSSOExclusions,omitempty"`
 	RoleInheritance         RoleInheritance `json:"roleInheritance,omitempty"`
+	FederatedAppIDs         []string        `json:"federatedAppIds,omitempty"`
 }
 
 type TenantRequest struct {
@@ -805,6 +806,7 @@ type TenantRequest struct {
 	ParentTenantID          string          `json:"parentId,omitempty"` // applicable only for creation request
 	EnforceSSOExclusions    []string        `json:"enforceSSOExclusions,omitempty"`
 	RoleInheritance         RoleInheritance `json:"roleInheritance,omitempty"`
+	FederatedAppIDs         []string        `json:"federatedAppIds,omitempty"`
 }
 
 // PatchTenantRequest is used to partially update an existing tenant. ID is

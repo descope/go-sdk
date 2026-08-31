@@ -31,9 +31,10 @@ func TestTenantCreateSuccess(t *testing.T) {
 		require.True(t, req["enforceSSO"].(bool))
 		require.EqualValues(t, []any{"aaaa"}, req["enforceSSOExclusions"].([]any))
 		require.True(t, req["disabled"].(bool))
+		require.EqualValues(t, []any{"app1"}, req["federatedAppIds"].([]any))
 	}, response))
 
-	id, err := mgmt.Tenant().Create(context.Background(), &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}, Disabled: true, EnforceSSO: true, ParentTenantID: "pid", RoleInheritance: descope.RoleInheritanceNone, EnforceSSOExclusions: []string{"aaaa"}})
+	id, err := mgmt.Tenant().Create(context.Background(), &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}, Disabled: true, EnforceSSO: true, ParentTenantID: "pid", RoleInheritance: descope.RoleInheritanceNone, EnforceSSOExclusions: []string{"aaaa"}, FederatedAppIDs: []string{"app1"}})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)
 }
@@ -89,8 +90,9 @@ func TestTenantUpdateSuccess(t *testing.T) {
 		require.EqualValues(t, []any{"aaaa"}, req["enforceSSOExclusions"].([]any))
 		require.True(t, req["disabled"].(bool))
 		require.Equal(t, string(descope.RoleInheritanceUserOnly), req["roleInheritance"])
+		require.EqualValues(t, []any{"app1"}, req["federatedAppIds"].([]any))
 	}))
-	err := mgmt.Tenant().Update(context.Background(), "123", &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}, Disabled: true, EnforceSSO: true, RoleInheritance: descope.RoleInheritanceUserOnly, EnforceSSOExclusions: []string{"aaaa"}})
+	err := mgmt.Tenant().Update(context.Background(), "123", &descope.TenantRequest{Name: "abc", SelfProvisioningDomains: []string{"foo", "bar"}, CustomAttributes: map[string]any{"k1": "v1"}, Disabled: true, EnforceSSO: true, RoleInheritance: descope.RoleInheritanceUserOnly, EnforceSSOExclusions: []string{"aaaa"}, FederatedAppIDs: []string{"app1"}})
 	require.NoError(t, err)
 }
 
