@@ -186,6 +186,10 @@ type whoResponse struct {
 }
 
 func (a *authz) WhoCanAccess(ctx context.Context, resource, relationDefinition, namespace string) ([]string, error) {
+	return a.WhoCanAccessWithContext(ctx, resource, relationDefinition, namespace, nil)
+}
+
+func (a *authz) WhoCanAccessWithContext(ctx context.Context, resource, relationDefinition, namespace string, extraContext map[string]any) ([]string, error) {
 	if resource == "" {
 		return nil, utils.NewInvalidArgumentError("resource")
 	}
@@ -199,6 +203,9 @@ func (a *authz) WhoCanAccess(ctx context.Context, resource, relationDefinition, 
 		"resource":           resource,
 		"relationDefinition": relationDefinition,
 		"namespace":          namespace,
+	}
+	if len(extraContext) > 0 {
+		body["context"] = extraContext
 	}
 	options := &api.HTTPRequest{BaseURL: a.fgaCacheURL}
 	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzREWho(), body, options, "")
@@ -276,11 +283,18 @@ func (a *authz) TargetsRelationsWithTargetSetsFilter(ctx context.Context, target
 }
 
 func (a *authz) WhatCanTargetAccess(ctx context.Context, target string) ([]*descope.AuthzRelation, error) {
+	return a.WhatCanTargetAccessWithContext(ctx, target, nil)
+}
+
+func (a *authz) WhatCanTargetAccessWithContext(ctx context.Context, target string, extraContext map[string]any) ([]*descope.AuthzRelation, error) {
 	if target == "" {
 		return nil, utils.NewInvalidArgumentError("target")
 	}
 	body := map[string]any{
 		"target": target,
+	}
+	if len(extraContext) > 0 {
+		body["context"] = extraContext
 	}
 	options := &api.HTTPRequest{BaseURL: a.fgaCacheURL}
 	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAuthzRETargetAll(), body, options, "")

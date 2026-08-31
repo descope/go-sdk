@@ -263,6 +263,27 @@ func (s *sso) DeleteSettings(ctx context.Context, tenantID string, ssoID string)
 	return nil
 }
 
+func (s *sso) ConfigureAuthType(ctx context.Context, tenantID string, authType descope.SSOAuthType, ssoID string) error {
+	if tenantID == "" {
+		return utils.NewInvalidArgumentError("tenantID")
+	}
+
+	if authType == "" {
+		return utils.NewInvalidArgumentError("authType")
+	}
+
+	req := map[string]any{
+		"tenantId": tenantID,
+		"authType": authType,
+	}
+	if len(ssoID) > 0 {
+		req["ssoId"] = ssoID
+	}
+
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOAuthType(), req, nil, "")
+	return err
+}
+
 // * Deprecated (use ConfigureSAMLSettings() instead) *//
 func (s *sso) ConfigureSettings(ctx context.Context, tenantID, idpURL, idpCert, entityID, redirectURL string, domains []string) error {
 	if tenantID == "" {
@@ -391,4 +412,111 @@ func (s *sso) RecalculateSSOMappings(ctx context.Context, tenantID string, ssoID
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSORecalculateMappings(), req, nil, "")
 
 	return err
+}
+
+func (s *sso) ConfigureXAASettings(ctx context.Context, tenantID string, settings *descope.SSOXAASettings, ssoID string) error {
+	if tenantID == "" {
+		return utils.NewInvalidArgumentError("tenantID")
+	}
+
+	if settings == nil {
+		return utils.NewInvalidArgumentError("settings")
+	}
+
+	mappings := []map[string]any{}
+	for i := range settings.RoleMappings {
+		mappings = append(mappings, map[string]any{
+			"groups":   settings.RoleMappings[i].Groups,
+			"roleName": settings.RoleMappings[i].Role,
+		})
+	}
+
+	req := map[string]any{
+		"tenantId":             tenantID,
+		"enabled":              settings.Enabled,
+		"settings":             settings.Settings,
+		"roleMappings":         mappings,
+		"defaultSSORoles":      settings.DefaultSSORoles,
+		"groupsPriority":       settings.GroupsPriority,
+		"groupPriorityEnabled": settings.GroupPriorityEnabled,
+		"allowOverrideRoles":   settings.AllowOverrideRoles,
+	}
+	if len(ssoID) > 0 {
+		req["ssoId"] = ssoID
+	}
+	fgaMappings := parseFgaMappings(settings.FgaMappings)
+	if len(fgaMappings) > 0 {
+		req["fgaMappings"] = fgaMappings
+	}
+	if settings.ProviderID != "" {
+		req["providerID"] = settings.ProviderID
+	}
+
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementXAASettings(), req, nil, "")
+	return err
+}
+
+func (s *sso) LoadXAASettings(ctx context.Context, tenantID string, ssoID string) (*descope.SSOXAASettingsResponse, error) {
+	if tenantID == "" {
+		return nil, utils.NewInvalidArgumentError("tenantID")
+	}
+
+	req := &api.HTTPRequest{
+		QueryParams: map[string]string{"tenantId": tenantID},
+	}
+	if len(ssoID) > 0 {
+		req.QueryParams["ssoId"] = ssoID
+	}
+	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementXAASettings(), req, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalXAASettingsResponse(res)
+}
+
+func (s *sso) LoadAllXAASettings(ctx context.Context, tenantID string) ([]*descope.SSOXAASettingsResponse, error) {
+	if tenantID == "" {
+		return nil, utils.NewInvalidArgumentError("tenantID")
+	}
+
+	req := &api.HTTPRequest{
+		QueryParams: map[string]string{"tenantId": tenantID},
+	}
+	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementXAALoadAllSettings(), req, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalXAAAllSettingsResponse(res)
+}
+
+func (s *sso) DeleteXAASettings(ctx context.Context, tenantID string, ssoID string) error {
+	if tenantID == "" {
+		return utils.NewInvalidArgumentError("tenantID")
+	}
+	req := &api.HTTPRequest{
+		QueryParams: map[string]string{"tenantId": tenantID},
+	}
+	if len(ssoID) > 0 {
+		req.QueryParams["ssoId"] = ssoID
+	}
+	_, err := s.client.DoDeleteRequest(ctx, api.Routes.ManagementXAASettings(), req, "")
+	return err
+}
+
+func unmarshalXAASettingsResponse(res *api.HTTPResponse) (*descope.SSOXAASettingsResponse, error) {
+	var xaaSettingsRes *descope.SSOXAASettingsResponse
+	err := utils.Unmarshal([]byte(res.BodyStr), &xaaSettingsRes)
+	if err != nil {
+		return nil, err
+	}
+	return xaaSettingsRes, err
+}
+
+func unmarshalXAAAllSettingsResponse(res *api.HTTPResponse) ([]*descope.SSOXAASettingsResponse, error) {
+	var xaaAllSettingsRes *descope.SSOXAAAllSettingsResponse
+	err := utils.Unmarshal([]byte(res.BodyStr), &xaaAllSettingsRes)
+	if err != nil {
+		return nil, err
+	}
+	return xaaAllSettingsRes.XAASettings, err
 }

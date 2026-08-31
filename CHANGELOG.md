@@ -1,5 +1,83 @@
 # Changelog
 
+## [1.31.0](https://github.com/descope/go-sdk/compare/v1.30.0...v1.31.0) (2026-08-24)
+
+
+### Features
+
+* **sso:** add ConfigureAuthType to enable or disable an SSO configuration ([#836](https://github.com/descope/go-sdk/issues/836)) ([679dad3](https://github.com/descope/go-sdk/commit/679dad3874016123bc06aa10850ffc2116892d06))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.30.0 ([#834](https://github.com/descope/go-sdk/issues/834)) ([1eb70cb](https://github.com/descope/go-sdk/commit/1eb70cbe11e1c9131e5869ff36e3d0adccedb4c8))
+
+## [1.30.0](https://github.com/descope/go-sdk/compare/v1.29.1...v1.30.0) (2026-08-21)
+
+
+### Features
+
+* **xaa:** add cross-app access (ID-JAG) tenant config incl. attribute/group mapping ([#832](https://github.com/descope/go-sdk/issues/832)) ([1bf6f14](https://github.com/descope/go-sdk/commit/1bf6f145bd9ebc05140bd7c4b0508c91d320d75d))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.29.1 ([#830](https://github.com/descope/go-sdk/issues/830)) ([922282b](https://github.com/descope/go-sdk/commit/922282bea73f6402e8b745bbb9b7950df103500b))
+* **deps:** update module github.com/stretchr/testify to v1.12.0 ([#833](https://github.com/descope/go-sdk/issues/833)) ([00393da](https://github.com/descope/go-sdk/commit/00393dac4eeb0558b5ff7cd95eb2bbf5ed90c97c))
+
+## [1.29.1](https://github.com/descope/go-sdk/compare/v1.29.0...v1.29.1) (2026-08-15)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.29.0 ([#820](https://github.com/descope/go-sdk/issues/820)) ([d72e55e](https://github.com/descope/go-sdk/commit/d72e55e552c93a379c3785c7799eb06a9795659a))
+* resolve base URL before constructing the HTTP transport ([#829](https://github.com/descope/go-sdk/issues/829)) ([97e79bd](https://github.com/descope/go-sdk/commit/97e79bdd8d00ed0cb2b00fe19a3c950b6a555acd))
+
+## [1.29.0](https://github.com/descope/go-sdk/compare/v1.28.0...v1.29.0) (2026-08-07)
+
+
+### Features
+
+* **auth:** expose tenantSSOID on SSO exchange and rotated refresh JWT on refresh ([#815](https://github.com/descope/go-sdk/issues/815)) ([0d01fd0](https://github.com/descope/go-sdk/commit/0d01fd008c9490592e5a02c9328336eca53f8736))
+* **mgmt:** add RemoveRecoveryCodes user management method ([#818](https://github.com/descope/go-sdk/issues/818)) ([71d73ef](https://github.com/descope/go-sdk/commit/71d73ef9ecf46fab6ef5b28ed694148031190d14))
+* **mgmt:** load external groups scoped to a specific SSO config ([#816](https://github.com/descope/go-sdk/issues/816)) ([82c7cb3](https://github.com/descope/go-sdk/commit/82c7cb3da59e998c3212cfa4f04c535deaebe47b))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.28.0 ([#808](https://github.com/descope/go-sdk/issues/808)) ([474437b](https://github.com/descope/go-sdk/commit/474437bc6540cf81d2147250952bf1d65f228609))
+
+## [1.28.0](https://github.com/descope/go-sdk/compare/v1.27.0...v1.28.0) (2026-07-21)
+
+
+### Features
+
+* expose lastSuccessTestTime on SSO settings load response ([#801](https://github.com/descope/go-sdk/issues/801)) ([c5eb3bb](https://github.com/descope/go-sdk/commit/c5eb3bbf900ad02db5144caddcf3c5858ec0b330))
+* expose source on external Group (scim vs jit) ([#802](https://github.com/descope/go-sdk/issues/802)) ([6b126d3](https://github.com/descope/go-sdk/commit/6b126d355df8681218b78c198f9d334608946d90))
+* support scope claim mapping for inbound apps ([#807](https://github.com/descope/go-sdk/issues/807)) ([a1710b8](https://github.com/descope/go-sdk/commit/a1710b8db7799b29b38562418b99199578234492))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.27.0 ([#799](https://github.com/descope/go-sdk/issues/799)) ([f8a29c4](https://github.com/descope/go-sdk/commit/f8a29c41f26ab58fcd7e2b0e6ae4edfec180bcfa))
+* **deps:** update module github.com/lestrrat-go/jwx/v2 to v2.1.7 ([#806](https://github.com/descope/go-sdk/issues/806)) ([516de1a](https://github.com/descope/go-sdk/commit/516de1a41516287e285dd5f157a1f25330cdbd90))
+
+## [1.27.0](https://github.com/descope/go-sdk/compare/v1.26.0...v1.27.0) (2026-07-12)
+
+
+### Features
+
+* **fga:** abac info support for authzcache ([#780](https://github.com/descope/go-sdk/issues/780)) ([e768507](https://github.com/descope/go-sdk/commit/e7685071d0dd0710a291b010895e5267deb79554))
+* **mgmt:** add access key, user, and third-party batch & recovery endpoints ([#790](https://github.com/descope/go-sdk/issues/790)) ([eb19bb0](https://github.com/descope/go-sdk/commit/eb19bb0e06fbcdfc8fc54a35f012bdf93984137d))
+* **mgmt:** add batch permission and role management endpoints ([#789](https://github.com/descope/go-sdk/issues/789)) ([d69d144](https://github.com/descope/go-sdk/commit/d69d144a40db64bb4492e4b728d11ea04671f129))
+* **mgmt:** add JWT template management API ([#791](https://github.com/descope/go-sdk/issues/791)) ([88beff9](https://github.com/descope/go-sdk/commit/88beff9a3b584e8a17e468474eede6dc2368e307))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.26.0 ([#787](https://github.com/descope/go-sdk/issues/787)) ([33258c3](https://github.com/descope/go-sdk/commit/33258c3b1ab0d33ab8b642e26699cee928beab15))
+* **mgmt:** send templateId and templateOptions in InviteBatch request ([#797](https://github.com/descope/go-sdk/issues/797)) ([c524e13](https://github.com/descope/go-sdk/commit/c524e13cc8c1ae21b7783a4d737e97fe6a4d2d5a))
+
 ## [1.26.0](https://github.com/descope/go-sdk/compare/v1.25.0...v1.26.0) (2026-06-28)
 
 

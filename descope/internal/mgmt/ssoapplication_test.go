@@ -657,6 +657,131 @@ func TestSSOApplicationRotateSecretError(t *testing.T) {
 	require.Empty(t, res)
 }
 
+func TestSSOApplicationAddSecretSuccess(t *testing.T) {
+	response := map[string]any{
+		"meta": map[string]any{
+			"id":          "secret-id",
+			"name":        "my-secret",
+			"status":      "active",
+			"expireTime":  1234,
+			"createdTime": 5678,
+		},
+		"cleartext": "secret-123",
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "id1", req["appId"])
+		require.Equal(t, "my-secret", req["name"])
+		require.EqualValues(t, 1234, req["expireTime"])
+	}, response))
+	meta, cleartext, err := mgmt.SSOApplication().AddApplicationSecret(context.Background(), "id1", "my-secret", 1234)
+	require.NoError(t, err)
+	require.Equal(t, "secret-123", cleartext)
+	require.NotNil(t, meta)
+	require.Equal(t, "secret-id", meta.ID)
+	require.Equal(t, "my-secret", meta.Name)
+	require.Equal(t, "active", meta.Status)
+	require.EqualValues(t, 1234, meta.ExpireTime)
+	require.EqualValues(t, 5678, meta.CreatedTime)
+}
+
+func TestSSOApplicationAddSecretErrorEmptyID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	meta, cleartext, err := mgmt.SSOApplication().AddApplicationSecret(context.Background(), "", "my-secret", 0)
+	require.Error(t, err)
+	require.Nil(t, meta)
+	require.Empty(t, cleartext)
+}
+
+func TestSSOApplicationAddSecretErrorEmptyName(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	meta, cleartext, err := mgmt.SSOApplication().AddApplicationSecret(context.Background(), "id1", "", 0)
+	require.Error(t, err)
+	require.Nil(t, meta)
+	require.Empty(t, cleartext)
+}
+
+func TestSSOApplicationAddSecretError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	meta, cleartext, err := mgmt.SSOApplication().AddApplicationSecret(context.Background(), "id1", "my-secret", 0)
+	require.Error(t, err)
+	require.Nil(t, meta)
+	require.Empty(t, cleartext)
+}
+
+func TestSSOApplicationRevealSecretSuccess(t *testing.T) {
+	response := map[string]any{"cleartext": "secret-123"}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.Equal(t, "id1", r.URL.Query().Get("id"))
+		require.Equal(t, "my-secret", r.URL.Query().Get("secretName"))
+	}, response))
+	res, err := mgmt.SSOApplication().RevealApplicationSecret(context.Background(), "id1", "my-secret")
+	require.NoError(t, err)
+	require.Equal(t, "secret-123", res)
+}
+
+func TestSSOApplicationRevealSecretEmptyName(t *testing.T) {
+	response := map[string]any{"cleartext": "secret-123"}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, "id1", r.URL.Query().Get("id"))
+		require.Empty(t, r.URL.Query().Get("secretName"))
+	}, response))
+	res, err := mgmt.SSOApplication().RevealApplicationSecret(context.Background(), "id1", "")
+	require.NoError(t, err)
+	require.Equal(t, "secret-123", res)
+}
+
+func TestSSOApplicationRevealSecretErrorEmptyID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.SSOApplication().RevealApplicationSecret(context.Background(), "", "my-secret")
+	require.Error(t, err)
+	require.Empty(t, res)
+}
+
+func TestSSOApplicationRevealSecretError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := mgmt.SSOApplication().RevealApplicationSecret(context.Background(), "test", "my-secret")
+	require.Error(t, err)
+	require.Empty(t, res)
+}
+
+func TestSSOApplicationRevokeSecretSuccess(t *testing.T) {
+	response := map[string]any{
+		"secrets": []map[string]any{
+			{"id": "secret-id", "name": "remaining", "status": "active", "expireTime": 0, "createdTime": 5678},
+		},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "id1", req["appId"])
+		require.Equal(t, "my-secret", req["name"])
+	}, response))
+	secrets, err := mgmt.SSOApplication().RevokeApplicationSecret(context.Background(), "id1", "my-secret")
+	require.NoError(t, err)
+	require.Len(t, secrets, 1)
+	require.Equal(t, "secret-id", secrets[0].ID)
+	require.Equal(t, "remaining", secrets[0].Name)
+}
+
+func TestSSOApplicationRevokeSecretErrorEmptyID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	secrets, err := mgmt.SSOApplication().RevokeApplicationSecret(context.Background(), "", "my-secret")
+	require.Error(t, err)
+	require.Nil(t, secrets)
+}
+
+func TestSSOApplicationRevokeSecretError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	secrets, err := mgmt.SSOApplication().RevokeApplicationSecret(context.Background(), "test", "my-secret")
+	require.Error(t, err)
+	require.Nil(t, secrets)
+}
+
 func TestSSOApplicationCreateOIDCApplicationWithDedicatedClientConfig(t *testing.T) {
 	response := map[string]any{"id": "qux"}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -709,4 +834,62 @@ func TestSSOApplicationUpdateOIDCApplicationOmitsImmutableClientCredentials(t *t
 		ForcePkce:    true,
 	})
 	require.NoError(t, err)
+}
+
+func TestSSOApplicationCreateCustomAttributesSuccess(t *testing.T) {
+	response := map[string]any{"data": []map[string]any{{"name": "npi_level", "type": 1, "displayName": "NPI Level"}}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		attrs, ok := req["attributes"].([]any)
+		require.True(t, ok)
+		require.Len(t, attrs, 1)
+		require.Equal(t, "npi_level", attrs[0].(map[string]any)["name"])
+		require.EqualValues(t, 1, attrs[0].(map[string]any)["type"])
+	}, response))
+
+	res, err := mgmt.SSOApplication().CreateCustomAttributes(context.Background(), []*descope.SSOApplicationCustomAttribute{
+		{Name: "npi_level", Type: 1, DisplayName: "NPI Level"},
+	})
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Equal(t, "npi_level", res[0].Name)
+}
+
+func TestSSOApplicationCreateCustomAttributesMissingArg(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	_, err := mgmt.SSOApplication().CreateCustomAttributes(context.Background(), nil)
+	require.Error(t, err)
+}
+
+func TestSSOApplicationDeleteCustomAttributesSuccess(t *testing.T) {
+	response := map[string]any{"data": []map[string]any{}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		names, ok := req["names"].([]any)
+		require.True(t, ok)
+		require.Len(t, names, 1)
+		require.Equal(t, "npi_level", names[0])
+	}, response))
+
+	res, err := mgmt.SSOApplication().DeleteCustomAttributes(context.Background(), []string{"npi_level"})
+	require.NoError(t, err)
+	require.Empty(t, res)
+}
+
+func TestSSOApplicationDeleteCustomAttributesMissingArg(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	_, err := mgmt.SSOApplication().DeleteCustomAttributes(context.Background(), nil)
+	require.Error(t, err)
+}
+
+func TestSSOApplicationLoadCustomAttributesSuccess(t *testing.T) {
+	response := map[string]any{"data": []map[string]any{{"name": "npi_level", "type": 1}}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {}, response))
+	res, err := mgmt.SSOApplication().LoadCustomAttributes(context.Background())
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Equal(t, "npi_level", res[0].Name)
 }

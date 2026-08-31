@@ -244,12 +244,29 @@ type MockSSO struct {
 	ConfigureOIDCSettingsAssert func(tenantID string, settings *descope.SSOOIDCSettings, domains []string, ssoID string)
 	ConfigureOIDCSettingsError  error
 
+	ConfigureXAASettingsAssert func(tenantID string, settings *descope.SSOXAASettings, ssoID string)
+	ConfigureXAASettingsError  error
+
+	LoadXAASettingsAssert   func(tenantID string, ssoID string)
+	LoadXAASettingsResponse *descope.SSOXAASettingsResponse
+	LoadXAASettingsError    error
+
+	LoadAllXAASettingsAssert   func(tenantID string)
+	LoadAllXAASettingsResponse []*descope.SSOXAASettingsResponse
+	LoadAllXAASettingsError    error
+
+	DeleteXAASettingsAssert func(tenantID string, ssoID string)
+	DeleteXAASettingsError  error
+
 	NewSettingsAssert   func(tenantID string, ssoID string, displayName string)
 	NewSettingsResponse *descope.SSOTenantSettingsResponse
 	NewSettingsError    error
 
 	DeleteSettingsAssert func(tenantID string, ssoID string)
 	DeleteSettingsError  error
+
+	ConfigureAuthTypeAssert func(tenantID string, authType descope.SSOAuthType, ssoID string)
+	ConfigureAuthTypeError  error
 
 	GetSettingsAssert   func(tenantID string)
 	GetSettingsResponse *descope.SSOSettingsResponse
@@ -308,6 +325,41 @@ func (m *MockSSO) ConfigureOIDCSettings(_ context.Context, tenantID string, sett
 		m.ConfigureOIDCSettingsAssert(tenantID, settings, domains, ssoID)
 	}
 	return m.ConfigureOIDCSettingsError
+}
+
+func (m *MockSSO) ConfigureAuthType(_ context.Context, tenantID string, authType descope.SSOAuthType, ssoID string) error {
+	if m.ConfigureAuthTypeAssert != nil {
+		m.ConfigureAuthTypeAssert(tenantID, authType, ssoID)
+	}
+	return m.ConfigureAuthTypeError
+}
+
+func (m *MockSSO) ConfigureXAASettings(_ context.Context, tenantID string, settings *descope.SSOXAASettings, ssoID string) error {
+	if m.ConfigureXAASettingsAssert != nil {
+		m.ConfigureXAASettingsAssert(tenantID, settings, ssoID)
+	}
+	return m.ConfigureXAASettingsError
+}
+
+func (m *MockSSO) LoadXAASettings(_ context.Context, tenantID string, ssoID string) (*descope.SSOXAASettingsResponse, error) {
+	if m.LoadXAASettingsAssert != nil {
+		m.LoadXAASettingsAssert(tenantID, ssoID)
+	}
+	return m.LoadXAASettingsResponse, m.LoadXAASettingsError
+}
+
+func (m *MockSSO) LoadAllXAASettings(_ context.Context, tenantID string) ([]*descope.SSOXAASettingsResponse, error) {
+	if m.LoadAllXAASettingsAssert != nil {
+		m.LoadAllXAASettingsAssert(tenantID)
+	}
+	return m.LoadAllXAASettingsResponse, m.LoadAllXAASettingsError
+}
+
+func (m *MockSSO) DeleteXAASettings(_ context.Context, tenantID string, ssoID string) error {
+	if m.DeleteXAASettingsAssert != nil {
+		m.DeleteXAASettingsAssert(tenantID, ssoID)
+	}
+	return m.DeleteXAASettingsError
 }
 
 func (m *MockSSO) NewSettings(_ context.Context, tenantID string, ssoID string, displayName string) (*descope.SSOTenantSettingsResponse, error) {
@@ -568,6 +620,9 @@ type MockUser struct {
 
 	RemoveTOTPSeedAssert func(loginID string)
 	RemoveTOTPSeedError  error
+
+	RemoveRecoveryCodesAssert func(loginIDOrUserID string)
+	RemoveRecoveryCodesError  error
 
 	ListTrustedDevicesAssert   func(loginIDsOrUserIDs []string)
 	ListTrustedDevicesResponse []*descope.UserTrustedDevice
@@ -982,6 +1037,13 @@ func (m *MockUser) RemoveTOTPSeed(_ context.Context, loginID string) error {
 	return m.RemoveTOTPSeedError
 }
 
+func (m *MockUser) RemoveRecoveryCodes(_ context.Context, loginIDOrUserID string) error {
+	if m.RemoveRecoveryCodesAssert != nil {
+		m.RemoveRecoveryCodesAssert(loginIDOrUserID)
+	}
+	return m.RemoveRecoveryCodesError
+}
+
 func (m *MockUser) ListTrustedDevices(_ context.Context, loginIDsOrUserIDs []string) ([]*descope.UserTrustedDevice, error) {
 	if m.ListTrustedDevicesAssert != nil {
 		m.ListTrustedDevicesAssert(loginIDsOrUserIDs)
@@ -1341,9 +1403,24 @@ type MockSSOApplication struct {
 	GetApplicationSecretAssert      func(id string)
 	GetApplicationSecretResponse    string
 	GetApplicationSecretError       error
+	AddApplicationSecretAssert      func(id string, name string, expireTime int32)
+	AddApplicationSecretMeta        *descope.ClientSecretMeta
+	AddApplicationSecretResponse    string
+	AddApplicationSecretError       error
+	RevealApplicationSecretAssert   func(id string, secretName string)
+	RevealApplicationSecretResponse string
+	RevealApplicationSecretError    error
+	RevokeApplicationSecretAssert   func(id string, name string)
+	RevokeApplicationSecretResponse []*descope.ClientSecretMeta
+	RevokeApplicationSecretError    error
 	RotateApplicationSecretAssert   func(id string)
 	RotateApplicationSecretResponse string
 	RotateApplicationSecretError    error
+
+	CreateCustomAttributesAssert func(attributes []*descope.SSOApplicationCustomAttribute)
+	DeleteCustomAttributesAssert func(names []string)
+	CustomAttributesResponse     []*descope.SSOApplicationCustomAttribute
+	CustomAttributesError        error
 }
 
 func (m *MockSSOApplication) CreateOIDCApplication(_ context.Context, appRequest *descope.OIDCApplicationRequest) (id string, err error) {
@@ -1413,11 +1490,50 @@ func (m *MockSSOApplication) GetApplicationSecret(_ context.Context, id string) 
 	return m.GetApplicationSecretResponse, m.GetApplicationSecretError
 }
 
+func (m *MockSSOApplication) AddApplicationSecret(_ context.Context, id string, name string, expireTime int32) (*descope.ClientSecretMeta, string, error) {
+	if m.AddApplicationSecretAssert != nil {
+		m.AddApplicationSecretAssert(id, name, expireTime)
+	}
+	return m.AddApplicationSecretMeta, m.AddApplicationSecretResponse, m.AddApplicationSecretError
+}
+
+func (m *MockSSOApplication) RevealApplicationSecret(_ context.Context, id string, secretName string) (string, error) {
+	if m.RevealApplicationSecretAssert != nil {
+		m.RevealApplicationSecretAssert(id, secretName)
+	}
+	return m.RevealApplicationSecretResponse, m.RevealApplicationSecretError
+}
+
+func (m *MockSSOApplication) RevokeApplicationSecret(_ context.Context, id string, name string) ([]*descope.ClientSecretMeta, error) {
+	if m.RevokeApplicationSecretAssert != nil {
+		m.RevokeApplicationSecretAssert(id, name)
+	}
+	return m.RevokeApplicationSecretResponse, m.RevokeApplicationSecretError
+}
+
 func (m *MockSSOApplication) RotateApplicationSecret(_ context.Context, id string) (string, error) {
 	if m.RotateApplicationSecretAssert != nil {
 		m.RotateApplicationSecretAssert(id)
 	}
 	return m.RotateApplicationSecretResponse, m.RotateApplicationSecretError
+}
+
+func (m *MockSSOApplication) CreateCustomAttributes(_ context.Context, attributes []*descope.SSOApplicationCustomAttribute) ([]*descope.SSOApplicationCustomAttribute, error) {
+	if m.CreateCustomAttributesAssert != nil {
+		m.CreateCustomAttributesAssert(attributes)
+	}
+	return m.CustomAttributesResponse, m.CustomAttributesError
+}
+
+func (m *MockSSOApplication) DeleteCustomAttributes(_ context.Context, names []string) ([]*descope.SSOApplicationCustomAttribute, error) {
+	if m.DeleteCustomAttributesAssert != nil {
+		m.DeleteCustomAttributesAssert(names)
+	}
+	return m.CustomAttributesResponse, m.CustomAttributesError
+}
+
+func (m *MockSSOApplication) LoadCustomAttributes(_ context.Context) ([]*descope.SSOApplicationCustomAttribute, error) {
+	return m.CustomAttributesResponse, m.CustomAttributesError
 }
 
 // Mock Permission
@@ -1618,13 +1734,25 @@ type MockGroup struct {
 	LoadAllGroupsResponse []*descope.Group
 	LoadAllGroupsError    error
 
+	LoadAllGroupsWithSSOIDAssert   func(tenantID, ssoID string)
+	LoadAllGroupsWithSSOIDResponse []*descope.Group
+	LoadAllGroupsWithSSOIDError    error
+
 	LoadAllGroupsForMembersAssert   func(tenantID string, userIDs, loginIDs []string)
 	LoadAllGroupsForMembersResponse []*descope.Group
 	LoadAllGroupsForMembersError    error
 
+	LoadAllGroupsForMembersWithSSOIDAssert   func(tenantID string, userIDs, loginIDs []string, ssoID string)
+	LoadAllGroupsForMembersWithSSOIDResponse []*descope.Group
+	LoadAllGroupsForMembersWithSSOIDError    error
+
 	LoadAllGroupMembersAssert   func(tenantID, groupID string)
 	LoadAllGroupMembersResponse []*descope.Group
 	LoadAllGroupMembersError    error
+
+	LoadAllGroupMembersWithSSOIDAssert   func(tenantID, groupID, ssoID string)
+	LoadAllGroupMembersWithSSOIDResponse []*descope.Group
+	LoadAllGroupMembersWithSSOIDError    error
 }
 
 func (m *MockGroup) LoadAllGroups(_ context.Context, tenantID string) ([]*descope.Group, error) {
@@ -1634,6 +1762,13 @@ func (m *MockGroup) LoadAllGroups(_ context.Context, tenantID string) ([]*descop
 	return m.LoadAllGroupsResponse, m.LoadAllGroupsError
 }
 
+func (m *MockGroup) LoadAllGroupsWithSSOID(_ context.Context, tenantID, ssoID string) ([]*descope.Group, error) {
+	if m.LoadAllGroupsWithSSOIDAssert != nil {
+		m.LoadAllGroupsWithSSOIDAssert(tenantID, ssoID)
+	}
+	return m.LoadAllGroupsWithSSOIDResponse, m.LoadAllGroupsWithSSOIDError
+}
+
 func (m *MockGroup) LoadAllGroupsForMembers(_ context.Context, tenantID string, userIDs, loginIDs []string) ([]*descope.Group, error) {
 	if m.LoadAllGroupsForMembersAssert != nil {
 		m.LoadAllGroupsForMembersAssert(tenantID, userIDs, loginIDs)
@@ -1641,11 +1776,25 @@ func (m *MockGroup) LoadAllGroupsForMembers(_ context.Context, tenantID string, 
 	return m.LoadAllGroupsForMembersResponse, m.LoadAllGroupsForMembersError
 }
 
+func (m *MockGroup) LoadAllGroupsForMembersWithSSOID(_ context.Context, tenantID string, userIDs, loginIDs []string, ssoID string) ([]*descope.Group, error) {
+	if m.LoadAllGroupsForMembersWithSSOIDAssert != nil {
+		m.LoadAllGroupsForMembersWithSSOIDAssert(tenantID, userIDs, loginIDs, ssoID)
+	}
+	return m.LoadAllGroupsForMembersWithSSOIDResponse, m.LoadAllGroupsForMembersWithSSOIDError
+}
+
 func (m *MockGroup) LoadAllGroupMembers(_ context.Context, tenantID, groupID string) ([]*descope.Group, error) {
 	if m.LoadAllGroupMembersAssert != nil {
 		m.LoadAllGroupMembersAssert(tenantID, groupID)
 	}
 	return m.LoadAllGroupMembersResponse, m.LoadAllGroupMembersError
+}
+
+func (m *MockGroup) LoadAllGroupMembersWithSSOID(_ context.Context, tenantID, groupID, ssoID string) ([]*descope.Group, error) {
+	if m.LoadAllGroupMembersWithSSOIDAssert != nil {
+		m.LoadAllGroupMembersWithSSOIDAssert(tenantID, groupID, ssoID)
+	}
+	return m.LoadAllGroupMembersWithSSOIDResponse, m.LoadAllGroupMembersWithSSOIDError
 }
 
 // Mock Flows
@@ -2028,6 +2177,10 @@ func (m *MockAuthz) WhoCanAccess(_ context.Context, resource, relationDefinition
 	return m.WhoCanAccessResponse, m.WhoCanAccessError
 }
 
+func (m *MockAuthz) WhoCanAccessWithContext(ctx context.Context, resource, relationDefinition, namespace string, _ map[string]any) ([]string, error) {
+	return m.WhoCanAccess(ctx, resource, relationDefinition, namespace)
+}
+
 func (m *MockAuthz) ResourceRelationsWithTargetSetsFilter(ctx context.Context, resource string, _ bool) ([]*descope.AuthzRelation, error) {
 	return m.ResourceRelations(ctx, resource)
 }
@@ -2055,6 +2208,10 @@ func (m *MockAuthz) WhatCanTargetAccess(_ context.Context, target string) ([]*de
 		m.WhatCanTargetAccessAssert(target)
 	}
 	return m.WhatCanTargetAccessResponse, m.WhatCanTargetAccessError
+}
+
+func (m *MockAuthz) WhatCanTargetAccessWithContext(ctx context.Context, target string, _ map[string]any) ([]*descope.AuthzRelation, error) {
+	return m.WhatCanTargetAccess(ctx, target)
 }
 
 func (m *MockAuthz) WhatCanTargetAccessWithRelation(_ context.Context, target, relationDefinition, namespace string) ([]*descope.AuthzRelation, error) {
@@ -2095,6 +2252,8 @@ type MockFGA struct {
 	CheckWithContextAssert   func(relations []*descope.FGARelation, extraContext map[string]any)
 	CheckWithContextResponse []*descope.FGACheck
 	CheckWithContextError    error
+
+	SetListConditionsAssert func(listConditions bool)
 
 	LoadMappableSchemaAssert   func(tenantID string, options *descope.FGAMappableResourcesOptions)
 	LoadMappableSchemaResponse *descope.FGAMappableSchema
@@ -2149,6 +2308,12 @@ func (m *MockFGA) Check(_ context.Context, relations []*descope.FGARelation) ([]
 		m.CheckAssert(relations)
 	}
 	return m.CheckResponse, m.CheckError
+}
+
+func (m *MockFGA) SetListConditions(listConditions bool) {
+	if m.SetListConditionsAssert != nil {
+		m.SetListConditionsAssert(listConditions)
+	}
 }
 
 func (m *MockFGA) CheckWithContext(_ context.Context, relations []*descope.FGARelation, extraContext map[string]any) ([]*descope.FGACheck, error) {
@@ -2214,6 +2379,19 @@ type MockThirdPartyApplication struct {
 	GetApplicationSecretAssert   func(id string)
 	GetApplicationSecretResponse string
 	GetApplicationSecretError    error
+
+	AddApplicationSecretAssert   func(id string, name string, expireTime int32)
+	AddApplicationSecretMeta     *descope.ClientSecretMeta
+	AddApplicationSecretResponse string
+	AddApplicationSecretError    error
+
+	RevealApplicationSecretAssert   func(id string, secretName string)
+	RevealApplicationSecretResponse string
+	RevealApplicationSecretError    error
+
+	RevokeApplicationSecretAssert   func(id string, name string)
+	RevokeApplicationSecretResponse []*descope.ClientSecretMeta
+	RevokeApplicationSecretError    error
 
 	RotateApplicationSecretAssert   func(id string)
 	RotateApplicationSecretResponse string
@@ -2286,6 +2464,27 @@ func (m *MockThirdPartyApplication) GetApplicationSecret(_ context.Context, id s
 		m.GetApplicationSecretAssert(id)
 	}
 	return m.GetApplicationSecretResponse, m.GetApplicationSecretError
+}
+
+func (m *MockThirdPartyApplication) AddApplicationSecret(_ context.Context, id string, name string, expireTime int32) (*descope.ClientSecretMeta, string, error) {
+	if m.AddApplicationSecretAssert != nil {
+		m.AddApplicationSecretAssert(id, name, expireTime)
+	}
+	return m.AddApplicationSecretMeta, m.AddApplicationSecretResponse, m.AddApplicationSecretError
+}
+
+func (m *MockThirdPartyApplication) RevealApplicationSecret(_ context.Context, id string, secretName string) (string, error) {
+	if m.RevealApplicationSecretAssert != nil {
+		m.RevealApplicationSecretAssert(id, secretName)
+	}
+	return m.RevealApplicationSecretResponse, m.RevealApplicationSecretError
+}
+
+func (m *MockThirdPartyApplication) RevokeApplicationSecret(_ context.Context, id string, name string) ([]*descope.ClientSecretMeta, error) {
+	if m.RevokeApplicationSecretAssert != nil {
+		m.RevokeApplicationSecretAssert(id, name)
+	}
+	return m.RevokeApplicationSecretResponse, m.RevokeApplicationSecretError
 }
 
 func (m *MockThirdPartyApplication) RotateApplicationSecret(_ context.Context, id string) (string, error) {

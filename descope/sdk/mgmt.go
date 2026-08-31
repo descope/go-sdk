@@ -188,8 +188,35 @@ type SSOApplication interface {
 	// Only relevant for OIDC apps configured with dedicated client credentials (ClientType "confidential").
 	GetApplicationSecret(ctx context.Context, id string) (string, error)
 
+	// Add a new client secret to an SSO application.
+	// name is a human-readable UI label used to identify the secret; the returned cleartext is the
+	// actual authentication credential and is only exposed here, so store it securely.
+	// expireTime is the secret's expiration as epoch seconds; 0 means the secret never expires.
+	// Returns the new secret's metadata together with its cleartext value.
+	AddApplicationSecret(ctx context.Context, id string, name string, expireTime int32) (meta *descope.ClientSecretMeta, cleartext string, err error)
+
+	// Reveal the cleartext value of an SSO application client secret, selecting it by its UI label name.
+	// When secretName is empty the backend returns the application's single secret, or errors if more
+	// than one secret exists.
+	RevealApplicationSecret(ctx context.Context, id string, secretName string) (string, error)
+
+	// Revoke a client secret of an SSO application, selecting it by its UI label name.
+	// Returns the metadata of the application's remaining secrets.
+	RevokeApplicationSecret(ctx context.Context, id string, name string) (secrets []*descope.ClientSecretMeta, err error)
+
 	// Rotate the dedicated OIDC client secret of an SSO application by its id, returning the new cleartext secret.
 	RotateApplicationSecret(ctx context.Context, id string) (string, error)
+
+	// Create or update the project-wide SSO (federated) application custom attribute definitions.
+	// Returns the full, updated set of attribute definitions.
+	CreateCustomAttributes(ctx context.Context, attributes []*descope.SSOApplicationCustomAttribute) ([]*descope.SSOApplicationCustomAttribute, error)
+
+	// Delete SSO application custom attribute definitions by name.
+	// Returns the remaining attribute definitions.
+	DeleteCustomAttributes(ctx context.Context, names []string) ([]*descope.SSOApplicationCustomAttribute, error)
+
+	// Load all SSO application custom attribute definitions.
+	LoadCustomAttributes(ctx context.Context) ([]*descope.SSOApplicationCustomAttribute, error)
 }
 
 // Provides functions for managing users in a project.
@@ -482,6 +509,9 @@ type User interface {
 	// methods or a verified email/phone.
 	RemoveTOTPSeed(ctx context.Context, loginID string) error
 
+	// Removes all recovery codes for the user with the given login ID or user ID.
+	RemoveRecoveryCodes(ctx context.Context, loginIDOrUserID string) error
+
 	// Get the provider token for the given login ID.
 	// Only users that sign-in using social providers will have token.
 	// Note: The 'Manage tokens from provider' setting must be enabled.
@@ -670,6 +700,31 @@ type SSO interface {
 	// ssoID (optional) - you can pass ssoID in case using multi SSO and you want to configure specific SSO configuration
 	ConfigureOIDCSettings(ctx context.Context, tenantID string, settings *descope.SSOOIDCSettings, domains []string, ssoID string) error
 
+	// Configure Cross-App Access (XAA / ID-JAG) trust settings for a single SSO configuration of a tenant.
+	//
+	// tenantID and settings are required.
+	// settings holds the trusted issuers + grant configuration together with the config-level shared
+	// group/role mapping. The shared mapping is shared across SAML / OIDC / SCIM / XAA for the sso_id.
+	// ssoID (optional) - pass ssoID when using multi SSO to configure a specific SSO configuration.
+	ConfigureXAASettings(ctx context.Context, tenantID string, settings *descope.SSOXAASettings, ssoID string) error
+
+	// Load the Cross-App Access (XAA / ID-JAG) trust settings for a single SSO configuration of a tenant.
+	//
+	// tenantID is required.
+	// ssoID (optional) - pass ssoID when using multi SSO to load a specific SSO configuration.
+	LoadXAASettings(ctx context.Context, tenantID string, ssoID string) (*descope.SSOXAASettingsResponse, error)
+
+	// Load the Cross-App Access (XAA / ID-JAG) trust settings for every SSO configuration of a tenant.
+	//
+	// tenantID is required.
+	LoadAllXAASettings(ctx context.Context, tenantID string) ([]*descope.SSOXAASettingsResponse, error)
+
+	// Delete the Cross-App Access (XAA / ID-JAG) trust settings of a single SSO configuration of a tenant.
+	//
+	// tenantID is required.
+	// ssoID (optional) - pass ssoID when using multi SSO to delete a specific SSO configuration.
+	DeleteXAASettings(ctx context.Context, tenantID string, ssoID string) error
+
 	// Create new SSO configuration (aka multi SSO)
 	// tenantID is required.
 	// ssoID (optional) - the desired SSO configuration id - if not provided, default sso ID id will be generated
@@ -679,6 +734,17 @@ type SSO interface {
 	// tenantID is required.
 	// ssoID (optional) - you can pass ssoID in case using multi SSO and you want to delete specific SSO configuration
 	DeleteSettings(ctx context.Context, tenantID string, ssoID string) error
+
+	// Set the authentication type of a single SSO configuration, leaving its stored SAML/OIDC
+	// settings, mappings and domains untouched.
+	//
+	// tenantID and authType are required.
+	//
+	// authType - descope.SSOAuthTypeNone disables the configuration without deleting it,
+	// descope.SSOAuthTypeSaml / descope.SSOAuthTypeOidc enable it on that protocol with its stored
+	// settings, so re-enabling needs no payload.
+	// ssoID (optional) - pass ssoID when using multi SSO to change a specific SSO configuration.
+	ConfigureAuthType(ctx context.Context, tenantID string, authType descope.SSOAuthType, ssoID string) error
 
 	// *** Deprecated ***
 
@@ -884,14 +950,29 @@ type Group interface {
 	// Load all groups for a specific tenant id.
 	LoadAllGroups(ctx context.Context, tenantID string) ([]*descope.Group, error)
 
+	// Load all groups for a specific tenant id, scoped to a single SSO configuration.
+	//
+	// ssoID returns only groups that came from the given SSO configuration (the ssoId used at
+	// SCIM provisioning or JIT login). Use the reserved id "default_ssoid" for the tenant's
+	// default SSO configuration; an empty ssoID behaves like LoadAllGroups.
+	LoadAllGroupsWithSSOID(ctx context.Context, tenantID, ssoID string) ([]*descope.Group, error)
+
 	// Load all groups for the provided user IDs or login IDs.
 	//
 	// userIDs have a format of "U2J5ES9S8TkvCgOvcrkpzUgVTEBM" (example), which can be found on the user's JWT.
 	// loginID is how the user identifies when logging in.
 	LoadAllGroupsForMembers(ctx context.Context, tenantID string, userIDs, loginIDs []string) ([]*descope.Group, error)
 
+	// Load all groups for the provided user IDs or login IDs, scoped to a single SSO
+	// configuration (see LoadAllGroupsWithSSOID for the ssoID semantics).
+	LoadAllGroupsForMembersWithSSOID(ctx context.Context, tenantID string, userIDs, loginIDs []string, ssoID string) ([]*descope.Group, error)
+
 	// Load all members of the provided group id.
 	LoadAllGroupMembers(ctx context.Context, tenantID, groupID string) ([]*descope.Group, error)
+
+	// Load all members of the provided group id, returning the group only if it came from the
+	// given SSO configuration (see LoadAllGroupsWithSSOID for the ssoID semantics).
+	LoadAllGroupMembersWithSSOID(ctx context.Context, tenantID, groupID, ssoID string) ([]*descope.Group, error)
 }
 
 // Provides functions for flow and theme management including export and import by ID.
@@ -1073,6 +1154,9 @@ type Authz interface {
 	// WhoCanAccess the given resource returns the list of targets with the given relation definition
 	WhoCanAccess(ctx context.Context, resource, relationDefinition, namespace string) ([]string, error)
 
+	// WhoCanAccessWithContext is like WhoCanAccess but threads an ABAC context
+	WhoCanAccessWithContext(ctx context.Context, resource, relationDefinition, namespace string, extraContext map[string]any) ([]string, error)
+
 	// ResourceRelations returns the list of all defined relations (not recursive) on the given resource, including target sets relations
 	ResourceRelations(ctx context.Context, resource string) ([]*descope.AuthzRelation, error)
 
@@ -1087,6 +1171,9 @@ type Authz interface {
 
 	// WhatCanTargetAccess returns the list of all relations for the given target including derived relations from the schema tree.
 	WhatCanTargetAccess(ctx context.Context, target string) ([]*descope.AuthzRelation, error)
+
+	// WhatCanTargetAccessWithContext is like WhatCanTargetAccess but threads an ABAC context
+	WhatCanTargetAccessWithContext(ctx context.Context, target string, extraContext map[string]any) ([]*descope.AuthzRelation, error)
 
 	// WhatCanTargetAccessWithRelation returns the list of all resources that the target has the given relation to including all derived relations
 	WhatCanTargetAccessWithRelation(ctx context.Context, target, relationDefinition, namespace string) ([]*descope.AuthzRelation, error)
@@ -1122,6 +1209,11 @@ type FGA interface {
 	// Pass a nil or empty map if you do not need to supply any extra context.
 	CheckWithContext(ctx context.Context, relations []*descope.FGARelation, extraContext map[string]any) ([]*descope.FGACheck, error)
 
+	// SetListConditions toggles whether Check requests per-condition evaluation results (the deciding-path
+	// condition IDs and schema version). Off by default; only an edge cache that builds condition
+	// certificates needs it — normal callers should leave it disabled.
+	SetListConditions(listConditions bool)
+
 	// LoadMappableSchema loads the mappable schema for the project (only listing the RDs for a Namespace), along with a list of mappable resources.
 	LoadMappableSchema(ctx context.Context, tenantID string, options *descope.FGAMappableResourcesOptions) (*descope.FGAMappableSchema, error)
 
@@ -1146,7 +1238,7 @@ type ThirdPartyApplication interface {
 	// LoginPageURL: The URL where login page is hosted.
 	// ApprovedCallbackUrls: List of approved callback URLs.
 	// PermissionsScopes: List of permissions scopes.
-	// AttributesScopes: List of attributes scopes.
+	// ScopeClaimMapping: List of scope→claim mapping entries.
 	// JWTBearerSettings: Optional JWT Bearer settings which used to validate external token.
 	//
 	// The argument appRequest.Name must be unique per project.
@@ -1178,6 +1270,22 @@ type ThirdPartyApplication interface {
 
 	// Get a third party application by the application id.
 	GetApplicationSecret(ctx context.Context, id string) (string, error)
+
+	// Add a new client secret to a third party (inbound) application.
+	// name is a human-readable UI label used to identify the secret; the returned cleartext is the
+	// actual authentication credential and is only exposed here, so store it securely.
+	// expireTime is the secret's expiration as epoch seconds; 0 means the secret never expires.
+	// Returns the new secret's metadata together with its cleartext value.
+	AddApplicationSecret(ctx context.Context, id string, name string, expireTime int32) (meta *descope.ClientSecretMeta, cleartext string, err error)
+
+	// Reveal the cleartext value of a third party application client secret, selecting it by its UI label name.
+	// When secretName is empty the backend returns the application's single secret, or errors if more
+	// than one secret exists.
+	RevealApplicationSecret(ctx context.Context, id string, secretName string) (string, error)
+
+	// Revoke a client secret of a third party application, selecting it by its UI label name.
+	// Returns the metadata of the application's remaining secrets.
+	RevokeApplicationSecret(ctx context.Context, id string, name string) (secrets []*descope.ClientSecretMeta, err error)
 
 	// Rotate the application secret for a third party application by the application id.
 	RotateApplicationSecret(ctx context.Context, id string) (string, error)

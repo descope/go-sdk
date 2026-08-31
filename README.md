@@ -432,6 +432,10 @@ authInfo, err := descopeClient.Auth.SSO().ExchangeToken(context.Background(), co
 if err != nil {
     // handle error
 }
+
+// When a tenant has multiple SSO configurations, authInfo.TenantSSOID holds the id
+// of the SSO configuration that performed the authentication
+ssoID := authInfo.TenantSSOID
 ```
 
 ```go
@@ -499,6 +503,14 @@ Pass the loginId to the function to remove the user's TOTP seed.
 
 ```go
 totpResponse, err := descopeClient.Management.User().RemoveTOTPSeed(context.Background(), loginID)
+```
+
+#### Removing Recovery Codes
+
+Pass a login ID or user ID to the function to remove all of the user's recovery codes.
+
+```go
+err := descopeClient.Management.User().RemoveRecoveryCodes(context.Background(), loginID)
 ```
 
 ### Passwords
@@ -606,6 +618,13 @@ if authorized, sessionToken, err := descopeClient.Auth.ValidateSessionWithToken(
 
 // If ValidateSessionWithRequest raises an exception, you will need to refresh the session using
 if authorized, sessionToken, err := descopeClient.Auth.RefreshSessionWithToken(context.Background(), refreshToken); !authorized {
+    // unauthorized error
+}
+
+// If refresh token rotation is enabled for the project, use RefreshSessionInfoWithToken to
+// receive the full authentication info: the rotated refresh token is returned in
+// authInfo.RefreshToken and must be used for subsequent refreshes
+if authorized, authInfo, err := descopeClient.Auth.RefreshSessionInfoWithToken(context.Background(), refreshToken); !authorized {
     // unauthorized error
 }
 
@@ -1275,6 +1294,13 @@ createdSSOSettings, err := descopeClient.Management.SSO().NewSettings(context.Ba
 // To delete SSO settings, call the following method
 // You can pass ssoID in case using multi SSO and you want to delete specific SSO configuration
 err := descopeClient.Management.SSO().DeleteSettings(context.Background(), "tenant-id")
+
+// To disable an SSO configuration without deleting it, set its auth type to none. Its settings,
+// mappings and domains are kept, so re-enabling it needs no payload.
+// You can pass ssoID in case using multi SSO and you want to disable a specific SSO configuration
+err := descopeClient.Management.SSO().ConfigureAuthType(context.Background(), "tenant-id", descope.SSOAuthTypeNone, ssoID)
+// Enable it again on the protocol it is configured for
+err = descopeClient.Management.SSO().ConfigureAuthType(context.Background(), "tenant-id", descope.SSOAuthTypeSaml, ssoID)
 ```
 
 Note: Certificates should have a similar structure to:
@@ -1897,8 +1923,8 @@ req := &descope.ThirdPartyApplicationRequest{
 	PermissionsScopes: []*descope.ThirdPartyApplicationScope{
 		{Name: "read", Description: "Read all", Values: []string{"Support"}},
 	},
-	AttributesScopes: []*descope.ThirdPartyApplicationScope{
-		{Name: "base", Description: "Basic attribute requirements", Values: []string{"email", "phone"}},
+	ScopeClaimMapping: []*descope.ThirdPartyApplicationScopeClaimMapping{
+		{Scope: "base", Description: "Basic attribute requirements", Claims: map[string]string{"email": "{{user.email}}", "phone_number": "{{user.phone}}"}},
 	},
 }
 appID, secret, err = descopeClient.Management.ThirdPartyApplication().CreateApplication(context.Background(), req)
@@ -1934,6 +1960,51 @@ err = descopeClient.DescopeClient().Management.ThirdPartyApplication().DeleteCon
 })
 
 ```
+
+### Manage Cross-App Access (XAA / ID-JAG)
+
+Cross-App Access (XAA), built on the OAuth identity-assertion authorization grant (ID-JAG), lets a tenant trust one or more external OIDC issuers so that a token minted by a trusted issuer can be exchanged for a Descope token (the RFC 7523 `jwt-bearer` grant). XAA trust is configured **per SSO configuration** of a tenant, alongside the tenant's SAML/OIDC settings, through the SSO management API. Each SSO configuration is addressed by its `ssoID` (leave it empty for the tenant's default SSO configuration). Read the effective trust config back through the same SSO management API (`LoadXAASettings` / `LoadAllXAASettings`).
+
+Configure the trusted issuers together with the config-level shared group/role mapping. Each issuer supports just-in-time (JIT) provisioning with the same attribute mapping as the SSO login JIT:
+
+```go
+err := descopeClient.Management.SSO().ConfigureXAASettings(context.Background(), "my-tenant-id", &descope.SSOXAASettings{
+	Enabled: true,
+	Settings: &descope.XAAJWTBearerSettings{
+		Issuers: map[string]*descope.XAAIssuerSettings{
+			// The map key is the trusted issuer URL.
+			"https://issuer.example.com": {
+				JWKsURI:             "https://issuer.example.com/.well-known/jwks.json",
+				SignAlgorithm:       "RS256",
+				UserInfoURI:         "https://issuer.example.com/userinfo",
+				ExternalIDFieldName: "sub", // assertion claim used as the login id
+				JITDisabled:         false, // JIT provisioning on: create/update the user from the assertion
+				AttributeMapping: &descope.AttributeMapping{
+					Email: "email",
+					Name:  "name",
+					Group: "groups", // assertion claim that carries the user's groups
+				},
+			},
+		},
+	},
+	// Config-level shared group/role mapping (shared across SAML / OIDC / SCIM / XAA for this ssoID).
+	RoleMappings: []*descope.RoleMapping{
+		{Groups: []string{"admins"}, Role: "Tenant Admin"},
+	},
+	DefaultSSORoles: []string{"Member"},
+}, "" /* ssoID, empty = default */)
+
+// Load the XAA settings for a single SSO configuration.
+xaa, err := descopeClient.Management.SSO().LoadXAASettings(context.Background(), "my-tenant-id", "" /* ssoID */)
+
+// Load the XAA settings for every SSO configuration of the tenant.
+allXAA, err := descopeClient.Management.SSO().LoadAllXAASettings(context.Background(), "my-tenant-id")
+
+// Delete the XAA settings of a single SSO configuration (removes its trusted issuers from the tenant).
+err = descopeClient.Management.SSO().DeleteXAASettings(context.Background(), "my-tenant-id", "" /* ssoID */)
+```
+
+> Group-to-role mapping is **not** configured per issuer. Role mapping (`RoleMappings`), default SSO roles (`DefaultSSORoles`), and FGA/group grants (`FgaMappings`) passed to `ConfigureXAASettings` are the config-level shared mapping: the same mapping is shared across SAML / OIDC / SCIM / XAA for that `ssoID`. Each issuer only maps the assertion's groups claim (via `AttributeMapping.Group`); how those group names resolve to roles is defined once, per SSO configuration. On load, this shared mapping is returned as `GroupsMapping` (role references by id and name), mirroring the SAML settings load shape.
 
 ### Manage Outbound Applications
 

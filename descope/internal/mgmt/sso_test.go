@@ -99,6 +99,51 @@ func TestDeleteSSOSettingsWithSSOIDSuccess(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestSSOConfigureAuthTypeDisableWithSSOIDSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["tenantId"])
+		require.Equal(t, "none", req["authType"])
+		require.Equal(t, "somessoid", req["ssoId"])
+	}))
+	err := mgmt.SSO().ConfigureAuthType(context.Background(), "abc", descope.SSOAuthTypeNone, "somessoid")
+	require.NoError(t, err)
+}
+
+func TestSSOConfigureAuthTypeDefaultConfigSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["tenantId"])
+		require.Equal(t, "saml", req["authType"])
+		require.Empty(t, req["ssoId"])
+	}))
+	err := mgmt.SSO().ConfigureAuthType(context.Background(), "abc", descope.SSOAuthTypeSaml, "")
+	require.NoError(t, err)
+}
+
+func TestSSOConfigureAuthTypeMissingTenantID(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+	err := mgmt.SSO().ConfigureAuthType(context.Background(), "", descope.SSOAuthTypeNone, "")
+	require.Error(t, err)
+	require.False(t, called)
+}
+
+func TestSSOConfigureAuthTypeMissingAuthType(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+	err := mgmt.SSO().ConfigureAuthType(context.Background(), "abc", "", "")
+	require.Error(t, err)
+	require.False(t, called)
+}
+
 func TestDeleteSSOSettingsError(t *testing.T) {
 	called := false
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {
@@ -442,6 +487,7 @@ func TestLoadSettingsSuccess(t *testing.T) {
 			},
 			"configFGATenantIDResourcePrefix": "tenant_prefix_",
 			"configFGATenantIDResourceSuffix": "_tenant_suffix",
+			"lastSuccessTestTime":             777,
 		},
 		"oidc": map[string]any{
 			"name":        "myName",
@@ -452,6 +498,7 @@ func TestLoadSettingsSuccess(t *testing.T) {
 			"userAttrMapping": map[string]any{
 				"givenName": "myGivenName",
 			},
+			"lastSuccessTestTime": 888,
 		},
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -499,6 +546,7 @@ func TestLoadSettingsSuccess(t *testing.T) {
 	assert.EqualValues(t, "ns3", res.Saml.FgaMappings["group2"].Relations[0].Namespace)
 	assert.EqualValues(t, "tenant_prefix_", res.Saml.ConfigFGATenantIDResourcePrefix)
 	assert.EqualValues(t, "_tenant_suffix", res.Saml.ConfigFGATenantIDResourceSuffix)
+	assert.EqualValues(t, 777, res.Saml.LastSuccessTestTime)
 
 	require.NotNil(t, res.Oidc)
 	assert.EqualValues(t, "myName", res.Oidc.Name)
@@ -508,6 +556,7 @@ func TestLoadSettingsSuccess(t *testing.T) {
 	assert.EqualValues(t, "http://dummy.com", res.Oidc.UserDataURL)
 	require.NotNil(t, res.Oidc.AttributeMapping)
 	assert.EqualValues(t, "myGivenName", res.Oidc.AttributeMapping.GivenName)
+	assert.EqualValues(t, 888, res.Oidc.LastSuccessTestTime)
 	require.Empty(t, res.SSOID)
 }
 
@@ -1355,6 +1404,261 @@ func TestRecalculateSSOMappingsError(t *testing.T) {
 
 	// Test with empty tenant ID
 	err := mgmt.SSO().RecalculateSSOMappings(context.Background(), "", "")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "tenantID")
+}
+
+func TestSSOConfigureXAASettingsSuccess(t *testing.T) {
+	settings := &descope.SSOXAASettings{
+		Enabled: true,
+		Settings: &descope.XAAJWTBearerSettings{
+			Issuers: map[string]*descope.XAAIssuerSettings{
+				"https://issuer.example.com": {
+					JWKsURI:             "https://issuer.example.com/jwks",
+					SignAlgorithm:       "RS256",
+					UserInfoURI:         "https://issuer.example.com/userinfo",
+					ExternalIDFieldName: "sub",
+					JITDisabled:         true,
+					AttributeMapping: &descope.AttributeMapping{
+						GivenName: "myGivenName",
+						Group:     "groups",
+					},
+				},
+			},
+			JWTBearerGrantTypeAudienceToUse: "clientId",
+		},
+		RoleMappings: []*descope.RoleMapping{
+			{
+				Groups: []string{"grp1", "grp2"},
+				Role:   "role1",
+			},
+		},
+		DefaultSSORoles:      []string{"defrole1", "defrole2"},
+		GroupsPriority:       []string{"group1"},
+		GroupPriorityEnabled: true,
+		AllowOverrideRoles:   true,
+		ProviderID:           "prov1",
+		FgaMappings: map[string]*descope.FGAGroupMapping{
+			"group1": {
+				Relations: []*descope.FGAGroupMappingRelation{
+					{
+						Resource:           "res1",
+						RelationDefinition: "rd1",
+						Namespace:          "ns1",
+					},
+				},
+			},
+		},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.Equal(t, "/v1/mgmt/sso/xaa/settings", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["tenantId"])
+		require.Empty(t, req["ssoId"])
+		require.Equal(t, true, req["enabled"])
+		require.Equal(t, true, req["groupPriorityEnabled"])
+		require.Equal(t, true, req["allowOverrideRoles"])
+		require.Equal(t, "prov1", req["providerID"])
+		require.Equal(t, []any{"defrole1", "defrole2"}, req["defaultSSORoles"])
+		require.Equal(t, []any{"group1"}, req["groupsPriority"])
+
+		settings, ok := req["settings"].(map[string]any)
+		require.True(t, ok)
+		issuers, ok := settings["issuers"].(map[string]any)
+		require.True(t, ok)
+		issuer, ok := issuers["https://issuer.example.com"].(map[string]any)
+		require.True(t, ok)
+		require.Equal(t, "https://issuer.example.com/jwks", issuer["jwksUri"])
+		require.Equal(t, "RS256", issuer["signAlgorithm"])
+		require.Equal(t, true, issuer["jitDisabled"])
+		attrMapping, ok := issuer["attributeMapping"].(map[string]any)
+		require.True(t, ok)
+		require.Equal(t, "myGivenName", attrMapping["givenName"])
+		require.Equal(t, "groups", attrMapping["group"])
+		require.Equal(t, "clientId", settings["jwtBearerGrantTypeAudienceToUse"])
+
+		roleMappings, ok := req["roleMappings"].([]any)
+		require.True(t, ok)
+		require.Len(t, roleMappings, 1)
+		mapping, ok := roleMappings[0].(map[string]any)
+		require.True(t, ok)
+		require.Equal(t, []any{"grp1", "grp2"}, mapping["groups"])
+		require.Equal(t, "role1", mapping["roleName"])
+
+		fgaMappings, ok := req["fgaMappings"].(map[string]any)
+		require.True(t, ok)
+		group1, ok := fgaMappings["group1"].(map[string]any)
+		require.True(t, ok)
+		relations, ok := group1["relations"].([]any)
+		require.True(t, ok)
+		require.Len(t, relations, 1)
+		relation := relations[0].(map[string]any)
+		require.Equal(t, "res1", relation["resource"])
+		require.Equal(t, "rd1", relation["relationDefinition"])
+		require.Equal(t, "ns1", relation["namespace"])
+	}))
+	err := mgmt.SSO().ConfigureXAASettings(context.Background(), "abc", settings, "")
+	require.NoError(t, err)
+}
+
+func TestSSOConfigureXAASettingsWithSSOIDSuccess(t *testing.T) {
+	ssoID := "somessoid"
+	settings := &descope.SSOXAASettings{
+		Enabled: true,
+		Settings: &descope.XAAJWTBearerSettings{
+			Issuers: map[string]*descope.XAAIssuerSettings{
+				"https://issuer.example.com": {JWKsURI: "https://issuer.example.com/jwks"},
+			},
+		},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["tenantId"])
+		require.Equal(t, ssoID, req["ssoId"])
+	}))
+	err := mgmt.SSO().ConfigureXAASettings(context.Background(), "abc", settings, ssoID)
+	require.NoError(t, err)
+}
+
+func TestSSOConfigureXAASettingsError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+	// Missing tenantID
+	err := mgmt.SSO().ConfigureXAASettings(context.Background(), "", &descope.SSOXAASettings{}, "")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "tenantID")
+	// Missing settings
+	err = mgmt.SSO().ConfigureXAASettings(context.Background(), "abc", nil, "")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "settings")
+	require.False(t, called)
+}
+
+func TestLoadXAASettingsSuccess(t *testing.T) {
+	tenantID := "abc"
+	ssoID := "somessoid"
+	response := map[string]any{
+		"ssoId":   ssoID,
+		"enabled": true,
+		"settings": map[string]any{
+			"issuers": map[string]any{
+				"https://issuer.example.com": map[string]any{
+					"jwksUri":       "https://issuer.example.com/jwks",
+					"signAlgorithm": "RS256",
+					"jitDisabled":   true,
+				},
+			},
+		},
+		"groupsMapping": []map[string]any{
+			{
+				"role": map[string]string{
+					"id":   "role.id",
+					"name": "role.name",
+				},
+				"groups": []string{"group1"},
+			},
+		},
+		"defaultSSORoles":      []string{"defrole1"},
+		"groupsPriority":       []string{"group1"},
+		"groupPriorityEnabled": true,
+		"allowOverrideRoles":   true,
+		"providerID":           "prov1",
+		"audience":             "https://api.descope.com/v1/apps/P1",
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.Equal(t, "/v1/mgmt/sso/xaa/settings", r.URL.Path)
+		params := helpers.ReadParams(r)
+		require.Equal(t, tenantID, params["tenantId"])
+		require.Equal(t, ssoID, params["ssoId"])
+	}, response))
+	res, err := mgmt.SSO().LoadXAASettings(context.Background(), tenantID, ssoID)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	assert.EqualValues(t, ssoID, res.SSOID)
+	assert.True(t, res.Enabled)
+	require.NotNil(t, res.Settings)
+	issuer := res.Settings.Issuers["https://issuer.example.com"]
+	require.NotNil(t, issuer)
+	assert.EqualValues(t, "https://issuer.example.com/jwks", issuer.JWKsURI)
+	assert.True(t, issuer.JITDisabled)
+	require.Len(t, res.GroupsMapping, 1)
+	assert.EqualValues(t, "role.id", res.GroupsMapping[0].Role.ID)
+	assert.EqualValues(t, []string{"group1"}, res.GroupsMapping[0].Groups)
+	assert.EqualValues(t, []string{"defrole1"}, res.DefaultSSORoles)
+	assert.True(t, res.GroupPriorityEnabled)
+	assert.True(t, res.AllowOverrideRoles)
+	assert.EqualValues(t, "prov1", res.ProviderID)
+	// Read-only, project-level: no tenant segment - the tenant travels in the aud_tenant claim.
+	assert.EqualValues(t, "https://api.descope.com/v1/apps/P1", res.Audience)
+}
+
+func TestLoadXAASettingsErrorMissingTenantID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	_, err := mgmt.SSO().LoadXAASettings(context.Background(), "", "")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "tenantID")
+}
+
+func TestLoadAllXAASettingsSuccess(t *testing.T) {
+	tenantID := "abc"
+	response := map[string]any{
+		"XAASettings": []map[string]any{
+			{
+				"ssoId":   "sso1",
+				"enabled": true,
+			},
+			{
+				"ssoId":   "sso2",
+				"enabled": false,
+			},
+		},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.Equal(t, "/v1/mgmt/sso/xaa/settings/all", r.URL.Path)
+		params := helpers.ReadParams(r)
+		require.Equal(t, tenantID, params["tenantId"])
+	}, response))
+	res, err := mgmt.SSO().LoadAllXAASettings(context.Background(), tenantID)
+	require.NoError(t, err)
+	require.Len(t, res, 2)
+	assert.EqualValues(t, "sso1", res[0].SSOID)
+	assert.True(t, res[0].Enabled)
+	assert.EqualValues(t, "sso2", res[1].SSOID)
+	assert.False(t, res[1].Enabled)
+}
+
+func TestLoadAllXAASettingsErrorMissingTenantID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	_, err := mgmt.SSO().LoadAllXAASettings(context.Background(), "")
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "tenantID")
+}
+
+func TestDeleteXAASettingsSuccess(t *testing.T) {
+	tenantID := "abc"
+	ssoID := "somessoid"
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.Equal(t, "/v1/mgmt/sso/xaa/settings", r.URL.Path)
+		params := helpers.ReadParams(r)
+		require.Equal(t, tenantID, params["tenantId"])
+		require.Equal(t, ssoID, params["ssoId"])
+	}, map[string]any{}))
+	err := mgmt.SSO().DeleteXAASettings(context.Background(), tenantID, ssoID)
+	require.NoError(t, err)
+}
+
+func TestDeleteXAASettingsErrorMissingTenantID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.SSO().DeleteXAASettings(context.Background(), "", "")
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "tenantID")
 }

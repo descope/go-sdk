@@ -319,6 +319,32 @@ func TestSkipVerifyValue(t *testing.T) {
 	require.True(t, CertificateVerifyAutomatic.SkipVerifyValue("https://apache/foo"))
 	require.True(t, CertificateVerifyAutomatic.SkipVerifyValue("https://127.0.0.1"))
 	require.True(t, CertificateVerifyAutomatic.SkipVerifyValue("https://example.com:8443"))
+	require.True(t, CertificateVerifyAutomatic.SkipVerifyValue(""))
+}
+
+func TestNewClientTransportDefaults(t *testing.T) {
+	tests := []struct {
+		name             string
+		conf             ClientParams
+		skipVerifyWanted bool
+	}{
+		{"no base url", ClientParams{ProjectID: "P2aAc4T2V93bddihGEx2Ryhc8e5Z"}, false},
+		{"no base url regional", ClientParams{ProjectID: "Puse1aAc4T2V93bddihGEx2Ryhc8e5Z"}, false},
+		{"no base url no project id", ClientParams{}, false},
+		{"explicit default base url", ClientParams{BaseURL: defaultURL}, false},
+		{"explicit local base url", ClientParams{BaseURL: "https://localhost:8443"}, true},
+		{"verify never", ClientParams{CertificateVerify: CertificateVerifyNever}, true},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			c := NewClient(test.conf)
+			httpClient, ok := c.httpClient.(*http.Client)
+			require.True(t, ok)
+			transport, ok := httpClient.Transport.(*http.Transport)
+			require.True(t, ok)
+			require.Equal(t, test.skipVerifyWanted, transport.TLSClientConfig.InsecureSkipVerify)
+		})
+	}
 }
 
 func TestBaseURLForProjectID(t *testing.T) {

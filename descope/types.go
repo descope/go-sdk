@@ -29,6 +29,7 @@ type AuthenticationInfo struct {
 	User         *UserResponse `json:"user,omitempty"`
 	FirstSeen    bool          `json:"firstSeen,omitempty"`
 	IDPResponse  *IDPResponse  `json:"idpResponse,omitempty"`
+	TenantSSOID  string        `json:"tenantSSOID,omitempty"` // the id of the tenant SSO configuration that performed the authentication (populated on SSO exchange)
 }
 
 // IDPResponse contains IDP groups, SAML attributes, and OIDC claims returned from SSO authentication.
@@ -149,6 +150,7 @@ type SSOSAMLSettingsResponse struct {
 	FgaMappings                     map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 	ConfigFGATenantIDResourcePrefix string                      `json:"configFGATenantIDResourcePrefix,omitempty"`
 	ConfigFGATenantIDResourceSuffix string                      `json:"configFGATenantIDResourceSuffix,omitempty"`
+	LastSuccessTestTime             int32                       `json:"lastSuccessTestTime,omitempty"` // epoch seconds of the last successful SSO test login on this configuration (read-only)
 }
 
 type SSOSAMLSettings struct {
@@ -218,6 +220,7 @@ type SSOOIDCSettings struct {
 	DefaultSSORoles      []string                    `json:"defaultSSORoles,omitempty"`
 	GroupsPriority       []string                    `json:"groupsPriority,omitempty"` // list of group names in priority order (first = highest priority)
 	FgaMappings          map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
+	LastSuccessTestTime  int32                       `json:"lastSuccessTestTime,omitempty"` // epoch seconds of the last successful SSO test login on this configuration (read-only, ignored on configure)
 }
 
 type SSOTenantSettingsResponse struct {
@@ -433,6 +436,7 @@ type JWTResponse struct {
 	User             *UserResponse `json:"user,omitempty"`
 	FirstSeen        bool          `json:"firstSeen,omitempty"`
 	IDPResponse      *IDPResponse  `json:"idpResponse,omitempty"`
+	TenantSSOID      string        `json:"tenantSSOID,omitempty"`
 }
 
 type EnchantedLinkResponse struct {
@@ -456,6 +460,7 @@ func NewAuthenticationInfo(jRes *JWTResponse, sessionToken, refreshToken *Token)
 		User:         jRes.User,
 		FirstSeen:    jRes.FirstSeen,
 		IDPResponse:  jRes.IDPResponse,
+		TenantSSOID:  jRes.TenantSSOID,
 	}
 }
 
@@ -768,6 +773,15 @@ const RoleInheritanceDefault RoleInheritance = ""
 const RoleInheritanceNone RoleInheritance = "none"
 const RoleInheritanceUserOnly RoleInheritance = "userOnly"
 
+// SSOAuthType is the authentication type of an SSO configuration. None means the configuration is
+// disabled: it keeps its stored settings, mappings and domains, and serves no logins until it is
+// set back to Saml or Oidc.
+type SSOAuthType string
+
+const SSOAuthTypeNone SSOAuthType = "none"
+const SSOAuthTypeSaml SSOAuthType = "saml"
+const SSOAuthTypeOidc SSOAuthType = "oidc"
+
 type Tenant struct {
 	ID                      string          `json:"id"`
 	Name                    string          `json:"name"`
@@ -915,6 +929,39 @@ type SSOApplication struct {
 	SAMLSettings  *SSOApplicationSAMLSettings  `json:"samlSettings"`
 	OIDCSettings  *SSOApplicationOIDCSettings  `json:"oidcSettings"`
 	WSFedSettings *SSOApplicationWSFedSettings `json:"wsFedSettings"`
+	// CustomAttributes holds this app's per-app custom attribute values, keyed by attribute name.
+	CustomAttributes map[string]any `json:"customAttributes,omitempty"`
+}
+
+// SSOApplicationCustomAttribute defines a project-wide SSO (federated) application custom attribute
+// schema. The available types match the other entity custom attributes: 1=text, 2=number, 3=boolean,
+// 4=singleSelect, 5=multiSelect, 6=date, 7=monthDay.
+type SSOApplicationCustomAttribute struct {
+	Name            string                                 `json:"name"`
+	Type            int32                                  `json:"type"`
+	DisplayName     string                                 `json:"displayName,omitempty"`
+	Options         []*SSOApplicationCustomAttributeOption `json:"options,omitempty"`
+	DefaultValue    any                                    `json:"defaultValue,omitempty"`
+	EditPermissions []string                               `json:"editPermissions,omitempty"`
+	ViewPermissions []string                               `json:"viewPermissions,omitempty"`
+}
+
+type SSOApplicationCustomAttributeOption struct {
+	Label string `json:"label,omitempty"`
+	Value string `json:"value,omitempty"`
+}
+
+// ClientSecretMeta describes a single client secret of an SSO or third party (inbound)
+// application, without the secret value itself. Name is a human-readable UI label used to
+// identify the secret; the actual authentication credential is the cleartext returned only
+// when the secret is added or revealed. Status is one of "active", "disabled" or "expired".
+// ExpireTime and CreatedTime are epoch seconds; an ExpireTime of 0 means the secret never expires.
+type ClientSecretMeta struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Status      string `json:"status"`
+	ExpireTime  int32  `json:"expireTime"`
+	CreatedTime int32  `json:"createdTime"`
 }
 
 type OIDCApplicationRequest struct {
@@ -945,6 +992,8 @@ type OIDCApplicationRequest struct {
 	// DefaultAudience controls the default aud of issued tokens for modern apps (non-empty ClientType):
 	// "projectId", "clientId", or "" (both). Legacy apps always use the project ID; empty preserves it.
 	DefaultAudience string `json:"defaultAudience,omitempty"`
+	// CustomAttributes holds this app's per-app custom attribute values, keyed by attribute name.
+	CustomAttributes map[string]any `json:"customAttributes,omitempty"`
 }
 
 type SAMLApplicationRequest struct {
@@ -971,6 +1020,8 @@ type SAMLApplicationRequest struct {
 	// SP-initiated flows use the algorithm from the SP's SAML request. Use "sha256" for SHA-256;
 	// leave empty for the default (SHA-1).
 	DefaultSignatureAlgorithm string `json:"defaultSignatureAlgorithm"`
+	// CustomAttributes holds this app's per-app custom attribute values, keyed by attribute name.
+	CustomAttributes map[string]any `json:"customAttributes,omitempty"`
 }
 
 type WSFedApplicationRequest struct {
@@ -988,6 +1039,8 @@ type WSFedApplicationRequest struct {
 	ForceAuthentication   bool                          `json:"forceAuthentication"`
 	LogoutRedirectURL     string                        `json:"logoutRedirectUrl"`
 	ErrorRedirectURL      string                        `json:"errorRedirectUrl"`
+	// CustomAttributes holds this app's per-app custom attribute values, keyed by attribute name.
+	CustomAttributes map[string]any `json:"customAttributes,omitempty"`
 }
 
 type SSOApplicationWSFedSettings struct {
@@ -1167,6 +1220,12 @@ type Group struct {
 	ID      string        `json:"id"`
 	Display string        `json:"display,omitempty"`
 	Members []GroupMember `json:"members,omitempty"`
+	// Source is the origin of the group: "scim" or "jit" (SSO SAML/OIDC assertion groups).
+	Source string `json:"source,omitempty"`
+	// SSOID is the SSO configuration the group came from (the ssoId bound to the SCIM token that
+	// created it, or the SSO configuration used at the JIT login that persisted it). Groups from
+	// the tenant's default SSO configuration report the reserved id "default_ssoid".
+	SSOID string `json:"ssoId,omitempty"`
 }
 
 type FlowList struct {
@@ -1618,6 +1677,20 @@ type ThirdPartyApplicationScope struct {
 	Values      []string `json:"values"`
 }
 
+// ThirdPartyApplicationScopeClaimMapping maps a requested OAuth scope to the JWT claims it produces.
+type ThirdPartyApplicationScopeClaimMapping struct {
+	Scope string `json:"scope"`
+	// Claims maps a claim name to a value template. Consulted only when UseProjectMapping is false.
+	Claims map[string]string `json:"claims,omitempty"`
+	// Description is shown on the consent screen for this scope.
+	Description string `json:"description,omitempty"`
+	// UseProjectMapping, when true, reuses the project-wide scope→claims mapping for this scope
+	// (the Claims field is ignored).
+	UseProjectMapping bool `json:"useProjectMapping,omitempty"`
+	// Mandatory, when true, means the scope is always granted and cannot be deselected on consent.
+	Mandatory bool `json:"mandatory,omitempty"`
+}
+
 type IssuerSettings struct {
 	JWKsURI             string `json:"jwksUri,omitempty"`
 	SignAlgorithm       string `json:"signAlgorithm,omitempty"`
@@ -1629,18 +1702,86 @@ type JWTBearerSettings struct {
 	Issuers map[string]*IssuerSettings `json:"issuers,omitempty"`
 }
 
+// XAAIssuerSettings is a trusted issuer for Cross-App Access (XAA / ID-JAG), extending the base issuer
+// config with per-issuer JIT provisioning (parity with the SSO login JIT).
+type XAAIssuerSettings struct {
+	JWKsURI             string `json:"jwksUri,omitempty"`
+	SignAlgorithm       string `json:"signAlgorithm,omitempty"`
+	UserInfoURI         string `json:"userInfoUri,omitempty"`
+	ExternalIDFieldName string `json:"externalIdFieldName,omitempty"`
+	// Cross-App Access JIT provisioning, per trusted issuer (parity with the SSO login JIT).
+	// JITDisabled signs in only, without creating users. AttributeMapping maps assertion claims to user
+	// fields. Group-to-role mapping reuses the tenant's shared SSO group mapping.
+	JITDisabled      bool              `json:"jitDisabled,omitempty"`
+	AttributeMapping *AttributeMapping `json:"attributeMapping,omitempty"`
+}
+
+// XAAJWTBearerSettings holds the trusted issuers and jwt-bearer grant configuration for a single SSO
+// configuration's Cross-App Access (XAA / ID-JAG) trust settings.
+type XAAJWTBearerSettings struct {
+	Issuers map[string]*XAAIssuerSettings `json:"issuers,omitempty"`
+	// JWTBearerGrantType* select which values are used when minting a jwt-bearer grant
+	// (ID-JAG / Cross-App Access). Empty means the default is used.
+	JWTBearerGrantTypeAudienceToUse     string `json:"jwtBearerGrantTypeAudienceToUse,omitempty"`
+	JWTBearerGrantTypeScopeToUse        string `json:"jwtBearerGrantTypeScopeToUse,omitempty"`
+	JWTBearerGrantTypeCustomClaimsToUse string `json:"jwtBearerGrantTypeCustomClaimsToUse,omitempty"`
+}
+
+// SSOXAASettings is the write payload for a single SSO configuration's Cross-App Access (XAA / ID-JAG)
+// trust settings. Settings holds the trusted issuers (keyed by issuer URL) and jwt-bearer grant
+// configuration; the remaining fields are the config-level shared group/role mapping, which is shared
+// across SAML / OIDC / SCIM / XAA for the sso_id (NOT a per-issuer mapping). Role references are by name
+// and resolved to role ids server-side.
+type SSOXAASettings struct {
+	// Enabled toggles Cross-App Access (ID-JAG) for this SSO configuration.
+	Enabled bool `json:"enabled,omitempty"`
+	// Settings holds the trusted issuers and jwt-bearer grant configuration.
+	Settings *XAAJWTBearerSettings `json:"settings,omitempty"`
+	// RoleMappings maps IdP groups to Descope roles by role name.
+	RoleMappings         []*RoleMapping              `json:"roleMappings,omitempty"`
+	DefaultSSORoles      []string                    `json:"defaultSSORoles,omitempty"`
+	FgaMappings          map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
+	GroupsPriority       []string                    `json:"groupsPriority,omitempty"` // list of group names in priority order (first = highest priority)
+	GroupPriorityEnabled bool                        `json:"groupPriorityEnabled,omitempty"`
+	AllowOverrideRoles   bool                        `json:"allowOverrideRoles,omitempty"`
+	ProviderID           string                      `json:"providerID,omitempty"` // selected IdP provider template id (display metadata; mirrors SSOSAMLSettings providerID)
+}
+
+// SSOXAASettingsResponse is the load-shape of a single SSO configuration's XAA (ID-JAG) settings.
+// GroupsMapping returns role references by id and name (mirrors SSOSAMLSettingsResponse.GroupsMapping).
+type SSOXAASettingsResponse struct {
+	SSOID                string                      `json:"ssoId,omitempty"`
+	Enabled              bool                        `json:"enabled,omitempty"`
+	Settings             *XAAJWTBearerSettings       `json:"settings,omitempty"`
+	GroupsMapping        []*GroupsMapping            `json:"groupsMapping,omitempty"`
+	DefaultSSORoles      []string                    `json:"defaultSSORoles,omitempty"`
+	FgaMappings          map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
+	GroupsPriority       []string                    `json:"groupsPriority,omitempty"`
+	GroupPriorityEnabled bool                        `json:"groupPriorityEnabled,omitempty"`
+	AllowOverrideRoles   bool                        `json:"allowOverrideRoles,omitempty"`
+	ProviderID           string                      `json:"providerID,omitempty"` // selected IdP provider template id (display metadata; mirrors SSOSAMLSettings providerID)
+	// Audience is read-only: the project-level audience a requesting application must present in its
+	// ID-JAG token. It carries no tenant segment - it equals the issuer the project publishes - so the
+	// identity provider must send the tenant id in the token's aud_tenant claim.
+	Audience string `json:"audience,omitempty"`
+}
+
+type SSOXAAAllSettingsResponse struct {
+	XAASettings []*SSOXAASettingsResponse `json:"XAASettings,omitempty"`
+}
+
 type ThirdPartyApplication struct {
-	ID                   string                        `json:"id"`
-	Name                 string                        `json:"name"`
-	Description          string                        `json:"description"`
-	Logo                 string                        `json:"logo"`
-	LoginPageURL         string                        `json:"loginPageUrl"`
-	ClientID             string                        `json:"clientId"`
-	ApprovedCallbackUrls []string                      `json:"approvedCallbackUrls"`
-	PermissionsScopes    []*ThirdPartyApplicationScope `json:"permissionsScopes"`
-	AttributesScopes     []*ThirdPartyApplicationScope `json:"attributesScopes"`
-	JWTBearerSettings    *JWTBearerSettings            `json:"jwtBearerSettings,omitempty"`
-	CustomAttributes     map[string]any                `json:"customAttributes,omitempty"`
+	ID                   string                                    `json:"id"`
+	Name                 string                                    `json:"name"`
+	Description          string                                    `json:"description"`
+	Logo                 string                                    `json:"logo"`
+	LoginPageURL         string                                    `json:"loginPageUrl"`
+	ClientID             string                                    `json:"clientId"`
+	ApprovedCallbackUrls []string                                  `json:"approvedCallbackUrls"`
+	PermissionsScopes    []*ThirdPartyApplicationScope             `json:"permissionsScopes"`
+	ScopeClaimMapping    []*ThirdPartyApplicationScopeClaimMapping `json:"scopeClaimMapping,omitempty"`
+	JWTBearerSettings    *JWTBearerSettings                        `json:"jwtBearerSettings,omitempty"`
+	CustomAttributes     map[string]any                            `json:"customAttributes,omitempty"`
 	// ForcePkce requires PKCE on the authorization-code flow in addition to client authentication.
 	ForcePkce bool `json:"forcePkce,omitempty"`
 	// DefaultAudience controls the default aud of issued tokens: "projectId", "clientId", or "" (both).
@@ -1648,16 +1789,16 @@ type ThirdPartyApplication struct {
 }
 
 type ThirdPartyApplicationRequest struct {
-	ID                   string                        `json:"id"`
-	Name                 string                        `json:"name"`
-	Description          string                        `json:"description"`
-	Logo                 string                        `json:"logo"`
-	LoginPageURL         string                        `json:"loginPageUrl"`
-	ApprovedCallbackUrls []string                      `json:"approvedCallbackUrls"`
-	PermissionsScopes    []*ThirdPartyApplicationScope `json:"permissionsScopes"`
-	AttributesScopes     []*ThirdPartyApplicationScope `json:"attributesScopes"`
-	JWTBearerSettings    *JWTBearerSettings            `json:"jwtBearerSettings,omitempty"`
-	CustomAttributes     map[string]any                `json:"customAttributes,omitempty"`
+	ID                   string                                    `json:"id"`
+	Name                 string                                    `json:"name"`
+	Description          string                                    `json:"description"`
+	Logo                 string                                    `json:"logo"`
+	LoginPageURL         string                                    `json:"loginPageUrl"`
+	ApprovedCallbackUrls []string                                  `json:"approvedCallbackUrls"`
+	PermissionsScopes    []*ThirdPartyApplicationScope             `json:"permissionsScopes"`
+	ScopeClaimMapping    []*ThirdPartyApplicationScopeClaimMapping `json:"scopeClaimMapping,omitempty"`
+	JWTBearerSettings    *JWTBearerSettings                        `json:"jwtBearerSettings,omitempty"`
+	CustomAttributes     map[string]any                            `json:"customAttributes,omitempty"`
 	// ForcePkce requires PKCE on the authorization-code flow in addition to client authentication.
 	ForcePkce bool `json:"forcePkce,omitempty"`
 	// DefaultAudience controls the default aud of issued tokens: "projectId", "clientId", or "" (both).
