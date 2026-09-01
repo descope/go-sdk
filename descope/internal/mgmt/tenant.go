@@ -63,6 +63,18 @@ func (t *tenant) Update(ctx context.Context, id string, tenantRequest *descope.T
 	return err
 }
 
+func (t *tenant) Patch(ctx context.Context, tenantRequest *descope.PatchTenantRequest) error {
+	if tenantRequest == nil {
+		return utils.NewInvalidArgumentError("tenantRequest")
+	}
+	if tenantRequest.ID == "" {
+		return utils.NewInvalidArgumentError("id")
+	}
+	req := makePatchTenantRequest(tenantRequest)
+	_, err := t.client.DoPatchRequest(ctx, api.Routes.ManagementTenantPatch(), req, nil, "")
+	return err
+}
+
 func (t *tenant) Delete(ctx context.Context, id string, cascade bool) error {
 	if id == "" {
 		return utils.NewInvalidArgumentError("id")
@@ -204,9 +216,44 @@ func makeCreateUpdateTenantRequest(id string, tenantRequest *descope.TenantReque
 		"enforceSSOExclusions":    tenantRequest.EnforceSSOExclusions,
 		"disabled":                tenantRequest.Disabled,
 		"roleInheritance":         tenantRequest.RoleInheritance,
+		"federatedAppIds":         tenantRequest.FederatedAppIDs,
 	}
 	if includeSubTenants && len(tenantRequest.ParentTenantID) > 0 {
 		res["parent"] = tenantRequest.ParentTenantID
+	}
+	return res
+}
+
+func makePatchTenantRequest(tenantRequest *descope.PatchTenantRequest) map[string]any {
+	res := map[string]any{
+		"id": tenantRequest.ID,
+	}
+	if tenantRequest.Name != nil {
+		res["name"] = *tenantRequest.Name
+	}
+	if tenantRequest.SelfProvisioningDomains != nil {
+		res["selfProvisioningDomains"] = *tenantRequest.SelfProvisioningDomains
+	}
+	if tenantRequest.CustomAttributes != nil {
+		res["customAttributes"] = tenantRequest.CustomAttributes
+	}
+	if tenantRequest.AuthType != nil {
+		res["authType"] = *tenantRequest.AuthType
+	}
+	if tenantRequest.Disabled != nil {
+		res["disabled"] = *tenantRequest.Disabled
+	}
+	if tenantRequest.EnforceSSO != nil {
+		res["enforceSSO"] = *tenantRequest.EnforceSSO
+	}
+	if tenantRequest.EnforceSSOExclusions != nil {
+		res["enforceSSOExclusions"] = *tenantRequest.EnforceSSOExclusions
+	}
+	if tenantRequest.FederatedAppIDs != nil {
+		res["federatedAppIds"] = *tenantRequest.FederatedAppIDs
+	}
+	if tenantRequest.RoleInheritance != nil {
+		res["roleInheritance"] = *tenantRequest.RoleInheritance
 	}
 	return res
 }
