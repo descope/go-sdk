@@ -151,6 +151,7 @@ type SSOSAMLSettingsResponse struct {
 	ConfigFGATenantIDResourcePrefix string                      `json:"configFGATenantIDResourcePrefix,omitempty"`
 	ConfigFGATenantIDResourceSuffix string                      `json:"configFGATenantIDResourceSuffix,omitempty"`
 	LastSuccessTestTime             int32                       `json:"lastSuccessTestTime,omitempty"` // epoch seconds of the last successful SSO test login on this configuration (read-only)
+	DisableSignRequest              bool                        `json:"disableSignRequest,omitempty"`  // true when Descope sends the SAML AuthnRequest to this IdP unsigned
 }
 
 type SSOSAMLSettings struct {
@@ -164,6 +165,11 @@ type SSOSAMLSettings struct {
 	FgaMappings                     map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 	ConfigFGATenantIDResourcePrefix string                      `json:"configFGATenantIDResourcePrefix,omitempty"`
 	ConfigFGATenantIDResourceSuffix string                      `json:"configFGATenantIDResourceSuffix,omitempty"`
+
+	// DisableSignRequest leaves the SAML AuthnRequest Descope sends to the IdP unsigned. Set it only for
+	// IdPs that reject a signed request because their trusted provider entry holds no signing certificate
+	// for Descope. Defaults to false, i.e. requests are signed.
+	DisableSignRequest bool `json:"disableSignRequest,omitempty"`
 
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
 	SpACSUrl   string `json:"spACSUrl,omitempty"`
@@ -180,6 +186,11 @@ type SSOSAMLSettingsByMetadata struct {
 	FgaMappings                     map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 	ConfigFGATenantIDResourcePrefix string                      `json:"configFGATenantIDResourcePrefix,omitempty"`
 	ConfigFGATenantIDResourceSuffix string                      `json:"configFGATenantIDResourceSuffix,omitempty"`
+
+	// DisableSignRequest leaves the SAML AuthnRequest Descope sends to the IdP unsigned. Set it only for
+	// IdPs that reject a signed request because their trusted provider entry holds no signing certificate
+	// for Descope. Defaults to false, i.e. requests are signed.
+	DisableSignRequest bool `json:"disableSignRequest,omitempty"`
 
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
 	SpACSUrl   string `json:"spACSUrl,omitempty"`

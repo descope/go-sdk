@@ -488,6 +488,7 @@ func TestLoadSettingsSuccess(t *testing.T) {
 			"configFGATenantIDResourcePrefix": "tenant_prefix_",
 			"configFGATenantIDResourceSuffix": "_tenant_suffix",
 			"lastSuccessTestTime":             777,
+			"disableSignRequest":              true,
 		},
 		"oidc": map[string]any{
 			"name":        "myName",
@@ -532,6 +533,7 @@ func TestLoadSettingsSuccess(t *testing.T) {
 	assert.EqualValues(t, "redirectURL", res.Saml.RedirectURL)
 	assert.EqualValues(t, []string{"defrole1", "defrole2"}, res.Saml.DefaultSSORoles)
 	assert.EqualValues(t, []string{"group1"}, res.Saml.GroupsPriority)
+	assert.True(t, res.Saml.DisableSignRequest)
 	assert.EqualValues(t, 2, len(res.Saml.FgaMappings))
 	assert.EqualValues(t, 2, len(res.Saml.FgaMappings["group1"].Relations))
 	assert.EqualValues(t, 1, len(res.Saml.FgaMappings["group2"].Relations))
@@ -874,6 +876,7 @@ func TestSSOConfigureSAMLSettingsSuccess(t *testing.T) {
 
 		require.Equal(t, "https://spacsurl.com", sett["spACSUrl"])
 		require.Equal(t, "spentityid", sett["spEntityId"])
+		require.Equal(t, false, sett["disableSignRequest"])
 
 		userAttrMappingMap, found := sett["attributeMapping"]
 		require.True(t, found)
@@ -923,6 +926,40 @@ func TestSSOConfigureSAMLSettingsSuccess(t *testing.T) {
 	}))
 	err := mgmt.SSO().ConfigureSAMLSettings(context.Background(), "abc", settings, "https://redirect", []string{"domain.com"}, "")
 	require.NoError(t, err)
+}
+
+func TestSSOConfigureSAMLSettingsDisableSignRequest(t *testing.T) {
+	// The settings object is a full replacement server side, so the flag is always sent - both to opt out
+	// of signing and to opt back in.
+	for _, disableSignRequest := range []bool{true, false} {
+		settings := &descope.SSOSAMLSettings{
+			IdpURL:             "http://idpURL",
+			IdpEntityID:        "entity",
+			IdpCert:            "mycert",
+			DisableSignRequest: disableSignRequest,
+		}
+		mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+			req := map[string]any{}
+			require.NoError(t, helpers.ReadBody(r, &req))
+			sett, ok := req["settings"].(map[string]any)
+			require.True(t, ok)
+			require.Equal(t, disableSignRequest, sett["disableSignRequest"])
+		}))
+		require.NoError(t, mgmt.SSO().ConfigureSAMLSettings(context.Background(), "abc", settings, "", nil, ""))
+
+		metadataSettings := &descope.SSOSAMLSettingsByMetadata{
+			IdpMetadataURL:     "http://idpMetadataURL",
+			DisableSignRequest: disableSignRequest,
+		}
+		mgmt = newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+			req := map[string]any{}
+			require.NoError(t, helpers.ReadBody(r, &req))
+			sett, ok := req["settings"].(map[string]any)
+			require.True(t, ok)
+			require.Equal(t, disableSignRequest, sett["disableSignRequest"])
+		}))
+		require.NoError(t, mgmt.SSO().ConfigureSAMLSettingsByMetadata(context.Background(), "abc", metadataSettings, "", nil, ""))
+	}
 }
 
 func TestSSOConfigureSAMLSettingsWithSSOIDSuccess(t *testing.T) {
