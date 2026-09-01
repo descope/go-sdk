@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.32.0](https://github.com/descope/go-sdk/compare/v1.31.0...v1.32.0) (2026-09-01)
+
+
+### Features
+
+* **mgmt:** add PatchTenant endpoint for partial tenant updates ([#841](https://github.com/descope/go-sdk/issues/841)) ([597ff5a](https://github.com/descope/go-sdk/commit/597ff5a8d45e002306107af13705ecf8baf4c6c6))
+* **xaa:** expose the read-only project-level audience on the XAA load response ([#839](https://github.com/descope/go-sdk/issues/839)) ([ca58dbb](https://github.com/descope/go-sdk/commit/ca58dbb9ee3958d6850739d2c0ac0ace17c93f38))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.31.0 ([#837](https://github.com/descope/go-sdk/issues/837)) ([2474620](https://github.com/descope/go-sdk/commit/247462033ecede4dc2148b18499780ef124060d8))
+
 ## [1.31.0](https://github.com/descope/go-sdk/compare/v1.30.0...v1.31.0) (2026-08-24)
 
 
