@@ -26,11 +26,22 @@ type Tenant interface {
 	// Both the tenantRequest.Name and ID must be unique per project.
 	CreateWithID(ctx context.Context, id string, tenantRequest *descope.TenantRequest) error
 
-	// Update an existing tenant's name and domains.
+	// Update an existing tenant.
 	//
-	// IMPORTANT: All parameters are required and will override whatever value is currently
-	// set in the existing tenant. Use carefully.
+	// IMPORTANT: This is a full overwrite, not a partial update. Every field on
+	// TenantRequest (including SSO enforcement, exclusions, custom attributes,
+	// disabled state, and role inheritance) is sent and will replace whatever is
+	// currently set, even if left as the zero value. To change a single field,
+	// first Load the tenant, copy its values into a TenantRequest, then apply
+	// your change before calling Update. Instead, use Patch if you don't want to
+	// pass all parameters.
 	Update(ctx context.Context, id string, tenantRequest *descope.TenantRequest) error
+
+	// Patches an existing tenant.
+	//
+	// Only the fields that are set (non-nil) in the request will be updated;
+	// everything else is left as-is. tenantRequest.ID is required.
+	Patch(ctx context.Context, tenantRequest *descope.PatchTenantRequest) error
 
 	// Delete an existing tenant.
 	// Pass true on `cascade` in case you want to delete all users/keys associated only with this tenant
