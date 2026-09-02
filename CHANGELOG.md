@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.33.0](https://github.com/descope/go-sdk/compare/v1.32.0...v1.33.0) (2026-09-02)
+
+
+### Features
+
+* **sso:** allow disabling SAML AuthnRequest signing per SSO configuration ([#842](https://github.com/descope/go-sdk/issues/842)) ([1d66ea5](https://github.com/descope/go-sdk/commit/1d66ea527b196e350f549d4ba0ef3a237e65aae3))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.32.0 ([#843](https://github.com/descope/go-sdk/issues/843)) ([e9fb26e](https://github.com/descope/go-sdk/commit/e9fb26e75e9f583f6034b37e42fd7cbfae5156a2))
+
 ## [1.32.0](https://github.com/descope/go-sdk/compare/v1.31.0...v1.32.0) (2026-09-01)
 
 
