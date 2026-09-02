@@ -2,10 +2,13 @@ package mgmt
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net/http"
 	"testing"
 
 	"github.com/descope/go-sdk/descope"
+	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/tests/helpers"
 	"github.com/stretchr/testify/require"
 )
@@ -237,4 +240,132 @@ func TestMgmtKeySearch_Error(t *testing.T) {
 	res, err := mgmt.ManagementKey().Search(context.Background(), nil)
 	require.Error(t, err)
 	require.Nil(t, res)
+}
+
+func TestMgmtKeyCreateWithOptions_TrustedIssuer(t *testing.T) {
+	response := map[string]any{
+		"cleartext": "",
+		"key": map[string]any{
+			"id":   "mk1",
+			"name": "ci-export",
+			"trustedIssuer": map[string]any{
+				"name":          "github-actions",
+				"issuer":        "https://token.actions.githubusercontent.com",
+				"maxTtlSeconds": 900,
+				"audience":      "https://api.descope.com/mk1",
+				"claimFilters":  map[string]any{"sub": []string{"repo:org/app:ref:refs/heads/main"}},
+			},
+		}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		issuer := req["trustedIssuer"].(map[string]any)
+		require.Equal(t, "github-actions", issuer["name"])
+		require.Equal(t, "https://token.actions.githubusercontent.com", issuer["issuer"])
+		require.EqualValues(t, 900, issuer["maxTtlSeconds"])
+		require.NotContains(t, issuer, "audience", "the audience is derived by the server, never sent")
+		subs := issuer["claimFilters"].(map[string]any)["sub"].([]any)
+		require.Len(t, subs, 1)
+		require.Equal(t, "repo:org/app:ref:refs/heads/main", subs[0])
+	}, response))
+
+	key, cleartext, err := mgmt.ManagementKey().CreateWithOptions(context.Background(), &descope.MgmtKeyCreateOptions{
+		Name: "ci-export",
+		TrustedIssuer: &descope.WIFTrustedIssuerRequest{
+			Name:          "github-actions",
+			Issuer:        "https://token.actions.githubusercontent.com",
+			MaxTTLSeconds: 900,
+			ClaimFilters:  map[string][]string{"sub": {"repo:org/app:ref:refs/heads/main"}},
+		},
+	})
+	require.NoError(t, err)
+	require.Empty(t, cleartext, "a federated key has no secret")
+	require.NotNil(t, key.TrustedIssuer)
+	require.Equal(t, "https://api.descope.com/mk1", key.TrustedIssuer.Audience)
+	require.Equal(t, []string{"repo:org/app:ref:refs/heads/main"}, key.TrustedIssuer.ClaimFilters["sub"])
+}
+
+func TestMgmtKeyCreateWithOptions_OmitsTrustedIssuerWhenAbsent(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.NotContains(t, req, "trustedIssuer")
+	}, map[string]any{"key": map[string]any{"id": "mk1"}}))
+
+	_, _, err := mgmt.ManagementKey().CreateWithOptions(context.Background(), &descope.MgmtKeyCreateOptions{Name: "plain"})
+	require.NoError(t, err)
+}
+
+func TestMgmtKeyUpdateWithOptions_TrustedIssuer(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "mk1", req["id"])
+		issuer := req["trustedIssuer"].(map[string]any)
+		require.EqualValues(t, 600, issuer["maxTtlSeconds"])
+	}, map[string]any{"key": map[string]any{"id": "mk1"}}))
+
+	_, err := mgmt.ManagementKey().UpdateWithOptions(context.Background(), &descope.MgmtKeyUpdateOptions{
+		ID:            "mk1",
+		Name:          "ci-export",
+		TrustedIssuer: &descope.WIFTrustedIssuerRequest{MaxTTLSeconds: 600},
+	})
+	require.NoError(t, err)
+}
+
+func TestMgmtKeyWithOptions_BadInput(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	_, _, err := mgmt.ManagementKey().CreateWithOptions(context.Background(), nil)
+	require.Error(t, err)
+	_, _, err = mgmt.ManagementKey().CreateWithOptions(context.Background(), &descope.MgmtKeyCreateOptions{})
+	require.Error(t, err)
+	_, err = mgmt.ManagementKey().UpdateWithOptions(context.Background(), nil)
+	require.Error(t, err)
+	_, err = mgmt.ManagementKey().UpdateWithOptions(context.Background(), &descope.MgmtKeyUpdateOptions{})
+	require.Error(t, err)
+}
+
+func TestWorkloadTokenIsSentInsteadOfAManagementKey(t *testing.T) {
+	params := &api.ClientParams{
+		ProjectID:             "P2abc",
+		WorkloadTokenProvider: func(context.Context) (string, error) { return "header.payload.signature", nil },
+	}
+	mgmt := newTestMgmt(params, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, "Bearer P2abc:header.payload.signature", r.Header.Get("Authorization"))
+	}, map[string]any{"key": map[string]any{"id": "mk1"}}))
+
+	_, err := mgmt.ManagementKey().Get(context.Background(), "mk1")
+	require.NoError(t, err)
+}
+
+func TestWorkloadTokenIsReadPerRequest(t *testing.T) {
+	calls := 0
+	params := &api.ClientParams{
+		ProjectID: "P2abc",
+		WorkloadTokenProvider: func(context.Context) (string, error) {
+			calls++
+			return fmt.Sprintf("token-%d", calls), nil
+		},
+	}
+	seen := []string{}
+	mgmt := newTestMgmt(params, helpers.DoOkWithBody(func(r *http.Request) {
+		seen = append(seen, r.Header.Get("Authorization"))
+	}, map[string]any{"key": map[string]any{"id": "mk1"}}))
+
+	_, err := mgmt.ManagementKey().Get(context.Background(), "mk1")
+	require.NoError(t, err)
+	_, err = mgmt.ManagementKey().Get(context.Background(), "mk1")
+	require.NoError(t, err)
+	require.Equal(t, []string{"Bearer P2abc:token-1", "Bearer P2abc:token-2"}, seen, "a short lived token must be refreshed per request")
+}
+
+func TestWorkloadTokenProviderFailureFailsTheRequest(t *testing.T) {
+	params := &api.ClientParams{
+		ProjectID:             "P2abc",
+		WorkloadTokenProvider: func(context.Context) (string, error) { return "", errors.New("no token") },
+	}
+	mgmt := newTestMgmt(params, helpers.DoOk(nil))
+
+	_, err := mgmt.ManagementKey().Get(context.Background(), "mk1")
+	require.ErrorContains(t, err, "no token")
 }

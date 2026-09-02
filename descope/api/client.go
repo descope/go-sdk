@@ -1984,14 +1984,15 @@ const (
 )
 
 type ClientParams struct {
-	ProjectID            string
-	BaseURL              string
-	ManagementKey        string
-	DefaultClient        IHttpClient
-	CustomDefaultHeaders map[string]string
-	ExternalRequestID    func(context.Context) string
-	CertificateVerify    CertificateVerifyMode
-	RequestTimeout       time.Duration
+	ProjectID             string
+	BaseURL               string
+	ManagementKey         string
+	WorkloadTokenProvider func(ctx context.Context) (string, error)
+	DefaultClient         IHttpClient
+	CustomDefaultHeaders  map[string]string
+	ExternalRequestID     func(context.Context) string
+	CertificateVerify     CertificateVerifyMode
+	RequestTimeout        time.Duration
 }
 
 type IHttpClient interface {
@@ -2225,7 +2226,17 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 		if len(pswd) > 0 {
 			bearerParts = append(bearerParts, pswd)
 		}
-		if mgmtKey := c.Conf.ManagementKey; len(mgmtKey) > 0 {
+		// a workload identity token stands in for the management key: same position in the header, but it
+		// is read per request because it is short lived
+		if c.Conf.WorkloadTokenProvider != nil {
+			workloadToken, tokenErr := c.Conf.WorkloadTokenProvider(ctx)
+			if tokenErr != nil {
+				return nil, tokenErr
+			}
+			if len(workloadToken) > 0 {
+				bearerParts = append(bearerParts, workloadToken)
+			}
+		} else if mgmtKey := c.Conf.ManagementKey; len(mgmtKey) > 0 {
 			// append a management key if available, this is true for both management and authentication requests
 			// only using the different provided keys in the client initialization
 			bearerParts = append(bearerParts, mgmtKey)

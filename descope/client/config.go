@@ -23,6 +23,16 @@ type Config struct {
 	// from the DESCOPE_MANAGEMENT_KEY environment variable instead. If neither
 	// values are set then any Management API call with fail.
 	ManagementKey string
+	// WorkloadToken (optional, "") - a token from an issuer this project's management key trusts, used
+	// to authenticate as that key without holding its secret (workload identity federation). Mutually
+	// exclusive with ManagementKey. If empty, this value is retrieved from the DESCOPE_WORKLOAD_TOKEN
+	// environment variable instead. Prefer WorkloadTokenProvider when the token is short lived, which
+	// it usually is.
+	WorkloadToken string
+	// WorkloadTokenProvider (optional, nil) - returns the workload identity token to authenticate the
+	// next request with. It is consulted per request, so a token that expires can be refreshed without
+	// rebuilding the client. Takes precedence over WorkloadToken and ManagementKey.
+	WorkloadTokenProvider func(ctx context.Context) (string, error)
 	// AuthManagementKey (optional, "") - used to provide a management key to use
 	// with Authentication APIs whose public access has been disabled.
 	// If empty, this value is retrieved from the DESCOPE_AUTH_MANAGEMENT_KEY environment variable instead.
@@ -103,6 +113,13 @@ func (c *Config) setManagementKey() string {
 		}
 	}
 	return c.ManagementKey
+}
+
+func (c *Config) setWorkloadToken() string {
+	if c.WorkloadToken == "" {
+		c.WorkloadToken = utils.GetWorkloadTokenEnvVariable()
+	}
+	return c.WorkloadToken
 }
 
 func (c *Config) setAuthManagementKey() string {

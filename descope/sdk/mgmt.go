@@ -1413,6 +1413,13 @@ type ManagementKey interface {
 	// The key object is returned along with its token and an optional error.
 	Create(ctx context.Context, name, description string, expiresIn uint64, permittedIPs []string, reBac *descope.MgmtKeyReBac) (*descope.MgmtKey, string, error)
 
+	// CreateWithOptions creates a new management key, and is the only way to federate one to an
+	// external OIDC issuer.
+	//
+	// The key object is returned along with its token and an optional error. A federated key has no
+	// token, so the returned cleartext is empty for one.
+	CreateWithOptions(ctx context.Context, options *descope.MgmtKeyCreateOptions) (*descope.MgmtKey, string, error)
+
 	// Update an existing management key.
 	//
 	// The id parameter is used to identify the management key.
@@ -1420,6 +1427,13 @@ type ManagementKey interface {
 	// IMPORTANT: All parameters will override whatever values are currently set
 	// in the existing management key. Use carefully.
 	Update(ctx context.Context, id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus) (*descope.MgmtKey, error)
+
+	// UpdateWithOptions updates an existing management key, and is the only way to edit the workload
+	// identity federation of one.
+	//
+	// IMPORTANT: All fields will override whatever values are currently set
+	// in the existing management key. Use carefully.
+	UpdateWithOptions(ctx context.Context, options *descope.MgmtKeyUpdateOptions) (*descope.MgmtKey, error)
 
 	// Get a management key by ID.
 	Get(ctx context.Context, id string) (*descope.MgmtKey, error)

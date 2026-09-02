@@ -31,15 +31,31 @@ type mgmtKeyDeleteResp struct {
 }
 
 func (r *mgmtkey) Create(ctx context.Context, name, description string, expiresIn uint64, permittedIPs []string, reBac *descope.MgmtKeyReBac) (key *descope.MgmtKey, cleartext string, err error) {
-	if name == "" {
+	return r.CreateWithOptions(ctx, &descope.MgmtKeyCreateOptions{
+		Name:         name,
+		Description:  description,
+		ExpiresIn:    expiresIn,
+		PermittedIPs: permittedIPs,
+		ReBac:        reBac,
+	})
+}
+
+func (r *mgmtkey) CreateWithOptions(ctx context.Context, options *descope.MgmtKeyCreateOptions) (key *descope.MgmtKey, cleartext string, err error) {
+	if options == nil {
+		return nil, "", utils.NewInvalidArgumentError("options")
+	}
+	if options.Name == "" {
 		return nil, "", utils.NewInvalidArgumentError("name")
 	}
 	body := map[string]any{
-		"name":         name,
-		"description":  description,
-		"expiresIn":    expiresIn,
-		"permittedIps": permittedIPs,
-		"reBac":        reBac,
+		"name":         options.Name,
+		"description":  options.Description,
+		"expiresIn":    options.ExpiresIn,
+		"permittedIps": options.PermittedIPs,
+		"reBac":        options.ReBac,
+	}
+	if options.TrustedIssuer != nil {
+		body["trustedIssuer"] = options.TrustedIssuer
 	}
 	resp, err := r.client.DoPutRequest(ctx, api.Routes.ManagementMgmtKeyCreate(), body, nil, "")
 	if err != nil {
@@ -54,16 +70,32 @@ func (r *mgmtkey) Create(ctx context.Context, name, description string, expiresI
 }
 
 func (r *mgmtkey) Update(ctx context.Context, id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus) (*descope.MgmtKey, error) {
-	if id == "" {
+	return r.UpdateWithOptions(ctx, &descope.MgmtKeyUpdateOptions{
+		ID:           id,
+		Name:         name,
+		Description:  description,
+		PermittedIPs: permittedIPs,
+		Status:       status,
+	})
+}
+
+func (r *mgmtkey) UpdateWithOptions(ctx context.Context, options *descope.MgmtKeyUpdateOptions) (*descope.MgmtKey, error) {
+	if options == nil {
+		return nil, utils.NewInvalidArgumentError("options")
+	}
+	if options.ID == "" {
 		return nil, utils.NewInvalidArgumentError("id")
 	}
 	body := map[string]any{
-		"id": id,
+		"id": options.ID,
 		// following fields are updated on the object
-		"name":         name,
-		"description":  description,
-		"permittedIps": permittedIPs,
-		"status":       status,
+		"name":         options.Name,
+		"description":  options.Description,
+		"permittedIps": options.PermittedIPs,
+		"status":       options.Status,
+	}
+	if options.TrustedIssuer != nil {
+		body["trustedIssuer"] = options.TrustedIssuer
 	}
 	resp, err := r.client.DoPatchRequest(ctx, api.Routes.ManagementMgmtKeyUpdate(), body, nil, "")
 	if err != nil {

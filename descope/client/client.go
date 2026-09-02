@@ -50,6 +50,17 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 	}
 	config.setManagementKey()
 	config.setAuthManagementKey()
+	config.setWorkloadToken()
+
+	// A workload identity token and a management key occupy the same slot in the authorization header,
+	// so accepting both would silently use one and ignore the other.
+	if config.WorkloadTokenProvider == nil && config.WorkloadToken != "" {
+		workloadToken := config.WorkloadToken
+		config.WorkloadTokenProvider = func(context.Context) (string, error) { return workloadToken, nil }
+	}
+	if config.WorkloadTokenProvider != nil && config.ManagementKey != "" {
+		return nil, utils.NewInvalidArgumentError("either a management key or a workload identity token, not both")
+	}
 
 	// Auth initialzes a client with the auth management key if provided
 	authClient := api.NewClient(api.ClientParams{
@@ -80,14 +91,15 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 
 	// Managament initializes its own client with the management key
 	mgmtClient := api.NewClient(api.ClientParams{
-		ProjectID:            config.ProjectID,
-		BaseURL:              config.DescopeBaseURL,
-		ManagementKey:        config.ManagementKey,
-		DefaultClient:        config.DefaultClient,
-		CustomDefaultHeaders: config.CustomDefaultHeaders,
-		ExternalRequestID:    config.ExternalRequestID,
-		CertificateVerify:    config.CertificateVerify,
-		RequestTimeout:       config.RequestTimeout,
+		ProjectID:             config.ProjectID,
+		BaseURL:               config.DescopeBaseURL,
+		ManagementKey:         config.ManagementKey,
+		WorkloadTokenProvider: config.WorkloadTokenProvider,
+		DefaultClient:         config.DefaultClient,
+		CustomDefaultHeaders:  config.CustomDefaultHeaders,
+		ExternalRequestID:     config.ExternalRequestID,
+		CertificateVerify:     config.CertificateVerify,
+		RequestTimeout:        config.RequestTimeout,
 	})
 
 	if config.ManagementKey != "" {

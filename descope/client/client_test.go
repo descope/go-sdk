@@ -220,3 +220,28 @@ func TestDescopeSDKMock(t *testing.T) {
 	assert.True(t, updateJWTWithCustomClaimsCalled)
 	assert.EqualValues(t, updateJWTWithCustomClaimsResponse, res)
 }
+
+func TestClientRefusesBothCredentials(t *testing.T) {
+	_, err := NewWithConfig(&Config{
+		ProjectID:     "P2abc",
+		ManagementKey: "key",
+		WorkloadToken: "header.payload.signature",
+	})
+	require.Error(t, err, "a management key and a workload identity token share one header slot")
+}
+
+func TestClientAcceptsAWorkloadTokenAlone(t *testing.T) {
+	c, err := NewWithConfig(&Config{ProjectID: "P2abc", WorkloadToken: "header.payload.signature"})
+	require.NoError(t, err)
+	require.NotNil(t, c.Management)
+}
+
+func TestClientPrefersTheProviderOverTheStaticToken(t *testing.T) {
+	c, err := NewWithConfig(&Config{
+		ProjectID:             "P2abc",
+		WorkloadToken:         "static",
+		WorkloadTokenProvider: func(context.Context) (string, error) { return "dynamic", nil },
+	})
+	require.NoError(t, err)
+	require.NotNil(t, c.Management)
+}

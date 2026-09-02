@@ -1500,6 +1500,7 @@ const (
 	EnvironmentVariableProjectID         = "DESCOPE_PROJECT_ID"
 	EnvironmentVariablePublicKey         = "DESCOPE_PUBLIC_KEY"
 	EnvironmentVariableManagementKey     = "DESCOPE_MANAGEMENT_KEY"
+	EnvironmentVariableWorkloadToken     = "DESCOPE_WORKLOAD_TOKEN"
 	EnvironmentVariableAuthManagementKey = "DESCOPE_AUTH_MANAGEMENT_KEY" // gitleaks:allow
 	EnvironmentVariableBaseURL           = "DESCOPE_BASE_URL"
 )
@@ -1941,6 +1942,77 @@ type MgmtKey struct {
 	ReBac        *MgmtKeyReBac `json:"reBac,omitempty"`
 	Version      int64         `json:"version,omitempty"`
 	AuthzVersion int64         `json:"authzVersion,omitempty"`
+	// TrustedIssuer is set when the key authenticates with a workload identity token instead of a
+	// secret. Nil for an ordinary management key.
+	TrustedIssuer *WIFTrustedIssuer `json:"trustedIssuer,omitempty"`
+}
+
+// WIFTrustedIssuerRequest federates a management key to an external OIDC issuer, so a workload holding
+// a token from that issuer can act as the key without ever holding its secret.
+//
+// It is deliberately separate from WIFTrustedIssuer: the audience a workload must present is derived
+// from the key, never chosen by the caller, so there is no field here to set it.
+type WIFTrustedIssuerRequest struct {
+	// Name is a label shown on the Descope console.
+	Name string `json:"name,omitempty"`
+	// Issuer is the OIDC issuer URL whose tokens this key trusts, matched against a token's iss claim.
+	// It must be a plain https URL with a host and no userinfo, query or fragment, and it cannot be
+	// changed after the key is created.
+	Issuer string `json:"issuer,omitempty"`
+	// MaxTTLSeconds rejects a presented token whose own lifetime exceeds this many seconds.
+	MaxTTLSeconds int32 `json:"maxTtlSeconds,omitempty"`
+	// ClaimFilters maps a claim name to the values it may take, so a token is accepted only when every
+	// named claim matches. A "sub" filter is required. Values may be exact strings or regular
+	// expressions, e.g. {"sub": {"repo:my-org/my-repo:ref:refs/heads/main"}}.
+	ClaimFilters map[string][]string `json:"claimFilters,omitempty"`
+}
+
+// WIFTrustedIssuer is the federation as Descope reports it, returned on a management key.
+type WIFTrustedIssuer struct {
+	Name          string              `json:"name,omitempty"`
+	Issuer        string              `json:"issuer,omitempty"`
+	MaxTTLSeconds int32               `json:"maxTtlSeconds,omitempty"`
+	ClaimFilters  map[string][]string `json:"claimFilters,omitempty"`
+	// Audience is the value a workload's token must carry in its aud claim. It is derived from the
+	// Descope API base URL and this key's id, so it is only ever reported, never sent.
+	Audience string `json:"audience,omitempty"`
+}
+
+// MgmtKeyCreateOptions carries everything a management key can be created with. Prefer it over the
+// positional Create arguments when the key needs a workload identity federation.
+type MgmtKeyCreateOptions struct {
+	// Name is required and shown on the Descope console.
+	Name string
+	// Description is optional.
+	Description string
+	// ExpiresIn is the expiration in seconds, 0 for no expiration.
+	ExpiresIn uint64
+	// PermittedIPs optionally restricts the key to these addresses or CIDR ranges.
+	PermittedIPs []string
+	// ReBac is the role based access control configuration for the key.
+	ReBac *MgmtKeyReBac
+	// TrustedIssuer federates the key to an external OIDC issuer. When set, the key has no secret and
+	// the cleartext returned by Create is empty.
+	TrustedIssuer *WIFTrustedIssuerRequest
+}
+
+// MgmtKeyUpdateOptions carries the fields an update overrides.
+//
+// IMPORTANT: every field overrides whatever the key currently has. Use carefully.
+type MgmtKeyUpdateOptions struct {
+	// ID identifies the management key and is required.
+	ID string
+	// Name is required and shown on the Descope console.
+	Name string
+	// Description is optional.
+	Description string
+	// PermittedIPs optionally restricts the key to these addresses or CIDR ranges.
+	PermittedIPs []string
+	// Status is the key status to set.
+	Status MgmtKeyStatus
+	// TrustedIssuer edits the federation of an already federated key. The issuer URL itself cannot be
+	// changed, and a federation cannot be added to a key that was created without one.
+	TrustedIssuer *WIFTrustedIssuerRequest
 }
 
 type MgmtKeyReBac struct {
