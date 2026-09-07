@@ -656,6 +656,41 @@ if authorized, sessionToken, err := descopeClient.Auth.ValidateSessionWithReques
 
 Token validation without an `http.Request` (`ValidateSessionWithToken`, `ValidateAndRefreshSessionWithTokens`) does **not** validate the DPoP proof, since the HTTP request context is unavailable. Use the request-based variants whenever DPoP enforcement is required.
 
+##### Acting as a DPoP client
+
+The section above covers the server side. To call an OAuth application that *requires* DPoP — for example a Descope inbound app with "Require DPoP" enabled — use `descope/dpop` to hold the proof-of-possession key and sign the outgoing requests:
+
+```go
+key, err := dpop.NewKey() // ES256, accepted in every configuration including FAPI 2.0
+httpClient := &http.Client{Transport: &dpop.Transport{Key: key}}
+```
+
+Use that client for both the token endpoint and every resource request made with the resulting token. The transport mints a fresh single-use proof per request, adds the `ath` claim and the `DPoP` authorization scheme whenever the request carries an access token, and answers the `DPoP-Nonce` challenge: Descope's token endpoint always requires a nonce, so the first request comes back as `400 use_dpop_nonce` and the transport retries it with the nonce from the response.
+
+At `/authorize`, `/par`, the device endpoint or the CIBA endpoint, send the key thumbprint so the authorization code is bound to the key up front:
+
+```go
+params.Set("dpop_jkt", key.Thumbprint()) // equals the cnf.jkt claim of the issued token
+```
+
+The key must outlive the tokens bound to it — a DPoP-bound refresh token cannot be used without it. Persist it like a client secret:
+
+```go
+stored, err := json.Marshal(key) // private JWK
+key, err = dpop.ParseKey(stored)
+```
+
+To sign a request the transport does not own (a custom client, a signed URL, a test), call `key.Proof` directly:
+
+```go
+proof, err := key.Proof(http.MethodGet, "https://api.example.com/data",
+    dpop.WithAccessToken(accessToken), // ath claim, required at a resource server
+    dpop.WithNonce(nonce))             // when the server issued one
+req.Header.Set(dpop.HeaderProof, proof)
+```
+
+`dpop.NewKeyFromRaw` wraps an existing `*ecdsa.PrivateKey`, `*rsa.PrivateKey` or `ed25519.PrivateKey`; RSA keys sign with `PS256`, since FAPI 2.0 rejects `RS*` proofs.
+
 Refreshed sessions return the same response as is returned when users first sign up / log in,
 Make sure to return the session token from the response to the client if tokens are validated directly.
 
