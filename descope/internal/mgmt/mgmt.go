@@ -198,7 +198,7 @@ func (mgmt *managementService) JWTTemplate() sdk.JWTTemplate {
 }
 
 func (mgmt *managementService) ensureManagementKey() {
-	if mgmt.client.Conf.ManagementKey == "" {
+	if mgmt.client.Conf.ManagementKey == "" && mgmt.client.Conf.WorkloadTokenProvider == nil {
 		logger.LogInfo("Management key is missing, make sure to add it in the Config struct or the environment variable \"%s\"", descope.EnvironmentVariableManagementKey) // notest
 	}
 }
