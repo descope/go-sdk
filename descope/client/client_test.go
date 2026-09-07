@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/descope/go-sdk/descope"
+	"github.com/descope/go-sdk/descope/api"
 	"github.com/descope/go-sdk/descope/logger"
 	"github.com/descope/go-sdk/descope/tests/mocks"
 	mocksauth "github.com/descope/go-sdk/descope/tests/mocks/auth"
@@ -230,18 +231,74 @@ func TestClientRefusesBothCredentials(t *testing.T) {
 	require.Error(t, err, "a management key and a workload identity token share one header slot")
 }
 
+// licenseHandshakeClient answers the license handshake and records how each request authenticated.
+func licenseHandshakeClient(seen *[]string) api.IHttpClient {
+	return mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+		*seen = append(*seen, r.Header.Get("Authorization"))
+		return &http.Response{
+			StatusCode: 200,
+			Body:       io.NopCloser(strings.NewReader(`{"rateLimitTier":"tier4"}`)),
+			Header:     make(http.Header),
+		}, nil
+	})
+}
+
 func TestClientAcceptsAWorkloadTokenAlone(t *testing.T) {
-	c, err := NewWithConfig(&Config{ProjectID: "P2abc", WorkloadToken: "header.payload.signature"})
+	seen := []string{}
+	c, err := NewWithConfig(&Config{
+		ProjectID:     "P2abc",
+		WorkloadToken: "header.payload.signature",
+		DefaultClient: licenseHandshakeClient(&seen),
+	})
 	require.NoError(t, err)
 	require.NotNil(t, c.Management)
+	require.Equal(t, []string{"Bearer P2abc:header.payload.signature"}, seen, "a federated client still performs the license handshake")
 }
 
 func TestClientPrefersTheProviderOverTheStaticToken(t *testing.T) {
+	seen := []string{}
 	c, err := NewWithConfig(&Config{
 		ProjectID:             "P2abc",
 		WorkloadToken:         "static",
 		WorkloadTokenProvider: func(context.Context) (string, error) { return "dynamic", nil },
+		DefaultClient:         licenseHandshakeClient(&seen),
 	})
 	require.NoError(t, err)
 	require.NotNil(t, c.Management)
+	require.Equal(t, []string{"Bearer P2abc:dynamic"}, seen)
+}
+
+func TestClientWorkloadTokenBeatsTheManagementKeyEnvVariable(t *testing.T) {
+	t.Setenv(descope.EnvironmentVariableManagementKey, "env-management-key")
+	seen := []string{}
+	c, err := NewWithConfig(&Config{
+		ProjectID:     "P2abc",
+		WorkloadToken: "header.payload.signature",
+		DefaultClient: licenseHandshakeClient(&seen),
+	})
+	require.NoError(t, err)
+	require.Empty(t, c.config.ManagementKey, "a configured workload token must not collide with a management key left in the environment")
+	require.Equal(t, []string{"Bearer P2abc:header.payload.signature"}, seen)
+}
+
+func TestClientManagementKeyBeatsTheWorkloadTokenEnvVariable(t *testing.T) {
+	t.Setenv(descope.EnvironmentVariableWorkloadToken, "env-workload-token")
+	seen := []string{}
+	c, err := NewWithConfig(&Config{
+		ProjectID:     "P2abc",
+		ManagementKey: "management-key",
+		DefaultClient: licenseHandshakeClient(&seen),
+	})
+	require.NoError(t, err)
+	require.Nil(t, c.config.WorkloadTokenProvider)
+	require.Equal(t, []string{"Bearer P2abc:management-key"}, seen)
+}
+
+func TestEnvVariableWorkloadToken(t *testing.T) {
+	t.Setenv(descope.EnvironmentVariableWorkloadToken, "env-workload-token")
+	seen := []string{}
+	c, err := NewWithConfig(&Config{ProjectID: "P2abc", DefaultClient: licenseHandshakeClient(&seen)})
+	require.NoError(t, err)
+	require.NotNil(t, c.config.WorkloadTokenProvider)
+	require.Equal(t, []string{"Bearer P2abc:env-workload-token"}, seen)
 }

@@ -1959,11 +1959,13 @@ type WIFTrustedIssuerRequest struct {
 	// It must be a plain https URL with a host and no userinfo, query or fragment, and it cannot be
 	// changed after the key is created.
 	Issuer string `json:"issuer,omitempty"`
-	// MaxTTLSeconds rejects a presented token whose own lifetime exceeds this many seconds.
+	// MaxTTLSeconds rejects a presented token whose own lifetime exceeds this many seconds. Required,
+	// between 60 and 86400.
 	MaxTTLSeconds int32 `json:"maxTtlSeconds,omitempty"`
-	// ClaimFilters maps a claim name to the values it may take, so a token is accepted only when every
-	// named claim matches. A "sub" filter is required. Values may be exact strings or regular
-	// expressions, e.g. {"sub": {"repo:my-org/my-repo:ref:refs/heads/main"}}.
+	// ClaimFilters maps a claim name to the patterns it may match, so a token is accepted only when
+	// every named claim matches one of them. A "sub" filter is required. Patterns are anchored regular
+	// expressions rather than globs, e.g. {"sub": {"repo:my-org/my-repo:ref:refs/.*"}}, and one broad
+	// enough to match a workload owned by someone else is rejected.
 	ClaimFilters map[string][]string `json:"claimFilters,omitempty"`
 }
 
@@ -2011,7 +2013,8 @@ type MgmtKeyUpdateOptions struct {
 	// Status is the key status to set.
 	Status MgmtKeyStatus
 	// TrustedIssuer edits the federation of an already federated key. The issuer URL itself cannot be
-	// changed, and a federation cannot be added to a key that was created without one.
+	// changed, and a federation cannot be added to a key that was created without one. Nil leaves the
+	// existing federation as it is.
 	TrustedIssuer *WIFTrustedIssuerRequest
 }
 
