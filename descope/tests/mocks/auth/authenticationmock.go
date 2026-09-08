@@ -152,6 +152,22 @@ type MockEnchantedLink struct {
 	UpdateUserEmailAssert   func(loginID, email, URI string, updateOptions *descope.UpdateOptions, r *http.Request)
 	UpdateUserEmailError    error
 	UpdateUserEmailResponse *descope.EnchantedLinkResponse
+
+	SignInWithPhoneAssert   func(phone, URI string, r *http.Request, loginOptions *descope.LoginOptions)
+	SignInWithPhoneError    error
+	SignInWithPhoneResponse *descope.PhoneEnchantedLinkResponse
+
+	SignUpWithPhoneAssert   func(phone, URI string, user *descope.User, signUpOptions *descope.SignUpOptions)
+	SignUpWithPhoneError    error
+	SignUpWithPhoneResponse *descope.PhoneEnchantedLinkResponse
+
+	SignUpOrInWithPhoneAssert   func(phone string, URI string, signUpOptions *descope.SignUpOptions)
+	SignUpOrInWithPhoneError    error
+	SignUpOrInWithPhoneResponse *descope.PhoneEnchantedLinkResponse
+
+	UpdateUserPhoneAssert   func(loginID, phone, URI string, updateOptions *descope.UpdateOptions, r *http.Request)
+	UpdateUserPhoneError    error
+	UpdateUserPhoneResponse *descope.PhoneEnchantedLinkResponse
 }
 
 func (m *MockEnchantedLink) SignIn(_ context.Context, loginID, URI string, r *http.Request, loginOptions *descope.LoginOptions) (*descope.EnchantedLinkResponse, error) {
@@ -194,6 +210,34 @@ func (m *MockEnchantedLink) UpdateUserEmail(_ context.Context, loginID, email, U
 		m.UpdateUserEmailAssert(loginID, email, URI, updateOptions, r)
 	}
 	return m.UpdateUserEmailResponse, m.UpdateUserEmailError
+}
+
+func (m *MockEnchantedLink) SignInWithPhone(_ context.Context, phone, URI string, r *http.Request, loginOptions *descope.LoginOptions) (*descope.PhoneEnchantedLinkResponse, error) {
+	if m.SignInWithPhoneAssert != nil {
+		m.SignInWithPhoneAssert(phone, URI, r, loginOptions)
+	}
+	return m.SignInWithPhoneResponse, m.SignInWithPhoneError
+}
+
+func (m *MockEnchantedLink) SignUpWithPhone(_ context.Context, phone, URI string, user *descope.User, signUpOptions *descope.SignUpOptions) (*descope.PhoneEnchantedLinkResponse, error) {
+	if m.SignUpWithPhoneAssert != nil {
+		m.SignUpWithPhoneAssert(phone, URI, user, signUpOptions)
+	}
+	return m.SignUpWithPhoneResponse, m.SignUpWithPhoneError
+}
+
+func (m *MockEnchantedLink) SignUpOrInWithPhone(_ context.Context, phone string, URI string, signUpOptions *descope.SignUpOptions) (*descope.PhoneEnchantedLinkResponse, error) {
+	if m.SignUpOrInWithPhoneAssert != nil {
+		m.SignUpOrInWithPhoneAssert(phone, URI, signUpOptions)
+	}
+	return m.SignUpOrInWithPhoneResponse, m.SignUpOrInWithPhoneError
+}
+
+func (m *MockEnchantedLink) UpdateUserPhone(_ context.Context, loginID, phone, URI string, updateOptions *descope.UpdateOptions, r *http.Request) (*descope.PhoneEnchantedLinkResponse, error) {
+	if m.UpdateUserPhoneAssert != nil {
+		m.UpdateUserPhoneAssert(loginID, phone, URI, updateOptions, r)
+	}
+	return m.UpdateUserPhoneResponse, m.UpdateUserPhoneError
 }
 
 // Mock OTP
