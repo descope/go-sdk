@@ -2329,7 +2329,36 @@ descopeClient, err := client.NewWithConfig(&client.Config{
 ```
 
 Setting the `DESCOPE_WORKLOAD_TOKEN` environment variable to that JWT does the same thing without
-passing anything in code, the way `DESCOPE_MANAGEMENT_KEY` works for a management key.
+passing anything in code, the way `DESCOPE_MANAGEMENT_KEY` works for a management key. That is the
+whole wiring for a job that mints a token in one step and spends it in the next:
+
+```yaml
+permissions:
+  id-token: write # without this there is no token to mint
+
+steps:
+  - uses: actions/github-script@v7
+    id: mint
+    with:
+      script: |
+        // The audience is the key's reported TrustedIssuer.Audience, which is the Descope API base
+        // URL for the target environment plus the key id. It must match that environment exactly.
+        const token = await core.getIDToken(`https://api.descope.com/${{ vars.DESCOPE_KEY_ID }}`)
+        core.setSecret(token)
+        core.setOutput('token', token)
+
+  - run: go run ./cmd/export
+    env:
+      DESCOPE_PROJECT_ID: ${{ vars.DESCOPE_PROJECT_ID }}
+      # Read by the SDK under this exact name. Any other name means reading it yourself and
+      # passing it as WorkloadToken.
+      DESCOPE_WORKLOAD_TOKEN: ${{ steps.mint.outputs.token }}
+```
+
+Mint the token in the step that spends it. A minted token is short-lived, and the key rejects one
+whose lifetime exceeds its configured maximum, so a token minted early in a long job can be expired
+by the time it is used. Leave `DESCOPE_MANAGEMENT_KEY` unset in such a job: when both are present
+the management key wins and the workload token is ignored.
 
 When the process mints its own token, or runs for longer than one token lives, use a provider
 instead. It is consulted before every request, so an expiring token is replaced without rebuilding
