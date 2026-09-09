@@ -2,8 +2,6 @@ package mgmt
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"net/http"
 	"testing"
 
@@ -333,8 +331,9 @@ func TestMgmtKeyWithOptions_BadInput(t *testing.T) {
 
 func TestWorkloadTokenIsSentInsteadOfAManagementKey(t *testing.T) {
 	params := &api.ClientParams{
-		ProjectID:             "P2abc",
-		WorkloadTokenProvider: func(context.Context) (string, error) { return "header.payload.signature", nil },
+		ProjectID:     "P2abc",
+		ManagementKey: "mgmt-key",
+		WorkloadToken: "header.payload.signature",
 	}
 	mgmt := newTestMgmt(params, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, "Bearer P2abc:header.payload.signature", r.Header.Get("Authorization"))
@@ -342,36 +341,4 @@ func TestWorkloadTokenIsSentInsteadOfAManagementKey(t *testing.T) {
 
 	_, err := mgmt.ManagementKey().Get(context.Background(), "mk1")
 	require.NoError(t, err)
-}
-
-func TestWorkloadTokenIsReadPerRequest(t *testing.T) {
-	calls := 0
-	params := &api.ClientParams{
-		ProjectID: "P2abc",
-		WorkloadTokenProvider: func(context.Context) (string, error) {
-			calls++
-			return fmt.Sprintf("token-%d", calls), nil
-		},
-	}
-	seen := []string{}
-	mgmt := newTestMgmt(params, helpers.DoOkWithBody(func(r *http.Request) {
-		seen = append(seen, r.Header.Get("Authorization"))
-	}, map[string]any{"key": map[string]any{"id": "mk1"}}))
-
-	_, err := mgmt.ManagementKey().Get(context.Background(), "mk1")
-	require.NoError(t, err)
-	_, err = mgmt.ManagementKey().Get(context.Background(), "mk1")
-	require.NoError(t, err)
-	require.Equal(t, []string{"Bearer P2abc:token-1", "Bearer P2abc:token-2"}, seen, "a short lived token must be refreshed per request")
-}
-
-func TestWorkloadTokenProviderFailureFailsTheRequest(t *testing.T) {
-	params := &api.ClientParams{
-		ProjectID:             "P2abc",
-		WorkloadTokenProvider: func(context.Context) (string, error) { return "", errors.New("no token") },
-	}
-	mgmt := newTestMgmt(params, helpers.DoOk(nil))
-
-	_, err := mgmt.ManagementKey().Get(context.Background(), "mk1")
-	require.ErrorContains(t, err, "no token")
 }

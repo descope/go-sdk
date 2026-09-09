@@ -255,19 +255,6 @@ func TestClientAcceptsAWorkloadTokenAlone(t *testing.T) {
 	require.Equal(t, []string{"Bearer P2abc:header.payload.signature"}, seen, "a federated client still performs the license handshake")
 }
 
-func TestClientPrefersTheProviderOverTheStaticToken(t *testing.T) {
-	seen := []string{}
-	c, err := NewWithConfig(&Config{
-		ProjectID:             "P2abc",
-		WorkloadToken:         "static",
-		WorkloadTokenProvider: func(context.Context) (string, error) { return "dynamic", nil },
-		DefaultClient:         licenseHandshakeClient(&seen),
-	})
-	require.NoError(t, err)
-	require.NotNil(t, c.Management)
-	require.Equal(t, []string{"Bearer P2abc:dynamic"}, seen)
-}
-
 func TestClientWorkloadTokenBeatsTheManagementKeyEnvVariable(t *testing.T) {
 	t.Setenv(descope.EnvironmentVariableManagementKey, "env-management-key")
 	seen := []string{}
@@ -290,7 +277,7 @@ func TestClientManagementKeyBeatsTheWorkloadTokenEnvVariable(t *testing.T) {
 		DefaultClient: licenseHandshakeClient(&seen),
 	})
 	require.NoError(t, err)
-	require.Nil(t, c.config.WorkloadTokenProvider)
+	require.Empty(t, c.config.WorkloadToken, "a configured management key must not pick up a workload token from the environment")
 	require.Equal(t, []string{"Bearer P2abc:management-key"}, seen)
 }
 
@@ -299,6 +286,6 @@ func TestEnvVariableWorkloadToken(t *testing.T) {
 	seen := []string{}
 	c, err := NewWithConfig(&Config{ProjectID: "P2abc", DefaultClient: licenseHandshakeClient(&seen)})
 	require.NoError(t, err)
-	require.NotNil(t, c.config.WorkloadTokenProvider)
+	require.Equal(t, "env-workload-token", c.config.WorkloadToken)
 	require.Equal(t, []string{"Bearer P2abc:env-workload-token"}, seen)
 }

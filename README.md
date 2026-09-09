@@ -2360,41 +2360,12 @@ whose lifetime exceeds its configured maximum, so a token minted early in a long
 by the time it is used. Leave `DESCOPE_MANAGEMENT_KEY` unset in such a job: when both are present
 the management key wins and the workload token is ignored.
 
-When the process mints its own token, or runs for longer than one token lives, use a provider
-instead. It is consulted before every request, so an expiring token is replaced without rebuilding
-the client:
+The `audience` the workload asks for is the `key.TrustedIssuer.Audience` that Descope reported when
+the key was federated, so a token minted for one key cannot be spent as another.
 
-```go
-// In GitHub Actions, with "permissions: id-token: write" on the job. The token is not in the
-// environment: it is minted on request, for one audience at a time.
-descopeClient, err := client.NewWithConfig(&client.Config{
-    ProjectID: "project-ID",
-    WorkloadTokenProvider: func(ctx context.Context) (string, error) {
-        mintURL := os.Getenv("ACTIONS_ID_TOKEN_REQUEST_URL") + "&audience=" + url.QueryEscape(audience)
-        req, err := http.NewRequestWithContext(ctx, http.MethodGet, mintURL, nil)
-        if err != nil {
-            return "", err
-        }
-        req.Header.Set("Authorization", "Bearer "+os.Getenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN"))
-        res, err := http.DefaultClient.Do(req)
-        if err != nil {
-            return "", err
-        }
-        defer res.Body.Close()
-        var minted struct{ Value string }
-        if err := json.NewDecoder(res.Body).Decode(&minted); err != nil {
-            return "", err
-        }
-        return minted.Value, nil
-    },
-})
-```
-
-`audience` is the `key.TrustedIssuer.Audience` that Descope reported when the key was federated.
-
-Either field replaces `ManagementKey`: configuring both fails, since they occupy the same slot in
-the authorization header. A federated key accepts tokens that live at most 15 minutes, so a run
-longer than that needs the provider rather than a fixed token.
+A workload token replaces `ManagementKey`: configuring both fails, since they occupy the same slot
+in the authorization header. The token is sent exactly as given for the life of the client, so a job
+that runs longer than its token lives has to mint a new one and build a new client.
 
 ### Manage Descopers
 

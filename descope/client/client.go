@@ -52,16 +52,11 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 
 	// A workload identity token and a management key occupy the same slot in the authorization header,
 	// so only one of them can be used. What is set on the config wins over the environment.
-	workloadConfigured := config.WorkloadToken != "" || config.WorkloadTokenProvider != nil
-	if workloadConfigured && config.ManagementKey != "" {
+	if config.WorkloadToken != "" && config.ManagementKey != "" {
 		return nil, utils.NewInvalidArgumentError("either a management key or a workload identity token, not both")
 	}
-	if !workloadConfigured && config.setManagementKey() == "" {
+	if config.WorkloadToken == "" && config.setManagementKey() == "" {
 		config.setWorkloadToken()
-	}
-	if config.WorkloadTokenProvider == nil && config.WorkloadToken != "" {
-		workloadToken := config.WorkloadToken
-		config.WorkloadTokenProvider = func(context.Context) (string, error) { return workloadToken, nil }
 	}
 
 	// Auth initialzes a client with the auth management key if provided
@@ -93,18 +88,18 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 
 	// Managament initializes its own client with the management key
 	mgmtClient := api.NewClient(api.ClientParams{
-		ProjectID:             config.ProjectID,
-		BaseURL:               config.DescopeBaseURL,
-		ManagementKey:         config.ManagementKey,
-		WorkloadTokenProvider: config.WorkloadTokenProvider,
-		DefaultClient:         config.DefaultClient,
-		CustomDefaultHeaders:  config.CustomDefaultHeaders,
-		ExternalRequestID:     config.ExternalRequestID,
-		CertificateVerify:     config.CertificateVerify,
-		RequestTimeout:        config.RequestTimeout,
+		ProjectID:            config.ProjectID,
+		BaseURL:              config.DescopeBaseURL,
+		ManagementKey:        config.ManagementKey,
+		WorkloadToken:        config.WorkloadToken,
+		DefaultClient:        config.DefaultClient,
+		CustomDefaultHeaders: config.CustomDefaultHeaders,
+		ExternalRequestID:    config.ExternalRequestID,
+		CertificateVerify:    config.CertificateVerify,
+		RequestTimeout:       config.RequestTimeout,
 	})
 
-	if config.ManagementKey != "" || config.WorkloadTokenProvider != nil {
+	if config.ManagementKey != "" || config.WorkloadToken != "" {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if rateLimitTier, err := mgmtClient.FetchLicense(ctx); err != nil {
