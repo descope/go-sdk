@@ -2319,15 +2319,17 @@ updatedKey, err := descopeClient.Management.ManagementKey().UpdateWithOptions(
 ```
 
 The workload then initializes a client with its token in place of a management key. When something
-else already minted the token and handed it over, pass it as a fixed value, or set
-`DESCOPE_WORKLOAD_TOKEN` and pass nothing:
+else already minted the token and handed it over, pass it as a fixed value:
 
 ```go
 descopeClient, err := client.NewWithConfig(&client.Config{
     ProjectID:     "project-ID",
-    WorkloadToken: os.Getenv("CI_ID_TOKEN"),
+    WorkloadToken: token, // the JWT the workload's own platform minted for this job
 })
 ```
+
+Setting the `DESCOPE_WORKLOAD_TOKEN` environment variable to that JWT does the same thing without
+passing anything in code, the way `DESCOPE_MANAGEMENT_KEY` works for a management key.
 
 When the process mints its own token, or runs for longer than one token lives, use a provider
 instead. It is consulted before every request, so an expiring token is replaced without rebuilding
