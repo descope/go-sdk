@@ -26,8 +26,7 @@ type Config struct {
 	// WorkloadToken (optional, "") - a token from an issuer this project's management key trusts, used
 	// to authenticate as that key without holding its secret (workload identity federation). Mutually
 	// exclusive with ManagementKey. If empty, this value is retrieved from the DESCOPE_WORKLOAD_TOKEN
-	// environment variable instead. The token is sent as given for the life of the client, so mint it
-	// close to where it is spent: these tokens are short lived.
+	// environment variable instead. These tokens are short lived.
 	WorkloadToken string
 	// AuthManagementKey (optional, "") - used to provide a management key to use
 	// with Authentication APIs whose public access has been disabled.

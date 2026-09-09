@@ -2318,8 +2318,8 @@ updatedKey, err := descopeClient.Management.ManagementKey().UpdateWithOptions(
 // Deleting the key removes the federation with it.
 ```
 
-The workload then initializes a client with its token in place of a management key. When something
-else already minted the token and handed it over, pass it as a fixed value:
+The workload then initializes a client with the issuer token. Set the `DESCOPE_WORKLOAD_TOKEN`
+environment variable to pass it to the client, or set the field directly:
 
 ```go
 descopeClient, err := client.NewWithConfig(&client.Config{
@@ -2328,9 +2328,7 @@ descopeClient, err := client.NewWithConfig(&client.Config{
 })
 ```
 
-Setting the `DESCOPE_WORKLOAD_TOKEN` environment variable to that JWT does the same thing without
-passing anything in code, the way `DESCOPE_MANAGEMENT_KEY` works for a management key. That is the
-whole wiring for a job that mints a token in one step and spends it in the next:
+That is the whole wiring for a job that mints a token in one step and spends it in the next:
 
 ```yaml
 permissions:
@@ -2347,13 +2345,26 @@ steps:
         core.setSecret(token)
         core.setOutput('token', token)
 
-  - run: go run ./cmd/export
+  # The Descope CLI, which uses this SDK: https://github.com/descope/descopecli
+  - run: descope project snapshot export "$DESCOPE_PROJECT_ID" --path ./descope_export
     env:
       DESCOPE_PROJECT_ID: ${{ vars.DESCOPE_PROJECT_ID }}
       # Read by the SDK under this exact name. Any other name means reading it yourself and
       # passing it as WorkloadToken.
       DESCOPE_WORKLOAD_TOKEN: ${{ steps.mint.outputs.token }}
 ```
+
+Mint the token in the step that spends it. A minted token is short lived, and the key rejects one
+whose lifetime exceeds its configured maximum, so a token minted early in a long job can be expired
+by the time it is used. The token is sent exactly as given for the life of the client, so a job that
+outlives its token has to mint a new one and build a new client.
+
+The `audience` the workload asks for is the `key.TrustedIssuer.Audience` that Descope reported when
+the key was federated, so a token minted for one key cannot be spent as another.
+
+A workload token replaces `ManagementKey`: configuring both fails, since they occupy the same slot
+in the authorization header. Leave `DESCOPE_MANAGEMENT_KEY` unset in a federated job too: when both
+environment variables are present the management key wins and the workload token is ignored.
 
 ### Manage Descopers
 
