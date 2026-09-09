@@ -2355,18 +2355,6 @@ steps:
       DESCOPE_WORKLOAD_TOKEN: ${{ steps.mint.outputs.token }}
 ```
 
-Mint the token in the step that spends it. A minted token is short-lived, and the key rejects one
-whose lifetime exceeds its configured maximum, so a token minted early in a long job can be expired
-by the time it is used. Leave `DESCOPE_MANAGEMENT_KEY` unset in such a job: when both are present
-the management key wins and the workload token is ignored.
-
-The `audience` the workload asks for is the `key.TrustedIssuer.Audience` that Descope reported when
-the key was federated, so a token minted for one key cannot be spent as another.
-
-A workload token replaces `ManagementKey`: configuring both fails, since they occupy the same slot
-in the authorization header. The token is sent exactly as given for the life of the client, so a job
-that runs longer than its token lives has to mint a new one and build a new client.
-
 ### Manage Descopers
 
 You can create, update, delete, get, or list descopers (users who have access to the Descope console):

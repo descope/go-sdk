@@ -1932,102 +1932,56 @@ const (
 )
 
 type MgmtKey struct {
-	ID           string        `json:"id,omitempty"`
-	Name         string        `json:"name,omitempty"`
-	Description  string        `json:"description,omitempty"`
-	Status       MgmtKeyStatus `json:"status,omitempty"`
-	CreatedTime  int64         `json:"createdTime,omitempty"`
-	ExpireTime   int64         `json:"expireTime,omitempty"`
-	PermittedIPs []string      `json:"permittedIps,omitempty"`
-	ReBac        *MgmtKeyReBac `json:"reBac,omitempty"`
-	Version      int64         `json:"version,omitempty"`
-	AuthzVersion int64         `json:"authzVersion,omitempty"`
-	// TrustedIssuer is set when the key authenticates with a workload identity token instead of a
-	// secret. Nil for an ordinary management key.
+	ID            string            `json:"id,omitempty"`
+	Name          string            `json:"name,omitempty"`
+	Description   string            `json:"description,omitempty"`
+	Status        MgmtKeyStatus     `json:"status,omitempty"`
+	CreatedTime   int64             `json:"createdTime,omitempty"`
+	ExpireTime    int64             `json:"expireTime,omitempty"`
+	PermittedIPs  []string          `json:"permittedIps,omitempty"`
+	ReBac         *MgmtKeyReBac     `json:"reBac,omitempty"`
+	Version       int64             `json:"version,omitempty"`
+	AuthzVersion  int64             `json:"authzVersion,omitempty"`
 	TrustedIssuer *WIFTrustedIssuer `json:"trustedIssuer,omitempty"`
 }
 
-// WIFTrustedIssuerRequest federates a management key to an external OIDC issuer, so a workload holding
-// a token from that issuer can act as the key without ever holding its secret.
-//
-// It is deliberately separate from WIFTrustedIssuer: the audience a workload must present is derived
-// from the key, never chosen by the caller, so there is no field here to set it.
 type WIFTrustedIssuerRequest struct {
-	// Name is a label shown on the Descope console.
-	Name string `json:"name,omitempty"`
-	// Issuer is the OIDC issuer URL whose tokens this key trusts, matched against a token's iss claim.
-	// It must be a plain https URL with a host and no userinfo, query or fragment, and it cannot be
-	// changed after the key is created.
-	Issuer string `json:"issuer,omitempty"`
-	// MaxTTL rejects a presented token whose own lifetime exceeds this, counted in MaxTTLUnit.
-	// Required, and the two fields together must land between 1 and 15 minutes.
-	MaxTTL int32 `json:"maxTtl,omitempty"`
-	// MaxTTLUnit is the unit MaxTTL is counted in: WIFMaxTTLUnitSeconds or WIFMaxTTLUnitMinutes.
-	// Leaving it empty means minutes. Set it explicitly, so a change to that default cannot
-	// reinterpret a MaxTTL you already configured.
-	MaxTTLUnit string `json:"maxTtlUnit,omitempty"`
-	// ClaimFilters maps a claim name to the patterns it may match, so a token is accepted only when
-	// every named claim matches one of them. A "sub" filter is required. Patterns are anchored regular
-	// expressions rather than globs, e.g. {"sub": {"repo:my-org/my-repo:ref:refs/.*"}}, and one broad
-	// enough to match a workload owned by someone else is rejected.
+	Name         string              `json:"name,omitempty"`
+	Issuer       string              `json:"issuer,omitempty"`
+	MaxTTL       int32               `json:"maxTtl,omitempty"`
+	MaxTTLUnit   string              `json:"maxTtlUnit,omitempty"`
 	ClaimFilters map[string][]string `json:"claimFilters,omitempty"`
 }
 
-// The units WIFTrustedIssuerRequest.MaxTTLUnit accepts.
 const (
 	WIFMaxTTLUnitSeconds = "seconds"
 	WIFMaxTTLUnitMinutes = "minutes"
 )
 
-// WIFTrustedIssuer is the federation as Descope reports it, returned on a management key.
 type WIFTrustedIssuer struct {
-	Name   string `json:"name,omitempty"`
-	Issuer string `json:"issuer,omitempty"`
-	// MaxTTL and MaxTTLUnit are the maximum token lifetime as Descope stored it. The unit is always
-	// reported here, even when it was left empty on the request.
+	Name         string              `json:"name,omitempty"`
+	Issuer       string              `json:"issuer,omitempty"`
 	MaxTTL       int32               `json:"maxTtl,omitempty"`
 	MaxTTLUnit   string              `json:"maxTtlUnit,omitempty"`
 	ClaimFilters map[string][]string `json:"claimFilters,omitempty"`
-	// Audience is the value a workload's token must carry in its aud claim. It is derived from the
-	// Descope API base URL and this key's id, so it is only ever reported, never sent.
-	Audience string `json:"audience,omitempty"`
+	Audience     string              `json:"audience,omitempty"`
 }
 
-// MgmtKeyCreateOptions carries everything a management key can be created with. Prefer it over the
-// positional Create arguments when the key needs a workload identity federation.
 type MgmtKeyCreateOptions struct {
-	// Name is required and shown on the Descope console.
-	Name string
-	// Description is optional.
-	Description string
-	// ExpiresIn is the expiration in seconds, 0 for no expiration.
-	ExpiresIn uint64
-	// PermittedIPs optionally restricts the key to these addresses or CIDR ranges.
-	PermittedIPs []string
-	// ReBac is the role based access control configuration for the key.
-	ReBac *MgmtKeyReBac
-	// TrustedIssuer federates the key to an external OIDC issuer. When set, the key has no secret and
-	// the cleartext returned by Create is empty.
+	Name          string
+	Description   string
+	ExpiresIn     uint64
+	PermittedIPs  []string
+	ReBac         *MgmtKeyReBac
 	TrustedIssuer *WIFTrustedIssuerRequest
 }
 
-// MgmtKeyUpdateOptions carries the fields an update overrides.
-//
-// IMPORTANT: every field overrides whatever the key currently has. Use carefully.
 type MgmtKeyUpdateOptions struct {
-	// ID identifies the management key and is required.
-	ID string
-	// Name is required and shown on the Descope console.
-	Name string
-	// Description is optional.
-	Description string
-	// PermittedIPs optionally restricts the key to these addresses or CIDR ranges.
-	PermittedIPs []string
-	// Status is the key status to set.
-	Status MgmtKeyStatus
-	// TrustedIssuer edits the federation of an already federated key. The issuer URL itself cannot be
-	// changed, and a federation cannot be added to a key that was created without one. Nil leaves the
-	// existing federation as it is.
+	ID            string
+	Name          string
+	Description   string
+	PermittedIPs  []string
+	Status        MgmtKeyStatus
 	TrustedIssuer *WIFTrustedIssuerRequest
 }
 

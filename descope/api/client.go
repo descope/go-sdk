@@ -2226,7 +2226,6 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 		if len(pswd) > 0 {
 			bearerParts = append(bearerParts, pswd)
 		}
-		// a workload identity token stands in for the management key, in the same position
 		if workloadToken := c.Conf.WorkloadToken; len(workloadToken) > 0 {
 			bearerParts = append(bearerParts, workloadToken)
 		} else if mgmtKey := c.Conf.ManagementKey; len(mgmtKey) > 0 {
