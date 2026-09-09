@@ -2318,22 +2318,52 @@ updatedKey, err := descopeClient.Management.ManagementKey().UpdateWithOptions(
 // Deleting the key removes the federation with it.
 ```
 
-The workload then initializes a client with its token in place of a management key:
+The workload then initializes a client with its token in place of a management key. When something
+else already minted the token and handed it over, pass it as a fixed value, or set
+`DESCOPE_WORKLOAD_TOKEN` and pass nothing:
 
 ```go
 descopeClient, err := client.NewWithConfig(&client.Config{
-    ProjectID: "project-ID",
+    ProjectID:     "project-ID",
+    WorkloadToken: os.Getenv("CI_ID_TOKEN"),
+})
+```
 
-    // Consulted per request, so a short-lived token can be refreshed without rebuilding the client
+When the process mints its own token, or runs for longer than one token lives, use a provider
+instead. It is consulted before every request, so an expiring token is replaced without rebuilding
+the client:
+
+```go
+// In GitHub Actions, with "permissions: id-token: write" on the job. The token is not in the
+// environment: it is minted on request, for one audience at a time.
+descopeClient, err := client.NewWithConfig(&client.Config{
+    ProjectID: "project-ID",
     WorkloadTokenProvider: func(ctx context.Context) (string, error) {
-        return mintIDToken(ctx, audience) // e.g. the GitHub Actions OIDC token for that audience
+        mintURL := os.Getenv("ACTIONS_ID_TOKEN_REQUEST_URL") + "&audience=" + url.QueryEscape(audience)
+        req, err := http.NewRequestWithContext(ctx, http.MethodGet, mintURL, nil)
+        if err != nil {
+            return "", err
+        }
+        req.Header.Set("Authorization", "Bearer "+os.Getenv("ACTIONS_ID_TOKEN_REQUEST_TOKEN"))
+        res, err := http.DefaultClient.Do(req)
+        if err != nil {
+            return "", err
+        }
+        defer res.Body.Close()
+        var minted struct{ Value string }
+        if err := json.NewDecoder(res.Body).Decode(&minted); err != nil {
+            return "", err
+        }
+        return minted.Value, nil
     },
 })
 ```
 
-`WorkloadToken` (or the `DESCOPE_WORKLOAD_TOKEN` environment variable) provides a fixed token
-instead. Either one replaces `ManagementKey`: configuring both fails, since they occupy the same
-slot in the authorization header.
+`audience` is the `key.TrustedIssuer.Audience` that Descope reported when the key was federated.
+
+Either field replaces `ManagementKey`: configuring both fails, since they occupy the same slot in
+the authorization header. A federated key accepts tokens that live at most 15 minutes, so a run
+longer than that needs the provider rather than a fixed token.
 
 ### Manage Descopers
 
