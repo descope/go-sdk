@@ -1959,9 +1959,13 @@ type WIFTrustedIssuerRequest struct {
 	// It must be a plain https URL with a host and no userinfo, query or fragment, and it cannot be
 	// changed after the key is created.
 	Issuer string `json:"issuer,omitempty"`
-	// MaxTTLSeconds rejects a presented token whose own lifetime exceeds this many seconds. Required,
-	// between 60 and 86400.
-	MaxTTLSeconds int32 `json:"maxTtlSeconds,omitempty"`
+	// MaxTTL rejects a presented token whose own lifetime exceeds this, counted in MaxTTLUnit.
+	// Required, and the two fields together must land between 1 and 15 minutes.
+	MaxTTL int32 `json:"maxTtl,omitempty"`
+	// MaxTTLUnit is the unit MaxTTL is counted in: WIFMaxTTLUnitSeconds or WIFMaxTTLUnitMinutes.
+	// Leaving it empty means minutes. Set it explicitly, so a change to that default cannot
+	// reinterpret a MaxTTL you already configured.
+	MaxTTLUnit string `json:"maxTtlUnit,omitempty"`
 	// ClaimFilters maps a claim name to the patterns it may match, so a token is accepted only when
 	// every named claim matches one of them. A "sub" filter is required. Patterns are anchored regular
 	// expressions rather than globs, e.g. {"sub": {"repo:my-org/my-repo:ref:refs/.*"}}, and one broad
@@ -1969,12 +1973,21 @@ type WIFTrustedIssuerRequest struct {
 	ClaimFilters map[string][]string `json:"claimFilters,omitempty"`
 }
 
+// The units WIFTrustedIssuerRequest.MaxTTLUnit accepts.
+const (
+	WIFMaxTTLUnitSeconds = "seconds"
+	WIFMaxTTLUnitMinutes = "minutes"
+)
+
 // WIFTrustedIssuer is the federation as Descope reports it, returned on a management key.
 type WIFTrustedIssuer struct {
-	Name          string              `json:"name,omitempty"`
-	Issuer        string              `json:"issuer,omitempty"`
-	MaxTTLSeconds int32               `json:"maxTtlSeconds,omitempty"`
-	ClaimFilters  map[string][]string `json:"claimFilters,omitempty"`
+	Name   string `json:"name,omitempty"`
+	Issuer string `json:"issuer,omitempty"`
+	// MaxTTL and MaxTTLUnit are the maximum token lifetime as Descope stored it. The unit is always
+	// reported here, even when it was left empty on the request.
+	MaxTTL       int32               `json:"maxTtl,omitempty"`
+	MaxTTLUnit   string              `json:"maxTtlUnit,omitempty"`
+	ClaimFilters map[string][]string `json:"claimFilters,omitempty"`
 	// Audience is the value a workload's token must carry in its aud claim. It is derived from the
 	// Descope API base URL and this key's id, so it is only ever reported, never sent.
 	Audience string `json:"audience,omitempty"`

@@ -2283,9 +2283,12 @@ key, cleartext, err := descopeClient.Management.ManagementKey().CreateWithOption
         Name:  "CI Snapshot Export",
         ReBac: reBac,
         TrustedIssuer: &descope.WIFTrustedIssuerRequest{
-            Name:          "github-actions",
-            Issuer:        "https://token.actions.githubusercontent.com",
-            MaxTTLSeconds: 900,
+            Name:   "github-actions",
+            Issuer: "https://token.actions.githubusercontent.com",
+            // Maximum lifetime of a token this key accepts, between 1 and 15 minutes. Pass the unit
+            // explicitly: an empty MaxTTLUnit means minutes.
+            MaxTTL:     900,
+            MaxTTLUnit: descope.WIFMaxTTLUnitSeconds,
             // Anchored regular expressions, and a "sub" filter is required
             ClaimFilters: map[string][]string{"sub": {"repo:my-org/my-repo:ref:refs/heads/main"}},
         },
@@ -2303,10 +2306,11 @@ updatedKey, err := descopeClient.Management.ManagementKey().UpdateWithOptions(
         Name:   "CI Snapshot Export",
         Status: descope.MgmtKeyActive,
         TrustedIssuer: &descope.WIFTrustedIssuerRequest{
-            Name:          "github-actions",
-            Issuer:        "https://token.actions.githubusercontent.com",
-            MaxTTLSeconds: 600,
-            ClaimFilters:  map[string][]string{"sub": {"repo:my-org/my-repo:ref:refs/heads/main"}},
+            Name:         "github-actions",
+            Issuer:       "https://token.actions.githubusercontent.com",
+            MaxTTL:       10,
+            MaxTTLUnit:   descope.WIFMaxTTLUnitMinutes,
+            ClaimFilters: map[string][]string{"sub": {"repo:my-org/my-repo:ref:refs/heads/main"}},
         },
     },
 )

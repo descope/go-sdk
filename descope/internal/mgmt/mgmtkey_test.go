@@ -249,11 +249,12 @@ func TestMgmtKeyCreateWithOptions_TrustedIssuer(t *testing.T) {
 			"id":   "mk1",
 			"name": "ci-export",
 			"trustedIssuer": map[string]any{
-				"name":          "github-actions",
-				"issuer":        "https://token.actions.githubusercontent.com",
-				"maxTtlSeconds": 900,
-				"audience":      "https://api.descope.com/mk1",
-				"claimFilters":  map[string]any{"sub": []string{"repo:org/app:ref:refs/heads/main"}},
+				"name":         "github-actions",
+				"issuer":       "https://token.actions.githubusercontent.com",
+				"maxTtl":       900,
+				"maxTtlUnit":   "seconds",
+				"audience":     "https://api.descope.com/mk1",
+				"claimFilters": map[string]any{"sub": []string{"repo:org/app:ref:refs/heads/main"}},
 			},
 		}}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -262,7 +263,8 @@ func TestMgmtKeyCreateWithOptions_TrustedIssuer(t *testing.T) {
 		issuer := req["trustedIssuer"].(map[string]any)
 		require.Equal(t, "github-actions", issuer["name"])
 		require.Equal(t, "https://token.actions.githubusercontent.com", issuer["issuer"])
-		require.EqualValues(t, 900, issuer["maxTtlSeconds"])
+		require.EqualValues(t, 900, issuer["maxTtl"])
+		require.Equal(t, "seconds", issuer["maxTtlUnit"], "the unit travels with the number, so the server default cannot reinterpret it")
 		require.NotContains(t, issuer, "audience", "the audience is derived by the server, never sent")
 		subs := issuer["claimFilters"].(map[string]any)["sub"].([]any)
 		require.Len(t, subs, 1)
@@ -272,16 +274,19 @@ func TestMgmtKeyCreateWithOptions_TrustedIssuer(t *testing.T) {
 	key, cleartext, err := mgmt.ManagementKey().CreateWithOptions(context.Background(), &descope.MgmtKeyCreateOptions{
 		Name: "ci-export",
 		TrustedIssuer: &descope.WIFTrustedIssuerRequest{
-			Name:          "github-actions",
-			Issuer:        "https://token.actions.githubusercontent.com",
-			MaxTTLSeconds: 900,
-			ClaimFilters:  map[string][]string{"sub": {"repo:org/app:ref:refs/heads/main"}},
+			Name:         "github-actions",
+			Issuer:       "https://token.actions.githubusercontent.com",
+			MaxTTL:       900,
+			MaxTTLUnit:   descope.WIFMaxTTLUnitSeconds,
+			ClaimFilters: map[string][]string{"sub": {"repo:org/app:ref:refs/heads/main"}},
 		},
 	})
 	require.NoError(t, err)
 	require.Empty(t, cleartext, "a federated key has no secret")
 	require.NotNil(t, key.TrustedIssuer)
 	require.Equal(t, "https://api.descope.com/mk1", key.TrustedIssuer.Audience)
+	require.EqualValues(t, 900, key.TrustedIssuer.MaxTTL)
+	require.Equal(t, descope.WIFMaxTTLUnitSeconds, key.TrustedIssuer.MaxTTLUnit)
 	require.Equal(t, []string{"repo:org/app:ref:refs/heads/main"}, key.TrustedIssuer.ClaimFilters["sub"])
 }
 
@@ -302,13 +307,14 @@ func TestMgmtKeyUpdateWithOptions_TrustedIssuer(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "mk1", req["id"])
 		issuer := req["trustedIssuer"].(map[string]any)
-		require.EqualValues(t, 600, issuer["maxTtlSeconds"])
+		require.EqualValues(t, 10, issuer["maxTtl"])
+		require.NotContains(t, issuer, "maxTtlUnit", "an empty unit is omitted, and the server reads it as minutes")
 	}, map[string]any{"key": map[string]any{"id": "mk1"}}))
 
 	_, err := mgmt.ManagementKey().UpdateWithOptions(context.Background(), &descope.MgmtKeyUpdateOptions{
 		ID:            "mk1",
 		Name:          "ci-export",
-		TrustedIssuer: &descope.WIFTrustedIssuerRequest{MaxTTLSeconds: 600},
+		TrustedIssuer: &descope.WIFTrustedIssuerRequest{MaxTTL: 10},
 	})
 	require.NoError(t, err)
 }
