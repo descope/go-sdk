@@ -33,6 +33,8 @@ func TestThirdPartyApplicationCreateSuccess(t *testing.T) {
 		require.EqualValues(t, "sub", d["issuer1"].(map[string]any)["externalIdFieldName"])
 		require.Equal(t, true, req["forcePkce"])
 		require.Equal(t, "clientId", req["defaultAudience"])
+		require.Equal(t, "confidential", req["clientType"])
+		require.Equal(t, true, req["forceDpop"])
 	}, response))
 
 	id, secret, err := mgmt.ThirdPartyApplication().CreateApplication(context.Background(), &descope.ThirdPartyApplicationRequest{
@@ -43,6 +45,8 @@ func TestThirdPartyApplicationCreateSuccess(t *testing.T) {
 		LoginPageURL:    "http://dummy.com",
 		ForcePkce:       true,
 		DefaultAudience: "clientId",
+		ClientType:      "confidential",
+		ForceDpop:       true,
 		JWTBearerSettings: &descope.JWTBearerSettings{
 			Issuers: map[string]*descope.IssuerSettings{
 				"issuer1": {
@@ -634,4 +638,65 @@ func TestDeleteThirdPartyApplicationBatchError(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
 	err := mgmt.ThirdPartyApplication().DeleteApplicationBatch(context.Background(), nil)
 	require.Error(t, err)
+}
+
+func TestThirdPartyApplicationPatchAlwaysSendsForceDpop(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "id1", req["id"])
+		require.Equal(t, false, req["forceDpop"])
+		require.Equal(t, "", req["clientType"])
+	}))
+	err := mgmt.ThirdPartyApplication().PatchApplication(context.Background(), &descope.ThirdPartyApplicationRequest{
+		ID:   "id1",
+		Name: "renamed",
+	})
+	require.NoError(t, err)
+}
+
+func TestThirdPartyApplicationPatchKeepsForceDpopWhenCarried(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, true, req["forceDpop"])
+		require.Equal(t, "confidential", req["clientType"])
+	}))
+	err := mgmt.ThirdPartyApplication().PatchApplication(context.Background(), &descope.ThirdPartyApplicationRequest{
+		ID:         "id1",
+		Name:       "renamed",
+		ClientType: "confidential",
+		ForceDpop:  true,
+	})
+	require.NoError(t, err)
+}
+
+func TestThirdPartyApplicationLoadReturnsForceDpop(t *testing.T) {
+	response := map[string]any{
+		"id":         "id1",
+		"name":       "abc",
+		"clientType": "confidential",
+		"forceDpop":  true,
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, response))
+
+	res, err := mgmt.ThirdPartyApplication().LoadApplication(context.Background(), "id1")
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	assert.Equal(t, "confidential", res.ClientType)
+	assert.True(t, res.ForceDpop, "a loaded application must report that it requires DPoP")
+
+	// Carrying the loaded values into an update keeps the requirement on.
+	mgmt = newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, true, req["forceDpop"])
+		require.Equal(t, "confidential", req["clientType"])
+	}))
+	require.NoError(t, mgmt.ThirdPartyApplication().UpdateApplication(context.Background(), &descope.ThirdPartyApplicationRequest{
+		ID:         res.ID,
+		Name:       res.Name,
+		ClientType: res.ClientType,
+		ForceDpop:  res.ForceDpop,
+	}))
 }

@@ -305,6 +305,8 @@ func makeCreateUpdateThirdPartyApplicationRequest(appRequest *descope.ThirdParty
 		"customAttributes":     appRequest.CustomAttributes,
 		"forcePkce":            appRequest.ForcePkce,
 		"defaultAudience":      appRequest.DefaultAudience,
+		"clientType":           appRequest.ClientType,
+		"forceDpop":            appRequest.ForceDpop,
 	}
 }
 
