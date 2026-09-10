@@ -640,8 +640,6 @@ func TestDeleteThirdPartyApplicationBatchError(t *testing.T) {
 	require.Error(t, err)
 }
 
-// Every field is sent on a patch, including the two DPoP-related ones, so a caller that does
-// not carry them over turns the requirement and the client type off.
 func TestThirdPartyApplicationPatchAlwaysSendsForceDpop(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		req := map[string]any{}
