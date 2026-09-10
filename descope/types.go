@@ -1799,6 +1799,10 @@ type ThirdPartyApplication struct {
 	ForcePkce bool `json:"forcePkce,omitempty"`
 	// DefaultAudience controls the default aud of issued tokens: "projectId", "clientId", or "" (both).
 	DefaultAudience string `json:"defaultAudience,omitempty"`
+	// ClientType is the client authentication model: "confidential", "public", or "" for a legacy app.
+	ClientType string `json:"clientType,omitempty"`
+	// ForceDpop reports whether a valid DPoP proof is required at the token endpoint.
+	ForceDpop bool `json:"forceDpop,omitempty"`
 }
 
 type ThirdPartyApplicationRequest struct {
@@ -1816,6 +1820,10 @@ type ThirdPartyApplicationRequest struct {
 	ForcePkce bool `json:"forcePkce,omitempty"`
 	// DefaultAudience controls the default aud of issued tokens: "projectId", "clientId", or "" (both).
 	DefaultAudience string `json:"defaultAudience,omitempty"`
+	// ClientType sets the client authentication model: "confidential" or "public".
+	ClientType string `json:"clientType,omitempty"`
+	// ForceDpop requires a valid DPoP proof at the token endpoint. Only a "confidential" or "public" ClientType may require it.
+	ForceDpop bool `json:"forceDpop,omitempty"`
 }
 
 // Options for loading third party applications
