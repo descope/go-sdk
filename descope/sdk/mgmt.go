@@ -1249,15 +1249,18 @@ type ThirdPartyApplication interface {
 	// Update an existing third party application.
 	//
 	// IMPORTANT: All parameters are required and will override whatever value is currently
-	// set in the existing sso application. Use carefully. In particular, ClientType and ForceDpop
-	// are cleared unless passed, so read the application with LoadApplication first and carry
-	// those values over. Use PatchApplication to change one field and leave the rest alone.
+	// set in the existing sso application. Use carefully. ClientType and ForceDpop are no
+	// exception: read the application with LoadApplication first and carry over every value
+	// you are not changing.
 	UpdateApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) error
 
 	// Patch an existing third party application.
 	//
 	// ID is required to identify the application to be patched.
-	// Fields left unset are not sent, so the application keeps its current values for them.
+	//
+	// Only ClientType and ForceDpop are omitted when left unset, so the application keeps its
+	// current values for those two. Every other field is always sent, and an empty one clears
+	// the current value, so carry over anything you are not changing here as well.
 	PatchApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) error
 
 	// Delete an existing third party application.
