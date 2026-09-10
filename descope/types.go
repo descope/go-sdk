@@ -1500,6 +1500,7 @@ const (
 	EnvironmentVariableProjectID         = "DESCOPE_PROJECT_ID"
 	EnvironmentVariablePublicKey         = "DESCOPE_PUBLIC_KEY"
 	EnvironmentVariableManagementKey     = "DESCOPE_MANAGEMENT_KEY"
+	EnvironmentVariableWorkloadToken     = "DESCOPE_WORKLOAD_TOKEN"
 	EnvironmentVariableAuthManagementKey = "DESCOPE_AUTH_MANAGEMENT_KEY" // gitleaks:allow
 	EnvironmentVariableBaseURL           = "DESCOPE_BASE_URL"
 )
@@ -1931,16 +1932,57 @@ const (
 )
 
 type MgmtKey struct {
-	ID           string        `json:"id,omitempty"`
-	Name         string        `json:"name,omitempty"`
-	Description  string        `json:"description,omitempty"`
-	Status       MgmtKeyStatus `json:"status,omitempty"`
-	CreatedTime  int64         `json:"createdTime,omitempty"`
-	ExpireTime   int64         `json:"expireTime,omitempty"`
-	PermittedIPs []string      `json:"permittedIps,omitempty"`
-	ReBac        *MgmtKeyReBac `json:"reBac,omitempty"`
-	Version      int64         `json:"version,omitempty"`
-	AuthzVersion int64         `json:"authzVersion,omitempty"`
+	ID            string            `json:"id,omitempty"`
+	Name          string            `json:"name,omitempty"`
+	Description   string            `json:"description,omitempty"`
+	Status        MgmtKeyStatus     `json:"status,omitempty"`
+	CreatedTime   int64             `json:"createdTime,omitempty"`
+	ExpireTime    int64             `json:"expireTime,omitempty"`
+	PermittedIPs  []string          `json:"permittedIps,omitempty"`
+	ReBac         *MgmtKeyReBac     `json:"reBac,omitempty"`
+	Version       int64             `json:"version,omitempty"`
+	AuthzVersion  int64             `json:"authzVersion,omitempty"`
+	TrustedIssuer *WIFTrustedIssuer `json:"trustedIssuer,omitempty"`
+}
+
+type WIFTrustedIssuerRequest struct {
+	Name         string              `json:"name,omitempty"`
+	Issuer       string              `json:"issuer,omitempty"`
+	MaxTTL       int32               `json:"maxTtl,omitempty"`
+	MaxTTLUnit   string              `json:"maxTtlUnit,omitempty"`
+	ClaimFilters map[string][]string `json:"claimFilters,omitempty"`
+}
+
+const (
+	WIFMaxTTLUnitSeconds = "seconds"
+	WIFMaxTTLUnitMinutes = "minutes"
+)
+
+type WIFTrustedIssuer struct {
+	Name         string              `json:"name,omitempty"`
+	Issuer       string              `json:"issuer,omitempty"`
+	MaxTTL       int32               `json:"maxTtl,omitempty"`
+	MaxTTLUnit   string              `json:"maxTtlUnit,omitempty"`
+	ClaimFilters map[string][]string `json:"claimFilters,omitempty"`
+	Audience     string              `json:"audience,omitempty"`
+}
+
+type MgmtKeyCreateOptions struct {
+	Name          string
+	Description   string
+	ExpiresIn     uint64
+	PermittedIPs  []string
+	ReBac         *MgmtKeyReBac
+	TrustedIssuer *WIFTrustedIssuerRequest
+}
+
+type MgmtKeyUpdateOptions struct {
+	ID            string
+	Name          string
+	Description   string
+	PermittedIPs  []string
+	Status        MgmtKeyStatus
+	TrustedIssuer *WIFTrustedIssuerRequest
 }
 
 type MgmtKeyReBac struct {

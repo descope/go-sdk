@@ -25,6 +25,10 @@ func GetManagementKeyEnvVariable() string {
 	return os.Getenv(descope.EnvironmentVariableManagementKey)
 }
 
+func GetWorkloadTokenEnvVariable() string {
+	return os.Getenv(descope.EnvironmentVariableWorkloadToken)
+}
+
 func GetAuthManagementKeyEnvVariable() string {
 	return os.Getenv(descope.EnvironmentVariableAuthManagementKey)
 }

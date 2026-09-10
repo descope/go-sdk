@@ -2270,6 +2270,94 @@ updatedKey, err := descopeClient.Management.ManagementKey().Update(
 total, err := descopeClient.Management.ManagementKey().Delete(context.Background(), []string{"key-id-1", "key-id-2"})
 ```
 
+#### Workload Identity Federation
+
+A management key can be federated to an external OIDC issuer, so a CI/CD workload authenticates with
+its own short-lived token instead of a stored key. Such a key has no secret: `Create` returns no
+cleartext for it. Federating one is only possible through `CreateWithOptions`:
+
+```go
+key, cleartext, err := descopeClient.Management.ManagementKey().CreateWithOptions(
+    context.Background(),
+    &descope.MgmtKeyCreateOptions{
+        Name:  "CI Snapshot Export",
+        ReBac: reBac,
+        TrustedIssuer: &descope.WIFTrustedIssuerRequest{
+            Name:   "github-actions",
+            Issuer: "https://token.actions.githubusercontent.com",
+            // Maximum lifetime of a token this key accepts, between 1 and 15 minutes. Pass the unit
+            // explicitly: an empty MaxTTLUnit means minutes.
+            MaxTTL:     900,
+            MaxTTLUnit: descope.WIFMaxTTLUnitSeconds,
+            // Anchored regular expressions, and a "sub" filter is required
+            ClaimFilters: map[string][]string{"sub": {"repo:my-org/my-repo:ref:refs/heads/main"}},
+        },
+    },
+)
+// cleartext is empty, and key.TrustedIssuer.Audience is the exact "aud" the workload's token must
+// carry. It is derived by Descope from the key, so it is only ever reported, never sent.
+
+// Edit the federation of an existing key. The issuer URL cannot be changed, and a federation cannot
+// be added to a key that was created without one.
+updatedKey, err := descopeClient.Management.ManagementKey().UpdateWithOptions(
+    context.Background(),
+    &descope.MgmtKeyUpdateOptions{
+        ID:     "key-id",
+        Name:   "CI Snapshot Export",
+        Status: descope.MgmtKeyActive,
+        TrustedIssuer: &descope.WIFTrustedIssuerRequest{
+            Name:         "github-actions",
+            Issuer:       "https://token.actions.githubusercontent.com",
+            MaxTTL:       10,
+            MaxTTLUnit:   descope.WIFMaxTTLUnitMinutes,
+            ClaimFilters: map[string][]string{"sub": {"repo:my-org/my-repo:ref:refs/heads/main"}},
+        },
+    },
+)
+
+// Deleting the key removes the federation with it.
+```
+
+The workload then initializes a client with the issuer token. Set the `DESCOPE_WORKLOAD_TOKEN`
+environment variable to pass it to the client, or set the field directly:
+
+```go
+descopeClient, err := client.NewWithConfig(&client.Config{
+    ProjectID:     "project-ID",
+    WorkloadToken: token, // the JWT the workload's own platform minted for this job
+})
+```
+
+That is the whole wiring for a job that mints a token in one step and spends it in the next:
+
+```yaml
+permissions:
+  id-token: write # without this there is no token to mint
+
+steps:
+  - uses: actions/github-script@v7
+    id: mint
+    with:
+      script: |
+        // The audience is the key's reported TrustedIssuer.Audience, which is the Descope API base
+        // URL for the target environment plus the key id. It must match that environment exactly.
+        const token = await core.getIDToken(`https://api.descope.com/${{ vars.DESCOPE_KEY_ID }}`)
+        core.setSecret(token)
+        core.setOutput('token', token)
+
+  # The Descope CLI, which uses this SDK: https://github.com/descope/descopecli
+  - run: descope project snapshot export "$DESCOPE_PROJECT_ID" --path ./descope_export
+    env:
+      DESCOPE_PROJECT_ID: ${{ vars.DESCOPE_PROJECT_ID }}
+      # Read by the SDK under this exact name. Any other name means reading it yourself and
+      # passing it as WorkloadToken.
+      DESCOPE_WORKLOAD_TOKEN: ${{ steps.mint.outputs.token }}
+```
+
+A workload token replaces `ManagementKey`: configuring both fails, since they occupy the same slot
+in the authorization header. Leave `DESCOPE_MANAGEMENT_KEY` unset in a federated job too: when both
+environment variables are present the management key wins and the workload token is ignored.
+
 ### Manage Descopers
 
 You can create, update, delete, get, or list descopers (users who have access to the Descope console):

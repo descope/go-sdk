@@ -1987,6 +1987,7 @@ type ClientParams struct {
 	ProjectID            string
 	BaseURL              string
 	ManagementKey        string
+	WorkloadToken        string
 	DefaultClient        IHttpClient
 	CustomDefaultHeaders map[string]string
 	ExternalRequestID    func(context.Context) string
@@ -2225,7 +2226,9 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 		if len(pswd) > 0 {
 			bearerParts = append(bearerParts, pswd)
 		}
-		if mgmtKey := c.Conf.ManagementKey; len(mgmtKey) > 0 {
+		if workloadToken := c.Conf.WorkloadToken; len(workloadToken) > 0 {
+			bearerParts = append(bearerParts, workloadToken)
+		} else if mgmtKey := c.Conf.ManagementKey; len(mgmtKey) > 0 {
 			// append a management key if available, this is true for both management and authentication requests
 			// only using the different provided keys in the client initialization
 			bearerParts = append(bearerParts, mgmtKey)

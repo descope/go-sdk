@@ -48,8 +48,16 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 	if config.setPublicKey() != "" {
 		logger.LogInfo("Provided public key is set, forcing only provided public key validation")
 	}
-	config.setManagementKey()
 	config.setAuthManagementKey()
+
+	// A workload identity token and a management key occupy the same slot in the authorization header,
+	// so only one of them can be used. What is set on the config wins over the environment.
+	if config.WorkloadToken != "" && config.ManagementKey != "" {
+		return nil, utils.NewInvalidArgumentError("either a management key or a workload identity token, not both")
+	}
+	if config.WorkloadToken == "" && config.setManagementKey() == "" {
+		config.setWorkloadToken()
+	}
 
 	// Auth initialzes a client with the auth management key if provided
 	authClient := api.NewClient(api.ClientParams{
@@ -83,6 +91,7 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 		ProjectID:            config.ProjectID,
 		BaseURL:              config.DescopeBaseURL,
 		ManagementKey:        config.ManagementKey,
+		WorkloadToken:        config.WorkloadToken,
 		DefaultClient:        config.DefaultClient,
 		CustomDefaultHeaders: config.CustomDefaultHeaders,
 		ExternalRequestID:    config.ExternalRequestID,
@@ -90,7 +99,7 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 		RequestTimeout:       config.RequestTimeout,
 	})
 
-	if config.ManagementKey != "" {
+	if config.ManagementKey != "" || config.WorkloadToken != "" {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		if rateLimitTier, err := mgmtClient.FetchLicense(ctx); err != nil {

@@ -2713,9 +2713,13 @@ type MockManagementKey struct {
 	CreateResponseToken string
 	CreateError         error
 
+	CreateWithOptionsAssert func(options *descope.MgmtKeyCreateOptions)
+
 	UpdateAssert   func(id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus)
 	UpdateResponse *descope.MgmtKey
 	UpdateError    error
+
+	UpdateWithOptionsAssert func(options *descope.MgmtKeyUpdateOptions)
 
 	GetAssert   func(id string)
 	GetResponse *descope.MgmtKey
@@ -2730,16 +2734,42 @@ type MockManagementKey struct {
 	SearchError    error
 }
 
-func (m *MockManagementKey) Create(_ context.Context, name, description string, expiresIn uint64, permittedIPs []string, reBac *descope.MgmtKeyReBac) (*descope.MgmtKey, string, error) {
-	if m.CreateAssert != nil {
-		m.CreateAssert(name, description, expiresIn, permittedIPs, reBac)
+func (m *MockManagementKey) Create(ctx context.Context, name, description string, expiresIn uint64, permittedIPs []string, reBac *descope.MgmtKeyReBac) (*descope.MgmtKey, string, error) {
+	return m.CreateWithOptions(ctx, &descope.MgmtKeyCreateOptions{
+		Name:         name,
+		Description:  description,
+		ExpiresIn:    expiresIn,
+		PermittedIPs: permittedIPs,
+		ReBac:        reBac,
+	})
+}
+
+func (m *MockManagementKey) CreateWithOptions(_ context.Context, options *descope.MgmtKeyCreateOptions) (*descope.MgmtKey, string, error) {
+	if m.CreateWithOptionsAssert != nil {
+		m.CreateWithOptionsAssert(options)
+	}
+	if m.CreateAssert != nil && options != nil {
+		m.CreateAssert(options.Name, options.Description, options.ExpiresIn, options.PermittedIPs, options.ReBac)
 	}
 	return m.CreateResponseKey, m.CreateResponseToken, m.CreateError
 }
 
-func (m *MockManagementKey) Update(_ context.Context, id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus) (*descope.MgmtKey, error) {
-	if m.UpdateAssert != nil {
-		m.UpdateAssert(id, name, description, permittedIPs, status)
+func (m *MockManagementKey) Update(ctx context.Context, id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus) (*descope.MgmtKey, error) {
+	return m.UpdateWithOptions(ctx, &descope.MgmtKeyUpdateOptions{
+		ID:           id,
+		Name:         name,
+		Description:  description,
+		PermittedIPs: permittedIPs,
+		Status:       status,
+	})
+}
+
+func (m *MockManagementKey) UpdateWithOptions(_ context.Context, options *descope.MgmtKeyUpdateOptions) (*descope.MgmtKey, error) {
+	if m.UpdateWithOptionsAssert != nil {
+		m.UpdateWithOptionsAssert(options)
+	}
+	if m.UpdateAssert != nil && options != nil {
+		m.UpdateAssert(options.ID, options.Name, options.Description, options.PermittedIPs, options.Status)
 	}
 	return m.UpdateResponse, m.UpdateError
 }
