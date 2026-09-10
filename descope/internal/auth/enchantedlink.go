@@ -24,7 +24,7 @@ func (auth *enchantedLink) SignIn(ctx context.Context, loginID, URI string, r *h
 			return nil, descope.ErrInvalidStepUpJWT
 		}
 	}
-	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignInURL(), newMagicLinkAuthenticationRequestBody(loginID, URI, true, loginOptions), nil, pswd)
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignInURL(descope.MethodEmail), newMagicLinkAuthenticationRequestBody(loginID, URI, true, loginOptions), nil, pswd)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (auth *enchantedLink) SignUp(ctx context.Context, loginID, URI string, user
 		user.Email = loginID
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignUpURL(), newMagicLinkAuthenticationSignUpRequestBody(descope.MethodEmail, loginID, URI, user, true, signUpOptions), nil, "")
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignUpURL(descope.MethodEmail), newMagicLinkAuthenticationSignUpRequestBody(descope.MethodEmail, loginID, URI, user, true, signUpOptions), nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +56,7 @@ func (auth *enchantedLink) SignUpOrIn(ctx context.Context, loginID, URI string, 
 	if signUpOptions == nil {
 		signUpOptions = &descope.SignUpOptions{}
 	}
-	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignUpOrInURL(), newMagicLinkAuthenticationRequestBody(loginID, URI, true, &descope.LoginOptions{
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignUpOrInURL(descope.MethodEmail), newMagicLinkAuthenticationRequestBody(loginID, URI, true, &descope.LoginOptions{
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
 		TemplateID:      signUpOptions.TemplateID,
@@ -107,4 +107,84 @@ func (auth *enchantedLink) UpdateUserEmail(ctx context.Context, loginID, email, 
 		return nil, err
 	}
 	return getPendingRefFromResponse(httpResponse)
+}
+
+func (auth *enchantedLink) SignInWithPhone(ctx context.Context, phone, URI string, r *http.Request, loginOptions *descope.LoginOptions) (*descope.PhoneEnchantedLinkResponse, error) {
+	var pswd string
+	var err error
+	if phone == "" {
+		return nil, utils.NewInvalidArgumentError("phone")
+	}
+	if loginOptions.IsJWTRequired() {
+		pswd, err = auth.getValidRefreshToken(r)
+		if err != nil {
+			return nil, descope.ErrInvalidStepUpJWT
+		}
+	}
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignInURL(descope.MethodSMS), newMagicLinkAuthenticationRequestBody(phone, URI, true, loginOptions), nil, pswd)
+	if err != nil {
+		return nil, err
+	}
+	return getPhonePendingRefFromResponse(httpResponse)
+}
+
+func (auth *enchantedLink) SignUpWithPhone(ctx context.Context, phone, URI string, user *descope.User, signUpOptions *descope.SignUpOptions) (*descope.PhoneEnchantedLinkResponse, error) {
+	if phone == "" {
+		return nil, utils.NewInvalidArgumentError("phone")
+	}
+	if user == nil {
+		user = &descope.User{}
+	}
+	if len(user.Phone) == 0 {
+		user.Phone = phone
+	}
+
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignUpURL(descope.MethodSMS), newMagicLinkAuthenticationSignUpRequestBody(descope.MethodSMS, phone, URI, user, true, signUpOptions), nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return getPhonePendingRefFromResponse(httpResponse)
+}
+
+func (auth *enchantedLink) SignUpOrInWithPhone(ctx context.Context, phone, URI string, signUpOptions *descope.SignUpOptions) (*descope.PhoneEnchantedLinkResponse, error) {
+	if phone == "" {
+		return nil, utils.NewInvalidArgumentError("phone")
+	}
+	if signUpOptions == nil {
+		signUpOptions = &descope.SignUpOptions{}
+	}
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeEnchantedLinkSignUpOrInURL(descope.MethodSMS), newMagicLinkAuthenticationRequestBody(phone, URI, true, &descope.LoginOptions{
+		CustomClaims:    signUpOptions.CustomClaims,
+		TemplateOptions: signUpOptions.TemplateOptions,
+		TemplateID:      signUpOptions.TemplateID,
+		TenantID:        signUpOptions.TenantID,
+	}), nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return getPhonePendingRefFromResponse(httpResponse)
+}
+
+func (auth *enchantedLink) UpdateUserPhone(ctx context.Context, loginID, phone, URI string, updateOptions *descope.UpdateOptions, r *http.Request) (*descope.PhoneEnchantedLinkResponse, error) {
+	if loginID == "" {
+		return nil, utils.NewInvalidArgumentError("loginID")
+	}
+	if phone == "" {
+		return nil, utils.NewInvalidArgumentError("phone")
+	}
+	if !phoneRegex.MatchString(phone) {
+		return nil, utils.NewInvalidArgumentError("phone")
+	}
+	pswd, err := auth.getValidRefreshToken(r)
+	if err != nil {
+		return nil, err
+	}
+	if updateOptions == nil {
+		updateOptions = &descope.UpdateOptions{}
+	}
+	httpResponse, err := auth.client.DoPostRequest(ctx, composeUpdateUserPhoneEnchantedLink(), newMagicLinkUpdatePhoneRequestBody(loginID, phone, URI, true, updateOptions), nil, pswd)
+	if err != nil {
+		return nil, err
+	}
+	return getPhonePendingRefFromResponse(httpResponse)
 }

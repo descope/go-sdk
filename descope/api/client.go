@@ -65,6 +65,7 @@ var (
 			verifyEnchantedLink:          "auth/enchantedlink/verify",
 			getEnchantedLinkSession:      "auth/enchantedlink/pending-session",
 			updateUserEmailEnchantedLink: "auth/enchantedlink/update/email",
+			updateUserPhoneEnchantedLink: "auth/enchantedlink/update/phone",
 			oauthSignUpOrIn:              "auth/oauth/authorize",
 			oauthSignUp:                  "auth/oauth/authorize/signup",
 			oauthSignIn:                  "auth/oauth/authorize/signin",
@@ -401,6 +402,7 @@ type authEndpoints struct {
 	verifyEnchantedLink          string
 	getEnchantedLinkSession      string
 	updateUserEmailEnchantedLink string
+	updateUserPhoneEnchantedLink string
 	oauthSignUpOrIn              string
 	oauthSignUp                  string
 	oauthSignIn                  string
@@ -812,6 +814,10 @@ func (e *endpoints) SignUpOrInEnchantedLink() string {
 
 func (e *endpoints) UpdateUserEmailEnchantedlink() string {
 	return path.Join(e.version, e.auth.updateUserEmailEnchantedLink)
+}
+
+func (e *endpoints) UpdateUserPhoneEnchantedlink() string {
+	return path.Join(e.version, e.auth.updateUserPhoneEnchantedLink)
 }
 
 func (e *endpoints) VerifyEnchantedLink() string {

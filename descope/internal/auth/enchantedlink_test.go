@@ -41,7 +41,7 @@ func TestSignInEnchantedLink(t *testing.T) {
 	loginID := "loginID"
 	maskedEmail := "t**@email.com"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
-		assert.EqualValues(t, composeEnchantedLinkSignInURL(), r.URL.RequestURI())
+		assert.EqualValues(t, composeEnchantedLinkSignInURL(descope.MethodEmail), r.URL.RequestURI())
 
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
@@ -66,7 +66,7 @@ func TestSignInEnchantedLinkStepup(t *testing.T) {
 	pendingRefResponse := "pending_ref"
 	loginID := "loginID"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
-		assert.EqualValues(t, composeEnchantedLinkSignInURL(), r.URL.RequestURI())
+		assert.EqualValues(t, composeEnchantedLinkSignInURL(descope.MethodEmail), r.URL.RequestURI())
 
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
@@ -113,7 +113,7 @@ func TestSignUpEnchantedLink(t *testing.T) {
 	pendingRefResponse := "pending_ref"
 	loginID := "loginID"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
-		assert.EqualValues(t, composeEnchantedLinkSignUpURL(), r.URL.RequestURI())
+		assert.EqualValues(t, composeEnchantedLinkSignUpURL(descope.MethodEmail), r.URL.RequestURI())
 
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
@@ -139,7 +139,7 @@ func TestSignUpEnchantedLinkWithSignUpOptions(t *testing.T) {
 	pendingRefResponse := "pending_ref"
 	loginID := "loginID"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
-		assert.EqualValues(t, composeEnchantedLinkSignUpURL(), r.URL.RequestURI())
+		assert.EqualValues(t, composeEnchantedLinkSignUpURL(descope.MethodEmail), r.URL.RequestURI())
 
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
@@ -170,7 +170,7 @@ func TestSignUpOrInEnchantedLink(t *testing.T) {
 	pendingRefResponse := "pending_ref"
 	loginID := "ident"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
-		assert.EqualValues(t, composeEnchantedLinkSignUpOrInURL(), r.URL.RequestURI())
+		assert.EqualValues(t, composeEnchantedLinkSignUpOrInURL(descope.MethodEmail), r.URL.RequestURI())
 
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
@@ -194,7 +194,7 @@ func TestSignUpOrInEnchantedLinkWithLoginOptions(t *testing.T) {
 	pendingRefResponse := "pending_ref"
 	loginID := "ident"
 	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
-		assert.EqualValues(t, composeEnchantedLinkSignUpOrInURL(), r.URL.RequestURI())
+		assert.EqualValues(t, composeEnchantedLinkSignUpOrInURL(descope.MethodEmail), r.URL.RequestURI())
 
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
@@ -409,7 +409,7 @@ func TestSignUpEnchantedLinkEmailNoUser(t *testing.T) {
 	email := "test@email.com"
 	uri := "http://test.me"
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
-		assert.EqualValues(t, composeEnchantedLinkSignUpURL(), r.URL.RequestURI())
+		assert.EqualValues(t, composeEnchantedLinkSignUpURL(descope.MethodEmail), r.URL.RequestURI())
 
 		m, err := readBodyMap(r)
 		require.NoError(t, err)
@@ -457,5 +457,204 @@ func TestVerifyEnchantedLinkError(t *testing.T) {
 	})
 	require.NoError(t, err)
 	err = a.EnchantedLink().Verify(context.Background(), token)
+	require.Error(t, err)
+}
+
+func TestSignInEnchantedLinkWithPhoneEmptyPhone(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	_, err = a.EnchantedLink().SignInWithPhone(context.Background(), "", "", nil, nil)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+}
+
+func TestSignInEnchantedLinkWithPhone(t *testing.T) {
+	phone := "+972555555555"
+	uri := "http://test.me"
+	pendingRefResponse := "pending_ref"
+	linkID := "linkID"
+	maskedPhone := "+9725*****555"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeEnchantedLinkSignInURL(descope.MethodSMS), r.URL.RequestURI())
+
+		m, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, m["loginId"])
+		assert.EqualValues(t, uri, m["URI"])
+		assert.True(t, m["crossDevice"].(bool))
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","linkId": "%s", "maskedPhone":"%s"}`, pendingRefResponse, linkID, maskedPhone))),
+		}, nil
+	})
+	require.NoError(t, err)
+	response, err := a.EnchantedLink().SignInWithPhone(context.Background(), phone, uri, nil, nil)
+	require.NoError(t, err)
+	require.EqualValues(t, pendingRefResponse, response.PendingRef)
+	require.EqualValues(t, linkID, response.LinkID)
+	require.EqualValues(t, maskedPhone, response.MaskedPhone)
+}
+
+func TestSignInEnchantedLinkWithPhoneStepupNoJwt(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	_, err = a.EnchantedLink().SignInWithPhone(context.Background(), "+972555555555", "", nil, &descope.LoginOptions{Stepup: true})
+	require.Error(t, err)
+	assert.ErrorIs(t, err, descope.ErrInvalidStepUpJWT)
+}
+
+func TestSignUpEnchantedLinkWithPhoneEmptyPhone(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	_, err = a.EnchantedLink().SignUpWithPhone(context.Background(), "", "http://test.me", nil, nil)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+}
+
+func TestSignUpEnchantedLinkWithPhone(t *testing.T) {
+	phone := "+972555555555"
+	uri := "http://test.me"
+	pendingRefResponse := "pending_ref"
+	linkID := "linkID"
+	maskedPhone := "+9725*****555"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeEnchantedLinkSignUpURL(descope.MethodSMS), r.URL.RequestURI())
+
+		m, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, m["phone"])
+		assert.EqualValues(t, phone, m["loginId"])
+		assert.EqualValues(t, uri, m["URI"])
+		assert.Nil(t, m["email"])
+		assert.EqualValues(t, "test", m["user"].(map[string]any)["name"])
+		assert.EqualValues(t, phone, m["user"].(map[string]any)["phone"])
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","linkId": "%s", "maskedPhone":"%s"}`, pendingRefResponse, linkID, maskedPhone))),
+		}, nil
+	})
+	require.NoError(t, err)
+	response, err := a.EnchantedLink().SignUpWithPhone(context.Background(), phone, uri, &descope.User{Name: "test"}, nil)
+	require.NoError(t, err)
+	require.EqualValues(t, pendingRefResponse, response.PendingRef)
+	require.EqualValues(t, linkID, response.LinkID)
+	require.EqualValues(t, maskedPhone, response.MaskedPhone)
+}
+
+func TestSignUpEnchantedLinkWithPhoneNoUser(t *testing.T) {
+	phone := "+972555555555"
+	uri := "http://test.me"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeEnchantedLinkSignUpURL(descope.MethodSMS), r.URL.RequestURI())
+
+		m, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, m["phone"])
+		assert.EqualValues(t, phone, m["loginId"])
+		assert.EqualValues(t, phone, m["user"].(map[string]any)["phone"])
+	}))
+	require.NoError(t, err)
+	_, err = a.EnchantedLink().SignUpWithPhone(context.Background(), phone, uri, nil, nil)
+	require.NoError(t, err)
+}
+
+func TestSignUpOrInEnchantedLinkWithPhoneEmptyPhone(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	_, err = a.EnchantedLink().SignUpOrInWithPhone(context.Background(), "", "http://test.me", nil)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+}
+
+func TestSignUpOrInEnchantedLinkWithPhone(t *testing.T) {
+	phone := "+972555555555"
+	uri := "http://test.me"
+	pendingRefResponse := "pending_ref"
+	linkID := "linkID"
+	maskedPhone := "+9725*****555"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeEnchantedLinkSignUpOrInURL(descope.MethodSMS), r.URL.RequestURI())
+
+		m, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, m["loginId"])
+		assert.EqualValues(t, uri, m["URI"])
+		assert.EqualValues(t, map[string]any{"customClaims": map[string]any{"aa": "bb"}, "templateOptions": map[string]any{"cc": "dd"}}, m["loginOptions"])
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","linkId": "%s", "maskedPhone":"%s"}`, pendingRefResponse, linkID, maskedPhone))),
+		}, nil
+	})
+	require.NoError(t, err)
+	response, err := a.EnchantedLink().SignUpOrInWithPhone(context.Background(), phone, uri, &descope.SignUpOptions{
+		CustomClaims:    map[string]any{"aa": "bb"},
+		TemplateOptions: map[string]string{"cc": "dd"},
+	})
+	require.NoError(t, err)
+	require.EqualValues(t, pendingRefResponse, response.PendingRef)
+	require.EqualValues(t, linkID, response.LinkID)
+	require.EqualValues(t, maskedPhone, response.MaskedPhone)
+}
+
+func TestUpdateUserPhoneEnchantedLink(t *testing.T) {
+	loginID := "943248329844"
+	phone := "+972555555555"
+	uri := "https://some.url.com"
+	pendingRefResponse := "pending_ref"
+	linkID := "linkID"
+	maskedPhone := "+9725*****555"
+	checkOptions := true
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeUpdateUserPhoneEnchantedLink(), r.URL.RequestURI())
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, loginID, body["loginId"])
+		assert.EqualValues(t, phone, body["phone"])
+		assert.EqualValues(t, uri, body["URI"])
+		if checkOptions {
+			assert.EqualValues(t, true, body["addToLoginIDs"])
+			assert.EqualValues(t, true, body["onMergeUseExisting"])
+			assert.EqualValues(t, map[string]any{"cc": "dd"}, body["templateOptions"])
+		} else {
+			assert.EqualValues(t, nil, body["addToLoginIDs"])
+			assert.EqualValues(t, nil, body["onMergeUseExisting"])
+			assert.EqualValues(t, nil, body["templateOptions"])
+		}
+		assert.True(t, body["crossDevice"].(bool))
+		u, p := getProjectAndJwt(r)
+		assert.NotEmpty(t, u)
+		assert.NotEmpty(t, p)
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s","linkId": "%s", "maskedPhone":"%s"}`, pendingRefResponse, linkID, maskedPhone))),
+		}, nil
+	})
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	response, err := a.EnchantedLink().UpdateUserPhone(context.Background(), loginID, phone, uri, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true, TemplateOptions: map[string]string{"cc": "dd"}}, r)
+	require.NoError(t, err)
+	require.EqualValues(t, pendingRefResponse, response.PendingRef)
+	require.EqualValues(t, linkID, response.LinkID)
+	require.EqualValues(t, maskedPhone, response.MaskedPhone)
+	checkOptions = false
+	_, err = a.EnchantedLink().UpdateUserPhone(context.Background(), loginID, phone, uri, nil, r)
+	require.NoError(t, err)
+}
+
+func TestUpdateUserPhoneEnchantedLinkMissingArgs(t *testing.T) {
+	loginID := "943248329844"
+	phone := "+972555555555"
+	uri := "https://some.url.com"
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	_, err = a.EnchantedLink().UpdateUserPhone(context.Background(), "", phone, uri, nil, r)
+	require.Error(t, err)
+	_, err = a.EnchantedLink().UpdateUserPhone(context.Background(), loginID, "", uri, nil, r)
+	require.Error(t, err)
+	_, err = a.EnchantedLink().UpdateUserPhone(context.Background(), loginID, "not_a_valid_phone", uri, nil, r)
 	require.Error(t, err)
 }

@@ -264,6 +264,23 @@ res.LinkID // should be displayed to the user so they can click the correspondin
 res.PendingRef // Used to poll for a valid session
 ```
 
+The enchanted link can also be delivered by SMS instead of email, using the `*WithPhone` variants.
+These return a `PhoneEnchantedLinkResponse`, which carries `MaskedPhone` instead of `MaskedEmail`.
+
+```go
+res, err := descopeClient.Auth.EnchantedLink().SignUpOrInWithPhone(context.Background(), phone, "http://myapp.com/verify-enchanted-link", nil)
+if err != nil {
+    // handle error
+}
+res.LinkID      // should be displayed to the user so they can click the corresponding link in the text message
+res.PendingRef  // Used to poll for a valid session, exactly as with email
+res.MaskedPhone // Masked phone to which the text message was sent
+```
+
+`SignInWithPhone` and `SignUpWithPhone` mirror their email counterparts, and `UpdateUserPhone`
+updates a user's phone via an enchanted link sent by SMS. Polling, verification and session
+handling are identical for both delivery methods.
+
 After sending the link, you must poll to receive a valid session using the `PendingRef` from
 the previous step. A valid session will be returned only after the user clicks the right link.
 

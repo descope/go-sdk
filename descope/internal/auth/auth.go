@@ -1091,6 +1091,15 @@ func getPendingRefFromResponse(httpResponse *api.HTTPResponse) (*descope.Enchant
 	return response, nil
 }
 
+func getPhonePendingRefFromResponse(httpResponse *api.HTTPResponse) (*descope.PhoneEnchantedLinkResponse, error) {
+	var response *descope.PhoneEnchantedLinkResponse
+	if err := utils.Unmarshal([]byte(httpResponse.BodyStr), &response); err != nil {
+		logger.LogError("Failed to load pending reference from response", err)
+		return response, descope.ErrUnexpectedResponse.WithMessage("Failed to load pending reference")
+	}
+	return response, nil
+}
+
 func getNOTPResponse(httpResponse *api.HTTPResponse) (*descope.NOTPResponse, error) {
 	var response *descope.NOTPResponse
 	if err := utils.Unmarshal([]byte(httpResponse.BodyStr), &response); err != nil {
@@ -1168,16 +1177,16 @@ func composeVerifyMagicLinkURL() string {
 	return api.Routes.VerifyMagicLink()
 }
 
-func composeEnchantedLinkSignInURL() string {
-	return composeURLMethod(api.Routes.SignInEnchantedLink(), descope.MethodEmail)
+func composeEnchantedLinkSignInURL(method descope.DeliveryMethod) string {
+	return composeURLMethod(api.Routes.SignInEnchantedLink(), method)
 }
 
-func composeEnchantedLinkSignUpURL() string {
-	return composeURLMethod(api.Routes.SignUpEnchantedLink(), descope.MethodEmail)
+func composeEnchantedLinkSignUpURL(method descope.DeliveryMethod) string {
+	return composeURLMethod(api.Routes.SignUpEnchantedLink(), method)
 }
 
-func composeEnchantedLinkSignUpOrInURL() string {
-	return composeURLMethod(api.Routes.SignUpOrInEnchantedLink(), descope.MethodEmail)
+func composeEnchantedLinkSignUpOrInURL(method descope.DeliveryMethod) string {
+	return composeURLMethod(api.Routes.SignUpOrInEnchantedLink(), method)
 }
 
 func composeVerifyEnchantedLinkURL() string {
@@ -1190,6 +1199,10 @@ func composeGetSession() string {
 
 func composeUpdateUserEmailEnchantedLink() string {
 	return api.Routes.UpdateUserEmailEnchantedlink()
+}
+
+func composeUpdateUserPhoneEnchantedLink() string {
+	return composeURLMethod(api.Routes.UpdateUserPhoneEnchantedlink(), descope.MethodSMS)
 }
 
 func composeOAuthSignUpOrInURL() string {
