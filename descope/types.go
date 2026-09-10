@@ -1801,7 +1801,7 @@ type ThirdPartyApplication struct {
 	DefaultAudience string `json:"defaultAudience,omitempty"`
 	// ClientType is the client authentication model: "confidential", "public", or "" for a legacy app.
 	ClientType string `json:"clientType,omitempty"`
-	// ForceDpop reports whether a valid DPoP proof (RFC 9449) is required at the token endpoint.
+	// ForceDpop reports whether a valid DPoP proof is required at the token endpoint.
 	ForceDpop bool `json:"forceDpop,omitempty"`
 }
 
@@ -1820,14 +1820,9 @@ type ThirdPartyApplicationRequest struct {
 	ForcePkce bool `json:"forcePkce,omitempty"`
 	// DefaultAudience controls the default aud of issued tokens: "projectId", "clientId", or "" (both).
 	DefaultAudience string `json:"defaultAudience,omitempty"`
-	// ClientType sets the client authentication model: "confidential" or "public". Empty makes the
-	// application a legacy client.
+	// ClientType sets the client authentication model: "confidential" or "public".
 	ClientType string `json:"clientType,omitempty"`
-	// ForceDpop requires a valid DPoP proof (RFC 9449) at the token endpoint. Only a "confidential"
-	// or "public" ClientType may require it.
-	//
-	// Like every other field here, this one is always sent, so a create, update or patch that
-	// leaves it false turns the requirement off. Pass the value from LoadApplication to keep it.
+	// ForceDpop requires a valid DPoP proof at the token endpoint. Only a "confidential" or "public" ClientType may require it.
 	ForceDpop bool `json:"forceDpop,omitempty"`
 }
 
