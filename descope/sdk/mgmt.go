@@ -1240,6 +1240,8 @@ type ThirdPartyApplication interface {
 	// PermissionsScopes: List of permissions scopes.
 	// ScopeClaimMapping: List of scope→claim mapping entries.
 	// JWTBearerSettings: Optional JWT Bearer settings which used to validate external token.
+	// ClientType: Optional client authentication model, "confidential" or "public".
+	// ForceDpop: Optional, requires a DPoP proof (RFC 9449) at the token endpoint. Needs a ClientType.
 	//
 	// The argument appRequest.Name must be unique per project.
 	CreateApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) (id string, secret string, err error)
@@ -1247,12 +1249,15 @@ type ThirdPartyApplication interface {
 	// Update an existing third party application.
 	//
 	// IMPORTANT: All parameters are required and will override whatever value is currently
-	// set in the existing sso application. Use carefully.
+	// set in the existing sso application. Use carefully. In particular, ClientType and ForceDpop
+	// are cleared unless passed, so read the application with LoadApplication first and carry
+	// those values over. Use PatchApplication to change one field and leave the rest alone.
 	UpdateApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) error
 
 	// Patch an existing third party application.
 	//
 	// ID is required to identify the application to be patched.
+	// Fields left unset are not sent, so the application keeps its current values for them.
 	PatchApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) error
 
 	// Delete an existing third party application.

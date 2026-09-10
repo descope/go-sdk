@@ -292,7 +292,7 @@ func (s *thirdPartyApplication) SearchConsents(ctx context.Context, consentReque
 }
 
 func makeCreateUpdateThirdPartyApplicationRequest(appRequest *descope.ThirdPartyApplicationRequest) map[string]any {
-	return map[string]any{
+	req := map[string]any{
 		"id":                   appRequest.ID,
 		"name":                 appRequest.Name,
 		"description":          appRequest.Description,
@@ -306,6 +306,15 @@ func makeCreateUpdateThirdPartyApplicationRequest(appRequest *descope.ThirdParty
 		"forcePkce":            appRequest.ForcePkce,
 		"defaultAudience":      appRequest.DefaultAudience,
 	}
+	if appRequest.ClientType != "" {
+		req["clientType"] = appRequest.ClientType
+	}
+	// Sent only when specified: a patch carrying forceDpop=false turns the requirement off, so an
+	// unspecified value must stay out of the body entirely.
+	if appRequest.ForceDpop != nil {
+		req["forceDpop"] = *appRequest.ForceDpop
+	}
+	return req
 }
 
 func unmarshalLoadThirdPartyApplicationResponse(res *api.HTTPResponse) (*descope.ThirdPartyApplication, error) {
