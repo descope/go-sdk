@@ -1820,16 +1820,15 @@ type ThirdPartyApplicationRequest struct {
 	ForcePkce bool `json:"forcePkce,omitempty"`
 	// DefaultAudience controls the default aud of issued tokens: "projectId", "clientId", or "" (both).
 	DefaultAudience string `json:"defaultAudience,omitempty"`
-	// ClientType sets the client authentication model: "confidential" or "public". Empty leaves the
-	// app as a legacy client on create, and clears the type on update.
+	// ClientType sets the client authentication model: "confidential" or "public". Empty makes the
+	// application a legacy client.
 	ClientType string `json:"clientType,omitempty"`
 	// ForceDpop requires a valid DPoP proof (RFC 9449) at the token endpoint. Only a "confidential"
 	// or "public" ClientType may require it.
 	//
-	// nil means "not specified": PatchApplication leaves the current setting alone, while
-	// CreateApplication and UpdateApplication replace the whole application, so an update that
-	// leaves this nil turns the requirement off. Pass the value from LoadApplication to keep it.
-	ForceDpop *bool `json:"forceDpop,omitempty"`
+	// Like every other field here, this one is always sent, so a create, update or patch that
+	// leaves it false turns the requirement off. Pass the value from LoadApplication to keep it.
+	ForceDpop bool `json:"forceDpop,omitempty"`
 }
 
 // Options for loading third party applications

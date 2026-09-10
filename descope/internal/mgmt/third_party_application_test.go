@@ -37,7 +37,6 @@ func TestThirdPartyApplicationCreateSuccess(t *testing.T) {
 		require.Equal(t, true, req["forceDpop"])
 	}, response))
 
-	forceDpop := true
 	id, secret, err := mgmt.ThirdPartyApplication().CreateApplication(context.Background(), &descope.ThirdPartyApplicationRequest{
 		ID:              "id1",
 		Name:            "abc",
@@ -47,7 +46,7 @@ func TestThirdPartyApplicationCreateSuccess(t *testing.T) {
 		ForcePkce:       true,
 		DefaultAudience: "clientId",
 		ClientType:      "confidential",
-		ForceDpop:       &forceDpop,
+		ForceDpop:       true,
 		JWTBearerSettings: &descope.JWTBearerSettings{
 			Issuers: map[string]*descope.IssuerSettings{
 				"issuer1": {
@@ -641,15 +640,15 @@ func TestDeleteThirdPartyApplicationBatchError(t *testing.T) {
 	require.Error(t, err)
 }
 
-// A patch that does not mention forceDpop must not carry it: the API treats an explicit
-// false as "turn the requirement off", so sending one would silently disable DPoP.
-func TestThirdPartyApplicationPatchOmitsUnsetForceDpop(t *testing.T) {
+// Every field is sent on a patch, including the two DPoP-related ones, so a caller that does
+// not carry them over turns the requirement and the client type off.
+func TestThirdPartyApplicationPatchAlwaysSendsForceDpop(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "id1", req["id"])
-		require.NotContains(t, req, "forceDpop")
-		require.NotContains(t, req, "clientType")
+		require.Equal(t, false, req["forceDpop"])
+		require.Equal(t, "", req["clientType"])
 	}))
 	err := mgmt.ThirdPartyApplication().PatchApplication(context.Background(), &descope.ThirdPartyApplicationRequest{
 		ID:   "id1",
@@ -658,16 +657,18 @@ func TestThirdPartyApplicationPatchOmitsUnsetForceDpop(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestThirdPartyApplicationPatchTurnsOffForceDpop(t *testing.T) {
-	forceDpop := false
+func TestThirdPartyApplicationPatchKeepsForceDpopWhenCarried(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		require.Equal(t, false, req["forceDpop"])
+		require.Equal(t, true, req["forceDpop"])
+		require.Equal(t, "confidential", req["clientType"])
 	}))
 	err := mgmt.ThirdPartyApplication().PatchApplication(context.Background(), &descope.ThirdPartyApplicationRequest{
-		ID:        "id1",
-		ForceDpop: &forceDpop,
+		ID:         "id1",
+		Name:       "renamed",
+		ClientType: "confidential",
+		ForceDpop:  true,
 	})
 	require.NoError(t, err)
 }
@@ -698,6 +699,6 @@ func TestThirdPartyApplicationLoadReturnsForceDpop(t *testing.T) {
 		ID:         res.ID,
 		Name:       res.Name,
 		ClientType: res.ClientType,
-		ForceDpop:  &res.ForceDpop,
+		ForceDpop:  res.ForceDpop,
 	}))
 }
