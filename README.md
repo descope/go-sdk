@@ -1955,6 +1955,11 @@ appID, secret, err = descopeClient.Management.ThirdPartyApplication().CreateAppl
 // Update will override all fields as is. Use carefully.
 err = tc.DescopeClient().Management.ThirdPartyApplication().UpdateApplication(context.TODO(), &descope.ThirdPartyApplicationRequest{ID: "my-id", Name: "my new name"})
 
+// Patch a third party application by id
+// Only the fields that are set are sent. Anything left nil keeps its current value.
+newName := "my new name"
+err = tc.DescopeClient().Management.ThirdPartyApplication().PatchApplication(context.TODO(), &descope.PatchThirdPartyApplicationRequest{ID: "my-id", Name: &newName})
+
 // Load third party application by id
 app, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadApplication(context.Background(), "appId")
 

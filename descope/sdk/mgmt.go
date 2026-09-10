@@ -1254,8 +1254,10 @@ type ThirdPartyApplication interface {
 
 	// Patch an existing third party application.
 	//
-	// ID is required to identify the application to be patched.
-	PatchApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) error
+	// ID is required to identify the application to be patched. Every other field is
+	// optional: only the fields that are set are sent, and any field left nil keeps
+	// its current value on the application.
+	PatchApplication(ctx context.Context, appRequest *descope.PatchThirdPartyApplicationRequest) error
 
 	// Delete an existing third party application.
 	//
