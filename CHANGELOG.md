@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.34.0](https://github.com/descope/go-sdk/compare/v1.33.0...v1.34.0) (2026-09-10)
+
+
+### Features
+
+* **enchantedlink:** add SMS delivery support ([#852](https://github.com/descope/go-sdk/issues/852)) ([9aa7418](https://github.com/descope/go-sdk/commit/9aa741872aa212f1ff17483430d33c324855b8e3))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.33.0 ([#847](https://github.com/descope/go-sdk/issues/847)) ([515a501](https://github.com/descope/go-sdk/commit/515a5015629f6840cd984a8854d100334c747838))
+* **mgmt:** support ForceDPoP ([#853](https://github.com/descope/go-sdk/issues/853)) ([d065c94](https://github.com/descope/go-sdk/commit/d065c941dd7b9dc6dffb11143c7493c1744b04c3))
+
 ## [1.33.0](https://github.com/descope/go-sdk/compare/v1.32.0...v1.33.0) (2026-09-07)
 
 
