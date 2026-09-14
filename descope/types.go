@@ -1832,13 +1832,6 @@ type ThirdPartyApplicationRequest struct {
 	ForceDpop bool `json:"forceDpop,omitempty"`
 }
 
-// PatchThirdPartyApplicationRequest updates only the fields that are set on it. Every
-// field is a pointer, so nil ("leave this alone") is distinct from a pointer to "" or
-// false ("set this to its zero value"). A nil field is omitted from the request and
-// keeps its current value.
-//
-// The list fields can be replaced but not emptied: the API reads an empty list as "not
-// given". Use UpdateApplication to clear one.
 type PatchThirdPartyApplicationRequest struct {
 	// ID identifies the application to patch. Required.
 	ID                   string                                     `json:"id"`
