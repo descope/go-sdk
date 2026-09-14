@@ -1832,6 +1832,28 @@ type ThirdPartyApplicationRequest struct {
 	ForceDpop bool `json:"forceDpop,omitempty"`
 }
 
+type PatchThirdPartyApplicationRequest struct {
+	// ID identifies the application to patch. Required.
+	ID                   string                                     `json:"id"`
+	Name                 *string                                    `json:"name,omitempty"`
+	Description          *string                                    `json:"description,omitempty"`
+	Logo                 *string                                    `json:"logo,omitempty"`
+	LoginPageURL         *string                                    `json:"loginPageUrl,omitempty"`
+	ApprovedCallbackUrls *[]string                                  `json:"approvedCallbackUrls,omitempty"`
+	PermissionsScopes    *[]*ThirdPartyApplicationScope             `json:"permissionsScopes,omitempty"`
+	ScopeClaimMapping    *[]*ThirdPartyApplicationScopeClaimMapping `json:"scopeClaimMapping,omitempty"`
+	JWTBearerSettings    *JWTBearerSettings                         `json:"jwtBearerSettings,omitempty"`
+	CustomAttributes     map[string]any                             `json:"customAttributes,omitempty"`
+	// ForcePkce requires PKCE on the authorization-code flow in addition to client authentication.
+	ForcePkce *bool `json:"forcePkce,omitempty"`
+	// DefaultAudience controls the default aud of issued tokens: "projectId", "clientId", or "" (both).
+	DefaultAudience *string `json:"defaultAudience,omitempty"`
+	// ClientType sets the client authentication model: "confidential" or "public".
+	ClientType *string `json:"clientType,omitempty"`
+	// ForceDpop requires a valid DPoP proof at the token endpoint. Only a "confidential" or "public" ClientType may require it.
+	ForceDpop *bool `json:"forceDpop,omitempty"`
+}
+
 // Options for loading third party applications
 //
 // Page - allows to paginate over the results. Pages start at 0 and must be non-negative.
