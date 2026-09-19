@@ -290,6 +290,25 @@ func (s *sso) ConfigureAuthType(ctx context.Context, tenantID string, authType d
 	return err
 }
 
+func (s *sso) ConfigureAuthenticationOnly(ctx context.Context, tenantID string, ssoID string, authenticationOnly bool) error {
+	if tenantID == "" {
+		return utils.NewInvalidArgumentError("tenantID")
+	}
+
+	if ssoID == "" {
+		return utils.NewInvalidArgumentError("ssoID")
+	}
+
+	req := map[string]any{
+		"tenantId":           tenantID,
+		"ssoId":              ssoID,
+		"authenticationOnly": authenticationOnly,
+	}
+
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOAuthenticationOnly(), req, nil, "")
+	return err
+}
+
 // * Deprecated (use ConfigureSAMLSettings() instead) *//
 func (s *sso) ConfigureSettings(ctx context.Context, tenantID, idpURL, idpCert, entityID, redirectURL string, domains []string) error {
 	if tenantID == "" {

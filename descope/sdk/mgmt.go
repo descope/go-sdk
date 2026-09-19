@@ -746,6 +746,17 @@ type SSO interface {
 	// ssoID (optional) - pass ssoID when using multi SSO to change a specific SSO configuration.
 	ConfigureAuthType(ctx context.Context, tenantID string, authType descope.SSOAuthType, ssoID string) error
 
+	// Classify a single SSO configuration as authentication only.
+	//
+	// An authentication-only configuration verifies a person's identity without creating,
+	// updating or signing in a user, so it grants no application access. Use it for a connection
+	// that exists to verify external people, alongside a separate connection for application
+	// login.
+	//
+	// tenantID and ssoID are required: the tenant's default SSO configuration cannot be marked
+	// authentication only.
+	ConfigureAuthenticationOnly(ctx context.Context, tenantID string, ssoID string, authenticationOnly bool) error
+
 	// *** Deprecated ***
 
 	//* Deprecated (use LoadSettings() instead) *//

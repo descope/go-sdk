@@ -268,6 +268,9 @@ type MockSSO struct {
 	ConfigureAuthTypeAssert func(tenantID string, authType descope.SSOAuthType, ssoID string)
 	ConfigureAuthTypeError  error
 
+	ConfigureAuthenticationOnlyAssert func(tenantID string, ssoID string, authenticationOnly bool)
+	ConfigureAuthenticationOnlyError  error
+
 	GetSettingsAssert   func(tenantID string)
 	GetSettingsResponse *descope.SSOSettingsResponse
 	GetSettingsError    error
@@ -332,6 +335,13 @@ func (m *MockSSO) ConfigureAuthType(_ context.Context, tenantID string, authType
 		m.ConfigureAuthTypeAssert(tenantID, authType, ssoID)
 	}
 	return m.ConfigureAuthTypeError
+}
+
+func (m *MockSSO) ConfigureAuthenticationOnly(_ context.Context, tenantID string, ssoID string, authenticationOnly bool) error {
+	if m.ConfigureAuthenticationOnlyAssert != nil {
+		m.ConfigureAuthenticationOnlyAssert(tenantID, ssoID, authenticationOnly)
+	}
+	return m.ConfigureAuthenticationOnlyError
 }
 
 func (m *MockSSO) ConfigureXAASettings(_ context.Context, tenantID string, settings *descope.SSOXAASettings, ssoID string) error {

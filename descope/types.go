@@ -239,6 +239,9 @@ type SSOTenantSettingsResponse struct {
 	Saml   *SSOSAMLSettingsResponse `json:"saml,omitempty"`
 	Oidc   *SSOOIDCSettings         `json:"oidc,omitempty"`
 	SSOID  string                   `json:"ssoId,omitempty"`
+	// AuthenticationOnly marks the configuration as verifying identity only: logins through it do
+	// not create, update or sign in a user.
+	AuthenticationOnly bool `json:"authenticationOnly,omitempty"`
 }
 
 type SSOTenantAllSettingsResponse struct {

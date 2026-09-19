@@ -144,6 +144,53 @@ func TestSSOConfigureAuthTypeMissingAuthType(t *testing.T) {
 	require.False(t, called)
 }
 
+func TestSSOConfigureAuthenticationOnlySuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["tenantId"])
+		require.Equal(t, "somessoid", req["ssoId"])
+		require.Equal(t, true, req["authenticationOnly"])
+	}))
+	err := mgmt.SSO().ConfigureAuthenticationOnly(context.Background(), "abc", "somessoid", true)
+	require.NoError(t, err)
+}
+
+// false has to reach the server as false, not be dropped as a zero value, or the classification
+// could never be cleared.
+func TestSSOConfigureAuthenticationOnlyClearSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, false, req["authenticationOnly"])
+	}))
+	err := mgmt.SSO().ConfigureAuthenticationOnly(context.Background(), "abc", "somessoid", false)
+	require.NoError(t, err)
+}
+
+func TestSSOConfigureAuthenticationOnlyMissingTenantID(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+	err := mgmt.SSO().ConfigureAuthenticationOnly(context.Background(), "", "somessoid", true)
+	require.Error(t, err)
+	require.False(t, called)
+}
+
+// The tenant's default configuration has nowhere to carry the classification, so an empty ssoID
+// is a client-side error rather than a request the server has to refuse.
+func TestSSOConfigureAuthenticationOnlyMissingSSOID(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+	err := mgmt.SSO().ConfigureAuthenticationOnly(context.Background(), "abc", "", true)
+	require.Error(t, err)
+	require.False(t, called)
+}
+
 func TestDeleteSSOSettingsError(t *testing.T) {
 	called := false
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {
