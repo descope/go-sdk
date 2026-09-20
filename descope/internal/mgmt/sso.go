@@ -295,14 +295,12 @@ func (s *sso) ConfigureAuthenticationOnly(ctx context.Context, tenantID string, 
 		return utils.NewInvalidArgumentError("tenantID")
 	}
 
-	if ssoID == "" {
-		return utils.NewInvalidArgumentError("ssoID")
-	}
-
 	req := map[string]any{
 		"tenantId":           tenantID,
-		"ssoId":              ssoID,
 		"authenticationOnly": authenticationOnly,
+	}
+	if len(ssoID) > 0 {
+		req["ssoId"] = ssoID
 	}
 
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOAuthenticationOnly(), req, nil, "")

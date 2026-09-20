@@ -753,8 +753,9 @@ type SSO interface {
 	// that exists to verify external people, alongside a separate connection for application
 	// login.
 	//
-	// tenantID and ssoID are required: the tenant's default SSO configuration cannot be marked
-	// authentication only.
+	// tenantID is required.
+	// ssoID (optional) - pass ssoID when using multi SSO to classify a specific SSO configuration;
+	// omit it for the tenant's default configuration.
 	ConfigureAuthenticationOnly(ctx context.Context, tenantID string, ssoID string, authenticationOnly bool) error
 
 	// *** Deprecated ***
