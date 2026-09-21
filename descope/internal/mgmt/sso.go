@@ -110,8 +110,11 @@ func (s *sso) ConfigureSAMLSettings(ctx context.Context, tenantID string, settin
 		req["settings"].(map[string]any)["configFGATenantIDResourceSuffix"] = settings.ConfigFGATenantIDResourceSuffix
 	}
 	if settings.AuthenticationOnly != nil {
-		// Sent only when set: the server keeps the stored classification for a request that says
-		// nothing, which is what stops an ordinary settings save from clearing it.
+		// Deliberately unlike disableSignRequest above, which is sent unconditionally because it is a
+		// plain bool the server cannot tell apart from "not set". authenticationOnly is optional on the
+		// wire, so the server keeps the stored classification for a request that omits it - that
+		// field-level exception is what stops an ordinary settings save from silently putting a
+		// verification connection back in the business of creating users. Send false to clear it.
 		req["settings"].(map[string]any)["authenticationOnly"] = *settings.AuthenticationOnly
 	}
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSAMLSettings(), req, nil, "")
@@ -171,8 +174,11 @@ func (s *sso) ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID stri
 		req["settings"].(map[string]any)["configFGATenantIDResourceSuffix"] = settings.ConfigFGATenantIDResourceSuffix
 	}
 	if settings.AuthenticationOnly != nil {
-		// Sent only when set: the server keeps the stored classification for a request that says
-		// nothing, which is what stops an ordinary settings save from clearing it.
+		// Deliberately unlike disableSignRequest above, which is sent unconditionally because it is a
+		// plain bool the server cannot tell apart from "not set". authenticationOnly is optional on the
+		// wire, so the server keeps the stored classification for a request that omits it - that
+		// field-level exception is what stops an ordinary settings save from silently putting a
+		// verification connection back in the business of creating users. Send false to clear it.
 		req["settings"].(map[string]any)["authenticationOnly"] = *settings.AuthenticationOnly
 	}
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSAMLSettingsByMetadata(), req, nil, "")

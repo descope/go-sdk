@@ -173,7 +173,10 @@ type SSOSAMLSettings struct {
 
 	// AuthenticationOnly classifies the configuration as verifying identity only: a login through it
 	// does not create, update or sign in a user, and returns the IdP response instead of a session.
-	// nil leaves whatever is stored, so an ordinary settings save cannot clear it by omission.
+	//
+	// It is a pointer because, unlike the rest of this object, the server treats it as optional rather
+	// than as part of the full replacement: nil is not sent and leaves whatever is stored, so an
+	// ordinary settings save cannot clear a classification by omission. False clears it.
 	AuthenticationOnly *bool `json:"authenticationOnly,omitempty"`
 
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
@@ -199,7 +202,10 @@ type SSOSAMLSettingsByMetadata struct {
 
 	// AuthenticationOnly classifies the configuration as verifying identity only: a login through it
 	// does not create, update or sign in a user, and returns the IdP response instead of a session.
-	// nil leaves whatever is stored, so an ordinary settings save cannot clear it by omission.
+	//
+	// It is a pointer because, unlike the rest of this object, the server treats it as optional rather
+	// than as part of the full replacement: nil is not sent and leaves whatever is stored, so an
+	// ordinary settings save cannot clear a classification by omission. False clears it.
 	AuthenticationOnly *bool `json:"authenticationOnly,omitempty"`
 
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
@@ -245,7 +251,10 @@ type SSOOIDCSettings struct {
 
 	// AuthenticationOnly classifies the configuration as verifying identity only: a login through it
 	// does not create, update or sign in a user, and returns the IdP response instead of a session.
-	// nil leaves whatever is stored, so an ordinary settings save cannot clear it by omission.
+	//
+	// It is a pointer because, unlike the rest of this object, the server treats it as optional rather
+	// than as part of the full replacement: nil is not sent and leaves whatever is stored, so an
+	// ordinary settings save cannot clear a classification by omission. False clears it.
 	AuthenticationOnly *bool `json:"authenticationOnly,omitempty"`
 }
 
