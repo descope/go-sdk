@@ -171,6 +171,11 @@ type SSOSAMLSettings struct {
 	// for Descope. Defaults to false, i.e. requests are signed.
 	DisableSignRequest bool `json:"disableSignRequest,omitempty"`
 
+	// AuthenticationOnly classifies the configuration as verifying identity only: a login through it
+	// does not create, update or sign in a user, and returns the IdP response instead of a session.
+	// nil leaves whatever is stored, so an ordinary settings save cannot clear it by omission.
+	AuthenticationOnly *bool `json:"authenticationOnly,omitempty"`
+
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
 	SpACSUrl   string `json:"spACSUrl,omitempty"`
 	SpEntityID string `json:"spEntityId,omitempty"`
@@ -191,6 +196,11 @@ type SSOSAMLSettingsByMetadata struct {
 	// IdPs that reject a signed request because their trusted provider entry holds no signing certificate
 	// for Descope. Defaults to false, i.e. requests are signed.
 	DisableSignRequest bool `json:"disableSignRequest,omitempty"`
+
+	// AuthenticationOnly classifies the configuration as verifying identity only: a login through it
+	// does not create, update or sign in a user, and returns the IdP response instead of a session.
+	// nil leaves whatever is stored, so an ordinary settings save cannot clear it by omission.
+	AuthenticationOnly *bool `json:"authenticationOnly,omitempty"`
 
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
 	SpACSUrl   string `json:"spACSUrl,omitempty"`
@@ -232,6 +242,11 @@ type SSOOIDCSettings struct {
 	GroupsPriority       []string                    `json:"groupsPriority,omitempty"` // list of group names in priority order (first = highest priority)
 	FgaMappings          map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 	LastSuccessTestTime  int32                       `json:"lastSuccessTestTime,omitempty"` // epoch seconds of the last successful SSO test login on this configuration (read-only, ignored on configure)
+
+	// AuthenticationOnly classifies the configuration as verifying identity only: a login through it
+	// does not create, update or sign in a user, and returns the IdP response instead of a session.
+	// nil leaves whatever is stored, so an ordinary settings save cannot clear it by omission.
+	AuthenticationOnly *bool `json:"authenticationOnly,omitempty"`
 }
 
 type SSOTenantSettingsResponse struct {

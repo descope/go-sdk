@@ -109,6 +109,11 @@ func (s *sso) ConfigureSAMLSettings(ctx context.Context, tenantID string, settin
 	if settings.ConfigFGATenantIDResourceSuffix != "" {
 		req["settings"].(map[string]any)["configFGATenantIDResourceSuffix"] = settings.ConfigFGATenantIDResourceSuffix
 	}
+	if settings.AuthenticationOnly != nil {
+		// Sent only when set: the server keeps the stored classification for a request that says
+		// nothing, which is what stops an ordinary settings save from clearing it.
+		req["settings"].(map[string]any)["authenticationOnly"] = *settings.AuthenticationOnly
+	}
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSAMLSettings(), req, nil, "")
 	return err
 }
@@ -164,6 +169,11 @@ func (s *sso) ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID stri
 	}
 	if settings.ConfigFGATenantIDResourceSuffix != "" {
 		req["settings"].(map[string]any)["configFGATenantIDResourceSuffix"] = settings.ConfigFGATenantIDResourceSuffix
+	}
+	if settings.AuthenticationOnly != nil {
+		// Sent only when set: the server keeps the stored classification for a request that says
+		// nothing, which is what stops an ordinary settings save from clearing it.
+		req["settings"].(map[string]any)["authenticationOnly"] = *settings.AuthenticationOnly
 	}
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSAMLSettingsByMetadata(), req, nil, "")
 	return err
@@ -287,23 +297,6 @@ func (s *sso) ConfigureAuthType(ctx context.Context, tenantID string, authType d
 	}
 
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOAuthType(), req, nil, "")
-	return err
-}
-
-func (s *sso) ConfigureAuthenticationOnly(ctx context.Context, tenantID string, ssoID string, authenticationOnly bool) error {
-	if tenantID == "" {
-		return utils.NewInvalidArgumentError("tenantID")
-	}
-
-	req := map[string]any{
-		"tenantId":           tenantID,
-		"authenticationOnly": authenticationOnly,
-	}
-	if len(ssoID) > 0 {
-		req["ssoId"] = ssoID
-	}
-
-	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOAuthenticationOnly(), req, nil, "")
 	return err
 }
 
