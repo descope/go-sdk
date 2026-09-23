@@ -473,6 +473,12 @@ func (s *sso) ConfigureXAASettings(ctx context.Context, tenantID string, setting
 	if settings.ProviderID != "" {
 		req["providerID"] = settings.ProviderID
 	}
+	if settings.AuthenticationOnly != nil {
+		// Optional on the wire, so a request that omits it keeps the stored classification. Send false
+		// to clear it. Same handling as the SAML and OIDC saves, and setting it here classifies the
+		// whole configuration, not only its Cross-App Access row.
+		req["authenticationOnly"] = *settings.AuthenticationOnly
+	}
 
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementXAASettings(), req, nil, "")
 	return err

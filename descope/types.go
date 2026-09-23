@@ -1796,6 +1796,19 @@ type SSOXAASettings struct {
 	GroupPriorityEnabled bool                        `json:"groupPriorityEnabled,omitempty"`
 	AllowOverrideRoles   bool                        `json:"allowOverrideRoles,omitempty"`
 	ProviderID           string                      `json:"providerID,omitempty"` // selected IdP provider template id (display metadata; mirrors SSOSAMLSettings providerID)
+
+	// AuthenticationOnly classifies the configuration as verifying identity only: a login through it
+	// does not create, update or sign in a user, and returns the IdP response instead of a session.
+	// Setting it through any one protocol classifies the whole configuration, so this field, the SAML
+	// one and the OIDC one all reach the same place.
+	//
+	// It is a pointer because, unlike the rest of this object, the server treats it as optional rather
+	// than as part of the full replacement: nil is not sent and leaves whatever is stored, so an
+	// ordinary settings save cannot clear a classification by omission. False clears it.
+	//
+	// A Cross-App Access token exchange through a classified configuration is refused: its output is
+	// an access token bound to a user, so there is no user-less form of it to fall back to.
+	AuthenticationOnly *bool `json:"authenticationOnly,omitempty"`
 }
 
 // SSOXAASettingsResponse is the load-shape of a single SSO configuration's XAA (ID-JAG) settings.
