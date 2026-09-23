@@ -255,6 +255,10 @@ type SSOOIDCSettings struct {
 	// It is a pointer because, unlike the rest of this object, the server treats it as optional rather
 	// than as part of the full replacement: nil is not sent and leaves whatever is stored, so an
 	// ordinary settings save cannot clear a classification by omission. False clears it.
+	//
+	// Write-only. This struct is also the Oidc field of SSOTenantSettingsResponse, where the server
+	// never sets it - read SSOTenantSettingsResponse.AuthenticationOnly instead, which answers for the
+	// whole configuration rather than one protocol.
 	AuthenticationOnly *bool `json:"authenticationOnly,omitempty"`
 }
 
@@ -263,8 +267,9 @@ type SSOTenantSettingsResponse struct {
 	Saml   *SSOSAMLSettingsResponse `json:"saml,omitempty"`
 	Oidc   *SSOOIDCSettings         `json:"oidc,omitempty"`
 	SSOID  string                   `json:"ssoId,omitempty"`
-	// AuthenticationOnly marks the configuration as verifying identity only: logins through it do
-	// not create, update or sign in a user.
+	// AuthenticationOnly marks the configuration as verifying identity only: a login through it
+	// creates no user and issues no session. This is the field to read on a load; the one nested
+	// under Oidc is write-only and the server never sets it.
 	AuthenticationOnly bool `json:"authenticationOnly,omitempty"`
 }
 
