@@ -1308,6 +1308,16 @@ err = descopeClient.Management.SSO().ConfigureSAMLSettingsByMetadata(context.Bac
 // settings (available on both variants above) to send the request unsigned for that configuration only.
 samlSettings.DisableSignRequest = true
 
+// A configuration can be classified as authentication only: a login through it verifies the person's
+// identity and returns the IdP response, creating no user and issuing no session, so it grants no
+// access to your application. AuthenticationOnly is a pointer because the server treats it as optional
+// rather than as part of the full replacement - leave it nil and the stored classification is kept, so
+// an ordinary settings edit cannot clear it by omission, and pass a pointer to false to clear it.
+// The same field is on the OIDC and Cross-App Access settings, and setting it through any one of them
+// classifies the whole configuration. Read it back from SSOTenantSettingsResponse.AuthenticationOnly.
+authenticationOnly := true
+samlSettings.AuthenticationOnly = &authenticationOnly
+
 // You can create new SSO configuration (aka multi SSO)
 ssoID := "my-new-additional-sso-id"
 displayName := "My additional SSO configuration"

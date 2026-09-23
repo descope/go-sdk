@@ -109,6 +109,14 @@ func (s *sso) ConfigureSAMLSettings(ctx context.Context, tenantID string, settin
 	if settings.ConfigFGATenantIDResourceSuffix != "" {
 		req["settings"].(map[string]any)["configFGATenantIDResourceSuffix"] = settings.ConfigFGATenantIDResourceSuffix
 	}
+	if settings.AuthenticationOnly != nil {
+		// Deliberately unlike disableSignRequest above, which is sent unconditionally because it is a
+		// plain bool the server cannot tell apart from "not set". authenticationOnly is optional on the
+		// wire, so the server keeps the stored classification for a request that omits it - that
+		// field-level exception is what stops an ordinary settings save from silently putting a
+		// verification connection back in the business of creating users. Send false to clear it.
+		req["settings"].(map[string]any)["authenticationOnly"] = *settings.AuthenticationOnly
+	}
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSAMLSettings(), req, nil, "")
 	return err
 }
@@ -164,6 +172,14 @@ func (s *sso) ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID stri
 	}
 	if settings.ConfigFGATenantIDResourceSuffix != "" {
 		req["settings"].(map[string]any)["configFGATenantIDResourceSuffix"] = settings.ConfigFGATenantIDResourceSuffix
+	}
+	if settings.AuthenticationOnly != nil {
+		// Deliberately unlike disableSignRequest above, which is sent unconditionally because it is a
+		// plain bool the server cannot tell apart from "not set". authenticationOnly is optional on the
+		// wire, so the server keeps the stored classification for a request that omits it - that
+		// field-level exception is what stops an ordinary settings save from silently putting a
+		// verification connection back in the business of creating users. Send false to clear it.
+		req["settings"].(map[string]any)["authenticationOnly"] = *settings.AuthenticationOnly
 	}
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSAMLSettingsByMetadata(), req, nil, "")
 	return err
@@ -456,6 +472,12 @@ func (s *sso) ConfigureXAASettings(ctx context.Context, tenantID string, setting
 	}
 	if settings.ProviderID != "" {
 		req["providerID"] = settings.ProviderID
+	}
+	if settings.AuthenticationOnly != nil {
+		// Optional on the wire, so a request that omits it keeps the stored classification. Send false
+		// to clear it. Same handling as the SAML and OIDC saves, and setting it here classifies the
+		// whole configuration, not only its Cross-App Access row.
+		req["authenticationOnly"] = *settings.AuthenticationOnly
 	}
 
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementXAASettings(), req, nil, "")
