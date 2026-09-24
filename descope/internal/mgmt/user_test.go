@@ -2902,3 +2902,304 @@ func TestUserDeleteCustomAttributesError(t *testing.T) {
 	_, err := mgmt.User().DeleteCustomAttributes(context.Background(), nil)
 	require.Error(t, err)
 }
+
+func TestUserCreateWithFamilyAssociationsSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, "/v1/mgmt/user/create", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, []any{
+			map[string]any{"familyId": "fam1", "roleNames": []any{"Family Admin"}, "familyScopedAttributes": map[string]any{"nickname": "Mom"}},
+			map[string]any{"familyId": "fam2"},
+		}, req["familyAssociations"])
+	}, map[string]any{"user": map[string]any{
+		"userId":       "U1",
+		"userFamilies": []map[string]any{{"familyId": "fam1", "roleNames": []string{"Family Admin"}}},
+	}}))
+	user := &descope.UserRequest{}
+	user.Email = "guardian@example.com"
+	user.FamilyAssociations = []*descope.AssociatedFamily{
+		{FamilyID: "fam1", Roles: []string{"Family Admin"}, FamilyScopedAttributes: map[string]any{"nickname": "Mom"}},
+		{FamilyID: "fam2"},
+	}
+	res, err := mgmt.User().Create(context.Background(), "guardian@example.com", user)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	assert.False(t, res.Dependent)
+	require.Len(t, res.UserFamilies, 1)
+	assert.Equal(t, "fam1", res.UserFamilies[0].FamilyID)
+	assert.EqualValues(t, []string{"Family Admin"}, res.UserFamilies[0].Roles)
+}
+
+func TestUserCreateWithoutFamilyAssociationsOmitsField(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.NotContains(t, req, "familyAssociations")
+	}, map[string]any{"user": map[string]any{"userId": "U1"}}))
+	_, err := mgmt.User().Create(context.Background(), "guardian@example.com", &descope.UserRequest{})
+	require.NoError(t, err)
+	_, err = mgmt.User().Update(context.Background(), "guardian@example.com", &descope.UserRequest{})
+	require.NoError(t, err)
+}
+
+func TestUserInviteAndTestUserWithFamilyAssociationsSuccess(t *testing.T) {
+	calls := 0
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		calls++
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, []any{map[string]any{"familyId": "fam1"}}, req["familyAssociations"])
+	}, map[string]any{"user": map[string]any{"userId": "U1"}}))
+	user := &descope.UserRequest{FamilyAssociations: []*descope.AssociatedFamily{{FamilyID: "fam1"}}}
+	_, err := mgmt.User().Invite(context.Background(), "guardian@example.com", user, nil)
+	require.NoError(t, err)
+	_, err = mgmt.User().CreateTestUser(context.Background(), "guardian@example.com", user)
+	require.NoError(t, err)
+	assert.Equal(t, 2, calls)
+}
+
+func TestUserUpdateWithFamilyAssociationsSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, "/v1/mgmt/user/update", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, []any{map[string]any{"familyId": "fam1", "roleNames": []any{"Family Member"}}}, req["familyAssociations"])
+	}, map[string]any{"user": map[string]any{"userId": "U1"}}))
+	user := &descope.UserRequest{FamilyAssociations: []*descope.AssociatedFamily{{FamilyID: "fam1", Roles: []string{"Family Member"}}}}
+	res, err := mgmt.User().Update(context.Background(), "guardian@example.com", user)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
+func TestUserCreateBatchWithFamilyAssociationsSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, "/v1/mgmt/user/create/batch", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		users := req["users"].([]any)
+		require.Len(t, users, 2)
+		assert.EqualValues(t, []any{map[string]any{"familyId": "fam1"}}, users[0].(map[string]any)["familyAssociations"])
+		assert.NotContains(t, users[1].(map[string]any), "familyAssociations")
+	}, map[string]any{"createdUsers": []map[string]any{{"userId": "U1"}, {"userId": "U2"}}}))
+	u1 := &descope.BatchUser{LoginID: "one@example.com"}
+	u1.FamilyAssociations = []*descope.AssociatedFamily{{FamilyID: "fam1"}}
+	u2 := &descope.BatchUser{LoginID: "two@example.com"}
+	res, err := mgmt.User().CreateBatch(context.Background(), []*descope.BatchUser{u1, u2})
+	require.NoError(t, err)
+	require.Len(t, res.CreatedUsers, 2)
+}
+
+func TestUserPatchWithFamilyAssociationsSuccess(t *testing.T) {
+	families := []*descope.AssociatedFamily{{FamilyID: "fam1", FamilyScopedAttributes: map[string]any{"nickname": "Mom"}}}
+	empty := []*descope.AssociatedFamily{}
+	call := 0
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, "/v1/mgmt/user/patch", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		switch call {
+		case 0:
+			assert.EqualValues(t, []any{map[string]any{"familyId": "fam1", "familyScopedAttributes": map[string]any{"nickname": "Mom"}}}, req["familyAssociations"])
+		case 1:
+			// an empty (non-nil) list is sent as-is, replacing the full membership
+			assert.Contains(t, req, "familyAssociations")
+			assert.EqualValues(t, []any{}, req["familyAssociations"])
+		default:
+			// nil leaves the families unchanged
+			assert.NotContains(t, req, "familyAssociations")
+		}
+		call++
+	}, map[string]any{"user": map[string]any{"userId": "U1"}}))
+	_, err := mgmt.User().Patch(context.Background(), "guardian@example.com", &descope.PatchUserRequest{FamilyAssociations: &families})
+	require.NoError(t, err)
+	_, err = mgmt.User().Patch(context.Background(), "guardian@example.com", &descope.PatchUserRequest{FamilyAssociations: &empty})
+	require.NoError(t, err)
+	_, err = mgmt.User().Patch(context.Background(), "guardian@example.com", &descope.PatchUserRequest{})
+	require.NoError(t, err)
+	assert.Equal(t, 3, call)
+}
+
+func TestUserPatchBatchWithFamilyAssociationsSuccess(t *testing.T) {
+	families := []*descope.AssociatedFamily{{FamilyID: "fam1"}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, "/v1/mgmt/user/patch/batch", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		users := req["users"].([]any)
+		require.Len(t, users, 1)
+		assert.EqualValues(t, []any{map[string]any{"familyId": "fam1"}}, users[0].(map[string]any)["familyAssociations"])
+	}, map[string]any{"patchedUsers": []map[string]any{{"userId": "U1"}}}))
+	res, err := mgmt.User().PatchBatch(context.Background(), []*descope.PatchUserBatchRequest{
+		{LoginID: "guardian@example.com", PatchUserRequest: &descope.PatchUserRequest{FamilyAssociations: &families}},
+	})
+	require.NoError(t, err)
+	require.Len(t, res.PatchedUsers, 1)
+}
+
+func TestSearchAllUsersFamilyFiltersSuccess(t *testing.T) {
+	dependent := true
+	call := 0
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, "/v2/mgmt/user/search", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		if call == 0 {
+			assert.EqualValues(t, []any{"fam1"}, req["familyIds"])
+			assert.Equal(t, true, req["dependent"])
+		} else {
+			assert.NotContains(t, req, "familyIds")
+			assert.NotContains(t, req, "dependent")
+		}
+		call++
+	}, map[string]any{"users": []map[string]any{{"userId": "U1", "dependent": true}}, "total": 1}))
+	res, total, err := mgmt.User().SearchAll(context.Background(), &descope.UserSearchOptions{FamilyIDs: []string{"fam1"}, Dependent: &dependent})
+	require.NoError(t, err)
+	assert.Equal(t, 1, total)
+	require.Len(t, res, 1)
+	assert.True(t, res[0].Dependent)
+	_, _, err = mgmt.User().SearchAll(context.Background(), &descope.UserSearchOptions{})
+	require.NoError(t, err)
+}
+
+func TestUserAddFamiliesSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, "Bearer a:key", r.Header.Get("Authorization"))
+		require.Equal(t, "/v1/mgmt/user/update/family/add", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, "guardian@example.com", req["loginId"])
+		assert.EqualValues(t, []any{
+			map[string]any{"familyId": "fam1", "familyScopedAttributes": map[string]any{"nickname": "Mommy"}},
+		}, req["familyAssociations"])
+	}, map[string]any{"user": map[string]any{
+		"userId": "U1",
+		"userFamilies": []map[string]any{{
+			"familyId":               "fam1",
+			"roleNames":              []string{"Family Admin"},
+			"familyScopedAttributes": map[string]any{"nickname": "Mommy"},
+		}},
+	}}))
+	res, err := mgmt.User().AddFamilies(context.Background(), "guardian@example.com", []*descope.AssociatedFamily{
+		{FamilyID: "fam1", FamilyScopedAttributes: map[string]any{"nickname": "Mommy"}},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Len(t, res.UserFamilies, 1)
+	assert.EqualValues(t, map[string]any{"nickname": "Mommy"}, res.UserFamilies[0].FamilyScopedAttributes)
+}
+
+func TestUserAddFamiliesError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.User().AddFamilies(context.Background(), "", []*descope.AssociatedFamily{{FamilyID: "fam1"}})
+	require.Error(t, err)
+	require.Nil(t, res)
+	res, err = mgmt.User().AddFamilies(context.Background(), "guardian@example.com", nil)
+	require.Error(t, err)
+	require.Nil(t, res)
+
+	mgmt = newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err = mgmt.User().AddFamilies(context.Background(), "guardian@example.com", []*descope.AssociatedFamily{{FamilyID: "fam1"}})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserRemoveFamiliesSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, "Bearer a:key", r.Header.Get("Authorization"))
+		require.Equal(t, "/v1/mgmt/user/update/family/remove", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, map[string]any{"loginId": "guardian@example.com", "familyIds": []any{"fam1"}}, req)
+	}, map[string]any{"user": map[string]any{"userId": "U1"}}))
+	res, err := mgmt.User().RemoveFamilies(context.Background(), "guardian@example.com", []string{"fam1"})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	assert.Empty(t, res.UserFamilies)
+}
+
+func TestUserRemoveFamiliesError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.User().RemoveFamilies(context.Background(), "", []string{"fam1"})
+	require.Error(t, err)
+	require.Nil(t, res)
+	res, err = mgmt.User().RemoveFamilies(context.Background(), "guardian@example.com", nil)
+	require.Error(t, err)
+	require.Nil(t, res)
+
+	mgmt = newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err = mgmt.User().RemoveFamilies(context.Background(), "guardian@example.com", []string{"fam1"})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserGetFamilyScopedCustomAttributesSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, "Bearer a:key", r.Header.Get("Authorization"))
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/mgmt/user/families/customattributes", r.URL.Path)
+	}, map[string]any{"data": []map[string]any{{"name": "nickname", "type": 1, "displayName": "Nickname"}}}))
+	res, err := mgmt.User().GetFamilyScopedCustomAttributes(context.Background())
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	assert.Equal(t, "nickname", res[0].Name)
+	assert.Equal(t, "Nickname", res[0].DisplayName)
+}
+
+func TestUserGetFamilyScopedCustomAttributesError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := mgmt.User().GetFamilyScopedCustomAttributes(context.Background())
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserCreateFamilyScopedCustomAttributesSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, "/v1/mgmt/user/families/customattribute/create", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		attrs, ok := req["attributes"].([]any)
+		require.True(t, ok)
+		require.Len(t, attrs, 1)
+		assert.Equal(t, "nickname", attrs[0].(map[string]any)["name"])
+	}, map[string]any{"data": []map[string]any{{"name": "nickname"}}}))
+	res, err := mgmt.User().CreateFamilyScopedCustomAttributes(context.Background(), []*descope.CustomAttribute{{Name: "nickname", Type: 1}})
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+}
+
+func TestUserCreateFamilyScopedCustomAttributesError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.User().CreateFamilyScopedCustomAttributes(context.Background(), nil)
+	require.Error(t, err)
+	require.Nil(t, res)
+
+	mgmt = newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err = mgmt.User().CreateFamilyScopedCustomAttributes(context.Background(), []*descope.CustomAttribute{{Name: "nickname", Type: 1}})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserDeleteFamilyScopedCustomAttributesSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, "/v1/mgmt/user/families/customattribute/delete", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, []any{"nickname"}, req["names"])
+	}, map[string]any{"data": []map[string]any{}}))
+	res, err := mgmt.User().DeleteFamilyScopedCustomAttributes(context.Background(), []string{"nickname"})
+	require.NoError(t, err)
+	require.Len(t, res, 0)
+}
+
+func TestUserDeleteFamilyScopedCustomAttributesError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.User().DeleteFamilyScopedCustomAttributes(context.Background(), nil)
+	require.Error(t, err)
+	require.Nil(t, res)
+
+	mgmt = newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err = mgmt.User().DeleteFamilyScopedCustomAttributes(context.Background(), []string{"nickname"})
+	require.Error(t, err)
+	require.Nil(t, res)
+}

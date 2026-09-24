@@ -33,6 +33,7 @@ type MockManagement struct {
 	*MockEngine
 	*MockScopeClaimMapping
 	*MockJWTTemplate
+	*MockFamily
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -129,6 +130,10 @@ func (m *MockManagement) ScopeClaimMapping() sdk.ScopeClaimMapping {
 
 func (m *MockManagement) JWTTemplate() sdk.JWTTemplate {
 	return m.MockJWTTemplate
+}
+
+func (m *MockManagement) Family() sdk.Family {
+	return m.MockFamily
 }
 
 // Mock JWT
@@ -499,6 +504,17 @@ type MockUser struct {
 	DeleteCustomAttributesResponse []*descope.CustomAttribute
 	DeleteCustomAttributesError    error
 
+	GetFamilyScopedCustomAttributesResponse []*descope.CustomAttribute
+	GetFamilyScopedCustomAttributesError    error
+
+	CreateFamilyScopedCustomAttributesAssert   func(attributes []*descope.CustomAttribute)
+	CreateFamilyScopedCustomAttributesResponse []*descope.CustomAttribute
+	CreateFamilyScopedCustomAttributesError    error
+
+	DeleteFamilyScopedCustomAttributesAssert   func(names []string)
+	DeleteFamilyScopedCustomAttributesResponse []*descope.CustomAttribute
+	DeleteFamilyScopedCustomAttributesError    error
+
 	ImportAssert   func(source string, users, hashes []byte, dryrun bool)
 	ImportResponse *descope.UserImportResponse
 	ImportError    error
@@ -589,6 +605,14 @@ type MockUser struct {
 	RemoveTenantAssert   func(loginID, tenantID string)
 	RemoveTenantResponse *descope.UserResponse
 	RemoveTenantError    error
+
+	AddFamiliesAssert   func(loginID string, familyAssociations []*descope.AssociatedFamily)
+	AddFamiliesResponse *descope.UserResponse
+	AddFamiliesError    error
+
+	RemoveFamiliesAssert   func(loginID string, familyIDs []string)
+	RemoveFamiliesResponse *descope.UserResponse
+	RemoveFamiliesError    error
 
 	SetTenantRoleAssert   func(loginID, tenantID string, roles []string)
 	SetTenantRoleResponse *descope.UserResponse
@@ -768,6 +792,24 @@ func (m *MockUser) DeleteCustomAttributes(_ context.Context, names []string) ([]
 		m.DeleteCustomAttributesAssert(names)
 	}
 	return m.DeleteCustomAttributesResponse, m.DeleteCustomAttributesError
+}
+
+func (m *MockUser) GetFamilyScopedCustomAttributes(_ context.Context) ([]*descope.CustomAttribute, error) {
+	return m.GetFamilyScopedCustomAttributesResponse, m.GetFamilyScopedCustomAttributesError
+}
+
+func (m *MockUser) CreateFamilyScopedCustomAttributes(_ context.Context, attributes []*descope.CustomAttribute) ([]*descope.CustomAttribute, error) {
+	if m.CreateFamilyScopedCustomAttributesAssert != nil {
+		m.CreateFamilyScopedCustomAttributesAssert(attributes)
+	}
+	return m.CreateFamilyScopedCustomAttributesResponse, m.CreateFamilyScopedCustomAttributesError
+}
+
+func (m *MockUser) DeleteFamilyScopedCustomAttributes(_ context.Context, names []string) ([]*descope.CustomAttribute, error) {
+	if m.DeleteFamilyScopedCustomAttributesAssert != nil {
+		m.DeleteFamilyScopedCustomAttributesAssert(names)
+	}
+	return m.DeleteFamilyScopedCustomAttributesResponse, m.DeleteFamilyScopedCustomAttributesError
 }
 
 func (m *MockUser) DeleteByUserID(_ context.Context, userID string) error {
@@ -957,6 +999,20 @@ func (m *MockUser) RemoveTenant(_ context.Context, loginID string, tenantID stri
 		m.RemoveTenantAssert(loginID, tenantID)
 	}
 	return m.RemoveTenantResponse, m.RemoveTenantError
+}
+
+func (m *MockUser) AddFamilies(_ context.Context, loginID string, familyAssociations []*descope.AssociatedFamily) (*descope.UserResponse, error) {
+	if m.AddFamiliesAssert != nil {
+		m.AddFamiliesAssert(loginID, familyAssociations)
+	}
+	return m.AddFamiliesResponse, m.AddFamiliesError
+}
+
+func (m *MockUser) RemoveFamilies(_ context.Context, loginID string, familyIDs []string) (*descope.UserResponse, error) {
+	if m.RemoveFamiliesAssert != nil {
+		m.RemoveFamiliesAssert(loginID, familyIDs)
+	}
+	return m.RemoveFamiliesResponse, m.RemoveFamiliesError
 }
 
 func (m *MockUser) SetTenantRoles(_ context.Context, loginID string, tenantID string, roles []string) (*descope.UserResponse, error) {
@@ -3156,4 +3212,152 @@ func (m *MockJWTTemplate) ApplyFromLibrary(_ context.Context, request *descope.A
 		m.ApplyFromLibraryAssert(request)
 	}
 	return m.ApplyFromLibraryResponse, m.ApplyFromLibraryError
+}
+
+// Mock Family
+
+type MockFamily struct {
+	CreateAssert   func(familyRequest *descope.FamilyRequest)
+	CreateResponse *descope.Family
+	CreateError    error
+
+	CreateWithIDAssert   func(id string, familyRequest *descope.FamilyRequest)
+	CreateWithIDResponse *descope.Family
+	CreateWithIDError    error
+
+	UpdateAssert   func(id string, familyRequest *descope.UpdateFamilyRequest)
+	UpdateResponse *descope.Family
+	UpdateError    error
+
+	DeleteAssert func(id string)
+	DeleteError  error
+
+	SearchAllAssert   func(options *descope.FamilySearchOptions)
+	SearchAllResponse []*descope.Family
+	SearchAllError    error
+
+	CreateDependentAssert   func(familyID string, dependent *descope.FamilyDependentRequest)
+	CreateDependentResponse *descope.UserResponse
+	CreateDependentError    error
+
+	DeleteDependentAssert func(userID string)
+	DeleteDependentError  error
+
+	ImpersonateDependentAssert   func(impersonatorUserIDOrLoginID string, dependentLoginID string, selectedFamily string)
+	ImpersonateDependentResponse string
+	ImpersonateDependentError    error
+
+	StopImpersonationAssert   func(jwt string, customClaims map[string]any, refreshDuration int32)
+	StopImpersonationResponse string
+	StopImpersonationError    error
+
+	GetSettingsResponse *descope.FamilySettings
+	GetSettingsError    error
+
+	ConfigureSettingsAssert   func(settings *descope.FamilySettingsRequest)
+	ConfigureSettingsResponse *descope.FamilySettings
+	ConfigureSettingsError    error
+
+	GetCustomAttributesResponse []*descope.CustomAttribute
+	GetCustomAttributesError    error
+
+	CreateCustomAttributesAssert   func(attributes []*descope.CustomAttribute)
+	CreateCustomAttributesResponse []*descope.CustomAttribute
+	CreateCustomAttributesError    error
+
+	DeleteCustomAttributesAssert   func(names []string)
+	DeleteCustomAttributesResponse []*descope.CustomAttribute
+	DeleteCustomAttributesError    error
+}
+
+func (m *MockFamily) Create(_ context.Context, familyRequest *descope.FamilyRequest) (*descope.Family, error) {
+	if m.CreateAssert != nil {
+		m.CreateAssert(familyRequest)
+	}
+	return m.CreateResponse, m.CreateError
+}
+
+func (m *MockFamily) CreateWithID(_ context.Context, id string, familyRequest *descope.FamilyRequest) (*descope.Family, error) {
+	if m.CreateWithIDAssert != nil {
+		m.CreateWithIDAssert(id, familyRequest)
+	}
+	return m.CreateWithIDResponse, m.CreateWithIDError
+}
+
+func (m *MockFamily) Update(_ context.Context, id string, familyRequest *descope.UpdateFamilyRequest) (*descope.Family, error) {
+	if m.UpdateAssert != nil {
+		m.UpdateAssert(id, familyRequest)
+	}
+	return m.UpdateResponse, m.UpdateError
+}
+
+func (m *MockFamily) Delete(_ context.Context, id string) error {
+	if m.DeleteAssert != nil {
+		m.DeleteAssert(id)
+	}
+	return m.DeleteError
+}
+
+func (m *MockFamily) SearchAll(_ context.Context, options *descope.FamilySearchOptions) ([]*descope.Family, error) {
+	if m.SearchAllAssert != nil {
+		m.SearchAllAssert(options)
+	}
+	return m.SearchAllResponse, m.SearchAllError
+}
+
+func (m *MockFamily) CreateDependent(_ context.Context, familyID string, dependent *descope.FamilyDependentRequest) (*descope.UserResponse, error) {
+	if m.CreateDependentAssert != nil {
+		m.CreateDependentAssert(familyID, dependent)
+	}
+	return m.CreateDependentResponse, m.CreateDependentError
+}
+
+func (m *MockFamily) DeleteDependent(_ context.Context, userID string) error {
+	if m.DeleteDependentAssert != nil {
+		m.DeleteDependentAssert(userID)
+	}
+	return m.DeleteDependentError
+}
+
+func (m *MockFamily) ImpersonateDependent(_ context.Context, impersonatorUserIDOrLoginID string, dependentLoginID string, selectedFamily string) (string, error) {
+	if m.ImpersonateDependentAssert != nil {
+		m.ImpersonateDependentAssert(impersonatorUserIDOrLoginID, dependentLoginID, selectedFamily)
+	}
+	return m.ImpersonateDependentResponse, m.ImpersonateDependentError
+}
+
+func (m *MockFamily) StopImpersonation(_ context.Context, jwt string, customClaims map[string]any, refreshDuration int32) (string, error) {
+	if m.StopImpersonationAssert != nil {
+		m.StopImpersonationAssert(jwt, customClaims, refreshDuration)
+	}
+	return m.StopImpersonationResponse, m.StopImpersonationError
+}
+
+func (m *MockFamily) GetSettings(_ context.Context) (*descope.FamilySettings, error) {
+	return m.GetSettingsResponse, m.GetSettingsError
+}
+
+func (m *MockFamily) ConfigureSettings(_ context.Context, settings *descope.FamilySettingsRequest) (*descope.FamilySettings, error) {
+	if m.ConfigureSettingsAssert != nil {
+		m.ConfigureSettingsAssert(settings)
+	}
+	return m.ConfigureSettingsResponse, m.ConfigureSettingsError
+}
+
+func (m *MockFamily) GetCustomAttributes(_ context.Context) ([]*descope.CustomAttribute, error) {
+	return m.GetCustomAttributesResponse, m.GetCustomAttributesError
+}
+
+func (m *MockFamily) CreateCustomAttributes(_ context.Context, attributes []*descope.CustomAttribute) ([]*descope.CustomAttribute, error) {
+	if m.CreateCustomAttributesAssert != nil {
+		m.CreateCustomAttributesAssert(attributes)
+	}
+	return m.CreateCustomAttributesResponse, m.CreateCustomAttributesError
+}
+
+func (m *MockFamily) DeleteCustomAttributes(_ context.Context, names []string) ([]*descope.CustomAttribute, error) {
+	if m.DeleteCustomAttributesAssert != nil {
+		m.DeleteCustomAttributesAssert(names)
+	}
+	return m.DeleteCustomAttributesResponse, m.DeleteCustomAttributesError
 }

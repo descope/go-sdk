@@ -145,6 +145,11 @@ var (
 			userUpdateCustomAttribute:                  "mgmt/user/update/customAttribute",
 			userAddTenant:                              "mgmt/user/update/tenant/add",
 			userRemoveTenant:                           "mgmt/user/update/tenant/remove",
+			userAddFamilies:                            "mgmt/user/update/family/add",
+			userRemoveFamilies:                         "mgmt/user/update/family/remove",
+			userFamilyScopedCustomAttributes:           "mgmt/user/families/customattributes",
+			userFamilyScopedCustomAttributeCreate:      "mgmt/user/families/customattribute/create",
+			userFamilyScopedCustomAttributeDelete:      "mgmt/user/families/customattribute/delete",
 			userSetRole:                                "mgmt/user/update/role/set",
 			userAddRole:                                "mgmt/user/update/role/add",
 			userRemoveRole:                             "mgmt/user/update/role/remove",
@@ -344,6 +349,18 @@ var (
 			scopeClaimMappingGet:                       "mgmt/scopeClaimMapping/get",
 			scopeClaimMappingSet:                       "mgmt/scopeClaimMapping/set",
 			scopeClaimMappingDelete:                    "mgmt/scopeClaimMapping/delete",
+			familyCreate:                               "mgmt/family/create",
+			familyUpdate:                               "mgmt/family/update",
+			familyDelete:                               "mgmt/family/delete",
+			familySearch:                               "mgmt/family/search",
+			familyDependentCreate:                      "mgmt/family/dependent/create",
+			familyDependentDelete:                      "mgmt/family/dependent/delete",
+			familyImpersonate:                          "mgmt/family/impersonate",
+			familyStopImpersonation:                    "mgmt/family/impersonate/stop",
+			familySettings:                             "mgmt/family/settings",
+			familyCustomAttributes:                     "mgmt/family/customattributes",
+			familyCustomAttributeCreate:                "mgmt/family/customattribute/create",
+			familyCustomAttributeDelete:                "mgmt/family/customattribute/delete",
 		},
 		logout:       "auth/logout",
 		logoutAll:    "auth/logoutall",
@@ -710,6 +727,25 @@ type mgmtEndpoints struct {
 	scopeClaimMappingGet    string
 	scopeClaimMappingSet    string
 	scopeClaimMappingDelete string
+
+	userAddFamilies                       string
+	userRemoveFamilies                    string
+	userFamilyScopedCustomAttributes      string
+	userFamilyScopedCustomAttributeCreate string
+	userFamilyScopedCustomAttributeDelete string
+
+	familyCreate                string
+	familyUpdate                string
+	familyDelete                string
+	familySearch                string
+	familyDependentCreate       string
+	familyDependentDelete       string
+	familyImpersonate           string
+	familyStopImpersonation     string
+	familySettings              string
+	familyCustomAttributes      string
+	familyCustomAttributeCreate string
+	familyCustomAttributeDelete string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -1163,6 +1199,26 @@ func (e *endpoints) ManagementUserAddTenant() string {
 
 func (e *endpoints) ManagementUserRemoveTenant() string {
 	return path.Join(e.version, e.mgmt.userRemoveTenant)
+}
+
+func (e *endpoints) ManagementUserAddFamilies() string {
+	return path.Join(e.version, e.mgmt.userAddFamilies)
+}
+
+func (e *endpoints) ManagementUserRemoveFamilies() string {
+	return path.Join(e.version, e.mgmt.userRemoveFamilies)
+}
+
+func (e *endpoints) ManagementUserFamilyScopedCustomAttributes() string {
+	return path.Join(e.version, e.mgmt.userFamilyScopedCustomAttributes)
+}
+
+func (e *endpoints) ManagementUserFamilyScopedCustomAttributeCreate() string {
+	return path.Join(e.version, e.mgmt.userFamilyScopedCustomAttributeCreate)
+}
+
+func (e *endpoints) ManagementUserFamilyScopedCustomAttributeDelete() string {
+	return path.Join(e.version, e.mgmt.userFamilyScopedCustomAttributeDelete)
 }
 
 func (e *endpoints) ManagementUserSetRole() string {
@@ -1961,6 +2017,54 @@ func (e *endpoints) ManagementScopeClaimMappingSet() string {
 
 func (e *endpoints) ManagementScopeClaimMappingDelete() string {
 	return path.Join(e.version, e.mgmt.scopeClaimMappingDelete)
+}
+
+func (e *endpoints) ManagementFamilyCreate() string {
+	return path.Join(e.version, e.mgmt.familyCreate)
+}
+
+func (e *endpoints) ManagementFamilyUpdate() string {
+	return path.Join(e.version, e.mgmt.familyUpdate)
+}
+
+func (e *endpoints) ManagementFamilyDelete() string {
+	return path.Join(e.version, e.mgmt.familyDelete)
+}
+
+func (e *endpoints) ManagementFamilySearch() string {
+	return path.Join(e.version, e.mgmt.familySearch)
+}
+
+func (e *endpoints) ManagementFamilyDependentCreate() string {
+	return path.Join(e.version, e.mgmt.familyDependentCreate)
+}
+
+func (e *endpoints) ManagementFamilyDependentDelete() string {
+	return path.Join(e.version, e.mgmt.familyDependentDelete)
+}
+
+func (e *endpoints) ManagementFamilyImpersonate() string {
+	return path.Join(e.version, e.mgmt.familyImpersonate)
+}
+
+func (e *endpoints) ManagementFamilyStopImpersonation() string {
+	return path.Join(e.version, e.mgmt.familyStopImpersonation)
+}
+
+func (e *endpoints) ManagementFamilySettings() string {
+	return path.Join(e.version, e.mgmt.familySettings)
+}
+
+func (e *endpoints) ManagementFamilyCustomAttributes() string {
+	return path.Join(e.version, e.mgmt.familyCustomAttributes)
+}
+
+func (e *endpoints) ManagementFamilyCustomAttributeCreate() string {
+	return path.Join(e.version, e.mgmt.familyCustomAttributeCreate)
+}
+
+func (e *endpoints) ManagementFamilyCustomAttributeDelete() string {
+	return path.Join(e.version, e.mgmt.familyCustomAttributeDelete)
 }
 
 func (e *endpoints) ManagementLicense() string {

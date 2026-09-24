@@ -596,6 +596,38 @@ func TestSignUpOrInEnchantedLinkWithPhone(t *testing.T) {
 	require.EqualValues(t, maskedPhone, response.MaskedPhone)
 }
 
+func TestSignUpOrInEnchantedLinkWithPhoneNilOptions(t *testing.T) {
+	phone := "+972555555555"
+	uri := "http://test.me"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeEnchantedLinkSignUpOrInURL(descope.MethodSMS), r.URL.RequestURI())
+
+		m, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, m["loginId"])
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(`{"pendingRef": "pending_ref","linkId": "linkID", "maskedPhone":"+9725*****555"}`)),
+		}, nil
+	})
+	require.NoError(t, err)
+	response, err := a.EnchantedLink().SignUpOrInWithPhone(context.Background(), phone, uri, nil)
+	require.NoError(t, err)
+	require.EqualValues(t, "pending_ref", response.PendingRef)
+}
+
+func TestSignInEnchantedLinkWithPhoneInvalidResponse(t *testing.T) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(`{"pendingRef": `)),
+		}, nil
+	})
+	require.NoError(t, err)
+	_, err = a.EnchantedLink().SignInWithPhone(context.Background(), "+972555555555", "http://test.me", nil, nil)
+	require.ErrorIs(t, err, descope.ErrUnexpectedResponse)
+}
+
 func TestUpdateUserPhoneEnchantedLink(t *testing.T) {
 	loginID := "943248329844"
 	phone := "+972555555555"

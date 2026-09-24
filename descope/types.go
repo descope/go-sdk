@@ -533,6 +533,7 @@ type UserRequest struct {
 	VerifiedPhone      *bool               `json:"verifiedPhone,omitempty"`
 	AdditionalLoginIDs []string            `json:"additionalLoginIds,omitempty"`
 	SSOAppIDs          []string            `json:"ssoAppIDs,omitempty"`
+	FamilyAssociations []*AssociatedFamily `json:"familyAssociations,omitempty"`
 }
 
 type PatchUserRequest struct {
@@ -552,6 +553,9 @@ type PatchUserRequest struct {
 	SCIM               *bool                `json:"scim,omitempty"`
 	Status             *UserStatus          `json:"status,omitempty"`
 	AdditionalLoginIDs *[]string            `json:"additionalLoginIds,omitempty"`
+	// FamilyAssociations replaces the user's full family membership when set (even to an empty
+	// list). Leave nil to keep the user's families unchanged.
+	FamilyAssociations *[]*AssociatedFamily `json:"familyAssociations,omitempty"`
 }
 
 type PatchUserBatchRequest struct {
@@ -655,6 +659,8 @@ type UserResponse struct {
 	SCIM             bool                            `json:"scim,omitempty"`
 	OAuth            map[string]bool                 `json:"oauth,omitempty"`
 	SSOAppIDs        []string                        `json:"ssoAppIds,omitempty"`
+	Dependent        bool                            `json:"dependent,omitempty"`
+	UserFamilies     []*UserFamily                   `json:"userFamilies,omitempty"`
 }
 
 type MeTenant struct {
@@ -763,6 +769,98 @@ type AssociatedTenant struct {
 type UserResponseAssociatedTenant struct {
 	AssociatedTenant `json:",inline"`
 	Permissions      []string `json:"permissions,omitempty"`
+}
+
+// Represents a family association for a user. The family ID is required to denote which family
+// the user belongs to. Roles is an optional list of the user's roles in this specific family, and
+// FamilyScopedAttributes is an optional map of the user's family-scoped custom attribute values
+// for this family (attribute name -> value).
+type AssociatedFamily struct {
+	FamilyID               string         `json:"familyId"`
+	Roles                  []string       `json:"roleNames,omitempty"`
+	FamilyScopedAttributes map[string]any `json:"familyScopedAttributes,omitempty"`
+}
+
+// UserFamily is a family the user belongs to, as returned on a UserResponse, including the
+// user's roles, effective permissions and family-scoped custom attribute values in that family.
+type UserFamily struct {
+	FamilyID               string         `json:"familyId"`
+	Roles                  []string       `json:"roleNames,omitempty"`
+	Permissions            []string       `json:"permissions,omitempty"`
+	FamilyScopedAttributes map[string]any `json:"familyScopedAttributes,omitempty"`
+}
+
+// Family groups a set of users (e.g. a guardian and their dependents) that can share access
+// and family-scoped custom attributes.
+type Family struct {
+	ID               string         `json:"id"`
+	Name             string         `json:"name"`
+	CustomAttributes map[string]any `json:"customAttributes,omitempty"`
+	Disabled         bool           `json:"disabled,omitempty"`
+	Photo            string         `json:"photo,omitempty"`
+	CreatedTime      int32          `json:"createdTime,omitempty"`
+}
+
+// FamilyRequest is used to create a new family. Name is required.
+type FamilyRequest struct {
+	Name             string         `json:"name"`
+	CustomAttributes map[string]any `json:"customAttributes,omitempty"`
+	Photo            string         `json:"photo,omitempty"`
+	Disabled         bool           `json:"disabled,omitempty"`
+}
+
+// UpdateFamilyRequest is used to partially update an existing family. Every field is optional
+// and only sent (and applied) when non-nil, so unset fields leave the family's current values
+// untouched.
+type UpdateFamilyRequest struct {
+	Name             *string        `json:"name,omitempty"`
+	CustomAttributes map[string]any `json:"customAttributes,omitempty"`
+	Photo            *string        `json:"photo,omitempty"`
+	Disabled         *bool          `json:"disabled,omitempty"`
+}
+
+// Options for searching families. Leaving all options empty returns all families.
+//
+// Page - allows to paginate over the results. Pages start at 0 and must be non-negative.
+// Size - limits the number of returned families (up to 1000). Leave at 0 to return the default amount.
+type FamilySearchOptions struct {
+	IDs              []string
+	Names            []string
+	Text             string
+	CustomAttributes map[string]any
+	Page             int32
+	Size             int32
+}
+
+// FamilyDependentRequest is used to create a dependent (shadow profile) user in a family,
+// i.e. a user with no login credentials of their own.
+//
+// When LoginID is empty it is derived from the name. The email and phone are never used as the
+// login ID since a dependent may share them with their guardian.
+//
+// FamilyScopedAttributes is an optional map of family-scoped custom attribute values, keyed by
+// family ID and then by attribute name.
+type FamilyDependentRequest struct {
+	User                   `json:",inline"`
+	LoginID                string                    `json:"loginId,omitempty"`
+	Picture                string                    `json:"picture,omitempty"`
+	CustomAttributes       map[string]any            `json:"customAttributes,omitempty"`
+	FamilyScopedAttributes map[string]map[string]any `json:"familyScopedAttributes,omitempty"`
+}
+
+// FamilySettings are the project's family account settings.
+type FamilySettings struct {
+	Enabled                    bool  `json:"enabled"`
+	MaxFamilyMembers           int32 `json:"maxFamilyMembers"`
+	AllowMultipleFamiliesUsers bool  `json:"allowMultipleFamiliesUsers"`
+}
+
+// FamilySettingsRequest is used to partially update the project's family account settings.
+// Only the fields that are set (non-nil) are updated. MaxFamilyMembers must be at least 1.
+type FamilySettingsRequest struct {
+	Enabled                    *bool  `json:"enabled,omitempty"`
+	MaxFamilyMembers           *int32 `json:"maxFamilyMembers,omitempty"`
+	AllowMultipleFamiliesUsers *bool  `json:"allowMultipleFamiliesUsers,omitempty"`
 }
 
 // Represents a mapping between a set of groups of users and a role that will be assigned to them.
@@ -1198,6 +1296,8 @@ type UserSearchOptions struct {
 	TenantRoleIDs     map[string]*RoleList
 	TenantRoleNames   map[string]*RoleList
 	IncludeSubTenants bool
+	FamilyIDs         []string // only return users that are members of at least one of these families
+	Dependent         *bool    // when set, filter by whether the user is a family dependent
 }
 
 type UserSearchSort struct {

@@ -119,6 +119,7 @@ These sections show how to use the SDK to perform API management functions. Befo
 18. [Manage Descopers](#manage-descopers)
 19. [Manage Engines](#manage-engines)
 20. [Manage JWT Templates](#manage-jwt-templates)
+21. [Manage Families](#manage-families)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -2418,6 +2419,101 @@ tmpl, err = descopeClient.Management.JWTTemplate().ApplyFromLibrary(context.Back
 // Delete a template by ID.
 err = descopeClient.Management.JWTTemplate().Delete(context.Background(), "template-id")
 ```
+
+### Manage Families
+
+Families group a set of users, for example a guardian and their dependents. You can manage the
+project's family settings, families, dependents (users with no login credentials of their own),
+family memberships and the related custom attribute definitions:
+
+```go
+// Load and update the project's family account settings. Only the non-nil fields are updated.
+settings, err := descopeClient.Management.Family().GetSettings(context.Background())
+enabled := true
+settings, err = descopeClient.Management.Family().ConfigureSettings(context.Background(), &descope.FamilySettingsRequest{Enabled: &enabled})
+
+// Custom attributes defined on the family entity itself
+attrs, err := descopeClient.Management.Family().CreateCustomAttributes(context.Background(), []*descope.CustomAttribute{
+    {Name: "plan", Type: 1, DisplayName: "Plan"},
+})
+attrs, err = descopeClient.Management.Family().GetCustomAttributes(context.Background())
+attrs, err = descopeClient.Management.Family().DeleteCustomAttributes(context.Background(), []string{"plan"})
+
+// Family-scoped user custom attributes: user attributes whose values are held per family membership
+attrs, err = descopeClient.Management.User().CreateFamilyScopedCustomAttributes(context.Background(), []*descope.CustomAttribute{
+    {Name: "nickname", Type: 1, DisplayName: "Nickname"},
+})
+attrs, err = descopeClient.Management.User().GetFamilyScopedCustomAttributes(context.Background())
+attrs, err = descopeClient.Management.User().DeleteFamilyScopedCustomAttributes(context.Background(), []string{"nickname"})
+
+// Create a family. The family ID is generated automatically, or use CreateWithID to set your own.
+family, err := descopeClient.Management.Family().Create(context.Background(), &descope.FamilyRequest{
+    Name:             "My Family",
+    CustomAttributes: map[string]any{"plan": "free"},
+})
+family, err = descopeClient.Management.Family().CreateWithID(context.Background(), "my-family-id", &descope.FamilyRequest{Name: "Other Family"})
+
+// Update a family. Only the non-nil fields are updated.
+name := "My Renamed Family"
+family, err = descopeClient.Management.Family().Update(context.Background(), family.ID, &descope.UpdateFamilyRequest{
+    Name:             &name,
+    CustomAttributes: map[string]any{"plan": "premium"},
+})
+
+// Search families. Passing nil returns all families.
+families, err := descopeClient.Management.Family().SearchAll(context.Background(), &descope.FamilySearchOptions{
+    IDs:              []string{family.ID},
+    CustomAttributes: map[string]any{"plan": "premium"},
+})
+
+// Create a user straight into a family with a family role and family-scoped attribute values...
+userReq := &descope.UserRequest{}
+userReq.Email = "guardian@example.com"
+userReq.FamilyAssociations = []*descope.AssociatedFamily{
+    {FamilyID: family.ID, Roles: []string{"Family Admin"}, FamilyScopedAttributes: map[string]any{"nickname": "Mom"}},
+}
+user, err := descopeClient.Management.User().Create(context.Background(), "guardian@example.com", userReq)
+
+// ...or add an existing user to families. This merges: omitting Roles or FamilyScopedAttributes on
+// a family the user already belongs to leaves them unchanged.
+user, err = descopeClient.Management.User().AddFamilies(context.Background(), "guardian@example.com", []*descope.AssociatedFamily{
+    {FamilyID: family.ID, FamilyScopedAttributes: map[string]any{"nickname": "Mommy"}},
+})
+for _, userFamily := range user.UserFamilies {
+    // userFamily.FamilyID, userFamily.Roles, userFamily.Permissions, userFamily.FamilyScopedAttributes
+}
+
+// Remove a user from families
+user, err = descopeClient.Management.User().RemoveFamilies(context.Background(), "guardian@example.com", []string{family.ID})
+
+// Create a dependent in a family. When LoginID is empty it is derived from the name.
+// Email and phone are never used as the login ID, since a dependent may share them with a guardian.
+dependent, err := descopeClient.Management.Family().CreateDependent(context.Background(), family.ID, &descope.FamilyDependentRequest{
+    User:                   descope.User{Name: "Kid"},
+    FamilyScopedAttributes: map[string]map[string]any{family.ID: {"nickname": "Kiddo"}},
+})
+
+// Search users by family, optionally only dependents
+isDependent := true
+users, total, err := descopeClient.Management.User().SearchAll(context.Background(), &descope.UserSearchOptions{
+    FamilyIDs: []string{family.ID},
+    Dependent: &isDependent,
+})
+
+// Impersonate a dependent. The impersonator must be a member of the dependent's family and hold the
+// "Family Impersonate Dependents" permission there. The last argument optionally scopes the
+// impersonated session to the dependent's family.
+jwt, err := descopeClient.Management.Family().ImpersonateDependent(context.Background(), "guardian@example.com", dependent.LoginIDs[0], family.ID)
+
+// Stop impersonating and get a JWT for the acting user's own session
+jwt, err = descopeClient.Management.Family().StopImpersonation(context.Background(), jwt, nil, 0)
+
+// Dependent and family deletion cannot be undone. Use carefully.
+err = descopeClient.Management.Family().DeleteDependent(context.Background(), dependent.UserID)
+err = descopeClient.Management.Family().Delete(context.Background(), family.ID)
+```
+
+A complete runnable walkthrough is available in the [families example](https://github.com/descope/go-sdk/blob/main/examples/families).
 
 ## Code Examples
 
