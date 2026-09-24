@@ -277,7 +277,8 @@ type User interface {
 	// The parameters follow the same convention as those for the Create function.
 	//
 	// IMPORTANT: All parameters will override whatever values are currently set
-	// in the existing user. Use carefully.
+	// in the existing user, including family memberships (an empty FamilyAssociations
+	// removes the user from all families). Use carefully.
 	// Instead, use Patch if you don't want to pass all parameters.
 	Update(ctx context.Context, loginIDOrUserID string, user *descope.UserRequest) (*descope.UserResponse, error)
 
@@ -414,6 +415,21 @@ type User interface {
 	// and returns the full set of custom attributes after the change.
 	DeleteCustomAttributes(ctx context.Context, names []string) ([]*descope.CustomAttribute, error)
 
+	// GetFamilyScopedCustomAttributes loads all family-scoped custom attribute definitions for users.
+	//
+	// Family-scoped attributes are user attributes whose values are held per family membership
+	// (see AssociatedFamily.FamilyScopedAttributes) rather than on the user itself. Their definitions
+	// are a separate set from the plain user custom attributes.
+	GetFamilyScopedCustomAttributes(ctx context.Context) ([]*descope.CustomAttribute, error)
+
+	// CreateFamilyScopedCustomAttributes creates family-scoped custom attribute definitions for users
+	// and returns the full set of family-scoped custom attributes after the change.
+	CreateFamilyScopedCustomAttributes(ctx context.Context, attributes []*descope.CustomAttribute) ([]*descope.CustomAttribute, error)
+
+	// DeleteFamilyScopedCustomAttributes deletes family-scoped user custom attribute definitions by name
+	// and returns the full set of family-scoped custom attributes after the change.
+	DeleteFamilyScopedCustomAttributes(ctx context.Context, names []string) ([]*descope.CustomAttribute, error)
+
 	// Update an existing user's display name (i.e., their full name).
 	//
 	// The displayName parameter can be empty in which case the name will be removed.
@@ -470,6 +486,17 @@ type User interface {
 
 	// Remove roles from a user in a specific tenant.
 	RemoveTenantRoles(ctx context.Context, loginIDOrUserID string, tenantID string, roles []string) (*descope.UserResponse, error)
+
+	// Add an existing user to one or more families.
+	//
+	// Each association may also set the user's roles and family-scoped attribute values in that
+	// family. This merges: omitting Roles or FamilyScopedAttributes on a family the user already
+	// belongs to leaves them unchanged, given roles are added on top of the existing ones, and given
+	// family-scoped attribute keys are merged into the stored values.
+	AddFamilies(ctx context.Context, loginIDOrUserID string, familyAssociations []*descope.AssociatedFamily) (*descope.UserResponse, error)
+
+	// Remove an existing user from one or more families.
+	RemoveFamilies(ctx context.Context, loginIDOrUserID string, familyIDs []string) (*descope.UserResponse, error)
 
 	// Set a temporary password for the given login ID.
 	// Note: The password will automatically be set as expired.
@@ -1619,6 +1646,9 @@ type Management interface {
 
 	// Provides functions for managing JWT templates in a project.
 	JWTTemplate() JWTTemplate
+
+	// Provides functions for managing families (family accounts) in a project.
+	Family() Family
 }
 
 // JWTTemplate provides functions for managing JWT templates in a project.
@@ -1677,4 +1707,85 @@ type ScopeClaimMapping interface {
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	Delete(ctx context.Context) error
+}
+
+// Family provides functions for managing families (family accounts) in a project.
+//
+// A family groups a set of users, e.g. a guardian and their dependents. Regular users are added to
+// and removed from families with User().AddFamilies and User().RemoveFamilies, or by setting
+// FamilyAssociations when creating or updating a user.
+type Family interface {
+	// Create a new family. familyRequest.Name is required. The family ID is generated automatically.
+	//
+	// Returns the created family.
+	Create(ctx context.Context, familyRequest *descope.FamilyRequest) (*descope.Family, error)
+
+	// Create a new family with the given ID. Both the ID and familyRequest.Name are required.
+	//
+	// Returns the created family.
+	CreateWithID(ctx context.Context, id string, familyRequest *descope.FamilyRequest) (*descope.Family, error)
+
+	// Update an existing family.
+	//
+	// Only the fields that are set (non-nil) in the request are updated; everything else is left
+	// as-is. Returns the updated family.
+	Update(ctx context.Context, id string, familyRequest *descope.UpdateFamilyRequest) (*descope.Family, error)
+
+	// Delete an existing family.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	Delete(ctx context.Context, id string) error
+
+	// Search families according to the given options.
+	//
+	// Using nil options returns all families.
+	SearchAll(ctx context.Context, options *descope.FamilySearchOptions) ([]*descope.Family, error)
+
+	// Create a dependent (shadow profile) user in a family, i.e. a user with no login
+	// credentials of their own.
+	//
+	// The familyID is required, dependent is optional. See descope.FamilyDependentRequest
+	// for how the login ID is determined. Returns the created user.
+	CreateDependent(ctx context.Context, familyID string, dependent *descope.FamilyDependentRequest) (*descope.UserResponse, error)
+
+	// Delete a dependent user by user ID. The family is inferred from the dependent.
+	//
+	// Regular (non-dependent) family members are removed with User().RemoveFamilies instead.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteDependent(ctx context.Context, userID string) error
+
+	// Impersonate a family dependent and return the impersonated session JWT.
+	//
+	// The impersonator (by user ID or login ID) must be a member of the dependent's family and hold
+	// the "Family Impersonate Dependents" permission there. selectedFamily is optional, and when set
+	// scopes the impersonated session to that family (it must be the dependent's family).
+	ImpersonateDependent(ctx context.Context, impersonatorUserIDOrLoginID string, dependentLoginID string, selectedFamily string) (string, error)
+
+	// Stop impersonating a family dependent and return a JWT for the acting user's own session.
+	//
+	// customClaims and refreshDuration are optional.
+	StopImpersonation(ctx context.Context, jwt string, customClaims map[string]any, refreshDuration int32) (string, error)
+
+	// Load the project's family account settings.
+	GetSettings(ctx context.Context) (*descope.FamilySettings, error)
+
+	// Update the project's family account settings.
+	//
+	// Only the fields that are set (non-nil) are updated. Returns the settings after the change.
+	ConfigureSettings(ctx context.Context, settings *descope.FamilySettingsRequest) (*descope.FamilySettings, error)
+
+	// GetCustomAttributes loads all custom attribute definitions configured on the family entity.
+	//
+	// These are distinct from the family-scoped user attributes managed with
+	// User().GetFamilyScopedCustomAttributes.
+	GetCustomAttributes(ctx context.Context) ([]*descope.CustomAttribute, error)
+
+	// CreateCustomAttributes creates custom attribute definitions on the family entity
+	// and returns the full set of family custom attributes after the change.
+	CreateCustomAttributes(ctx context.Context, attributes []*descope.CustomAttribute) ([]*descope.CustomAttribute, error)
+
+	// DeleteCustomAttributes deletes custom attribute definitions from the family entity by name
+	// and returns the full set of family custom attributes after the change.
+	DeleteCustomAttributes(ctx context.Context, names []string) ([]*descope.CustomAttribute, error)
 }

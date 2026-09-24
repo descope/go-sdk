@@ -37,20 +37,21 @@ type createUserRequest struct {
 	additionalLoginIDs []string
 	options            *descope.InviteOptions
 	ssoAppIDs          []string
+	familyAssociations []*descope.AssociatedFamily
 }
 
 func (u *user) Create(ctx context.Context, loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
-	return u.create(ctx, loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, false, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, nil, user.SSOAppIDs)
+	return u.create(ctx, loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, false, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, nil, user.SSOAppIDs, user.FamilyAssociations)
 }
 
 func (u *user) CreateTestUser(ctx context.Context, loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
-	return u.create(ctx, loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, false, true, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, nil, user.SSOAppIDs)
+	return u.create(ctx, loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, false, true, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, nil, user.SSOAppIDs, user.FamilyAssociations)
 }
 
 func (u *user) CreateBatch(ctx context.Context, users []*descope.BatchUser) (*descope.UsersBatchResponse, error) {
@@ -64,7 +65,7 @@ func (u *user) Invite(ctx context.Context, loginIDOrUserID string, user *descope
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
-	return u.create(ctx, loginIDOrUserID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, true, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, options, user.SSOAppIDs)
+	return u.create(ctx, loginIDOrUserID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, true, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, options, user.SSOAppIDs, user.FamilyAssociations)
 }
 
 func (u *user) InviteBatch(ctx context.Context, users []*descope.BatchUser, options *descope.InviteOptions) (*descope.UsersBatchResponse, error) {
@@ -74,7 +75,7 @@ func (u *user) InviteBatch(ctx context.Context, users []*descope.BatchUser, opti
 	return u.createBatch(ctx, users, options)
 }
 
-func (u *user) create(ctx context.Context, loginID, email, phone, displayName, givenName, middleName, familyName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, options *descope.InviteOptions, ssoAppIDs []string) (*descope.UserResponse, error) {
+func (u *user) create(ctx context.Context, loginID, email, phone, displayName, givenName, middleName, familyName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, options *descope.InviteOptions, ssoAppIDs []string, familyAssociations []*descope.AssociatedFamily) (*descope.UserResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
@@ -102,6 +103,7 @@ func (u *user) create(ctx context.Context, loginID, email, phone, displayName, g
 		additionalLoginIDs: additionalLoginIDs,
 		options:            options,
 		ssoAppIDs:          ssoAppIDs,
+		familyAssociations: familyAssociations,
 	})
 
 	var res *api.HTTPResponse
@@ -153,6 +155,7 @@ func (u *user) Update(ctx context.Context, loginIDOrUserID string, user *descope
 		verifiedPhone:      user.VerifiedPhone,
 		additionalLoginIDs: user.AdditionalLoginIDs,
 		ssoAppIDs:          user.SSOAppIDs,
+		familyAssociations: user.FamilyAssociations,
 	})
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdate(), req, nil, "")
 	if err != nil {
@@ -233,6 +236,38 @@ func (u *user) DeleteCustomAttributes(ctx context.Context, names []string) ([]*d
 	}
 	body := map[string]any{"names": names}
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserCustomAttributeDelete(), body, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalCustomAttributesResponse(res)
+}
+
+func (u *user) GetFamilyScopedCustomAttributes(ctx context.Context) ([]*descope.CustomAttribute, error) {
+	res, err := u.client.DoGetRequest(ctx, api.Routes.ManagementUserFamilyScopedCustomAttributes(), nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalCustomAttributesResponse(res)
+}
+
+func (u *user) CreateFamilyScopedCustomAttributes(ctx context.Context, attributes []*descope.CustomAttribute) ([]*descope.CustomAttribute, error) {
+	if len(attributes) == 0 {
+		return nil, utils.NewInvalidArgumentError("attributes")
+	}
+	body := map[string]any{"attributes": attributes}
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserFamilyScopedCustomAttributeCreate(), body, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalCustomAttributesResponse(res)
+}
+
+func (u *user) DeleteFamilyScopedCustomAttributes(ctx context.Context, names []string) ([]*descope.CustomAttribute, error) {
+	if len(names) == 0 {
+		return nil, utils.NewInvalidArgumentError("names")
+	}
+	body := map[string]any{"names": names}
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserFamilyScopedCustomAttributeDelete(), body, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -587,6 +622,42 @@ func (u *user) RemoveTenant(ctx context.Context, loginIDOrUserID string, tenantI
 	}
 	req := makeUpdateUserTenantRequest(loginIDOrUserID, tenantID)
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveTenant(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalUserResponse(res)
+}
+
+func (u *user) AddFamilies(ctx context.Context, loginIDOrUserID string, familyAssociations []*descope.AssociatedFamily) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
+	}
+	if len(familyAssociations) == 0 {
+		return nil, utils.NewInvalidArgumentError("familyAssociations")
+	}
+	req := map[string]any{
+		"loginId":            loginIDOrUserID,
+		"familyAssociations": makeAssociatedFamilyList(familyAssociations),
+	}
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserAddFamilies(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalUserResponse(res)
+}
+
+func (u *user) RemoveFamilies(ctx context.Context, loginIDOrUserID string, familyIDs []string) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
+	}
+	if len(familyIDs) == 0 {
+		return nil, utils.NewInvalidArgumentError("familyIDs")
+	}
+	req := map[string]any{
+		"loginId":   loginIDOrUserID,
+		"familyIds": familyIDs,
+	}
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserRemoveFamilies(), req, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -1047,6 +1118,7 @@ func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.In
 			verifiedPhone:      u.VerifiedPhone,
 			additionalLoginIDs: u.AdditionalLoginIDs,
 			ssoAppIDs:          u.SSOAppIDs,
+			familyAssociations: u.FamilyAssociations,
 		})
 		if u.Password != nil {
 			if cleartext := u.Password.Cleartext; cleartext != "" {
@@ -1122,6 +1194,9 @@ func makeUpdateUserRequest(req *createUserRequest) map[string]any {
 		res["verifiedPhone"] = *req.verifiedPhone
 	}
 	res["ssoAppIDs"] = req.ssoAppIDs
+	if len(req.familyAssociations) > 0 {
+		res["familyAssociations"] = makeAssociatedFamilyList(req.familyAssociations)
+	}
 	return res
 }
 
@@ -1177,6 +1252,9 @@ func makePatchUserRequest(loginID string, req *descope.PatchUserRequest) map[str
 	if req.AdditionalLoginIDs != nil {
 		res["additionalLoginIds"] = *req.AdditionalLoginIDs
 	}
+	if req.FamilyAssociations != nil {
+		res["familyAssociations"] = makeAssociatedFamilyList(*req.FamilyAssociations)
+	}
 	return res
 }
 
@@ -1227,7 +1305,7 @@ func makeSetPasswordRequest(loginID string, password string, setActive bool) map
 }
 
 func makeSearchAllRequest(options *descope.UserSearchOptions) map[string]any {
-	return map[string]any{
+	req := map[string]any{
 		"tenantIds":         options.TenantIDs,
 		"roleNames":         options.Roles,
 		"limit":             options.Limit,
@@ -1251,6 +1329,13 @@ func makeSearchAllRequest(options *descope.UserSearchOptions) map[string]any {
 		"tenantRoleNames":   options.TenantRoleNames,
 		"includeSubTenants": options.IncludeSubTenants,
 	}
+	if len(options.FamilyIDs) > 0 {
+		req["familyIds"] = options.FamilyIDs
+	}
+	if options.Dependent != nil {
+		req["dependent"] = *options.Dependent
+	}
+	return req
 }
 
 func unmarshalUserResponse(res *api.HTTPResponse) (*descope.UserResponse, error) {
