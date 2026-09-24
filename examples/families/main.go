@@ -18,11 +18,13 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/descope/go-sdk/descope"
@@ -240,10 +242,14 @@ func run(ctx context.Context) error {
 	if err = step("Family().ImpersonateDependent", nil, err); err != nil {
 		return err
 	}
-	_, err = family.StopImpersonation(ctx, jwt, nil, 0)
+	// sub is the dependent, act is the guardian acting on their behalf, dcf is the selected family
+	printSessionClaims(jwt)
+	guardianJWT, err := family.StopImpersonation(ctx, jwt, nil, 0)
 	if err = step("Family().StopImpersonation", nil, err); err != nil {
 		return err
 	}
+	// Back to the guardian's own session: sub is the guardian and act is gone
+	printSessionClaims(guardianJWT)
 
 	// --- Membership removal ----------------------------------------------------------------------
 	// Kept when skipping cleanup, so the family shows both the guardian and the dependent
@@ -299,4 +305,33 @@ func maxMembersOrNil(maxMembers int32) *int32 {
 		return nil
 	}
 	return &maxMembers
+}
+
+// printSessionClaims prints the identity claims of a session JWT: the subject, the acting user (set
+// while impersonating) and the selected family. The token itself is a live session credential, so it
+// is never printed. The payload is decoded without verifying the signature, which is fine for display
+// only - validate tokens with the SDK before trusting them.
+func printSessionClaims(jwt string) {
+	parts := strings.Split(jwt, ".")
+	if len(parts) != 3 {
+		fmt.Fprintln(os.Stderr, "  unexpected JWT format")
+		return
+	}
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "  failed to decode JWT payload: %v\n", err)
+		return
+	}
+	var claims struct {
+		Sub string         `json:"sub"`
+		Act map[string]any `json:"act,omitempty"`
+		Dcf string         `json:"dcf,omitempty"`
+	}
+	if err := json.Unmarshal(payload, &claims); err != nil {
+		fmt.Fprintf(os.Stderr, "  failed to parse JWT claims: %v\n", err)
+		return
+	}
+	if b, err := json.MarshalIndent(claims, "  ", "  "); err == nil {
+		fmt.Println("  " + string(b))
+	}
 }
