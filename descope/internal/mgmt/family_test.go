@@ -140,9 +140,23 @@ func TestFamilyUpdateOmitsUnsetFields(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		assert.EqualValues(t, map[string]any{"id": "fam1"}, req)
 	}, familyResponse))
-	res, err := mgmt.Family().Update(context.Background(), "fam1", nil)
+	res, err := mgmt.Family().Update(context.Background(), "fam1", &descope.UpdateFamilyRequest{})
 	require.NoError(t, err)
 	assertFamilyResponse(t, res)
+}
+
+func TestFamilyUpdateNilRequestError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.Family().Update(context.Background(), "fam1", nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Nil(t, res)
+}
+
+func TestFamilyCreateMissingFamilyInResponseError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, map[string]any{}))
+	res, err := mgmt.Family().Create(context.Background(), &descope.FamilyRequest{Name: "My Family"})
+	require.ErrorIs(t, err, descope.ErrUnexpectedResponse)
+	assert.Nil(t, res)
 }
 
 func TestFamilyUpdateError(t *testing.T) {
@@ -272,7 +286,7 @@ func TestFamilyCreateDependentSuccess(t *testing.T) {
 		LoginID:                "demo-kid",
 		Picture:                "https://example.com/kid.png",
 		CustomAttributes:       map[string]any{"grade": "3"},
-		FamilyScopedAttributes: map[string]map[string]any{"fam1": {"nickname": "Kiddo"}},
+		FamilyScopedAttributes: map[string]any{"nickname": "Kiddo"},
 	})
 	require.NoError(t, err)
 	require.NotNil(t, res)

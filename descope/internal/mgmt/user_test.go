@@ -2939,7 +2939,15 @@ func TestUserCreateWithoutFamilyAssociationsOmitsField(t *testing.T) {
 	}, map[string]any{"user": map[string]any{"userId": "U1"}}))
 	_, err := mgmt.User().Create(context.Background(), "guardian@example.com", &descope.UserRequest{})
 	require.NoError(t, err)
-	_, err = mgmt.User().Update(context.Background(), "guardian@example.com", &descope.UserRequest{})
+}
+
+func TestUserUpdateWithoutFamilyAssociationsSendsEmptyList(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, []any{}, req["familyAssociations"])
+	}, map[string]any{"user": map[string]any{"userId": "U1"}}))
+	_, err := mgmt.User().Update(context.Background(), "guardian@example.com", &descope.UserRequest{})
 	require.NoError(t, err)
 }
 

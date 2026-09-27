@@ -15,13 +15,13 @@ func makeAssociatedTenantList(tenants []*descope.AssociatedTenant) []map[string]
 
 func makeAssociatedFamilyList(families []*descope.AssociatedFamily) []map[string]any {
 	res := []map[string]any{}
-	for _, family := range families {
-		entry := map[string]any{"familyId": family.FamilyID}
-		if family.Roles != nil {
-			entry["roleNames"] = family.Roles
+	for _, af := range families {
+		entry := map[string]any{"familyId": af.FamilyID}
+		if af.Roles != nil {
+			entry["roleNames"] = af.Roles
 		}
-		if family.FamilyScopedAttributes != nil {
-			entry["familyScopedAttributes"] = family.FamilyScopedAttributes
+		if af.FamilyScopedAttributes != nil {
+			entry["familyScopedAttributes"] = af.FamilyScopedAttributes
 		}
 		res = append(res, entry)
 	}

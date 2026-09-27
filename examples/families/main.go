@@ -29,7 +29,6 @@ import (
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/client"
-	"github.com/descope/go-sdk/descope/sdk"
 )
 
 func main() {
@@ -85,10 +84,8 @@ func run(ctx context.Context) error {
 	if guardianRole == "" {
 		guardianRole = "Family Admin"
 	}
-	// Keep everything the run created so it can be inspected in the console afterwards
 	skipCleanup := os.Getenv("SKIP_CLEANUP") == "1"
 
-	// Unique suffix so reruns and parallel runs don't collide
 	runID := strconv.FormatInt(time.Now().UnixMilli(), 36)
 	familyAttr := "plan_" + runID
 	familyScopedAttr := "nickname_" + runID
@@ -125,8 +122,30 @@ func run(ctx context.Context) error {
 			fmt.Printf("  original settings:            %+v\n", *originalSettings)
 			return
 		}
-		cleanup(ctx, family, user, dependentUserID, guardianCreated, guardianLoginID, familyID,
-			familyScopedAttrCreated, familyScopedAttr, familyAttrCreated, familyAttr, originalSettings)
+		fmt.Println("\n--- cleanup ---")
+		if dependentUserID != "" {
+			tryStep("Family().DeleteDependent", family.DeleteDependent(ctx, dependentUserID))
+		}
+		if guardianCreated {
+			tryStep("User().Delete (guardian)", user.Delete(ctx, guardianLoginID))
+		}
+		if familyID != "" {
+			tryStep("Family().Delete", family.Delete(ctx, familyID))
+		}
+		if familyScopedAttrCreated {
+			_, err := user.DeleteFamilyScopedCustomAttributes(ctx, []string{familyScopedAttr})
+			tryStep("User().DeleteFamilyScopedCustomAttributes", err)
+		}
+		if familyAttrCreated {
+			_, err := family.DeleteCustomAttributes(ctx, []string{familyAttr})
+			tryStep("Family().DeleteCustomAttributes", err)
+		}
+		_, err := family.ConfigureSettings(ctx, &descope.FamilySettingsRequest{
+			Enabled:                    &originalSettings.Enabled,
+			MaxFamilyMembers:           maxMembersOrNil(originalSettings.MaxFamilyMembers),
+			AllowMultipleFamiliesUsers: &originalSettings.AllowMultipleFamiliesUsers,
+		})
+		tryStep("Family().ConfigureSettings (restore original)", err)
 	}()
 
 	// --- Attribute definitions -------------------------------------------------------------------
@@ -207,7 +226,7 @@ func run(ctx context.Context) error {
 	// --- Dependent (shadow profile, no credentials) ----------------------------------------------
 	dependent, err := family.CreateDependent(ctx, familyID, &descope.FamilyDependentRequest{
 		User:                   descope.User{Name: "Demo Kid " + runID, GivenName: "Demo"},
-		FamilyScopedAttributes: map[string]map[string]any{familyID: {familyScopedAttr: "Kiddo"}},
+		FamilyScopedAttributes: map[string]any{familyScopedAttr: "Kiddo"},
 	})
 	if err = step("Family().CreateDependent", dependent, err); err != nil {
 		return err
@@ -260,35 +279,6 @@ func run(ctx context.Context) error {
 		}
 	}
 	return nil
-}
-
-// cleanup deletes everything the run created, in reverse order, and restores the original settings.
-func cleanup(ctx context.Context, family sdk.Family, user sdk.User, dependentUserID string, guardianCreated bool, guardianLoginID string,
-	familyID string, familyScopedAttrCreated bool, familyScopedAttr string, familyAttrCreated bool, familyAttr string, originalSettings *descope.FamilySettings) {
-	fmt.Println("\n--- cleanup ---")
-	if dependentUserID != "" {
-		tryStep("Family().DeleteDependent", family.DeleteDependent(ctx, dependentUserID))
-	}
-	if guardianCreated {
-		tryStep("User().Delete (guardian)", user.Delete(ctx, guardianLoginID))
-	}
-	if familyID != "" {
-		tryStep("Family().Delete", family.Delete(ctx, familyID))
-	}
-	if familyScopedAttrCreated {
-		_, err := user.DeleteFamilyScopedCustomAttributes(ctx, []string{familyScopedAttr})
-		tryStep("User().DeleteFamilyScopedCustomAttributes", err)
-	}
-	if familyAttrCreated {
-		_, err := family.DeleteCustomAttributes(ctx, []string{familyAttr})
-		tryStep("Family().DeleteCustomAttributes", err)
-	}
-	_, err := family.ConfigureSettings(ctx, &descope.FamilySettingsRequest{
-		Enabled:                    &originalSettings.Enabled,
-		MaxFamilyMembers:           maxMembersOrNil(originalSettings.MaxFamilyMembers),
-		AllowMultipleFamiliesUsers: &originalSettings.AllowMultipleFamiliesUsers,
-	})
-	tryStep("Family().ConfigureSettings (restore original)", err)
 }
 
 // userFamilies returns the user's family memberships, or nil when the user is nil (a failed call).

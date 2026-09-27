@@ -1040,7 +1040,9 @@ user := &descope.BatchUser{
 }
 users, err := descopeClient.Management.User().CreateBatch(context.Background(), []*descope.BatchUser{user})
 
-// Update will override all fields as is. Use carefully.
+// Update will override all fields as is, including family memberships: a nil or empty
+// FamilyAssociations removes the user from all of their families, and updating a dependent
+// requires FamilyAssociations with the dependent's family. Use carefully, or use Patch instead.
 userReqUpdate := &descope.UserRequest{}
 userReqUpdate.Email = "desmond@descope.com"
 userReqUpdate.Name = "Desmond Copeland"
@@ -2453,7 +2455,8 @@ family, err := descopeClient.Management.Family().Create(context.Background(), &d
 })
 family, err = descopeClient.Management.Family().CreateWithID(context.Background(), "my-family-id", &descope.FamilyRequest{Name: "Other Family"})
 
-// Update a family. Only the non-nil fields are updated.
+// Update a family. Only the non-nil fields are updated. CustomAttributes replaces all of the
+// family's custom attributes, it is not merged.
 name := "My Renamed Family"
 family, err = descopeClient.Management.Family().Update(context.Background(), family.ID, &descope.UpdateFamilyRequest{
     Name:             &name,
@@ -2490,7 +2493,7 @@ user, err = descopeClient.Management.User().RemoveFamilies(context.Background(),
 // Email and phone are never used as the login ID, since a dependent may share them with a guardian.
 dependent, err := descopeClient.Management.Family().CreateDependent(context.Background(), family.ID, &descope.FamilyDependentRequest{
     User:                   descope.User{Name: "Kid"},
-    FamilyScopedAttributes: map[string]map[string]any{family.ID: {"nickname": "Kiddo"}},
+    FamilyScopedAttributes: map[string]any{"nickname": "Kiddo"},
 })
 
 // Search users by family, optionally only dependents

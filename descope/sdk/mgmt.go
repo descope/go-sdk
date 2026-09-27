@@ -277,8 +277,9 @@ type User interface {
 	// The parameters follow the same convention as those for the Create function.
 	//
 	// IMPORTANT: All parameters will override whatever values are currently set
-	// in the existing user, including family memberships (an empty FamilyAssociations
-	// removes the user from all families). Use carefully.
+	// in the existing user, including family memberships: a nil or empty FamilyAssociations
+	// removes the user from all of their families, and updating a dependent requires
+	// FamilyAssociations with the dependent's family. Use carefully.
 	// Instead, use Patch if you don't want to pass all parameters.
 	Update(ctx context.Context, loginIDOrUserID string, user *descope.UserRequest) (*descope.UserResponse, error)
 
@@ -1728,7 +1729,8 @@ type Family interface {
 	// Update an existing family.
 	//
 	// Only the fields that are set (non-nil) in the request are updated; everything else is left
-	// as-is. Returns the updated family.
+	// as-is. CustomAttributes replaces all of the family's custom attributes, it is not merged.
+	// Returns the updated family.
 	Update(ctx context.Context, id string, familyRequest *descope.UpdateFamilyRequest) (*descope.Family, error)
 
 	// Delete an existing family.

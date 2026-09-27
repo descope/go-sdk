@@ -811,7 +811,7 @@ type FamilyRequest struct {
 
 // UpdateFamilyRequest is used to partially update an existing family. Every field is optional
 // and only sent (and applied) when non-nil, so unset fields leave the family's current values
-// untouched.
+// untouched. CustomAttributes replaces all of the family's custom attributes, it is not merged.
 type UpdateFamilyRequest struct {
 	Name             *string        `json:"name,omitempty"`
 	CustomAttributes map[string]any `json:"customAttributes,omitempty"`
@@ -838,14 +838,14 @@ type FamilySearchOptions struct {
 // When LoginID is empty it is derived from the name. The email and phone are never used as the
 // login ID since a dependent may share them with their guardian.
 //
-// FamilyScopedAttributes is an optional map of family-scoped custom attribute values, keyed by
-// family ID and then by attribute name.
+// FamilyScopedAttributes is an optional map of the dependent's family-scoped custom attribute
+// values in this family (attribute name -> value).
 type FamilyDependentRequest struct {
 	User                   `json:",inline"`
-	LoginID                string                    `json:"loginId,omitempty"`
-	Picture                string                    `json:"picture,omitempty"`
-	CustomAttributes       map[string]any            `json:"customAttributes,omitempty"`
-	FamilyScopedAttributes map[string]map[string]any `json:"familyScopedAttributes,omitempty"`
+	LoginID                string         `json:"loginId,omitempty"`
+	Picture                string         `json:"picture,omitempty"`
+	CustomAttributes       map[string]any `json:"customAttributes,omitempty"`
+	FamilyScopedAttributes map[string]any `json:"familyScopedAttributes,omitempty"`
 }
 
 // FamilySettings are the project's family account settings.

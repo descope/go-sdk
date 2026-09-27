@@ -157,6 +157,8 @@ func (u *user) Update(ctx context.Context, loginIDOrUserID string, user *descope
 		ssoAppIDs:          user.SSOAppIDs,
 		familyAssociations: user.FamilyAssociations,
 	})
+	// Update replaces the user's family memberships, so always send the (possibly empty) list, like userTenants
+	req["familyAssociations"] = makeAssociatedFamilyList(user.FamilyAssociations)
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserUpdate(), req, nil, "")
 	if err != nil {
 		return nil, err
@@ -211,67 +213,27 @@ func (u *user) DeleteBatch(ctx context.Context, userIDs []string) error {
 }
 
 func (u *user) GetCustomAttributes(ctx context.Context) ([]*descope.CustomAttribute, error) {
-	res, err := u.client.DoGetRequest(ctx, api.Routes.ManagementUserCustomAttributes(), nil, "")
-	if err != nil {
-		return nil, err
-	}
-	return unmarshalCustomAttributesResponse(res)
+	return getCustomAttributes(ctx, u.client, api.Routes.ManagementUserCustomAttributes())
 }
 
 func (u *user) CreateCustomAttributes(ctx context.Context, attributes []*descope.CustomAttribute) ([]*descope.CustomAttribute, error) {
-	if len(attributes) == 0 {
-		return nil, utils.NewInvalidArgumentError("attributes")
-	}
-	body := map[string]any{"attributes": attributes}
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserCustomAttributeCreate(), body, nil, "")
-	if err != nil {
-		return nil, err
-	}
-	return unmarshalCustomAttributesResponse(res)
+	return createCustomAttributes(ctx, u.client, api.Routes.ManagementUserCustomAttributeCreate(), attributes)
 }
 
 func (u *user) DeleteCustomAttributes(ctx context.Context, names []string) ([]*descope.CustomAttribute, error) {
-	if len(names) == 0 {
-		return nil, utils.NewInvalidArgumentError("names")
-	}
-	body := map[string]any{"names": names}
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserCustomAttributeDelete(), body, nil, "")
-	if err != nil {
-		return nil, err
-	}
-	return unmarshalCustomAttributesResponse(res)
+	return deleteCustomAttributes(ctx, u.client, api.Routes.ManagementUserCustomAttributeDelete(), names)
 }
 
 func (u *user) GetFamilyScopedCustomAttributes(ctx context.Context) ([]*descope.CustomAttribute, error) {
-	res, err := u.client.DoGetRequest(ctx, api.Routes.ManagementUserFamilyScopedCustomAttributes(), nil, "")
-	if err != nil {
-		return nil, err
-	}
-	return unmarshalCustomAttributesResponse(res)
+	return getCustomAttributes(ctx, u.client, api.Routes.ManagementUserFamilyScopedCustomAttributes())
 }
 
 func (u *user) CreateFamilyScopedCustomAttributes(ctx context.Context, attributes []*descope.CustomAttribute) ([]*descope.CustomAttribute, error) {
-	if len(attributes) == 0 {
-		return nil, utils.NewInvalidArgumentError("attributes")
-	}
-	body := map[string]any{"attributes": attributes}
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserFamilyScopedCustomAttributeCreate(), body, nil, "")
-	if err != nil {
-		return nil, err
-	}
-	return unmarshalCustomAttributesResponse(res)
+	return createCustomAttributes(ctx, u.client, api.Routes.ManagementUserFamilyScopedCustomAttributeCreate(), attributes)
 }
 
 func (u *user) DeleteFamilyScopedCustomAttributes(ctx context.Context, names []string) ([]*descope.CustomAttribute, error) {
-	if len(names) == 0 {
-		return nil, utils.NewInvalidArgumentError("names")
-	}
-	body := map[string]any{"names": names}
-	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserFamilyScopedCustomAttributeDelete(), body, nil, "")
-	if err != nil {
-		return nil, err
-	}
-	return unmarshalCustomAttributesResponse(res)
+	return deleteCustomAttributes(ctx, u.client, api.Routes.ManagementUserFamilyScopedCustomAttributeDelete(), names)
 }
 
 // Deprecated
@@ -1347,17 +1309,6 @@ func unmarshalUserResponse(res *api.HTTPResponse) (*descope.UserResponse, error)
 		return nil, err
 	}
 	return ures.User, nil
-}
-
-func unmarshalCustomAttributesResponse(res *api.HTTPResponse) ([]*descope.CustomAttribute, error) {
-	cres := struct {
-		Data []*descope.CustomAttribute
-	}{}
-	err := utils.Unmarshal([]byte(res.BodyStr), &cres)
-	if err != nil {
-		return nil, err
-	}
-	return cres.Data, nil
 }
 
 func unmarshalUserImportResponse(res *api.HTTPResponse) (*descope.UserImportResponse, error) {

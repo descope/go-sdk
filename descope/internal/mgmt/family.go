@@ -55,7 +55,7 @@ func (f *family) Update(ctx context.Context, id string, familyRequest *descope.U
 		return nil, utils.NewInvalidArgumentError("id")
 	}
 	if familyRequest == nil {
-		familyRequest = &descope.UpdateFamilyRequest{}
+		return nil, utils.NewInvalidArgumentError("familyRequest")
 	}
 	req := map[string]any{"id": id}
 	if familyRequest.Name != nil {
@@ -142,7 +142,7 @@ func (f *family) CreateDependent(ctx context.Context, familyID string, dependent
 		req["customAttributes"] = dependent.CustomAttributes
 	}
 	if dependent.FamilyScopedAttributes != nil {
-		req["familyScopedAttributes"] = dependent.FamilyScopedAttributes
+		req["familyScopedAttributes"] = map[string]any{familyID: dependent.FamilyScopedAttributes}
 	}
 	res, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFamilyDependentCreate(), req, nil, "")
 	if err != nil {
@@ -178,7 +178,7 @@ func (f *family) ImpersonateDependent(ctx context.Context, impersonatorUserIDOrL
 	if err != nil {
 		return "", err
 	}
-	return unmarshalFamilyJWTResponse(res)
+	return unmarshalJWTResponse(res)
 }
 
 func (f *family) StopImpersonation(ctx context.Context, jwt string, customClaims map[string]any, refreshDuration int32) (string, error) {
@@ -194,7 +194,7 @@ func (f *family) StopImpersonation(ctx context.Context, jwt string, customClaims
 	if err != nil {
 		return "", err
 	}
-	return unmarshalFamilyJWTResponse(res)
+	return unmarshalJWTResponse(res)
 }
 
 func (f *family) GetSettings(ctx context.Context) (*descope.FamilySettings, error) {
@@ -209,17 +209,7 @@ func (f *family) ConfigureSettings(ctx context.Context, settings *descope.Family
 	if settings == nil {
 		return nil, utils.NewInvalidArgumentError("settings")
 	}
-	req := map[string]any{}
-	if settings.Enabled != nil {
-		req["enabled"] = *settings.Enabled
-	}
-	if settings.MaxFamilyMembers != nil {
-		req["maxFamilyMembers"] = *settings.MaxFamilyMembers
-	}
-	if settings.AllowMultipleFamiliesUsers != nil {
-		req["allowMultipleFamiliesUsers"] = *settings.AllowMultipleFamiliesUsers
-	}
-	res, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFamilySettings(), req, nil, "")
+	res, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFamilySettings(), settings, nil, "")
 	if err != nil {
 		return nil, err
 	}
@@ -227,35 +217,15 @@ func (f *family) ConfigureSettings(ctx context.Context, settings *descope.Family
 }
 
 func (f *family) GetCustomAttributes(ctx context.Context) ([]*descope.CustomAttribute, error) {
-	res, err := f.client.DoGetRequest(ctx, api.Routes.ManagementFamilyCustomAttributes(), nil, "")
-	if err != nil {
-		return nil, err
-	}
-	return unmarshalCustomAttributesResponse(res)
+	return getCustomAttributes(ctx, f.client, api.Routes.ManagementFamilyCustomAttributes())
 }
 
 func (f *family) CreateCustomAttributes(ctx context.Context, attributes []*descope.CustomAttribute) ([]*descope.CustomAttribute, error) {
-	if len(attributes) == 0 {
-		return nil, utils.NewInvalidArgumentError("attributes")
-	}
-	body := map[string]any{"attributes": attributes}
-	res, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFamilyCustomAttributeCreate(), body, nil, "")
-	if err != nil {
-		return nil, err
-	}
-	return unmarshalCustomAttributesResponse(res)
+	return createCustomAttributes(ctx, f.client, api.Routes.ManagementFamilyCustomAttributeCreate(), attributes)
 }
 
 func (f *family) DeleteCustomAttributes(ctx context.Context, names []string) ([]*descope.CustomAttribute, error) {
-	if len(names) == 0 {
-		return nil, utils.NewInvalidArgumentError("names")
-	}
-	body := map[string]any{"names": names}
-	res, err := f.client.DoPostRequest(ctx, api.Routes.ManagementFamilyCustomAttributeDelete(), body, nil, "")
-	if err != nil {
-		return nil, err
-	}
-	return unmarshalCustomAttributesResponse(res)
+	return deleteCustomAttributes(ctx, f.client, api.Routes.ManagementFamilyCustomAttributeDelete(), names)
 }
 
 func unmarshalFamilyResponse(res *api.HTTPResponse) (*descope.Family, error) {
@@ -264,6 +234,9 @@ func unmarshalFamilyResponse(res *api.HTTPResponse) (*descope.Family, error) {
 	}{}
 	if err := utils.Unmarshal([]byte(res.BodyStr), &fres); err != nil {
 		return nil, err // notest
+	}
+	if fres.Family == nil {
+		return nil, descope.ErrUnexpectedResponse.WithMessage("Missing family in response")
 	}
 	return fres.Family, nil
 }
@@ -274,12 +247,4 @@ func unmarshalFamilySettingsResponse(res *api.HTTPResponse) (*descope.FamilySett
 		return nil, err // notest
 	}
 	return settings, nil
-}
-
-func unmarshalFamilyJWTResponse(res *api.HTTPResponse) (string, error) {
-	jRes := &jwtRes{}
-	if err := utils.Unmarshal([]byte(res.BodyStr), jRes); err != nil {
-		return "", err // notest
-	}
-	return jRes.JWT, nil
 }
