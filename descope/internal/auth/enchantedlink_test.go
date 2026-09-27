@@ -596,6 +596,46 @@ func TestSignUpOrInEnchantedLinkWithPhone(t *testing.T) {
 	require.EqualValues(t, maskedPhone, response.MaskedPhone)
 }
 
+// Sign-up options are optional, and the nil case defaults them rather than dereferencing. The
+// existing coverage always passes them, so nothing exercised that default.
+func TestSignUpOrInEnchantedLinkWithPhoneNilSignUpOptions(t *testing.T) {
+	phone := "+972555555555"
+	uri := "http://test.me"
+	pendingRefResponse := "pending_ref"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, composeEnchantedLinkSignUpOrInURL(descope.MethodSMS), r.URL.RequestURI())
+
+		m, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, m["loginId"])
+		// the defaulted options carry no claims, template or tenant
+		assert.EqualValues(t, map[string]any{}, m["loginOptions"])
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString(fmt.Sprintf(`{"pendingRef": "%s"}`, pendingRefResponse))),
+		}, nil
+	})
+	require.NoError(t, err)
+	response, err := a.EnchantedLink().SignUpOrInWithPhone(context.Background(), phone, uri, nil)
+	require.NoError(t, err)
+	require.EqualValues(t, pendingRefResponse, response.PendingRef)
+}
+
+// A body the phone pending-reference reader cannot parse has to surface as an unexpected-response
+// error rather than a nil dereference downstream.
+func TestPhoneEnchantedLinkInvalidResponseBody(t *testing.T) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(bytes.NewBufferString("not-json")),
+		}, nil
+	})
+	require.NoError(t, err)
+	_, err = a.EnchantedLink().SignUpOrInWithPhone(context.Background(), "+972555555555", "http://test.me", nil)
+	require.Error(t, err)
+	assert.ErrorIs(t, err, descope.ErrUnexpectedResponse)
+}
+
 func TestUpdateUserPhoneEnchantedLink(t *testing.T) {
 	loginID := "943248329844"
 	phone := "+972555555555"
