@@ -144,6 +144,156 @@ func TestSSOConfigureAuthTypeMissingAuthType(t *testing.T) {
 	require.False(t, called)
 }
 
+func authOnlySAMLSettings(authenticationOnly *bool) *descope.SSOSAMLSettings {
+	return &descope.SSOSAMLSettings{
+		IdpURL:             "https://idp.example.com/sso",
+		IdpEntityID:        "entity-id",
+		IdpCert:            "cert",
+		AuthenticationOnly: authenticationOnly,
+	}
+}
+
+func TestSSOConfigureSAMLAuthenticationOnly(t *testing.T) {
+	on := true
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["tenantId"])
+		require.Equal(t, "somessoid", req["ssoId"])
+		require.Equal(t, true, req["settings"].(map[string]any)["authenticationOnly"])
+	}))
+	require.NoError(t, mgmt.SSO().ConfigureSAMLSettings(context.Background(), "abc", authOnlySAMLSettings(&on), "", nil, "somessoid"))
+}
+
+// false has to reach the server as false rather than be dropped as a zero value, or the
+// classification could never be cleared.
+func TestSSOConfigureSAMLAuthenticationOnlyClear(t *testing.T) {
+	off := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, false, req["settings"].(map[string]any)["authenticationOnly"])
+	}))
+	require.NoError(t, mgmt.SSO().ConfigureSAMLSettings(context.Background(), "abc", authOnlySAMLSettings(&off), "", nil, "somessoid"))
+}
+
+// Left unset it must not appear at all, so an ordinary settings save keeps the stored
+// classification instead of clearing it.
+func TestSSOConfigureSAMLAuthenticationOnlyOmitted(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.NotContains(t, req["settings"].(map[string]any), "authenticationOnly")
+	}))
+	require.NoError(t, mgmt.SSO().ConfigureSAMLSettings(context.Background(), "abc", authOnlySAMLSettings(nil), "", nil, "somessoid"))
+}
+
+// The classification lives on the configuration's settings rows, which the tenant's default
+// configuration has too, so omitting the ssoID targets the default rather than being an error.
+func TestSSOConfigureSAMLAuthenticationOnlyDefaultConfig(t *testing.T) {
+	on := true
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "abc", req["tenantId"])
+		require.Empty(t, req["ssoId"])
+		require.Equal(t, true, req["settings"].(map[string]any)["authenticationOnly"])
+	}))
+	require.NoError(t, mgmt.SSO().ConfigureSAMLSettings(context.Background(), "abc", authOnlySAMLSettings(&on), "", nil, ""))
+}
+
+func TestSSOConfigureOIDCAuthenticationOnly(t *testing.T) {
+	on := true
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, true, req["settings"].(map[string]any)["authenticationOnly"])
+	}))
+	require.NoError(t, mgmt.SSO().ConfigureOIDCSettings(context.Background(), "abc", &descope.SSOOIDCSettings{
+		Name:               "provider",
+		ClientID:           "client-id",
+		AuthenticationOnly: &on,
+	}, nil, "somessoid"))
+}
+
+// The by-metadata save is a separate endpoint with its own request map, so it needs its own proof
+// that the classification travels and that omitting it keeps what is stored.
+func TestSSOConfigureSAMLByMetadataAuthenticationOnly(t *testing.T) {
+	on := true
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, true, req["settings"].(map[string]any)["authenticationOnly"])
+	}))
+	require.NoError(t, mgmt.SSO().ConfigureSAMLSettingsByMetadata(context.Background(), "abc", &descope.SSOSAMLSettingsByMetadata{
+		IdpMetadataURL:     "https://idp.example.com/metadata",
+		AuthenticationOnly: &on,
+	}, "", nil, "somessoid"))
+}
+
+func TestSSOConfigureSAMLByMetadataAuthenticationOnlyOmitted(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.NotContains(t, req["settings"].(map[string]any), "authenticationOnly")
+	}))
+	require.NoError(t, mgmt.SSO().ConfigureSAMLSettingsByMetadata(context.Background(), "abc", &descope.SSOSAMLSettingsByMetadata{
+		IdpMetadataURL: "https://idp.example.com/metadata",
+	}, "", nil, "somessoid"))
+}
+
+// The Cross-App Access save builds its request map by hand and puts the field at the top level
+// rather than under settings, so leaving it out of that map would drop it silently.
+func TestSSOConfigureXAAAuthenticationOnly(t *testing.T) {
+	on := true
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, true, req["authenticationOnly"])
+	}))
+	require.NoError(t, mgmt.SSO().ConfigureXAASettings(context.Background(), "abc", &descope.SSOXAASettings{
+		Enabled:            true,
+		AuthenticationOnly: &on,
+	}, "somessoid"))
+}
+
+func TestSSOConfigureXAAAuthenticationOnlyOmitted(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.NotContains(t, req, "authenticationOnly")
+	}))
+	require.NoError(t, mgmt.SSO().ConfigureXAASettings(context.Background(), "abc", &descope.SSOXAASettings{Enabled: true}, "somessoid"))
+}
+
+// The load answers for the whole configuration on the top-level field, not under Oidc, so a client
+// reading the wrong one always sees false.
+func TestSSOLoadSettingsDecodesAuthenticationOnly(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, map[string]any{
+		"ssoId":              "somessoid",
+		"authenticationOnly": true,
+	}))
+	res, err := mgmt.SSO().LoadSettings(context.Background(), "abc", "somessoid")
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.True(t, res.AuthenticationOnly)
+}
+
+func TestSSOLoadAllSettingsDecodesAuthenticationOnly(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, map[string]any{
+		"SSOSettings": []map[string]any{
+			{"ssoId": "verification", "authenticationOnly": true},
+			{"ssoId": "workforce"},
+		},
+	}))
+	res, err := mgmt.SSO().LoadAllSettings(context.Background(), "abc")
+	require.NoError(t, err)
+	require.Len(t, res, 2)
+	require.True(t, res[0].AuthenticationOnly, "the classified configuration")
+	require.False(t, res[1].AuthenticationOnly, "its login-enabled sibling")
+}
+
 func TestDeleteSSOSettingsError(t *testing.T) {
 	called := false
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {
