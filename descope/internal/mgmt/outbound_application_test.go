@@ -32,6 +32,29 @@ func TestOutboundApplicationCreateSuccess(t *testing.T) {
 	require.Equal(t, "app1", app.Name)
 }
 
+func TestOutboundApplicationCreateWithDCRSuccess(t *testing.T) {
+	response := map[string]any{"app": map[string]any{"id": "id1", "name": "app1", "useDcr": true, "dcrUrl": "https://dcr.example.com/register"}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		assert.Equal(t, "/v1/mgmt/outbound/app/create", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, "app1", req["name"])
+		assert.Equal(t, true, req["useDcr"])
+		assert.Equal(t, "https://dcr.example.com/register", req["dcrUrl"])
+	}, response))
+	app, err := mgmt.OutboundApplication().CreateApplication(context.Background(), &descope.CreateOutboundAppRequest{
+		OutboundApp: descope.OutboundApp{
+			Name:   "app1",
+			UseDcr: true,
+			DcrURL: "https://dcr.example.com/register",
+		},
+	})
+	require.NoError(t, err)
+	require.NotNil(t, app)
+	require.True(t, app.UseDcr)
+	require.Equal(t, "https://dcr.example.com/register", app.DcrURL)
+}
+
 func TestOutboundApplicationCreateError(t *testing.T) {
 	called := false
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
@@ -69,6 +92,30 @@ func TestOutboundApplicationUpdateSuccess(t *testing.T) {
 	require.NotNil(t, app)
 	require.Equal(t, "id1", app.ID)
 	require.Equal(t, "app1", app.Name)
+}
+
+func TestOutboundApplicationUpdateWithDCRSuccess(t *testing.T) {
+	response := map[string]any{"app": map[string]any{"id": "id1", "name": "app1", "useDcr": true, "dcrUrl": "https://dcr.example.com/register"}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		assert.Equal(t, "/v1/mgmt/outbound/app/update", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		appMap := req["app"].(map[string]any)
+		assert.Equal(t, "id1", appMap["id"])
+		assert.Equal(t, "app1", appMap["name"])
+		assert.Equal(t, true, appMap["useDcr"])
+		assert.Equal(t, "https://dcr.example.com/register", appMap["dcrUrl"])
+	}, response))
+	app, err := mgmt.OutboundApplication().UpdateApplication(context.Background(), &descope.OutboundApp{
+		ID:     "id1",
+		Name:   "app1",
+		UseDcr: true,
+		DcrURL: "https://dcr.example.com/register",
+	}, nil)
+	require.NoError(t, err)
+	require.NotNil(t, app)
+	require.True(t, app.UseDcr)
+	require.Equal(t, "https://dcr.example.com/register", app.DcrURL)
 }
 
 func TestOutboundApplicationUpdateError(t *testing.T) {
