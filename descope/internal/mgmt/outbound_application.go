@@ -110,6 +110,8 @@ func makeCreateUpdateOutboundApplicationRequest(app *descope.OutboundApp) map[st
 		"pkce":                   app.Pkce,
 		"accessType":             app.AccessType,
 		"prompt":                 app.Prompt,
+		"useDcr":                 app.UseDcr,
+		"dcrUrl":                 app.DcrURL,
 	}
 }
 

@@ -1578,6 +1578,8 @@ type OutboundApp struct {
 	Pkce                   bool         `json:"pkce,omitempty"`
 	AccessType             AccessType   `json:"accessType,omitempty"`
 	Prompt                 []PromptType `json:"prompt,omitempty"`
+	UseDcr                 bool         `json:"useDcr,omitempty"`
+	DcrURL                 string       `json:"dcrUrl,omitempty"`
 }
 
 type CreateOutboundAppRequest struct {
