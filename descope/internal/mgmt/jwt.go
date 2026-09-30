@@ -36,12 +36,7 @@ func (j *jwt) UpdateJWTWithCustomClaims(ctx context.Context, jwt string, customC
 	if err != nil {
 		return "", err
 	}
-	jRes := &jwtRes{}
-	err = utils.Unmarshal([]byte(res.BodyStr), jRes)
-	if err != nil {
-		return "", err //notest
-	}
-	return jRes.JWT, nil
+	return unmarshalJWTResponse(res)
 }
 
 func (j *jwt) Impersonate(ctx context.Context, impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string, refreshDuration int32) (string, error) {
@@ -63,12 +58,7 @@ func (j *jwt) Impersonate(ctx context.Context, impersonatorID string, loginID st
 	if err != nil {
 		return "", err
 	}
-	jRes := &jwtRes{}
-	err = utils.Unmarshal([]byte(res.BodyStr), jRes)
-	if err != nil {
-		return "", err //notest
-	}
-	return jRes.JWT, nil
+	return unmarshalJWTResponse(res)
 }
 
 func (j *jwt) ImpersonateStepup(ctx context.Context, impersonatorID string, loginID string, validateConcent bool, customClaims map[string]any, tenantID string, refreshDuration int32) (string, error) {
@@ -90,12 +80,7 @@ func (j *jwt) ImpersonateStepup(ctx context.Context, impersonatorID string, logi
 	if err != nil {
 		return "", err
 	}
-	jRes := &jwtRes{}
-	err = utils.Unmarshal([]byte(res.BodyStr), jRes)
-	if err != nil {
-		return "", err //notest
-	}
-	return jRes.JWT, nil
+	return unmarshalJWTResponse(res)
 }
 
 func (j *jwt) StopImpersonation(ctx context.Context, jwt string, customClaims map[string]any, tenantID string, refreshDuration int32) (string, error) {
@@ -112,12 +97,7 @@ func (j *jwt) StopImpersonation(ctx context.Context, jwt string, customClaims ma
 	if err != nil {
 		return "", err
 	}
-	jRes := &jwtRes{}
-	err = utils.Unmarshal([]byte(res.BodyStr), jRes)
-	if err != nil {
-		return "", err //notest
-	}
-	return jRes.JWT, nil
+	return unmarshalJWTResponse(res)
 }
 
 func (j *jwt) parseJWT(jwtResponse *descope.JWTResponse) (*descope.AuthenticationInfo, error) {
@@ -255,4 +235,12 @@ func (j *jwt) Anonymous(ctx context.Context, customClaims map[string]any, select
 		SessionToken: ai.SessionToken,
 		RefreshToken: ai.RefreshToken,
 	}, nil
+}
+
+func unmarshalJWTResponse(res *api.HTTPResponse) (string, error) {
+	jRes := &jwtRes{}
+	if err := utils.Unmarshal([]byte(res.BodyStr), jRes); err != nil {
+		return "", err // notest
+	}
+	return jRes.JWT, nil
 }

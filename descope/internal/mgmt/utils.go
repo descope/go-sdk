@@ -12,3 +12,18 @@ func makeAssociatedTenantList(tenants []*descope.AssociatedTenant) []map[string]
 	}
 	return res
 }
+
+func makeAssociatedFamilyList(families []*descope.AssociatedFamily) []map[string]any {
+	res := []map[string]any{}
+	for _, af := range families {
+		entry := map[string]any{"familyId": af.FamilyID}
+		if af.Roles != nil {
+			entry["roleNames"] = af.Roles
+		}
+		if af.FamilyScopedAttributes != nil {
+			entry["familyScopedAttributes"] = af.FamilyScopedAttributes
+		}
+		res = append(res, entry)
+	}
+	return res
+}
