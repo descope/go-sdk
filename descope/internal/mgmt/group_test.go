@@ -23,6 +23,7 @@ func TestLoadAllGroupsSuccess(t *testing.T) {
 					LoginID: "some-loginID",
 					UserID:  "some-userID",
 					Display: "some-display",
+					Source:  "jit",
 				},
 			},
 		},
