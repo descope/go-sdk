@@ -243,6 +243,69 @@ func TestSSOConfigureSAMLByMetadataAuthenticationOnlyOmitted(t *testing.T) {
 	}, "", nil, "somessoid"))
 }
 
+// The server cannot tell an empty defaultSSORoles from an omitted one, so clearing the stored roles
+// needs replaceDefaultSSORoles. A server that predates the flag rejects it as an unknown field, so it
+// must be sent only for an empty non-nil slice, and never for nil or a non-empty list.
+func TestSSOConfigureDefaultSSORolesReplaceFlag(t *testing.T) {
+	configures := map[string]func(m *managementService, roles []string) error{
+		"saml": func(m *managementService, roles []string) error {
+			settings := authOnlySAMLSettings(nil)
+			settings.DefaultSSORoles = roles
+			return m.SSO().ConfigureSAMLSettings(context.Background(), "abc", settings, "", nil, "somessoid")
+		},
+		"saml by metadata": func(m *managementService, roles []string) error {
+			return m.SSO().ConfigureSAMLSettingsByMetadata(context.Background(), "abc", &descope.SSOSAMLSettingsByMetadata{
+				IdpMetadataURL:  "https://idp.example.com/metadata",
+				DefaultSSORoles: roles,
+			}, "", nil, "somessoid")
+		},
+		"oidc": func(m *managementService, roles []string) error {
+			return m.SSO().ConfigureOIDCSettings(context.Background(), "abc", &descope.SSOOIDCSettings{
+				Name:            "provider",
+				ClientID:        "client-id",
+				DefaultSSORoles: roles,
+			}, nil, "somessoid")
+		},
+	}
+	cases := map[string]struct {
+		roles       []string
+		wantReplace bool
+	}{
+		"empty clears":       {roles: []string{}, wantReplace: true},
+		"nil keeps":          {roles: nil},
+		"non-empty replaces": {roles: []string{"Tenant Admin"}},
+	}
+	for endpoint, configure := range configures {
+		for name, tc := range cases {
+			t.Run(endpoint+"/"+name, func(t *testing.T) {
+				called := false
+				mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+					called = true
+					req := map[string]any{}
+					require.NoError(t, helpers.ReadBody(r, &req))
+					require.NotContains(t, req, "replaceDefaultSSORoles", "the flag belongs under settings")
+					settings, ok := req["settings"].(map[string]any)
+					require.True(t, ok)
+					if tc.wantReplace {
+						assert.Equal(t, true, settings["replaceDefaultSSORoles"])
+					} else {
+						assert.NotContains(t, settings, "replaceDefaultSSORoles")
+					}
+					if len(tc.roles) > 0 {
+						assert.Equal(t, []any{"Tenant Admin"}, settings["defaultSSORoles"])
+					}
+					// the settings fields still travel when the OIDC settings are wrapped to carry the flag
+					if endpoint == "oidc" {
+						assert.Equal(t, "client-id", settings["clientId"])
+					}
+				}))
+				require.NoError(t, configure(mgmt, tc.roles))
+				require.True(t, called)
+			})
+		}
+	}
+}
+
 // The Cross-App Access save builds its request map by hand and puts the field at the top level
 // rather than under settings, so leaving it out of that map would drop it silently.
 func TestSSOConfigureXAAAuthenticationOnly(t *testing.T) {
