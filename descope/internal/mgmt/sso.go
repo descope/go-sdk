@@ -117,6 +117,9 @@ func (s *sso) ConfigureSAMLSettings(ctx context.Context, tenantID string, settin
 		// verification connection back in the business of creating users. Send false to clear it.
 		req["settings"].(map[string]any)["authenticationOnly"] = *settings.AuthenticationOnly
 	}
+	if clearsDefaultSSORoles(settings.DefaultSSORoles) {
+		req["settings"].(map[string]any)["replaceDefaultSSORoles"] = true
+	}
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSAMLSettings(), req, nil, "")
 	return err
 }
@@ -181,6 +184,9 @@ func (s *sso) ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID stri
 		// verification connection back in the business of creating users. Send false to clear it.
 		req["settings"].(map[string]any)["authenticationOnly"] = *settings.AuthenticationOnly
 	}
+	if clearsDefaultSSORoles(settings.DefaultSSORoles) {
+		req["settings"].(map[string]any)["replaceDefaultSSORoles"] = true
+	}
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSAMLSettingsByMetadata(), req, nil, "")
 	return err
 }
@@ -219,9 +225,18 @@ func (s *sso) ConfigureOIDCSettings(ctx context.Context, tenantID string, settin
 		return utils.NewInvalidArgumentError("settings")
 	}
 
+	var reqSettings any = settings
+	if clearsDefaultSSORoles(settings.DefaultSSORoles) {
+		// the settings struct is marshaled as is, so the flag rides along in a wrapper rather than
+		// becoming a public field callers could set on their own
+		reqSettings = struct {
+			*descope.SSOOIDCSettings
+			ReplaceDefaultSSORoles bool `json:"replaceDefaultSSORoles"`
+		}{settings, true}
+	}
 	req := map[string]any{
 		"tenantId": tenantID,
-		"settings": settings,
+		"settings": reqSettings,
 		"domains":  domains,
 	}
 	if len(ssoID) > 0 {
@@ -396,6 +411,14 @@ func unmarshalSSOTenantAllSettingsResponse(res *api.HTTPResponse) ([]*descope.SS
 		return nil, err
 	}
 	return ssoAllSettingsRes.SSOSettings, err
+}
+
+// clearsDefaultSSORoles reports whether the caller asked to clear the stored default SSO roles, which
+// is a non-nil empty slice. The server cannot tell an empty list from an omitted one, so clearing
+// needs replaceDefaultSSORoles. It is sent only in this case and never as false, so a server that
+// predates the flag still accepts every other request.
+func clearsDefaultSSORoles(roles []string) bool {
+	return roles != nil && len(roles) == 0
 }
 
 func parseFgaMappings(fgaMappings map[string]*descope.FGAGroupMapping) map[string]any {

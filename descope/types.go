@@ -160,7 +160,7 @@ type SSOSAMLSettings struct {
 	IdpCert                         string                      `json:"idpCert,omitempty"`
 	AttributeMapping                *AttributeMapping           `json:"attributeMapping,omitempty"`
 	RoleMappings                    []*RoleMapping              `json:"roleMappings,omitempty"`
-	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"` // roles names
+	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"` // roles names; nil keeps the stored roles, an empty non-nil slice clears them
 	GroupsPriority                  []string                    `json:"groupsPriority,omitempty"`  // list of group names in priority order (first = highest priority)
 	FgaMappings                     map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 	ConfigFGATenantIDResourcePrefix string                      `json:"configFGATenantIDResourcePrefix,omitempty"`
@@ -189,7 +189,7 @@ type SSOSAMLSettingsByMetadata struct {
 	IdpEntityID                     string                      `json:"entityId,omitempty"` // IdP entity ID - set so IdP-initiated login can resolve the tenant by the SAML response issuer
 	AttributeMapping                *AttributeMapping           `json:"attributeMapping,omitempty"`
 	RoleMappings                    []*RoleMapping              `json:"roleMappings,omitempty"`
-	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"` // roles names
+	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"` // roles names; nil keeps the stored roles, an empty non-nil slice clears them
 	GroupsPriority                  []string                    `json:"groupsPriority,omitempty"`  // list of group names in priority order (first = highest priority)
 	FgaMappings                     map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 	ConfigFGATenantIDResourcePrefix string                      `json:"configFGATenantIDResourcePrefix,omitempty"`
@@ -244,8 +244,8 @@ type SSOOIDCSettings struct {
 	GrantType            string                      `json:"grantType,omitempty"`
 	Issuer               string                      `json:"issuer,omitempty"`
 	GroupsMapping        []*GroupsMapping            `json:"groupsMapping,omitempty"`
-	DefaultSSORoles      []string                    `json:"defaultSSORoles,omitempty"`
-	GroupsPriority       []string                    `json:"groupsPriority,omitempty"` // list of group names in priority order (first = highest priority)
+	DefaultSSORoles      []string                    `json:"defaultSSORoles,omitempty"` // roles names; on configure nil keeps the stored roles, an empty non-nil slice clears them
+	GroupsPriority       []string                    `json:"groupsPriority,omitempty"`  // list of group names in priority order (first = highest priority)
 	FgaMappings          map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 	LastSuccessTestTime  int32                       `json:"lastSuccessTestTime,omitempty"` // epoch seconds of the last successful SSO test login on this configuration (read-only, ignored on configure)
 
