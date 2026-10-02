@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.35.1](https://github.com/descope/go-sdk/compare/v1.35.0...v1.35.1) (2026-10-02)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.35.0 ([#861](https://github.com/descope/go-sdk/issues/861)) ([49a8822](https://github.com/descope/go-sdk/commit/49a8822f1a3730d1136d7618ed8dcab9c96b4305))
+* **sso:** allow clearing default SSO roles ([#863](https://github.com/descope/go-sdk/issues/863)) ([b6f9b5a](https://github.com/descope/go-sdk/commit/b6f9b5a383cf9ec62cb49d84466f0b7711410f58))
+
 ## [1.35.0](https://github.com/descope/go-sdk/compare/v1.34.0...v1.35.0) (2026-09-29)
 
 
