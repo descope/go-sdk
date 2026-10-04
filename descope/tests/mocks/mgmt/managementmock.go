@@ -2429,7 +2429,7 @@ type MockThirdPartyApplication struct {
 	LoadApplicationResponse *descope.ThirdPartyApplication
 	LoadApplicationError    error
 
-	PatchApplicationAssert func(*descope.ThirdPartyApplicationRequest)
+	PatchApplicationAssert func(*descope.PatchThirdPartyApplicationRequest)
 	PatchApplicationError  error
 
 	GetApplicationSecretAssert   func(id string)
@@ -2508,7 +2508,7 @@ func (m *MockThirdPartyApplication) LoadAllApplications(_ context.Context, _ *de
 	return m.LoadAllApplicationsResponse, m.LoadAllApplicationsTotal, m.LoadAllApplicationsError
 }
 
-func (m *MockThirdPartyApplication) PatchApplication(_ context.Context, app *descope.ThirdPartyApplicationRequest) error {
+func (m *MockThirdPartyApplication) PatchApplication(_ context.Context, app *descope.PatchThirdPartyApplicationRequest) error {
 	if m.PatchApplicationAssert != nil {
 		m.PatchApplicationAssert(app)
 	}

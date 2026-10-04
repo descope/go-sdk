@@ -155,11 +155,14 @@ func TestThirdPartyApplicationPatchSuccess(t *testing.T) {
 		require.Equal(t, []any{map[string]any{"scope": "scope2", "description": "desc2", "claims": map[string]any{"email": "{{user.email}}"}}}, req["scopeClaimMapping"])
 	}, response))
 
-	err := mgmt.ThirdPartyApplication().PatchApplication(context.Background(), &descope.ThirdPartyApplicationRequest{
+	description := "desc"
+	callbackUrls := []string{"http://dummy.com/callback"}
+	scopeClaimMapping := []*descope.ThirdPartyApplicationScopeClaimMapping{{Scope: "scope2", Description: "desc2", Claims: map[string]string{"email": "{{user.email}}"}}}
+	err := mgmt.ThirdPartyApplication().PatchApplication(context.Background(), &descope.PatchThirdPartyApplicationRequest{
 		ID:                   "id1",
-		Description:          "desc",
-		ApprovedCallbackUrls: []string{"http://dummy.com/callback"},
-		ScopeClaimMapping:    []*descope.ThirdPartyApplicationScopeClaimMapping{{Scope: "scope2", Description: "desc2", Claims: map[string]string{"email": "{{user.email}}"}}},
+		Description:          &description,
+		ApprovedCallbackUrls: &callbackUrls,
+		ScopeClaimMapping:    &scopeClaimMapping,
 	})
 	require.NoError(t, err)
 }
@@ -172,7 +175,7 @@ func TestThirdPartyApplicationPatchError(t *testing.T) {
 	require.Error(t, err)
 
 	// Empty application ID
-	err = mgmt.ThirdPartyApplication().PatchApplication(context.Background(), &descope.ThirdPartyApplicationRequest{})
+	err = mgmt.ThirdPartyApplication().PatchApplication(context.Background(), &descope.PatchThirdPartyApplicationRequest{})
 	require.Error(t, err)
 }
 
@@ -640,17 +643,97 @@ func TestDeleteThirdPartyApplicationBatchError(t *testing.T) {
 	require.Error(t, err)
 }
 
-func TestThirdPartyApplicationPatchAlwaysSendsForceDpop(t *testing.T) {
+// A rename must not carry any other field, so the app keeps its login page URL,
+// client type, PKCE and DPoP settings.
+func TestThirdPartyApplicationPatchSendsOnlyFieldsThatAreSet(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, map[string]any{"id": "id1", "name": "renamed"}, req)
+	}))
+	name := "renamed"
+	err := mgmt.ThirdPartyApplication().PatchApplication(context.Background(), &descope.PatchThirdPartyApplicationRequest{
+		ID:   "id1",
+		Name: &name,
+	})
+	require.NoError(t, err)
+}
+
+func TestThirdPartyApplicationPatchSendsEveryFieldThatIsSet(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, "id1", req["id"])
-		require.Equal(t, false, req["forceDpop"])
-		require.Equal(t, "", req["clientType"])
+		require.Equal(t, "renamed", req["name"])
+		require.Equal(t, "desc", req["description"])
+		require.Equal(t, "logo", req["logo"])
+		require.Equal(t, "http://dummy.com/login", req["loginPageUrl"])
+		require.Equal(t, []any{"http://dummy.com/callback"}, req["approvedCallbackUrls"])
+		require.Equal(t, []any{map[string]any{"name": "scope1", "description": "desc1", "values": nil}}, req["permissionsScopes"])
+		require.Equal(t, []any{map[string]any{"scope": "scope2", "description": "desc2", "claims": map[string]any{"email": "{{user.email}}"}}}, req["scopeClaimMapping"])
+		require.Equal(t, map[string]any{"issuers": map[string]any{"http://dummy.com": map[string]any{
+			"jwksUri":             "http://dummy.com/jwks",
+			"signAlgorithm":       "RS256",
+			"userInfoUri":         "http://dummy.com/userinfo",
+			"externalIdFieldName": "sub",
+		}}}, req["jwtBearerSettings"])
+		require.Equal(t, map[string]any{"k1": "v1"}, req["customAttributes"])
+		require.Equal(t, true, req["forcePkce"])
+		require.Equal(t, "clientId", req["defaultAudience"])
+		require.Equal(t, "confidential", req["clientType"])
+		require.Equal(t, true, req["forceDpop"])
 	}))
-	err := mgmt.ThirdPartyApplication().PatchApplication(context.Background(), &descope.ThirdPartyApplicationRequest{
-		ID:   "id1",
-		Name: "renamed",
+	name, description, logo := "renamed", "desc", "logo"
+	loginPageURL, defaultAudience, clientType := "http://dummy.com/login", "clientId", "confidential"
+	callbackUrls := []string{"http://dummy.com/callback"}
+	permissionsScopes := []*descope.ThirdPartyApplicationScope{{Name: "scope1", Description: "desc1"}}
+	scopeClaimMapping := []*descope.ThirdPartyApplicationScopeClaimMapping{{Scope: "scope2", Description: "desc2", Claims: map[string]string{"email": "{{user.email}}"}}}
+	forcePkce, forceDpop := true, true
+	err := mgmt.ThirdPartyApplication().PatchApplication(context.Background(), &descope.PatchThirdPartyApplicationRequest{
+		ID:                   "id1",
+		Name:                 &name,
+		Description:          &description,
+		Logo:                 &logo,
+		LoginPageURL:         &loginPageURL,
+		ApprovedCallbackUrls: &callbackUrls,
+		PermissionsScopes:    &permissionsScopes,
+		ScopeClaimMapping:    &scopeClaimMapping,
+		JWTBearerSettings: &descope.JWTBearerSettings{Issuers: map[string]*descope.IssuerSettings{
+			"http://dummy.com": {
+				JWKsURI:             "http://dummy.com/jwks",
+				SignAlgorithm:       "RS256",
+				UserInfoURI:         "http://dummy.com/userinfo",
+				ExternalIDFieldName: "sub",
+			},
+		}},
+		CustomAttributes: map[string]any{"k1": "v1"},
+		ForcePkce:        &forcePkce,
+		DefaultAudience:  &defaultAudience,
+		ClientType:       &clientType,
+		ForceDpop:        &forceDpop,
+	})
+	require.NoError(t, err)
+}
+
+// An explicitly set zero value is still sent, so a field can be cleared on purpose.
+func TestThirdPartyApplicationPatchSendsExplicitZeroValues(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, map[string]any{
+			"id":           "id1",
+			"loginPageUrl": "",
+			"forceDpop":    false,
+			"forcePkce":    false,
+		}, req)
+	}))
+	loginPageURL := ""
+	forceDpop, forcePkce := false, false
+	err := mgmt.ThirdPartyApplication().PatchApplication(context.Background(), &descope.PatchThirdPartyApplicationRequest{
+		ID:           "id1",
+		LoginPageURL: &loginPageURL,
+		ForceDpop:    &forceDpop,
+		ForcePkce:    &forcePkce,
 	})
 	require.NoError(t, err)
 }
@@ -662,11 +745,13 @@ func TestThirdPartyApplicationPatchKeepsForceDpopWhenCarried(t *testing.T) {
 		require.Equal(t, true, req["forceDpop"])
 		require.Equal(t, "confidential", req["clientType"])
 	}))
-	err := mgmt.ThirdPartyApplication().PatchApplication(context.Background(), &descope.ThirdPartyApplicationRequest{
+	name, clientType := "renamed", "confidential"
+	forceDpop := true
+	err := mgmt.ThirdPartyApplication().PatchApplication(context.Background(), &descope.PatchThirdPartyApplicationRequest{
 		ID:         "id1",
-		Name:       "renamed",
-		ClientType: "confidential",
-		ForceDpop:  true,
+		Name:       &name,
+		ClientType: &clientType,
+		ForceDpop:  &forceDpop,
 	})
 	require.NoError(t, err)
 }

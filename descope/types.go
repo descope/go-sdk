@@ -160,7 +160,7 @@ type SSOSAMLSettings struct {
 	IdpCert                         string                      `json:"idpCert,omitempty"`
 	AttributeMapping                *AttributeMapping           `json:"attributeMapping,omitempty"`
 	RoleMappings                    []*RoleMapping              `json:"roleMappings,omitempty"`
-	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"` // roles names
+	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"` // roles names; nil keeps the stored roles, an empty non-nil slice clears them
 	GroupsPriority                  []string                    `json:"groupsPriority,omitempty"`  // list of group names in priority order (first = highest priority)
 	FgaMappings                     map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 	ConfigFGATenantIDResourcePrefix string                      `json:"configFGATenantIDResourcePrefix,omitempty"`
@@ -189,7 +189,7 @@ type SSOSAMLSettingsByMetadata struct {
 	IdpEntityID                     string                      `json:"entityId,omitempty"` // IdP entity ID - set so IdP-initiated login can resolve the tenant by the SAML response issuer
 	AttributeMapping                *AttributeMapping           `json:"attributeMapping,omitempty"`
 	RoleMappings                    []*RoleMapping              `json:"roleMappings,omitempty"`
-	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"` // roles names
+	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"` // roles names; nil keeps the stored roles, an empty non-nil slice clears them
 	GroupsPriority                  []string                    `json:"groupsPriority,omitempty"`  // list of group names in priority order (first = highest priority)
 	FgaMappings                     map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 	ConfigFGATenantIDResourcePrefix string                      `json:"configFGATenantIDResourcePrefix,omitempty"`
@@ -244,8 +244,8 @@ type SSOOIDCSettings struct {
 	GrantType            string                      `json:"grantType,omitempty"`
 	Issuer               string                      `json:"issuer,omitempty"`
 	GroupsMapping        []*GroupsMapping            `json:"groupsMapping,omitempty"`
-	DefaultSSORoles      []string                    `json:"defaultSSORoles,omitempty"`
-	GroupsPriority       []string                    `json:"groupsPriority,omitempty"` // list of group names in priority order (first = highest priority)
+	DefaultSSORoles      []string                    `json:"defaultSSORoles,omitempty"` // roles names; on configure nil keeps the stored roles, an empty non-nil slice clears them
+	GroupsPriority       []string                    `json:"groupsPriority,omitempty"`  // list of group names in priority order (first = highest priority)
 	FgaMappings          map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 	LastSuccessTestTime  int32                       `json:"lastSuccessTestTime,omitempty"` // epoch seconds of the last successful SSO test login on this configuration (read-only, ignored on configure)
 
@@ -1678,6 +1678,8 @@ type OutboundApp struct {
 	Pkce                   bool         `json:"pkce,omitempty"`
 	AccessType             AccessType   `json:"accessType,omitempty"`
 	Prompt                 []PromptType `json:"prompt,omitempty"`
+	UseDcr                 bool         `json:"useDcr,omitempty"`
+	DcrURL                 string       `json:"dcrUrl,omitempty"`
 }
 
 type CreateOutboundAppRequest struct {
@@ -1975,6 +1977,28 @@ type ThirdPartyApplicationRequest struct {
 	ClientType string `json:"clientType,omitempty"`
 	// ForceDpop requires a valid DPoP proof at the token endpoint. Only a "confidential" or "public" ClientType may require it.
 	ForceDpop bool `json:"forceDpop,omitempty"`
+}
+
+type PatchThirdPartyApplicationRequest struct {
+	// ID identifies the application to patch. Required.
+	ID                   string                                     `json:"id"`
+	Name                 *string                                    `json:"name,omitempty"`
+	Description          *string                                    `json:"description,omitempty"`
+	Logo                 *string                                    `json:"logo,omitempty"`
+	LoginPageURL         *string                                    `json:"loginPageUrl,omitempty"`
+	ApprovedCallbackUrls *[]string                                  `json:"approvedCallbackUrls,omitempty"`
+	PermissionsScopes    *[]*ThirdPartyApplicationScope             `json:"permissionsScopes,omitempty"`
+	ScopeClaimMapping    *[]*ThirdPartyApplicationScopeClaimMapping `json:"scopeClaimMapping,omitempty"`
+	JWTBearerSettings    *JWTBearerSettings                         `json:"jwtBearerSettings,omitempty"`
+	CustomAttributes     map[string]any                             `json:"customAttributes,omitempty"`
+	// ForcePkce requires PKCE on the authorization-code flow in addition to client authentication.
+	ForcePkce *bool `json:"forcePkce,omitempty"`
+	// DefaultAudience controls the default aud of issued tokens: "projectId", "clientId", or "" (both).
+	DefaultAudience *string `json:"defaultAudience,omitempty"`
+	// ClientType sets the client authentication model: "confidential" or "public".
+	ClientType *string `json:"clientType,omitempty"`
+	// ForceDpop requires a valid DPoP proof at the token endpoint. Only a "confidential" or "public" ClientType may require it.
+	ForceDpop *bool `json:"forceDpop,omitempty"`
 }
 
 // Options for loading third party applications

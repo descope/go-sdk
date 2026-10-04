@@ -54,7 +54,7 @@ func (s *thirdPartyApplication) UpdateApplication(ctx context.Context, appReques
 	return err
 }
 
-func (s *thirdPartyApplication) PatchApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) error {
+func (s *thirdPartyApplication) PatchApplication(ctx context.Context, appRequest *descope.PatchThirdPartyApplicationRequest) error {
 	if appRequest == nil {
 		return utils.NewInvalidArgumentError("appRequest")
 	}
@@ -62,7 +62,7 @@ func (s *thirdPartyApplication) PatchApplication(ctx context.Context, appRequest
 		return utils.NewInvalidArgumentError("appRequest.id")
 	}
 
-	req := makeCreateUpdateThirdPartyApplicationRequest(appRequest)
+	req := makePatchThirdPartyApplicationRequest(appRequest)
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationPatch(), req, nil, "")
 	return err
 }
@@ -308,6 +308,53 @@ func makeCreateUpdateThirdPartyApplicationRequest(appRequest *descope.ThirdParty
 		"clientType":           appRequest.ClientType,
 		"forceDpop":            appRequest.ForceDpop,
 	}
+}
+
+// makePatchThirdPartyApplicationRequest sends only the fields the caller set.
+func makePatchThirdPartyApplicationRequest(appRequest *descope.PatchThirdPartyApplicationRequest) map[string]any {
+	res := map[string]any{
+		"id": appRequest.ID,
+	}
+	if appRequest.Name != nil {
+		res["name"] = *appRequest.Name
+	}
+	if appRequest.Description != nil {
+		res["description"] = *appRequest.Description
+	}
+	if appRequest.Logo != nil {
+		res["logo"] = *appRequest.Logo
+	}
+	if appRequest.LoginPageURL != nil {
+		res["loginPageUrl"] = *appRequest.LoginPageURL
+	}
+	if appRequest.ApprovedCallbackUrls != nil {
+		res["approvedCallbackUrls"] = *appRequest.ApprovedCallbackUrls
+	}
+	if appRequest.PermissionsScopes != nil {
+		res["permissionsScopes"] = *appRequest.PermissionsScopes
+	}
+	if appRequest.ScopeClaimMapping != nil {
+		res["scopeClaimMapping"] = *appRequest.ScopeClaimMapping
+	}
+	if appRequest.JWTBearerSettings != nil {
+		res["jwtBearerSettings"] = appRequest.JWTBearerSettings
+	}
+	if appRequest.CustomAttributes != nil {
+		res["customAttributes"] = appRequest.CustomAttributes
+	}
+	if appRequest.ForcePkce != nil {
+		res["forcePkce"] = *appRequest.ForcePkce
+	}
+	if appRequest.DefaultAudience != nil {
+		res["defaultAudience"] = *appRequest.DefaultAudience
+	}
+	if appRequest.ClientType != nil {
+		res["clientType"] = *appRequest.ClientType
+	}
+	if appRequest.ForceDpop != nil {
+		res["forceDpop"] = *appRequest.ForceDpop
+	}
+	return res
 }
 
 func unmarshalLoadThirdPartyApplicationResponse(res *api.HTTPResponse) (*descope.ThirdPartyApplication, error) {

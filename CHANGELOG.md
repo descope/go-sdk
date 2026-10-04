@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.35.0](https://github.com/descope/go-sdk/compare/v1.34.0...v1.35.0) (2026-09-29)
+
+
+### Features
+
+* **outbound-app:** add UseDcr and DcrURL fields to OutboundApp ([#860](https://github.com/descope/go-sdk/issues/860)) ([aafaea1](https://github.com/descope/go-sdk/commit/aafaea189c5c8d17d84d02ebaef01ceb5785d6d7))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.34.0 ([#858](https://github.com/descope/go-sdk/issues/858)) ([64d6077](https://github.com/descope/go-sdk/commit/64d6077bd4d4ca424d9f0614e47a7903cf988983))
+
 ## [1.34.0](https://github.com/descope/go-sdk/compare/v1.33.0...v1.34.0) (2026-09-27)
 
 
