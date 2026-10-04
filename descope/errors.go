@@ -48,6 +48,7 @@ var (
 	ErrInvalidToken     = newClientError("G030002", "Invalid token")
 	ErrRefreshToken     = newClientError("G030003", "Missing or invalid refresh token")
 	ErrInvalidStepUpJWT = newClientError("G030004", "Refresh token must be provided for stepup actions")
+	ErrJWEDecrypt       = newClientError("G030005", "Failed to decrypt encrypted (JWE) token")
 )
 
 // Additional information that might be available in the
