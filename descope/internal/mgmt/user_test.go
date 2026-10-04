@@ -2980,8 +2980,10 @@ func TestUserUpdateWithFamilyAssociationsSuccess(t *testing.T) {
 	require.NotNil(t, res)
 }
 
-func TestUserCreateBatchWithFamilyAssociationsSuccess(t *testing.T) {
+func TestUserCreateAndInviteBatchWithFamilyAssociationsSuccess(t *testing.T) {
+	calls := 0
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		calls++
 		require.Equal(t, "/v1/mgmt/user/create/batch", r.URL.Path)
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
@@ -2996,6 +2998,10 @@ func TestUserCreateBatchWithFamilyAssociationsSuccess(t *testing.T) {
 	res, err := mgmt.User().CreateBatch(context.Background(), []*descope.BatchUser{u1, u2})
 	require.NoError(t, err)
 	require.Len(t, res.CreatedUsers, 2)
+	res, err = mgmt.User().InviteBatch(context.Background(), []*descope.BatchUser{u1, u2}, nil)
+	require.NoError(t, err)
+	require.Len(t, res.CreatedUsers, 2)
+	assert.Equal(t, 2, calls)
 }
 
 func TestUserPatchWithFamilyAssociationsSuccess(t *testing.T) {
