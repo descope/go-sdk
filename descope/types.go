@@ -160,7 +160,7 @@ type SSOSAMLSettings struct {
 	IdpCert                         string                      `json:"idpCert,omitempty"`
 	AttributeMapping                *AttributeMapping           `json:"attributeMapping,omitempty"`
 	RoleMappings                    []*RoleMapping              `json:"roleMappings,omitempty"`
-	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"` // roles names
+	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"` // roles names; nil keeps the stored roles, an empty non-nil slice clears them
 	GroupsPriority                  []string                    `json:"groupsPriority,omitempty"`  // list of group names in priority order (first = highest priority)
 	FgaMappings                     map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 	ConfigFGATenantIDResourcePrefix string                      `json:"configFGATenantIDResourcePrefix,omitempty"`
@@ -170,6 +170,14 @@ type SSOSAMLSettings struct {
 	// IdPs that reject a signed request because their trusted provider entry holds no signing certificate
 	// for Descope. Defaults to false, i.e. requests are signed.
 	DisableSignRequest bool `json:"disableSignRequest,omitempty"`
+
+	// AuthenticationOnly classifies the configuration as verifying identity only: a login through it
+	// does not create, update or sign in a user, and returns the IdP response instead of a session.
+	//
+	// It is a pointer because, unlike the rest of this object, the server treats it as optional rather
+	// than as part of the full replacement: nil is not sent and leaves whatever is stored, so an
+	// ordinary settings save cannot clear a classification by omission. False clears it.
+	AuthenticationOnly *bool `json:"authenticationOnly,omitempty"`
 
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
 	SpACSUrl   string `json:"spACSUrl,omitempty"`
@@ -181,7 +189,7 @@ type SSOSAMLSettingsByMetadata struct {
 	IdpEntityID                     string                      `json:"entityId,omitempty"` // IdP entity ID - set so IdP-initiated login can resolve the tenant by the SAML response issuer
 	AttributeMapping                *AttributeMapping           `json:"attributeMapping,omitempty"`
 	RoleMappings                    []*RoleMapping              `json:"roleMappings,omitempty"`
-	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"` // roles names
+	DefaultSSORoles                 []string                    `json:"defaultSSORoles,omitempty"` // roles names; nil keeps the stored roles, an empty non-nil slice clears them
 	GroupsPriority                  []string                    `json:"groupsPriority,omitempty"`  // list of group names in priority order (first = highest priority)
 	FgaMappings                     map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 	ConfigFGATenantIDResourcePrefix string                      `json:"configFGATenantIDResourcePrefix,omitempty"`
@@ -191,6 +199,14 @@ type SSOSAMLSettingsByMetadata struct {
 	// IdPs that reject a signed request because their trusted provider entry holds no signing certificate
 	// for Descope. Defaults to false, i.e. requests are signed.
 	DisableSignRequest bool `json:"disableSignRequest,omitempty"`
+
+	// AuthenticationOnly classifies the configuration as verifying identity only: a login through it
+	// does not create, update or sign in a user, and returns the IdP response instead of a session.
+	//
+	// It is a pointer because, unlike the rest of this object, the server treats it as optional rather
+	// than as part of the full replacement: nil is not sent and leaves whatever is stored, so an
+	// ordinary settings save cannot clear a classification by omission. False clears it.
+	AuthenticationOnly *bool `json:"authenticationOnly,omitempty"`
 
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
 	SpACSUrl   string `json:"spACSUrl,omitempty"`
@@ -228,10 +244,22 @@ type SSOOIDCSettings struct {
 	GrantType            string                      `json:"grantType,omitempty"`
 	Issuer               string                      `json:"issuer,omitempty"`
 	GroupsMapping        []*GroupsMapping            `json:"groupsMapping,omitempty"`
-	DefaultSSORoles      []string                    `json:"defaultSSORoles,omitempty"`
-	GroupsPriority       []string                    `json:"groupsPriority,omitempty"` // list of group names in priority order (first = highest priority)
+	DefaultSSORoles      []string                    `json:"defaultSSORoles,omitempty"` // roles names; on configure nil keeps the stored roles, an empty non-nil slice clears them
+	GroupsPriority       []string                    `json:"groupsPriority,omitempty"`  // list of group names in priority order (first = highest priority)
 	FgaMappings          map[string]*FGAGroupMapping `json:"fgaMappings,omitempty"`
 	LastSuccessTestTime  int32                       `json:"lastSuccessTestTime,omitempty"` // epoch seconds of the last successful SSO test login on this configuration (read-only, ignored on configure)
+
+	// AuthenticationOnly classifies the configuration as verifying identity only: a login through it
+	// does not create, update or sign in a user, and returns the IdP response instead of a session.
+	//
+	// It is a pointer because, unlike the rest of this object, the server treats it as optional rather
+	// than as part of the full replacement: nil is not sent and leaves whatever is stored, so an
+	// ordinary settings save cannot clear a classification by omission. False clears it.
+	//
+	// Write-only. This struct is also the Oidc field of SSOTenantSettingsResponse, where the server
+	// never sets it - read SSOTenantSettingsResponse.AuthenticationOnly instead, which answers for the
+	// whole configuration rather than one protocol.
+	AuthenticationOnly *bool `json:"authenticationOnly,omitempty"`
 }
 
 type SSOTenantSettingsResponse struct {
@@ -239,6 +267,10 @@ type SSOTenantSettingsResponse struct {
 	Saml   *SSOSAMLSettingsResponse `json:"saml,omitempty"`
 	Oidc   *SSOOIDCSettings         `json:"oidc,omitempty"`
 	SSOID  string                   `json:"ssoId,omitempty"`
+	// AuthenticationOnly marks the configuration as verifying identity only: a login through it
+	// creates no user and issues no session. This is the field to read on a load; the one nested
+	// under Oidc is write-only and the server never sets it.
+	AuthenticationOnly bool `json:"authenticationOnly,omitempty"`
 }
 
 type SSOTenantAllSettingsResponse struct {
@@ -1546,6 +1578,8 @@ type OutboundApp struct {
 	Pkce                   bool         `json:"pkce,omitempty"`
 	AccessType             AccessType   `json:"accessType,omitempty"`
 	Prompt                 []PromptType `json:"prompt,omitempty"`
+	UseDcr                 bool         `json:"useDcr,omitempty"`
+	DcrURL                 string       `json:"dcrUrl,omitempty"`
 }
 
 type CreateOutboundAppRequest struct {
@@ -1764,6 +1798,19 @@ type SSOXAASettings struct {
 	GroupPriorityEnabled bool                        `json:"groupPriorityEnabled,omitempty"`
 	AllowOverrideRoles   bool                        `json:"allowOverrideRoles,omitempty"`
 	ProviderID           string                      `json:"providerID,omitempty"` // selected IdP provider template id (display metadata; mirrors SSOSAMLSettings providerID)
+
+	// AuthenticationOnly classifies the configuration as verifying identity only: a login through it
+	// does not create, update or sign in a user, and returns the IdP response instead of a session.
+	// Setting it through any one protocol classifies the whole configuration, so this field, the SAML
+	// one and the OIDC one all reach the same place.
+	//
+	// It is a pointer because, unlike the rest of this object, the server treats it as optional rather
+	// than as part of the full replacement: nil is not sent and leaves whatever is stored, so an
+	// ordinary settings save cannot clear a classification by omission. False clears it.
+	//
+	// A Cross-App Access token exchange through a classified configuration is refused: its output is
+	// an access token bound to a user, so there is no user-less form of it to fall back to.
+	AuthenticationOnly *bool `json:"authenticationOnly,omitempty"`
 }
 
 // SSOXAASettingsResponse is the load-shape of a single SSO configuration's XAA (ID-JAG) settings.
