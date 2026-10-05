@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.36.0](https://github.com/descope/go-sdk/compare/v1.35.0...v1.36.0) (2026-10-05)
+
+
+### Features
+
+* add family account management API ([#857](https://github.com/descope/go-sdk/issues/857)) ([62f23fa](https://github.com/descope/go-sdk/commit/62f23fa9b020af6eb414f4d003b58731be93ae0f))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.35.0 ([#861](https://github.com/descope/go-sdk/issues/861)) ([49a8822](https://github.com/descope/go-sdk/commit/49a8822f1a3730d1136d7618ed8dcab9c96b4305))
+* **mgmt:** send only the set fields on an inbound app patch ([#854](https://github.com/descope/go-sdk/issues/854)) ([012d409](https://github.com/descope/go-sdk/commit/012d4098928021f9d9d1eae7eac7a4e07585ccc8))
+* **sso:** allow clearing default SSO roles ([#863](https://github.com/descope/go-sdk/issues/863)) ([b6f9b5a](https://github.com/descope/go-sdk/commit/b6f9b5a383cf9ec62cb49d84466f0b7711410f58))
+
 ## [1.35.0](https://github.com/descope/go-sdk/compare/v1.34.0...v1.35.0) (2026-09-29)
 
 
