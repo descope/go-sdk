@@ -1130,7 +1130,9 @@ func TestUserLogoutUserByLoginIdErr(t *testing.T) {
 func TestSearchAllUsersSuccess(t *testing.T) {
 	response := map[string]any{
 		"users": []map[string]any{{
-			"email": "a@b.c",
+			"email":              "a@b.c",
+			"lockReason":         "password",
+			"tempLockExpiration": 1791105360,
 		}},
 		"total": 85,
 	}
@@ -1154,6 +1156,8 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 		require.EqualValues(t, []any([]any{map[string]any{"desc": true, "field": "nono"}, map[string]any{"desc": false, "field": "lolo"}}), req["sort"])
 		require.EqualValues(t, map[string]any{"tenant1": map[string]any{"values": []any{"id1", "id2"}}}, req["tenantRoleIds"])
 		require.EqualValues(t, map[string]any{"tenant2": map[string]any{"values": []any{"name1", "name2"}}}, req["tenantRoleNames"])
+		require.EqualValues(t, []any{"password", "totp"}, req["lockReasons"])
+		require.EqualValues(t, []any{"recovery_codes"}, req["tempLockReasons"])
 	}, response))
 	res, total, err := m.User().SearchAll(context.Background(), &descope.UserSearchOptions{
 		Statuses:         []descope.UserStatus{descope.UserStatusDisabled},
@@ -1170,12 +1174,30 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 		},
 		TenantRoleIDs:   map[string]*descope.RoleList{"tenant1": {Values: []string{"id1", "id2"}}},
 		TenantRoleNames: map[string]*descope.RoleList{"tenant2": {Values: []string{"name1", "name2"}}},
+		LockReasons:     []string{"password", "totp"},
+		TempLockReasons: []string{"recovery_codes"},
 	})
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Len(t, res, 1)
 	require.Equal(t, "a@b.c", res[0].Email)
+	require.Equal(t, "password", res[0].LockReason)
+	require.EqualValues(t, 1791105360, res[0].TempLockExpiration)
 	require.Equal(t, 85, total)
+}
+
+func TestSearchAllUsersOmitsUnsetLockFilters(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.NotContains(t, req, "lockReasons")
+		require.NotContains(t, req, "tempLockReasons")
+	}, map[string]any{"users": []map[string]any{{"email": "a@b.c"}}, "total": 1}))
+	res, _, err := m.User().SearchAll(context.Background(), &descope.UserSearchOptions{})
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Empty(t, res[0].LockReason)
+	require.Zero(t, res[0].TempLockExpiration)
 }
 
 func TestSearchAllTestUsersSuccess(t *testing.T) {

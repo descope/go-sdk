@@ -693,6 +693,12 @@ type UserResponse struct {
 	SSOAppIDs        []string                        `json:"ssoAppIds,omitempty"`
 	Dependent        bool                            `json:"dependent,omitempty"`
 	UserFamilies     []*UserFamily                   `json:"userFamilies,omitempty"`
+	// LockReason is the auth method that triggered brute-force protection (password, totp,
+	// recovery_codes, security_questions), empty when none
+	LockReason string `json:"lockReason,omitempty"`
+	// TempLockExpiration is when a temporary lock ends, in unix seconds (0 when none); the user is
+	// temporarily locked while TempLockExpiration > now
+	TempLockExpiration int64 `json:"tempLockExpiration,omitempty"`
 }
 
 type MeTenant struct {
@@ -1330,6 +1336,12 @@ type UserSearchOptions struct {
 	IncludeSubTenants bool
 	FamilyIDs         []string // only return users that are members of at least one of these families
 	Dependent         *bool    // when set, filter by whether the user is a family dependent
+	// LockReasons returns users disabled by brute-force protection with one of these lock reasons:
+	// password, totp, recovery_codes, security_questions
+	LockReasons []string
+	// TempLockReasons returns users currently temporarily locked (tempLockExpiration > now) with one of
+	// these lock reasons: password, recovery_codes, security_questions (TOTP has no temporary lock)
+	TempLockReasons []string
 }
 
 type UserSearchSort struct {
