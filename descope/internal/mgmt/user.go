@@ -1297,6 +1297,12 @@ func makeSearchAllRequest(options *descope.UserSearchOptions) map[string]any {
 	if options.Dependent != nil {
 		req["dependent"] = *options.Dependent
 	}
+	if len(options.LockReasons) > 0 {
+		req["lockReasons"] = options.LockReasons
+	}
+	if len(options.TempLockReasons) > 0 {
+		req["tempLockReasons"] = options.TempLockReasons
+	}
 	return req
 }
 
