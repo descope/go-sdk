@@ -25,3 +25,8 @@ echo 'Building importusers example..'
 if [ $? -ne 0 ]; then
     exit 1
 fi
+echo 'Building families example..'
+(cd examples/families && go mod tidy && go build)
+if [ $? -ne 0 ]; then
+    exit 1
+fi
