@@ -1256,6 +1256,8 @@ ssoSettings.Oidc.Name = "my prOvider"
 ssoSettings.Oidc.AuthURL = authorizeEndpoint
 ...
 ssoSettings.Oidc.Scope = []string{"openid", "profile", "email"}
+usePkce := true // send a PKCE code challenge to the IdP; leave nil to keep the stored value
+ssoSettings.Oidc.UsePkce = &usePkce
 err = descopeClient.Management.SSO().ConfigureOIDCSettings("tenant-id", ssoSettings.Oidc, "")
 
 // Configure tenant SSO by SAML settings

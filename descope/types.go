@@ -260,6 +260,11 @@ type SSOOIDCSettings struct {
 	// never sets it - read SSOTenantSettingsResponse.AuthenticationOnly instead, which answers for the
 	// whole configuration rather than one protocol.
 	AuthenticationOnly *bool `json:"authenticationOnly,omitempty"`
+
+	// UsePkce sends a PKCE (S256) code challenge to the IdP and the code verifier on the code exchange.
+	// A pointer for the same reason as AuthenticationOnly: nil is not sent and keeps the stored value,
+	// false turns it off. Not allowed with the implicit grant type. Set on load responses.
+	UsePkce *bool `json:"usePkce,omitempty"`
 }
 
 type SSOTenantSettingsResponse struct {
