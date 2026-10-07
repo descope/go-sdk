@@ -217,6 +217,42 @@ func TestSSOConfigureOIDCAuthenticationOnly(t *testing.T) {
 	}, nil, "somessoid"))
 }
 
+// usePkce is optional on the wire: false has to be sent as false, and nil must not be sent at all so
+// the server keeps the stored value.
+func TestSSOConfigureOIDCUsePkce(t *testing.T) {
+	on, off := true, false
+	cases := map[string]struct {
+		usePkce *bool
+		want    any
+	}{
+		"true":  {usePkce: &on, want: true},
+		"false": {usePkce: &off, want: false},
+		"nil":   {usePkce: nil},
+	}
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			called := false
+			mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+				called = true
+				req := map[string]any{}
+				require.NoError(t, helpers.ReadBody(r, &req))
+				settings := req["settings"].(map[string]any)
+				if tc.usePkce == nil {
+					require.NotContains(t, settings, "usePkce")
+				} else {
+					require.Equal(t, tc.want, settings["usePkce"])
+				}
+			}))
+			require.NoError(t, mgmt.SSO().ConfigureOIDCSettings(context.Background(), "abc", &descope.SSOOIDCSettings{
+				Name:     "provider",
+				ClientID: "client-id",
+				UsePkce:  tc.usePkce,
+			}, nil, "somessoid"))
+			require.True(t, called)
+		})
+	}
+}
+
 // The by-metadata save is a separate endpoint with its own request map, so it needs its own proof
 // that the classification travels and that omitting it keeps what is stored.
 func TestSSOConfigureSAMLByMetadataAuthenticationOnly(t *testing.T) {
@@ -713,6 +749,7 @@ func TestLoadSettingsSuccess(t *testing.T) {
 				"givenName": "myGivenName",
 			},
 			"lastSuccessTestTime": 888,
+			"usePkce":             true,
 		},
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
@@ -772,6 +809,8 @@ func TestLoadSettingsSuccess(t *testing.T) {
 	require.NotNil(t, res.Oidc.AttributeMapping)
 	assert.EqualValues(t, "myGivenName", res.Oidc.AttributeMapping.GivenName)
 	assert.EqualValues(t, 888, res.Oidc.LastSuccessTestTime)
+	require.NotNil(t, res.Oidc.UsePkce)
+	assert.True(t, *res.Oidc.UsePkce)
 	require.Empty(t, res.SSOID)
 }
 
