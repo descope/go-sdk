@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.37.0](https://github.com/descope/go-sdk/compare/v1.36.0...v1.37.0) (2026-10-09)
+
+
+### Features
+
+* **sso:** usePkce on tenant OIDC SSO settings ([#867](https://github.com/descope/go-sdk/issues/867)) ([bdcf6ef](https://github.com/descope/go-sdk/commit/bdcf6eff3efc33e5e5f85af68314e58bc3b67de5))
+* support lock reason in user search ([#866](https://github.com/descope/go-sdk/issues/866)) ([6368b59](https://github.com/descope/go-sdk/commit/6368b59ab95fe765aee84a049d9b74a1a1b06a93))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.36.0 ([#864](https://github.com/descope/go-sdk/issues/864)) ([90da5d9](https://github.com/descope/go-sdk/commit/90da5d934d51872bcc65fb1aeea134908679c954))
+
 ## [1.36.0](https://github.com/descope/go-sdk/compare/v1.35.0...v1.36.0) (2026-10-05)
 
 
