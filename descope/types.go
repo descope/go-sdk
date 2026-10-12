@@ -179,6 +179,13 @@ type SSOSAMLSettings struct {
 	// ordinary settings save cannot clear a classification by omission. False clears it.
 	AuthenticationOnly *bool `json:"authenticationOnly,omitempty"`
 
+	// JITDisabled turns off JIT provisioning for this SSO configuration: a login through it signs in
+	// only users who already exist and refuses anyone else instead of creating them. It applies to the
+	// configuration named by the ssoID argument, or to the tenant's default configuration when ssoID
+	// is empty. A pointer for the same reason as AuthenticationOnly: nil is not sent and keeps the
+	// stored value, false turns JIT back on. Read it back from SSOTenantSettingsResponse.JITDisabled.
+	JITDisabled *bool `json:"jitDisabled,omitempty"`
+
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
 	SpACSUrl   string `json:"spACSUrl,omitempty"`
 	SpEntityID string `json:"spEntityId,omitempty"`
@@ -207,6 +214,13 @@ type SSOSAMLSettingsByMetadata struct {
 	// than as part of the full replacement: nil is not sent and leaves whatever is stored, so an
 	// ordinary settings save cannot clear a classification by omission. False clears it.
 	AuthenticationOnly *bool `json:"authenticationOnly,omitempty"`
+
+	// JITDisabled turns off JIT provisioning for this SSO configuration: a login through it signs in
+	// only users who already exist and refuses anyone else instead of creating them. It applies to the
+	// configuration named by the ssoID argument, or to the tenant's default configuration when ssoID
+	// is empty. A pointer for the same reason as AuthenticationOnly: nil is not sent and keeps the
+	// stored value, false turns JIT back on. Read it back from SSOTenantSettingsResponse.JITDisabled.
+	JITDisabled *bool `json:"jitDisabled,omitempty"`
 
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
 	SpACSUrl   string `json:"spACSUrl,omitempty"`
@@ -265,6 +279,14 @@ type SSOOIDCSettings struct {
 	// A pointer for the same reason as AuthenticationOnly: nil is not sent and keeps the stored value,
 	// false turns it off. Not allowed with the implicit grant type. Set on load responses.
 	UsePkce *bool `json:"usePkce,omitempty"`
+
+	// JITDisabled turns off JIT provisioning for this SSO configuration: a login through it signs in
+	// only users who already exist and refuses anyone else instead of creating them. It applies to the
+	// configuration named by the ssoID argument, or to the tenant's default configuration when ssoID
+	// is empty. A pointer for the same reason as AuthenticationOnly: nil is not sent and keeps the
+	// stored value, false turns JIT back on. Write-only like AuthenticationOnly: read it back from
+	// SSOTenantSettingsResponse.JITDisabled.
+	JITDisabled *bool `json:"jitDisabled,omitempty"`
 }
 
 type SSOTenantSettingsResponse struct {
@@ -276,6 +298,10 @@ type SSOTenantSettingsResponse struct {
 	// creates no user and issues no session. This is the field to read on a load; the one nested
 	// under Oidc is write-only and the server never sets it.
 	AuthenticationOnly bool `json:"authenticationOnly,omitempty"`
+	// JITDisabled reports that JIT provisioning is off for this configuration: a login through it
+	// signs in only users who already exist. This is the field to read on a load; the one nested
+	// under Oidc is write-only and the server never sets it.
+	JITDisabled bool `json:"jitDisabled,omitempty"`
 }
 
 type SSOTenantAllSettingsResponse struct {
