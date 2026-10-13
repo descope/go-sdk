@@ -1323,6 +1323,14 @@ samlSettings.DisableSignRequest = true
 authenticationOnly := true
 samlSettings.AuthenticationOnly = &authenticationOnly
 
+// JIT provisioning can be turned off per SSO configuration: a login through it then signs in only
+// users who already exist (invited, or provisioned through SCIM) and refuses anyone else. It applies to
+// the configuration named by the ssoID argument, or to the tenant's default configuration when ssoID is
+// empty. Like AuthenticationOnly it is a pointer: nil keeps the stored value and false turns JIT back on.
+// The same field is on the OIDC settings. Read it back from SSOTenantSettingsResponse.JITDisabled.
+jitDisabled := true
+samlSettings.JITDisabled = &jitDisabled
+
 // You can create new SSO configuration (aka multi SSO)
 ssoID := "my-new-additional-sso-id"
 displayName := "My additional SSO configuration"

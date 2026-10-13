@@ -117,6 +117,10 @@ func (s *sso) ConfigureSAMLSettings(ctx context.Context, tenantID string, settin
 		// verification connection back in the business of creating users. Send false to clear it.
 		req["settings"].(map[string]any)["authenticationOnly"] = *settings.AuthenticationOnly
 	}
+	if settings.JITDisabled != nil {
+		// Optional on the wire like authenticationOnly: omitting it keeps the stored value.
+		req["settings"].(map[string]any)["jitDisabled"] = *settings.JITDisabled
+	}
 	if clearsDefaultSSORoles(settings.DefaultSSORoles) {
 		req["settings"].(map[string]any)["replaceDefaultSSORoles"] = true
 	}
@@ -183,6 +187,10 @@ func (s *sso) ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID stri
 		// field-level exception is what stops an ordinary settings save from silently putting a
 		// verification connection back in the business of creating users. Send false to clear it.
 		req["settings"].(map[string]any)["authenticationOnly"] = *settings.AuthenticationOnly
+	}
+	if settings.JITDisabled != nil {
+		// Optional on the wire like authenticationOnly: omitting it keeps the stored value.
+		req["settings"].(map[string]any)["jitDisabled"] = *settings.JITDisabled
 	}
 	if clearsDefaultSSORoles(settings.DefaultSSORoles) {
 		req["settings"].(map[string]any)["replaceDefaultSSORoles"] = true

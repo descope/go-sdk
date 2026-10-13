@@ -393,6 +393,82 @@ func TestSSOLoadAllSettingsDecodesAuthenticationOnly(t *testing.T) {
 	require.False(t, res[1].AuthenticationOnly, "its login-enabled sibling")
 }
 
+// jitDisabled is optional on the wire on every SSO settings save: false has to be sent as false so JIT
+// can be turned back on, and nil must not be sent at all so the server keeps the stored value.
+func TestSSOConfigureJITDisabled(t *testing.T) {
+	saves := map[string]func(mgmt *managementService, jitDisabled *bool) error{
+		"saml": func(mgmt *managementService, jitDisabled *bool) error {
+			return mgmt.SSO().ConfigureSAMLSettings(context.Background(), "abc", &descope.SSOSAMLSettings{
+				IdpURL:      "https://idp.example.com/sso",
+				IdpEntityID: "entity-id",
+				IdpCert:     "cert",
+				JITDisabled: jitDisabled,
+			}, "", nil, "somessoid")
+		},
+		"saml metadata": func(mgmt *managementService, jitDisabled *bool) error {
+			return mgmt.SSO().ConfigureSAMLSettingsByMetadata(context.Background(), "abc", &descope.SSOSAMLSettingsByMetadata{
+				IdpMetadataURL: "https://idp.example.com/metadata",
+				JITDisabled:    jitDisabled,
+			}, "", nil, "somessoid")
+		},
+		"oidc": func(mgmt *managementService, jitDisabled *bool) error {
+			return mgmt.SSO().ConfigureOIDCSettings(context.Background(), "abc", &descope.SSOOIDCSettings{
+				Name:        "provider",
+				ClientID:    "client-id",
+				JITDisabled: jitDisabled,
+			}, nil, "somessoid")
+		},
+	}
+	on, off := true, false
+	values := map[string]*bool{"true": &on, "false": &off, "nil": nil}
+	for saveName, save := range saves {
+		for valueName, jitDisabled := range values {
+			t.Run(saveName+"/"+valueName, func(t *testing.T) {
+				called := false
+				mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+					called = true
+					req := map[string]any{}
+					require.NoError(t, helpers.ReadBody(r, &req))
+					require.Equal(t, "somessoid", req["ssoId"])
+					settings := req["settings"].(map[string]any)
+					if jitDisabled == nil {
+						require.NotContains(t, settings, "jitDisabled")
+					} else {
+						require.Equal(t, *jitDisabled, settings["jitDisabled"])
+					}
+				}))
+				require.NoError(t, save(mgmt, jitDisabled))
+				require.True(t, called)
+			})
+		}
+	}
+}
+
+func TestSSOLoadSettingsDecodesJITDisabled(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, map[string]any{
+		"ssoId":       "somessoid",
+		"jitDisabled": true,
+	}))
+	res, err := mgmt.SSO().LoadSettings(context.Background(), "abc", "somessoid")
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.True(t, res.JITDisabled)
+}
+
+func TestSSOLoadAllSettingsDecodesJITDisabled(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, map[string]any{
+		"SSOSettings": []map[string]any{
+			{"ssoId": "invite-only", "jitDisabled": true},
+			{"ssoId": "open"},
+		},
+	}))
+	res, err := mgmt.SSO().LoadAllSettings(context.Background(), "abc")
+	require.NoError(t, err)
+	require.Len(t, res, 2)
+	require.True(t, res[0].JITDisabled)
+	require.False(t, res[1].JITDisabled)
+}
+
 func TestDeleteSSOSettingsError(t *testing.T) {
 	called := false
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {
