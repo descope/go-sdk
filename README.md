@@ -664,6 +664,9 @@ No configuration is needed. When `ValidateSessionWithRequest` or `ValidateAndRef
 - If the session token has a `cnf.jkt` claim, the `DPoP` header in the incoming request is validated (RFC 9449 §7.1–7.2).
 - Plain Bearer tokens without `cnf.jkt` are unaffected — the check is skipped entirely.
 - If a `DPoP`-scheme `Authorization` header is present but the token has no `cnf.jkt`, the request is rejected (downgrade-attack prevention).
+- A proof whose `jti` has already been seen within the acceptance window (~120s) is rejected as a replay, so clients must generate a fresh proof for every request, including retries.
+
+> **Note:** The replay cache is held in memory per SDK client instance. When running multiple instances behind a load balancer, replay protection applies per instance, not across the deployment.
 
 ```go
 // DPoP enforcement is automatic — use the same session validation calls as usual.
