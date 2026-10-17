@@ -1004,7 +1004,10 @@ func TestUserImportError(t *testing.T) {
 func TestUserLoadSuccess(t *testing.T) {
 	response := map[string]any{
 		"user": map[string]any{
-			"email": "a@b.c",
+			"email":        "a@b.c",
+			"scimTenantId": "T1",
+			"samlTenantId": "T2",
+			"oidcTenantId": "T3",
 		}}
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -1015,6 +1018,9 @@ func TestUserLoadSuccess(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	require.Equal(t, "a@b.c", res.Email)
+	assert.Equal(t, "T1", res.SCIMTenantID)
+	assert.Equal(t, "T2", res.SAMLTenantID)
+	assert.Equal(t, "T3", res.OIDCTenantID)
 }
 
 func TestUsersLoad(t *testing.T) {
@@ -1133,6 +1139,9 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 			"email":              "a@b.c",
 			"lockReason":         "password",
 			"tempLockExpiration": 1791105360,
+			"scimTenantId":       "T1",
+			"samlTenantId":       "T2",
+			"oidcTenantId":       "T3",
 		}},
 		"total": 85,
 	}
@@ -1183,6 +1192,9 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 	require.Equal(t, "a@b.c", res[0].Email)
 	require.Equal(t, "password", res[0].LockReason)
 	require.EqualValues(t, 1791105360, res[0].TempLockExpiration)
+	assert.Equal(t, "T1", res[0].SCIMTenantID)
+	assert.Equal(t, "T2", res[0].SAMLTenantID)
+	assert.Equal(t, "T3", res[0].OIDCTenantID)
 	require.Equal(t, 85, total)
 }
 

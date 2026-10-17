@@ -724,6 +724,14 @@ type UserResponse struct {
 	SSOAppIDs        []string                        `json:"ssoAppIds,omitempty"`
 	Dependent        bool                            `json:"dependent,omitempty"`
 	UserFamilies     []*UserFamily                   `json:"userFamilies,omitempty"`
+	// SCIMTenantID is the tenant whose SCIM connection provisioned the user, empty when none or ambiguous
+	SCIMTenantID string `json:"scimTenantId,omitempty"`
+	// SAMLTenantID is the tenant whose SAML SSO created the user or merged the user's login into it,
+	// empty when none or ambiguous
+	SAMLTenantID string `json:"samlTenantId,omitempty"`
+	// OIDCTenantID is the tenant whose OIDC SSO created the user or merged the user's login into it,
+	// empty when none or ambiguous
+	OIDCTenantID string `json:"oidcTenantId,omitempty"`
 	// LockReason is the auth method that triggered brute-force protection (password, totp,
 	// recovery_codes, security_questions), empty when none
 	LockReason string `json:"lockReason,omitempty"`
