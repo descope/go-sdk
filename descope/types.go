@@ -719,6 +719,7 @@ type UserResponse struct {
 	WebAuthn         bool                            `json:"webauthn,omitempty"`
 	Password         bool                            `json:"password,omitempty"`
 	SAML             bool                            `json:"saml,omitempty"`
+	OIDC             bool                            `json:"oidc,omitempty"`
 	SCIM             bool                            `json:"scim,omitempty"`
 	OAuth            map[string]bool                 `json:"oauth,omitempty"`
 	SSOAppIDs        []string                        `json:"ssoAppIds,omitempty"`
