@@ -720,6 +720,7 @@ type UserResponse struct {
 	Password         bool                            `json:"password,omitempty"`
 	SAML             bool                            `json:"saml,omitempty"`
 	SCIM             bool                            `json:"scim,omitempty"`
+	OIDC             bool                            `json:"oidc,omitempty"`
 	OAuth            map[string]bool                 `json:"oauth,omitempty"`
 	SSOAppIDs        []string                        `json:"ssoAppIds,omitempty"`
 	Dependent        bool                            `json:"dependent,omitempty"`
