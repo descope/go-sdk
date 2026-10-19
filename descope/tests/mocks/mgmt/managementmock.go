@@ -2929,6 +2929,10 @@ type MockList struct {
 	CheckTextResponse bool
 	CheckTextError    error
 
+	CheckTextsAssert   func(id string, texts []string, matchAll bool)
+	CheckTextsResponse bool
+	CheckTextsError    error
+
 	ClearAssert func(id string)
 	ClearError  error
 }
@@ -3019,6 +3023,13 @@ func (m *MockList) CheckText(_ context.Context, id string, text string) (bool, e
 		m.CheckTextAssert(id, text)
 	}
 	return m.CheckTextResponse, m.CheckTextError
+}
+
+func (m *MockList) CheckTexts(_ context.Context, id string, texts []string, matchAll bool) (bool, error) {
+	if m.CheckTextsAssert != nil {
+		m.CheckTextsAssert(id, texts, matchAll)
+	}
+	return m.CheckTextsResponse, m.CheckTextsError
 }
 
 func (m *MockList) Clear(_ context.Context, id string) error {
