@@ -719,11 +719,20 @@ type UserResponse struct {
 	WebAuthn         bool                            `json:"webauthn,omitempty"`
 	Password         bool                            `json:"password,omitempty"`
 	SAML             bool                            `json:"saml,omitempty"`
+	OIDC             bool                            `json:"oidc,omitempty"`
 	SCIM             bool                            `json:"scim,omitempty"`
 	OAuth            map[string]bool                 `json:"oauth,omitempty"`
 	SSOAppIDs        []string                        `json:"ssoAppIds,omitempty"`
 	Dependent        bool                            `json:"dependent,omitempty"`
 	UserFamilies     []*UserFamily                   `json:"userFamilies,omitempty"`
+	// SCIMTenantID is the tenant whose SCIM connection provisioned the user, empty when none or ambiguous
+	SCIMTenantID string `json:"scimTenantId,omitempty"`
+	// SAMLTenantID is the tenant whose SAML SSO created the user or merged the user's login into it,
+	// empty when none or ambiguous
+	SAMLTenantID string `json:"samlTenantId,omitempty"`
+	// OIDCTenantID is the tenant whose OIDC SSO created the user or merged the user's login into it,
+	// empty when none or ambiguous
+	OIDCTenantID string `json:"oidcTenantId,omitempty"`
 	// LockReason is the auth method that triggered brute-force protection (password, totp,
 	// recovery_codes, security_questions), empty when none
 	LockReason string `json:"lockReason,omitempty"`
@@ -2305,6 +2314,12 @@ type ListTextsRequest struct {
 type ListCheckTextRequest struct {
 	ID   string `json:"id"`
 	Text string `json:"text"`
+}
+
+type ListCheckTextsRequest struct {
+	ID       string   `json:"id"`
+	Texts    []string `json:"texts"`
+	MatchAll bool     `json:"matchAll"`
 }
 
 // JWTTemplate is a JWT template definition in a project.

@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.38.0](https://github.com/descope/go-sdk/compare/v1.37.0...v1.38.0) (2026-10-19)
+
+
+### Features
+
+* **lists:** check multiple texts in a text list with CheckTexts ([#875](https://github.com/descope/go-sdk/issues/875)) ([aee2cf1](https://github.com/descope/go-sdk/commit/aee2cf1fac2ce2e844682058dd9b9223903713a4))
+* **user:** expose SCIM/SAML/OIDC provisioning tenant on user responses ([#874](https://github.com/descope/go-sdk/issues/874)) ([90ec550](https://github.com/descope/go-sdk/commit/90ec550e001a0a3b75ad6530a4aba1bf9e508141))
+* **user:** expose the OIDC flag on user responses ([#876](https://github.com/descope/go-sdk/issues/876)) ([7a4293b](https://github.com/descope/go-sdk/commit/7a4293b7c5438324ade4e9e84032f7d1b24ea288))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.37.0 ([#871](https://github.com/descope/go-sdk/issues/871)) ([14a6f9b](https://github.com/descope/go-sdk/commit/14a6f9bda77b4da5d63730b32298e57ad776b162))
+
 ## [1.37.0](https://github.com/descope/go-sdk/compare/v1.36.0...v1.37.0) (2026-10-13)
 
 

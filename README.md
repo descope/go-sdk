@@ -2251,6 +2251,15 @@ if err == nil && exists {
     // Text is in the list
 }
 
+// Check if multiple texts exist in a text list (up to 100 per call)
+// The list must be of type "texts".
+// When matchAll is false, returns true if any of the texts is in the list.
+// When matchAll is true, returns true only if all of the texts are in the list.
+exists, err := descopeClient.Management.List().CheckTexts(context.Background(), "list-id", []string{"item1", "item2"}, false)
+if err == nil && exists {
+    // At least one of the texts is in the list
+}
+
 // Clear all data from a list
 // The list metadata (name, description, type) is preserved.
 err := descopeClient.Management.List().Clear(context.Background(), "list-id")
