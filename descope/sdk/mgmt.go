@@ -1268,7 +1268,8 @@ type ThirdPartyApplication interface {
 	// PermissionsScopes: List of permissions scopes.
 	// ScopeClaimMapping: List of scope→claim mapping entries.
 	// JWTBearerSettings: Optional JWT Bearer settings which used to validate external token.
-	// ClientType: Optional client authentication model, "confidential" or "public".
+	// ClientType: Client authentication model, "confidential" or "public". Optional for older accounts,
+	// where leaving it empty selects the legacy unspecified mode; required for newer accounts.
 	// ForceDpop: Optional, requires a DPoP proof at the token endpoint. Needs a ClientType.
 	//
 	// The argument appRequest.Name must be unique per project.

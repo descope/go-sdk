@@ -1174,7 +1174,7 @@ type OIDCApplicationRequest struct {
 	// the client_secret is generated server-side (fetch/rotate it via the application secret methods).
 	ClientID                  string   `json:"clientId,omitempty"`
 	ClientSecret              string   `json:"clientSecret,omitempty"`
-	ClientType                string   `json:"clientType,omitempty"`
+	ClientType                string   `json:"clientType,omitempty"` // "confidential" or "public"; empty is the legacy access-key mode, which newer accounts can't use
 	ApprovedRedirectURLs      []string `json:"approvedRedirectUrls,omitempty"`
 	AuthorizationCodeDisabled bool     `json:"authorizationCodeDisabled,omitempty"`
 	ClientCredentialsDisabled bool     `json:"clientCredentialsDisabled,omitempty"`
@@ -2024,7 +2024,8 @@ type ThirdPartyApplicationRequest struct {
 	ForcePkce bool `json:"forcePkce,omitempty"`
 	// DefaultAudience controls the default aud of issued tokens: "projectId", "clientId", or "" (both).
 	DefaultAudience string `json:"defaultAudience,omitempty"`
-	// ClientType sets the client authentication model: "confidential" or "public".
+	// ClientType sets the client authentication model: "confidential" or "public". Empty selects the legacy
+	// unspecified mode, which newer accounts can't use.
 	ClientType string `json:"clientType,omitempty"`
 	// ForceDpop requires a valid DPoP proof at the token endpoint. Only a "confidential" or "public" ClientType may require it.
 	ForceDpop bool `json:"forceDpop,omitempty"`
