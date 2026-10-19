@@ -1005,6 +1005,7 @@ func TestUserLoadSuccess(t *testing.T) {
 	response := map[string]any{
 		"user": map[string]any{
 			"email":        "a@b.c",
+			"oidc":         true,
 			"scimTenantId": "T1",
 			"samlTenantId": "T2",
 			"oidcTenantId": "T3",
@@ -1021,6 +1022,7 @@ func TestUserLoadSuccess(t *testing.T) {
 	assert.Equal(t, "T1", res.SCIMTenantID)
 	assert.Equal(t, "T2", res.SAMLTenantID)
 	assert.Equal(t, "T3", res.OIDCTenantID)
+	assert.True(t, res.OIDC)
 }
 
 func TestUsersLoad(t *testing.T) {
@@ -1139,6 +1141,7 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 			"email":              "a@b.c",
 			"lockReason":         "password",
 			"tempLockExpiration": 1791105360,
+			"oidc":               true,
 			"scimTenantId":       "T1",
 			"samlTenantId":       "T2",
 			"oidcTenantId":       "T3",
@@ -1195,6 +1198,7 @@ func TestSearchAllUsersSuccess(t *testing.T) {
 	assert.Equal(t, "T1", res[0].SCIMTenantID)
 	assert.Equal(t, "T2", res[0].SAMLTenantID)
 	assert.Equal(t, "T3", res[0].OIDCTenantID)
+	assert.True(t, res[0].OIDC)
 	require.Equal(t, 85, total)
 }
 
