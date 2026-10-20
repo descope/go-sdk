@@ -1233,10 +1233,9 @@ type GroupMember struct {
 	LoginID string `json:"loginID,omitempty"`
 	UserID  string `json:"userId,omitempty"`
 	Display string `json:"display,omitempty"`
-	// Source is which side added this member to the group: "scim" (pushed by SCIM) or "jit" (added
-	// from an SSO assertion at login). Empty for memberships recorded before provenance was tracked,
-	// which belong to the group's own Source. A SCIM group can hold JIT members, because SSO
-	// assertions keep their own membership so the user's idpGroups claim survives a token refresh.
+	// Source is which side added this member to the group: "scim" when SCIM pushed it, or "jit" when
+	// an SSO assertion added it at login. A SCIM-owned group can hold JIT members, because an SSO
+	// assertion keeps its own membership so the user's idpGroups claim survives a token refresh.
 	// Read-only.
 	Source string `json:"source,omitempty"`
 }
