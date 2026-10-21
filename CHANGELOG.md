@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.38.1](https://github.com/descope/go-sdk/compare/v1.38.0...v1.38.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.38.0 ([#878](https://github.com/descope/go-sdk/issues/878)) ([12c8c20](https://github.com/descope/go-sdk/commit/12c8c201d8e147ed5d9b2efa0bdfd93c19020bbd))
+
 ## [1.38.0](https://github.com/descope/go-sdk/compare/v1.37.0...v1.38.0) (2026-10-19)
 
 
