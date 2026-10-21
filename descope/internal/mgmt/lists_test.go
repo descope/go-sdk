@@ -593,3 +593,75 @@ func TestListCheckTextEmptyText(t *testing.T) {
 	require.False(t, exists)
 	require.Contains(t, err.Error(), "text")
 }
+
+func TestListCheckTextsSuccess(t *testing.T) {
+	response := map[string]any{
+		"exists": true,
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "list-123", req["id"])
+		texts := req["texts"].([]any)
+		require.Len(t, texts, 2)
+		require.Equal(t, "item1", texts[0])
+		require.Equal(t, "item2", texts[1])
+		require.Equal(t, false, req["matchAll"])
+	}, response))
+
+	exists, err := mgmt.List().CheckTexts(context.Background(), "list-123", []string{"item1", "item2"}, false)
+	require.NoError(t, err)
+	require.True(t, exists)
+}
+
+func TestListCheckTextsMatchAll(t *testing.T) {
+	response := map[string]any{
+		"exists": true,
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "list-123", req["id"])
+		require.Equal(t, true, req["matchAll"])
+	}, response))
+
+	exists, err := mgmt.List().CheckTexts(context.Background(), "list-123", []string{"item1", "item2"}, true)
+	require.NoError(t, err)
+	require.True(t, exists)
+}
+
+func TestListCheckTextsNotExists(t *testing.T) {
+	response := map[string]any{
+		"exists": false,
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+	}, response))
+
+	exists, err := mgmt.List().CheckTexts(context.Background(), "list-123", []string{"item998", "item999"}, false)
+	require.NoError(t, err)
+	require.False(t, exists)
+}
+
+func TestListCheckTextsEmptyID(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	exists, err := mgmt.List().CheckTexts(context.Background(), "", []string{"item1"}, false)
+	require.Error(t, err)
+	require.False(t, exists)
+	require.Contains(t, err.Error(), "id")
+}
+
+func TestListCheckTextsEmptyTexts(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	exists, err := mgmt.List().CheckTexts(context.Background(), "list-123", nil, false)
+	require.Error(t, err)
+	require.False(t, exists)
+	require.Contains(t, err.Error(), "texts")
+
+	exists, err = mgmt.List().CheckTexts(context.Background(), "list-123", []string{}, false)
+	require.Error(t, err)
+	require.False(t, exists)
+	require.Contains(t, err.Error(), "texts")
+}

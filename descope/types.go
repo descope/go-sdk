@@ -2318,6 +2318,12 @@ type ListCheckTextRequest struct {
 	Text string `json:"text"`
 }
 
+type ListCheckTextsRequest struct {
+	ID       string   `json:"id"`
+	Texts    []string `json:"texts"`
+	MatchAll bool     `json:"matchAll"`
+}
+
 // JWTTemplate is a JWT template definition in a project.
 type JWTTemplate struct {
 	ID                      string         `json:"id,omitempty"`

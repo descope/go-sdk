@@ -1567,6 +1567,13 @@ type List interface {
 	// Returns true if the text exists in the list, false otherwise.
 	CheckText(ctx context.Context, id string, text string) (bool, error)
 
+	// Check if texts exist in a text list.
+	//
+	// The list must be of type "texts". Up to 100 texts can be checked in a single call.
+	// When matchAll is false, returns true if any of the texts exists in the list.
+	// When matchAll is true, returns true only if all of the texts exist in the list.
+	CheckTexts(ctx context.Context, id string, texts []string, matchAll bool) (bool, error)
+
 	// Clear all data from a list.
 	//
 	// The list metadata (name, description, type) is preserved.

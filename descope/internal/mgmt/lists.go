@@ -217,6 +217,32 @@ func (l *lists) CheckText(ctx context.Context, id string, text string) (bool, er
 	return checkRes.Exists, nil
 }
 
+func (l *lists) CheckTexts(ctx context.Context, id string, texts []string, matchAll bool) (bool, error) {
+	if id == "" {
+		return false, utils.NewInvalidArgumentError("id")
+	}
+	if len(texts) == 0 {
+		return false, utils.NewInvalidArgumentError("texts")
+	}
+	req := &descope.ListCheckTextsRequest{
+		ID:       id,
+		Texts:    texts,
+		MatchAll: matchAll,
+	}
+	res, err := l.client.DoPostRequest(ctx, api.Routes.ManagementListCheckText(), req, nil, "")
+	if err != nil {
+		return false, err
+	}
+
+	var checkRes struct {
+		Exists bool `json:"exists"`
+	}
+	if err := utils.Unmarshal([]byte(res.BodyStr), &checkRes); err != nil {
+		return false, err
+	}
+	return checkRes.Exists, nil
+}
+
 func (l *lists) Clear(ctx context.Context, id string) error {
 	if id == "" {
 		return utils.NewInvalidArgumentError("id")
