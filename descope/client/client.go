@@ -48,6 +48,9 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 	if config.setPublicKey() != "" {
 		logger.LogInfo("Provided public key is set, forcing only provided public key validation")
 	}
+	if config.setPrivateKey() != "" {
+		logger.LogInfo("Provided private key is set, encrypted (JWE) session tokens will be decrypted before validation")
+	}
 	config.setManagementKey()
 	config.setAuthManagementKey()
 
@@ -66,6 +69,8 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 	conf := &auth.AuthParams{
 		ProjectID:           config.ProjectID,
 		PublicKey:           config.PublicKey,
+		PrivateKey:          config.PrivateKey,
+		PrivateKeyProvider:  config.PrivateKeyProvider,
 		SessionJWTViaCookie: config.SessionJWTViaCookie,
 		CookieDomain:        config.SessionJWTCookieDomain,
 		CookieSameSite:      config.SessionJWTCookieSameSite,
