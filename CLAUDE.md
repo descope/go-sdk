@@ -28,7 +28,7 @@ A new management area also needs wiring in `internal/mgmt/mgmt.go` (field, init,
 ## Conventions
 
 - Required arguments: `return utils.NewInvalidArgumentError("<name>")`.
-- Requests: `client.Do<Method>Request(ctx, api.Routes.<Route>(), body, options, pswd)`. The header becomes `Authorization: Bearer <projectID>[:<pswd>][:<managementKey>]`.
+- Requests: `client.DoPostRequest` / `DoPutRequest` / `DoPatchRequest(ctx, api.Routes.<Route>(), body, options, pswd)`, or `client.DoGetRequest` / `DoDeleteRequest(ctx, api.Routes.<Route>(), options, pswd)` with no body. The header becomes `Authorization: Bearer <projectID>[:<pswd>][:<managementKey>]`.
   - Management calls pass `pswd = ""`; the management key is added automatically.
   - Auth calls acting for a user pass the refresh JWT as `pswd`, from `auth.getValidRefreshToken(r)` or a token parameter.
 - Partial updates send only the fields the caller set.
@@ -36,7 +36,7 @@ A new management area also needs wiring in `internal/mgmt/mgmt.go` (field, init,
 
 ## Tests
 
-- Use testify `require` and the helpers in `tests/helpers`: `newTestMgmt` / `newTestAuth`, `helpers.DoOkWithBody`, `helpers.ReadBody`.
+- Use testify `require`, the package-local `newTestMgmt` (`internal/mgmt/mgmt_test.go`) / `newTestAuth` (`internal/auth/auth_test.go`), and `helpers.DoOkWithBody` / `helpers.ReadBody` from `tests/helpers`.
 - Assert the route, the `Authorization` header, the request body, the parsed response, and one invalid-argument case per required argument.
 - Cover every new branch. Mark only truly unreachable lines with a trailing `// notest`, as existing code does.
 
