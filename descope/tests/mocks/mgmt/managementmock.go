@@ -1309,6 +1309,18 @@ type MockTenant struct {
 	CreateWithIDAssert func(id string, tenantRequest *descope.TenantRequest)
 	CreateWithIDError  error
 
+	CreateBatchAssert   func(tenants []*descope.BatchCreateTenant)
+	CreateBatchResponse *descope.CreateTenantsBatchResponse
+	CreateBatchError    error
+
+	UpdateBatchAssert   func(tenants []*descope.BatchUpdateTenant)
+	UpdateBatchResponse *descope.UpdateTenantsBatchResponse
+	UpdateBatchError    error
+
+	DeleteBatchAssert   func(ids []string, cascade bool)
+	DeleteBatchResponse *descope.DeleteTenantsBatchResponse
+	DeleteBatchError    error
+
 	UpdateAssert func(id string, tenantRequest *descope.TenantRequest)
 	UpdateError  error
 
@@ -1359,6 +1371,27 @@ func (m *MockTenant) CreateWithID(_ context.Context, id string, tenantRequest *d
 		m.CreateWithIDAssert(id, tenantRequest)
 	}
 	return m.CreateWithIDError
+}
+
+func (m *MockTenant) CreateBatch(_ context.Context, tenants []*descope.BatchCreateTenant) (*descope.CreateTenantsBatchResponse, error) {
+	if m.CreateBatchAssert != nil {
+		m.CreateBatchAssert(tenants)
+	}
+	return m.CreateBatchResponse, m.CreateBatchError
+}
+
+func (m *MockTenant) UpdateBatch(_ context.Context, tenants []*descope.BatchUpdateTenant) (*descope.UpdateTenantsBatchResponse, error) {
+	if m.UpdateBatchAssert != nil {
+		m.UpdateBatchAssert(tenants)
+	}
+	return m.UpdateBatchResponse, m.UpdateBatchError
+}
+
+func (m *MockTenant) DeleteBatch(_ context.Context, ids []string, cascade bool) (*descope.DeleteTenantsBatchResponse, error) {
+	if m.DeleteBatchAssert != nil {
+		m.DeleteBatchAssert(ids, cascade)
+	}
+	return m.DeleteBatchResponse, m.DeleteBatchError
 }
 
 func (m *MockTenant) Update(_ context.Context, id string, tenantRequest *descope.TenantRequest) error {

@@ -26,6 +26,12 @@ type Tenant interface {
 	// Both the tenantRequest.Name and ID must be unique per project.
 	CreateWithID(ctx context.Context, id string, tenantRequest *descope.TenantRequest) error
 
+	// Create multiple tenants in a single batch.
+	//
+	// Each tenant is created independently. Name is required for every tenant, and ID is
+	// optional. Per-tenant failures are returned in the response's FailedTenants.
+	CreateBatch(ctx context.Context, tenants []*descope.BatchCreateTenant) (*descope.CreateTenantsBatchResponse, error)
+
 	// Update an existing tenant.
 	//
 	// IMPORTANT: This is a full overwrite, not a partial update. Every field on
@@ -36,6 +42,13 @@ type Tenant interface {
 	// your change before calling Update. Instead, use Patch if you don't want to
 	// pass all parameters.
 	Update(ctx context.Context, id string, tenantRequest *descope.TenantRequest) error
+
+	// Update multiple existing tenants in a single batch.
+	//
+	// Each tenant is updated independently. ID and Name are required for every tenant.
+	// IMPORTANT: like Update, this is a full overwrite of each tenant.
+	// Per-tenant failures are returned in the response's FailedTenants.
+	UpdateBatch(ctx context.Context, tenants []*descope.BatchUpdateTenant) (*descope.UpdateTenantsBatchResponse, error)
 
 	// Patches an existing tenant.
 	//
@@ -48,6 +61,14 @@ type Tenant interface {
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	Delete(ctx context.Context, id string, cascade bool) error
+
+	// Delete multiple existing tenants in a single batch.
+	// Pass true on `cascade` in case you want to delete all users/keys associated only with these tenants
+	//
+	// Each tenant is deleted independently. Per-tenant failures are returned in the response's FailedTenants.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteBatch(ctx context.Context, ids []string, cascade bool) (*descope.DeleteTenantsBatchResponse, error)
 
 	// Load project tenant by id
 	Load(ctx context.Context, id string) (*descope.Tenant, error)

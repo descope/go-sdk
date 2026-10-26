@@ -908,6 +908,26 @@ err := descopeClient.Management.Tenant().Patch(context.Background(), tenantPatch
 // Pass true to cascade value, in case you want to delete all users/keys associated only with this tenant
 err := descopeClient.Management.Tenant().Delete(context.Background(), "my-custom-id", true)
 
+// Batch operations process each tenant independently. Per-tenant failures are
+// returned in the response's FailedTenants (and AdditionalErrors) rather than as an error.
+createRes, err := descopeClient.Management.Tenant().CreateBatch(context.Background(), []*descope.BatchCreateTenant{
+    {Name: "Tenant A"},
+    {ID: "tenant-b", Name: "Tenant B", SelfProvisioningDomains: []string{"b.com"}},
+})
+if err == nil {
+    for _, created := range createRes.CreatedTenants {
+        // Do something with created.ID
+    }
+}
+
+// Update will override all fields of each tenant as is. Use carefully.
+updateRes, err := descopeClient.Management.Tenant().UpdateBatch(context.Background(), []*descope.BatchUpdateTenant{
+    {ID: "tenant-b", Name: "Tenant B", SelfProvisioningDomains: []string{"b.com", "b.org"}},
+})
+
+// Tenant deletion cannot be undone. Use carefully.
+deleteRes, err := descopeClient.Management.Tenant().DeleteBatch(context.Background(), []string{"tenant-a", "tenant-b"}, true)
+
 // Load tenant by id
 tenant, err := descopeClient.Management.Tenant().Load(context.Background(), "my-custom-id")
 

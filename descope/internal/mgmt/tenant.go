@@ -51,6 +51,116 @@ func (t *tenant) createWithID(ctx context.Context, id string, tenantRequest *des
 	return res.ID, nil
 }
 
+type createTenantsBatchRequest struct {
+	Tenants []*descope.BatchCreateTenant `json:"tenants"`
+}
+
+type updateTenantsBatchRequest struct {
+	Tenants []*descope.BatchUpdateTenant `json:"tenants"`
+}
+
+type deleteTenantsBatchRequest struct {
+	IDs     []string `json:"ids"`
+	Cascade bool     `json:"cascade"`
+}
+
+func (t *tenant) CreateBatch(ctx context.Context, tenants []*descope.BatchCreateTenant) (*descope.CreateTenantsBatchResponse, error) {
+	if len(tenants) == 0 {
+		return nil, utils.NewInvalidArgumentError("tenants")
+	}
+	for _, tr := range tenants {
+		if tr == nil {
+			return nil, utils.NewInvalidArgumentError("tenants")
+		}
+		if tr.Name == "" {
+			return nil, utils.NewInvalidArgumentError("name")
+		}
+		if err := validateTenantBatchLists(tr.SelfProvisioningDomains, tr.EnforceSSOExclusions, tr.FederatedAppIDs); err != nil {
+			return nil, err
+		}
+	}
+	req := &createTenantsBatchRequest{Tenants: tenants}
+	httpRes, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantCreateBatch(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	res := &descope.CreateTenantsBatchResponse{}
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), res); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (t *tenant) UpdateBatch(ctx context.Context, tenants []*descope.BatchUpdateTenant) (*descope.UpdateTenantsBatchResponse, error) {
+	if len(tenants) == 0 {
+		return nil, utils.NewInvalidArgumentError("tenants")
+	}
+	for _, tr := range tenants {
+		if tr == nil {
+			return nil, utils.NewInvalidArgumentError("tenants")
+		}
+		if tr.ID == "" {
+			return nil, utils.NewInvalidArgumentError("id")
+		}
+		if tr.Name == "" {
+			return nil, utils.NewInvalidArgumentError("name")
+		}
+		if err := validateTenantBatchLists(tr.SelfProvisioningDomains, tr.EnforceSSOExclusions, tr.FederatedAppIDs); err != nil {
+			return nil, err
+		}
+	}
+	req := &updateTenantsBatchRequest{Tenants: tenants}
+	httpRes, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantUpdateBatch(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	res := &descope.UpdateTenantsBatchResponse{}
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), res); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (t *tenant) DeleteBatch(ctx context.Context, ids []string, cascade bool) (*descope.DeleteTenantsBatchResponse, error) {
+	if len(ids) == 0 {
+		return nil, utils.NewInvalidArgumentError("ids")
+	}
+	for _, id := range ids {
+		if id == "" {
+			return nil, utils.NewInvalidArgumentError("ids")
+		}
+	}
+	req := &deleteTenantsBatchRequest{IDs: ids, Cascade: cascade}
+	httpRes, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantDeleteBatch(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	res := &descope.DeleteTenantsBatchResponse{}
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), res); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func validateTenantBatchLists(selfProvisioningDomains, enforceSSOExclusions, federatedAppIDs []string) error {
+	for _, v := range selfProvisioningDomains {
+		if v == "" {
+			return utils.NewInvalidArgumentError("selfProvisioningDomains")
+		}
+	}
+	for _, v := range enforceSSOExclusions {
+		if v == "" {
+			return utils.NewInvalidArgumentError("enforceSSOExclusions")
+		}
+	}
+	for _, v := range federatedAppIDs {
+		if v == "" {
+			return utils.NewInvalidArgumentError("federatedAppIds")
+		}
+	}
+	return nil
+}
+
 func (t *tenant) Update(ctx context.Context, id string, tenantRequest *descope.TenantRequest) error {
 	if id == "" {
 		return utils.NewInvalidArgumentError("id")

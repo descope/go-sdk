@@ -91,9 +91,12 @@ var (
 		mgmt: mgmtEndpoints{
 			license:                                    "mgmt/license",
 			tenantCreate:                               "mgmt/tenant/create",
+			tenantCreateBatch:                          "mgmt/tenant/create/batch",
 			tenantUpdate:                               "mgmt/tenant/update",
+			tenantUpdateBatch:                          "mgmt/tenant/update/batch",
 			tenantPatch:                                "mgmt/tenant/patch",
 			tenantDelete:                               "mgmt/tenant/delete",
+			tenantDeleteBatch:                          "mgmt/tenant/delete/batch",
 			tenantLoad:                                 "mgmt/tenant",
 			tenantLoadAll:                              "mgmt/tenant/all",
 			tenantSearchAll:                            "mgmt/tenant/search",
@@ -446,9 +449,12 @@ type authEndpoints struct {
 type mgmtEndpoints struct {
 	license                  string
 	tenantCreate             string
+	tenantCreateBatch        string
 	tenantUpdate             string
+	tenantUpdateBatch        string
 	tenantPatch              string
 	tenantDelete             string
+	tenantDeleteBatch        string
 	tenantLoad               string
 	tenantLoadAll            string
 	tenantSearchAll          string
@@ -986,8 +992,16 @@ func (e *endpoints) ManagementTenantCreate() string {
 	return path.Join(e.version, e.mgmt.tenantCreate)
 }
 
+func (e *endpoints) ManagementTenantCreateBatch() string {
+	return path.Join(e.version, e.mgmt.tenantCreateBatch)
+}
+
 func (e *endpoints) ManagementTenantUpdate() string {
 	return path.Join(e.version, e.mgmt.tenantUpdate)
+}
+
+func (e *endpoints) ManagementTenantUpdateBatch() string {
+	return path.Join(e.version, e.mgmt.tenantUpdateBatch)
 }
 
 func (e *endpoints) ManagementTenantPatch() string {
@@ -996,6 +1010,10 @@ func (e *endpoints) ManagementTenantPatch() string {
 
 func (e *endpoints) ManagementTenantDelete() string {
 	return path.Join(e.version, e.mgmt.tenantDelete)
+}
+
+func (e *endpoints) ManagementTenantDeleteBatch() string {
+	return path.Join(e.version, e.mgmt.tenantDeleteBatch)
 }
 
 func (e *endpoints) ManagementTenantLoad() string {
