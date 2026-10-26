@@ -160,7 +160,7 @@ if err != nil {
 
 ### OTP Authentication
 
-Send a user a one-time password (OTP) using your preferred delivery method (_Email / SMS / Voice call / WhatsApp_). An email address or phone number must be provided accordingly.
+Send a user a one-time password (OTP) using your preferred delivery method (_Email / SMS / Voice call / WhatsApp / Instant message_). An email address or phone number must be provided accordingly. Use `descope.MethodIM` to send the code as an instant message to the user's phone number.
 
 The user can either `sign up`, `sign in` or `sign up or in`
 

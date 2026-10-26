@@ -1660,6 +1660,7 @@ const (
 	MethodWhatsApp DeliveryMethod = "whatsapp"
 	MethodSMS      DeliveryMethod = "sms"
 	MethodVoice    DeliveryMethod = "voice"
+	MethodIM       DeliveryMethod = "im"
 	MethodEmail    DeliveryMethod = "email"
 	MethodEmbedded DeliveryMethod = "Embedded"
 

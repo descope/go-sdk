@@ -121,7 +121,7 @@ func (auth *otp) UpdateUserPhone(ctx context.Context, method descope.DeliveryMet
 	if !phoneRegex.MatchString(phone) {
 		return "", utils.NewInvalidArgumentError("phone")
 	}
-	if method != descope.MethodSMS && method != descope.MethodVoice && method != descope.MethodWhatsApp {
+	if method != descope.MethodSMS && method != descope.MethodVoice && method != descope.MethodIM && method != descope.MethodWhatsApp {
 		return "", utils.NewInvalidArgumentError("method")
 	}
 	pswd, err := auth.getValidRefreshToken(r)

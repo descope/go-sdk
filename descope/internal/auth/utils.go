@@ -161,7 +161,7 @@ func newSignUpRequestBody(method descope.DeliveryMethod, user *descope.User) *au
 	switch method {
 	case descope.MethodSMS:
 		return &authenticationSignUpRequestBody{Phone: user.Phone}
-	case descope.MethodVoice:
+	case descope.MethodVoice, descope.MethodIM:
 		return &authenticationSignUpRequestBody{Phone: user.Phone}
 	case descope.MethodWhatsApp:
 		return &authenticationSignUpRequestBody{WhatsApp: user.Phone}

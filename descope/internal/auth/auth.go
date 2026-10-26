@@ -874,7 +874,7 @@ func (*authenticationsBase) verifyDeliveryMethod(method descope.DeliveryMethod, 
 		if !phoneRegex.MatchString(user.Phone) {
 			return utils.NewInvalidArgumentError(varName)
 		}
-	case descope.MethodVoice:
+	case descope.MethodVoice, descope.MethodIM:
 		if len(user.Phone) == 0 {
 			user.Phone = loginID
 		} else {
@@ -1299,6 +1299,8 @@ func getMaskedValue(method descope.DeliveryMethod) Masked {
 	case descope.MethodSMS:
 		fallthrough
 	case descope.MethodVoice:
+		fallthrough
+	case descope.MethodIM:
 		fallthrough
 	case descope.MethodWhatsApp:
 		m = &MaskedPhoneRes{}
