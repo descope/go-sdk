@@ -1406,6 +1406,25 @@ type OutboundApplication interface {
 
 	// Delete an outbound application token by its ID.
 	DeleteTokenByID(ctx context.Context, id string) error
+
+	// Create a new outbound SCIM configuration, which provisions users from a federated
+	// application to an external SCIM 2.0 service provider.
+	CreateSCIMConfiguration(ctx context.Context, request *descope.CreateOutboundSCIMConfigurationRequest) (*descope.OutboundSCIMConfiguration, error)
+
+	// Update an existing outbound SCIM configuration.
+	UpdateSCIMConfiguration(ctx context.Context, request *descope.UpdateOutboundSCIMConfigurationRequest) (*descope.OutboundSCIMConfiguration, error)
+
+	// Delete an outbound SCIM configuration.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteSCIMConfiguration(ctx context.Context, appID string) error
+
+	// Load an outbound SCIM configuration by application id, including its provisioning status
+	// (enabled flag, last export and processing times, and failure counter).
+	LoadSCIMConfiguration(ctx context.Context, appID string) (*descope.OutboundSCIMConfiguration, error)
+
+	// Enable or disable an outbound SCIM configuration.
+	SetSCIMEnabled(ctx context.Context, appID string, enabled bool) (*descope.OutboundSCIMConfiguration, error)
 }
 
 // Provides functions for managing engines in a project.

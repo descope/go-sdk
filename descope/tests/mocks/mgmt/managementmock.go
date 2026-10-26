@@ -2636,6 +2636,25 @@ type MockOutboundApplication struct {
 
 	DeleteTokenByIDAssert func(id string)
 	DeleteTokenByIDError  error
+
+	CreateSCIMConfigurationAssert   func(request *descope.CreateOutboundSCIMConfigurationRequest)
+	CreateSCIMConfigurationResponse *descope.OutboundSCIMConfiguration
+	CreateSCIMConfigurationError    error
+
+	UpdateSCIMConfigurationAssert   func(request *descope.UpdateOutboundSCIMConfigurationRequest)
+	UpdateSCIMConfigurationResponse *descope.OutboundSCIMConfiguration
+	UpdateSCIMConfigurationError    error
+
+	DeleteSCIMConfigurationAssert func(appID string)
+	DeleteSCIMConfigurationError  error
+
+	LoadSCIMConfigurationAssert   func(appID string)
+	LoadSCIMConfigurationResponse *descope.OutboundSCIMConfiguration
+	LoadSCIMConfigurationError    error
+
+	SetSCIMEnabledAssert   func(appID string, enabled bool)
+	SetSCIMEnabledResponse *descope.OutboundSCIMConfiguration
+	SetSCIMEnabledError    error
 }
 
 func (m *MockOutboundApplication) CreateApplication(_ context.Context, appRequest *descope.CreateOutboundAppRequest) (app *descope.OutboundApp, err error) {
@@ -2759,6 +2778,41 @@ func (m *MockOutboundApplication) DeleteTokenByID(_ context.Context, id string) 
 		m.DeleteTokenByIDAssert(id)
 	}
 	return m.DeleteTokenByIDError
+}
+
+func (m *MockOutboundApplication) CreateSCIMConfiguration(_ context.Context, request *descope.CreateOutboundSCIMConfigurationRequest) (*descope.OutboundSCIMConfiguration, error) {
+	if m.CreateSCIMConfigurationAssert != nil {
+		m.CreateSCIMConfigurationAssert(request)
+	}
+	return m.CreateSCIMConfigurationResponse, m.CreateSCIMConfigurationError
+}
+
+func (m *MockOutboundApplication) UpdateSCIMConfiguration(_ context.Context, request *descope.UpdateOutboundSCIMConfigurationRequest) (*descope.OutboundSCIMConfiguration, error) {
+	if m.UpdateSCIMConfigurationAssert != nil {
+		m.UpdateSCIMConfigurationAssert(request)
+	}
+	return m.UpdateSCIMConfigurationResponse, m.UpdateSCIMConfigurationError
+}
+
+func (m *MockOutboundApplication) DeleteSCIMConfiguration(_ context.Context, appID string) error {
+	if m.DeleteSCIMConfigurationAssert != nil {
+		m.DeleteSCIMConfigurationAssert(appID)
+	}
+	return m.DeleteSCIMConfigurationError
+}
+
+func (m *MockOutboundApplication) LoadSCIMConfiguration(_ context.Context, appID string) (*descope.OutboundSCIMConfiguration, error) {
+	if m.LoadSCIMConfigurationAssert != nil {
+		m.LoadSCIMConfigurationAssert(appID)
+	}
+	return m.LoadSCIMConfigurationResponse, m.LoadSCIMConfigurationError
+}
+
+func (m *MockOutboundApplication) SetSCIMEnabled(_ context.Context, appID string, enabled bool) (*descope.OutboundSCIMConfiguration, error) {
+	if m.SetSCIMEnabledAssert != nil {
+		m.SetSCIMEnabledAssert(appID, enabled)
+	}
+	return m.SetSCIMEnabledResponse, m.SetSCIMEnabledError
 }
 
 // Mock ManagementKey

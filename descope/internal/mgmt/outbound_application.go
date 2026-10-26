@@ -383,3 +383,76 @@ func unmarshalBatchUploadResponse(httpRes *api.HTTPResponse) (*descope.BatchUplo
 	}
 	return &response, nil
 }
+
+func (s *outboundApplication) CreateSCIMConfiguration(ctx context.Context, request *descope.CreateOutboundSCIMConfigurationRequest) (*descope.OutboundSCIMConfiguration, error) {
+	if request == nil {
+		return nil, utils.NewInvalidArgumentError("request")
+	}
+	if request.AppID == "" {
+		return nil, utils.NewInvalidArgumentError("request.AppID")
+	}
+	if request.Configuration == nil {
+		return nil, utils.NewInvalidArgumentError("request.Configuration")
+	}
+
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementOutboundSCIMCreate(), request, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalSCIMConfigurationResponse(httpRes)
+}
+
+func (s *outboundApplication) UpdateSCIMConfiguration(ctx context.Context, request *descope.UpdateOutboundSCIMConfigurationRequest) (*descope.OutboundSCIMConfiguration, error) {
+	if request == nil {
+		return nil, utils.NewInvalidArgumentError("request")
+	}
+	if request.AppID == "" {
+		return nil, utils.NewInvalidArgumentError("request.AppID")
+	}
+
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementOutboundSCIMUpdate(), request, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalSCIMConfigurationResponse(httpRes)
+}
+
+func (s *outboundApplication) DeleteSCIMConfiguration(ctx context.Context, appID string) error {
+	if appID == "" {
+		return utils.NewInvalidArgumentError("appID")
+	}
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementOutboundSCIMDelete(), map[string]any{"appId": appID}, nil, "")
+	return err
+}
+
+func (s *outboundApplication) LoadSCIMConfiguration(ctx context.Context, appID string) (*descope.OutboundSCIMConfiguration, error) {
+	if appID == "" {
+		return nil, utils.NewInvalidArgumentError("appID")
+	}
+	httpRes, err := s.client.DoGetRequest(ctx, api.Routes.ManagementOutboundSCIMLoad(appID), nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalSCIMConfigurationResponse(httpRes)
+}
+
+func (s *outboundApplication) SetSCIMEnabled(ctx context.Context, appID string, enabled bool) (*descope.OutboundSCIMConfiguration, error) {
+	if appID == "" {
+		return nil, utils.NewInvalidArgumentError("appID")
+	}
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementOutboundSCIMSetEnabled(), map[string]any{"appId": appID, "enabled": enabled}, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalSCIMConfigurationResponse(httpRes)
+}
+
+func unmarshalSCIMConfigurationResponse(httpRes *api.HTTPResponse) (*descope.OutboundSCIMConfiguration, error) {
+	res := &struct {
+		Configuration *descope.OutboundSCIMConfiguration `json:"configuration"`
+	}{}
+	if err := utils.Unmarshal([]byte(httpRes.BodyStr), res); err != nil {
+		return nil, err
+	}
+	return res.Configuration, nil
+}

@@ -1876,6 +1876,32 @@ type BatchUploadOutboundAppTokensResponse struct {
 	Failures []*OutboundAppTokenUploadFailure `json:"failures"`
 }
 
+// OutboundSCIMConfiguration is an outbound SCIM connector that provisions users from a federated
+// application to an external SCIM 2.0 service provider, merged with its provisioning status.
+type OutboundSCIMConfiguration struct {
+	AppID              string         `json:"appId"`
+	Configuration      map[string]any `json:"configuration,omitempty"`
+	Enabled            bool           `json:"enabled"`
+	LastExportTime     int32          `json:"lastExportTime"`
+	LastProcessingTime int32          `json:"lastProcessingTime"`
+	Failures           int32          `json:"failures"`
+	Version            int64          `json:"version,string"`
+}
+
+// CreateOutboundSCIMConfigurationRequest creates an outbound SCIM configuration for an application.
+type CreateOutboundSCIMConfigurationRequest struct {
+	AppID         string         `json:"appId"`
+	Configuration map[string]any `json:"configuration"`
+}
+
+// UpdateOutboundSCIMConfigurationRequest updates an outbound SCIM configuration. A nil Configuration
+// keeps the existing configuration, and a zero Version uses the current version.
+type UpdateOutboundSCIMConfigurationRequest struct {
+	AppID         string         `json:"appId"`
+	Configuration map[string]any `json:"configuration,omitempty"`
+	Version       int64          `json:"version,omitempty,string"`
+}
+
 type ThirdPartyApplicationScope struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
