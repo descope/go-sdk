@@ -1808,8 +1808,8 @@ type Family interface {
 //
 // A SCIM access key is scoped to a tenant and one of its SSO configurations, and carries the
 // roles and custom claims SCIM requires, so its cleartext can be configured as the bearer token
-// in an identity provider's SCIM configuration. Wherever ssoID is empty, the tenant's default
-// SSO configuration is targeted, not every configuration.
+// in an identity provider's SCIM configuration. For the create, rotate, revoke and activate
+// methods, an empty SSO ID targets the tenant's default SSO configuration, not every configuration.
 type SCIM interface {
 	// Create a SCIM access key for a tenant. request.TenantID is required.
 	//

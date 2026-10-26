@@ -2557,8 +2557,8 @@ A complete runnable walkthrough is available in the [families example](https://g
 
 You can create, rotate, revoke, activate and load the SCIM access keys of a tenant. A SCIM access key is scoped
 to a tenant and one of its SSO configurations, and its cleartext is the bearer token to configure in the
-identity provider's SCIM settings. When the SSO configuration ID is empty, the tenant's default SSO configuration
-is targeted, not every configuration.
+identity provider's SCIM settings. When the SSO configuration ID is empty, create, rotate, revoke and activate
+target the tenant's default SSO configuration, while load returns the keys of every SSO configuration.
 
 ```go
 // Create a SCIM access key for a tenant. Only TenantID is required. ExpireTime is in epoch seconds,
