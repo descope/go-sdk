@@ -833,6 +833,7 @@ type AccessKeyResponse struct {
 	Description      string              `json:"description,omitempty"`
 	PermittedIPs     []string            `json:"permittedIps,omitempty"`
 	CustomAttributes map[string]any      `json:"customAttributes,omitempty"`
+	Editable         *bool               `json:"editable,omitempty"`
 }
 
 // Represents a tenant association for a User or an Access Key. The tenant ID is required
@@ -939,6 +940,75 @@ type FamilySettingsRequest struct {
 	Enabled                    *bool  `json:"enabled,omitempty"`
 	MaxFamilyMembers           *int32 `json:"maxFamilyMembers,omitempty"`
 	AllowMultipleFamiliesUsers *bool  `json:"allowMultipleFamiliesUsers,omitempty"`
+}
+
+// SCIMKeyRevokeMode controls how SCIM access keys are taken out of service when they are
+// revoked or rotated.
+type SCIMKeyRevokeMode string
+
+// SCIMKeyRevokeModeDelete deletes the keys permanently. This is the default.
+const SCIMKeyRevokeModeDelete SCIMKeyRevokeMode = "SCIM_KEY_REVOKE_MODE_DELETE"
+
+// SCIMKeyRevokeModeDeactivate deactivates the keys, so they can be activated again later.
+const SCIMKeyRevokeModeDeactivate SCIMKeyRevokeMode = "SCIM_KEY_REVOKE_MODE_DEACTIVATE"
+
+// CreateSCIMAccessKeyRequest is used to create a SCIM access key for a tenant. TenantID is
+// required. SSOID targets the tenant's default SSO configuration when empty. ExpireTime is in
+// epoch seconds, and 0 means the key never expires.
+type CreateSCIMAccessKeyRequest struct {
+	TenantID    string `json:"tenantId"`
+	SSOID       string `json:"ssoId,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+	ExpireTime  int64  `json:"expireTime,omitempty,string"`
+}
+
+// RotateSCIMAccessKeyRequest is used to rotate the SCIM access keys of a tenant. TenantID is
+// required. SSOID targets the tenant's default SSO configuration when empty. RevokeMode
+// controls how the replaced keys are taken out of service, and defaults to
+// SCIMKeyRevokeModeDelete.
+type RotateSCIMAccessKeyRequest struct {
+	TenantID    string            `json:"tenantId"`
+	SSOID       string            `json:"ssoId,omitempty"`
+	Name        string            `json:"name,omitempty"`
+	Description string            `json:"description,omitempty"`
+	ExpireTime  int64             `json:"expireTime,omitempty,string"`
+	RevokeMode  SCIMKeyRevokeMode `json:"revokeMode,omitempty"`
+}
+
+// RevokeSCIMAccessKeysRequest is used to revoke the SCIM access keys of a tenant. TenantID is
+// required. SSOID targets the tenant's default SSO configuration when empty. RevokeMode
+// defaults to SCIMKeyRevokeModeDelete.
+type RevokeSCIMAccessKeysRequest struct {
+	TenantID   string            `json:"tenantId"`
+	SSOID      string            `json:"ssoId,omitempty"`
+	RevokeMode SCIMKeyRevokeMode `json:"revokeMode,omitempty"`
+}
+
+// ActivateSCIMAccessKeysRequest is used to activate deactivated SCIM access keys of a tenant.
+// TenantID and KeyIDs are required. SSOID targets the tenant's default SSO configuration when
+// empty.
+type ActivateSCIMAccessKeysRequest struct {
+	TenantID string   `json:"tenantId"`
+	SSOID    string   `json:"ssoId,omitempty"`
+	KeyIDs   []string `json:"keyIds"`
+}
+
+// SCIMAccessKeyResponse is returned when a SCIM access key is created or rotated.
+type SCIMAccessKeyResponse struct {
+	// The bearer token to configure in the identity provider. Returned exactly once.
+	Cleartext string             `json:"cleartext,omitempty"`
+	Key       *AccessKeyResponse `json:"key,omitempty"`
+	// The SCIM base URL to configure in the identity provider alongside the bearer token.
+	SCIMURL string `json:"scimUrl,omitempty"`
+	// The keys revoked by this call, if any.
+	RevokedKeyIDs []string `json:"revokedKeyIds,omitempty"`
+}
+
+// SCIMAccessKey is a SCIM access key of a tenant and the SSO configuration it provisions into.
+type SCIMAccessKey struct {
+	Key   *AccessKeyResponse `json:"key,omitempty"`
+	SSOID string             `json:"ssoId,omitempty"`
 }
 
 // Represents a mapping between a set of groups of users and a role that will be assigned to them.

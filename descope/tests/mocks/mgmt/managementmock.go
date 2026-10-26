@@ -34,6 +34,7 @@ type MockManagement struct {
 	*MockScopeClaimMapping
 	*MockJWTTemplate
 	*MockFamily
+	*MockSCIM
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -134,6 +135,10 @@ func (m *MockManagement) JWTTemplate() sdk.JWTTemplate {
 
 func (m *MockManagement) Family() sdk.Family {
 	return m.MockFamily
+}
+
+func (m *MockManagement) SCIM() sdk.SCIM {
+	return m.MockSCIM
 }
 
 // Mock JWT
@@ -3371,4 +3376,63 @@ func (m *MockFamily) DeleteCustomAttributes(_ context.Context, names []string) (
 		m.DeleteCustomAttributesAssert(names)
 	}
 	return m.DeleteCustomAttributesResponse, m.DeleteCustomAttributesError
+}
+
+// Mock SCIM
+
+type MockSCIM struct {
+	CreateAccessKeyAssert   func(request *descope.CreateSCIMAccessKeyRequest)
+	CreateAccessKeyResponse *descope.SCIMAccessKeyResponse
+	CreateAccessKeyError    error
+
+	RotateAccessKeyAssert   func(request *descope.RotateSCIMAccessKeyRequest)
+	RotateAccessKeyResponse *descope.SCIMAccessKeyResponse
+	RotateAccessKeyError    error
+
+	RevokeAccessKeysAssert   func(request *descope.RevokeSCIMAccessKeysRequest)
+	RevokeAccessKeysResponse []string
+	RevokeAccessKeysError    error
+
+	ActivateAccessKeysAssert   func(request *descope.ActivateSCIMAccessKeysRequest)
+	ActivateAccessKeysResponse []string
+	ActivateAccessKeysError    error
+
+	LoadAccessKeysAssert   func(tenantID, ssoID string)
+	LoadAccessKeysResponse []*descope.SCIMAccessKey
+	LoadAccessKeysError    error
+}
+
+func (m *MockSCIM) CreateAccessKey(_ context.Context, request *descope.CreateSCIMAccessKeyRequest) (*descope.SCIMAccessKeyResponse, error) {
+	if m.CreateAccessKeyAssert != nil {
+		m.CreateAccessKeyAssert(request)
+	}
+	return m.CreateAccessKeyResponse, m.CreateAccessKeyError
+}
+
+func (m *MockSCIM) RotateAccessKey(_ context.Context, request *descope.RotateSCIMAccessKeyRequest) (*descope.SCIMAccessKeyResponse, error) {
+	if m.RotateAccessKeyAssert != nil {
+		m.RotateAccessKeyAssert(request)
+	}
+	return m.RotateAccessKeyResponse, m.RotateAccessKeyError
+}
+
+func (m *MockSCIM) RevokeAccessKeys(_ context.Context, request *descope.RevokeSCIMAccessKeysRequest) ([]string, error) {
+	if m.RevokeAccessKeysAssert != nil {
+		m.RevokeAccessKeysAssert(request)
+	}
+	return m.RevokeAccessKeysResponse, m.RevokeAccessKeysError
+}
+
+func (m *MockSCIM) ActivateAccessKeys(_ context.Context, request *descope.ActivateSCIMAccessKeysRequest) ([]string, error) {
+	if m.ActivateAccessKeysAssert != nil {
+		m.ActivateAccessKeysAssert(request)
+	}
+	return m.ActivateAccessKeysResponse, m.ActivateAccessKeysError
+}
+
+func (m *MockSCIM) LoadAccessKeys(_ context.Context, tenantID, ssoID string) ([]*descope.SCIMAccessKey, error) {
+	if m.LoadAccessKeysAssert != nil {
+		m.LoadAccessKeysAssert(tenantID, ssoID)
+	}
+	return m.LoadAccessKeysResponse, m.LoadAccessKeysError
 }
