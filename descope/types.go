@@ -1018,6 +1018,94 @@ type PatchTenantRequest struct {
 	RoleInheritance         *RoleInheritance `json:"roleInheritance,omitempty"`
 }
 
+// BatchCreateTenant is a single tenant to create with Tenant().CreateBatch. Name is
+// required. ID is optional and generated automatically when left empty.
+type BatchCreateTenant struct {
+	ID                      string          `json:"id,omitempty"`
+	Name                    string          `json:"name"`
+	SelfProvisioningDomains []string        `json:"selfProvisioningDomains,omitempty"`
+	CustomAttributes        map[string]any  `json:"customAttributes,omitempty"`
+	AuthType                string          `json:"authType,omitempty"`
+	Disabled                bool            `json:"disabled,omitempty"`
+	EnforceSSO              bool            `json:"enforceSSO,omitempty"`
+	EnforceSSOExclusions    []string        `json:"enforceSSOExclusions,omitempty"`
+	FederatedAppIDs         []string        `json:"federatedAppIds,omitempty"`
+	ParentTenantID          string          `json:"parent,omitempty"`
+	RoleInheritance         RoleInheritance `json:"roleInheritance,omitempty"`
+}
+
+// BatchUpdateTenant is a single tenant to update with Tenant().UpdateBatch. ID and Name
+// are required. Like Update, this is a full overwrite of the tenant.
+type BatchUpdateTenant struct {
+	ID                      string          `json:"id"`
+	Name                    string          `json:"name"`
+	SelfProvisioningDomains []string        `json:"selfProvisioningDomains,omitempty"`
+	CustomAttributes        map[string]any  `json:"customAttributes,omitempty"`
+	AuthType                string          `json:"authType,omitempty"` // Deprecated: kept for backward compatibility
+	Disabled                bool            `json:"disabled,omitempty"`
+	EnforceSSO              bool            `json:"enforceSSO,omitempty"`
+	EnforceSSOExclusions    []string        `json:"enforceSSOExclusions,omitempty"`
+	FederatedAppIDs         []string        `json:"federatedAppIds,omitempty"`
+	RoleInheritance         RoleInheritance `json:"roleInheritance,omitempty"`
+}
+
+type CreateTenantsBatchRequest struct {
+	Tenants []*BatchCreateTenant `json:"tenants"`
+}
+
+type UpdateTenantsBatchRequest struct {
+	Tenants []*BatchUpdateTenant `json:"tenants"`
+}
+
+type DeleteTenantsBatchRequest struct {
+	IDs     []string `json:"ids"`
+	Cascade bool     `json:"cascade"`
+}
+
+type CreatedTenant struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type CreateTenantBatchFailure struct {
+	Failure string             `json:"failure,omitempty"`
+	Tenant  *BatchCreateTenant `json:"tenant,omitempty"`
+}
+
+type UpdateTenantBatchFailure struct {
+	Failure string             `json:"failure,omitempty"`
+	Tenant  *BatchUpdateTenant `json:"tenant,omitempty"`
+}
+
+type DeleteTenantBatchFailure struct {
+	Failure string `json:"failure,omitempty"`
+	ID      string `json:"id,omitempty"`
+}
+
+// CreateTenantsBatchResponse is returned by Tenant().CreateBatch. Each tenant is created
+// independently, so some can succeed while others appear in FailedTenants.
+type CreateTenantsBatchResponse struct {
+	CreatedTenants   []*CreatedTenant            `json:"createdTenants,omitempty"`
+	FailedTenants    []*CreateTenantBatchFailure `json:"failedTenants,omitempty"`
+	AdditionalErrors map[string]string           `json:"additionalErrors,omitempty"`
+}
+
+// UpdateTenantsBatchResponse is returned by Tenant().UpdateBatch. Each tenant is updated
+// independently, so some can succeed while others appear in FailedTenants.
+type UpdateTenantsBatchResponse struct {
+	UpdatedTenantIDs []string                    `json:"updatedTenantIds,omitempty"`
+	FailedTenants    []*UpdateTenantBatchFailure `json:"failedTenants,omitempty"`
+	AdditionalErrors map[string]string           `json:"additionalErrors,omitempty"`
+}
+
+// DeleteTenantsBatchResponse is returned by Tenant().DeleteBatch. Each tenant is deleted
+// independently, so some can succeed while others appear in FailedTenants.
+type DeleteTenantsBatchResponse struct {
+	DeletedTenantIDs []string                    `json:"deletedTenantIds,omitempty"`
+	FailedTenants    []*DeleteTenantBatchFailure `json:"failedTenants,omitempty"`
+	AdditionalErrors map[string]string           `json:"additionalErrors,omitempty"`
+}
+
 type TenantSearchOptions struct {
 	IDs                     []string
 	Names                   []string

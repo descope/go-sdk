@@ -49,6 +49,29 @@ type Tenant interface {
 	// IMPORTANT: This action is irreversible. Use carefully.
 	Delete(ctx context.Context, id string, cascade bool) error
 
+	// Create multiple tenants in a single batch.
+	//
+	// Each tenant is created independently; per-tenant failures are returned in the
+	// response's FailedTenants. At least one tenant is required, and each tenant's
+	// Name is required.
+	CreateBatch(ctx context.Context, tenants []*descope.BatchCreateTenant) (*descope.CreateTenantsBatchResponse, error)
+
+	// Update multiple existing tenants in a single batch.
+	//
+	// Like Update, this is a full overwrite of each tenant. Each tenant is updated
+	// independently; per-tenant failures are returned in the response's FailedTenants.
+	// At least one tenant is required, and each tenant's ID and Name are required.
+	UpdateBatch(ctx context.Context, tenants []*descope.BatchUpdateTenant) (*descope.UpdateTenantsBatchResponse, error)
+
+	// Delete multiple existing tenants in a single batch.
+	// Pass true on `cascade` in case you want to delete all users/keys associated only with these tenants
+	//
+	// Each tenant is deleted independently; per-tenant failures are returned in the
+	// response's FailedTenants.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteBatch(ctx context.Context, ids []string, cascade bool) (*descope.DeleteTenantsBatchResponse, error)
+
 	// Load project tenant by id
 	Load(ctx context.Context, id string) (*descope.Tenant, error)
 

@@ -94,6 +94,9 @@ var (
 			tenantUpdate:                               "mgmt/tenant/update",
 			tenantPatch:                                "mgmt/tenant/patch",
 			tenantDelete:                               "mgmt/tenant/delete",
+			tenantCreateBatch:                          "mgmt/tenant/create/batch",
+			tenantUpdateBatch:                          "mgmt/tenant/update/batch",
+			tenantDeleteBatch:                          "mgmt/tenant/delete/batch",
 			tenantLoad:                                 "mgmt/tenant",
 			tenantLoadAll:                              "mgmt/tenant/all",
 			tenantSearchAll:                            "mgmt/tenant/search",
@@ -449,6 +452,9 @@ type mgmtEndpoints struct {
 	tenantUpdate             string
 	tenantPatch              string
 	tenantDelete             string
+	tenantCreateBatch        string
+	tenantUpdateBatch        string
+	tenantDeleteBatch        string
 	tenantLoad               string
 	tenantLoadAll            string
 	tenantSearchAll          string
@@ -996,6 +1002,18 @@ func (e *endpoints) ManagementTenantPatch() string {
 
 func (e *endpoints) ManagementTenantDelete() string {
 	return path.Join(e.version, e.mgmt.tenantDelete)
+}
+
+func (e *endpoints) ManagementTenantCreateBatch() string {
+	return path.Join(e.version, e.mgmt.tenantCreateBatch)
+}
+
+func (e *endpoints) ManagementTenantUpdateBatch() string {
+	return path.Join(e.version, e.mgmt.tenantUpdateBatch)
+}
+
+func (e *endpoints) ManagementTenantDeleteBatch() string {
+	return path.Join(e.version, e.mgmt.tenantDeleteBatch)
 }
 
 func (e *endpoints) ManagementTenantLoad() string {

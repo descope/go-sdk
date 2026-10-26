@@ -199,6 +199,232 @@ func TestTenantDeleteError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestTenantCreateBatchSuccess(t *testing.T) {
+	response := map[string]any{
+		"createdTenants": []map[string]any{{"id": "t1", "name": "abc"}},
+		"failedTenants": []map[string]any{{
+			"failure": "already exists",
+			"tenant": map[string]any{
+				"id":                      "t2",
+				"name":                    "def",
+				"selfProvisioningDomains": []string{"bar"},
+				"customAttributes":        map[string]any{"k2": "v2"},
+				"authType":                "oidc",
+				"disabled":                true,
+				"enforceSSO":              true,
+				"enforceSSOExclusions":    []string{"bbbb"},
+				"federatedAppIds":         []string{"app2"},
+				"parent":                  "pid",
+				"roleInheritance":         "userOnly",
+			},
+		}},
+		"additionalErrors": map[string]string{"err": "desc"},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v1/mgmt/tenant/create/batch", r.URL.Path)
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		tenants := req["tenants"].([]any)
+		require.Len(t, tenants, 2)
+		t1 := tenants[0].(map[string]any)
+		require.Equal(t, "t1", t1["id"])
+		require.Equal(t, "abc", t1["name"])
+		require.EqualValues(t, []any{"foo"}, t1["selfProvisioningDomains"])
+		require.EqualValues(t, map[string]any{"k1": "v1"}, t1["customAttributes"])
+		require.Equal(t, "saml", t1["authType"])
+		require.True(t, t1["disabled"].(bool))
+		require.True(t, t1["enforceSSO"].(bool))
+		require.EqualValues(t, []any{"aaaa"}, t1["enforceSSOExclusions"])
+		require.EqualValues(t, []any{"app1"}, t1["federatedAppIds"])
+		require.Equal(t, "pid", t1["parent"])
+		require.Equal(t, string(descope.RoleInheritanceNone), t1["roleInheritance"])
+		t2 := tenants[1].(map[string]any)
+		require.Equal(t, map[string]any{"name": "def"}, t2)
+	}, response))
+	res, err := mgmt.Tenant().CreateBatch(context.Background(), []*descope.BatchCreateTenant{
+		{ID: "t1", Name: "abc", SelfProvisioningDomains: []string{"foo"}, CustomAttributes: map[string]any{"k1": "v1"}, AuthType: "saml", Disabled: true, EnforceSSO: true, EnforceSSOExclusions: []string{"aaaa"}, FederatedAppIDs: []string{"app1"}, ParentTenantID: "pid", RoleInheritance: descope.RoleInheritanceNone},
+		{Name: "def"},
+	})
+	require.NoError(t, err)
+	require.Len(t, res.CreatedTenants, 1)
+	require.Equal(t, "t1", res.CreatedTenants[0].ID)
+	require.Equal(t, "abc", res.CreatedTenants[0].Name)
+	require.Len(t, res.FailedTenants, 1)
+	require.Equal(t, "already exists", res.FailedTenants[0].Failure)
+	require.Equal(t, &descope.BatchCreateTenant{ID: "t2", Name: "def", SelfProvisioningDomains: []string{"bar"}, CustomAttributes: map[string]any{"k2": "v2"}, AuthType: "oidc", Disabled: true, EnforceSSO: true, EnforceSSOExclusions: []string{"bbbb"}, FederatedAppIDs: []string{"app2"}, ParentTenantID: "pid", RoleInheritance: descope.RoleInheritanceUserOnly}, res.FailedTenants[0].Tenant)
+	require.Equal(t, map[string]string{"err": "desc"}, res.AdditionalErrors)
+}
+
+func TestTenantCreateBatchInvalidArguments(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		require.Fail(t, "request should not be sent")
+	}))
+	for name, tenants := range map[string][]*descope.BatchCreateTenant{
+		"tenants":                 nil,
+		"name":                    {{ID: "t1"}},
+		"selfProvisioningDomains": {{Name: "abc", SelfProvisioningDomains: []string{""}}},
+		"enforceSSOExclusions":    {{Name: "abc", EnforceSSOExclusions: []string{""}}},
+		"federatedAppIds":         {{Name: "abc", FederatedAppIDs: []string{""}}},
+	} {
+		res, err := mgmt.Tenant().CreateBatch(context.Background(), tenants)
+		require.ErrorIs(t, err, descope.ErrInvalidArguments)
+		require.ErrorContains(t, err, name)
+		require.Nil(t, res)
+	}
+	res, err := mgmt.Tenant().CreateBatch(context.Background(), []*descope.BatchCreateTenant{nil})
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Nil(t, res)
+}
+
+func TestTenantCreateBatchError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := mgmt.Tenant().CreateBatch(context.Background(), []*descope.BatchCreateTenant{{Name: "abc"}})
+	require.Error(t, err)
+	require.Nil(t, res)
+
+	mgmt = newTestMgmt(nil, helpers.DoOkWithBody(nil, "invalid"))
+	res, err = mgmt.Tenant().CreateBatch(context.Background(), []*descope.BatchCreateTenant{{Name: "abc"}})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestTenantUpdateBatchSuccess(t *testing.T) {
+	response := map[string]any{
+		"updatedTenantIds": []string{"t1"},
+		"failedTenants": []map[string]any{{
+			"failure": "not found",
+			"tenant": map[string]any{
+				"id":                      "t2",
+				"name":                    "def",
+				"selfProvisioningDomains": []string{"bar"},
+				"customAttributes":        map[string]any{"k2": "v2"},
+				"authType":                "oidc",
+				"disabled":                true,
+				"enforceSSO":              true,
+				"enforceSSOExclusions":    []string{"bbbb"},
+				"federatedAppIds":         []string{"app2"},
+				"roleInheritance":         "userOnly",
+			},
+		}},
+		"additionalErrors": map[string]string{"err": "desc"},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v1/mgmt/tenant/update/batch", r.URL.Path)
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		tenants := req["tenants"].([]any)
+		require.Len(t, tenants, 2)
+		t1 := tenants[0].(map[string]any)
+		require.Equal(t, "t1", t1["id"])
+		require.Equal(t, "abc", t1["name"])
+		require.EqualValues(t, []any{"foo"}, t1["selfProvisioningDomains"])
+		require.EqualValues(t, map[string]any{"k1": "v1"}, t1["customAttributes"])
+		require.Equal(t, "saml", t1["authType"])
+		require.True(t, t1["disabled"].(bool))
+		require.True(t, t1["enforceSSO"].(bool))
+		require.EqualValues(t, []any{"aaaa"}, t1["enforceSSOExclusions"])
+		require.EqualValues(t, []any{"app1"}, t1["federatedAppIds"])
+		require.Equal(t, string(descope.RoleInheritanceNone), t1["roleInheritance"])
+		t2 := tenants[1].(map[string]any)
+		require.Equal(t, map[string]any{"id": "t2", "name": "def"}, t2)
+	}, response))
+	res, err := mgmt.Tenant().UpdateBatch(context.Background(), []*descope.BatchUpdateTenant{
+		{ID: "t1", Name: "abc", SelfProvisioningDomains: []string{"foo"}, CustomAttributes: map[string]any{"k1": "v1"}, AuthType: "saml", Disabled: true, EnforceSSO: true, EnforceSSOExclusions: []string{"aaaa"}, FederatedAppIDs: []string{"app1"}, RoleInheritance: descope.RoleInheritanceNone},
+		{ID: "t2", Name: "def"},
+	})
+	require.NoError(t, err)
+	require.Equal(t, []string{"t1"}, res.UpdatedTenantIDs)
+	require.Len(t, res.FailedTenants, 1)
+	require.Equal(t, "not found", res.FailedTenants[0].Failure)
+	require.Equal(t, &descope.BatchUpdateTenant{ID: "t2", Name: "def", SelfProvisioningDomains: []string{"bar"}, CustomAttributes: map[string]any{"k2": "v2"}, AuthType: "oidc", Disabled: true, EnforceSSO: true, EnforceSSOExclusions: []string{"bbbb"}, FederatedAppIDs: []string{"app2"}, RoleInheritance: descope.RoleInheritanceUserOnly}, res.FailedTenants[0].Tenant)
+	require.Equal(t, map[string]string{"err": "desc"}, res.AdditionalErrors)
+}
+
+func TestTenantUpdateBatchInvalidArguments(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		require.Fail(t, "request should not be sent")
+	}))
+	for name, tenants := range map[string][]*descope.BatchUpdateTenant{
+		"tenants":                 {},
+		"id":                      {{Name: "abc"}},
+		"name":                    {{ID: "t1"}},
+		"selfProvisioningDomains": {{ID: "t1", Name: "abc", SelfProvisioningDomains: []string{""}}},
+		"enforceSSOExclusions":    {{ID: "t1", Name: "abc", EnforceSSOExclusions: []string{""}}},
+		"federatedAppIds":         {{ID: "t1", Name: "abc", FederatedAppIDs: []string{""}}},
+	} {
+		res, err := mgmt.Tenant().UpdateBatch(context.Background(), tenants)
+		require.ErrorIs(t, err, descope.ErrInvalidArguments)
+		require.ErrorContains(t, err, name)
+		require.Nil(t, res)
+	}
+	res, err := mgmt.Tenant().UpdateBatch(context.Background(), []*descope.BatchUpdateTenant{nil})
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Nil(t, res)
+}
+
+func TestTenantUpdateBatchError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := mgmt.Tenant().UpdateBatch(context.Background(), []*descope.BatchUpdateTenant{{ID: "t1", Name: "abc"}})
+	require.Error(t, err)
+	require.Nil(t, res)
+
+	mgmt = newTestMgmt(nil, helpers.DoOkWithBody(nil, "invalid"))
+	res, err = mgmt.Tenant().UpdateBatch(context.Background(), []*descope.BatchUpdateTenant{{ID: "t1", Name: "abc"}})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestTenantDeleteBatchSuccess(t *testing.T) {
+	response := map[string]any{
+		"deletedTenantIds": []string{"t1"},
+		"failedTenants":    []map[string]any{{"failure": "not found", "id": "t2"}},
+		"additionalErrors": map[string]string{"err": "desc"},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v1/mgmt/tenant/delete/batch", r.URL.Path)
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, map[string]any{"ids": []any{"t1", "t2"}, "cascade": true}, req)
+	}, response))
+	res, err := mgmt.Tenant().DeleteBatch(context.Background(), []string{"t1", "t2"}, true)
+	require.NoError(t, err)
+	require.Equal(t, []string{"t1"}, res.DeletedTenantIDs)
+	require.Equal(t, []*descope.DeleteTenantBatchFailure{{Failure: "not found", ID: "t2"}}, res.FailedTenants)
+	require.Equal(t, map[string]string{"err": "desc"}, res.AdditionalErrors)
+}
+
+func TestTenantDeleteBatchInvalidArguments(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		require.Fail(t, "request should not be sent")
+	}))
+	res, err := mgmt.Tenant().DeleteBatch(context.Background(), nil, false)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.ErrorContains(t, err, "ids")
+	require.Nil(t, res)
+	res, err = mgmt.Tenant().DeleteBatch(context.Background(), []string{"t1", ""}, false)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.ErrorContains(t, err, "ids")
+	require.Nil(t, res)
+}
+
+func TestTenantDeleteBatchError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := mgmt.Tenant().DeleteBatch(context.Background(), []string{"t1"}, false)
+	require.Error(t, err)
+	require.Nil(t, res)
+
+	mgmt = newTestMgmt(nil, helpers.DoOkWithBody(nil, "invalid"))
+	res, err = mgmt.Tenant().DeleteBatch(context.Background(), []string{"t1"}, false)
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
 func TestAllTenantsLoadSuccess(t *testing.T) {
 	response := map[string]any{
 		"tenants": []map[string]any{{
