@@ -291,6 +291,48 @@ func (s *thirdPartyApplication) SearchConsents(ctx context.Context, consentReque
 	return unmarshalApplicationConsentsResponse(res)
 }
 
+type agenticIdentitiesSearchResponse struct {
+	Identities []*descope.AgenticIdentity `json:"identities"`
+	Total      int32                      `json:"total"`
+}
+
+type agenticIdentitiesRevokeResponse struct {
+	Revoked int32 `json:"revoked"`
+}
+
+func (s *thirdPartyApplication) SearchAgenticIdentities(ctx context.Context, options *descope.AgenticIdentitySearchOptions) ([]*descope.AgenticIdentity, int, error) {
+	if options == nil {
+		return nil, 0, utils.NewInvalidArgumentError("options")
+	}
+	res, err := s.client.DoPostRequest(ctx, api.Routes.ManagementAgenticIdentitiesSearch(), options, nil, "")
+	if err != nil {
+		return nil, 0, err
+	}
+	searchRes := &agenticIdentitiesSearchResponse{}
+	if err = utils.Unmarshal([]byte(res.BodyStr), searchRes); err != nil {
+		return nil, 0, err
+	}
+	return searchRes.Identities, int(searchRes.Total), nil
+}
+
+func (s *thirdPartyApplication) RevokeAgenticIdentities(ctx context.Context, options *descope.AgenticIdentityRevokeOptions) (int, error) {
+	if options == nil {
+		return 0, utils.NewInvalidArgumentError("options")
+	}
+	if options.UserID == "" && options.ClientID == "" && options.ResourceID == "" && options.ConsentID == "" {
+		return 0, utils.NewInvalidArgumentError("options")
+	}
+	res, err := s.client.DoPostRequest(ctx, api.Routes.ManagementAgenticIdentitiesRevoke(), options, nil, "")
+	if err != nil {
+		return 0, err
+	}
+	revokeRes := &agenticIdentitiesRevokeResponse{}
+	if err = utils.Unmarshal([]byte(res.BodyStr), revokeRes); err != nil {
+		return 0, err
+	}
+	return int(revokeRes.Revoked), nil
+}
+
 func makeCreateUpdateThirdPartyApplicationRequest(appRequest *descope.ThirdPartyApplicationRequest) map[string]any {
 	return map[string]any{
 		"id":                   appRequest.ID,

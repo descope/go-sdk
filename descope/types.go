@@ -2123,6 +2123,51 @@ type ThirdPartyApplicationConsentSearchOptions struct {
 	TenantID  string `json:"tenantId"`
 }
 
+// An agentic identity: a consent granted to an agentic app
+type AgenticIdentity struct {
+	// The consent granted to the agentic app, may be nil
+	Consent *ThirdPartyApplicationConsent `json:"consent,omitempty"`
+	// The name of the agent
+	AgentName string `json:"agentName"`
+	// The resource (MCP server) ID the identity is associated with
+	ResourceID string `json:"resourceId"`
+	// The client ID of the agentic app
+	ClientID string `json:"clientId"`
+	// The user ID that created the identity
+	CreatedBy string `json:"createdBy"`
+}
+
+// Options for searching and filtering agentic identities
+//
+// UserID - allows to filter by a given user id.
+// ClientID - allows to filter by a given client id.
+// ResourceID - allows to filter by a given resource id.
+// ConsentID - search a specific consent by id.
+// Page - allows to paginate over the results. Pages start at 0 and must be non-negative.
+// Limit - limits the number of returned identities. Leave at 0 to return the default amount.
+type AgenticIdentitySearchOptions struct {
+	UserID     string `json:"userId"`
+	ClientID   string `json:"clientId"`
+	ResourceID string `json:"resourceId"`
+	ConsentID  string `json:"consentId"`
+	Page       int32  `json:"page"`
+	Limit      int32  `json:"limit"`
+}
+
+// Options for revoking agentic identities and their consents. At least one of UserID, ClientID, ResourceID or ConsentID must be provided.
+// Providing only UserID revokes all of the user's agentic identities across MCP servers.
+//
+// UserID - allows to revoke by a given user id.
+// ClientID - allows to revoke by a given client id.
+// ResourceID - allows to revoke by a given resource id.
+// ConsentID - allows to revoke a specific consent by id.
+type AgenticIdentityRevokeOptions struct {
+	UserID     string `json:"userId"`
+	ClientID   string `json:"clientId"`
+	ResourceID string `json:"resourceId"`
+	ConsentID  string `json:"consentId"`
+}
+
 func (c *ThirdPartyApplicationConsent) GetCreatedTime() time.Time {
 	return time.Unix(int64(c.CreatedTime), 0)
 }

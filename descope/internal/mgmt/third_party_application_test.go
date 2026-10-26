@@ -785,3 +785,173 @@ func TestThirdPartyApplicationLoadReturnsForceDpop(t *testing.T) {
 		ForceDpop:  res.ForceDpop,
 	}))
 }
+
+func TestSearchAgenticIdentitiesSuccess(t *testing.T) {
+	response := map[string]any{
+		"identities": []map[string]any{
+			{
+				"consent": map[string]any{
+					"id":           "consent1",
+					"appId":        "app1",
+					"userId":       "user1",
+					"scopes":       []any{"scope1"},
+					"grantedBy":    "user1",
+					"createdTime":  10,
+					"tenantId":     "tenant1",
+					"ExpireTime":   20,
+					"modifiedTime": 30,
+				},
+				"agentName":  "agent1",
+				"resourceId": "resource1",
+				"clientId":   "client1",
+				"createdBy":  "user1",
+			},
+			{
+				"consent":    nil,
+				"agentName":  "agent2",
+				"resourceId": "resource2",
+				"clientId":   "client2",
+				"createdBy":  "",
+			},
+		},
+		"total": 2,
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v1/mgmt/agentic/identities/search", r.URL.Path)
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, map[string]any{
+			"userId":     "user1",
+			"clientId":   "client1",
+			"resourceId": "resource1",
+			"consentId":  "consent1",
+			"page":       float64(1),
+			"limit":      float64(10),
+		}, req)
+	}, response))
+	res, total, err := mgmt.ThirdPartyApplication().SearchAgenticIdentities(context.Background(), &descope.AgenticIdentitySearchOptions{
+		UserID:     "user1",
+		ClientID:   "client1",
+		ResourceID: "resource1",
+		ConsentID:  "consent1",
+		Page:       1,
+		Limit:      10,
+	})
+	require.NoError(t, err)
+	require.Len(t, res, 2)
+	require.Equal(t, 2, total)
+	require.NotNil(t, res[0].Consent)
+	assert.EqualValues(t, "consent1", res[0].Consent.ID)
+	assert.EqualValues(t, "app1", res[0].Consent.AppID)
+	assert.EqualValues(t, "user1", res[0].Consent.UserID)
+	assert.EqualValues(t, []string{"scope1"}, res[0].Consent.Scopes)
+	assert.EqualValues(t, "user1", res[0].Consent.GrantedBy)
+	assert.EqualValues(t, 10, res[0].Consent.CreatedTime)
+	assert.EqualValues(t, "tenant1", res[0].Consent.TenantID)
+	assert.EqualValues(t, 20, res[0].Consent.ExpireTime)
+	assert.EqualValues(t, 30, res[0].Consent.ModifiedTime)
+	assert.EqualValues(t, "agent1", res[0].AgentName)
+	assert.EqualValues(t, "resource1", res[0].ResourceID)
+	assert.EqualValues(t, "client1", res[0].ClientID)
+	assert.EqualValues(t, "user1", res[0].CreatedBy)
+	assert.Nil(t, res[1].Consent)
+	assert.EqualValues(t, "agent2", res[1].AgentName)
+}
+
+func TestSearchAgenticIdentitiesNilOptionsError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) { called = true }))
+	res, total, err := mgmt.ThirdPartyApplication().SearchAgenticIdentities(context.Background(), nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Nil(t, res)
+	require.Zero(t, total)
+	require.False(t, called)
+}
+
+func TestSearchAgenticIdentitiesError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, total, err := mgmt.ThirdPartyApplication().SearchAgenticIdentities(context.Background(), &descope.AgenticIdentitySearchOptions{})
+	require.Error(t, err)
+	require.Nil(t, res)
+	require.Zero(t, total)
+}
+
+func TestSearchAgenticIdentitiesBadResponseError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, "bad"))
+	res, total, err := mgmt.ThirdPartyApplication().SearchAgenticIdentities(context.Background(), &descope.AgenticIdentitySearchOptions{})
+	require.Error(t, err)
+	require.Nil(t, res)
+	require.Zero(t, total)
+}
+
+func TestRevokeAgenticIdentitiesSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v1/mgmt/agentic/identities/revoke", r.URL.Path)
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, map[string]any{
+			"userId":     "user1",
+			"clientId":   "client1",
+			"resourceId": "resource1",
+			"consentId":  "consent1",
+		}, req)
+	}, map[string]any{"revoked": 3}))
+	revoked, err := mgmt.ThirdPartyApplication().RevokeAgenticIdentities(context.Background(), &descope.AgenticIdentityRevokeOptions{
+		UserID:     "user1",
+		ClientID:   "client1",
+		ResourceID: "resource1",
+		ConsentID:  "consent1",
+	})
+	require.NoError(t, err)
+	require.Equal(t, 3, revoked)
+}
+
+func TestRevokeAgenticIdentitiesSingleFilter(t *testing.T) {
+	for _, options := range []*descope.AgenticIdentityRevokeOptions{
+		{UserID: "user1"},
+		{ClientID: "client1"},
+		{ResourceID: "resource1"},
+		{ConsentID: "consent1"},
+	} {
+		mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, map[string]any{"revoked": 1}))
+		revoked, err := mgmt.ThirdPartyApplication().RevokeAgenticIdentities(context.Background(), options)
+		require.NoError(t, err)
+		require.Equal(t, 1, revoked)
+	}
+}
+
+func TestRevokeAgenticIdentitiesNilOptionsError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) { called = true }))
+	revoked, err := mgmt.ThirdPartyApplication().RevokeAgenticIdentities(context.Background(), nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Zero(t, revoked)
+	require.False(t, called)
+}
+
+func TestRevokeAgenticIdentitiesNoFilterError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) { called = true }))
+	revoked, err := mgmt.ThirdPartyApplication().RevokeAgenticIdentities(context.Background(), &descope.AgenticIdentityRevokeOptions{})
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Zero(t, revoked)
+	require.False(t, called)
+}
+
+func TestRevokeAgenticIdentitiesError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	revoked, err := mgmt.ThirdPartyApplication().RevokeAgenticIdentities(context.Background(), &descope.AgenticIdentityRevokeOptions{UserID: "user1"})
+	require.Error(t, err)
+	require.Zero(t, revoked)
+}
+
+func TestRevokeAgenticIdentitiesBadResponseError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, "bad"))
+	revoked, err := mgmt.ThirdPartyApplication().RevokeAgenticIdentities(context.Background(), &descope.AgenticIdentityRevokeOptions{UserID: "user1"})
+	require.Error(t, err)
+	require.Zero(t, revoked)
+}
