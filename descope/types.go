@@ -790,6 +790,38 @@ type ProviderTokenResponse struct {
 	RefreshToken   string   `json:"refreshToken,omitempty"`
 }
 
+type UsersLogoutRequest struct {
+	Identifiers  []string `json:"identifiers,omitempty"`
+	SessionTypes []string `json:"sessionTypes,omitempty"`
+}
+
+type UsersLogoutResponse struct {
+	// The login IDs or user IDs that matched no user, and were therefore not logged out
+	NotFoundIdentifiers []string `json:"notFoundIdentifiers,omitempty"`
+}
+
+// UserAppRolesRequest is used to set or remove direct app role assignments for a user in an SSO application
+type UserAppRolesRequest struct {
+	LoginID  string   `json:"identifier,omitempty"`
+	SSOAppID string   `json:"ssoAppId,omitempty"`
+	RoleIDs  []string `json:"roleIds,omitempty"`
+}
+
+type GetUserAppRolesRequest struct {
+	LoginID   string   `json:"identifier,omitempty"`
+	SSOAppIDs []string `json:"ssoAppIds,omitempty"`
+}
+
+// UserAppRolesAssignment represents the app roles directly assigned to a user in an SSO application
+type UserAppRolesAssignment struct {
+	SSOAppID string   `json:"ssoAppId,omitempty"`
+	RoleIDs  []string `json:"roleIds,omitempty"`
+}
+
+type GetUserAppRolesResponse struct {
+	Assignments []*UserAppRolesAssignment `json:"assignments,omitempty"`
+}
+
 type UpdateOptions struct {
 	AddToLoginIDs      bool              `json:"addToLoginIDs,omitempty"`
 	OnMergeUseExisting bool              `json:"onMergeUseExisting,omitempty"`

@@ -598,6 +598,18 @@ type MockUser struct {
 	RemoveSSOAppsResponse *descope.UserResponse
 	RemoveSSOAppsError    error
 
+	SetSSOAppRolesAssert   func(loginIDOrUserID, ssoAppID string, roleIDs []string)
+	SetSSOAppRolesResponse *descope.UserResponse
+	SetSSOAppRolesError    error
+
+	RemoveSSOAppRolesAssert   func(loginIDOrUserID, ssoAppID string, roleIDs []string)
+	RemoveSSOAppRolesResponse *descope.UserResponse
+	RemoveSSOAppRolesError    error
+
+	GetSSOAppRolesAssert   func(loginIDOrUserID string, ssoAppIDs []string)
+	GetSSOAppRolesResponse []*descope.UserAppRolesAssignment
+	GetSSOAppRolesError    error
+
 	AddTenantAssert   func(loginID, tenantID string)
 	AddTenantResponse *descope.UserResponse
 	AddTenantError    error
@@ -654,6 +666,10 @@ type MockUser struct {
 
 	RemoveTrustedDevicesAssert func(loginIDOrUserID string, deviceIDs []string)
 	RemoveTrustedDevicesError  error
+
+	LogoutUsersAssert   func(loginIDsOrUserIDs []string, sessionTypes ...string)
+	LogoutUsersResponse *descope.UsersLogoutResponse
+	LogoutUsersError    error
 
 	GetProviderTokenWithOptionsAssert   func(loginID, provider string, options *descope.ProviderTokenOptions)
 	GetProviderTokenWithOptionsResponse *descope.ProviderTokenResponse
@@ -987,6 +1003,27 @@ func (m *MockUser) RemoveSSOApps(_ context.Context, loginID string, ssoAppIDs []
 	return m.RemoveSSOAppsResponse, m.RemoveSSOAppsError
 }
 
+func (m *MockUser) SetSSOAppRoles(_ context.Context, loginIDOrUserID string, ssoAppID string, roleIDs []string) (*descope.UserResponse, error) {
+	if m.SetSSOAppRolesAssert != nil {
+		m.SetSSOAppRolesAssert(loginIDOrUserID, ssoAppID, roleIDs)
+	}
+	return m.SetSSOAppRolesResponse, m.SetSSOAppRolesError
+}
+
+func (m *MockUser) RemoveSSOAppRoles(_ context.Context, loginIDOrUserID string, ssoAppID string, roleIDs []string) (*descope.UserResponse, error) {
+	if m.RemoveSSOAppRolesAssert != nil {
+		m.RemoveSSOAppRolesAssert(loginIDOrUserID, ssoAppID, roleIDs)
+	}
+	return m.RemoveSSOAppRolesResponse, m.RemoveSSOAppRolesError
+}
+
+func (m *MockUser) GetSSOAppRoles(_ context.Context, loginIDOrUserID string, ssoAppIDs []string) ([]*descope.UserAppRolesAssignment, error) {
+	if m.GetSSOAppRolesAssert != nil {
+		m.GetSSOAppRolesAssert(loginIDOrUserID, ssoAppIDs)
+	}
+	return m.GetSSOAppRolesResponse, m.GetSSOAppRolesError
+}
+
 func (m *MockUser) AddTenant(_ context.Context, loginID string, tenantID string) (*descope.UserResponse, error) {
 	if m.AddTenantAssert != nil {
 		m.AddTenantAssert(loginID, tenantID)
@@ -1112,6 +1149,13 @@ func (m *MockUser) RemoveTrustedDevices(_ context.Context, loginIDOrUserID strin
 		m.RemoveTrustedDevicesAssert(loginIDOrUserID, deviceIDs)
 	}
 	return m.RemoveTrustedDevicesError
+}
+
+func (m *MockUser) LogoutUsers(_ context.Context, loginIDsOrUserIDs []string, sessionTypes ...string) (*descope.UsersLogoutResponse, error) {
+	if m.LogoutUsersAssert != nil {
+		m.LogoutUsersAssert(loginIDsOrUserIDs, sessionTypes...)
+	}
+	return m.LogoutUsersResponse, m.LogoutUsersError
 }
 
 func (m *MockUser) GetProviderToken(_ context.Context, loginID, provider string) (*descope.ProviderTokenResponse, error) {

@@ -370,6 +370,11 @@ type User interface {
 	// Logout given user from all their devices, by user ID
 	LogoutUserByUserID(ctx context.Context, userID string, sessionTypes ...string) error
 
+	// Logout multiple users from all their devices, by login ID or user ID.
+	//
+	// The returned response lists the identifiers that matched no user, and were therefore not logged out.
+	LogoutUsers(ctx context.Context, loginIDsOrUserIDs []string, sessionTypes ...string) (*descope.UsersLogoutResponse, error)
+
 	// Change current loginID to new one
 	// Leave empty to remove the current login ID
 	// Pay attention that if this is the only login ID, it cannot be removed
@@ -472,6 +477,19 @@ type User interface {
 
 	// Remove SSO application association from a user.
 	RemoveSSOApps(ctx context.Context, loginIDOrUserID string, ssoAppIDs []string) (*descope.UserResponse, error)
+
+	// Directly assign app roles to a user for a specific SSO application.
+	//
+	// Manual assignments override the automatic role-mapping for the same user/app pair.
+	SetSSOAppRoles(ctx context.Context, loginIDOrUserID string, ssoAppID string, roleIDs []string) (*descope.UserResponse, error)
+
+	// Remove direct app-role assignments from a user for a specific SSO application.
+	RemoveSSOAppRoles(ctx context.Context, loginIDOrUserID string, ssoAppID string, roleIDs []string) (*descope.UserResponse, error)
+
+	// Return the direct app-role assignments for a user.
+	//
+	// Optionally filter by SSO application IDs, or pass nil to get the assignments for all SSO applications.
+	GetSSOAppRoles(ctx context.Context, loginIDOrUserID string, ssoAppIDs []string) ([]*descope.UserAppRolesAssignment, error)
 
 	// Add a tenant association for an existing user.
 	AddTenant(ctx context.Context, loginIDOrUserID string, tenantID string) (*descope.UserResponse, error)

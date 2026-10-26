@@ -1080,6 +1080,21 @@ user, err := descopeClient.Management.User().RemoveSSOApps(context.Background(),
 // If needed, can be using the user ID as well
 user, err := descopeClient.Management.User().RemoveSSOApps(context.Background(), "<user-id>",[]string{"appId2"})
 
+// Directly assign app roles to a user for a specific SSO application.
+// Manual assignments override the automatic role-mapping for the same user/app pair.
+user, err := descopeClient.Management.User().SetSSOAppRoles(context.Background(), "desmond@descope.com", "appId1", []string{"roleId1", "roleId2"})
+
+// Remove direct app-role assignments from a user for a specific SSO application.
+user, err := descopeClient.Management.User().RemoveSSOAppRoles(context.Background(), "desmond@descope.com", "appId1", []string{"roleId2"})
+
+// Get the direct app-role assignments for a user, optionally filtered by SSO application IDs.
+assignments, err := descopeClient.Management.User().GetSSOAppRoles(context.Background(), "desmond@descope.com", []string{"appId1"})
+if err == nil {
+    for _, assignment := range assignments {
+        // Do something with assignment.SSOAppID and assignment.RoleIDs
+    }
+}
+
 // User deletion cannot be undone. Use carefully.
 err := descopeClient.Management.User().Delete(context.Background(), "desmond@descope.com")
 // If needed, users can be loaded using their ID as well
@@ -1128,6 +1143,15 @@ err := descopeClient.Management.User().LogoutUser(context.Background(), "<login 
 // Session types (optional string array) can be added to logout request
 // Which will cause only session that were marked with this specific type to be revoked
 err := descopeClient.Management.User().LogoutUserByUserID(context.Background(), "<user id>")
+
+// Logout multiple users from all their devices, by login ID or user ID
+// Session types (optional string array) can be added to logout request as well
+logoutRes, err := descopeClient.Management.User().LogoutUsers(context.Background(), []string{"<login id>", "<user id>"})
+if err == nil {
+    for _, identifier := range logoutRes.NotFoundIdentifiers {
+        // Do something with identifiers that matched no user, and were therefore not logged out
+    }
+}
 
 // Get users' authentication history
 loginHistoryRes, err := descopeClient.Management.User().History(context.Background(), []string{"<user id 1>", "<user id 2>"})

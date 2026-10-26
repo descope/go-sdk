@@ -169,6 +169,10 @@ var (
 			userRemoveTrustedDevices:                   "mgmt/user/trusteddevices/remove",
 			userGetProviderToken:                       "mgmt/user/provider/token",
 			userLogoutAllDevices:                       "mgmt/user/logout",
+			userLogoutUsers:                            "mgmt/user/logout/batch",
+			userGetSSOAppRoles:                         "mgmt/user/ssoapp/roles",
+			userSetSSOAppRoles:                         "mgmt/user/update/ssoapp/roles/set",
+			userRemoveSSOAppRoles:                      "mgmt/user/update/ssoapp/roles/remove",
 			userGenerateOTPForTest:                     "mgmt/tests/generate/otp",
 			userGenerateMagicLinkForTest:               "mgmt/tests/generate/magiclink",
 			userGenerateEnchantedLinkForTest:           "mgmt/tests/generate/enchantedlink",
@@ -518,6 +522,10 @@ type mgmtEndpoints struct {
 	userRemoveRecoveryCodes   string
 	userGetProviderToken      string
 	userLogoutAllDevices      string
+	userLogoutUsers           string
+	userGetSSOAppRoles        string
+	userSetSSOAppRoles        string
+	userRemoveSSOAppRoles     string
 	userAddSsoApps            string
 	userSetSsoApps            string
 	userRemoveSsoApps         string
@@ -1296,6 +1304,22 @@ func (e *endpoints) ManagementUserGetProviderToken() string {
 
 func (e *endpoints) ManagementUserLogoutAllDevices() string {
 	return path.Join(e.version, e.mgmt.userLogoutAllDevices)
+}
+
+func (e *endpoints) ManagementUserLogoutUsers() string {
+	return path.Join(e.version, e.mgmt.userLogoutUsers)
+}
+
+func (e *endpoints) ManagementUserGetSSOAppRoles() string {
+	return path.Join(e.version, e.mgmt.userGetSSOAppRoles)
+}
+
+func (e *endpoints) ManagementUserSetSSOAppRoles() string {
+	return path.Join(e.version, e.mgmt.userSetSSOAppRoles)
+}
+
+func (e *endpoints) ManagementUserRemoveSSOAppRoles() string {
+	return path.Join(e.version, e.mgmt.userRemoveSSOAppRoles)
 }
 
 func (e *endpoints) ManagementUserGenerateOTPForTest() string {

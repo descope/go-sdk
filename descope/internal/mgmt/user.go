@@ -566,6 +566,55 @@ func (u *user) RemoveSSOApps(ctx context.Context, loginIDOrUserID string, ssoApp
 	return unmarshalUserResponse(res)
 }
 
+func (u *user) SetSSOAppRoles(ctx context.Context, loginIDOrUserID string, ssoAppID string, roleIDs []string) (*descope.UserResponse, error) {
+	return u.updateSSOAppRoles(ctx, api.Routes.ManagementUserSetSSOAppRoles(), loginIDOrUserID, ssoAppID, roleIDs)
+}
+
+func (u *user) RemoveSSOAppRoles(ctx context.Context, loginIDOrUserID string, ssoAppID string, roleIDs []string) (*descope.UserResponse, error) {
+	return u.updateSSOAppRoles(ctx, api.Routes.ManagementUserRemoveSSOAppRoles(), loginIDOrUserID, ssoAppID, roleIDs)
+}
+
+func (u *user) updateSSOAppRoles(ctx context.Context, route string, loginIDOrUserID string, ssoAppID string, roleIDs []string) (*descope.UserResponse, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
+	}
+	if ssoAppID == "" {
+		return nil, utils.NewInvalidArgumentError("ssoAppID")
+	}
+	for i, id := range roleIDs {
+		if id == "" {
+			return nil, utils.NewInvalidArgumentError("roleIDs[" + strconv.Itoa(i) + "] is empty")
+		}
+	}
+	req := &descope.UserAppRolesRequest{LoginID: loginIDOrUserID, SSOAppID: ssoAppID, RoleIDs: roleIDs}
+	res, err := u.client.DoPostRequest(ctx, route, req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalUserResponse(res)
+}
+
+func (u *user) GetSSOAppRoles(ctx context.Context, loginIDOrUserID string, ssoAppIDs []string) ([]*descope.UserAppRolesAssignment, error) {
+	if loginIDOrUserID == "" {
+		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
+	}
+	for i, id := range ssoAppIDs {
+		if id == "" {
+			return nil, utils.NewInvalidArgumentError("ssoAppIDs[" + strconv.Itoa(i) + "] is empty")
+		}
+	}
+	req := &descope.GetUserAppRolesRequest{LoginID: loginIDOrUserID, SSOAppIDs: ssoAppIDs}
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserGetSSOAppRoles(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	out := &descope.GetUserAppRolesResponse{}
+	if err := utils.Unmarshal([]byte(res.BodyStr), out); err != nil {
+		return nil, err
+	}
+	return out.Assignments, nil
+}
+
 func (u *user) AddTenant(ctx context.Context, loginIDOrUserID string, tenantID string) (*descope.UserResponse, error) {
 	if loginIDOrUserID == "" {
 		return nil, utils.NewInvalidArgumentError("loginIDOrUserID")
@@ -919,6 +968,24 @@ func (u *user) LogoutUserByUserID(ctx context.Context, userID string, sessionTyp
 func (u *user) logoutUser(ctx context.Context, userID string, loginID string, sessionTypes ...string) error {
 	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserLogoutAllDevices(), map[string]any{"userId": userID, "loginId": loginID, "sessionTypes": sessionTypes}, nil, "")
 	return err
+}
+
+func (u *user) LogoutUsers(ctx context.Context, loginIDsOrUserIDs []string, sessionTypes ...string) (*descope.UsersLogoutResponse, error) {
+	for i, id := range loginIDsOrUserIDs {
+		if id == "" {
+			return nil, utils.NewInvalidArgumentError("loginIDsOrUserIDs[" + strconv.Itoa(i) + "] is empty")
+		}
+	}
+	req := &descope.UsersLogoutRequest{Identifiers: loginIDsOrUserIDs, SessionTypes: sessionTypes}
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserLogoutUsers(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	out := &descope.UsersLogoutResponse{}
+	if err := utils.Unmarshal([]byte(res.BodyStr), out); err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (u *user) GenerateOTPForTestUser(ctx context.Context, method descope.DeliveryMethod, loginID string, loginOptions *descope.LoginOptions) (code string, err error) {

@@ -3255,3 +3255,185 @@ func TestUserDeleteFamilyScopedCustomAttributesError(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, res)
 }
+
+func TestUserLogoutUsersSuccess(t *testing.T) {
+	response := map[string]any{"notFoundIdentifiers": []string{"def"}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v1/mgmt/user/logout/batch", r.URL.Path)
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, []any{"abc", "def"}, req["identifiers"])
+		require.Equal(t, []any{"web"}, req["sessionTypes"])
+	}, response))
+	res, err := m.User().LogoutUsers(context.Background(), []string{"abc", "def"}, "web")
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, []string{"def"}, res.NotFoundIdentifiers)
+}
+
+func TestUserLogoutUsersBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {
+		assert.Fail(t, "shouldn't get here")
+	}, nil))
+	res, err := m.User().LogoutUsers(context.Background(), []string{"abc", ""})
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Contains(t, err.Error(), "loginIDsOrUserIDs[1]")
+	require.Nil(t, res)
+}
+
+func TestUserLogoutUsersError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := m.User().LogoutUsers(context.Background(), []string{"abc"})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserLogoutUsersInvalidResponse(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(nil, "invalid"))
+	res, err := m.User().LogoutUsers(context.Background(), []string{"abc"})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserSetSSOAppRolesSuccess(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"userId":    "u1",
+			"ssoAppIds": []string{"app1"},
+		}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v1/mgmt/user/update/ssoapp/roles/set", r.URL.Path)
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, map[string]any{"identifier": "abc", "ssoAppId": "app1", "roleIds": []any{"r1", "r2"}}, req)
+	}, response))
+	res, err := m.User().SetSSOAppRoles(context.Background(), "abc", "app1", []string{"r1", "r2"})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, "u1", res.UserID)
+	require.Equal(t, []string{"app1"}, res.SSOAppIDs)
+}
+
+func TestUserSetSSOAppRolesBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {
+		assert.Fail(t, "shouldn't get here")
+	}, nil))
+	res, err := m.User().SetSSOAppRoles(context.Background(), "", "app1", []string{"r1"})
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Contains(t, err.Error(), "loginIDOrUserID")
+	require.Nil(t, res)
+	res, err = m.User().SetSSOAppRoles(context.Background(), "abc", "", []string{"r1"})
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Contains(t, err.Error(), "ssoAppID")
+	require.Nil(t, res)
+	res, err = m.User().SetSSOAppRoles(context.Background(), "abc", "app1", []string{""})
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Contains(t, err.Error(), "roleIDs[0]")
+	require.Nil(t, res)
+}
+
+func TestUserSetSSOAppRolesError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := m.User().SetSSOAppRoles(context.Background(), "abc", "app1", []string{"r1"})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserRemoveSSOAppRolesSuccess(t *testing.T) {
+	response := map[string]any{
+		"user": map[string]any{
+			"userId": "u1",
+		}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v1/mgmt/user/update/ssoapp/roles/remove", r.URL.Path)
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, map[string]any{"identifier": "abc", "ssoAppId": "app1", "roleIds": []any{"r1"}}, req)
+	}, response))
+	res, err := m.User().RemoveSSOAppRoles(context.Background(), "abc", "app1", []string{"r1"})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	require.Equal(t, "u1", res.UserID)
+}
+
+func TestUserRemoveSSOAppRolesBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {
+		assert.Fail(t, "shouldn't get here")
+	}, nil))
+	res, err := m.User().RemoveSSOAppRoles(context.Background(), "", "app1", nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Contains(t, err.Error(), "loginIDOrUserID")
+	require.Nil(t, res)
+	res, err = m.User().RemoveSSOAppRoles(context.Background(), "abc", "", nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Contains(t, err.Error(), "ssoAppID")
+	require.Nil(t, res)
+	res, err = m.User().RemoveSSOAppRoles(context.Background(), "abc", "app1", []string{"r1", ""})
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Contains(t, err.Error(), "roleIDs[1]")
+	require.Nil(t, res)
+}
+
+func TestUserRemoveSSOAppRolesError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := m.User().RemoveSSOAppRoles(context.Background(), "abc", "app1", nil)
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserGetSSOAppRolesSuccess(t *testing.T) {
+	response := map[string]any{
+		"assignments": []map[string]any{
+			{"ssoAppId": "app1", "roleIds": []string{"r1", "r2"}},
+			{"ssoAppId": "app2", "roleIds": []string{}},
+		}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v1/mgmt/user/ssoapp/roles", r.URL.Path)
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, map[string]any{"identifier": "abc", "ssoAppIds": []any{"app1", "app2"}}, req)
+	}, response))
+	res, err := m.User().GetSSOAppRoles(context.Background(), "abc", []string{"app1", "app2"})
+	require.NoError(t, err)
+	require.Len(t, res, 2)
+	require.Equal(t, "app1", res[0].SSOAppID)
+	require.Equal(t, []string{"r1", "r2"}, res[0].RoleIDs)
+	require.Equal(t, "app2", res[1].SSOAppID)
+	require.Empty(t, res[1].RoleIDs)
+}
+
+func TestUserGetSSOAppRolesBadInput(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {
+		assert.Fail(t, "shouldn't get here")
+	}, nil))
+	res, err := m.User().GetSSOAppRoles(context.Background(), "", nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Contains(t, err.Error(), "loginIDOrUserID")
+	require.Nil(t, res)
+	res, err = m.User().GetSSOAppRoles(context.Background(), "abc", []string{""})
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Contains(t, err.Error(), "ssoAppIDs[0]")
+	require.Nil(t, res)
+}
+
+func TestUserGetSSOAppRolesError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := m.User().GetSSOAppRoles(context.Background(), "abc", nil)
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserGetSSOAppRolesInvalidResponse(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(nil, "invalid"))
+	res, err := m.User().GetSSOAppRoles(context.Background(), "abc", nil)
+	require.Error(t, err)
+	require.Nil(t, res)
+}
