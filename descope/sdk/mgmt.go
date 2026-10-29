@@ -1336,6 +1336,25 @@ type ThirdPartyApplication interface {
 	SearchConsents(ctx context.Context, options *descope.ThirdPartyApplicationConsentSearchOptions) ([]*descope.ThirdPartyApplicationConsent, int, error)
 }
 
+// Agentic provides functions for managing agentic identities in a project, i.e. the
+// consents users granted to agentic apps.
+type Agentic interface {
+	// Search agentic identities, filterable by user ID, client ID, resource ID or consent ID.
+	//
+	// All options are optional, and nil options search without filters.
+	// Returns the matching agentic identities and the total.
+	SearchIdentities(ctx context.Context, options *descope.AgenticIdentitySearchOptions) ([]*descope.AgenticIdentity, int, error)
+
+	// Revoke agentic identities and their consents by user ID, client ID, resource ID and/or consent ID.
+	//
+	// At least one of the options must be set. Options with only a user ID revoke all of the
+	// user's agentic identities.
+	// Returns the number of revoked agentic identities.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	RevokeIdentities(ctx context.Context, options *descope.AgenticIdentityRevokeOptions) (int, error)
+}
+
 // Provides functions for managing outbound applications in a project.
 type OutboundApplication interface {
 	// Create a new outbound application with the given name.
@@ -1659,6 +1678,9 @@ type Management interface {
 
 	// Provides functions for managing families (family accounts) in a project.
 	Family() Family
+
+	// Provides functions for managing agentic identities in a project.
+	Agentic() Agentic
 }
 
 // JWTTemplate provides functions for managing JWT templates in a project.
