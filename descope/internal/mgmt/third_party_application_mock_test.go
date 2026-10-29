@@ -33,7 +33,7 @@ func newMockClient(t *testing.T, url string) *client.DescopeClient {
 func readMockLastCall(t *testing.T, url string) *mockLastCall {
 	res, err := http.Get(url + "/__mock/last") // #nosec G107 -- test-only mock URL
 	require.NoError(t, err)
-	defer res.Body.Close()
+	defer func() { _ = res.Body.Close() }()
 	last := &mockLastCall{}
 	require.NoError(t, json.NewDecoder(res.Body).Decode(last))
 	return last
