@@ -2009,6 +2009,17 @@ err = descopeClient.DescopeClient().Management.ThirdPartyApplication().DeleteCon
 	UserIDs: string{"my-user"}
 })
 
+// Search agentic identities (consents granted to agentic apps) by pages, filtered by client id, resource id or user id.
+identities, total, err := descopeClient.DescopeClient().Management.ThirdPartyApplication().SearchAgenticIdentities(context.Background(), &descope.AgenticIdentitySearchOptions{
+	UserID: "my-user",
+})
+
+// Revoke agentic identities and their consents by client id, consent id, resource id and/or user id.
+// Setting only the user id revokes all of the user's agentic identities across MCP servers.
+revoked, err := descopeClient.DescopeClient().Management.ThirdPartyApplication().RevokeAgenticIdentities(context.Background(), &descope.AgenticIdentityRevokeOptions{
+	UserID: "my-user",
+})
+
 ```
 
 ### Manage Cross-App Access (XAA / ID-JAG)

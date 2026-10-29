@@ -1334,6 +1334,18 @@ type ThirdPartyApplication interface {
 
 	// Search consents for a third party application.
 	SearchConsents(ctx context.Context, options *descope.ThirdPartyApplicationConsentSearchOptions) ([]*descope.ThirdPartyApplicationConsent, int, error)
+
+	// Search agentic identities (consents granted to agentic apps), filterable by client ID,
+	// resource ID or user ID.
+	// Returns the matching identities and the total number of matches.
+	SearchAgenticIdentities(ctx context.Context, options *descope.AgenticIdentitySearchOptions) ([]*descope.AgenticIdentity, int, error)
+
+	// Revoke agentic identities and their consents by client ID, consent ID, resource ID and/or user ID.
+	// Options with only a user ID revoke all of the user's agentic identities across MCP servers.
+	// Returns the number of revoked identities.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	RevokeAgenticIdentities(ctx context.Context, options *descope.AgenticIdentityRevokeOptions) (int, error)
 }
 
 // Provides functions for managing outbound applications in a project.

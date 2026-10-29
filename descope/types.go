@@ -2123,6 +2123,51 @@ type ThirdPartyApplicationConsentSearchOptions struct {
 	TenantID  string `json:"tenantId"`
 }
 
+// An agentic identity, i.e. a consent granted to an agentic app
+type AgenticIdentity struct {
+	// The consent granted to the agentic app, may be nil
+	Consent *ThirdPartyApplicationConsent `json:"consent,omitempty"`
+	// The name of the agent
+	AgentName string `json:"agentName"`
+	// The resource ID (MCP server) the identity was granted for
+	ResourceID string `json:"resourceId"`
+	// The client ID of the agentic app
+	ClientID string `json:"clientId"`
+	// The creator of the agentic identity
+	CreatedBy string `json:"createdBy"`
+}
+
+// Options for searching and filtering agentic identities
+//
+// UserID - allows to filter by a given user id.
+// ClientID - allows to filter by a given client id.
+// ResourceID - allows to filter by a given resource id.
+// ConsentID - search a specific agentic identity by consent id.
+// Page - allows to paginate over the results. Pages start at 0 and must be non-negative.
+// Limit - limits the number of returned identities. Leave at 0 to return the default amount.
+type AgenticIdentitySearchOptions struct {
+	UserID     string `json:"userId"`
+	ClientID   string `json:"clientId"`
+	ResourceID string `json:"resourceId"`
+	ConsentID  string `json:"consentId"`
+	Page       int32  `json:"page"`
+	Limit      int32  `json:"limit"`
+}
+
+// Options for revoking agentic identities and their consents
+//
+// UserID - revoke the agentic identities of a given user id. When it's the only option set,
+// all of the user's agentic identities are revoked.
+// ClientID - revoke the agentic identities of a given client id.
+// ResourceID - revoke the agentic identities of a given resource id.
+// ConsentID - revoke a specific agentic identity by consent id.
+type AgenticIdentityRevokeOptions struct {
+	UserID     string `json:"userId"`
+	ClientID   string `json:"clientId"`
+	ResourceID string `json:"resourceId"`
+	ConsentID  string `json:"consentId"`
+}
+
 func (c *ThirdPartyApplicationConsent) GetCreatedTime() time.Time {
 	return time.Unix(int64(c.CreatedTime), 0)
 }

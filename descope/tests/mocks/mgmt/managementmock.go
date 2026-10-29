@@ -2467,6 +2467,15 @@ type MockThirdPartyApplication struct {
 	SearchConsentsResponse      []*descope.ThirdPartyApplicationConsent
 	SearchConsentsTotalResponse int
 	SearchConsentsError         error
+
+	SearchAgenticIdentitiesAssert        func(*descope.AgenticIdentitySearchOptions)
+	SearchAgenticIdentitiesResponse      []*descope.AgenticIdentity
+	SearchAgenticIdentitiesTotalResponse int
+	SearchAgenticIdentitiesError         error
+
+	RevokeAgenticIdentitiesAssert   func(*descope.AgenticIdentityRevokeOptions)
+	RevokeAgenticIdentitiesResponse int
+	RevokeAgenticIdentitiesError    error
 }
 
 func (m *MockThirdPartyApplication) CreateApplication(_ context.Context, app *descope.ThirdPartyApplicationRequest) (string, string, error) {
@@ -2569,6 +2578,20 @@ func (m *MockThirdPartyApplication) SearchConsents(_ context.Context, options *d
 		m.SearchConsentsAssert(options)
 	}
 	return m.SearchConsentsResponse, m.SearchConsentsTotalResponse, m.SearchConsentsError
+}
+
+func (m *MockThirdPartyApplication) SearchAgenticIdentities(_ context.Context, options *descope.AgenticIdentitySearchOptions) ([]*descope.AgenticIdentity, int, error) {
+	if m.SearchAgenticIdentitiesAssert != nil {
+		m.SearchAgenticIdentitiesAssert(options)
+	}
+	return m.SearchAgenticIdentitiesResponse, m.SearchAgenticIdentitiesTotalResponse, m.SearchAgenticIdentitiesError
+}
+
+func (m *MockThirdPartyApplication) RevokeAgenticIdentities(_ context.Context, options *descope.AgenticIdentityRevokeOptions) (int, error) {
+	if m.RevokeAgenticIdentitiesAssert != nil {
+		m.RevokeAgenticIdentitiesAssert(options)
+	}
+	return m.RevokeAgenticIdentitiesResponse, m.RevokeAgenticIdentitiesError
 }
 
 // Mock Outbound Application

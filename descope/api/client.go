@@ -307,6 +307,8 @@ var (
 			thirdPartyApplicationConsentDelete:         "mgmt/thirdparty/consents/delete",
 			thirdPartyApplicationTenantConsentDelete:   "mgmt/thirdparty/consents/delete/tenant",
 			thirdPartyApplicationConsentsSearch:        "mgmt/thirdparty/consents/search",
+			agenticIdentitiesSearch:                    "mgmt/agentic/identities/search",
+			agenticIdentitiesRevoke:                    "mgmt/agentic/identities/revoke",
 			mgmtKeyCreate:                              "mgmt/managementkey",
 			mgmtKeyUpdate:                              "mgmt/managementkey",
 			mgmtKeyGet:                                 "mgmt/managementkey",
@@ -679,6 +681,8 @@ type mgmtEndpoints struct {
 	thirdPartyApplicationConsentDelete       string
 	thirdPartyApplicationTenantConsentDelete string
 	thirdPartyApplicationConsentsSearch      string
+	agenticIdentitiesSearch                  string
+	agenticIdentitiesRevoke                  string
 
 	mgmtKeyCreate string
 	mgmtKeyUpdate string
@@ -1849,6 +1853,14 @@ func (e *endpoints) ManagementThirdPartyApplicationDeleteTenantConsent() string 
 
 func (e *endpoints) ManagementThirdPartyApplicationSearchConsents() string {
 	return path.Join(e.version, e.mgmt.thirdPartyApplicationConsentsSearch)
+}
+
+func (e *endpoints) ManagementAgenticIdentitiesSearch() string {
+	return path.Join(e.version, e.mgmt.agenticIdentitiesSearch)
+}
+
+func (e *endpoints) ManagementAgenticIdentitiesRevoke() string {
+	return path.Join(e.version, e.mgmt.agenticIdentitiesRevoke)
 }
 
 func (e *endpoints) ManagementMgmtKeyCreate() string {
