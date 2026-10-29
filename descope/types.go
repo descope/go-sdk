@@ -1175,7 +1175,7 @@ type OIDCApplicationRequest struct {
 	// the client_secret is generated server-side (fetch/rotate it via the application secret methods).
 	ClientID                  string   `json:"clientId,omitempty"`
 	ClientSecret              string   `json:"clientSecret,omitempty"`
-	ClientType                string   `json:"clientType,omitempty"`
+	ClientType                string   `json:"clientType,omitempty"` // "confidential" or "public"; if empty on create, the account's default applies (the created app's ClientType shows which)
 	ApprovedRedirectURLs      []string `json:"approvedRedirectUrls,omitempty"`
 	AuthorizationCodeDisabled bool     `json:"authorizationCodeDisabled,omitempty"`
 	ClientCredentialsDisabled bool     `json:"clientCredentialsDisabled,omitempty"`
@@ -2025,7 +2025,9 @@ type ThirdPartyApplicationRequest struct {
 	ForcePkce bool `json:"forcePkce,omitempty"`
 	// DefaultAudience controls the default aud of issued tokens: "projectId", "clientId", or "" (both).
 	DefaultAudience string `json:"defaultAudience,omitempty"`
-	// ClientType sets the client authentication model: "confidential" or "public".
+	// ClientType sets the client authentication model: "confidential" or "public". If empty on create, the
+	// account's default applies (the created app's ClientType shows which). Update replaces the whole app, so
+	// pass the current type on update.
 	ClientType string `json:"clientType,omitempty"`
 	// ForceDpop requires a valid DPoP proof at the token endpoint. Only a "confidential" or "public" ClientType may require it.
 	ForceDpop bool `json:"forceDpop,omitempty"`
@@ -2125,6 +2127,46 @@ type ThirdPartyApplicationConsentSearchOptions struct {
 
 func (c *ThirdPartyApplicationConsent) GetCreatedTime() time.Time {
 	return time.Unix(int64(c.CreatedTime), 0)
+}
+
+// An agentic identity, i.e. a consent granted to an agentic app
+type AgenticIdentity struct {
+	// The consent granted to the agentic app
+	Consent *ThirdPartyApplicationConsent `json:"consent,omitempty"`
+	// The name of the agent
+	AgentName string `json:"agentName"`
+	// The resource ID the consent was granted for
+	ResourceID string `json:"resourceId"`
+	// The client ID of the agentic app
+	ClientID string `json:"clientId"`
+	// The identifier of who created the agentic identity
+	CreatedBy string `json:"createdBy"`
+}
+
+// Options for searching and filtering agentic identities. All filters are optional.
+//
+// Page - the page number, starting with 0 for the first page.
+// Limit - the maximum number of results per page.
+type AgenticIdentitySearchOptions struct {
+	UserID     string `json:"userId"`
+	ClientID   string `json:"clientId"`
+	ResourceID string `json:"resourceId"`
+	ConsentID  string `json:"consentId"`
+	Page       int32  `json:"page"`
+	Limit      int32  `json:"limit"`
+}
+
+// Options for revoking agentic identities. At least one of UserID, ClientID, ResourceID or ConsentID must be provided.
+//
+// UserID - revokes the agentic identities of the given user. When it is the only option set, all of the user's agentic identities are revoked.
+// ClientID - revokes the agentic identities of the given agentic app client ID.
+// ResourceID - revokes the agentic identities granted for the given resource ID.
+// ConsentID - revokes the agentic identity with the given consent ID.
+type AgenticIdentityRevokeOptions struct {
+	UserID     string `json:"userId"`
+	ClientID   string `json:"clientId"`
+	ResourceID string `json:"resourceId"`
+	ConsentID  string `json:"consentId"`
 }
 
 type MgmSignUpOptions struct {
