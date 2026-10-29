@@ -2309,7 +2309,9 @@ if err == nil {
 }
 
 // Update an existing management key.
-// IMPORTANT: All parameters will override existing values. Use carefully.
+// IMPORTANT: All parameters except reBac will override existing values. Use carefully.
+// reBac is optional: pass nil to keep the key's current roles, or pass a value to
+// replace them. Changing the roles does not rotate the key's secret.
 updatedKey, err := descopeClient.Management.ManagementKey().Update(
     context.Background(),
     "key-id",
@@ -2317,6 +2319,14 @@ updatedKey, err := descopeClient.Management.ManagementKey().Update(
     "Updated description",
     []string{"10.0.0.2"},
     descope.MgmtKeyActive, // MgmtKeyActive or MgmtKeyInactive
+    &descope.MgmtKeyReBac{
+        ProjectRoles: []*descope.MgmtKeyProjectRole{
+            {
+                ProjectIDs: []string{"project-id-1"},
+                Roles:      []string{"read-only"},
+            },
+        },
+    }, // or nil to keep the current roles
 )
 
 // Delete management keys by IDs.
