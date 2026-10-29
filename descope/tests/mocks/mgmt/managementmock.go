@@ -2769,7 +2769,7 @@ type MockManagementKey struct {
 	CreateResponseToken string
 	CreateError         error
 
-	UpdateAssert   func(id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus)
+	UpdateAssert   func(id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus, reBac *descope.MgmtKeyReBac)
 	UpdateResponse *descope.MgmtKey
 	UpdateError    error
 
@@ -2793,9 +2793,9 @@ func (m *MockManagementKey) Create(_ context.Context, name, description string, 
 	return m.CreateResponseKey, m.CreateResponseToken, m.CreateError
 }
 
-func (m *MockManagementKey) Update(_ context.Context, id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus) (*descope.MgmtKey, error) {
+func (m *MockManagementKey) Update(_ context.Context, id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus, reBac *descope.MgmtKeyReBac) (*descope.MgmtKey, error) {
 	if m.UpdateAssert != nil {
-		m.UpdateAssert(id, name, description, permittedIPs, status)
+		m.UpdateAssert(id, name, description, permittedIPs, status, reBac)
 	}
 	return m.UpdateResponse, m.UpdateError
 }

@@ -53,7 +53,7 @@ func (r *mgmtkey) Create(ctx context.Context, name, description string, expiresI
 	return res.Key, res.Cleartext, nil
 }
 
-func (r *mgmtkey) Update(ctx context.Context, id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus) (*descope.MgmtKey, error) {
+func (r *mgmtkey) Update(ctx context.Context, id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus, reBac *descope.MgmtKeyReBac) (*descope.MgmtKey, error) {
 	if id == "" {
 		return nil, utils.NewInvalidArgumentError("id")
 	}
@@ -64,6 +64,10 @@ func (r *mgmtkey) Update(ctx context.Context, id, name, description string, perm
 		"description":  description,
 		"permittedIps": permittedIPs,
 		"status":       status,
+	}
+	// omitted (not null) when nil so the key keeps its current roles
+	if reBac != nil {
+		body["reBac"] = reBac
 	}
 	resp, err := r.client.DoPatchRequest(ctx, api.Routes.ManagementMgmtKeyUpdate(), body, nil, "")
 	if err != nil {
