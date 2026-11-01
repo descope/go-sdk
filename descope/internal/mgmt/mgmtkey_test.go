@@ -90,8 +90,10 @@ func TestMgmtKeyUpdate_Success(t *testing.T) {
 		require.Equal(t, desc, req["description"])
 		require.EqualValues(t, []any{"1.2.3.4"}, req["permittedIps"])
 		require.Equal(t, "inactive", req["status"])
+		// a nil reBac must be omitted entirely (not sent as null) so the key keeps its roles
+		require.NotContains(t, req, "reBac")
 	}, response))
-	res, err := mgmt.ManagementKey().Update(context.Background(), "mk1", "updated-key", desc, []string{"1.2.3.4"}, descope.MgmtKeyInactive)
+	res, err := mgmt.ManagementKey().Update(context.Background(), "mk1", "updated-key", desc, []string{"1.2.3.4"}, descope.MgmtKeyInactive, nil)
 	require.NoError(t, err)
 	require.Equal(t, "mk1", res.ID)
 	require.Equal(t, "updated-key", res.Name)
@@ -99,6 +101,47 @@ func TestMgmtKeyUpdate_Success(t *testing.T) {
 	require.Len(t, res.PermittedIPs, 1)
 	require.Equal(t, "1.2.3.4", res.PermittedIPs[0])
 	require.Equal(t, descope.MgmtKeyInactive, res.Status)
+}
+
+func TestMgmtKeyUpdate_WithReBac(t *testing.T) {
+	reBac := &descope.MgmtKeyReBac{
+		CompanyRoles: []string{"company-role"},
+		ProjectRoles: []*descope.MgmtKeyProjectRole{{ProjectIDs: []string{"p1", "p2"}, Roles: []string{"project-role"}}},
+		TagRoles:     []*descope.MgmtKeyTagRole{{Tags: []string{"prod"}, Roles: []string{"tag-role"}}},
+	}
+	response := map[string]any{
+		"key": map[string]any{
+			"id":     "mk1",
+			"name":   "updated-key",
+			"status": "active",
+			"reBac": map[string]any{
+				"companyRoles": []string{"company-role"},
+				"projectRoles": []map[string]any{{"projectIds": []string{"p1", "p2"}, "roles": []string{"project-role"}}},
+				"tagRoles":     []map[string]any{{"tags": []string{"prod"}, "roles": []string{"tag-role"}}},
+			},
+		}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "mk1", req["id"])
+		require.Equal(t, map[string]any{
+			"companyRoles": []any{"company-role"},
+			"projectRoles": []any{map[string]any{"projectIds": []any{"p1", "p2"}, "roles": []any{"project-role"}}},
+			"tagRoles":     []any{map[string]any{"tags": []any{"prod"}, "roles": []any{"tag-role"}}},
+		}, req["reBac"])
+	}, response))
+	res, err := mgmt.ManagementKey().Update(context.Background(), "mk1", "updated-key", "", nil, descope.MgmtKeyActive, reBac)
+	require.NoError(t, err)
+	require.Equal(t, "mk1", res.ID)
+	require.NotNil(t, res.ReBac)
+	require.Equal(t, []string{"company-role"}, res.ReBac.CompanyRoles)
+	require.Len(t, res.ReBac.ProjectRoles, 1)
+	require.Equal(t, []string{"p1", "p2"}, res.ReBac.ProjectRoles[0].ProjectIDs)
+	require.Equal(t, []string{"project-role"}, res.ReBac.ProjectRoles[0].Roles)
+	require.Len(t, res.ReBac.TagRoles, 1)
+	require.Equal(t, []string{"prod"}, res.ReBac.TagRoles[0].Tags)
+	require.Equal(t, []string{"tag-role"}, res.ReBac.TagRoles[0].Roles)
 }
 
 func TestMgmtKeyGet_Success(t *testing.T) {
@@ -207,7 +250,7 @@ func TestMgmtKeyCreate_Error(t *testing.T) {
 
 func TestMgmtKeyUpdate_Error(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
-	_, err := mgmt.ManagementKey().Update(context.Background(), "", "name", "desc", nil, descope.MgmtKeyActive)
+	_, err := mgmt.ManagementKey().Update(context.Background(), "", "name", "desc", nil, descope.MgmtKeyActive, nil)
 	require.Error(t, err)
 }
 
