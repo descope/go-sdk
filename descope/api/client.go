@@ -361,6 +361,8 @@ var (
 			familyCustomAttributes:                     "mgmt/family/customattributes",
 			familyCustomAttributeCreate:                "mgmt/family/customattribute/create",
 			familyCustomAttributeDelete:                "mgmt/family/customattribute/delete",
+			agenticIdentitiesSearch:                    "mgmt/agentic/identities/search",
+			agenticIdentitiesRevoke:                    "mgmt/agentic/identities/revoke",
 		},
 		logout:       "auth/logout",
 		logoutAll:    "auth/logoutall",
@@ -746,6 +748,9 @@ type mgmtEndpoints struct {
 	familyCustomAttributes      string
 	familyCustomAttributeCreate string
 	familyCustomAttributeDelete string
+
+	agenticIdentitiesSearch string
+	agenticIdentitiesRevoke string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -2065,6 +2070,14 @@ func (e *endpoints) ManagementFamilyCustomAttributeCreate() string {
 
 func (e *endpoints) ManagementFamilyCustomAttributeDelete() string {
 	return path.Join(e.version, e.mgmt.familyCustomAttributeDelete)
+}
+
+func (e *endpoints) ManagementAgenticIdentitiesSearch() string {
+	return path.Join(e.version, e.mgmt.agenticIdentitiesSearch)
+}
+
+func (e *endpoints) ManagementAgenticIdentitiesRevoke() string {
+	return path.Join(e.version, e.mgmt.agenticIdentitiesRevoke)
 }
 
 func (e *endpoints) ManagementLicense() string {
