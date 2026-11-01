@@ -6,7 +6,7 @@ Guidance for Claude Code and other contributors working in this repository. `REA
 
 - Build: `make build` (`go mod tidy && go build ./...`).
 - Tests: `go test -race ./...`. CI runs `scripts/build/ci/build_test.sh` and requires 100% coverage, excluding mocks.
-- Lint: `bash scripts/lint/lint.sh` (the file is not executable; golangci-lint with `scripts/lint/.golangci.yml`, plus gitleaks). The `.hooks/pre-commit` hook runs it.
+- Lint: `bash scripts/build/ci/build_lint.sh`, the same command CI runs (go build, golangci-lint with `scripts/lint/.golangci.yml`, gitleaks). `scripts/lint/lint.sh` only defines the functions, so running it alone does nothing.
 
 ## Adding an endpoint
 
