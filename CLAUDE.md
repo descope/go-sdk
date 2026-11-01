@@ -31,6 +31,7 @@ A new management area also needs wiring in `internal/mgmt/mgmt.go` (field, init,
 - Requests: `client.DoPostRequest` / `DoPutRequest` / `DoPatchRequest(ctx, api.Routes.<Route>(), body, options, pswd)`, or `client.DoGetRequest` / `DoDeleteRequest(ctx, api.Routes.<Route>(), options, pswd)` with no body. The header becomes `Authorization: Bearer <projectID>[:<pswd>][:<managementKey>]`.
   - Management calls pass `pswd = ""`; the management key is added automatically.
   - Auth calls acting for a user pass the refresh JWT as `pswd`, from `auth.getValidRefreshToken(r)` or a token parameter.
+  - On the auth client, `<managementKey>` is the optional auth management key (`Config.AuthManagementKey` or `DESCOPE_AUTH_MANAGEMENT_KEY`), not the management key. It lets callers use auth methods whose public access is disabled in the project. New auth methods get it through `DoXRequest`; never build the `Authorization` header yourself.
 - Partial updates send only the fields the caller set.
 - Errors: reuse the codes in `errors.go`; do not add new ones for single endpoints.
 
