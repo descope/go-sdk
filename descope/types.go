@@ -2083,6 +2083,9 @@ type ThirdPartyApplicationConsent struct {
 	ExpireTime int32 `json:"expireTime,omitempty"`
 	// The consent modified time in milliseconds since epoch
 	ModifiedTime int32 `json:"modifiedTime,omitempty"`
+	// How the consent was recorded. Empty for an explicit consent, "idJag" for an identity
+	// recorded by a Cross-App Access exchange, which cannot be revoked.
+	AuthMethod string `json:"authMethod,omitempty"`
 }
 
 // Options for deleting third party application consents. At least one of ConsentIDs, AppID or UserIDs must be provided.
@@ -2127,6 +2130,51 @@ type ThirdPartyApplicationConsentSearchOptions struct {
 
 func (c *ThirdPartyApplicationConsent) GetCreatedTime() time.Time {
 	return time.Unix(int64(c.CreatedTime), 0)
+}
+
+// AgenticIdentity is a consent granted to an agentic app.
+type AgenticIdentity struct {
+	// The consent backing this agentic identity. Can be nil.
+	Consent *ThirdPartyApplicationConsent `json:"consent,omitempty"`
+	// The name of the agent
+	AgentName string `json:"agentName"`
+	// The resource (MCP server) ID the identity was granted for
+	ResourceID string `json:"resourceId"`
+	// The client ID of the agentic app
+	ClientID string `json:"clientId"`
+	// Who created the identity
+	CreatedBy string `json:"createdBy"`
+}
+
+// Options for searching agentic identities. All filters are optional.
+//
+// UserID - filter by a given user id.
+// ClientID - filter by a given agentic app client id.
+// ResourceID - filter by a given resource (MCP server) id.
+// ConsentID - search a specific consent by id.
+// Page - allows to paginate over the results. Pages start at 0 and must be non-negative.
+// Limit - limits the number of returned identities. Leave at 0 to return the default amount.
+type AgenticIdentitySearchOptions struct {
+	UserID     string `json:"userId"`
+	ClientID   string `json:"clientId"`
+	ResourceID string `json:"resourceId"`
+	ConsentID  string `json:"consentId"`
+	Page       int32  `json:"page"`
+	Limit      int32  `json:"limit"`
+}
+
+// Options for revoking agentic identities and their consents. At least one of the fields must be set.
+// Setting only UserID revokes all of the user's agentic identities across MCP servers.
+//
+// UserID - revoke the agentic identities of a given user id.
+// ClientID - revoke the agentic identities of a given agentic app client id.
+// ResourceID - revoke the agentic identities of a given resource (MCP server) id.
+// ConsentID - revoke a specific consent by id.
+type AgenticIdentityRevokeOptions struct {
+	UserID     string `json:"userId"`
+	ClientID   string `json:"clientId"`
+	ResourceID string `json:"resourceId"`
+	ConsentID  string `json:"consentId"`
 }
 
 type MgmSignUpOptions struct {
