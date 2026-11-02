@@ -2083,6 +2083,9 @@ type ThirdPartyApplicationConsent struct {
 	ExpireTime int32 `json:"expireTime,omitempty"`
 	// The consent modified time in milliseconds since epoch
 	ModifiedTime int32 `json:"modifiedTime,omitempty"`
+	// How the consent was recorded: empty for a consent the user granted explicitly,
+	// or "idJag" for one recorded by a Cross-App Access (ID-JAG) exchange
+	AuthMethod string `json:"authMethod,omitempty"`
 }
 
 // Options for deleting third party application consents. At least one of ConsentIDs, AppID or UserIDs must be provided.
@@ -2389,4 +2392,200 @@ type ApplyJWTTemplateFromLibraryRequest struct {
 	DescriptionOverride string         `json:"descriptionOverride,omitempty"`
 	TagsOverride        []string       `json:"tagsOverride,omitempty"`
 	TemplateOverride    map[string]any `json:"templateOverride,omitempty"`
+}
+
+// AgenticIdentity is a consent granted to an agentic application.
+type AgenticIdentity struct {
+	// The consent the identity is based on
+	Consent *ThirdPartyApplicationConsent `json:"consent,omitempty"`
+	// The name of the agent
+	AgentName string `json:"agentName,omitempty"`
+	// The ID of the resource (such as an MCP server) the identity was granted for
+	ResourceID string `json:"resourceId,omitempty"`
+	// The client ID of the agentic application
+	ClientID string `json:"clientId,omitempty"`
+	// Who created the identity
+	CreatedBy string `json:"createdBy,omitempty"`
+}
+
+// Options for searching agentic identities. All filters are optional.
+//
+// UserID - only return identities of this user.
+// ClientID - only return identities of the agentic application with this client ID.
+// ResourceID - only return identities granted for this resource (such as an MCP server).
+// ConsentID - only return the identity of this consent.
+// Page - allows to paginate over the results. Pages start at 0 and must be non-negative.
+// Limit - limits the number of returned identities.
+type AgenticIdentitySearchOptions struct {
+	UserID     string `json:"userId,omitempty"`
+	ClientID   string `json:"clientId,omitempty"`
+	ResourceID string `json:"resourceId,omitempty"`
+	ConsentID  string `json:"consentId,omitempty"`
+	Page       int32  `json:"page,omitempty"`
+	Limit      int32  `json:"limit,omitempty"`
+}
+
+// Options for revoking agentic identities. The filters that are set are combined.
+//
+// IMPORTANT: Leaving every filter empty revokes all of the project's agentic identities.
+//
+// UserID - revoke the identities of this user.
+// ClientID - revoke the identities of the agentic application with this client ID.
+// ResourceID - revoke the identities granted for this resource (such as an MCP server).
+// ConsentID - revoke the identity of this consent.
+type AgenticIdentityRevokeOptions struct {
+	UserID     string `json:"userId,omitempty"`
+	ClientID   string `json:"clientId,omitempty"`
+	ResourceID string `json:"resourceId,omitempty"`
+	ConsentID  string `json:"consentId,omitempty"`
+}
+
+// AgenticGovernanceSettings holds the project's Agentic Governance Suite settings.
+//
+// When updating, only the non-nil fields are changed.
+type AgenticGovernanceSettings struct {
+	// Whether the Agentic Governance Suite has been activated for the project
+	Configured *bool `json:"configured,omitempty"`
+	// Whether a new access request that the current policies already permit is
+	// approved, and its agent client provisioned, when it is created
+	AutoApproval *bool `json:"autoApproval,omitempty"`
+	// Whether the suite is switched off: no new access requests can be created
+	// and none are auto-approved, while existing requests can still be searched,
+	// loaded and resolved
+	SuiteDisabled *bool `json:"suiteDisabled,omitempty"`
+}
+
+// The kinds of target an access request can ask for
+const (
+	GovernanceAccessRequestTargetKindResource   = "resource"
+	GovernanceAccessRequestTargetKindConnection = "connection"
+)
+
+// The statuses of an access request
+const (
+	GovernanceAccessRequestStatusPending  = "pending"
+	GovernanceAccessRequestStatusApproved = "approved"
+	GovernanceAccessRequestStatusDenied   = "denied"
+)
+
+// The OAuth grant types an access request can ask for
+const (
+	GovernanceAccessRequestGrantTypeAuthCode          = "authCode"
+	GovernanceAccessRequestGrantTypeClientCredentials = "clientCredentials"
+	GovernanceAccessRequestGrantTypeJWTBearer         = "jwtBearer"
+	GovernanceAccessRequestGrantTypeCIBA              = "ciba"
+)
+
+// GovernanceAccessRequestAction is how an access request is resolved.
+type GovernanceAccessRequestAction string
+
+const (
+	GovernanceAccessRequestActionApprove GovernanceAccessRequestAction = "approve"
+	GovernanceAccessRequestActionDeny    GovernanceAccessRequestAction = "deny"
+)
+
+// GovernanceAccessRequestTarget is a resource or connection an access request asks the agent client to reach.
+type GovernanceAccessRequestTarget struct {
+	// The name of the target, as listed in the project's resources or connections
+	Name string `json:"name,omitempty"`
+	// The kind of the target: GovernanceAccessRequestTargetKindResource or GovernanceAccessRequestTargetKindConnection
+	Kind string `json:"kind,omitempty"`
+	// Read-only: the ID of the resource the name matched when the request was created.
+	// Ignored when creating a request.
+	TargetID string `json:"targetId,omitempty"`
+	// The scopes requested on the target. Leave empty when AllScopes is set.
+	Scopes []string `json:"scopes,omitempty"`
+	// Request any scope the target offers instead of an explicit list
+	AllScopes bool `json:"allScopes,omitempty"`
+}
+
+// GovernanceAccessRequest is a request to provision an agent client, reviewed in the Agentic Governance Suite.
+type GovernanceAccessRequest struct {
+	ID string `json:"id,omitempty"`
+	// The user the request was raised for, and their display name at that time
+	RequestorUserID string `json:"requestorUserId,omitempty"`
+	RequestorName   string `json:"requestorName,omitempty"`
+	// The type of agent client requested
+	ClientType string `json:"clientType,omitempty"`
+	// The OAuth grant types requested for the client
+	GrantTypes []string `json:"grantTypes,omitempty"`
+	// The resources and connections the client asks to reach
+	Targets []*GovernanceAccessRequestTarget `json:"targets,omitempty"`
+	Scopes  []string                         `json:"scopes,omitempty"`
+	// The reason given for the request
+	Justification string `json:"justification,omitempty"`
+	// One of the GovernanceAccessRequestStatus constants
+	Status string `json:"status,omitempty"`
+	// The user who approved or denied the request, and their display name at that time.
+	// A request resolved with a management key has an empty user ID and the name "Management API".
+	ResolvedByUserID string `json:"resolvedByUserId,omitempty"`
+	ResolvedByName   string `json:"resolvedByName,omitempty"`
+	// The note recorded with the resolution
+	ResolutionNote string `json:"resolutionNote,omitempty"`
+	// The client ID of the agent client provisioned on approval
+	ClientID string `json:"clientId,omitempty"`
+	// The application ID the agent client is provisioned with
+	ClientAppID string `json:"clientAppId,omitempty"`
+	// The name requested for the agent client
+	ClientName string `json:"clientName,omitempty"`
+	// Whether the provisioned client has since been deleted
+	ClientDeleted bool  `json:"clientDeleted,omitempty"`
+	CreatedTime   int64 `json:"createdTime,omitempty,string"`
+	ModifiedTime  int64 `json:"modifiedTime,omitempty,string"`
+	Version       int64 `json:"version,omitempty,string"`
+}
+
+// GovernanceAccessRequestCreate holds the details of a new access request.
+type GovernanceAccessRequestCreate struct {
+	// Required: the ID of an existing, active console user in your company the request is raised for
+	RequestorUserID string `json:"requestorUserId"`
+	// The name for the agent client
+	ClientName string `json:"clientName,omitempty"`
+	// The type of agent client requested
+	ClientType string `json:"clientType,omitempty"`
+	// The OAuth grant types requested, from the GovernanceAccessRequestGrantType constants
+	GrantTypes []string `json:"grantTypes,omitempty"`
+	// The resources and connections the client asks to reach
+	Targets []*GovernanceAccessRequestTarget `json:"targets,omitempty"`
+	Scopes  []string                         `json:"scopes,omitempty"`
+	// The reason for the request
+	Justification string `json:"justification,omitempty"`
+}
+
+// GovernanceAccessRequestSearchField filters access requests by one of their fields,
+// such as "status", "clientType" or "requestorUserId". Fields the server does not know are ignored.
+type GovernanceAccessRequestSearchField struct {
+	// The name of the field to filter on
+	Field string `json:"field,omitempty"`
+	// Match any of these values
+	ValArr []string `json:"valArr,omitempty"`
+	// Match this value
+	ValStr string `json:"valStr,omitempty"`
+	// Negate the match
+	Negative bool `json:"negative,omitempty"`
+	// The type of the value
+	ValType string `json:"valType,omitempty"`
+}
+
+// GovernanceAccessRequestSort sorts access requests by one of their fields.
+type GovernanceAccessRequestSort struct {
+	// Required: the name of the field to sort by, such as "createdTime"
+	Field string `json:"field"`
+	// Sort in descending order
+	Desc bool `json:"desc,omitempty"`
+}
+
+// Options for searching access requests. All options are optional.
+//
+// SearchFields - per-field filters, combined with AND.
+// Sort - the sort order. Defaults to newest first.
+// Text - free-text search across the request's text fields.
+// Page - allows to paginate over the results. Pages start at 0 and must be non-negative.
+// Limit - limits the number of returned requests. Leave at 0 to return all matches.
+type GovernanceAccessRequestSearchOptions struct {
+	SearchFields []*GovernanceAccessRequestSearchField `json:"searchFields,omitempty"`
+	Sort         []*GovernanceAccessRequestSort        `json:"sort,omitempty"`
+	Text         string                                `json:"text,omitempty"`
+	Page         int32                                 `json:"page,omitempty"`
+	Limit        int32                                 `json:"limit,omitempty"`
 }
