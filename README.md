@@ -1574,6 +1574,26 @@ res, err := descopeClient.Management.Group().ImportTheme(context.Background(), t
 if err == nil {
     fmt.Println(res)
 }
+
+// Set the styles a tenant overrides the project theme with. A logo must be a base64 data URI
+tenantTheme, err := descopeClient.Management.Flow().SetTenantTheme(context.Background(), "tenant-ID", &descope.TenantTheme{
+    Styles: map[string]any{
+        "light": map[string]any{"logo": "data:image/png;base64,iVBORw0KGgo="},
+        "dark":  map[string]any{"logo": "data:image/png;base64,iVBORw0KGgo="},
+    },
+})
+if err == nil {
+    fmt.Println(tenantTheme.Styles)
+}
+
+// Get a tenant's theme, returns a not found error if the tenant has none
+tenantTheme, err := descopeClient.Management.Flow().GetTenantTheme(context.Background(), "tenant-ID")
+if err == nil {
+    fmt.Println(tenantTheme.Styles, tenantTheme.ComponentsVersion)
+}
+
+// Delete a tenant's theme, so the tenant's flows use the project theme again
+err := descopeClient.Management.Flow().DeleteTenantTheme(context.Background(), "tenant-ID")
 ```
 
 ### Manage JWTs

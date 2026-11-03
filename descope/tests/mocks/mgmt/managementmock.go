@@ -1877,6 +1877,17 @@ type MockFlow struct {
 	ImportThemeAssert func(theme map[string]any)
 	ImportThemeError  error
 
+	GetTenantThemeAssert   func(tenantID string)
+	GetTenantThemeResponse *descope.TenantTheme
+	GetTenantThemeError    error
+
+	SetTenantThemeAssert   func(tenantID string, theme *descope.TenantTheme)
+	SetTenantThemeResponse *descope.TenantTheme
+	SetTenantThemeError    error
+
+	DeleteTenantThemeAssert func(tenantID string)
+	DeleteTenantThemeError  error
+
 	RunManagementFlowAssert   func(flowID string, option *descope.MgmtFlowOptions)
 	RunManagementFlowResponse map[string]any
 	RunManagementFlowError    error
@@ -1930,6 +1941,27 @@ func (m *MockFlow) ImportTheme(_ context.Context, theme map[string]any) error {
 		m.ImportThemeAssert(theme)
 	}
 	return m.ImportThemeError
+}
+
+func (m *MockFlow) GetTenantTheme(_ context.Context, tenantID string) (*descope.TenantTheme, error) {
+	if m.GetTenantThemeAssert != nil {
+		m.GetTenantThemeAssert(tenantID)
+	}
+	return m.GetTenantThemeResponse, m.GetTenantThemeError
+}
+
+func (m *MockFlow) SetTenantTheme(_ context.Context, tenantID string, theme *descope.TenantTheme) (*descope.TenantTheme, error) {
+	if m.SetTenantThemeAssert != nil {
+		m.SetTenantThemeAssert(tenantID, theme)
+	}
+	return m.SetTenantThemeResponse, m.SetTenantThemeError
+}
+
+func (m *MockFlow) DeleteTenantTheme(_ context.Context, tenantID string) error {
+	if m.DeleteTenantThemeAssert != nil {
+		m.DeleteTenantThemeAssert(tenantID)
+	}
+	return m.DeleteTenantThemeError
 }
 
 func (m *MockFlow) RunManagementFlow(_ context.Context, flowID string, options *descope.MgmtFlowOptions) (map[string]any, error) {

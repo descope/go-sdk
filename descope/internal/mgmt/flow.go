@@ -108,6 +108,47 @@ func (r *flow) ImportTheme(ctx context.Context, theme map[string]any) error {
 	return err
 }
 
+func (r *flow) GetTenantTheme(ctx context.Context, tenantID string) (*descope.TenantTheme, error) {
+	if tenantID == "" {
+		return nil, utils.NewInvalidArgumentError("tenantID")
+	}
+	res, err := r.client.DoGetRequest(ctx, api.Routes.ManagementThemeTenant(tenantID), nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalTenantTheme(res)
+}
+
+func (r *flow) SetTenantTheme(ctx context.Context, tenantID string, theme *descope.TenantTheme) (*descope.TenantTheme, error) {
+	if tenantID == "" {
+		return nil, utils.NewInvalidArgumentError("tenantID")
+	}
+	if theme == nil {
+		return nil, utils.NewInvalidArgumentError("theme")
+	}
+	if len(theme.Styles) == 0 {
+		return nil, utils.NewInvalidArgumentError("theme.Styles")
+	}
+	for _, flavor := range theme.Styles {
+		if _, ok := flavor.(map[string]any); !ok {
+			return nil, utils.NewInvalidArgumentError("theme.Styles")
+		}
+	}
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementThemeTenant(tenantID), theme, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalTenantTheme(res)
+}
+
+func (r *flow) DeleteTenantTheme(ctx context.Context, tenantID string) error {
+	if tenantID == "" {
+		return utils.NewInvalidArgumentError("tenantID")
+	}
+	_, err := r.client.DoDeleteRequest(ctx, api.Routes.ManagementThemeTenant(tenantID), nil, "")
+	return err
+}
+
 func unmarshalFlowsResponse(res *api.HTTPResponse) (*descope.FlowList, error) {
 	var a *descope.FlowList
 	err := utils.Unmarshal([]byte(res.BodyStr), &a)
@@ -140,6 +181,15 @@ func unmarshalTheme(res *api.HTTPResponse) (map[string]any, error) {
 		return nil, err
 	}
 	return a.Theme, nil
+}
+
+func unmarshalTenantTheme(res *api.HTTPResponse) (*descope.TenantTheme, error) {
+	a := &descope.TenantTheme{}
+	err := utils.Unmarshal([]byte(res.BodyStr), a)
+	if err != nil { // notest
+		return nil, err
+	}
+	return a, nil
 }
 
 func unmarshalManagementFlowResponse(res *api.HTTPResponse) (map[string]any, error) {

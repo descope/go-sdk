@@ -1442,6 +1442,14 @@ type FlowListEnty struct {
 	Disabled    bool   `json:"disabled,omitempty"`
 }
 
+// The styles a tenant overrides the project theme with.
+type TenantTheme struct {
+	// Keyed by style flavor, e.g. "light" or "<styleId>-dark".
+	Styles map[string]any `json:"styles"`
+	// Read-only, ignored on write.
+	ComponentsVersion string `json:"componentsVersion,omitempty"`
+}
+
 type AuditRecord struct {
 	ProjectID     string    `json:"projectId,omitempty"`
 	UserID        string    `json:"userId,omitempty"`
