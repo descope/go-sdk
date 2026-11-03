@@ -798,3 +798,160 @@ func TestUpdatePhoneOTPFailures(t *testing.T) {
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }
+
+func maskedPhoneResponse(t *testing.T, maskedPhone string) *http.Response {
+	respBytes, err := utils.Marshal(MaskedPhoneRes{MaskedPhone: maskedPhone})
+	require.NoError(t, err)
+	return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}
+}
+
+func TestSignUpIM(t *testing.T) {
+	phone := "+15555555555"
+	maskedPhone := "+*******555"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/signup/im", r.URL.RequestURI())
+		p, jwt := getProjectAndJwt(r)
+		assert.NotEmpty(t, p)
+		assert.Empty(t, jwt)
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, body["phone"])
+		assert.EqualValues(t, phone, body["loginId"])
+		assert.EqualValues(t, map[string]any{"name": "test", "email": "test@example.com"}, body["user"])
+		assert.EqualValues(t, map[string]any{"tenantId": "t1", "customClaims": map[string]any{"aa": "bb"}, "templateOptions": map[string]any{"cc": "dd"}}, body["loginOptions"])
+		return maskedPhoneResponse(t, maskedPhone), nil
+	})
+	require.NoError(t, err)
+	user := &descope.User{Name: "test", Email: "test@example.com"}
+	mp, err := a.OTP().SignUp(context.Background(), descope.MethodIM, phone, user, &descope.SignUpOptions{
+		CustomClaims:    map[string]any{"aa": "bb"},
+		TemplateOptions: map[string]string{"cc": "dd"},
+		TenantID:        "t1",
+	})
+	require.NoError(t, err)
+	require.EqualValues(t, maskedPhone, mp)
+}
+
+func TestSignUpIMInvalidArguments(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	_, err = a.OTP().SignUp(context.Background(), descope.MethodIM, "", nil, nil)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+	_, err = a.OTP().SignUp(context.Background(), descope.MethodIM, "not a phone", nil, nil)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+}
+
+func TestSignInIM(t *testing.T) {
+	phone := "+15555555555"
+	maskedPhone := "+*******555"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/signin/im", r.URL.RequestURI())
+		p, jwt := getProjectAndJwt(r)
+		assert.NotEmpty(t, p)
+		assert.EqualValues(t, jwtTokenValid, jwt)
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, body["loginId"])
+		assert.EqualValues(t, map[string]any{"stepup": true, "tenantId": "t1", "templateOptions": map[string]any{"cc": "dd"}}, body["loginOptions"])
+		return maskedPhoneResponse(t, maskedPhone), nil
+	})
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	mp, err := a.OTP().SignIn(context.Background(), descope.MethodIM, phone, r, &descope.LoginOptions{Stepup: true, TenantID: "t1", TemplateOptions: map[string]string{"cc": "dd"}})
+	require.NoError(t, err)
+	require.EqualValues(t, maskedPhone, mp)
+}
+
+func TestSignInIMEmptyLoginID(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	_, err = a.OTP().SignIn(context.Background(), descope.MethodIM, "", nil, nil)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+}
+
+func TestSignUpOrInIM(t *testing.T) {
+	loginID := "+15555555555"
+	maskedPhone := "+*******555"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/signup-in/im", r.URL.RequestURI())
+		p, jwt := getProjectAndJwt(r)
+		assert.NotEmpty(t, p)
+		assert.Empty(t, jwt)
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, loginID, body["loginId"])
+		assert.Nil(t, body["user"])
+		assert.EqualValues(t, map[string]any{"customClaims": map[string]any{"aa": "bb"}, "templateOptions": map[string]any{"cc": "dd"}}, body["loginOptions"])
+		return maskedPhoneResponse(t, maskedPhone), nil
+	})
+	require.NoError(t, err)
+	mp, err := a.OTP().SignUpOrIn(context.Background(), descope.MethodIM, loginID, &descope.SignUpOptions{
+		CustomClaims:    map[string]any{"aa": "bb"},
+		TemplateOptions: map[string]string{"cc": "dd"},
+	})
+	require.NoError(t, err)
+	require.EqualValues(t, maskedPhone, mp)
+}
+
+func TestSignUpOrInIMEmptyLoginID(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	_, err = a.OTP().SignUpOrIn(context.Background(), descope.MethodIM, "", nil)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+}
+
+func TestUpdatePhoneOTPIM(t *testing.T) {
+	loginID := "943248329844"
+	phone := "+111111111111"
+	maskedPhone := "+*******111"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/update/phone/im", r.URL.RequestURI())
+		p, jwt := getProjectAndJwt(r)
+		assert.NotEmpty(t, p)
+		assert.EqualValues(t, jwtTokenValid, jwt)
+
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, map[string]any{
+			"loginId":            loginID,
+			"phone":              phone,
+			"addToLoginIDs":      true,
+			"onMergeUseExisting": true,
+			"providerId":         "p1",
+			"mfa":                true,
+			"templateOptions":    map[string]any{"cc": "dd"},
+		}, body)
+		return maskedPhoneResponse(t, maskedPhone), nil
+	})
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	mp, err := a.OTP().UpdateUserPhone(context.Background(), descope.MethodIM, loginID, phone, &descope.UpdateOptions{
+		AddToLoginIDs:      true,
+		OnMergeUseExisting: true,
+		ProviderID:         "p1",
+		MFA:                true,
+		TemplateOptions:    map[string]string{"cc": "dd"},
+	}, r)
+	require.NoError(t, err)
+	require.EqualValues(t, maskedPhone, mp)
+}
+
+func TestUpdatePhoneOTPIMInvalidArguments(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	_, err = a.OTP().UpdateUserPhone(context.Background(), descope.MethodIM, "", "+111111111111", nil, r)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+	_, err = a.OTP().UpdateUserPhone(context.Background(), descope.MethodIM, "id", "", nil, r)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+}

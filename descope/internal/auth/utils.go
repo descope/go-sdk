@@ -163,6 +163,8 @@ func newSignUpRequestBody(method descope.DeliveryMethod, user *descope.User) *au
 		return &authenticationSignUpRequestBody{Phone: user.Phone}
 	case descope.MethodVoice:
 		return &authenticationSignUpRequestBody{Phone: user.Phone}
+	case descope.MethodIM:
+		return &authenticationSignUpRequestBody{Phone: user.Phone}
 	case descope.MethodWhatsApp:
 		return &authenticationSignUpRequestBody{WhatsApp: user.Phone}
 	}
@@ -241,6 +243,12 @@ func newMagicLinkAuthenticationVerifyRequestBody(token string) *magicLinkAuthent
 func newAuthenticationSignUpRequestBody(method descope.DeliveryMethod, loginID string, user *descope.User, signUpOptions *descope.SignUpOptions) *authenticationSignUpRequestBody {
 	b := newSignUpRequestBody(method, user)
 	b.User = user
+	if method == descope.MethodIM {
+		// IM sign-up user object has no phone
+		u := *user
+		u.Phone = ""
+		b.User = &u
+	}
 	b.LoginID = loginID
 	if signUpOptions == nil {
 		signUpOptions = &descope.SignUpOptions{}

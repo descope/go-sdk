@@ -193,6 +193,8 @@ func TestVerifyDeliveryMethod(t *testing.T) {
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 	err = a.verifyDeliveryMethod(descope.MethodWhatsApp, "abc@notaphone.com", &descope.User{})
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+	err = a.verifyDeliveryMethod(descope.MethodIM, "abc@notaphone.com", &descope.User{})
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 
 	u := &descope.User{}
 	err = a.verifyDeliveryMethod(descope.MethodEmail, "abc@notaphone.com", u)
