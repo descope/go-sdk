@@ -349,6 +349,8 @@ var (
 			scopeClaimMappingGet:                       "mgmt/scopeClaimMapping/get",
 			scopeClaimMappingSet:                       "mgmt/scopeClaimMapping/set",
 			scopeClaimMappingDelete:                    "mgmt/scopeClaimMapping/delete",
+			agenticIdentitiesSearch:                    "mgmt/agentic/identities/search",
+			agenticIdentitiesRevoke:                    "mgmt/agentic/identities/revoke",
 			familyCreate:                               "mgmt/family/create",
 			familyUpdate:                               "mgmt/family/update",
 			familyDelete:                               "mgmt/family/delete",
@@ -727,6 +729,9 @@ type mgmtEndpoints struct {
 	scopeClaimMappingGet    string
 	scopeClaimMappingSet    string
 	scopeClaimMappingDelete string
+
+	agenticIdentitiesSearch string
+	agenticIdentitiesRevoke string
 
 	userAddFamilies                       string
 	userRemoveFamilies                    string
@@ -2017,6 +2022,14 @@ func (e *endpoints) ManagementScopeClaimMappingSet() string {
 
 func (e *endpoints) ManagementScopeClaimMappingDelete() string {
 	return path.Join(e.version, e.mgmt.scopeClaimMappingDelete)
+}
+
+func (e *endpoints) ManagementAgenticIdentitiesSearch() string {
+	return path.Join(e.version, e.mgmt.agenticIdentitiesSearch)
+}
+
+func (e *endpoints) ManagementAgenticIdentitiesRevoke() string {
+	return path.Join(e.version, e.mgmt.agenticIdentitiesRevoke)
 }
 
 func (e *endpoints) ManagementFamilyCreate() string {

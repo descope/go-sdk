@@ -120,6 +120,7 @@ These sections show how to use the SDK to perform API management functions. Befo
 19. [Manage Engines](#manage-engines)
 20. [Manage JWT Templates](#manage-jwt-templates)
 21. [Manage Families](#manage-families)
+22. [Manage Agentic Identities](#manage-agentic-identities)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -2561,6 +2562,28 @@ err = descopeClient.Management.Family().Delete(context.Background(), family.ID)
 ```
 
 A complete runnable walkthrough is available in the [families example](https://github.com/descope/go-sdk/blob/main/examples/families).
+
+### Manage Agentic Identities
+
+Agentic identities are authorization records that bind an OAuth client to a user, tenant, or autonomous client.
+You can search and revoke them:
+
+```go
+// Search agentic identities by pages, filtered by client ID, resource ID, user ID or consent ID.
+identities, total, err := descopeClient.Management.Agentic().SearchIdentities(context.Background(), &descope.AgenticIdentitySearchOptions{
+	UserID: "my-user-id",
+	Page:   0,
+	Limit:  100,
+})
+
+// Revoke agentic identities and invalidate their consents. Combine filters to narrow the scope,
+// e.g. UserID alone revokes all of the user's agentic identities across every MCP server.
+// Revocation cannot be undone. Use carefully.
+revoked, err := descopeClient.Management.Agentic().RevokeIdentities(context.Background(), &descope.AgenticIdentityRevokeOptions{
+	UserID:   "my-user-id",
+	ClientID: "my-client-id",
+})
+```
 
 ## Code Examples
 

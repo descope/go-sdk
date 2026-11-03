@@ -2083,6 +2083,10 @@ type ThirdPartyApplicationConsent struct {
 	ExpireTime int32 `json:"expireTime,omitempty"`
 	// The consent modified time in milliseconds since epoch
 	ModifiedTime int32 `json:"modifiedTime,omitempty"`
+	// Empty for an explicit consent, "idJag" for an identity recorded by a Cross-App Access exchange
+	AuthMethod string `json:"authMethod,omitempty"`
+	// True when an admin blocked this "idJag" identity
+	Blocked bool `json:"blocked,omitempty"`
 }
 
 // Options for deleting third party application consents. At least one of ConsentIDs, AppID or UserIDs must be provided.
@@ -2127,6 +2131,35 @@ type ThirdPartyApplicationConsentSearchOptions struct {
 
 func (c *ThirdPartyApplicationConsent) GetCreatedTime() time.Time {
 	return time.Unix(int64(c.CreatedTime), 0)
+}
+
+// AgenticIdentity is an authorization record that binds an OAuth client to a user, tenant, or autonomous client.
+type AgenticIdentity struct {
+	Consent    *ThirdPartyApplicationConsent `json:"consent,omitempty"`
+	AgentName  string                        `json:"agentName,omitempty"`
+	ResourceID string                        `json:"resourceId,omitempty"`
+	ClientID   string                        `json:"clientId,omitempty"`
+	CreatedBy  string                        `json:"createdBy,omitempty"`
+}
+
+// Options for searching agentic identities. All fields are optional filters.
+//
+// Page - allows to paginate over the results. Pages start at 0.
+type AgenticIdentitySearchOptions struct {
+	UserID     string `json:"userId,omitempty"`
+	ClientID   string `json:"clientId,omitempty"`
+	ResourceID string `json:"resourceId,omitempty"`
+	ConsentID  string `json:"consentId,omitempty"`
+	Page       int32  `json:"page,omitempty"`
+	Limit      int32  `json:"limit,omitempty"`
+}
+
+// Options for revoking agentic identities. Combine the filters to narrow the scope of the revocation.
+type AgenticIdentityRevokeOptions struct {
+	UserID     string `json:"userId,omitempty"`
+	ClientID   string `json:"clientId,omitempty"`
+	ResourceID string `json:"resourceId,omitempty"`
+	ConsentID  string `json:"consentId,omitempty"`
 }
 
 type MgmSignUpOptions struct {

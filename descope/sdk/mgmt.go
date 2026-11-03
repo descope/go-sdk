@@ -1663,6 +1663,30 @@ type Management interface {
 
 	// Provides functions for managing families (family accounts) in a project.
 	Family() Family
+
+	// Provides functions for managing agentic identities in a project.
+	Agentic() Agentic
+}
+
+// Agentic provides functions for managing agentic identities, the authorization records
+// that bind an OAuth client to a user, tenant, or autonomous client.
+type Agentic interface {
+	// Search agentic identities, filtered by client ID, resource ID, user ID or consent ID.
+	//
+	// Use Page (zero-based) and Limit for pagination. Returns the matching identities and their total count.
+	SearchIdentities(ctx context.Context, options *descope.AgenticIdentitySearchOptions) ([]*descope.AgenticIdentity, int, error)
+
+	// Revoke agentic identities and invalidate their consents. Combine filters to narrow scope:
+	//
+	//   - ClientID + UserID: one user's grant to a specific agent
+	//   - ConsentID + UserID: a specific consent for a user
+	//   - ResourceID + UserID: all of a user's grants on one MCP server resource
+	//   - UserID alone: all agentic identities for that user across every MCP server
+	//
+	// Returns the number of identities revoked.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	RevokeIdentities(ctx context.Context, options *descope.AgenticIdentityRevokeOptions) (int, error)
 }
 
 // JWTTemplate provides functions for managing JWT templates in a project.
