@@ -1129,6 +1129,15 @@ err := descopeClient.Management.User().LogoutUser(context.Background(), "<login 
 // Which will cause only session that were marked with this specific type to be revoked
 err := descopeClient.Management.User().LogoutUserByUserID(context.Background(), "<user id>")
 
+// Logout multiple users from all their devices, by login ID or user ID
+// Session types (optional) can be added the same way as above
+logoutRes, err := descopeClient.Management.User().LogoutUsers(context.Background(), []string{"<login id>", "<user id>"})
+if err == nil {
+    for _, id := range logoutRes.NotFoundIdentifiers {
+        // These identifiers matched no user
+    }
+}
+
 // Get users' authentication history
 loginHistoryRes, err := descopeClient.Management.User().History(context.Background(), []string{"<user id 1>", "<user id 2>"})
 if err == nil {

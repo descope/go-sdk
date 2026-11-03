@@ -370,6 +370,11 @@ type User interface {
 	// Logout given user from all their devices, by user ID
 	LogoutUserByUserID(ctx context.Context, userID string, sessionTypes ...string) error
 
+	// Logout multiple users from all their devices, by login ID or user ID.
+	// Session types (optional) limit the logout to sessions marked with those types.
+	// The response lists the identifiers that matched no user.
+	LogoutUsers(ctx context.Context, loginIDsOrUserIDs []string, sessionTypes ...string) (*descope.LogoutUsersResponse, error)
+
 	// Change current loginID to new one
 	// Leave empty to remove the current login ID
 	// Pay attention that if this is the only login ID, it cannot be removed

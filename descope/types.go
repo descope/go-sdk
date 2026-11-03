@@ -760,6 +760,10 @@ type UserHistoryResponse struct {
 	SelectedTenant string `json:"selectedTenant,omitempty"`
 }
 
+type LogoutUsersResponse struct {
+	NotFoundIdentifiers []string `json:"notFoundIdentifiers,omitempty"`
+}
+
 type UsersFailedResponse struct {
 	Failure string        `json:"failure,omitempty"`
 	User    *UserResponse `json:"user,omitempty"`

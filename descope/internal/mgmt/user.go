@@ -916,6 +916,30 @@ func (u *user) LogoutUserByUserID(ctx context.Context, userID string, sessionTyp
 	return u.logoutUser(ctx, userID, "", sessionTypes...)
 }
 
+func (u *user) LogoutUsers(ctx context.Context, loginIDsOrUserIDs []string, sessionTypes ...string) (*descope.LogoutUsersResponse, error) {
+	for i, id := range loginIDsOrUserIDs {
+		if id == "" {
+			return nil, utils.NewInvalidArgumentError("loginIDsOrUserIDs[" + strconv.Itoa(i) + "] is empty")
+		}
+	}
+	req := map[string]any{}
+	if len(loginIDsOrUserIDs) > 0 {
+		req["identifiers"] = loginIDsOrUserIDs
+	}
+	if len(sessionTypes) > 0 {
+		req["sessionTypes"] = sessionTypes
+	}
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserLogoutBatch(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	out := &descope.LogoutUsersResponse{}
+	if err := utils.Unmarshal([]byte(res.BodyStr), out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (u *user) logoutUser(ctx context.Context, userID string, loginID string, sessionTypes ...string) error {
 	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserLogoutAllDevices(), map[string]any{"userId": userID, "loginId": loginID, "sessionTypes": sessionTypes}, nil, "")
 	return err
