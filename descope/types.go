@@ -1692,6 +1692,7 @@ const (
 	EnvironmentVariableManagementKey     = "DESCOPE_MANAGEMENT_KEY"
 	EnvironmentVariableAuthManagementKey = "DESCOPE_AUTH_MANAGEMENT_KEY" // gitleaks:allow
 	EnvironmentVariableBaseURL           = "DESCOPE_BASE_URL"
+	EnvironmentVariableJWTEncryptionKeys = "DESCOPE_JWT_ENCRYPTION_KEYS"
 )
 
 type AccessType string

@@ -73,6 +73,35 @@ descopeClient, err := client.NewWithConfig(&client.Config{
 
 If `JWTLeeway` is not set or set to 0, the SDK will use the default 5-second leeway for backward compatibility.
 
+### Encrypted (JWE) Tokens
+
+When JWT encryption is enabled for your project, session and refresh tokens are encrypted with your project's AES key, and the SDK needs that key to validate them. Set it in the `DESCOPE_JWT_ENCRYPTION_KEYS` environment variable, as a single JWK or a JWK Set:
+
+```bash
+export DESCOPE_JWT_ENCRYPTION_KEYS='{"kty":"oct","kid":"my-key-1","k":"..."}'
+
+# after a rotation, keep the previous key next to the new one
+export DESCOPE_JWT_ENCRYPTION_KEYS='{"keys":[{"kty":"oct","kid":"my-key-2","k":"..."},{"kty":"oct","kid":"my-key-1","k":"..."}]}'
+```
+
+Or pass the keys in `Config.JWTEncryptionKeys`, which takes precedence over the environment variable:
+
+```go
+descopeClient, err := client.NewWithConfig(&client.Config{
+    ProjectID:         "project-ID",
+    JWTEncryptionKeys: []string{currentKeyJWK, previousKeyJWK},
+})
+```
+
+Each key must be a 256-bit JWK with `kty` `oct` and the `kid` Descope uses for it; an invalid key makes `NewWithConfig` return `descope.ErrInvalidArguments`. Tokens are matched to keys by `kid`, and tokens that are not encrypted are validated as before, so you can configure a new key before turning encryption on or rotating. Keep a previous key until the refresh tokens it encrypted have expired.
+
+Every service that validates tokens needs these keys to read their claims. Descope encrypts with a new key as soon as it is set, so to turn encryption on or rotate without failing valid sessions:
+
+1. Create the key yourself, e.g. `{"kty":"oct","kid":"my-key-2","k":"<base64url of 32 random bytes>"}`.
+2. Add it to your keys, next to the current one, and deploy.
+3. Upload it in the console (Project Settings > Security > JWT Encryption).
+4. Remove the previous key once the project's refresh token timeout has passed.
+
 ## Usage
 
 ### Authentication Functions
@@ -244,10 +273,10 @@ displayed when initiating the authentication process.
 
 This method is similar to [Magic Link](#magic-link) but differs in two major ways:
 
--   The user must choose the correct link out of the three, instead of having just one
-    single link.
--   This supports cross-device clicking, meaning the user can try to log in on one device,
-    like a computer, while clicking the link on another device, for instance a mobile phone.
+- The user must choose the correct link out of the three, instead of having just one
+  single link.
+- This supports cross-device clicking, meaning the user can try to log in on one device,
+  like a computer, while clicking the link on another device, for instance a mobile phone.
 
 The Enchanted Link will redirect the user to page where the its token needs to be verified.
 This redirection can be configured in code per request, or set globally in the [Descope Console](https://app.descope.com/settings/authentication/enchantedlink).
@@ -784,6 +813,7 @@ if err != nil {
 ```
 
 A few things to keep in mind:
+
 - Only the sign-up/sign-in step requires `TenantID` — the verify step carries the tenant context automatically.
 - If `TenantID` is omitted, the request uses the non-isolated (shared) identity, as if tenant isolation were not enabled.
 - This is different from [`SelectTenant`](#tenant-selection), which switches the active tenant on an already-authenticated session. `TenantID` in `LoginOptions`/`SignUpOptions` scopes identity resolution at authentication time.
@@ -1592,6 +1622,7 @@ if err != nil {
 
 Generate a JWT for a user, simulating a signin request.
 refreshDuration - a custom refresh duration in seconds for the impersonation JWT, 0 will use project configuration
+
 ```go
 const res, err := updatedJWT, err := descopeClient.Management.JWT().SignIn(context.Background(), "dummy"), 0;
 if err != nil {
@@ -1601,6 +1632,7 @@ if err != nil {
 
 Generate a JWT for a user, simulating a signup request.
 refreshDuration - a custom refresh duration in seconds for the impersonation JWT, 0 will use project configuration
+
 ```go
 const res, err := updatedJWT, err := descopeClient.Management.JWT().SignUp(context.Background(), "dummy", 0);
 if err != nil {
@@ -1610,6 +1642,7 @@ if err != nil {
 
 Generate a JWT for a user, simulating a signup or in request.
 refreshDuration - a custom refresh duration in seconds for the impersonation JWT, 0 will use project configuration
+
 ```go
 const res, err := updatedJWT, err := descopeClient.Management.JWT().SignUpOrIn(context.Background(), "dummy", 0);
 if err != nil {
@@ -1988,7 +2021,7 @@ app, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadApplication
 
 // Load all third party applications with options for pagination
 apps, total, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadAllApplications(context.Background(), &descope.ThirdPartyApplicationSearchOptions{
-    Page: 0, 
+    Page: 0,
     Limit: 100
 })
 
@@ -2596,8 +2629,8 @@ Simplify your unit testing by using our mocks package for testing your app witho
 
 Mock usage examples:
 
--   [Authentication](https://github.com/descope/go-sdk/blob/main/descope/tests/mocks/auth/authenticationmock_test.go)
--   [Management](https://github.com/descope/go-sdk/blob/main/descope/tests/mocks/mgmt/managementmock_test.go)
+- [Authentication](https://github.com/descope/go-sdk/blob/main/descope/tests/mocks/auth/authenticationmock_test.go)
+- [Management](https://github.com/descope/go-sdk/blob/main/descope/tests/mocks/mgmt/managementmock_test.go)
 
 In the following snippet we mocked the Descope Authentication and Management SDKs, and have assertions to check the actual inputs passed to the SDK:
 

@@ -15,10 +15,11 @@ import (
 )
 
 type Provider struct {
-	client      *api.Client
-	conf        *AuthParams
-	providedKey jwk.Key
-	keySet      atomic.Value
+	client         *api.Client
+	conf           *AuthParams
+	providedKey    jwk.Key
+	keySet         atomic.Value
+	encryptionKeys map[string]jwk.Key
 }
 
 func NewProvider(client *api.Client, conf *AuthParams) *Provider {

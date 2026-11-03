@@ -31,6 +31,11 @@ type Config struct {
 	// PublicKey (optional, "") - used to override or implicitly use a dedicated public key in order to decrypt and validate the JWT tokens
 	// during ValidateSessionRequest(). If empty, will attempt to fetch all public keys from the specified project id.
 	PublicKey string
+	// JWTEncryptionKeys (optional, nil) - the project's JWT encryption keys, used to decrypt encrypted (JWE) session and refresh
+	// tokens before validating them. Each entry is a JWK (kty oct, 256 bits, with its kid) or a JWK Set of such keys. Keep previous
+	// keys here after a rotation so the tokens they encrypted still validate. Tokens that are not encrypted are validated as before.
+	// If empty, this value is retrieved from the DESCOPE_JWT_ENCRYPTION_KEYS environment variable instead.
+	JWTEncryptionKeys []string
 	// DescopeBaseURL (optional, "https://api.descope.com") - override the default base URL used to communicate with descope services.
 	DescopeBaseURL string
 	// FGACacheURL (optional, "") - pass FGA calls through a cache service, if set.
@@ -92,6 +97,14 @@ func (c *Config) setPublicKey() string {
 		}
 	}
 	return c.PublicKey
+}
+
+func (c *Config) setJWTEncryptionKeys() {
+	if len(c.JWTEncryptionKeys) == 0 {
+		if keys := utils.GetJWTEncryptionKeysEnvVariable(); keys != "" {
+			c.JWTEncryptionKeys = []string{keys}
+		}
+	}
 }
 
 func (c *Config) setManagementKey() string {
