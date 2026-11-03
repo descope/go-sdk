@@ -349,6 +349,11 @@ var (
 			scopeClaimMappingGet:                       "mgmt/scopeClaimMapping/get",
 			scopeClaimMappingSet:                       "mgmt/scopeClaimMapping/set",
 			scopeClaimMappingDelete:                    "mgmt/scopeClaimMapping/delete",
+			scimKeyCreate:                              "mgmt/scim/key/create",
+			scimKeyRotate:                              "mgmt/scim/key/rotate",
+			scimKeyRevoke:                              "mgmt/scim/key/revoke",
+			scimKeyActivate:                            "mgmt/scim/key/activate",
+			scimKeyLoad:                                "mgmt/scim/key",
 			familyCreate:                               "mgmt/family/create",
 			familyUpdate:                               "mgmt/family/update",
 			familyDelete:                               "mgmt/family/delete",
@@ -727,6 +732,12 @@ type mgmtEndpoints struct {
 	scopeClaimMappingGet    string
 	scopeClaimMappingSet    string
 	scopeClaimMappingDelete string
+
+	scimKeyCreate   string
+	scimKeyRotate   string
+	scimKeyRevoke   string
+	scimKeyActivate string
+	scimKeyLoad     string
 
 	userAddFamilies                       string
 	userRemoveFamilies                    string
@@ -2017,6 +2028,26 @@ func (e *endpoints) ManagementScopeClaimMappingSet() string {
 
 func (e *endpoints) ManagementScopeClaimMappingDelete() string {
 	return path.Join(e.version, e.mgmt.scopeClaimMappingDelete)
+}
+
+func (e *endpoints) ManagementSCIMKeyCreate() string {
+	return path.Join(e.version, e.mgmt.scimKeyCreate)
+}
+
+func (e *endpoints) ManagementSCIMKeyRotate() string {
+	return path.Join(e.version, e.mgmt.scimKeyRotate)
+}
+
+func (e *endpoints) ManagementSCIMKeyRevoke() string {
+	return path.Join(e.version, e.mgmt.scimKeyRevoke)
+}
+
+func (e *endpoints) ManagementSCIMKeyActivate() string {
+	return path.Join(e.version, e.mgmt.scimKeyActivate)
+}
+
+func (e *endpoints) ManagementSCIMKeyLoad() string {
+	return path.Join(e.version, e.mgmt.scimKeyLoad)
 }
 
 func (e *endpoints) ManagementFamilyCreate() string {

@@ -1663,6 +1663,48 @@ type Management interface {
 
 	// Provides functions for managing families (family accounts) in a project.
 	Family() Family
+
+	// Provides functions for managing SCIM access keys of tenants.
+	SCIM() SCIM
+}
+
+// SCIM provides functions for managing the SCIM access keys of tenants.
+//
+// A SCIM access key is scoped to a tenant and an SSO configuration, and its bearer token is
+// configured in the identity provider's SCIM settings.
+type SCIM interface {
+	// CreateAccessKey creates a SCIM access key for a tenant.
+	//
+	// request.TenantID is required. Existing SCIM keys for the same SSO configuration stay valid.
+	// The returned Cleartext is the bearer token for the identity provider, returned exactly once.
+	CreateAccessKey(ctx context.Context, request *descope.SCIMAccessKeyCreateRequest) (*descope.SCIMAccessKeyResponse, error)
+
+	// RotateAccessKey creates a new SCIM access key for a tenant and revokes the tenant's existing
+	// SCIM keys for the same SSO configuration, according to request.RevokeMode.
+	//
+	// request.TenantID is required. Update the identity provider with the new bearer token
+	// immediately, SCIM provisioning for the tenant fails until you do. The returned Cleartext is
+	// returned exactly once.
+	RotateAccessKey(ctx context.Context, request *descope.SCIMAccessKeyRotateRequest) (*descope.SCIMAccessKeyResponse, error)
+
+	// RevokeAccessKeys revokes every SCIM access key of a tenant for the given SSO configuration,
+	// and returns the IDs of the revoked keys.
+	//
+	// tenantID is required. An empty ssoID targets the tenant's default SSO configuration, not every
+	// configuration. An empty revokeMode means descope.SCIMKeyRevokeModeDelete; use
+	// descope.SCIMKeyRevokeModeDeactivate to suspend the keys reversibly.
+	RevokeAccessKeys(ctx context.Context, tenantID, ssoID string, revokeMode descope.SCIMKeyRevokeMode) ([]string, error)
+
+	// ActivateAccessKeys re-enables deactivated SCIM access keys of a tenant, and returns the IDs of
+	// the activated keys. Deleted keys cannot be restored.
+	//
+	// tenantID and keyIDs are required. An empty ssoID targets the tenant's default SSO configuration.
+	ActivateAccessKeys(ctx context.Context, tenantID, ssoID string, keyIDs []string) ([]string, error)
+
+	// LoadAccessKeys loads the SCIM access keys of a tenant. Returns key metadata only, never the cleartext.
+	//
+	// An empty ssoID returns the tenant's SCIM keys across every SSO configuration.
+	LoadAccessKeys(ctx context.Context, tenantID, ssoID string) ([]*descope.SCIMAccessKey, error)
 }
 
 // JWTTemplate provides functions for managing JWT templates in a project.

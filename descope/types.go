@@ -833,6 +833,7 @@ type AccessKeyResponse struct {
 	Description      string              `json:"description,omitempty"`
 	PermittedIPs     []string            `json:"permittedIps,omitempty"`
 	CustomAttributes map[string]any      `json:"customAttributes,omitempty"`
+	Editable         bool                `json:"editable,omitempty"`
 }
 
 // Represents a tenant association for a User or an Access Key. The tenant ID is required
@@ -2255,6 +2256,57 @@ type AccessKeysSearchOptions struct {
 	BoundUserID      *string          `json:"boundUserId,omitempty"`
 	CreatingUser     *string          `json:"creatingUser,omitempty"`
 	CustomAttributes map[string]any   `json:"customAttributes,omitempty"`
+}
+
+// SCIM types
+
+// SCIMKeyRevokeMode is how SCIM access keys are taken out of service when revoked or rotated.
+type SCIMKeyRevokeMode string
+
+const (
+	// SCIMKeyRevokeModeDelete deletes the keys permanently (the default).
+	SCIMKeyRevokeModeDelete SCIMKeyRevokeMode = "SCIM_KEY_REVOKE_MODE_DELETE"
+	// SCIMKeyRevokeModeDeactivate disables the keys reversibly, see SCIM().ActivateAccessKeys.
+	SCIMKeyRevokeModeDeactivate SCIMKeyRevokeMode = "SCIM_KEY_REVOKE_MODE_DEACTIVATE"
+)
+
+type SCIMAccessKeyCreateRequest struct {
+	// TenantID is required.
+	TenantID string `json:"tenantId"`
+	// SSOID is the SSO configuration the key provisions into. Empty targets the tenant's default configuration.
+	SSOID string `json:"ssoId,omitempty"`
+	// Name defaults to a name derived from the tenant and SSO configuration.
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+	// ExpireTime in epoch seconds. 0 means the key never expires.
+	ExpireTime int64 `json:"expireTime,omitempty,string"`
+}
+
+type SCIMAccessKeyRotateRequest struct {
+	// TenantID is required.
+	TenantID string `json:"tenantId"`
+	// SSOID is the SSO configuration to rotate. Empty targets the tenant's default configuration.
+	SSOID       string `json:"ssoId,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+	// ExpireTime in epoch seconds. 0 means the key never expires.
+	ExpireTime int64 `json:"expireTime,omitempty,string"`
+	// RevokeMode is how the replaced keys are taken out of service. Empty means SCIMKeyRevokeModeDelete.
+	RevokeMode SCIMKeyRevokeMode `json:"revokeMode,omitempty"`
+}
+
+type SCIMAccessKeyResponse struct {
+	// Cleartext is the bearer token to configure in the identity provider. Returned exactly once.
+	Cleartext string             `json:"cleartext,omitempty"`
+	Key       *AccessKeyResponse `json:"key,omitempty"`
+	// SCIMURL is the SCIM base URL to configure in the identity provider.
+	SCIMURL       string   `json:"scimUrl,omitempty"`
+	RevokedKeyIDs []string `json:"revokedKeyIds,omitempty"`
+}
+
+type SCIMAccessKey struct {
+	Key   *AccessKeyResponse `json:"key,omitempty"`
+	SSOID string             `json:"ssoId,omitempty"`
 }
 
 // List types
