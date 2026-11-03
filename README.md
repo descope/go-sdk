@@ -1576,6 +1576,27 @@ if err == nil {
 }
 ```
 
+You can also override the project theme for a specific tenant:
+
+```go
+// Create or replace the tenant's theme, logos must be base64 data URIs
+tenantTheme, err := descopeClient.Management.Flow().SetTenantTheme(context.Background(), "my-tenant-id", &descope.TenantTheme{
+    Styles: map[string]any{
+        "light": map[string]any{},
+        "dark":  map[string]any{},
+    },
+})
+
+// Load the tenant's theme, fails with a not found error if the tenant has none
+tenantTheme, err = descopeClient.Management.Flow().GetTenantTheme(context.Background(), "my-tenant-id")
+if err == nil {
+    fmt.Println(tenantTheme.Styles)
+}
+
+// Delete the tenant's theme, so the tenant's flows render with the project theme again
+err = descopeClient.Management.Flow().DeleteTenantTheme(context.Background(), "my-tenant-id")
+```
+
 ### Manage JWTs
 
 You can add custom claims to a valid JWT.

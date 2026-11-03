@@ -108,6 +108,51 @@ func (r *flow) ImportTheme(ctx context.Context, theme map[string]any) error {
 	return err
 }
 
+func (r *flow) GetTenantTheme(ctx context.Context, tenantID string) (*descope.TenantTheme, error) {
+	if tenantID == "" {
+		return nil, utils.NewInvalidArgumentError("tenantID")
+	}
+	res, err := r.client.DoGetRequest(ctx, api.Routes.ManagementTenantTheme(tenantID), nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalTenantTheme(res)
+}
+
+func (r *flow) SetTenantTheme(ctx context.Context, tenantID string, theme *descope.TenantTheme) (*descope.TenantTheme, error) {
+	if tenantID == "" {
+		return nil, utils.NewInvalidArgumentError("tenantID")
+	}
+	if theme == nil {
+		return nil, utils.NewInvalidArgumentError("theme")
+	}
+	if theme.Styles == nil {
+		return nil, utils.NewInvalidArgumentError("theme.Styles")
+	}
+	res, err := r.client.DoPostRequest(ctx, api.Routes.ManagementTenantTheme(tenantID), theme, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalTenantTheme(res)
+}
+
+func (r *flow) DeleteTenantTheme(ctx context.Context, tenantID string) error {
+	if tenantID == "" {
+		return utils.NewInvalidArgumentError("tenantID")
+	}
+	_, err := r.client.DoDeleteRequest(ctx, api.Routes.ManagementTenantTheme(tenantID), nil, "")
+	return err
+}
+
+func unmarshalTenantTheme(res *api.HTTPResponse) (*descope.TenantTheme, error) {
+	var a *descope.TenantTheme
+	err := utils.Unmarshal([]byte(res.BodyStr), &a)
+	if err != nil { // notest
+		return nil, err
+	}
+	return a, nil
+}
+
 func unmarshalFlowsResponse(res *api.HTTPResponse) (*descope.FlowList, error) {
 	var a *descope.FlowList
 	err := utils.Unmarshal([]byte(res.BodyStr), &a)

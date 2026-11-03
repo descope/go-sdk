@@ -1435,6 +1435,14 @@ type FlowList struct {
 	Flows []*FlowListEnty `json:"flows"`
 }
 
+// The styles a tenant overrides the project theme with
+type TenantTheme struct {
+	// Keyed by style flavor, e.g. "light", "dark", "<styleId>-light"
+	Styles map[string]any `json:"styles"`
+	// Read-only, ignored on write
+	ComponentsVersion string `json:"componentsVersion,omitempty"`
+}
+
 type FlowListEnty struct {
 	FlowID      string `json:"id"`
 	Name        string `json:"name"`

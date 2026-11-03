@@ -289,3 +289,92 @@ func TestGetManagementFlowAsyncResultFailure(t *testing.T) {
 	require.Error(t, err)
 	assert.Nil(t, res)
 }
+
+func TestGetTenantThemeSuccess(t *testing.T) {
+	body := map[string]any{
+		"styles":            map[string]any{"light": map[string]any{"foo": "bar"}},
+		"componentsVersion": "1.2.3",
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.Equal(t, http.MethodGet, r.Method)
+		require.Equal(t, "/v1/mgmt/theme/tenant/t1", r.URL.Path)
+	}, body))
+	res, err := mgmt.Flow().GetTenantTheme(context.Background(), "t1")
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	assert.EqualValues(t, map[string]any{"light": map[string]any{"foo": "bar"}}, res.Styles)
+	assert.Equal(t, "1.2.3", res.ComponentsVersion)
+}
+
+func TestGetTenantThemeMissingArgument(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	res, err := mgmt.Flow().GetTenantTheme(context.Background(), "")
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("tenantID").Message)
+	require.Nil(t, res)
+}
+
+func TestGetTenantThemeError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := mgmt.Flow().GetTenantTheme(context.Background(), "t1")
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestSetTenantThemeSuccess(t *testing.T) {
+	styles := map[string]any{"light": map[string]any{"foo": "bar"}}
+	body := map[string]any{
+		"styles":            styles,
+		"componentsVersion": "1.2.3",
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v1/mgmt/theme/tenant/t1", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, map[string]any{"styles": styles}, req)
+	}, body))
+	res, err := mgmt.Flow().SetTenantTheme(context.Background(), "t1", &descope.TenantTheme{Styles: styles})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	assert.EqualValues(t, styles, res.Styles)
+	assert.Equal(t, "1.2.3", res.ComponentsVersion)
+}
+
+func TestSetTenantThemeMissingArguments(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	styles := map[string]any{"light": map[string]any{}}
+	res, err := mgmt.Flow().SetTenantTheme(context.Background(), "", &descope.TenantTheme{Styles: styles})
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("tenantID").Message)
+	require.Nil(t, res)
+	res, err = mgmt.Flow().SetTenantTheme(context.Background(), "t1", nil)
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("theme").Message)
+	require.Nil(t, res)
+	res, err = mgmt.Flow().SetTenantTheme(context.Background(), "t1", &descope.TenantTheme{})
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("theme.Styles").Message)
+	require.Nil(t, res)
+}
+
+func TestSetTenantThemeError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := mgmt.Flow().SetTenantTheme(context.Background(), "t1", &descope.TenantTheme{Styles: map[string]any{}})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestDeleteTenantThemeSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.Equal(t, http.MethodDelete, r.Method)
+		require.Equal(t, "/v1/mgmt/theme/tenant/t1", r.URL.Path)
+	}))
+	err := mgmt.Flow().DeleteTenantTheme(context.Background(), "t1")
+	require.NoError(t, err)
+}
+
+func TestDeleteTenantThemeMissingArgument(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.Flow().DeleteTenantTheme(context.Background(), "")
+	require.ErrorContains(t, err, utils.NewInvalidArgumentError("tenantID").Message)
+}

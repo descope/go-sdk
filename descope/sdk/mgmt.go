@@ -1051,6 +1051,20 @@ type Flow interface {
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	ImportTheme(ctx context.Context, theme map[string]any) error
+
+	// Get the styles a tenant overrides the project theme with.
+	// The logo is returned as a base64 data URI, so the result can be passed to SetTenantTheme unchanged.
+	// Returns a not found error when the tenant has no theme of its own.
+	GetTenantTheme(ctx context.Context, tenantID string) (*descope.TenantTheme, error)
+
+	// Create or replace the styles a tenant overrides the project theme with.
+	// The given styles replace the tenant's stored ones whole, and the stored theme is returned.
+	// A logo must be given as a base64 data URI.
+	SetTenantTheme(ctx context.Context, tenantID string, theme *descope.TenantTheme) (*descope.TenantTheme, error)
+
+	// Delete a tenant's theme, so flows for that tenant render with the project theme again.
+	// Returns a not found error when the tenant has no theme of its own.
+	DeleteTenantTheme(ctx context.Context, tenantID string) error
 }
 
 // Provides functions for exporting and importing project settings, flows, styles, etc.
