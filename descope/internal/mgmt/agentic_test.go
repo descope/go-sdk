@@ -186,6 +186,8 @@ func TestAgenticRevokeIdentitiesError(t *testing.T) {
 	}))
 	_, err := mgmt.Agentic().RevokeIdentities(context.Background(), nil)
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	_, err = mgmt.Agentic().RevokeIdentities(context.Background(), &descope.AgenticIdentityRevokeOptions{})
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 
 	mgmt = newTestMgmt(nil, helpers.DoBadRequest(nil))
 	_, err = mgmt.Agentic().RevokeIdentities(context.Background(), &descope.AgenticIdentityRevokeOptions{UserID: "U1"})

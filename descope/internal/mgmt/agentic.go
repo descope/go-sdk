@@ -38,6 +38,9 @@ func (a *agentic) RevokeIdentities(ctx context.Context, options *descope.Agentic
 	if options == nil {
 		return 0, utils.NewInvalidArgumentError("options")
 	}
+	if options.UserID == "" && options.ClientID == "" && options.ResourceID == "" && options.ConsentID == "" {
+		return 0, utils.NewInvalidArgumentError("options")
+	}
 	res, err := a.client.DoPostRequest(ctx, api.Routes.ManagementAgenticIdentitiesRevoke(), options, nil, "")
 	if err != nil {
 		return 0, err
