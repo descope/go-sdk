@@ -833,6 +833,77 @@ type AccessKeyResponse struct {
 	Description      string              `json:"description,omitempty"`
 	PermittedIPs     []string            `json:"permittedIps,omitempty"`
 	CustomAttributes map[string]any      `json:"customAttributes,omitempty"`
+	Editable         bool                `json:"editable,omitempty"`
+}
+
+// SCIMKeyRevokeMode is how SCIM access keys being replaced or revoked are taken out of service.
+type SCIMKeyRevokeMode string
+
+const (
+	// SCIMKeyRevokeModeDelete deletes the keys permanently (the default).
+	SCIMKeyRevokeModeDelete SCIMKeyRevokeMode = "SCIM_KEY_REVOKE_MODE_DELETE"
+	// SCIMKeyRevokeModeDeactivate disables the keys reversibly, so they can be restored with SCIM().ActivateAccessKeys.
+	SCIMKeyRevokeModeDeactivate SCIMKeyRevokeMode = "SCIM_KEY_REVOKE_MODE_DEACTIVATE"
+)
+
+// CreateSCIMAccessKeyRequest is the request for SCIM().CreateAccessKey. TenantID is required.
+type CreateSCIMAccessKeyRequest struct {
+	TenantID string `json:"tenantId"`
+	// The SSO configuration this key provisions into. Empty targets the tenant's default configuration.
+	SSOID string `json:"ssoId,omitempty"`
+	// Defaults to a name derived from the tenant and SSO configuration.
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+	// Epoch seconds. 0, the default, means the key never expires.
+	ExpireTime int64 `json:"expireTime,omitempty,string"`
+}
+
+// RotateSCIMAccessKeyRequest is the request for SCIM().RotateAccessKey. TenantID is required.
+type RotateSCIMAccessKeyRequest struct {
+	TenantID string `json:"tenantId"`
+	// The SSO configuration to rotate. Empty targets the tenant's default configuration, not every configuration.
+	SSOID       string `json:"ssoId,omitempty"`
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+	// Epoch seconds. 0, the default, means the key never expires.
+	ExpireTime int64 `json:"expireTime,omitempty,string"`
+	// How the replaced keys are taken out of service. Empty means SCIMKeyRevokeModeDelete.
+	RevokeMode SCIMKeyRevokeMode `json:"revokeMode,omitempty"`
+}
+
+// RevokeSCIMAccessKeysRequest is the request for SCIM().RevokeAccessKeys. TenantID is required.
+type RevokeSCIMAccessKeysRequest struct {
+	TenantID string `json:"tenantId"`
+	// The SSO configuration to revoke. Empty targets the tenant's default configuration, not every configuration.
+	SSOID string `json:"ssoId,omitempty"`
+	// How the keys are taken out of service. Empty means SCIMKeyRevokeModeDelete.
+	RevokeMode SCIMKeyRevokeMode `json:"revokeMode,omitempty"`
+}
+
+// ActivateSCIMAccessKeysRequest is the request for SCIM().ActivateAccessKeys. TenantID and KeyIDs are required.
+type ActivateSCIMAccessKeysRequest struct {
+	TenantID string `json:"tenantId"`
+	// The SSO configuration the keys belong to. Empty targets the tenant's default configuration.
+	SSOID string `json:"ssoId,omitempty"`
+	// The ids of the deactivated keys to activate, from SCIM().LoadAccessKeys.
+	KeyIDs []string `json:"keyIds"`
+}
+
+// SCIMAccessKeyResponse is the result of creating or rotating a SCIM access key.
+type SCIMAccessKeyResponse struct {
+	// The bearer token to configure in the identity provider, in "<projectId>:<key>" form. Returned exactly once.
+	Cleartext string             `json:"cleartext,omitempty"`
+	Key       *AccessKeyResponse `json:"key,omitempty"`
+	// The SCIM base URL to configure in the identity provider alongside the bearer token.
+	SCIMURL string `json:"scimUrl,omitempty"`
+	// The keys revoked by this call, if any.
+	RevokedKeyIDs []string `json:"revokedKeyIds,omitempty"`
+}
+
+// SCIMAccessKey is a SCIM access key's metadata and the SSO configuration it provisions into.
+type SCIMAccessKey struct {
+	Key   *AccessKeyResponse `json:"key,omitempty"`
+	SSOID string             `json:"ssoId,omitempty"`
 }
 
 // Represents a tenant association for a User or an Access Key. The tenant ID is required

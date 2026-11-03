@@ -361,6 +361,11 @@ var (
 			familyCustomAttributes:                     "mgmt/family/customattributes",
 			familyCustomAttributeCreate:                "mgmt/family/customattribute/create",
 			familyCustomAttributeDelete:                "mgmt/family/customattribute/delete",
+			scimKeyCreate:                              "mgmt/scim/key/create",
+			scimKeyRotate:                              "mgmt/scim/key/rotate",
+			scimKeyRevoke:                              "mgmt/scim/key/revoke",
+			scimKeyActivate:                            "mgmt/scim/key/activate",
+			scimKeyLoad:                                "mgmt/scim/key",
 		},
 		logout:       "auth/logout",
 		logoutAll:    "auth/logoutall",
@@ -746,6 +751,12 @@ type mgmtEndpoints struct {
 	familyCustomAttributes      string
 	familyCustomAttributeCreate string
 	familyCustomAttributeDelete string
+
+	scimKeyCreate   string
+	scimKeyRotate   string
+	scimKeyRevoke   string
+	scimKeyActivate string
+	scimKeyLoad     string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -2065,6 +2076,26 @@ func (e *endpoints) ManagementFamilyCustomAttributeCreate() string {
 
 func (e *endpoints) ManagementFamilyCustomAttributeDelete() string {
 	return path.Join(e.version, e.mgmt.familyCustomAttributeDelete)
+}
+
+func (e *endpoints) ManagementSCIMKeyCreate() string {
+	return path.Join(e.version, e.mgmt.scimKeyCreate)
+}
+
+func (e *endpoints) ManagementSCIMKeyRotate() string {
+	return path.Join(e.version, e.mgmt.scimKeyRotate)
+}
+
+func (e *endpoints) ManagementSCIMKeyRevoke() string {
+	return path.Join(e.version, e.mgmt.scimKeyRevoke)
+}
+
+func (e *endpoints) ManagementSCIMKeyActivate() string {
+	return path.Join(e.version, e.mgmt.scimKeyActivate)
+}
+
+func (e *endpoints) ManagementSCIMKeyLoad() string {
+	return path.Join(e.version, e.mgmt.scimKeyLoad)
 }
 
 func (e *endpoints) ManagementLicense() string {

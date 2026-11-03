@@ -1663,6 +1663,9 @@ type Management interface {
 
 	// Provides functions for managing families (family accounts) in a project.
 	Family() Family
+
+	// Provides functions for managing tenants' SCIM access keys.
+	SCIM() SCIM
 }
 
 // JWTTemplate provides functions for managing JWT templates in a project.
@@ -1721,6 +1724,42 @@ type ScopeClaimMapping interface {
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	Delete(ctx context.Context) error
+}
+
+// SCIM provides functions for managing the access keys identity providers use for SCIM provisioning.
+type SCIM interface {
+	// Create a SCIM access key for a tenant. request.TenantID is required.
+	//
+	// The key is scoped to the tenant and carries the roles and custom claims SCIM requires, so the
+	// returned cleartext bearer token can be configured straight in an identity provider's SCIM settings.
+	// Existing SCIM keys for the same SSO configuration stay valid. The cleartext is returned exactly once.
+	CreateAccessKey(ctx context.Context, request *descope.CreateSCIMAccessKeyRequest) (*descope.SCIMAccessKeyResponse, error)
+
+	// Rotate the SCIM access keys of a tenant. request.TenantID is required.
+	//
+	// A new key is created and the tenant's existing SCIM keys for the same SSO configuration are
+	// revoked according to request.RevokeMode. Update the identity provider with the new bearer token
+	// immediately, until then SCIM provisioning for that tenant fails. The cleartext is returned exactly once.
+	RotateAccessKey(ctx context.Context, request *descope.RotateSCIMAccessKeyRequest) (*descope.SCIMAccessKeyResponse, error)
+
+	// Revoke every SCIM access key of a tenant for the given SSO configuration. request.TenantID is required.
+	//
+	// This disables SCIM provisioning for that tenant until a new key is created and configured in the
+	// identity provider. Use SCIMKeyRevokeModeDeactivate to suspend the keys reversibly instead of deleting them.
+	// Returns the ids of the revoked keys.
+	RevokeAccessKeys(ctx context.Context, request *descope.RevokeSCIMAccessKeysRequest) ([]string, error)
+
+	// Activate specific deactivated SCIM access keys of a tenant. request.TenantID and request.KeyIDs are required.
+	//
+	// This reverses a revoke that used SCIMKeyRevokeModeDeactivate; deleted keys cannot be restored.
+	// Returns the ids of the activated keys.
+	ActivateAccessKeys(ctx context.Context, request *descope.ActivateSCIMAccessKeysRequest) ([]string, error)
+
+	// Load the SCIM access keys of a tenant. tenantID is required.
+	//
+	// Pass an empty ssoID to load the tenant's SCIM keys across every SSO configuration.
+	// Returns key metadata only, never the cleartext.
+	LoadAccessKeys(ctx context.Context, tenantID, ssoID string) ([]*descope.SCIMAccessKey, error)
 }
 
 // Family provides functions for managing families (family accounts) in a project.

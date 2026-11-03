@@ -120,6 +120,7 @@ These sections show how to use the SDK to perform API management functions. Befo
 19. [Manage Engines](#manage-engines)
 20. [Manage JWT Templates](#manage-jwt-templates)
 21. [Manage Families](#manage-families)
+22. [Manage SCIM Access Keys](#manage-scim-access-keys)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -2561,6 +2562,50 @@ err = descopeClient.Management.Family().Delete(context.Background(), family.ID)
 ```
 
 A complete runnable walkthrough is available in the [families example](https://github.com/descope/go-sdk/blob/main/examples/families).
+
+### Manage SCIM Access Keys
+
+You can create, rotate, revoke, activate and load the access keys an identity provider uses for SCIM provisioning into a tenant:
+
+```go
+// Create a SCIM access key for a tenant. TenantID is required, other fields are optional.
+// An empty SSOID targets the tenant's default SSO configuration. ExpireTime is in epoch seconds, 0 means never.
+// Configure res.Cleartext as the bearer token and res.SCIMURL as the SCIM base URL in the identity provider.
+// The cleartext is returned exactly once.
+res, err := descopeClient.Management.SCIM().CreateAccessKey(context.Background(), &descope.CreateSCIMAccessKeyRequest{
+	TenantID:    "tenant-ID",
+	SSOID:       "sso-ID",
+	Name:        "Okta SCIM",
+	Description: "SCIM provisioning from Okta",
+	ExpireTime:  1893456000,
+})
+
+// Rotate the tenant's SCIM keys: a new key is created and the existing keys for the SSO configuration are revoked.
+// Update the identity provider with res.Cleartext immediately, until then SCIM provisioning fails.
+res, err = descopeClient.Management.SCIM().RotateAccessKey(context.Background(), &descope.RotateSCIMAccessKeyRequest{
+	TenantID:   "tenant-ID",
+	SSOID:      "sso-ID",
+	RevokeMode: descope.SCIMKeyRevokeModeDeactivate,
+})
+
+// Load the tenant's SCIM keys (metadata only). Pass an empty ssoID to load keys across every SSO configuration.
+keys, err := descopeClient.Management.SCIM().LoadAccessKeys(context.Background(), "tenant-ID", "sso-ID")
+
+// Revoke every SCIM key of the SSO configuration. SCIMKeyRevokeModeDeactivate suspends the keys reversibly,
+// SCIMKeyRevokeModeDelete (the default) deletes them permanently.
+revokedKeyIDs, err := descopeClient.Management.SCIM().RevokeAccessKeys(context.Background(), &descope.RevokeSCIMAccessKeysRequest{
+	TenantID:   "tenant-ID",
+	SSOID:      "sso-ID",
+	RevokeMode: descope.SCIMKeyRevokeModeDeactivate,
+})
+
+// Activate specific deactivated SCIM keys, by their ids from LoadAccessKeys. Deleted keys cannot be restored.
+activatedKeyIDs, err := descopeClient.Management.SCIM().ActivateAccessKeys(context.Background(), &descope.ActivateSCIMAccessKeysRequest{
+	TenantID: "tenant-ID",
+	SSOID:    "sso-ID",
+	KeyIDs:   []string{"key-ID"},
+})
+```
 
 ## Code Examples
 
