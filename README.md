@@ -909,7 +909,7 @@ err := descopeClient.Management.Tenant().Patch(context.Background(), tenantPatch
 err := descopeClient.Management.Tenant().Delete(context.Background(), "my-custom-id", true)
 
 // Create, update or delete several tenants in one request, at most 100 tenants per call by default.
-// A tenant that fails validation fails the whole call; other per-tenant failures are returned in FailedTenants
+// A tenant with invalid fields fails the whole call; any other failure for a tenant is returned in FailedTenants
 createRes, err := descopeClient.Management.Tenant().CreateBatch(context.Background(), []*descope.BatchCreateTenantRequest{
     {ID: "tenant-id", Name: "My Tenant", SelfProvisioningDomains: []string{"example.com"}},
 })

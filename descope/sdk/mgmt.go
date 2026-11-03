@@ -52,8 +52,8 @@ type Tenant interface {
 	// CreateBatch creates multiple tenants in a single request.
 	//
 	// Each tenant's Name is required. At most 100 tenants per call by default.
-	// A tenant that fails validation fails the whole call; other per-tenant
-	// failures are returned in the response's FailedTenants.
+	// A tenant with invalid fields fails the whole call; any other failure for a
+	// tenant is returned in the response's FailedTenants.
 	CreateBatch(ctx context.Context, tenants []*descope.BatchCreateTenantRequest) (*descope.CreateTenantsBatchResponse, error)
 
 	// UpdateBatch updates multiple tenants in a single request.
@@ -63,14 +63,14 @@ type Tenant interface {
 	// their current values.
 	//
 	// Each tenant's ID and Name are required. At most 100 tenants per call by default.
-	// A tenant that fails validation fails the whole call; other per-tenant
-	// failures are returned in the response's FailedTenants.
+	// A tenant with invalid fields fails the whole call; any other failure for a
+	// tenant is returned in the response's FailedTenants.
 	UpdateBatch(ctx context.Context, tenants []*descope.BatchUpdateTenantRequest) (*descope.UpdateTenantsBatchResponse, error)
 
 	// DeleteBatch deletes multiple tenants in a single request.
 	// Pass true on `cascade` in case you want to delete all users/keys associated only with these tenants.
-	// At most 100 tenants per call by default. A tenant that fails validation fails
-	// the whole call; other per-tenant failures are returned in the response's FailedTenants.
+	// At most 100 tenants per call by default. An invalid tenant ID fails the whole
+	// call; any other failure for a tenant is returned in the response's FailedTenants.
 	//
 	// IMPORTANT: This action is irreversible. Use carefully.
 	DeleteBatch(ctx context.Context, ids []string, cascade bool) (*descope.DeleteTenantsBatchResponse, error)
