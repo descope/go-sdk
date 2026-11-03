@@ -1663,6 +1663,59 @@ type Management interface {
 
 	// Provides functions for managing families (family accounts) in a project.
 	Family() Family
+
+	// Provides functions for managing agentic identities and the Agentic Governance Suite in a project.
+	Agentic() Agentic
+}
+
+// Agentic provides functions for managing agentic identities and the Agentic Governance Suite in a project.
+type Agentic interface {
+	// Search agentic identities (consents granted to agentic apps), filterable by client ID,
+	// resource ID, consent ID or user ID.
+	//
+	// Using nil options returns all identities. Returns the identities and the total number of matches.
+	SearchIdentities(ctx context.Context, options *descope.AgenticIdentitySearchOptions) ([]*descope.AgenticIdentity, int, error)
+
+	// Revoke agentic identities and their consents by client ID, consent ID, resource ID and/or user ID.
+	//
+	// At least one option must be set. Returns the number of revoked identities.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	RevokeIdentities(ctx context.Context, options *descope.AgenticIdentityRevokeOptions) (int, error)
+
+	// Load the project's Agentic Governance Suite settings, or the defaults when none are stored.
+	GetGovernanceSettings(ctx context.Context) (*descope.AgenticGovernanceSettings, error)
+
+	// Update the project's Agentic Governance Suite settings.
+	//
+	// Only the fields that are set (non-nil) are changed. Returns the settings after the change.
+	// Requires the Agentic Governance Suite in the company license, unless nothing changes.
+	SetGovernanceSettings(ctx context.Context, settings *descope.AgenticGovernanceSettings) (*descope.AgenticGovernanceSettings, error)
+
+	// Search the project's Agentic Governance Suite access requests, with filtering, sorting and paging.
+	//
+	// Using nil options returns all requests. Returns the requests and the total number of matches.
+	// Requires the Agentic Governance Suite in the company license.
+	SearchGovernanceAccessRequests(ctx context.Context, options *descope.GovernanceAccessRequestSearchOptions) ([]*descope.GovernanceAccessRequest, int, error)
+
+	// Load a single Agentic Governance Suite access request by id.
+	//
+	// Requires the Agentic Governance Suite in the company license.
+	GetGovernanceAccessRequest(ctx context.Context, id string) (*descope.GovernanceAccessRequest, error)
+
+	// Approve or deny a pending Agentic Governance Suite access request.
+	//
+	// The action is "approve" or "deny", and resolutionNote is optional. Approving provisions the requested
+	// agent client. The resolution is attributed to the Management API.
+	// Requires the Agentic Governance Suite in the company license.
+	ResolveGovernanceAccessRequest(ctx context.Context, id string, action string, resolutionNote string) (*descope.GovernanceAccessRequest, error)
+
+	// Create an Agentic Governance Suite access request to provision an agent client on behalf of a developer.
+	//
+	// request.RequestorUserID is required. When auto-approval is on and the current policies already permit
+	// the request, it is approved and the client provisioned immediately.
+	// Requires the Agentic Governance Suite in the company license, and fails while the suite is disabled.
+	CreateGovernanceAccessRequest(ctx context.Context, request *descope.GovernanceAccessRequestCreate) (*descope.GovernanceAccessRequest, error)
 }
 
 // JWTTemplate provides functions for managing JWT templates in a project.

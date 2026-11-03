@@ -361,6 +361,13 @@ var (
 			familyCustomAttributes:                     "mgmt/family/customattributes",
 			familyCustomAttributeCreate:                "mgmt/family/customattribute/create",
 			familyCustomAttributeDelete:                "mgmt/family/customattribute/delete",
+			agenticIdentitiesSearch:                    "mgmt/agentic/identities/search",
+			agenticIdentitiesRevoke:                    "mgmt/agentic/identities/revoke",
+			agenticGovernanceSettings:                  "mgmt/agentic/governance/settings",
+			agenticGovernanceRequestsSearch:            "mgmt/agentic/governance/requests/search",
+			agenticGovernanceRequestGet:                "mgmt/agentic/governance/requests/get",
+			agenticGovernanceRequestResolve:            "mgmt/agentic/governance/requests/resolve",
+			agenticGovernanceRequestCreate:             "mgmt/agentic/governance/requests/create",
 		},
 		logout:       "auth/logout",
 		logoutAll:    "auth/logoutall",
@@ -746,6 +753,14 @@ type mgmtEndpoints struct {
 	familyCustomAttributes      string
 	familyCustomAttributeCreate string
 	familyCustomAttributeDelete string
+
+	agenticIdentitiesSearch         string
+	agenticIdentitiesRevoke         string
+	agenticGovernanceSettings       string
+	agenticGovernanceRequestsSearch string
+	agenticGovernanceRequestGet     string
+	agenticGovernanceRequestResolve string
+	agenticGovernanceRequestCreate  string
 }
 
 func (e *endpoints) SignInOTP() string {
@@ -2065,6 +2080,34 @@ func (e *endpoints) ManagementFamilyCustomAttributeCreate() string {
 
 func (e *endpoints) ManagementFamilyCustomAttributeDelete() string {
 	return path.Join(e.version, e.mgmt.familyCustomAttributeDelete)
+}
+
+func (e *endpoints) ManagementAgenticIdentitiesSearch() string {
+	return path.Join(e.version, e.mgmt.agenticIdentitiesSearch)
+}
+
+func (e *endpoints) ManagementAgenticIdentitiesRevoke() string {
+	return path.Join(e.version, e.mgmt.agenticIdentitiesRevoke)
+}
+
+func (e *endpoints) ManagementAgenticGovernanceSettings() string {
+	return path.Join(e.version, e.mgmt.agenticGovernanceSettings)
+}
+
+func (e *endpoints) ManagementAgenticGovernanceRequestsSearch() string {
+	return path.Join(e.version, e.mgmt.agenticGovernanceRequestsSearch)
+}
+
+func (e *endpoints) ManagementAgenticGovernanceRequestGet() string {
+	return path.Join(e.version, e.mgmt.agenticGovernanceRequestGet)
+}
+
+func (e *endpoints) ManagementAgenticGovernanceRequestResolve() string {
+	return path.Join(e.version, e.mgmt.agenticGovernanceRequestResolve)
+}
+
+func (e *endpoints) ManagementAgenticGovernanceRequestCreate() string {
+	return path.Join(e.version, e.mgmt.agenticGovernanceRequestCreate)
 }
 
 func (e *endpoints) ManagementLicense() string {
