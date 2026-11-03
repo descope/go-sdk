@@ -2150,6 +2150,30 @@ res, err := descopeClient.Management.OutboundApplication().BatchUploadUserTokens
 })
 ```
 
+You can also manage the outbound SCIM configuration of an outbound application, which provisions users to an external SCIM 2.0 service provider:
+
+```go
+// Create an outbound SCIM configuration
+scimConfig, err := descopeClient.Management.OutboundApplication().CreateSCIMConfiguration(context.Background(), "app-id", map[string]any{
+    "baseUrl": "https://scim.example.com",
+})
+
+// Update an outbound SCIM configuration (Configuration and Version are sent only when set)
+scimConfig, err = descopeClient.Management.OutboundApplication().UpdateSCIMConfiguration(context.Background(), &descope.UpdateOutboundSCIMConfigurationRequest{
+    AppID:         "app-id",
+    Configuration: map[string]any{"baseUrl": "https://scim.example.com/v2"},
+})
+
+// Load an outbound SCIM configuration, including its enabled flag and export status
+scimConfig, err = descopeClient.Management.OutboundApplication().LoadSCIMConfiguration(context.Background(), "app-id")
+
+// Enable or disable an outbound SCIM configuration
+scimConfig, err = descopeClient.Management.OutboundApplication().SetSCIMEnabled(context.Background(), "app-id", true)
+
+// Delete an outbound SCIM configuration
+err = descopeClient.Management.OutboundApplication().DeleteSCIMConfiguration(context.Background(), "app-id")
+```
+
 ### Manage Lists
 
 You can create, update, delete, or load lists, as well as perform IP-specific operations:

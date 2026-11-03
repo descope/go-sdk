@@ -718,3 +718,194 @@ func TestOutboundApplicationDeleteTokenByIDError(t *testing.T) {
 	require.Error(t, err)
 	require.False(t, called)
 }
+
+var outboundSCIMResponse = map[string]any{"configuration": map[string]any{
+	"appId":              "app1",
+	"configuration":      map[string]any{"baseUrl": "https://scim.example.com"},
+	"enabled":            true,
+	"lastExportTime":     11,
+	"lastProcessingTime": 12,
+	"failures":           3,
+	"version":            "v1",
+}}
+
+func requireOutboundSCIMConfiguration(t *testing.T, cfg *descope.OutboundSCIMConfiguration) {
+	require.NotNil(t, cfg)
+	assert.Equal(t, "app1", cfg.AppID)
+	assert.Equal(t, map[string]any{"baseUrl": "https://scim.example.com"}, cfg.Configuration)
+	assert.True(t, cfg.Enabled)
+	assert.EqualValues(t, 11, cfg.LastExportTime)
+	assert.EqualValues(t, 12, cfg.LastProcessingTime)
+	assert.EqualValues(t, 3, cfg.Failures)
+	assert.Equal(t, "v1", cfg.Version)
+}
+
+func TestOutboundSCIMCreateSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.Equal(t, "/v1/mgmt/outbound/scim/create", r.URL.Path)
+		assert.Equal(t, "Bearer a:key", r.Header.Get("Authorization"))
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, map[string]any{"appId": "app1", "configuration": map[string]any{"baseUrl": "https://scim.example.com"}}, req)
+	}, outboundSCIMResponse))
+	cfg, err := mgmt.OutboundApplication().CreateSCIMConfiguration(context.Background(), "app1", map[string]any{"baseUrl": "https://scim.example.com"})
+	require.NoError(t, err)
+	requireOutboundSCIMConfiguration(t, cfg)
+}
+
+func TestOutboundSCIMCreateError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+	cfg, err := mgmt.OutboundApplication().CreateSCIMConfiguration(context.Background(), "", map[string]any{})
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Nil(t, cfg)
+	cfg, err = mgmt.OutboundApplication().CreateSCIMConfiguration(context.Background(), "app1", nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Nil(t, cfg)
+	require.False(t, called)
+
+	mgmt = newTestMgmt(nil, helpers.DoBadRequest(nil))
+	cfg, err = mgmt.OutboundApplication().CreateSCIMConfiguration(context.Background(), "app1", map[string]any{})
+	require.Error(t, err)
+	require.Nil(t, cfg)
+
+	mgmt = newTestMgmt(nil, helpers.DoOkWithBody(nil, "invalid"))
+	cfg, err = mgmt.OutboundApplication().CreateSCIMConfiguration(context.Background(), "app1", map[string]any{})
+	require.Error(t, err)
+	require.Nil(t, cfg)
+}
+
+func TestOutboundSCIMUpdateSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.Equal(t, "/v1/mgmt/outbound/scim/update", r.URL.Path)
+		assert.Equal(t, "Bearer a:key", r.Header.Get("Authorization"))
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, map[string]any{"appId": "app1", "configuration": map[string]any{"baseUrl": "https://scim.example.com"}, "version": "v1"}, req)
+	}, outboundSCIMResponse))
+	cfg, err := mgmt.OutboundApplication().UpdateSCIMConfiguration(context.Background(), &descope.UpdateOutboundSCIMConfigurationRequest{
+		AppID:         "app1",
+		Configuration: map[string]any{"baseUrl": "https://scim.example.com"},
+		Version:       "v1",
+	})
+	require.NoError(t, err)
+	requireOutboundSCIMConfiguration(t, cfg)
+}
+
+func TestOutboundSCIMUpdateOmitsUnsetFields(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, map[string]any{"appId": "app1"}, req)
+	}, map[string]any{"configuration": nil}))
+	cfg, err := mgmt.OutboundApplication().UpdateSCIMConfiguration(context.Background(), &descope.UpdateOutboundSCIMConfigurationRequest{AppID: "app1"})
+	require.NoError(t, err)
+	require.Nil(t, cfg)
+}
+
+func TestOutboundSCIMUpdateError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+	cfg, err := mgmt.OutboundApplication().UpdateSCIMConfiguration(context.Background(), nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Nil(t, cfg)
+	cfg, err = mgmt.OutboundApplication().UpdateSCIMConfiguration(context.Background(), &descope.UpdateOutboundSCIMConfigurationRequest{})
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Nil(t, cfg)
+	require.False(t, called)
+
+	mgmt = newTestMgmt(nil, helpers.DoBadRequest(nil))
+	cfg, err = mgmt.OutboundApplication().UpdateSCIMConfiguration(context.Background(), &descope.UpdateOutboundSCIMConfigurationRequest{AppID: "app1"})
+	require.Error(t, err)
+	require.Nil(t, cfg)
+}
+
+func TestOutboundSCIMDeleteSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.Equal(t, "/v1/mgmt/outbound/scim/delete", r.URL.Path)
+		assert.Equal(t, "Bearer a:key", r.Header.Get("Authorization"))
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, map[string]any{"appId": "app1"}, req)
+	}))
+	err := mgmt.OutboundApplication().DeleteSCIMConfiguration(context.Background(), "app1")
+	require.NoError(t, err)
+}
+
+func TestOutboundSCIMDeleteError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+	err := mgmt.OutboundApplication().DeleteSCIMConfiguration(context.Background(), "")
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.False(t, called)
+
+	mgmt = newTestMgmt(nil, helpers.DoBadRequest(nil))
+	err = mgmt.OutboundApplication().DeleteSCIMConfiguration(context.Background(), "app1")
+	require.Error(t, err)
+}
+
+func TestOutboundSCIMLoadSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.Equal(t, "/v1/mgmt/outbound/scim/app1", r.URL.Path)
+		assert.Equal(t, "Bearer a:key", r.Header.Get("Authorization"))
+	}, outboundSCIMResponse))
+	cfg, err := mgmt.OutboundApplication().LoadSCIMConfiguration(context.Background(), "app1")
+	require.NoError(t, err)
+	requireOutboundSCIMConfiguration(t, cfg)
+}
+
+func TestOutboundSCIMLoadError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+	cfg, err := mgmt.OutboundApplication().LoadSCIMConfiguration(context.Background(), "")
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Nil(t, cfg)
+	require.False(t, called)
+
+	mgmt = newTestMgmt(nil, helpers.DoBadRequest(nil))
+	cfg, err = mgmt.OutboundApplication().LoadSCIMConfiguration(context.Background(), "app1")
+	require.Error(t, err)
+	require.Nil(t, cfg)
+}
+
+func TestOutboundSCIMSetEnabledSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		assert.Equal(t, http.MethodPost, r.Method)
+		assert.Equal(t, "/v1/mgmt/outbound/scim/enabled/set", r.URL.Path)
+		assert.Equal(t, "Bearer a:key", r.Header.Get("Authorization"))
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, map[string]any{"appId": "app1", "enabled": true}, req)
+	}, outboundSCIMResponse))
+	cfg, err := mgmt.OutboundApplication().SetSCIMEnabled(context.Background(), "app1", true)
+	require.NoError(t, err)
+	requireOutboundSCIMConfiguration(t, cfg)
+}
+
+func TestOutboundSCIMSetEnabledError(t *testing.T) {
+	called := false
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		called = true
+	}))
+	cfg, err := mgmt.OutboundApplication().SetSCIMEnabled(context.Background(), "", false)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Nil(t, cfg)
+	require.False(t, called)
+
+	mgmt = newTestMgmt(nil, helpers.DoBadRequest(nil))
+	cfg, err = mgmt.OutboundApplication().SetSCIMEnabled(context.Background(), "app1", false)
+	require.Error(t, err)
+	require.Nil(t, cfg)
+}
