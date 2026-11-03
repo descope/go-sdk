@@ -1268,7 +1268,8 @@ type ThirdPartyApplication interface {
 	// PermissionsScopes: List of permissions scopes.
 	// ScopeClaimMapping: List of scope→claim mapping entries.
 	// JWTBearerSettings: Optional JWT Bearer settings which used to validate external token.
-	// ClientType: Optional client authentication model, "confidential" or "public".
+	// ClientType: Optional client authentication model, "confidential" or "public". If empty on create, the
+	// account's default applies; the created app's ClientType shows which.
 	// ForceDpop: Optional, requires a DPoP proof at the token endpoint. Needs a ClientType.
 	//
 	// The argument appRequest.Name must be unique per project.
@@ -1449,9 +1450,12 @@ type ManagementKey interface {
 	//
 	// The id parameter is used to identify the management key.
 	//
-	// IMPORTANT: All parameters will override whatever values are currently set
+	// The reBac parameter is optional. When nil, the key keeps its current roles. When
+	// non-nil, it replaces the key's roles without rotating the key's secret.
+	//
+	// IMPORTANT: All other parameters will override whatever values are currently set
 	// in the existing management key. Use carefully.
-	Update(ctx context.Context, id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus) (*descope.MgmtKey, error)
+	Update(ctx context.Context, id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus, reBac *descope.MgmtKeyReBac) (*descope.MgmtKey, error)
 
 	// Get a management key by ID.
 	Get(ctx context.Context, id string) (*descope.MgmtKey, error)
