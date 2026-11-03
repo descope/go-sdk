@@ -34,6 +34,7 @@ type MockManagement struct {
 	*MockScopeClaimMapping
 	*MockJWTTemplate
 	*MockFamily
+	*MockAgentic
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -134,6 +135,10 @@ func (m *MockManagement) JWTTemplate() sdk.JWTTemplate {
 
 func (m *MockManagement) Family() sdk.Family {
 	return m.MockFamily
+}
+
+func (m *MockManagement) Agentic() sdk.Agentic {
+	return m.MockAgentic
 }
 
 // Mock JWT
@@ -3371,4 +3376,31 @@ func (m *MockFamily) DeleteCustomAttributes(_ context.Context, names []string) (
 		m.DeleteCustomAttributesAssert(names)
 	}
 	return m.DeleteCustomAttributesResponse, m.DeleteCustomAttributesError
+}
+
+// Mock Agentic
+
+type MockAgentic struct {
+	SearchIdentitiesAssert        func(options *descope.AgenticIdentitySearchOptions)
+	SearchIdentitiesResponse      []*descope.AgenticIdentity
+	SearchIdentitiesTotalResponse int
+	SearchIdentitiesError         error
+
+	RevokeIdentitiesAssert   func(options *descope.AgenticIdentityRevokeOptions)
+	RevokeIdentitiesResponse int
+	RevokeIdentitiesError    error
+}
+
+func (m *MockAgentic) SearchIdentities(_ context.Context, options *descope.AgenticIdentitySearchOptions) ([]*descope.AgenticIdentity, int, error) {
+	if m.SearchIdentitiesAssert != nil {
+		m.SearchIdentitiesAssert(options)
+	}
+	return m.SearchIdentitiesResponse, m.SearchIdentitiesTotalResponse, m.SearchIdentitiesError
+}
+
+func (m *MockAgentic) RevokeIdentities(_ context.Context, options *descope.AgenticIdentityRevokeOptions) (int, error) {
+	if m.RevokeIdentitiesAssert != nil {
+		m.RevokeIdentitiesAssert(options)
+	}
+	return m.RevokeIdentitiesResponse, m.RevokeIdentitiesError
 }
