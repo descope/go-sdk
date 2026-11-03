@@ -1,6 +1,7 @@
 package descope
 
 import (
+	"encoding/json"
 	"strings"
 	"time"
 
@@ -2083,6 +2084,9 @@ type ThirdPartyApplicationConsent struct {
 	ExpireTime int32 `json:"expireTime,omitempty"`
 	// The consent modified time in milliseconds since epoch
 	ModifiedTime int32 `json:"modifiedTime,omitempty"`
+	// Empty for an explicitly granted consent, or "idJag" for an agentic identity recorded by a
+	// Cross-App Access exchange, which cannot be revoked
+	AuthMethod string `json:"authMethod,omitempty"`
 }
 
 // Options for deleting third party application consents. At least one of ConsentIDs, AppID or UserIDs must be provided.
@@ -2127,6 +2131,220 @@ type ThirdPartyApplicationConsentSearchOptions struct {
 
 func (c *ThirdPartyApplicationConsent) GetCreatedTime() time.Time {
 	return time.Unix(int64(c.CreatedTime), 0)
+}
+
+// AgenticIdentity is a consent granted to an agentic app, together with the agent and resource it
+// was granted for.
+type AgenticIdentity struct {
+	// The consent behind this identity. Can be nil.
+	Consent *ThirdPartyApplicationConsent `json:"consent,omitempty"`
+	// The name of the agent
+	AgentName string `json:"agentName"`
+	// The ID of the resource (for example an MCP server) the identity was granted for
+	ResourceID string `json:"resourceId"`
+	// The client ID of the agent
+	ClientID string `json:"clientId"`
+	// Who created the identity
+	CreatedBy string `json:"createdBy"`
+}
+
+// Options for searching agentic identities. Leaving all options empty returns all identities.
+//
+// UserID - filter by a given user ID.
+// ClientID - filter by a given agent client ID.
+// ResourceID - filter by a given resource ID.
+// ConsentID - search a specific consent by ID.
+// Page - allows to paginate over the results. Pages start at 0.
+// Limit - limits the number of returned identities. Leave at 0 to return the default amount.
+type AgenticIdentitySearchOptions struct {
+	UserID     string `json:"userId"`
+	ClientID   string `json:"clientId"`
+	ResourceID string `json:"resourceId"`
+	ConsentID  string `json:"consentId"`
+	Page       int32  `json:"page"`
+	Limit      int32  `json:"limit"`
+}
+
+// Options for revoking agentic identities and their consents. At least one of the fields must be
+// set. Setting only UserID revokes all of the user's agentic identities.
+type AgenticIdentityRevokeOptions struct {
+	UserID     string `json:"userId"`
+	ClientID   string `json:"clientId"`
+	ResourceID string `json:"resourceId"`
+	ConsentID  string `json:"consentId"`
+}
+
+// AgenticGovernanceSettings are the project's Agentic Governance Suite settings.
+type AgenticGovernanceSettings struct {
+	// Whether the Agentic Governance Suite has been activated for the project
+	Configured bool `json:"configured"`
+	// Whether a new access request that the current policies already permit is approved, and its
+	// agent client provisioned, automatically when it is created
+	AutoApproval bool `json:"autoApproval"`
+	// Whether the suite is switched off: no new access requests can be created and none are
+	// auto-approved, while existing requests can still be searched, loaded and resolved
+	SuiteDisabled bool `json:"suiteDisabled"`
+}
+
+// AgenticGovernanceSettingsRequest is used to partially update the project's Agentic Governance
+// Suite settings. Only the fields that are set (non-nil) are updated.
+type AgenticGovernanceSettingsRequest struct {
+	Configured    *bool `json:"configured,omitempty"`
+	AutoApproval  *bool `json:"autoApproval,omitempty"`
+	SuiteDisabled *bool `json:"suiteDisabled,omitempty"`
+}
+
+// GovernanceAccessRequestAction is the decision taken when resolving a governance access request.
+type GovernanceAccessRequestAction string
+
+const (
+	GovernanceAccessRequestActionApprove GovernanceAccessRequestAction = "approve"
+	GovernanceAccessRequestActionDeny    GovernanceAccessRequestAction = "deny"
+)
+
+// GovernanceAccessRequestTarget is a resource or connection that an access request asks the agent
+// client to reach.
+type GovernanceAccessRequestTarget struct {
+	// The name of the target, as listed in the project's resources or connections
+	Name string `json:"name"`
+	// The kind of the target: "resource" or "connection"
+	Kind string `json:"kind"`
+	// Set by the server: the ID of the resource the name matched when the request was created.
+	// Ignored when creating a request.
+	TargetID string `json:"targetId,omitempty"`
+	// The scopes requested on this target. Leave empty when AllScopes is set.
+	Scopes []string `json:"scopes,omitempty"`
+	// Request any scope the target offers instead of an explicit list
+	AllScopes bool `json:"allScopes,omitempty"`
+}
+
+// GovernanceAccessRequest is a request to provision an agent client, reviewed in the Agentic
+// Governance Suite.
+type GovernanceAccessRequest struct {
+	ID string `json:"id"`
+	// The user the request was raised for, and their display name at that time
+	RequestorUserID string `json:"requestorUserId"`
+	RequestorName   string `json:"requestorName"`
+	// The type of agent client requested
+	ClientType string `json:"clientType"`
+	// The name requested for the agent client
+	ClientName string `json:"clientName"`
+	// The OAuth grant types requested for the client
+	GrantTypes []string `json:"grantTypes"`
+	// The resources and connections the client asks to reach
+	Targets []*GovernanceAccessRequestTarget `json:"targets"`
+	Scopes  []string                         `json:"scopes"`
+	// The requester's reason for the request
+	Justification string `json:"justification"`
+	// The request status: "pending", "approved" or "denied"
+	Status string `json:"status"`
+	// The user who approved or denied the request, and their display name at that time. A request
+	// resolved through the management API has an empty user ID and the name "Management API".
+	ResolvedByUserID string `json:"resolvedByUserId"`
+	ResolvedByName   string `json:"resolvedByName"`
+	// The deny reason or the approve comment recorded with the resolution
+	ResolutionNote string `json:"resolutionNote"`
+	// The client ID of the agent client provisioned on approval
+	ClientID string `json:"clientId"`
+	// The application ID the agent client is provisioned with
+	ClientAppID string `json:"clientAppId"`
+	// Whether the provisioned client has since been deleted
+	ClientDeleted bool `json:"clientDeleted"`
+	// The creation and last modification times, in seconds since epoch
+	CreatedTime  int64 `json:"createdTime"`
+	ModifiedTime int64 `json:"modifiedTime"`
+	// The revision of the request, incremented on every change
+	Version int64 `json:"version"`
+}
+
+// UnmarshalJSON accepts the 64-bit fields both as JSON numbers and as strings.
+func (r *GovernanceAccessRequest) UnmarshalJSON(data []byte) error {
+	type alias GovernanceAccessRequest
+	aux := struct {
+		*alias
+		CreatedTime  json.Number `json:"createdTime"`
+		ModifiedTime json.Number `json:"modifiedTime"`
+		Version      json.Number `json:"version"`
+	}{alias: (*alias)(r)}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	var err error
+	if r.CreatedTime, err = jsonNumberToInt64(aux.CreatedTime); err != nil {
+		return err
+	}
+	if r.ModifiedTime, err = jsonNumberToInt64(aux.ModifiedTime); err != nil {
+		return err
+	}
+	r.Version, err = jsonNumberToInt64(aux.Version)
+	return err
+}
+
+func (r *GovernanceAccessRequest) GetCreatedTime() time.Time {
+	return time.Unix(r.CreatedTime, 0)
+}
+
+func jsonNumberToInt64(n json.Number) (int64, error) {
+	if n == "" {
+		return 0, nil
+	}
+	return n.Int64()
+}
+
+// GovernanceAccessRequestCreateRequest is used to create a governance access request on behalf of
+// a developer. RequestorUserID is required.
+type GovernanceAccessRequestCreateRequest struct {
+	// The ID of the console user the request is raised for. It must be an existing, active console
+	// user in your company, and the requestor name is taken from that user.
+	RequestorUserID string `json:"requestorUserId"`
+	// The name for the agent client
+	ClientName string `json:"clientName,omitempty"`
+	// The type of agent client requested
+	ClientType string `json:"clientType,omitempty"`
+	// The OAuth grant types requested: "authCode", "clientCredentials", "jwtBearer" or "ciba"
+	GrantTypes []string `json:"grantTypes,omitempty"`
+	// The resources and connections the client asks to reach
+	Targets []*GovernanceAccessRequestTarget `json:"targets,omitempty"`
+	Scopes  []string                         `json:"scopes,omitempty"`
+	// The requester's reason for the request
+	Justification string `json:"justification,omitempty"`
+}
+
+// GovernanceAccessRequestSearchField filters governance access requests by a single field.
+//
+// Field - the name of the field to filter by, for example "status". Unknown fields are ignored.
+// ValArr - match any of these values.
+// ValStr - match this value.
+// Negative - negate the filter.
+// ValType - the type of the given value.
+type GovernanceAccessRequestSearchField struct {
+	Field    string   `json:"field"`
+	ValArr   []string `json:"valArr,omitempty"`
+	ValStr   string   `json:"valStr,omitempty"`
+	Negative bool     `json:"negative,omitempty"`
+	ValType  string   `json:"valType,omitempty"`
+}
+
+// GovernanceAccessRequestSort sorts governance access requests by a field. Field is required.
+type GovernanceAccessRequestSort struct {
+	Field string `json:"field"`
+	Desc  bool   `json:"desc"`
+}
+
+// Options for searching governance access requests. Leaving all options empty returns all
+// requests, newest first.
+//
+// Text - free-text search across the requests' text fields.
+// SearchFields - per-field filters, combined with AND.
+// Sort - the sort order. Defaults to newest first.
+// Page - allows to paginate over the results, used with Limit. Pages start at 0.
+// Limit - limits the number of returned requests. Leave at 0 to return all matches.
+type GovernanceAccessRequestSearchOptions struct {
+	Text         string                               `json:"text,omitempty"`
+	SearchFields []GovernanceAccessRequestSearchField `json:"searchFields,omitempty"`
+	Sort         []GovernanceAccessRequestSort        `json:"sort,omitempty"`
+	Page         int32                                `json:"page"`
+	Limit        int32                                `json:"limit"`
 }
 
 type MgmSignUpOptions struct {
