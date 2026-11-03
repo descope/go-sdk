@@ -34,6 +34,7 @@ type MockManagement struct {
 	*MockScopeClaimMapping
 	*MockJWTTemplate
 	*MockFamily
+	*MockAgentic
 }
 
 func (m *MockManagement) JWT() sdk.JWT {
@@ -134,6 +135,10 @@ func (m *MockManagement) JWTTemplate() sdk.JWTTemplate {
 
 func (m *MockManagement) Family() sdk.Family {
 	return m.MockFamily
+}
+
+func (m *MockManagement) Agentic() sdk.Agentic {
+	return m.MockAgentic
 }
 
 // Mock JWT
@@ -3371,4 +3376,94 @@ func (m *MockFamily) DeleteCustomAttributes(_ context.Context, names []string) (
 		m.DeleteCustomAttributesAssert(names)
 	}
 	return m.DeleteCustomAttributesResponse, m.DeleteCustomAttributesError
+}
+
+// Mock Agentic
+
+type MockAgentic struct {
+	SearchIdentitiesAssert   func(options *descope.AgenticIdentitySearchOptions)
+	SearchIdentitiesResponse []*descope.AgenticIdentity
+	SearchIdentitiesTotal    int
+	SearchIdentitiesError    error
+
+	RevokeIdentitiesAssert   func(options *descope.AgenticIdentityRevokeOptions)
+	RevokeIdentitiesResponse int
+	RevokeIdentitiesError    error
+
+	GetGovernanceSettingsResponse *descope.AgenticGovernanceSettings
+	GetGovernanceSettingsError    error
+
+	SetGovernanceSettingsAssert   func(settings *descope.AgenticGovernanceSettings)
+	SetGovernanceSettingsResponse *descope.AgenticGovernanceSettings
+	SetGovernanceSettingsError    error
+
+	SearchGovernanceAccessRequestsAssert   func(options *descope.GovernanceAccessRequestSearchOptions)
+	SearchGovernanceAccessRequestsResponse []*descope.GovernanceAccessRequest
+	SearchGovernanceAccessRequestsTotal    int
+	SearchGovernanceAccessRequestsError    error
+
+	GetGovernanceAccessRequestAssert   func(id string)
+	GetGovernanceAccessRequestResponse *descope.GovernanceAccessRequest
+	GetGovernanceAccessRequestError    error
+
+	ResolveGovernanceAccessRequestAssert   func(id string, action descope.GovernanceAccessRequestAction, resolutionNote string)
+	ResolveGovernanceAccessRequestResponse *descope.GovernanceAccessRequest
+	ResolveGovernanceAccessRequestError    error
+
+	CreateGovernanceAccessRequestAssert   func(request *descope.GovernanceAccessRequestCreateOptions)
+	CreateGovernanceAccessRequestResponse *descope.GovernanceAccessRequest
+	CreateGovernanceAccessRequestError    error
+}
+
+func (m *MockAgentic) SearchIdentities(_ context.Context, options *descope.AgenticIdentitySearchOptions) ([]*descope.AgenticIdentity, int, error) {
+	if m.SearchIdentitiesAssert != nil {
+		m.SearchIdentitiesAssert(options)
+	}
+	return m.SearchIdentitiesResponse, m.SearchIdentitiesTotal, m.SearchIdentitiesError
+}
+
+func (m *MockAgentic) RevokeIdentities(_ context.Context, options *descope.AgenticIdentityRevokeOptions) (int, error) {
+	if m.RevokeIdentitiesAssert != nil {
+		m.RevokeIdentitiesAssert(options)
+	}
+	return m.RevokeIdentitiesResponse, m.RevokeIdentitiesError
+}
+
+func (m *MockAgentic) GetGovernanceSettings(_ context.Context) (*descope.AgenticGovernanceSettings, error) {
+	return m.GetGovernanceSettingsResponse, m.GetGovernanceSettingsError
+}
+
+func (m *MockAgentic) SetGovernanceSettings(_ context.Context, settings *descope.AgenticGovernanceSettings) (*descope.AgenticGovernanceSettings, error) {
+	if m.SetGovernanceSettingsAssert != nil {
+		m.SetGovernanceSettingsAssert(settings)
+	}
+	return m.SetGovernanceSettingsResponse, m.SetGovernanceSettingsError
+}
+
+func (m *MockAgentic) SearchGovernanceAccessRequests(_ context.Context, options *descope.GovernanceAccessRequestSearchOptions) ([]*descope.GovernanceAccessRequest, int, error) {
+	if m.SearchGovernanceAccessRequestsAssert != nil {
+		m.SearchGovernanceAccessRequestsAssert(options)
+	}
+	return m.SearchGovernanceAccessRequestsResponse, m.SearchGovernanceAccessRequestsTotal, m.SearchGovernanceAccessRequestsError
+}
+
+func (m *MockAgentic) GetGovernanceAccessRequest(_ context.Context, id string) (*descope.GovernanceAccessRequest, error) {
+	if m.GetGovernanceAccessRequestAssert != nil {
+		m.GetGovernanceAccessRequestAssert(id)
+	}
+	return m.GetGovernanceAccessRequestResponse, m.GetGovernanceAccessRequestError
+}
+
+func (m *MockAgentic) ResolveGovernanceAccessRequest(_ context.Context, id string, action descope.GovernanceAccessRequestAction, resolutionNote string) (*descope.GovernanceAccessRequest, error) {
+	if m.ResolveGovernanceAccessRequestAssert != nil {
+		m.ResolveGovernanceAccessRequestAssert(id, action, resolutionNote)
+	}
+	return m.ResolveGovernanceAccessRequestResponse, m.ResolveGovernanceAccessRequestError
+}
+
+func (m *MockAgentic) CreateGovernanceAccessRequest(_ context.Context, request *descope.GovernanceAccessRequestCreateOptions) (*descope.GovernanceAccessRequest, error) {
+	if m.CreateGovernanceAccessRequestAssert != nil {
+		m.CreateGovernanceAccessRequestAssert(request)
+	}
+	return m.CreateGovernanceAccessRequestResponse, m.CreateGovernanceAccessRequestError
 }

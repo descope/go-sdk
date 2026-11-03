@@ -120,6 +120,7 @@ These sections show how to use the SDK to perform API management functions. Befo
 19. [Manage Engines](#manage-engines)
 20. [Manage JWT Templates](#manage-jwt-templates)
 21. [Manage Families](#manage-families)
+22. [Manage Agentic Identities and Governance](#manage-agentic-identities-and-governance)
 
 If you wish to run any of our code samples and play with them, check out our [Code Examples](#code-examples) section.
 
@@ -2561,6 +2562,60 @@ err = descopeClient.Management.Family().Delete(context.Background(), family.ID)
 ```
 
 A complete runnable walkthrough is available in the [families example](https://github.com/descope/go-sdk/blob/main/examples/families).
+
+### Manage Agentic Identities and Governance
+
+You can search and revoke agentic identities (consents granted to agentic apps), and manage the
+Agentic Governance Suite: its settings and the access requests that provision agent clients.
+Most of the governance functions require the Agentic Governance Suite in the company license (see
+the method docs for the exceptions).
+
+```go
+// Search agentic identities, optionally filtered by user, client, resource (MCP server) or consent ID
+identities, total, err := descopeClient.Management.Agentic().SearchIdentities(context.Background(), &descope.AgenticIdentitySearchOptions{
+    UserID: "user-id",
+    Page:   0,
+    Limit:  20,
+})
+
+// Revoke agentic identities. At least one filter is required. A user ID alone revokes all of the
+// user's agentic identities across MCP servers.
+revoked, err := descopeClient.Management.Agentic().RevokeIdentities(context.Background(), &descope.AgenticIdentityRevokeOptions{
+    UserID:     "user-id",
+    ResourceID: "mcp-server-id",
+})
+
+// Load and update the Agentic Governance Suite settings. Only the fields that are set are changed.
+settings, err := descopeClient.Management.Agentic().GetGovernanceSettings(context.Background())
+autoApproval := true
+settings, err = descopeClient.Management.Agentic().SetGovernanceSettings(context.Background(), &descope.AgenticGovernanceSettings{
+    AutoApproval: &autoApproval,
+})
+
+// Create an access request on behalf of an existing, active console user in your company
+request, err := descopeClient.Management.Agentic().CreateGovernanceAccessRequest(context.Background(), &descope.GovernanceAccessRequestCreateOptions{
+    RequestorUserID: "console-user-id",
+    ClientName:      "my-agent",
+    GrantTypes:      []string{"clientCredentials"},
+    Targets: []*descope.GovernanceAccessRequestTarget{
+        {Name: "my-mcp-server", Kind: "resource", Scopes: []string{"read"}},
+    },
+    Justification: "Needed for the nightly sync",
+})
+
+// Search access requests, with filtering, sorting and paging
+requests, total, err := descopeClient.Management.Agentic().SearchGovernanceAccessRequests(context.Background(), &descope.GovernanceAccessRequestSearchOptions{
+    SearchFields: []*descope.GovernanceAccessRequestSearchField{{Field: "status", ValArr: []string{"pending"}}},
+    Sort:         []*descope.GovernanceAccessRequestSort{{Field: "createdTime", Desc: true}},
+    Limit:        20,
+})
+
+// Load a single access request
+request, err = descopeClient.Management.Agentic().GetGovernanceAccessRequest(context.Background(), request.ID)
+
+// Approve or deny a pending access request. Approving provisions the requested agent client.
+request, err = descopeClient.Management.Agentic().ResolveGovernanceAccessRequest(context.Background(), request.ID, descope.GovernanceAccessRequestActionApprove, "Approved for the nightly sync")
+```
 
 ## Code Examples
 
