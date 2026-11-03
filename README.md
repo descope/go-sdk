@@ -160,7 +160,7 @@ if err != nil {
 
 ### OTP Authentication
 
-Send a user a one-time password (OTP) using your preferred delivery method (_Email / SMS / Voice call / WhatsApp_). An email address or phone number must be provided accordingly.
+Send a user a one-time password (OTP) using your preferred delivery method (_Email / SMS / Voice call / WhatsApp / Instant message_). An email address or phone number must be provided accordingly.
 
 The user can either `sign up`, `sign in` or `sign up or in`
 
@@ -201,6 +201,17 @@ if err != nil {
     }
     // handle other error cases
 }
+```
+
+To send the code by instant message (IM), use `descope.MethodIM` with a phone number:
+
+```go
+loginID := "+11111111111"
+maskedAddress, err := descopeClient.Auth.OTP().SignUpOrIn(context.Background(), descope.MethodIM, loginID, nil)
+// Verify the received code (6 digits)
+authInfo, err := descopeClient.Auth.OTP().VerifyCode(context.Background(), descope.MethodIM, loginID, code, w)
+// Update a signed-in user's phone, verified by IM. The request carries the user's refresh token
+maskedAddress, err = descopeClient.Auth.OTP().UpdateUserPhone(context.Background(), descope.MethodIM, "loginID", "+11111111111", &descope.UpdateOptions{AddToLoginIDs: true}, r)
 ```
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)

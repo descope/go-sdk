@@ -798,3 +798,186 @@ func TestUpdatePhoneOTPFailures(t *testing.T) {
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }
+
+func TestSignUpIM(t *testing.T) {
+	phone := "+11111111111"
+	maskedPhone := "+*******111"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/signup/im", r.URL.RequestURI())
+		p, jwt := getProjectAndJwt(r)
+		assert.EqualValues(t, "a", p)
+		assert.Empty(t, jwt)
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, body["phone"])
+		assert.EqualValues(t, phone, body["loginId"])
+		assert.Nil(t, body["whatsapp"])
+		assert.EqualValues(t, map[string]any{"name": "test"}, body["user"])
+		assert.EqualValues(t, map[string]any{"tenantId": "tid"}, body["loginOptions"])
+		resp := MaskedPhoneRes{MaskedPhone: maskedPhone}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	mp, err := a.OTP().SignUp(context.Background(), descope.MethodIM, phone, &descope.User{Name: "test"}, &descope.SignUpOptions{TenantID: "tid"})
+	require.NoError(t, err)
+	require.EqualValues(t, maskedPhone, mp)
+}
+
+func TestSignUpIMFailures(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	_, err = a.OTP().SignUp(context.Background(), descope.MethodIM, "", &descope.User{Name: "test"}, nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "loginID")
+	_, err = a.OTP().SignUp(context.Background(), descope.MethodIM, "id", &descope.User{Phone: "aaa"}, nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "user.Phone")
+}
+
+func TestSignInIM(t *testing.T) {
+	phone := "+11111111111"
+	maskedPhone := "+*******111"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/signin/im", r.URL.RequestURI())
+		p, jwt := getProjectAndJwt(r)
+		assert.EqualValues(t, "a", p)
+		assert.Empty(t, jwt)
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, body["loginId"])
+		assert.EqualValues(t, map[string]any{"tenantId": "tid"}, body["loginOptions"])
+		resp := MaskedPhoneRes{MaskedPhone: maskedPhone}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	mp, err := a.OTP().SignIn(context.Background(), descope.MethodIM, phone, nil, &descope.LoginOptions{TenantID: "tid"})
+	require.NoError(t, err)
+	require.EqualValues(t, maskedPhone, mp)
+	_, err = a.OTP().SignIn(context.Background(), descope.MethodIM, "", nil, nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "loginID")
+}
+
+func TestSignUpOrInIM(t *testing.T) {
+	phone := "+11111111111"
+	maskedPhone := "+*******111"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/signup-in/im", r.URL.RequestURI())
+		p, jwt := getProjectAndJwt(r)
+		assert.EqualValues(t, "a", p)
+		assert.Empty(t, jwt)
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, body["loginId"])
+		assert.Nil(t, body["user"])
+		assert.EqualValues(t, map[string]any{"tenantId": "tid"}, body["loginOptions"])
+		resp := MaskedPhoneRes{MaskedPhone: maskedPhone}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	mp, err := a.OTP().SignUpOrIn(context.Background(), descope.MethodIM, phone, &descope.SignUpOptions{TenantID: "tid"})
+	require.NoError(t, err)
+	require.EqualValues(t, maskedPhone, mp)
+	_, err = a.OTP().SignUpOrIn(context.Background(), descope.MethodIM, "", nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "loginID")
+}
+
+func TestVerifyCodeIM(t *testing.T) {
+	phone := "+11111111111"
+	code := "123456"
+	name := "name"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/verify/im", r.URL.RequestURI())
+		p, jwt := getProjectAndJwt(r)
+		assert.EqualValues(t, "a", p)
+		assert.Empty(t, jwt)
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, body["loginId"])
+		assert.EqualValues(t, code, body["code"])
+		resp := &descope.JWTResponse{
+			SessionJwt: jwtTokenValid,
+			RefreshJwt: jwtTokenValid,
+			User:       &descope.UserResponse{User: descope.User{Name: name, Phone: phone}},
+			FirstSeen:  true,
+		}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	authInfo, err := a.OTP().VerifyCode(context.Background(), descope.MethodIM, phone, code, nil)
+	require.NoError(t, err)
+	assert.True(t, authInfo.FirstSeen)
+	assert.EqualValues(t, name, authInfo.User.Name)
+	assert.EqualValues(t, phone, authInfo.User.Phone)
+	require.NotNil(t, authInfo.SessionToken)
+	assert.EqualValues(t, jwtTokenValid, authInfo.SessionToken.JWT)
+}
+
+func TestVerifyCodeIMFailures(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	_, err = a.OTP().VerifyCode(context.Background(), descope.MethodIM, "", "123456", nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "loginID")
+	_, err = a.OTP().VerifyCode(context.Background(), descope.MethodIM, "+11111111111", "", nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "code")
+	_, err = a.OTP().VerifyCode(context.Background(), descope.MethodIM, "+11111111111", "12345", nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "code")
+}
+
+func TestUpdatePhoneOTPIM(t *testing.T) {
+	loginID := "id"
+	phone := "+11111111111"
+	maskedPhone := "+*******111"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/update/phone/im", r.URL.RequestURI())
+		p, jwt := getProjectAndJwt(r)
+		assert.EqualValues(t, "a", p)
+		assert.EqualValues(t, jwtTokenValid, jwt)
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, loginID, body["loginId"])
+		assert.EqualValues(t, phone, body["phone"])
+		assert.EqualValues(t, true, body["addToLoginIDs"])
+		assert.EqualValues(t, true, body["onMergeUseExisting"])
+		resp := MaskedPhoneRes{MaskedPhone: maskedPhone}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	mp, err := a.OTP().UpdateUserPhone(context.Background(), descope.MethodIM, loginID, phone, &descope.UpdateOptions{AddToLoginIDs: true, OnMergeUseExisting: true}, r)
+	require.NoError(t, err)
+	require.EqualValues(t, maskedPhone, mp)
+}
+
+func TestUpdatePhoneOTPIMFailures(t *testing.T) {
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	_, err = a.OTP().UpdateUserPhone(context.Background(), descope.MethodIM, "", "+11111111111", nil, r)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "loginID")
+	_, err = a.OTP().UpdateUserPhone(context.Background(), descope.MethodIM, "id", "", nil, r)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "phone")
+}

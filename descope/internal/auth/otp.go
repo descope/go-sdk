@@ -25,7 +25,7 @@ func (auth *otp) SignIn(ctx context.Context, method descope.DeliveryMethod, logi
 			return "", descope.ErrInvalidStepUpJWT
 		}
 	}
-	masked := getMaskedValue(method)
+	masked := getOTPMaskedValue(method)
 	options := &api.HTTPRequest{ResBodyObj: masked}
 	_, err = auth.client.DoPostRequest(ctx, composeSignInURL(method), newSignInRequestBody(loginID, loginOptions), options, pswd)
 	return masked.GetMasked(), err
@@ -35,12 +35,24 @@ func (auth *otp) SignUp(ctx context.Context, method descope.DeliveryMethod, logi
 	if user == nil {
 		user = &descope.User{}
 	}
-	if err := auth.verifyDeliveryMethod(method, loginID, user); err != nil {
+	// IM validates and sends the phone like SMS
+	bodyMethod := method
+	if method == descope.MethodIM {
+		bodyMethod = descope.MethodSMS
+	}
+	if err := auth.verifyDeliveryMethod(bodyMethod, loginID, user); err != nil {
 		return "", err
 	}
-	masked := getMaskedValue(method)
+	body := newAuthenticationSignUpRequestBody(bodyMethod, loginID, user, signUpOptions)
+	if method == descope.MethodIM {
+		// IM user object has no phone
+		u := *user
+		u.Phone = ""
+		body.User = &u
+	}
+	masked := getOTPMaskedValue(method)
 	options := &api.HTTPRequest{ResBodyObj: masked}
-	_, err := auth.client.DoPostRequest(ctx, composeSignUpURL(method), newAuthenticationSignUpRequestBody(method, loginID, user, signUpOptions), options, "")
+	_, err := auth.client.DoPostRequest(ctx, composeSignUpURL(method), body, options, "")
 	return masked.GetMasked(), err
 }
 
@@ -53,7 +65,7 @@ func (auth *otp) SignUpOrIn(ctx context.Context, method descope.DeliveryMethod, 
 		signUpOptions = &descope.SignUpOptions{}
 	}
 
-	masked := getMaskedValue(method)
+	masked := getOTPMaskedValue(method)
 	options := &api.HTTPRequest{ResBodyObj: masked}
 	_, err := auth.client.DoPostRequest(ctx, composeSignUpOrInURL(method), newSignInRequestBody(loginID, &descope.LoginOptions{
 		CustomClaims:    signUpOptions.CustomClaims,
@@ -80,6 +92,10 @@ func (auth *otp) VerifyCode(ctx context.Context, method descope.DeliveryMethod, 
 		if method == "" {
 			return nil, utils.NewInvalidArgumentError("method")
 		}
+	}
+	// Scoped to IM to keep existing methods unchanged
+	if method == descope.MethodIM && len(code) < 6 {
+		return nil, utils.NewInvalidArgumentError("code")
 	}
 	httpResponse, err := auth.client.DoPostRequest(ctx, composeVerifyCodeURL(method), newAuthenticationVerifyRequestBody(loginID, code), nil, "")
 	if err != nil {
@@ -121,7 +137,7 @@ func (auth *otp) UpdateUserPhone(ctx context.Context, method descope.DeliveryMet
 	if !phoneRegex.MatchString(phone) {
 		return "", utils.NewInvalidArgumentError("phone")
 	}
-	if method != descope.MethodSMS && method != descope.MethodVoice && method != descope.MethodWhatsApp {
+	if method != descope.MethodSMS && method != descope.MethodVoice && method != descope.MethodWhatsApp && method != descope.MethodIM {
 		return "", utils.NewInvalidArgumentError("method")
 	}
 	pswd, err := auth.getValidRefreshToken(r)
@@ -135,4 +151,11 @@ func (auth *otp) UpdateUserPhone(ctx context.Context, method descope.DeliveryMet
 	options := &api.HTTPRequest{ResBodyObj: masked}
 	_, err = auth.client.DoPostRequest(ctx, composeUpdateUserPhoneOTP(method), newOTPUpdatePhoneRequestBody(loginID, phone, updateOptions), options, pswd)
 	return masked.GetMasked(), err
+}
+
+func getOTPMaskedValue(method descope.DeliveryMethod) Masked {
+	if method == descope.MethodIM {
+		return &MaskedPhoneRes{}
+	}
+	return getMaskedValue(method)
 }

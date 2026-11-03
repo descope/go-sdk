@@ -16,6 +16,10 @@ type magicLink struct {
 func (auth *magicLink) SignIn(ctx context.Context, method descope.DeliveryMethod, loginID, URI string, r *http.Request, loginOptions *descope.LoginOptions) (string, error) {
 	var pswd string
 	var err error
+	// No magic link IM routes
+	if method == descope.MethodIM {
+		return "", utils.NewInvalidArgumentError("method")
+	}
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
@@ -32,6 +36,9 @@ func (auth *magicLink) SignIn(ctx context.Context, method descope.DeliveryMethod
 }
 
 func (auth *magicLink) SignUp(ctx context.Context, method descope.DeliveryMethod, loginID, URI string, user *descope.User, signUpOptions *descope.SignUpOptions) (string, error) {
+	if method == descope.MethodIM {
+		return "", utils.NewInvalidArgumentError("method")
+	}
 	if user == nil {
 		user = &descope.User{}
 	}
@@ -45,6 +52,9 @@ func (auth *magicLink) SignUp(ctx context.Context, method descope.DeliveryMethod
 }
 
 func (auth *magicLink) SignUpOrIn(ctx context.Context, method descope.DeliveryMethod, loginID, URI string, signUpOptions *descope.SignUpOptions) (string, error) {
+	if method == descope.MethodIM {
+		return "", utils.NewInvalidArgumentError("method")
+	}
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
