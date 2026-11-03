@@ -2,6 +2,9 @@ package mgmt
 
 import (
 	"context"
+	"encoding/json"
+	"strconv"
+	"strings"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
@@ -355,6 +358,112 @@ func (s *outboundApplication) DeleteTokenByID(ctx context.Context, id string) er
 		return err
 	}
 	return nil
+}
+
+func (s *outboundApplication) CreateSCIMConfiguration(ctx context.Context, appID string, configuration map[string]any) (*descope.OutboundSCIMConfiguration, error) {
+	if appID == "" {
+		return nil, utils.NewInvalidArgumentError("appID")
+	}
+	if configuration == nil {
+		return nil, utils.NewInvalidArgumentError("configuration")
+	}
+	req := map[string]any{"appId": appID, "configuration": configuration}
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementOutboundSCIMCreate(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalOutboundSCIMConfigurationResponse(httpRes)
+}
+
+func (s *outboundApplication) UpdateSCIMConfiguration(ctx context.Context, request *descope.UpdateOutboundSCIMConfigurationRequest) (*descope.OutboundSCIMConfiguration, error) {
+	if request == nil {
+		return nil, utils.NewInvalidArgumentError("request")
+	}
+	if request.AppID == "" {
+		return nil, utils.NewInvalidArgumentError("request.AppID")
+	}
+	req := map[string]any{"appId": request.AppID}
+	if request.Configuration != nil {
+		req["configuration"] = request.Configuration
+	}
+	if request.Version != nil {
+		req["version"] = strconv.FormatInt(*request.Version, 10)
+	}
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementOutboundSCIMUpdate(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalOutboundSCIMConfigurationResponse(httpRes)
+}
+
+func (s *outboundApplication) DeleteSCIMConfiguration(ctx context.Context, appID string) error {
+	if appID == "" {
+		return utils.NewInvalidArgumentError("appID")
+	}
+	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementOutboundSCIMDelete(), map[string]any{"appId": appID}, nil, "")
+	return err
+}
+
+func (s *outboundApplication) LoadSCIMConfiguration(ctx context.Context, appID string) (*descope.OutboundSCIMConfiguration, error) {
+	if appID == "" {
+		return nil, utils.NewInvalidArgumentError("appID")
+	}
+	httpRes, err := s.client.DoGetRequest(ctx, api.Routes.ManagementOutboundSCIMLoad(appID), nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalOutboundSCIMConfigurationResponse(httpRes)
+}
+
+func (s *outboundApplication) SetSCIMConfigurationEnabled(ctx context.Context, appID string, enabled bool) (*descope.OutboundSCIMConfiguration, error) {
+	if appID == "" {
+		return nil, utils.NewInvalidArgumentError("appID")
+	}
+	req := map[string]any{"appId": appID, "enabled": enabled}
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementOutboundSCIMSetEnabled(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalOutboundSCIMConfigurationResponse(httpRes)
+}
+
+// Version is int64, sent as a quoted string or a number.
+type apiOutboundSCIMConfiguration struct {
+	AppID              string          `json:"appId"`
+	Configuration      map[string]any  `json:"configuration"`
+	Enabled            bool            `json:"enabled"`
+	LastExportTime     int32           `json:"lastExportTime"`
+	LastProcessingTime int32           `json:"lastProcessingTime"`
+	Failures           int32           `json:"failures"`
+	Version            json.RawMessage `json:"version"`
+}
+
+func unmarshalOutboundSCIMConfigurationResponse(httpRes *api.HTTPResponse) (*descope.OutboundSCIMConfiguration, error) {
+	res := &struct {
+		Configuration *apiOutboundSCIMConfiguration `json:"configuration"`
+	}{}
+	if err := utils.Unmarshal([]byte(httpRes.BodyStr), res); err != nil {
+		return nil, err
+	}
+	if res.Configuration == nil {
+		return nil, nil
+	}
+	cfg := &descope.OutboundSCIMConfiguration{
+		AppID:              res.Configuration.AppID,
+		Configuration:      res.Configuration.Configuration,
+		Enabled:            res.Configuration.Enabled,
+		LastExportTime:     res.Configuration.LastExportTime,
+		LastProcessingTime: res.Configuration.LastProcessingTime,
+		Failures:           res.Configuration.Failures,
+	}
+	if version := strings.Trim(string(res.Configuration.Version), `"`); version != "" && version != "null" {
+		v, err := strconv.ParseInt(version, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		cfg.Version = v
+	}
+	return cfg, nil
 }
 
 func (s *outboundApplication) unmarshalAppResponse(httpRes *api.HTTPResponse) (*descope.OutboundApp, error) {

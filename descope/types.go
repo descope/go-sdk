@@ -1876,6 +1876,24 @@ type BatchUploadOutboundAppTokensResponse struct {
 	Failures []*OutboundAppTokenUploadFailure `json:"failures"`
 }
 
+// OutboundSCIMConfiguration is an outbound SCIM connector configuration merged with its webhook status.
+type OutboundSCIMConfiguration struct {
+	AppID              string         `json:"appId"`
+	Configuration      map[string]any `json:"configuration,omitempty"`
+	Enabled            bool           `json:"enabled"`
+	LastExportTime     int32          `json:"lastExportTime,omitempty"`
+	LastProcessingTime int32          `json:"lastProcessingTime,omitempty"`
+	Failures           int32          `json:"failures,omitempty"`
+	Version            int64          `json:"version,omitempty"`
+}
+
+// UpdateOutboundSCIMConfigurationRequest updates an outbound SCIM configuration. Unset optional fields are not sent.
+type UpdateOutboundSCIMConfigurationRequest struct {
+	AppID         string         `json:"appId"`
+	Configuration map[string]any `json:"configuration,omitempty"`
+	Version       *int64         `json:"version,omitempty"`
+}
+
 type ThirdPartyApplicationScope struct {
 	Name        string   `json:"name"`
 	Description string   `json:"description"`
