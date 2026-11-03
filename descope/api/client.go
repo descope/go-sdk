@@ -169,6 +169,7 @@ var (
 			userRemoveTrustedDevices:                   "mgmt/user/trusteddevices/remove",
 			userGetProviderToken:                       "mgmt/user/provider/token",
 			userLogoutAllDevices:                       "mgmt/user/logout",
+			userLogoutAllDevicesBatch:                  "mgmt/user/logout/batch",
 			userGenerateOTPForTest:                     "mgmt/tests/generate/otp",
 			userGenerateMagicLinkForTest:               "mgmt/tests/generate/magiclink",
 			userGenerateEnchantedLinkForTest:           "mgmt/tests/generate/enchantedlink",
@@ -518,6 +519,7 @@ type mgmtEndpoints struct {
 	userRemoveRecoveryCodes   string
 	userGetProviderToken      string
 	userLogoutAllDevices      string
+	userLogoutAllDevicesBatch string
 	userAddSsoApps            string
 	userSetSsoApps            string
 	userRemoveSsoApps         string
@@ -1296,6 +1298,10 @@ func (e *endpoints) ManagementUserGetProviderToken() string {
 
 func (e *endpoints) ManagementUserLogoutAllDevices() string {
 	return path.Join(e.version, e.mgmt.userLogoutAllDevices)
+}
+
+func (e *endpoints) ManagementUserLogoutAllDevicesBatch() string {
+	return path.Join(e.version, e.mgmt.userLogoutAllDevicesBatch)
 }
 
 func (e *endpoints) ManagementUserGenerateOTPForTest() string {

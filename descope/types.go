@@ -765,6 +765,10 @@ type UsersFailedResponse struct {
 	User    *UserResponse `json:"user,omitempty"`
 }
 
+type UsersLogoutResponse struct {
+	NotFoundIdentifiers []string `json:"notFoundIdentifiers,omitempty"`
+}
+
 type UsersBatchResponse struct {
 	CreatedUsers     []*UserResponse        `json:"createdUsers,omitempty"`
 	PatchedUsers     []*UserResponse        `json:"patchedUsers,omitempty"`

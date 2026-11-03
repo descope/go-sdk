@@ -1135,6 +1135,69 @@ func TestUserLogoutUserByLoginIdErr(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestUserLogoutUsersSuccess(t *testing.T) {
+	response := map[string]any{"notFoundIdentifiers": []string{"def"}}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, http.MethodPost, r.Method)
+		require.Equal(t, "/v1/mgmt/user/logout/batch", r.URL.Path)
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, []any{"abc", "def"}, req["identifiers"])
+		assert.EqualValues(t, []any{"web"}, req["sessionTypes"])
+	}, response))
+	res, err := m.User().LogoutUsers(context.Background(), []string{"abc", "def"}, "web")
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	assert.EqualValues(t, []string{"def"}, res.NotFoundIdentifiers)
+}
+
+func TestUserLogoutUsersNoSessionTypes(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, []any{"abc"}, req["identifiers"])
+		_, ok := req["sessionTypes"]
+		assert.False(t, ok)
+	}, map[string]any{}))
+	res, err := m.User().LogoutUsers(context.Background(), []string{"abc"})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	assert.Empty(t, res.NotFoundIdentifiers)
+}
+
+func TestUserLogoutUsersEmptyIdentifiersErr(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {
+		assert.Fail(t, "shouldn't get here")
+	}, nil))
+	res, err := m.User().LogoutUsers(context.Background(), nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Nil(t, res)
+}
+
+func TestUserLogoutUsersEmptyIdentifierErr(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {
+		assert.Fail(t, "shouldn't get here")
+	}, nil))
+	res, err := m.User().LogoutUsers(context.Background(), []string{"abc", ""})
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Nil(t, res)
+}
+
+func TestUserLogoutUsersError(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := m.User().LogoutUsers(context.Background(), []string{"abc"})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserLogoutUsersInvalidResponse(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(nil, "invalid"))
+	res, err := m.User().LogoutUsers(context.Background(), []string{"abc"})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
 func TestSearchAllUsersSuccess(t *testing.T) {
 	response := map[string]any{
 		"users": []map[string]any{{

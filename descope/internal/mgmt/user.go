@@ -916,6 +916,30 @@ func (u *user) LogoutUserByUserID(ctx context.Context, userID string, sessionTyp
 	return u.logoutUser(ctx, userID, "", sessionTypes...)
 }
 
+func (u *user) LogoutUsers(ctx context.Context, identifiers []string, sessionTypes ...string) (*descope.UsersLogoutResponse, error) {
+	if len(identifiers) == 0 {
+		return nil, utils.NewInvalidArgumentError("identifiers")
+	}
+	for _, identifier := range identifiers {
+		if identifier == "" {
+			return nil, utils.NewInvalidArgumentError("identifiers")
+		}
+	}
+	req := map[string]any{"identifiers": identifiers}
+	if len(sessionTypes) > 0 {
+		req["sessionTypes"] = sessionTypes
+	}
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserLogoutAllDevicesBatch(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	resBody := &descope.UsersLogoutResponse{}
+	if err := utils.Unmarshal([]byte(res.BodyStr), resBody); err != nil {
+		return nil, err
+	}
+	return resBody, nil
+}
+
 func (u *user) logoutUser(ctx context.Context, userID string, loginID string, sessionTypes ...string) error {
 	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserLogoutAllDevices(), map[string]any{"userId": userID, "loginId": loginID, "sessionTypes": sessionTypes}, nil, "")
 	return err

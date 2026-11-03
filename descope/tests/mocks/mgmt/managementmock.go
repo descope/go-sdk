@@ -687,6 +687,10 @@ type MockUser struct {
 	LogoutAssert func(id string, sessionTypes ...string)
 	LogoutError  error
 
+	LogoutUsersAssert   func(identifiers []string, sessionTypes ...string)
+	LogoutUsersResponse *descope.UsersLogoutResponse
+	LogoutUsersError    error
+
 	HistoryAssert   func(userIDs []string)
 	HistoryResponse []*descope.UserHistoryResponse
 	HistoryError    error
@@ -866,6 +870,13 @@ func (m *MockUser) LogoutUserByUserID(_ context.Context, userID string, sessionT
 		m.LogoutAssert(userID, sessionTypes...)
 	}
 	return m.LogoutError
+}
+
+func (m *MockUser) LogoutUsers(_ context.Context, identifiers []string, sessionTypes ...string) (*descope.UsersLogoutResponse, error) {
+	if m.LogoutUsersAssert != nil {
+		m.LogoutUsersAssert(identifiers, sessionTypes...)
+	}
+	return m.LogoutUsersResponse, m.LogoutUsersError
 }
 
 func (m *MockUser) SearchAll(_ context.Context, options *descope.UserSearchOptions) ([]*descope.UserResponse, int, error) {

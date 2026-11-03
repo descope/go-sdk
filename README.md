@@ -1129,6 +1129,16 @@ err := descopeClient.Management.User().LogoutUser(context.Background(), "<login 
 // Which will cause only session that were marked with this specific type to be revoked
 err := descopeClient.Management.User().LogoutUserByUserID(context.Background(), "<user id>")
 
+// Logout multiple users from all their devices, by login ID or user ID (up to 100)
+// Session types (optional string array) limit the logout to sessions of these types
+// The response lists the identifiers that matched no user
+logoutRes, err := descopeClient.Management.User().LogoutUsers(context.Background(), []string{"<login id 1>", "<user id 2>"}, "web")
+if err == nil {
+    for _, identifier := range logoutRes.NotFoundIdentifiers {
+        // Do something
+    }
+}
+
 // Get users' authentication history
 loginHistoryRes, err := descopeClient.Management.User().History(context.Background(), []string{"<user id 1>", "<user id 2>"})
 if err == nil {
