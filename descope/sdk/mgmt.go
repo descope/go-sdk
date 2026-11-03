@@ -49,6 +49,32 @@ type Tenant interface {
 	// IMPORTANT: This action is irreversible. Use carefully.
 	Delete(ctx context.Context, id string, cascade bool) error
 
+	// CreateBatch creates multiple tenants in a single request.
+	//
+	// Each tenant's Name is required. At most 100 tenants per call by default.
+	// A tenant that fails validation fails the whole call; other per-tenant
+	// failures are returned in the response's FailedTenants.
+	CreateBatch(ctx context.Context, tenants []*descope.BatchCreateTenantRequest) (*descope.CreateTenantsBatchResponse, error)
+
+	// UpdateBatch updates multiple tenants in a single request.
+	//
+	// IMPORTANT: Like Update, this is a full overwrite: every field left unset is
+	// cleared, except ApprovedDomains when nil and an empty AuthType, which keep
+	// their current values.
+	//
+	// Each tenant's ID and Name are required. At most 100 tenants per call by default.
+	// A tenant that fails validation fails the whole call; other per-tenant
+	// failures are returned in the response's FailedTenants.
+	UpdateBatch(ctx context.Context, tenants []*descope.BatchUpdateTenantRequest) (*descope.UpdateTenantsBatchResponse, error)
+
+	// DeleteBatch deletes multiple tenants in a single request.
+	// Pass true on `cascade` in case you want to delete all users/keys associated only with these tenants.
+	// At most 100 tenants per call by default. A tenant that fails validation fails
+	// the whole call; other per-tenant failures are returned in the response's FailedTenants.
+	//
+	// IMPORTANT: This action is irreversible. Use carefully.
+	DeleteBatch(ctx context.Context, ids []string, cascade bool) (*descope.DeleteTenantsBatchResponse, error)
+
 	// Load project tenant by id
 	Load(ctx context.Context, id string) (*descope.Tenant, error)
 

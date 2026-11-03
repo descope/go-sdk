@@ -2,6 +2,7 @@ package mgmt
 
 import (
 	"context"
+	"strconv"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
@@ -82,6 +83,116 @@ func (t *tenant) Delete(ctx context.Context, id string, cascade bool) error {
 	req := map[string]any{"id": id, "cascade": cascade}
 	_, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantDelete(), req, nil, "")
 	return err
+}
+
+func (t *tenant) CreateBatch(ctx context.Context, tenants []*descope.BatchCreateTenantRequest) (*descope.CreateTenantsBatchResponse, error) {
+	if len(tenants) == 0 {
+		return nil, utils.NewInvalidArgumentError("tenants")
+	}
+	for i, tr := range tenants {
+		prefix := "tenants[" + strconv.Itoa(i) + "]"
+		if tr == nil {
+			return nil, utils.NewInvalidArgumentError(prefix)
+		}
+		if tr.Name == "" {
+			return nil, utils.NewInvalidArgumentError(prefix + ".name")
+		}
+		if err := validateBatchTenantLists(prefix, map[string][]string{
+			"selfProvisioningDomains":        tr.SelfProvisioningDomains,
+			"enforceSSOExclusions":           tr.EnforceSSOExclusions,
+			"federatedAppIds":                tr.FederatedAppIDs,
+			"approvedDomains":                tr.ApprovedDomains,
+			"enforceSSOExclusionPermissions": tr.EnforceSSOExclusionPermissions,
+		}); err != nil {
+			return nil, err
+		}
+	}
+	req := map[string]any{"tenants": tenants}
+	httpRes, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantCreateBatch(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	res := &descope.CreateTenantsBatchResponse{}
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), res); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (t *tenant) UpdateBatch(ctx context.Context, tenants []*descope.BatchUpdateTenantRequest) (*descope.UpdateTenantsBatchResponse, error) {
+	if len(tenants) == 0 {
+		return nil, utils.NewInvalidArgumentError("tenants")
+	}
+	for i, tr := range tenants {
+		prefix := "tenants[" + strconv.Itoa(i) + "]"
+		if tr == nil {
+			return nil, utils.NewInvalidArgumentError(prefix)
+		}
+		if tr.ID == "" {
+			return nil, utils.NewInvalidArgumentError(prefix + ".id")
+		}
+		if tr.Name == "" {
+			return nil, utils.NewInvalidArgumentError(prefix + ".name")
+		}
+		if err := validateBatchTenantLists(prefix, map[string][]string{
+			"selfProvisioningDomains":        tr.SelfProvisioningDomains,
+			"enforceSSOExclusions":           tr.EnforceSSOExclusions,
+			"federatedAppIds":                tr.FederatedAppIDs,
+			"approvedDomains":                derefStrings(tr.ApprovedDomains),
+			"enforceSSOExclusionPermissions": tr.EnforceSSOExclusionPermissions,
+		}); err != nil {
+			return nil, err
+		}
+	}
+	req := map[string]any{"tenants": tenants}
+	httpRes, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantUpdateBatch(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	res := &descope.UpdateTenantsBatchResponse{}
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), res); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (t *tenant) DeleteBatch(ctx context.Context, ids []string, cascade bool) (*descope.DeleteTenantsBatchResponse, error) {
+	if len(ids) == 0 {
+		return nil, utils.NewInvalidArgumentError("ids")
+	}
+	for i, id := range ids {
+		if id == "" {
+			return nil, utils.NewInvalidArgumentError("ids[" + strconv.Itoa(i) + "]")
+		}
+	}
+	req := map[string]any{"ids": ids, "cascade": cascade}
+	httpRes, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantDeleteBatch(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	res := &descope.DeleteTenantsBatchResponse{}
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), res); err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func validateBatchTenantLists(prefix string, lists map[string][]string) error {
+	for name, list := range lists {
+		for i, item := range list {
+			if item == "" {
+				return utils.NewInvalidArgumentError(prefix + "." + name + "[" + strconv.Itoa(i) + "]")
+			}
+		}
+	}
+	return nil
+}
+
+func derefStrings(list *[]string) []string {
+	if list == nil {
+		return nil
+	}
+	return *list
 }
 
 func (t *tenant) Load(ctx context.Context, id string) (*descope.Tenant, error) {

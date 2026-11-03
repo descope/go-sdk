@@ -1,6 +1,7 @@
 package descope
 
 import (
+	"encoding/json"
 	"strings"
 	"time"
 
@@ -1016,6 +1017,100 @@ type PatchTenantRequest struct {
 	EnforceSSOExclusions    *[]string        `json:"enforceSSOExclusions,omitempty"`
 	FederatedAppIDs         *[]string        `json:"federatedAppIds,omitempty"`
 	RoleInheritance         *RoleInheritance `json:"roleInheritance,omitempty"`
+}
+
+// BatchCreateTenantRequest is a single tenant in a batch tenant creation.
+// Name is required; the tenant ID is generated when ID is empty.
+type BatchCreateTenantRequest struct {
+	ID                             string          `json:"id,omitempty"`
+	Name                           string          `json:"name"`
+	SelfProvisioningDomains        []string        `json:"selfProvisioningDomains,omitempty"`
+	CustomAttributes               map[string]any  `json:"customAttributes,omitempty"`
+	AuthType                       string          `json:"authType,omitempty"`
+	Disabled                       bool            `json:"disabled,omitempty"`
+	EnforceSSO                     bool            `json:"enforceSSO,omitempty"`
+	EnforceSSOExclusions           []string        `json:"enforceSSOExclusions,omitempty"`
+	FederatedAppIDs                []string        `json:"federatedAppIds,omitempty"`
+	ParentTenantID                 string          `json:"parent,omitempty"`
+	RoleInheritance                RoleInheritance `json:"roleInheritance,omitempty"`
+	ApprovedDomains                []string        `json:"approvedDomains,omitempty"` // vanity hostname, one item for now
+	EnforceSSOExclusionPermissions []string        `json:"enforceSSOExclusionPermissions,omitempty"`
+}
+
+// BatchUpdateTenantRequest is a single tenant in a batch tenant update.
+// ID and Name are required.
+//
+// IMPORTANT: This is a full overwrite, like Update: every field left unset is
+// cleared, except ApprovedDomains (nil keeps it, an empty list clears it) and an
+// empty AuthType, which keep their current values.
+type BatchUpdateTenantRequest struct {
+	ID                             string          `json:"id"`
+	Name                           string          `json:"name"`
+	SelfProvisioningDomains        []string        `json:"selfProvisioningDomains,omitempty"`
+	CustomAttributes               map[string]any  `json:"customAttributes,omitempty"`
+	AuthType                       string          `json:"authType,omitempty"` // Deprecated: use ConfigureSettings
+	Disabled                       bool            `json:"disabled,omitempty"`
+	EnforceSSO                     bool            `json:"enforceSSO,omitempty"`
+	EnforceSSOExclusions           []string        `json:"enforceSSOExclusions,omitempty"`
+	FederatedAppIDs                []string        `json:"federatedAppIds,omitempty"`
+	RoleInheritance                RoleInheritance `json:"roleInheritance,omitempty"`
+	ApprovedDomains                *[]string       `json:"approvedDomains,omitempty"`
+	EnforceSSOExclusionPermissions []string        `json:"enforceSSOExclusionPermissions,omitempty"`
+}
+
+// UnmarshalJSON ignores an approvedDomains value that isn't a list of strings.
+func (r *BatchUpdateTenantRequest) UnmarshalJSON(data []byte) error {
+	type alias BatchUpdateTenantRequest
+	aux := struct {
+		*alias
+		ApprovedDomains json.RawMessage `json:"approvedDomains,omitempty"`
+	}{alias: (*alias)(r)}
+	if err := json.Unmarshal(data, &aux); err != nil {
+		return err
+	}
+	var domains []string
+	if json.Unmarshal(aux.ApprovedDomains, &domains) == nil && domains != nil {
+		r.ApprovedDomains = &domains
+	}
+	return nil
+}
+
+type CreatedTenant struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type CreateTenantBatchFailure struct {
+	Failure string                    `json:"failure,omitempty"`
+	Tenant  *BatchCreateTenantRequest `json:"tenant,omitempty"`
+}
+
+type CreateTenantsBatchResponse struct {
+	CreatedTenants   []*CreatedTenant            `json:"createdTenants,omitempty"`
+	FailedTenants    []*CreateTenantBatchFailure `json:"failedTenants,omitempty"`
+	AdditionalErrors map[string]string           `json:"additionalErrors,omitempty"`
+}
+
+type UpdateTenantBatchFailure struct {
+	Failure string                    `json:"failure,omitempty"`
+	Tenant  *BatchUpdateTenantRequest `json:"tenant,omitempty"`
+}
+
+type UpdateTenantsBatchResponse struct {
+	UpdatedTenantIDs []string                    `json:"updatedTenantIds,omitempty"`
+	FailedTenants    []*UpdateTenantBatchFailure `json:"failedTenants,omitempty"`
+	AdditionalErrors map[string]string           `json:"additionalErrors,omitempty"`
+}
+
+type DeleteTenantBatchFailure struct {
+	Failure string `json:"failure,omitempty"`
+	ID      string `json:"id,omitempty"`
+}
+
+type DeleteTenantsBatchResponse struct {
+	DeletedTenantIDs []string                    `json:"deletedTenantIds,omitempty"`
+	FailedTenants    []*DeleteTenantBatchFailure `json:"failedTenants,omitempty"`
+	AdditionalErrors map[string]string           `json:"additionalErrors,omitempty"`
 }
 
 type TenantSearchOptions struct {
