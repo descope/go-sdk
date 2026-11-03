@@ -2,6 +2,7 @@ package mgmt
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
@@ -130,7 +131,8 @@ func (r *flow) SetTenantTheme(ctx context.Context, tenantID string, theme *desco
 		return nil, utils.NewInvalidArgumentError("theme.Styles")
 	}
 	for _, flavor := range theme.Styles {
-		if _, ok := flavor.(map[string]any); !ok {
+		v := reflect.Indirect(reflect.ValueOf(flavor))
+		if !v.IsValid() || (v.Kind() != reflect.Map && v.Kind() != reflect.Struct) {
 			return nil, utils.NewInvalidArgumentError("theme.Styles")
 		}
 	}

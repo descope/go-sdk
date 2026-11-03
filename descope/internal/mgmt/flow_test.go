@@ -342,6 +342,17 @@ func TestSetTenantThemeSuccess(t *testing.T) {
 	assert.Equal(t, "1.2.3", res.ComponentsVersion)
 }
 
+func TestSetTenantThemeTypedFlavor(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, map[string]any{"styles": map[string]any{"light": map[string]any{"color": "red"}}}, req)
+	}, map[string]any{"styles": map[string]any{"light": map[string]any{"color": "red"}}}))
+	res, err := mgmt.Flow().SetTenantTheme(context.Background(), "t1", &descope.TenantTheme{Styles: map[string]any{"light": map[string]string{"color": "red"}}})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+}
+
 func TestSetTenantThemeMissingArgument(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
 	styles := map[string]any{"light": map[string]any{}}
