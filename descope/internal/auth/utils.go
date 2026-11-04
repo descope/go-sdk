@@ -354,6 +354,12 @@ func newOTPSignUpRequestBody(method descope.DeliveryMethod, loginID string, user
 		}
 		b.User = u
 	}
+	// like SignUp, loginID is the default address
+	if method == descope.MethodEmail && b.Email == "" {
+		b.Email = loginID
+	} else if method != descope.MethodEmail && b.Phone == "" {
+		b.Phone = loginID
+	}
 	b.LoginOptions = &otpSignUpLoginOptionsBody{
 		CustomClaims:    options.CustomClaims,
 		TemplateOptions: options.TemplateOptions,

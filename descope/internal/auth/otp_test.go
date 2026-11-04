@@ -997,13 +997,22 @@ func TestSignUpWithOptionsFailures(t *testing.T) {
 	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, map[string]any{"loginId": "id1", "loginOptions": map[string]any{}}, body)
+		assert.EqualValues(t, map[string]any{"loginId": "id1", "phone": "id1", "loginOptions": map[string]any{}}, body)
 	}))
 	require.NoError(t, err)
 	_, err = a.OTP().SignUpWithOptions(context.Background(), descope.MethodEmbedded, "id1", nil, nil)
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 	assert.Contains(t, err.Error(), "method")
 	_, err = a.OTP().SignUpWithOptions(context.Background(), descope.MethodSMS, "id1", nil, nil)
+	require.NoError(t, err)
+
+	a, err = newTestAuth(nil, DoOk(func(r *http.Request) {
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, map[string]any{"loginId": "test@email.com", "email": "test@email.com", "loginOptions": map[string]any{}}, body)
+	}))
+	require.NoError(t, err)
+	_, err = a.OTP().SignUpWithOptions(context.Background(), descope.MethodEmail, "test@email.com", nil, nil)
 	require.NoError(t, err)
 
 	a, err = newTestAuth(nil, DoBadRequest(nil))

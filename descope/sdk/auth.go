@@ -146,7 +146,7 @@ type OTP interface {
 
 	// SignUpWithOptions - Use to create a new user and send a code
 	// with the selected delivery method (MethodEmail, MethodSMS, MethodVoice or MethodIM).
-	// user.Email is the address for MethodEmail and user.Phone the number for the other methods.
+	// user.Email is the address for MethodEmail and user.Phone the number for the other methods; when unset, loginID is used.
 	// User and options are optional.
 	// returns the masked address where the code was sent and the remaining verification attempts, or an error upon failure.
 	SignUpWithOptions(ctx context.Context, method descope.DeliveryMethod, loginID string, user *descope.OTPSignUpUser, options *descope.OTPSignUpOptions) (*descope.OTPResponse, error)
