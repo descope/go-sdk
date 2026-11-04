@@ -137,6 +137,38 @@ type OTP interface {
 	// Request is needed to obtain JWT and send it to Descope, for verification
 	// returns the masked phone where the code was sent or an error upon failure.
 	UpdateUserPhone(ctx context.Context, method descope.DeliveryMethod, loginID, phone string, updateOptions *descope.UpdateOptions, request *http.Request) (maskedAddress string, err error)
+
+	// SignInWithOptions - Use to login a user based on the given loginID and send a code
+	// with the selected delivery method (MethodEmail, MethodSMS, MethodVoice or MethodIM).
+	// Options are optional; if options.LoginOptions sets Stepup or MFA, the request must hold the user's refresh token.
+	// returns the masked address where the code was sent and the remaining verification attempts, or an error upon failure.
+	SignInWithOptions(ctx context.Context, method descope.DeliveryMethod, loginID string, r *http.Request, options *descope.OTPSignInOptions) (*descope.OTPResponse, error)
+
+	// SignUpWithOptions - Use to create a new user and send a code
+	// with the selected delivery method (MethodEmail, MethodSMS, MethodVoice or MethodIM).
+	// user.Email is the address for MethodEmail and user.Phone the number for the other methods.
+	// User and options are optional.
+	// returns the masked address where the code was sent and the remaining verification attempts, or an error upon failure.
+	SignUpWithOptions(ctx context.Context, method descope.DeliveryMethod, loginID string, user *descope.OTPSignUpUser, options *descope.OTPSignUpOptions) (*descope.OTPResponse, error)
+
+	// SignUpOrInWithOptions - Use to login using loginID, if user does not exist, a new user will be created,
+	// and send a code with the selected delivery method (MethodEmail, MethodSMS, MethodVoice or MethodIM).
+	// Options are optional; if options.LoginOptions sets Stepup or MFA, the request must hold the user's refresh token.
+	// returns the masked address where the code was sent and the remaining verification attempts, or an error upon failure.
+	SignUpOrInWithOptions(ctx context.Context, method descope.DeliveryMethod, loginID string, r *http.Request, options *descope.OTPSignInOptions) (*descope.OTPResponse, error)
+
+	// UpdateUserEmailWithOptions - Use to update email and verify via OTP, like UpdateUserEmail.
+	// updateOptions.ProviderID and updateOptions.Locale are limited to 254 characters.
+	// Request is needed to obtain JWT and send it to Descope, for verification
+	// returns the masked email where the code was sent and the remaining verification attempts, or an error upon failure.
+	UpdateUserEmailWithOptions(ctx context.Context, loginID, email string, updateOptions *descope.UpdateOptions, request *http.Request) (*descope.OTPResponse, error)
+
+	// UpdateUserPhoneWithOptions - Use to update phone and verify via OTP, like UpdateUserPhone.
+	// allowed methods are MethodSMS, MethodVoice and MethodIM.
+	// updateOptions.ProviderID and updateOptions.Locale are limited to 254 characters.
+	// Request is needed to obtain JWT and send it to Descope, for verification
+	// returns the masked phone where the code was sent and the remaining verification attempts, or an error upon failure.
+	UpdateUserPhoneWithOptions(ctx context.Context, method descope.DeliveryMethod, loginID, phone string, updateOptions *descope.UpdateOptions, request *http.Request) (*descope.OTPResponse, error)
 }
 
 type TOTP interface {

@@ -85,7 +85,31 @@ func (auth *otp) VerifyCode(ctx context.Context, method descope.DeliveryMethod, 
 	if err != nil {
 		return nil, err
 	}
-	return auth.generateAuthenticationInfo(httpResponse, w)
+	info, err := auth.generateAuthenticationInfo(httpResponse, w)
+	if err != nil {
+		return nil, err
+	}
+	jwtResponse, _ := auth.extractJWTResponse(httpResponse.BodyStr) // already parsed successfully above
+	setOTPVerifyFields(info, jwtResponse)
+	return info, nil
+}
+
+func setOTPVerifyFields(info *descope.AuthenticationInfo, jRes *descope.JWTResponse) {
+	if jRes == nil {
+		return
+	}
+	info.SessionExpiration = jRes.SessionExpiration
+	info.ExternalToken = jRes.ExternalToken
+	info.Claims = jRes.Claims
+	info.TrustedDeviceJWT = jRes.TrustedDeviceJWT
+	info.NextRefreshSeconds = jRes.NextRefreshSeconds
+	info.CookieName = jRes.CookieName
+	info.SessionCookieName = jRes.SessionCookieName
+	info.SessionCookieDomain = jRes.SessionCookieDomain
+	info.UnsavedSSO = jRes.UnsavedSSO
+	info.KnownDeviceJWT = jRes.KnownDeviceJWT
+	info.SSOAuthenticationOnly = jRes.SSOAuthenticationOnly
+	info.UserCreationDeferred = jRes.UserCreationDeferred
 }
 
 func (auth *otp) UpdateUserEmail(ctx context.Context, loginID, email string, updateOptions *descope.UpdateOptions, r *http.Request) (string, error) {
@@ -135,4 +159,93 @@ func (auth *otp) UpdateUserPhone(ctx context.Context, method descope.DeliveryMet
 	options := &api.HTTPRequest{ResBodyObj: masked}
 	_, err = auth.client.DoPostRequest(ctx, composeUpdateUserPhoneOTP(method), newOTPUpdatePhoneRequestBody(loginID, phone, updateOptions), options, pswd)
 	return masked.GetMasked(), err
+}
+
+func isOTPPhoneMethod(method descope.DeliveryMethod) bool {
+	return method == descope.MethodSMS || method == descope.MethodVoice || method == descope.MethodIM
+}
+
+func (auth *otp) SignInWithOptions(ctx context.Context, method descope.DeliveryMethod, loginID string, r *http.Request, options *descope.OTPSignInOptions) (*descope.OTPResponse, error) {
+	return auth.sendSignInOTP(ctx, composeSignInURL(method), method, loginID, r, options)
+}
+
+func (auth *otp) SignUpOrInWithOptions(ctx context.Context, method descope.DeliveryMethod, loginID string, r *http.Request, options *descope.OTPSignInOptions) (*descope.OTPResponse, error) {
+	return auth.sendSignInOTP(ctx, composeSignUpOrInURL(method), method, loginID, r, options)
+}
+
+func (auth *otp) sendSignInOTP(ctx context.Context, url string, method descope.DeliveryMethod, loginID string, r *http.Request, options *descope.OTPSignInOptions) (*descope.OTPResponse, error) {
+	if loginID == "" {
+		return nil, utils.NewInvalidArgumentError("loginID")
+	}
+	if method != descope.MethodEmail && !isOTPPhoneMethod(method) {
+		return nil, utils.NewInvalidArgumentError("method")
+	}
+	if options == nil {
+		options = &descope.OTPSignInOptions{}
+	}
+	var pswd string
+	if options.LoginOptions.IsJWTRequired() {
+		var err error
+		pswd, err = auth.getValidRefreshToken(r)
+		if err != nil {
+			return nil, descope.ErrInvalidStepUpJWT
+		}
+	}
+	res := &descope.OTPResponse{}
+	_, err := auth.client.DoPostRequest(ctx, url, newOTPSignInRequestBody(loginID, options), &api.HTTPRequest{ResBodyObj: res}, pswd)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (auth *otp) SignUpWithOptions(ctx context.Context, method descope.DeliveryMethod, loginID string, user *descope.OTPSignUpUser, options *descope.OTPSignUpOptions) (*descope.OTPResponse, error) {
+	if method != descope.MethodEmail && !isOTPPhoneMethod(method) {
+		return nil, utils.NewInvalidArgumentError("method")
+	}
+	if options == nil {
+		options = &descope.OTPSignUpOptions{}
+	}
+	res := &descope.OTPResponse{}
+	_, err := auth.client.DoPostRequest(ctx, composeSignUpURL(method), newOTPSignUpRequestBody(method, loginID, user, options), &api.HTTPRequest{ResBodyObj: res}, "")
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+func (auth *otp) UpdateUserEmailWithOptions(ctx context.Context, loginID, email string, updateOptions *descope.UpdateOptions, r *http.Request) (*descope.OTPResponse, error) {
+	if loginID == "" {
+		return nil, utils.NewInvalidArgumentError("loginID")
+	}
+	if email == "" {
+		return nil, utils.NewInvalidArgumentError("email")
+	}
+	return auth.sendUpdateOTP(ctx, composeUpdateUserEmailOTP(), newOTPUpdateEmailRequestBody(loginID, email, updateOptions), r)
+}
+
+func (auth *otp) UpdateUserPhoneWithOptions(ctx context.Context, method descope.DeliveryMethod, loginID, phone string, updateOptions *descope.UpdateOptions, r *http.Request) (*descope.OTPResponse, error) {
+	if loginID == "" {
+		return nil, utils.NewInvalidArgumentError("loginID")
+	}
+	if phone == "" {
+		return nil, utils.NewInvalidArgumentError("phone")
+	}
+	if !isOTPPhoneMethod(method) {
+		return nil, utils.NewInvalidArgumentError("method")
+	}
+	return auth.sendUpdateOTP(ctx, composeUpdateUserPhoneOTP(method), newOTPUpdatePhoneRequestBody(loginID, phone, updateOptions), r)
+}
+
+func (auth *otp) sendUpdateOTP(ctx context.Context, url string, body any, r *http.Request) (*descope.OTPResponse, error) {
+	pswd, err := auth.getValidRefreshToken(r)
+	if err != nil {
+		return nil, err
+	}
+	res := &descope.OTPResponse{}
+	_, err = auth.client.DoPostRequest(ctx, url, body, &api.HTTPRequest{ResBodyObj: res}, pswd)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
 }

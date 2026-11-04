@@ -296,3 +296,70 @@ var (
 	phoneRegex = regexp.MustCompile(`^(?:(?:\(?(?:00|\+)([1-4]\d\d|[1-9]\d?)\)?)?[\-\.\ \\\/]?)?((?:\(?\d{1,}\)?[\-\.\ \\\/]?){0,})(?:[\-\.\ \\\/]?(?:#|ext\.?|extension|x)[\-\.\ \\\/]?(\d+))?$`)
 	emailRegex = regexp.MustCompile("^(((([a-zA-Z]|\\d|[!#\\$%&'\\*\\+\\-\\/=\\?\\^_`{\\|}~]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])+(\\.([a-zA-Z]|\\d|[!#\\$%&'\\*\\+\\-\\/=\\?\\^_`{\\|}~]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])+)*)|((\\x22)((((\\x20|\\x09)*(\\x0d\\x0a))?(\\x20|\\x09)+)?(([\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x7f]|\\x21|[\\x23-\\x5b]|[\\x5d-\\x7e]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])|(\\([\\x01-\\x09\\x0b\\x0c\\x0d-\\x7f]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}]))))*(((\\x20|\\x09)*(\\x0d\\x0a))?(\\x20|\\x09)+)?(\\x22)))@((([a-zA-Z]|\\d|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])|(([a-zA-Z]|\\d|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])([a-zA-Z]|\\d|-|\\.|_|~|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])*([a-zA-Z]|\\d|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])))\\.)+(([a-zA-Z]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])|(([a-zA-Z]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])([a-zA-Z]|\\d|-|_|~|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])*([a-zA-Z]|[\\x{00A0}-\\x{D7FF}\\x{F900}-\\x{FDCF}\\x{FDF0}-\\x{FFEF}])))\\.?$")
 )
+
+type otpSignInRequestBody struct {
+	LoginID      string                `json:"loginId,omitempty"`
+	LoginOptions *descope.LoginOptions `json:"loginOptions,omitempty"`
+	ProviderID   string                `json:"providerId,omitempty"`
+	SSOAppID     string                `json:"ssoAppId,omitempty"`
+	UseRecovery  *bool                 `json:"useRecovery,omitempty"`
+}
+
+type otpSignUpUserBody struct {
+	Username string `json:"username,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Phone    string `json:"phone,omitempty"`
+	Email    string `json:"email,omitempty"`
+	Icon     string `json:"icon,omitempty"`
+}
+
+type otpSignUpLoginOptionsBody struct {
+	CustomClaims    map[string]any    `json:"customClaims,omitempty"`
+	TemplateOptions map[string]string `json:"templateOptions,omitempty"`
+	Locale          string            `json:"locale,omitempty"`
+	PKCEChallenge   []byte            `json:"pkceChallenge,omitempty"`
+	TenantID        string            `json:"tenantId,omitempty"`
+}
+
+type otpSignUpRequestBody struct {
+	Email        string                     `json:"email,omitempty"`
+	Phone        string                     `json:"phone,omitempty"`
+	LoginID      string                     `json:"loginId,omitempty"`
+	User         *otpSignUpUserBody         `json:"user,omitempty"`
+	ProviderID   string                     `json:"providerId,omitempty"`
+	LoginOptions *otpSignUpLoginOptionsBody `json:"loginOptions,omitempty"`
+}
+
+func newOTPSignInRequestBody(loginID string, options *descope.OTPSignInOptions) *otpSignInRequestBody {
+	return &otpSignInRequestBody{
+		LoginID:      loginID,
+		LoginOptions: options.LoginOptions,
+		ProviderID:   options.ProviderID,
+		SSOAppID:     options.SSOAppID,
+		UseRecovery:  options.UseRecovery,
+	}
+}
+
+func newOTPSignUpRequestBody(method descope.DeliveryMethod, loginID string, user *descope.OTPSignUpUser, options *descope.OTPSignUpOptions) *otpSignUpRequestBody {
+	b := &otpSignUpRequestBody{LoginID: loginID, ProviderID: options.ProviderID}
+	if user != nil {
+		// the address goes top level, the user object holds the other contact
+		u := &otpSignUpUserBody{Username: user.Username, Name: user.Name, Icon: user.Icon}
+		if method == descope.MethodEmail {
+			b.Email = user.Email
+			u.Phone = user.Phone
+		} else {
+			b.Phone = user.Phone
+			u.Email = user.Email
+		}
+		b.User = u
+	}
+	b.LoginOptions = &otpSignUpLoginOptionsBody{
+		CustomClaims:    options.CustomClaims,
+		TemplateOptions: options.TemplateOptions,
+		Locale:          options.Locale,
+		PKCEChallenge:   options.PKCEChallenge,
+		TenantID:        options.TenantID,
+	}
+	return b
+}

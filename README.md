@@ -205,6 +205,35 @@ if err != nil {
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
 
+The `WithOptions` variants accept more request options, support instant messages (`descope.MethodIM`), and also return the remaining verification attempts:
+
+```go
+// Sign up, with the code sent by instant message
+res, err := descopeClient.Auth.OTP().SignUpWithOptions(context.Background(), descope.MethodIM, "login-id",
+    &descope.OTPSignUpUser{Name: "Desmond Copeland", Email: "desmond@descope.com", Phone: "+12125551234", Username: "desmond", Icon: "https://example.com/icon.png"},
+    &descope.OTPSignUpOptions{ProviderID: "provider-id", TenantID: "tenant-id", Locale: "en"})
+if err == nil {
+    fmt.Println(res.MaskedPhone, res.VerificationAttempts)
+}
+
+// Sign in, or sign up or in. Stepup and MFA require the refresh token on the request (r)
+useRecovery := true
+res, err = descopeClient.Auth.OTP().SignInWithOptions(context.Background(), descope.MethodEmail, "login-id", r, &descope.OTPSignInOptions{
+    LoginOptions: &descope.LoginOptions{Stepup: true, Locale: "en", SSOAppID: "sso-app-id"},
+    ProviderID:   "provider-id",
+    SSOAppID:     "sso-app-id",
+    UseRecovery:  &useRecovery,
+})
+res, err = descopeClient.Auth.OTP().SignUpOrInWithOptions(context.Background(), descope.MethodSMS, "login-id", r, &descope.OTPSignInOptions{
+    LoginOptions: &descope.LoginOptions{MFA: true, Locale: "en"},
+})
+
+// Update the user's email or phone, the request (r) must hold the user's refresh token
+failOnConflict := true
+res, err = descopeClient.Auth.OTP().UpdateUserEmailWithOptions(context.Background(), "login-id", "desmond@descope.com", &descope.UpdateOptions{Locale: "en", FailOnConflict: &failOnConflict}, r)
+res, err = descopeClient.Auth.OTP().UpdateUserPhoneWithOptions(context.Background(), descope.MethodIM, "login-id", "+12125551234", &descope.UpdateOptions{Locale: "en", FailOnConflict: &failOnConflict}, r)
+```
+
 ### Magic Link
 
 Send a user a Magic Link using your preferred delivery method (_Email / SMS / WhatsApp_).

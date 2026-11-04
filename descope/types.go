@@ -30,6 +30,20 @@ type AuthenticationInfo struct {
 	FirstSeen    bool          `json:"firstSeen,omitempty"`
 	IDPResponse  *IDPResponse  `json:"idpResponse,omitempty"`
 	TenantSSOID  string        `json:"tenantSSOID,omitempty"` // the id of the tenant SSO configuration that performed the authentication (populated on SSO exchange)
+
+	// The fields below are currently set only by OTP().VerifyCode
+	SessionExpiration     int32          `json:"sessionExpiration,omitempty"`
+	ExternalToken         string         `json:"externalToken,omitempty"`
+	Claims                map[string]any `json:"claims,omitempty"`
+	TrustedDeviceJWT      string         `json:"trustedDeviceJwt,omitempty"`
+	NextRefreshSeconds    int32          `json:"nextRefreshSeconds,omitempty"`
+	CookieName            string         `json:"cookieName,omitempty"`
+	SessionCookieName     string         `json:"sessionCookieName,omitempty"`
+	SessionCookieDomain   string         `json:"sessionCookieDomain,omitempty"`
+	UnsavedSSO            bool           `json:"unsavedSSO,omitempty"`
+	KnownDeviceJWT        string         `json:"knownDeviceJwt,omitempty"`
+	SSOAuthenticationOnly bool           `json:"ssoAuthenticationOnly,omitempty"` // login went through an authentication-only SSO configuration, no session was issued
+	UserCreationDeferred  bool           `json:"userCreationDeferred,omitempty"`
 }
 
 // IDPResponse contains IDP groups, SAML attributes, and OIDC claims returned from SSO authentication.
@@ -477,6 +491,9 @@ type LoginOptions struct {
 	TemplateID               string            `json:"templateId,omitempty"`      // for overriding the default messaging template
 	TemplateOptions          map[string]string `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 	TenantID                 string            `json:"tenantId,omitempty"`        // for associating the authentication with a specific tenant
+	Locale                   string            `json:"locale,omitempty"`          // locale for the message, up to 254 characters
+	PKCEChallenge            []byte            `json:"pkceChallenge,omitempty"`   // relevant only for enchanted links, other methods ignore it
+	SSOAppID                 string            `json:"ssoAppId,omitempty"`
 }
 
 func (lo *LoginOptions) IsJWTRequired() bool {
@@ -511,6 +528,54 @@ type JWTResponse struct {
 	FirstSeen        bool          `json:"firstSeen,omitempty"`
 	IDPResponse      *IDPResponse  `json:"idpResponse,omitempty"`
 	TenantSSOID      string        `json:"tenantSSOID,omitempty"`
+
+	SessionExpiration     int32          `json:"sessionExpiration,omitempty"`
+	ExternalToken         string         `json:"externalToken,omitempty"`
+	Claims                map[string]any `json:"claims,omitempty"`
+	TrustedDeviceJWT      string         `json:"trustedDeviceJwt,omitempty"`
+	NextRefreshSeconds    int32          `json:"nextRefreshSeconds,omitempty"`
+	CookieName            string         `json:"cookieName,omitempty"`
+	SessionCookieName     string         `json:"sessionCookieName,omitempty"`
+	SessionCookieDomain   string         `json:"sessionCookieDomain,omitempty"`
+	UnsavedSSO            bool           `json:"unsavedSSO,omitempty"`
+	KnownDeviceJWT        string         `json:"knownDeviceJwt,omitempty"`
+	SSOAuthenticationOnly bool           `json:"ssoAuthenticationOnly,omitempty"`
+	UserCreationDeferred  bool           `json:"userCreationDeferred,omitempty"`
+}
+
+// OTPSignInOptions are the optional fields of an OTP sign-in or sign-up-or-in request.
+type OTPSignInOptions struct {
+	LoginOptions *LoginOptions // stepup or mfa require the refresh token on the request
+	ProviderID   string
+	SSOAppID     string
+	UseRecovery  *bool
+}
+
+// OTPSignUpUser is the user to create on OTP sign-up.
+// Email is the address for MethodEmail, Phone is the number for phone based methods.
+type OTPSignUpUser struct {
+	Name     string
+	Email    string
+	Phone    string
+	Username string
+	Icon     string
+}
+
+// OTPSignUpOptions are the optional fields of an OTP sign-up request.
+type OTPSignUpOptions struct {
+	ProviderID      string
+	CustomClaims    map[string]any
+	TemplateOptions map[string]string
+	TenantID        string
+	Locale          string // up to 254 characters
+	PKCEChallenge   []byte // relevant only for enchanted links, OTP ignores it
+}
+
+// OTPResponse is returned by OTP methods that send a code.
+type OTPResponse struct {
+	MaskedEmail          string `json:"maskedEmail,omitempty"` // set for MethodEmail
+	MaskedPhone          string `json:"maskedPhone,omitempty"` // set for phone based methods
+	VerificationAttempts int32  `json:"verificationAttempts,omitempty"`
 }
 
 type EnchantedLinkResponse struct {
@@ -801,6 +866,9 @@ type UpdateOptions struct {
 	// instead of replacing it with a single factor. Requires a valid refresh token on the
 	// request. Currently applies to the OTP update phone / email flows.
 	MFA bool `json:"mfa,omitempty"`
+	// Locale for the message, up to 254 characters
+	Locale         string `json:"locale,omitempty"`
+	FailOnConflict *bool  `json:"failOnConflict,omitempty"`
 }
 
 type NOTPTemplates struct {
@@ -1661,6 +1729,7 @@ const (
 	MethodSMS      DeliveryMethod = "sms"
 	MethodVoice    DeliveryMethod = "voice"
 	MethodEmail    DeliveryMethod = "email"
+	MethodIM       DeliveryMethod = "im" // instant message, currently OTP only
 	MethodEmbedded DeliveryMethod = "Embedded"
 
 	OAuthFacebook  OAuthProvider = "facebook"
