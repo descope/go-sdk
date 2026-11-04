@@ -370,6 +370,21 @@ type User interface {
 	// Logout given user from all their devices, by user ID
 	LogoutUserByUserID(ctx context.Context, userID string, sessionTypes ...string) error
 
+	// Logs out sessions created in the given time range (optionally only the given session types).
+	// Each session is logged out on its next refresh or validation. The range stays active for a
+	// year; delete it to stop applying it to new sessions, sessions already logged out stay logged out.
+	//
+	// The before parameter is required. A nil after means the range is open-ended (all sessions
+	// created before the given time).
+	LogoutSessionsCreatedBetween(ctx context.Context, before time.Time, after *time.Time, sessionTypes ...string) (*descope.LogoutSessionRange, error)
+
+	// List the active logout session ranges.
+	ListLogoutSessionRanges(ctx context.Context) ([]*descope.LogoutSessionRange, error)
+
+	// Delete a logout session range by its ID, so it no longer applies to new validations.
+	// Sessions already logged out by it stay logged out.
+	DeleteLogoutSessionRange(ctx context.Context, id string) error
+
 	// Change current loginID to new one
 	// Leave empty to remove the current login ID
 	// Pay attention that if this is the only login ID, it cannot be removed

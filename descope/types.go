@@ -54,6 +54,15 @@ type UserTrustedDevice struct {
 	LastLocation   string    `json:"lastLocation,omitempty"`
 }
 
+// LogoutSessionRange represents a time range of session creation times whose sessions are logged out.
+// After is the Unix epoch when the range is open-ended.
+type LogoutSessionRange struct {
+	ID           string    `json:"id,omitempty"`
+	After        time.Time `json:"after,omitempty"`
+	Before       time.Time `json:"before,omitempty"`
+	SessionTypes []string  `json:"sessionTypes,omitempty"`
+}
+
 // UserPasskey represents a registered passkey (WebAuthn credential) for a user.
 type UserPasskey struct {
 	ID          string    `json:"id,omitempty"`

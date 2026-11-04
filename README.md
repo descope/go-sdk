@@ -1129,6 +1129,19 @@ err := descopeClient.Management.User().LogoutUser(context.Background(), "<login 
 // Which will cause only session that were marked with this specific type to be revoked
 err := descopeClient.Management.User().LogoutUserByUserID(context.Background(), "<user id>")
 
+// Logout sessions created in a time range (optionally only the given session types).
+// Each session is logged out on its next refresh or validation. The range stays active for a year;
+// delete it to stop applying it to new sessions, sessions already logged out stay logged out.
+// Pass nil as the "after" time to logout all sessions created before the given time.
+after := time.Now().Add(-24 * time.Hour)
+logoutRange, err := descopeClient.Management.User().LogoutSessionsCreatedBetween(context.Background(), time.Now(), &after, "<session type>")
+
+// List the active logout session ranges
+logoutRanges, err := descopeClient.Management.User().ListLogoutSessionRanges(context.Background())
+
+// Delete a logout session range by its ID
+err := descopeClient.Management.User().DeleteLogoutSessionRange(context.Background(), logoutRange.ID)
+
 // Get users' authentication history
 loginHistoryRes, err := descopeClient.Management.User().History(context.Background(), []string{"<user id 1>", "<user id 2>"})
 if err == nil {
