@@ -371,18 +371,22 @@ type User interface {
 	LogoutUserByUserID(ctx context.Context, userID string, sessionTypes ...string) error
 
 	// Logs out sessions created in the given time range (optionally only the given session types).
-	// Each session is logged out on its next refresh or validation. The range stays active for a
-	// year; delete it to stop applying it to new sessions, sessions already logged out stay logged out.
+	// Each session is logged out on its next refresh or validation. before defaults to the server's
+	// current time when nil; prefer leaving it nil over passing time.Now(), since a before in the
+	// future is rejected. The range stays active for a year. Deleting it stops it from logging out
+	// matching sessions it hasn't logged out yet; sessions already logged out stay logged out.
 	//
-	// The before parameter is required. A nil after means the range is open-ended (all sessions
-	// created before the given time).
-	LogoutSessionsCreatedBetween(ctx context.Context, before time.Time, after *time.Time, sessionTypes ...string) (*descope.LogoutSessionRange, error)
+	// At least one of before and after is required. A nil after means the range is open-ended
+	// (all sessions created before the given time). The returned range is what the server stored;
+	// the server may store a later After than requested, since a range cannot start before the
+	// capability's rollout in the environment.
+	LogoutSessionsCreatedBetween(ctx context.Context, before *time.Time, after *time.Time, sessionTypes ...string) (*descope.LogoutSessionRange, error)
 
 	// List the active logout session ranges.
 	ListLogoutSessionRanges(ctx context.Context) ([]*descope.LogoutSessionRange, error)
 
-	// Delete a logout session range by its ID, so it no longer applies to new validations.
-	// Sessions already logged out by it stay logged out.
+	// Deletes a logout sessions range. It stops logging out matching sessions it hasn't logged out yet;
+	// sessions already logged out stay logged out.
 	DeleteLogoutSessionRange(ctx context.Context, id string) error
 
 	// Change current loginID to new one

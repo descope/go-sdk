@@ -55,7 +55,8 @@ type UserTrustedDevice struct {
 }
 
 // LogoutSessionRange represents a time range of session creation times whose sessions are logged out.
-// After is the Unix epoch when the range is open-ended.
+// It is the range the server stored; the server may store a later After than requested, since a
+// range cannot start before the capability's rollout in the environment.
 type LogoutSessionRange struct {
 	ID           string    `json:"id,omitempty"`
 	After        time.Time `json:"after,omitempty"`

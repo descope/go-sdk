@@ -1154,7 +1154,7 @@ func TestUserLogoutSessionsCreatedBetweenSuccess(t *testing.T) {
 		assert.EqualValues(t, "2026-11-01T00:00:00Z", req["sessionsCreatedAfter"])
 		assert.EqualValues(t, []any{"web"}, req["sessionTypes"])
 	}, response))
-	res, err := m.User().LogoutSessionsCreatedBetween(context.Background(), before, &after, "web")
+	res, err := m.User().LogoutSessionsCreatedBetween(context.Background(), &before, &after, "web")
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	assert.Equal(t, "r1", res.ID)
@@ -1177,7 +1177,7 @@ func TestUserLogoutSessionsCreatedBetweenOpenEndedSuccess(t *testing.T) {
 		assert.NotContains(t, req, "sessionsCreatedAfter")
 		assert.NotContains(t, req, "sessionTypes")
 	}, response))
-	res, err := m.User().LogoutSessionsCreatedBetween(context.Background(), before, nil)
+	res, err := m.User().LogoutSessionsCreatedBetween(context.Background(), &before, nil)
 	require.NoError(t, err)
 	require.NotNil(t, res)
 	assert.Equal(t, "r1", res.ID)
@@ -1190,21 +1190,44 @@ func TestUserLogoutSessionsCreatedBetweenErr(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {
 		assert.Fail(t, "shouldn't get here")
 	}, nil))
-	res, err := m.User().LogoutSessionsCreatedBetween(context.Background(), time.Time{}, nil)
+	res, err := m.User().LogoutSessionsCreatedBetween(context.Background(), nil, nil)
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 	require.Nil(t, res)
 }
 
+func TestUserLogoutSessionsCreatedBetweenBeforeOmittedSuccess(t *testing.T) {
+	after := time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC)
+	response := map[string]any{
+		"id":     "r1",
+		"after":  "2026-11-01T00:00:00Z",
+		"before": "2026-11-04T10:00:00Z",
+	}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.NotContains(t, req, "sessionsCreatedBefore")
+		assert.EqualValues(t, "2026-11-01T00:00:00Z", req["sessionsCreatedAfter"])
+	}, response))
+	res, err := m.User().LogoutSessionsCreatedBetween(context.Background(), nil, &after)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	assert.Equal(t, "r1", res.ID)
+	assert.True(t, after.Equal(res.After))
+	assert.True(t, time.Date(2026, 11, 4, 10, 0, 0, 0, time.UTC).Equal(res.Before))
+}
+
 func TestUserLogoutSessionsCreatedBetweenBadTime(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoOkWithBody(nil, map[string]any{"id": "r1", "before": "not-a-time"}))
-	res, err := m.User().LogoutSessionsCreatedBetween(context.Background(), time.Now(), nil)
+	now := time.Now()
+	res, err := m.User().LogoutSessionsCreatedBetween(context.Background(), &now, nil)
 	require.Error(t, err)
 	require.Nil(t, res)
 }
 
 func TestUserLogoutSessionsCreatedBetweenServerErr(t *testing.T) {
 	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
-	res, err := m.User().LogoutSessionsCreatedBetween(context.Background(), time.Now(), nil)
+	now := time.Now()
+	res, err := m.User().LogoutSessionsCreatedBetween(context.Background(), &now, nil)
 	require.Error(t, err)
 	require.Nil(t, res)
 }

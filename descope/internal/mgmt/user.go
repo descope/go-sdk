@@ -947,11 +947,14 @@ func (r *logoutSessionRangeRaw) toLogoutSessionRange() (*descope.LogoutSessionRa
 	return out, nil
 }
 
-func (u *user) LogoutSessionsCreatedBetween(ctx context.Context, before time.Time, after *time.Time, sessionTypes ...string) (*descope.LogoutSessionRange, error) {
-	if before.IsZero() {
-		return nil, utils.NewInvalidArgumentError("before")
+func (u *user) LogoutSessionsCreatedBetween(ctx context.Context, before *time.Time, after *time.Time, sessionTypes ...string) (*descope.LogoutSessionRange, error) {
+	if before == nil && after == nil {
+		return nil, utils.NewInvalidArgumentError("before or after")
 	}
-	req := map[string]any{"sessionsCreatedBefore": before.UTC().Format(time.RFC3339)}
+	req := map[string]any{}
+	if before != nil {
+		req["sessionsCreatedBefore"] = before.UTC().Format(time.RFC3339)
+	}
 	if after != nil {
 		req["sessionsCreatedAfter"] = after.UTC().Format(time.RFC3339)
 	}

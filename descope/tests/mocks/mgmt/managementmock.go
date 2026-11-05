@@ -687,7 +687,7 @@ type MockUser struct {
 	LogoutAssert func(id string, sessionTypes ...string)
 	LogoutError  error
 
-	LogoutSessionsCreatedBetweenAssert   func(before time.Time, after *time.Time, sessionTypes ...string)
+	LogoutSessionsCreatedBetweenAssert   func(before *time.Time, after *time.Time, sessionTypes ...string)
 	LogoutSessionsCreatedBetweenResponse *descope.LogoutSessionRange
 	LogoutSessionsCreatedBetweenError    error
 
@@ -879,7 +879,7 @@ func (m *MockUser) LogoutUserByUserID(_ context.Context, userID string, sessionT
 	return m.LogoutError
 }
 
-func (m *MockUser) LogoutSessionsCreatedBetween(_ context.Context, before time.Time, after *time.Time, sessionTypes ...string) (*descope.LogoutSessionRange, error) {
+func (m *MockUser) LogoutSessionsCreatedBetween(_ context.Context, before *time.Time, after *time.Time, sessionTypes ...string) (*descope.LogoutSessionRange, error) {
 	if m.LogoutSessionsCreatedBetweenAssert != nil {
 		m.LogoutSessionsCreatedBetweenAssert(before, after, sessionTypes...)
 	}

@@ -1130,16 +1130,22 @@ err := descopeClient.Management.User().LogoutUser(context.Background(), "<login 
 err := descopeClient.Management.User().LogoutUserByUserID(context.Background(), "<user id>")
 
 // Logout sessions created in a time range (optionally only the given session types).
-// Each session is logged out on its next refresh or validation. The range stays active for a year;
-// delete it to stop applying it to new sessions, sessions already logged out stay logged out.
-// Pass nil as the "after" time to logout all sessions created before the given time.
-after := time.Now().Add(-24 * time.Hour)
-logoutRange, err := descopeClient.Management.User().LogoutSessionsCreatedBetween(context.Background(), time.Now(), &after, "<session type>")
+// Each session is logged out on its next refresh or validation. "before" defaults to the server's
+// current time when nil; prefer leaving it nil over passing time.Now(), since a "before" in the
+// future is rejected. Pass nil as the "after" time to logout all sessions created before the given
+// time; at least one of the two is required. The range stays active for a year. Deleting it stops it
+// from logging out matching sessions it hasn't logged out yet; sessions already logged out stay
+// logged out. The returned range is what the server stored; the server may store a later "after"
+// than requested, since a range cannot start before the capability's rollout in the environment.
+// For example, logout sessions created in the last hour:
+after := time.Now().Add(-time.Hour)
+logoutRange, err := descopeClient.Management.User().LogoutSessionsCreatedBetween(context.Background(), nil, &after, "<session type>")
 
 // List the active logout session ranges
 logoutRanges, err := descopeClient.Management.User().ListLogoutSessionRanges(context.Background())
 
-// Delete a logout session range by its ID
+// Delete a logout sessions range by its ID. It stops logging out matching sessions it hasn't logged out yet;
+// sessions already logged out stay logged out.
 err := descopeClient.Management.User().DeleteLogoutSessionRange(context.Background(), logoutRange.ID)
 
 // Get users' authentication history
