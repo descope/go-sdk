@@ -25,7 +25,7 @@ func (auth *otp) SignIn(ctx context.Context, method descope.DeliveryMethod, logi
 			return "", descope.ErrInvalidStepUpJWT
 		}
 	}
-	masked := getMaskedValue(method)
+	masked := getOTPMaskedValue(method)
 	options := &api.HTTPRequest{ResBodyObj: masked}
 	_, err = auth.client.DoPostRequest(ctx, composeSignInURL(method), newSignInRequestBody(loginID, loginOptions), options, pswd)
 	return masked.GetMasked(), err
@@ -35,12 +35,35 @@ func (auth *otp) SignUp(ctx context.Context, method descope.DeliveryMethod, logi
 	if user == nil {
 		user = &descope.User{}
 	}
+	if method == descope.MethodIM {
+		return auth.signUpIM(ctx, loginID, user, signUpOptions)
+	}
 	if err := auth.verifyDeliveryMethod(method, loginID, user); err != nil {
 		return "", err
 	}
 	masked := getMaskedValue(method)
 	options := &api.HTTPRequest{ResBodyObj: masked}
 	_, err := auth.client.DoPostRequest(ctx, composeSignUpURL(method), newAuthenticationSignUpRequestBody(method, loginID, user, signUpOptions), options, "")
+	return masked.GetMasked(), err
+}
+
+func (auth *otp) signUpIM(ctx context.Context, loginID string, user *descope.User, signUpOptions *descope.SignUpOptions) (string, error) {
+	if loginID == "" {
+		return "", utils.NewInvalidArgumentError("loginID")
+	}
+	phone, varName := user.Phone, "user.Phone"
+	if phone == "" {
+		phone, varName = loginID, "loginID"
+	}
+	if !phoneRegex.MatchString(phone) {
+		return "", utils.NewInvalidArgumentError(varName)
+	}
+	// The IM sign up user object has no phone or split name fields
+	body := newAuthenticationSignUpRequestBody(descope.MethodSMS, loginID, &descope.User{Name: user.Name, Email: user.Email}, signUpOptions)
+	body.Phone = phone
+	masked := &MaskedPhoneRes{}
+	options := &api.HTTPRequest{ResBodyObj: masked}
+	_, err := auth.client.DoPostRequest(ctx, composeSignUpURL(descope.MethodIM), body, options, "")
 	return masked.GetMasked(), err
 }
 
@@ -53,13 +76,14 @@ func (auth *otp) SignUpOrIn(ctx context.Context, method descope.DeliveryMethod, 
 		signUpOptions = &descope.SignUpOptions{}
 	}
 
-	masked := getMaskedValue(method)
+	masked := getOTPMaskedValue(method)
 	options := &api.HTTPRequest{ResBodyObj: masked}
 	_, err := auth.client.DoPostRequest(ctx, composeSignUpOrInURL(method), newSignInRequestBody(loginID, &descope.LoginOptions{
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
 		TemplateID:      signUpOptions.TemplateID,
 		TenantID:        signUpOptions.TenantID,
+		Locale:          signUpOptions.Locale,
 	}), options, "")
 	return masked.GetMasked(), err
 }
@@ -121,7 +145,7 @@ func (auth *otp) UpdateUserPhone(ctx context.Context, method descope.DeliveryMet
 	if !phoneRegex.MatchString(phone) {
 		return "", utils.NewInvalidArgumentError("phone")
 	}
-	if method != descope.MethodSMS && method != descope.MethodVoice && method != descope.MethodWhatsApp {
+	if method != descope.MethodSMS && method != descope.MethodVoice && method != descope.MethodWhatsApp && method != descope.MethodIM {
 		return "", utils.NewInvalidArgumentError("method")
 	}
 	pswd, err := auth.getValidRefreshToken(r)
@@ -135,4 +159,12 @@ func (auth *otp) UpdateUserPhone(ctx context.Context, method descope.DeliveryMet
 	options := &api.HTTPRequest{ResBodyObj: masked}
 	_, err = auth.client.DoPostRequest(ctx, composeUpdateUserPhoneOTP(method), newOTPUpdatePhoneRequestBody(loginID, phone, updateOptions), options, pswd)
 	return masked.GetMasked(), err
+}
+
+// IM responses carry a masked phone; other methods use the shared mapping
+func getOTPMaskedValue(method descope.DeliveryMethod) Masked {
+	if method == descope.MethodIM {
+		return &MaskedPhoneRes{}
+	}
+	return getMaskedValue(method)
 }

@@ -798,3 +798,181 @@ func TestUpdatePhoneOTPFailures(t *testing.T) {
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }
+
+func TestSignInIM(t *testing.T) {
+	phone := "+111111111111"
+	maskedPhone := "+*******111"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/signin/im", r.URL.RequestURI())
+		u, p := getProjectAndJwt(r)
+		assert.NotEmpty(t, u)
+		assert.Empty(t, p)
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, body["loginId"])
+		assert.EqualValues(t, map[string]any{"tenantId": "t1", "ssoAppId": "app1", "locale": "fr"}, body["loginOptions"])
+		respBytes, err := utils.Marshal(MaskedPhoneRes{MaskedPhone: maskedPhone})
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	mp, err := a.OTP().SignIn(context.Background(), descope.MethodIM, phone, nil, &descope.LoginOptions{TenantID: "t1", SSOAppID: "app1", Locale: "fr"})
+	require.NoError(t, err)
+	assert.EqualValues(t, maskedPhone, mp)
+}
+
+func TestSignUpIM(t *testing.T) {
+	phone := "+111111111111"
+	maskedPhone := "+*******111"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/signup/im", r.URL.RequestURI())
+		u, p := getProjectAndJwt(r)
+		assert.NotEmpty(t, u)
+		assert.Empty(t, p)
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, body["loginId"])
+		assert.EqualValues(t, phone, body["phone"])
+		assert.Nil(t, body["email"])
+		assert.EqualValues(t, map[string]any{"name": "test", "email": "test@example.com"}, body["user"])
+		assert.EqualValues(t, map[string]any{"tenantId": "t1", "locale": "fr", "templateOptions": map[string]any{"cc": "dd"}}, body["loginOptions"])
+		respBytes, err := utils.Marshal(MaskedPhoneRes{MaskedPhone: maskedPhone})
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	user := &descope.User{Name: "test", GivenName: "given", Email: "test@example.com"}
+	mp, err := a.OTP().SignUp(context.Background(), descope.MethodIM, phone, user, &descope.SignUpOptions{TenantID: "t1", Locale: "fr", TemplateOptions: map[string]string{"cc": "dd"}})
+	require.NoError(t, err)
+	assert.EqualValues(t, maskedPhone, mp)
+	assert.Empty(t, user.Phone)
+}
+
+func TestSignUpIMWithUserPhone(t *testing.T) {
+	loginID := "someone"
+	phone := "+111111111111"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, "/v1/auth/otp/signup/im", r.URL.RequestURI())
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, loginID, body["loginId"])
+		assert.EqualValues(t, phone, body["phone"])
+		assert.EqualValues(t, map[string]any{}, body["user"])
+	}))
+	require.NoError(t, err)
+	_, err = a.OTP().SignUp(context.Background(), descope.MethodIM, loginID, &descope.User{Phone: phone}, nil)
+	require.NoError(t, err)
+}
+
+func TestSignUpIMFailures(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	_, err = a.OTP().SignUp(context.Background(), descope.MethodIM, "", nil, nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "loginID")
+	_, err = a.OTP().SignUp(context.Background(), descope.MethodIM, "aaaaa", nil, nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "loginID")
+	_, err = a.OTP().SignUp(context.Background(), descope.MethodIM, "+111111111111", &descope.User{Phone: "aaaaa"}, nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "user.Phone")
+}
+
+func TestSignUpOrInIM(t *testing.T) {
+	phone := "+111111111111"
+	maskedPhone := "+*******111"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/signup-in/im", r.URL.RequestURI())
+		u, p := getProjectAndJwt(r)
+		assert.NotEmpty(t, u)
+		assert.Empty(t, p)
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, body["loginId"])
+		assert.EqualValues(t, map[string]any{"customClaims": map[string]any{"aa": "bb"}, "locale": "fr"}, body["loginOptions"])
+		respBytes, err := utils.Marshal(MaskedPhoneRes{MaskedPhone: maskedPhone})
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	mp, err := a.OTP().SignUpOrIn(context.Background(), descope.MethodIM, phone, &descope.SignUpOptions{CustomClaims: map[string]any{"aa": "bb"}, Locale: "fr"})
+	require.NoError(t, err)
+	assert.EqualValues(t, maskedPhone, mp)
+}
+
+func TestVerifyCodeIM(t *testing.T) {
+	phone := "+111111111111"
+	code := "123456"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/verify/im", r.URL.RequestURI())
+		u, p := getProjectAndJwt(r)
+		assert.NotEmpty(t, u)
+		assert.Empty(t, p)
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, map[string]any{"loginId": phone, "code": code}, body)
+	}))
+	require.NoError(t, err)
+	info, err := a.OTP().VerifyCode(context.Background(), descope.MethodIM, phone, code, nil)
+	require.NoError(t, err)
+	require.NotNil(t, info)
+	assert.NotEmpty(t, info.SessionToken.JWT)
+}
+
+func TestUpdatePhoneOTPIM(t *testing.T) {
+	loginID := "someone"
+	phone := "+111111111111"
+	maskedPhone := "+*******111"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/update/phone/im", r.URL.RequestURI())
+		u, p := getProjectAndJwt(r)
+		assert.NotEmpty(t, u)
+		assert.NotEmpty(t, p)
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, map[string]any{"loginId": loginID, "phone": phone, "locale": "fr", "failOnConflict": true, "providerId": "p1"}, body)
+		respBytes, err := utils.Marshal(MaskedPhoneRes{MaskedPhone: maskedPhone})
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	mp, err := a.OTP().UpdateUserPhone(context.Background(), descope.MethodIM, loginID, phone, &descope.UpdateOptions{Locale: "fr", FailOnConflict: true, ProviderID: "p1"}, r)
+	require.NoError(t, err)
+	assert.EqualValues(t, maskedPhone, mp)
+}
+
+func TestUpdateEmailOTPWithLocale(t *testing.T) {
+	loginID := "someone"
+	email := "test@example.com"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeUpdateUserEmailOTP(), r.URL.RequestURI())
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, map[string]any{"loginId": loginID, "email": email, "locale": "fr", "failOnConflict": true}, body)
+	}))
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	_, err = a.OTP().UpdateUserEmail(context.Background(), loginID, email, &descope.UpdateOptions{Locale: "fr", FailOnConflict: true}, r)
+	require.NoError(t, err)
+}
+
+func TestSignUpEmailWithLocale(t *testing.T) {
+	email := "test@example.com"
+	a, err := newTestAuth(nil, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, composeSignUpURL(descope.MethodEmail), r.URL.RequestURI())
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, map[string]any{"locale": "fr"}, body["loginOptions"])
+	}))
+	require.NoError(t, err)
+	_, err = a.OTP().SignUp(context.Background(), descope.MethodEmail, email, nil, &descope.SignUpOptions{Locale: "fr"})
+	require.NoError(t, err)
+}
