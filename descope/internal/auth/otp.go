@@ -88,13 +88,13 @@ func (auth *otp) VerifyCode(ctx context.Context, method descope.DeliveryMethod, 
 	if err != nil {
 		return nil, err
 	}
-	info, err := auth.generateAuthenticationInfo(httpResponse, w)
+	jRes, err := auth.extractJWTResponse(httpResponse.BodyStr)
 	if err != nil {
 		return nil, err
 	}
-	jRes, err := auth.extractJWTResponse(httpResponse.BodyStr)
+	info, err := auth.generateAuthenticationInfoFromJWTResponse(httpResponse, jRes, nil, w)
 	if err != nil {
-		return nil, err // notest
+		return nil, err
 	}
 	setJWTResponseDetails(info, jRes)
 	return info, nil

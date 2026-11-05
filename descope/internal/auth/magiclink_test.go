@@ -665,3 +665,14 @@ func TestUpdatePhoneMagicLinkRejectsIM(t *testing.T) {
 	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
 	assert.True(t, strings.Contains(err.Error(), "method"))
 }
+
+func TestMagicLinkSignInSignUpRejectsIM(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	_, err = a.MagicLink().SignIn(context.Background(), descope.MethodIM, "+1111111111", "", nil, nil)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+	_, err = a.MagicLink().SignUp(context.Background(), descope.MethodIM, "+1111111111", "", nil, nil)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+	_, err = a.MagicLink().SignUpOrIn(context.Background(), descope.MethodIM, "+1111111111", "", nil)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+}

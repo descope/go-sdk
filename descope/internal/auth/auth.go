@@ -917,6 +917,10 @@ func (auth *authenticationsBase) generateAuthenticationInfoWithRefreshToken(http
 	if err != nil {
 		return nil, err
 	}
+	return auth.generateAuthenticationInfoFromJWTResponse(httpResponse, jwtResponse, refreshToken, w)
+}
+
+func (auth *authenticationsBase) generateAuthenticationInfoFromJWTResponse(httpResponse *api.HTTPResponse, jwtResponse *descope.JWTResponse, refreshToken *descope.Token, w http.ResponseWriter) (*descope.AuthenticationInfo, error) {
 	tokens, err := auth.extractTokens(jwtResponse)
 	if err != nil {
 		logger.LogError("Unable to extract tokens from request [%s]", err, httpResponse.Req.URL)
