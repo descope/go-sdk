@@ -2457,6 +2457,10 @@ type MockThirdPartyApplication struct {
 	LoadAllApplicationsTotal    int
 	LoadAllApplicationsError    error
 
+	CreateConsentAssert   func(*descope.ThirdPartyApplicationConsentCreateRequest)
+	CreateConsentResponse *descope.ThirdPartyApplicationConsent
+	CreateConsentError    error
+
 	DeleteConsentsAssert func(*descope.ThirdPartyApplicationConsentDeleteOptions)
 	DeleteConsentsError  error
 
@@ -2548,6 +2552,13 @@ func (m *MockThirdPartyApplication) RotateApplicationSecret(_ context.Context, i
 		m.RotateApplicationSecretAssert(id)
 	}
 	return m.RotateApplicationSecretResponse, m.RotateApplicationSecretError
+}
+
+func (m *MockThirdPartyApplication) CreateConsent(_ context.Context, request *descope.ThirdPartyApplicationConsentCreateRequest) (*descope.ThirdPartyApplicationConsent, error) {
+	if m.CreateConsentAssert != nil {
+		m.CreateConsentAssert(request)
+	}
+	return m.CreateConsentResponse, m.CreateConsentError
 }
 
 func (m *MockThirdPartyApplication) DeleteConsents(_ context.Context, options *descope.ThirdPartyApplicationConsentDeleteOptions) error {

@@ -576,6 +576,111 @@ func TestSearchThirdPartyApplicationConsentError(t *testing.T) {
 	require.Zero(t, total)
 }
 
+func TestCreateThirdPartyApplicationConsent(t *testing.T) {
+	response := map[string]any{
+		"consent": map[string]any{
+			"id":           "consent1",
+			"appId":        "app1",
+			"userId":       "user1",
+			"scopes":       []any{"read", "write"},
+			"grantedBy":    "user1",
+			"createdTime":  1700000000,
+			"tenantId":     "tenant1",
+			"ExpireTime":   1800000000,
+			"modifiedTime": 1700000001,
+		},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.Equal(t, "/v1/mgmt/thirdparty/consents/create", r.URL.Path)
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, map[string]any{
+			"appId":      "app1",
+			"userId":     "user1",
+			"scopes":     []any{"read", "write"},
+			"tenantId":   "tenant1",
+			"expireTime": float64(1800000000),
+		}, req)
+	}, response))
+	res, err := mgmt.ThirdPartyApplication().CreateConsent(context.Background(), &descope.ThirdPartyApplicationConsentCreateRequest{
+		AppID:      "app1",
+		UserID:     "user1",
+		Scopes:     []string{"read", "write"},
+		TenantID:   "tenant1",
+		ExpireTime: 1800000000,
+	})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	assert.Equal(t, "consent1", res.ID)
+	assert.Equal(t, "app1", res.AppID)
+	assert.Equal(t, "user1", res.UserID)
+	assert.Equal(t, []string{"read", "write"}, res.Scopes)
+	assert.Equal(t, "user1", res.GrantedBy)
+	assert.EqualValues(t, 1700000000, res.CreatedTime)
+	assert.Equal(t, "tenant1", res.TenantID)
+	assert.EqualValues(t, 1800000000, res.ExpireTime)
+	assert.EqualValues(t, 1700000001, res.ModifiedTime)
+}
+
+func TestCreateThirdPartyApplicationConsentOptionalFieldsEmpty(t *testing.T) {
+	response := map[string]any{
+		"consent": map[string]any{
+			"id":     "consent1",
+			"appId":  "app1",
+			"userId": "user1",
+		},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, map[string]any{
+			"appId":      "app1",
+			"userId":     "user1",
+			"scopes":     nil,
+			"tenantId":   "",
+			"expireTime": float64(0),
+		}, req)
+	}, response))
+	res, err := mgmt.ThirdPartyApplication().CreateConsent(context.Background(), &descope.ThirdPartyApplicationConsentCreateRequest{
+		AppID:  "app1",
+		UserID: "user1",
+	})
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	assert.Equal(t, "consent1", res.ID)
+	assert.Empty(t, res.TenantID)
+	assert.Zero(t, res.ExpireTime)
+}
+
+func TestCreateThirdPartyApplicationConsentInvalidArguments(t *testing.T) {
+	for name, request := range map[string]*descope.ThirdPartyApplicationConsentCreateRequest{
+		"nil request":   nil,
+		"empty app id":  {UserID: "user1", Scopes: []string{"read"}},
+		"empty user id": {AppID: "app1", Scopes: []string{"read"}},
+	} {
+		t.Run(name, func(t *testing.T) {
+			mgmt := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+				assert.Fail(t, "request should not be sent")
+			}))
+			res, err := mgmt.ThirdPartyApplication().CreateConsent(context.Background(), request)
+			require.ErrorIs(t, err, descope.ErrInvalidArguments)
+			require.Nil(t, res)
+		})
+	}
+}
+
+func TestCreateThirdPartyApplicationConsentError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := mgmt.ThirdPartyApplication().CreateConsent(context.Background(), &descope.ThirdPartyApplicationConsentCreateRequest{
+		AppID:  "app1",
+		UserID: "user1",
+		Scopes: []string{"read"},
+	})
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
 func TestDeleteThirdPartyApplicationConsents(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
