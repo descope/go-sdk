@@ -39,6 +39,7 @@ type managementService struct {
 	fga                   sdk.FGA
 	thirdPartyApplication sdk.ThirdPartyApplication
 	outboundApplication   sdk.OutboundApplication
+	outboundSCIM          sdk.OutboundSCIM
 	managementKey         sdk.ManagementKey
 	descoper              sdk.Descoper
 	list                  sdk.List
@@ -55,6 +56,7 @@ func NewManagement(conf ManagementParams, provider *auth.Provider, c *api.Client
 	service.ssoApplication = &ssoApplication{managementBase: base}
 	service.thirdPartyApplication = &thirdPartyApplication{managementBase: base}
 	service.outboundApplication = &outboundApplication{managementBase: base}
+	service.outboundSCIM = &outboundSCIM{managementBase: base}
 	service.user = &user{managementBase: base}
 	service.accessKey = &accessKey{managementBase: base}
 	service.sso = &sso{managementBase: base}
@@ -167,6 +169,11 @@ func (mgmt *managementService) ThirdPartyApplication() sdk.ThirdPartyApplication
 func (mgmt *managementService) OutboundApplication() sdk.OutboundApplication {
 	mgmt.ensureManagementKey()
 	return mgmt.outboundApplication
+}
+
+func (mgmt *managementService) OutboundSCIM() sdk.OutboundSCIM {
+	mgmt.ensureManagementKey()
+	return mgmt.outboundSCIM
 }
 
 func (mgmt *managementService) ManagementKey() sdk.ManagementKey {
