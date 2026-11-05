@@ -34,9 +34,15 @@ type AuthenticationInfo struct {
 
 // IDPResponse contains IDP groups, SAML attributes, and OIDC claims returned from SSO authentication.
 type IDPResponse struct {
-	IDPGroups         []string       `json:"idpGroups,omitempty"`
-	IDPSAMLAttributes map[string]any `json:"idpSAMLAttributes,omitempty"`
-	IDPOIDCClaims     map[string]any `json:"idpOIDCClaims,omitempty"`
+	IDPGroups          []string       `json:"idpGroups,omitempty"`
+	IDPSAMLAttributes  map[string]any `json:"idpSAMLAttributes,omitempty"`
+	IDPOIDCClaims      map[string]any `json:"idpOIDCClaims,omitempty"`
+	SAMLResponse       string         `json:"samlResponse,omitempty"`
+	SAMLGeneratedUser  string         `json:"samlGeneratedUser,omitempty"`
+	SAMLGeneratedRoles string         `json:"samlGeneratedRoles,omitempty"`
+	OIDCResponse       string         `json:"oidcResponse,omitempty"`
+	OIDCGeneratedUser  string         `json:"oidcGeneratedUser,omitempty"`
+	OIDCGeneratedRoles string         `json:"oidcGeneratedRoles,omitempty"`
 }
 
 type AnonymousAuthenticationInfo struct {
@@ -477,6 +483,9 @@ type LoginOptions struct {
 	TemplateID               string            `json:"templateId,omitempty"`      // for overriding the default messaging template
 	TemplateOptions          map[string]string `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 	TenantID                 string            `json:"tenantId,omitempty"`        // for associating the authentication with a specific tenant
+	SSOAppID                 string            `json:"ssoAppId,omitempty"`
+	Locale                   string            `json:"locale,omitempty"`        // locale for the message
+	PKCEChallenge            string            `json:"pkceChallenge,omitempty"` // PKCE code challenge
 }
 
 func (lo *LoginOptions) IsJWTRequired() bool {
@@ -738,7 +747,20 @@ type UserResponse struct {
 	LockReason string `json:"lockReason,omitempty"`
 	// TempLockExpiration is when a temporary lock ends, in unix seconds (0 when none); the user is
 	// temporarily locked while TempLockExpiration > now
-	TempLockExpiration int64 `json:"tempLockExpiration,omitempty"`
+	TempLockExpiration    int64    `json:"tempLockExpiration,omitempty"`
+	ExternalIDs           []string `json:"externalIds,omitempty"`
+	Editable              bool     `json:"editable,omitempty"`
+	Push                  bool     `json:"push,omitempty"`
+	Permissions           []string `json:"permissions,omitempty"`
+	ConsentExpiration     int32    `json:"consentExpiration,omitempty"`
+	RecoveryEmail         string   `json:"recoveryEmail,omitempty"`
+	VerifiedRecoveryEmail bool     `json:"verifiedRecoveryEmail,omitempty"`
+	RecoveryPhone         string   `json:"recoveryPhone,omitempty"`
+	VerifiedRecoveryPhone bool     `json:"verifiedRecoveryPhone,omitempty"`
+	RoleIDs               []string `json:"roleIds,omitempty"`
+	RecoveryCodes         bool     `json:"recoveryCodes,omitempty"`
+	ConsentTenantID       string   `json:"consentTenantId,omitempty"`
+	LastLoginTime         int32    `json:"lastLoginTime,omitempty"`
 }
 
 type MeTenant struct {
@@ -801,6 +823,10 @@ type UpdateOptions struct {
 	// instead of replacing it with a single factor. Requires a valid refresh token on the
 	// request. Currently applies to the OTP update phone / email flows.
 	MFA bool `json:"mfa,omitempty"`
+	// Locale for the message, up to 254 characters. Currently applies to the OTP update phone / email flows.
+	Locale string `json:"locale,omitempty"`
+	// FailOnConflict is sent only when set. Currently applies to the OTP update phone / email flows.
+	FailOnConflict *bool `json:"failOnConflict,omitempty"`
 }
 
 type NOTPTemplates struct {
@@ -1662,6 +1688,7 @@ const (
 	MethodVoice    DeliveryMethod = "voice"
 	MethodEmail    DeliveryMethod = "email"
 	MethodEmbedded DeliveryMethod = "Embedded"
+	MethodIM       DeliveryMethod = "im" // instant message to a phone number, OTP only
 
 	OAuthFacebook  OAuthProvider = "facebook"
 	OAuthGithub    OAuthProvider = "github"

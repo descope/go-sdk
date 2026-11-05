@@ -131,7 +131,7 @@ type OTP interface {
 	UpdateUserEmail(ctx context.Context, loginID, email string, updateOptions *descope.UpdateOptions, request *http.Request) (maskedAddress string, err error)
 
 	// UpdateUserPhone - Use to update phone and validate via OTP
-	// allowed methods are phone based methods - whatsapp and SMS or Voice call
+	// allowed methods are phone based methods - whatsapp, SMS, Voice call or IM
 	// LoginID of user whom we want to update
 	// UpdateOptions to determine whether to add email as a login id and if to merge with existing user in that case
 	// Request is needed to obtain JWT and send it to Descope, for verification

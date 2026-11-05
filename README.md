@@ -160,7 +160,7 @@ if err != nil {
 
 ### OTP Authentication
 
-Send a user a one-time password (OTP) using your preferred delivery method (_Email / SMS / Voice call / WhatsApp_). An email address or phone number must be provided accordingly.
+Send a user a one-time password (OTP) using your preferred delivery method (_Email / SMS / Voice call / WhatsApp / IM_). An email address or phone number must be provided accordingly.
 
 The user can either `sign up`, `sign in` or `sign up or in`
 
@@ -204,6 +204,27 @@ if err != nil {
 ```
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
+
+Sign in with an instant message (IM) to a phone number, with optional login options:
+
+```go
+maskedPhone, err := descopeClient.Auth.OTP().SignIn(context.Background(), descope.MethodIM, "+12025550123", nil, &descope.LoginOptions{
+    SSOAppID:      "sso-app-id",
+    Locale:        "en",
+    PKCEChallenge: "challenge",
+})
+```
+
+Update a logged-in user's phone or email; `Locale` (up to 254 characters) and `FailOnConflict` are sent only when set:
+
+```go
+failOnConflict := true
+// r is the incoming request, which carries the refresh JWT
+maskedPhone, err := descopeClient.Auth.OTP().UpdateUserPhone(context.Background(), descope.MethodIM, "+12025550123", "+12025550124", &descope.UpdateOptions{
+    Locale:         "en",
+    FailOnConflict: &failOnConflict,
+}, r)
+```
 
 ### Magic Link
 

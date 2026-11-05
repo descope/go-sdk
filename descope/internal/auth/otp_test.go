@@ -798,3 +798,164 @@ func TestUpdatePhoneOTPFailures(t *testing.T) {
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }
+
+func TestSignInIM(t *testing.T) {
+	loginID := "+11111111111"
+	maskedPhone := "+*******111"
+	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/signin/im", r.URL.RequestURI())
+		assert.EqualValues(t, api.BearerAuthorizationPrefix+"a", r.Header.Get(api.AuthorizationHeaderName))
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, loginID, body["loginId"])
+		assert.EqualValues(t, map[string]any{"ssoAppId": "app", "locale": "en", "pkceChallenge": "challenge"}, body["loginOptions"])
+	}, MaskedPhoneRes{MaskedPhone: maskedPhone}))
+	require.NoError(t, err)
+	mp, err := a.OTP().SignIn(context.Background(), descope.MethodIM, loginID, nil, &descope.LoginOptions{SSOAppID: "app", Locale: "en", PKCEChallenge: "challenge"})
+	require.NoError(t, err)
+	assert.EqualValues(t, maskedPhone, mp)
+}
+
+func TestSignUpOrInIM(t *testing.T) {
+	loginID := "+11111111111"
+	maskedPhone := "+*******111"
+	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/signup-in/im", r.URL.RequestURI())
+		assert.EqualValues(t, api.BearerAuthorizationPrefix+"a", r.Header.Get(api.AuthorizationHeaderName))
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, loginID, body["loginId"])
+	}, MaskedPhoneRes{MaskedPhone: maskedPhone}))
+	require.NoError(t, err)
+	mp, err := a.OTP().SignUpOrIn(context.Background(), descope.MethodIM, loginID, nil)
+	require.NoError(t, err)
+	assert.EqualValues(t, maskedPhone, mp)
+}
+
+func TestVerifyCodeIM(t *testing.T) {
+	phone := "+11111111111"
+	code := "491421"
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/verify/im", r.URL.RequestURI())
+		assert.EqualValues(t, api.BearerAuthorizationPrefix+"a", r.Header.Get(api.AuthorizationHeaderName))
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, body["loginId"])
+		assert.EqualValues(t, code, body["code"])
+		resp := map[string]any{
+			"refreshJwt": jwtTokenValid,
+			"user": map[string]any{
+				"externalIds":           []string{"ext"},
+				"editable":              true,
+				"push":                  true,
+				"permissions":           []string{"perm"},
+				"consentExpiration":     10,
+				"recoveryEmail":         "r@example.com",
+				"verifiedRecoveryEmail": true,
+				"recoveryPhone":         "+12222222222",
+				"verifiedRecoveryPhone": true,
+				"roleIds":               []string{"role"},
+				"recoveryCodes":         true,
+				"consentTenantId":       "tenant",
+				"lastLoginTime":         20,
+			},
+			"idpResponse": map[string]any{
+				"samlResponse":       "sr",
+				"samlGeneratedUser":  "sgu",
+				"samlGeneratedRoles": "sgr",
+				"oidcResponse":       "or",
+				"oidcGeneratedUser":  "ogu",
+				"oidcGeneratedRoles": "ogr",
+			},
+			"unknownField": "ignored",
+		}
+		respBytes, err := utils.Marshal(resp)
+		require.NoError(t, err)
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBuffer(respBytes))}, nil
+	})
+	require.NoError(t, err)
+	info, err := a.OTP().VerifyCode(context.Background(), descope.MethodIM, phone, code, nil)
+	require.NoError(t, err)
+	u := info.User
+	require.NotNil(t, u)
+	assert.EqualValues(t, []string{"ext"}, u.ExternalIDs)
+	assert.True(t, u.Editable)
+	assert.True(t, u.Push)
+	assert.EqualValues(t, []string{"perm"}, u.Permissions)
+	assert.EqualValues(t, 10, u.ConsentExpiration)
+	assert.EqualValues(t, "r@example.com", u.RecoveryEmail)
+	assert.True(t, u.VerifiedRecoveryEmail)
+	assert.EqualValues(t, "+12222222222", u.RecoveryPhone)
+	assert.True(t, u.VerifiedRecoveryPhone)
+	assert.EqualValues(t, []string{"role"}, u.RoleIDs)
+	assert.True(t, u.RecoveryCodes)
+	assert.EqualValues(t, "tenant", u.ConsentTenantID)
+	assert.EqualValues(t, 20, u.LastLoginTime)
+	idp := info.IDPResponse
+	require.NotNil(t, idp)
+	assert.EqualValues(t, "sr", idp.SAMLResponse)
+	assert.EqualValues(t, "sgu", idp.SAMLGeneratedUser)
+	assert.EqualValues(t, "sgr", idp.SAMLGeneratedRoles)
+	assert.EqualValues(t, "or", idp.OIDCResponse)
+	assert.EqualValues(t, "ogu", idp.OIDCGeneratedUser)
+	assert.EqualValues(t, "ogr", idp.OIDCGeneratedRoles)
+}
+
+func TestUpdatePhoneOTPIM(t *testing.T) {
+	loginID := "943248329844"
+	phone := "+111111111111"
+	maskedPhone := "+*******111"
+	failOnConflict := false
+	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/update/phone/im", r.URL.RequestURI())
+		assert.EqualValues(t, api.BearerAuthorizationPrefix+"a:"+jwtTokenValid, r.Header.Get(api.AuthorizationHeaderName))
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, loginID, body["loginId"])
+		assert.EqualValues(t, phone, body["phone"])
+		assert.EqualValues(t, "en", body["locale"])
+		assert.EqualValues(t, false, body["failOnConflict"])
+	}, MaskedPhoneRes{MaskedPhone: maskedPhone}))
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	mp, err := a.OTP().UpdateUserPhone(context.Background(), descope.MethodIM, loginID, phone, &descope.UpdateOptions{Locale: "en", FailOnConflict: &failOnConflict}, r)
+	require.NoError(t, err)
+	assert.EqualValues(t, maskedPhone, mp)
+}
+
+func TestUpdateEmailOTPWithLocaleAndFailOnConflict(t *testing.T) {
+	loginID := "943248329844"
+	email := "a@b.com"
+	failOnConflict := true
+	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
+		assert.EqualValues(t, composeUpdateUserEmailOTP(), r.URL.RequestURI())
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, "en", body["locale"])
+		assert.EqualValues(t, true, body["failOnConflict"])
+	}, MaskedEmailRes{MaskedEmail: "a***"}))
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	_, err = a.OTP().UpdateUserEmail(context.Background(), loginID, email, &descope.UpdateOptions{Locale: "en", FailOnConflict: &failOnConflict}, r)
+	require.NoError(t, err)
+}
+
+func TestUpdatePhoneOTPOmitsUnsetFailOnConflict(t *testing.T) {
+	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.NotContains(t, body, "failOnConflict")
+		assert.NotContains(t, body, "locale")
+	}, MaskedPhoneRes{}))
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	_, err = a.OTP().UpdateUserPhone(context.Background(), descope.MethodSMS, "id", "+111111111111", &descope.UpdateOptions{}, r)
+	require.NoError(t, err)
+}
