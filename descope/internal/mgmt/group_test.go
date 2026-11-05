@@ -2,6 +2,7 @@ package mgmt
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"testing"
 
@@ -23,6 +24,7 @@ func TestLoadAllGroupsSuccess(t *testing.T) {
 					LoginID: "some-loginID",
 					UserID:  "some-userID",
 					Display: "some-display",
+					Source:  "jit",
 				},
 			},
 		},
@@ -40,6 +42,34 @@ func TestLoadAllGroupsSuccess(t *testing.T) {
 	res, err := mgmt.Group().LoadAllGroups(context.Background(), tenantID)
 	require.NoError(t, err)
 	assert.EqualValues(t, response, res)
+}
+
+// The round-trip tests above marshal the SDK's own structs, so they pass whatever the json tags say.
+// Decoding a literal server body is what actually pins the wire names.
+func TestLoadAllGroupsDecodesServerFieldNames(t *testing.T) {
+	body := json.RawMessage(`[{
+		"id": "g1",
+		"display": "Engineering",
+		"source": "scim",
+		"ssoId": "sso-1",
+		"members": [
+			{"loginId": "alice@example.com", "userId": "U1", "display": "Alice", "source": "jit"},
+			{"loginId": "bob@example.com", "userId": "U2", "display": "Bob", "source": "scim"}
+		]
+	}]`)
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, body))
+
+	res, err := mgmt.Group().LoadAllGroups(context.Background(), "abc")
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	assert.Equal(t, "g1", res[0].ID)
+	assert.Equal(t, "scim", res[0].Source)
+	require.Len(t, res[0].Members, 2)
+	assert.Equal(t, "alice@example.com", res[0].Members[0].LoginID)
+	assert.Equal(t, "U1", res[0].Members[0].UserID)
+	// a JIT member inside a SCIM-owned group is the case this field exists for
+	assert.Equal(t, "jit", res[0].Members[0].Source)
+	assert.Equal(t, "scim", res[0].Members[1].Source)
 }
 
 func TestLoadAllGroupsWithSSOIDSuccess(t *testing.T) {
@@ -191,6 +221,20 @@ func TestLoadAllGroupMembersSuccess(t *testing.T) {
 	res, err := mgmt.Group().LoadAllGroupMembers(context.Background(), tenantID, groupID)
 	require.NoError(t, err)
 	assert.EqualValues(t, response, res)
+}
+
+func TestLoadAllGroupMembersDecodesServerFieldNames(t *testing.T) {
+	body := json.RawMessage(`[{"id":"g1","display":"Engineering","source":"scim",
+		"members":[{"loginId":"alice@example.com","userId":"U1","display":"Alice","source":"jit"}]}]`)
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, body))
+
+	res, err := mgmt.Group().LoadAllGroupMembers(context.Background(), "abc", "g1")
+	require.NoError(t, err)
+	require.Len(t, res, 1)
+	require.Len(t, res[0].Members, 1)
+	assert.Equal(t, "alice@example.com", res[0].Members[0].LoginID)
+	assert.Equal(t, "U1", res[0].Members[0].UserID)
+	assert.Equal(t, "jit", res[0].Members[0].Source)
 }
 
 func TestLoadAllGroupMembersWithSSOIDSuccess(t *testing.T) {
