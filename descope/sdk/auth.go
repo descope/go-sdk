@@ -108,6 +108,7 @@ type OTP interface {
 	// SignUp - Use to create a new user based on the given loginID either email or a phone.
 	// choose the selected delivery method for verification. (see auth/DeliveryMethod)
 	// optional to add user metadata for farther user details such as name and more.
+	// descope.MethodIM is not supported.
 	// returns the masked address where the code was sent (email or phone) or an error upon failure.
 	SignUp(ctx context.Context, method descope.DeliveryMethod, loginID string, user *descope.User, signUpOptions *descope.SignUpOptions) (maskedAddress string, err error)
 
@@ -131,7 +132,7 @@ type OTP interface {
 	UpdateUserEmail(ctx context.Context, loginID, email string, updateOptions *descope.UpdateOptions, request *http.Request) (maskedAddress string, err error)
 
 	// UpdateUserPhone - Use to update phone and validate via OTP
-	// allowed methods are phone based methods - whatsapp and SMS or Voice call
+	// allowed methods are phone based methods - whatsapp, IM and SMS or Voice call
 	// LoginID of user whom we want to update
 	// UpdateOptions to determine whether to add email as a login id and if to merge with existing user in that case
 	// Request is needed to obtain JWT and send it to Descope, for verification

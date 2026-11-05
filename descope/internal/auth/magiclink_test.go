@@ -655,3 +655,13 @@ func TestUpdatePhoneMagicLinkFailures(t *testing.T) {
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }
+
+func TestUpdatePhoneMagicLinkRejectsIM(t *testing.T) {
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	_, err = a.MagicLink().UpdateUserPhone(context.Background(), descope.MethodIM, "id", "+1111111111", "", nil, r)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.True(t, strings.Contains(err.Error(), "method"))
+}

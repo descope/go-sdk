@@ -160,7 +160,7 @@ if err != nil {
 
 ### OTP Authentication
 
-Send a user a one-time password (OTP) using your preferred delivery method (_Email / SMS / Voice call / WhatsApp_). An email address or phone number must be provided accordingly.
+Send a user a one-time password (OTP) using your preferred delivery method (_Email / SMS / Voice call / WhatsApp / IM_). An email address or phone number must be provided accordingly.
 
 The user can either `sign up`, `sign in` or `sign up or in`
 
@@ -201,6 +201,16 @@ if err != nil {
     }
     // handle other error cases
 }
+```
+
+Use `descope.MethodIM` to send the code via instant message (sign in, sign up or in, verify and update phone; not sign up).
+`LoginOptions` can also set the SSO application, locale and PKCE challenge:
+
+```go
+maskedAddress, err := descopeClient.Auth.OTP().SignIn(context.Background(), descope.MethodIM, "+12025550123", nil, &descope.LoginOptions{
+    SSOAppID: "sso-app-id",
+    Locale:   "en-US",
+})
 ```
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
