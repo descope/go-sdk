@@ -32,3 +32,7 @@ func GetAuthManagementKeyEnvVariable() string {
 func GetPublicKeyEnvVariable() string {
 	return os.Getenv(descope.EnvironmentVariablePublicKey)
 }
+
+func GetJWTEncryptionKeysEnvVariable() string {
+	return os.Getenv(descope.EnvironmentVariableJWTEncryptionKeys)
+}

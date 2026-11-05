@@ -35,6 +35,7 @@ type AuthParams struct {
 	fallBackSessionCookieNames []string
 	fallBackRefreshCookieNames []string
 	JWTLeeway                  time.Duration
+	JWTEncryptionKeys          []string
 }
 
 type defaultRequestTokensProvider struct {
@@ -154,6 +155,9 @@ func NewAuth(conf AuthParams, c *api.Client, requestTokensProvider sdk.RequestTo
 }
 
 func NewAuthWithProvider(conf AuthParams, provider *Provider, c *api.Client, requestTokensProvider sdk.RequestTokensProvider) (*authenticationService, error) {
+	if err := provider.loadEncryptionKeys(); err != nil {
+		return nil, err
+	}
 	base := authenticationsBase{conf: &conf, client: c, dpopJTIStore: newDPoPJTIStore()}
 	base.publicKeysProvider = provider
 	if len(conf.GetSessionCookieNameWithFallback()) == 0 || len(conf.GetRefreshCookieNameWithFallback()) == 0 {
@@ -811,11 +815,18 @@ func (auth *authenticationsBase) extractTokens(jRes *descope.JWTResponse) ([]*de
 }
 
 func ValidateJWT(JWT string, publicKeysProvider *Provider) (*descope.Token, error) {
+	signedJWT := JWT
+	if isEncryptedToken(JWT) {
+		var err error
+		if signedJWT, err = publicKeysProvider.decryptToken(JWT); err != nil {
+			return nil, err
+		}
+	}
 	leeway := getLeeway(publicKeysProvider)
-	token, err := jwt.Parse([]byte(JWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true), jwt.WithAcceptableSkew(leeway))
+	token, err := jwt.Parse([]byte(signedJWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true), jwt.WithAcceptableSkew(leeway))
 	if err != nil {
 		var parseErr error
-		token, parseErr = jwt.Parse([]byte(JWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(false), jwt.WithValidate(false), jwt.WithAcceptableSkew(leeway))
+		token, parseErr = jwt.Parse([]byte(signedJWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(false), jwt.WithValidate(false), jwt.WithAcceptableSkew(leeway))
 		if parseErr != nil {
 			err = parseErr
 		}

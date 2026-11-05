@@ -50,6 +50,7 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 	}
 	config.setManagementKey()
 	config.setAuthManagementKey()
+	config.setJWTEncryptionKeys()
 
 	// Auth initialzes a client with the auth management key if provided
 	authClient := api.NewClient(api.ClientParams{
@@ -70,6 +71,7 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 		CookieDomain:        config.SessionJWTCookieDomain,
 		CookieSameSite:      config.SessionJWTCookieSameSite,
 		JWTLeeway:           config.JWTLeeway,
+		JWTEncryptionKeys:   config.JWTEncryptionKeys,
 	}
 	conf.SetCookieNames(config.RefreshCookieName, config.FallBackRefreshCookieNames, config.SessionCookieName, config.FallBackSessionCookieNames)
 	provider := auth.NewProvider(authClient, conf)
