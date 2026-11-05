@@ -2085,6 +2085,22 @@ type ThirdPartyApplicationConsent struct {
 	ModifiedTime int32 `json:"modifiedTime,omitempty"`
 }
 
+// Options for creating a third party application consent on behalf of a user.
+//
+// AppID - the third party application id the consent is granted to (required).
+// UserID - the id of the user who granted the consent (required).
+// Scopes - the consented scopes. Each scope must be defined by the application, and the application's
+// mandatory scopes must be included (all of its scopes when it does not allow partial scopes).
+// TenantID - optional tenant id the consent is bound to. The user must be a member of this tenant.
+// ExpireTime - optional consent expiration in seconds since epoch. Leave at 0 for a consent that never expires.
+type ThirdPartyApplicationConsentCreateRequest struct {
+	AppID      string   `json:"appId"`
+	UserID     string   `json:"userId"`
+	Scopes     []string `json:"scopes"`
+	TenantID   string   `json:"tenantId"`
+	ExpireTime int32    `json:"expireTime"`
+}
+
 // Options for deleting third party application consents. At least one of ConsentIDs, AppID or UserIDs must be provided.
 //
 // ConsentIDs - allows to delete any consents by their given id.
