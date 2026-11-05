@@ -655,3 +655,20 @@ func TestUpdatePhoneMagicLinkFailures(t *testing.T) {
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }
+
+func TestMagicLinkIMNotSupported(t *testing.T) {
+	a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
+		t.Fatal("no request expected")
+		return nil, nil
+	})
+	require.NoError(t, err)
+	_, err = a.MagicLink().SignIn(context.Background(), descope.MethodIM, "+111111111111", "", nil, nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "method")
+	_, err = a.MagicLink().SignUp(context.Background(), descope.MethodIM, "+111111111111", "", nil, nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "method")
+	_, err = a.MagicLink().SignUpOrIn(context.Background(), descope.MethodIM, "+111111111111", "", nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "method")
+}

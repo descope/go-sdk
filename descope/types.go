@@ -477,6 +477,8 @@ type LoginOptions struct {
 	TemplateID               string            `json:"templateId,omitempty"`      // for overriding the default messaging template
 	TemplateOptions          map[string]string `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 	TenantID                 string            `json:"tenantId,omitempty"`        // for associating the authentication with a specific tenant
+	SSOAppID                 string            `json:"ssoAppId,omitempty"`
+	Locale                   string            `json:"locale,omitempty"` // for choosing the messaging template's locale
 }
 
 func (lo *LoginOptions) IsJWTRequired() bool {
@@ -493,6 +495,7 @@ type SignUpOptions struct {
 	TemplateID      string            `json:"templateId,omitempty"`      // for overriding the default messaging template
 	TemplateOptions map[string]string `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 	TenantID        string            `json:"-"`                         // for associating the authentication with a specific tenant
+	Locale          string            `json:"-"`                         // for choosing the messaging template's locale (OTP only)
 }
 
 type EmbeddedLinkLoginOptions struct {
@@ -801,6 +804,9 @@ type UpdateOptions struct {
 	// instead of replacing it with a single factor. Requires a valid refresh token on the
 	// request. Currently applies to the OTP update phone / email flows.
 	MFA bool `json:"mfa,omitempty"`
+
+	Locale         string `json:"locale,omitempty"` // for choosing the messaging template's locale
+	FailOnConflict bool   `json:"failOnConflict,omitempty"`
 }
 
 type NOTPTemplates struct {
@@ -1662,6 +1668,7 @@ const (
 	MethodVoice    DeliveryMethod = "voice"
 	MethodEmail    DeliveryMethod = "email"
 	MethodEmbedded DeliveryMethod = "Embedded"
+	MethodIM       DeliveryMethod = "im" // instant message, OTP only
 
 	OAuthFacebook  OAuthProvider = "facebook"
 	OAuthGithub    OAuthProvider = "github"

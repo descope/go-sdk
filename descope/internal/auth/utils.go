@@ -250,6 +250,7 @@ func newAuthenticationSignUpRequestBody(method descope.DeliveryMethod, loginID s
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
 		TemplateID:      signUpOptions.TemplateID,
+		Locale:          signUpOptions.Locale,
 	}
 	return b
 }
