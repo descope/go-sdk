@@ -921,6 +921,89 @@ func (u *user) logoutUser(ctx context.Context, userID string, loginID string, se
 	return err
 }
 
+type logoutSessionRangeRaw struct {
+	ID           string   `json:"id,omitempty"`
+	After        string   `json:"after,omitempty"`
+	Before       string   `json:"before,omitempty"`
+	SessionTypes []string `json:"sessionTypes,omitempty"`
+}
+
+func (r *logoutSessionRangeRaw) toLogoutSessionRange() (*descope.LogoutSessionRange, error) {
+	out := &descope.LogoutSessionRange{ID: r.ID, SessionTypes: r.SessionTypes}
+	if r.After != "" {
+		after, err := time.Parse(time.RFC3339, r.After)
+		if err != nil {
+			return nil, err
+		}
+		out.After = after
+	}
+	if r.Before != "" {
+		before, err := time.Parse(time.RFC3339, r.Before)
+		if err != nil {
+			return nil, err
+		}
+		out.Before = before
+	}
+	return out, nil
+}
+
+func (u *user) LogoutSessionsCreatedBetween(ctx context.Context, before *time.Time, after *time.Time, sessionTypes ...string) (*descope.LogoutSessionRange, error) {
+	if before == nil && after == nil {
+		return nil, utils.NewInvalidArgumentError("before or after")
+	}
+	req := map[string]any{}
+	if before != nil {
+		req["sessionsCreatedBefore"] = before.UTC().Format(time.RFC3339)
+	}
+	if after != nil {
+		req["sessionsCreatedAfter"] = after.UTC().Format(time.RFC3339)
+	}
+	if len(sessionTypes) > 0 {
+		req["sessionTypes"] = sessionTypes
+	}
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserLogoutSessions(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	raw := &logoutSessionRangeRaw{}
+	if err := utils.Unmarshal([]byte(res.BodyStr), raw); err != nil {
+		// notest
+		return nil, err
+	}
+	return raw.toLogoutSessionRange()
+}
+
+func (u *user) ListLogoutSessionRanges(ctx context.Context) ([]*descope.LogoutSessionRange, error) {
+	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserLogoutSessionsList(), map[string]any{}, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	outRaw := struct {
+		Ranges []*logoutSessionRangeRaw `json:"ranges"`
+	}{}
+	if err := utils.Unmarshal([]byte(res.BodyStr), &outRaw); err != nil {
+		// notest
+		return nil, err
+	}
+	out := make([]*descope.LogoutSessionRange, len(outRaw.Ranges))
+	for i, r := range outRaw.Ranges {
+		lr, err := r.toLogoutSessionRange()
+		if err != nil {
+			return nil, err
+		}
+		out[i] = lr
+	}
+	return out, nil
+}
+
+func (u *user) DeleteLogoutSessionRange(ctx context.Context, id string) error {
+	if id == "" {
+		return utils.NewInvalidArgumentError("id")
+	}
+	_, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserLogoutSessionsDelete(), map[string]any{"id": id}, nil, "")
+	return err
+}
+
 func (u *user) GenerateOTPForTestUser(ctx context.Context, method descope.DeliveryMethod, loginID string, loginOptions *descope.LoginOptions) (code string, err error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
