@@ -959,3 +959,10 @@ func TestUpdatePhoneOTPOmitsUnsetFailOnConflict(t *testing.T) {
 	_, err = a.OTP().UpdateUserPhone(context.Background(), descope.MethodSMS, "id", "+111111111111", &descope.UpdateOptions{}, r)
 	require.NoError(t, err)
 }
+
+func TestSignUpIMNotSupported(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	_, err = a.OTP().SignUp(context.Background(), descope.MethodIM, "+111111111111", nil, nil)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+}

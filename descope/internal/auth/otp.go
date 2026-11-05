@@ -32,6 +32,9 @@ func (auth *otp) SignIn(ctx context.Context, method descope.DeliveryMethod, logi
 }
 
 func (auth *otp) SignUp(ctx context.Context, method descope.DeliveryMethod, loginID string, user *descope.User, signUpOptions *descope.SignUpOptions) (string, error) {
+	if method == descope.MethodIM {
+		return "", utils.NewInvalidArgumentError("method")
+	}
 	if user == nil {
 		user = &descope.User{}
 	}
