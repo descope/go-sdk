@@ -32,3 +32,7 @@ func GetAuthManagementKeyEnvVariable() string {
 func GetPublicKeyEnvVariable() string {
 	return os.Getenv(descope.EnvironmentVariablePublicKey)
 }
+
+func GetPrivateKeyEnvVariable() string {
+	return os.Getenv(descope.EnvironmentVariablePrivateKey)
+}
