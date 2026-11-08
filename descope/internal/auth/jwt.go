@@ -29,9 +29,9 @@ type Provider struct {
 	conf        *AuthParams
 	providedKey jwk.Key
 	keySet      atomic.Value
-	fetchedAt   atomic.Int64 // unix nanos of the last successful fetch
-	mu          sync.Mutex   // serializes fetches
-	attemptedAt time.Time    // last fetch attempt, guarded by mu
+	fetchedAt   atomic.Pointer[time.Time] // last successful fetch, nil before the first one
+	mu          sync.Mutex                // serializes fetches
+	attemptedAt time.Time                 // last fetch attempt, guarded by mu
 	now         func() time.Time
 }
 
@@ -43,7 +43,7 @@ func NewProvider(client *api.Client, conf *AuthParams) *Provider {
 
 // cachedKey returns the key from the cached key set, as long as the set is not older than keySetTTL
 func (p *Provider) cachedKey(kid string) (jwk.Key, bool) {
-	if p.now().UnixNano()-p.fetchedAt.Load() >= int64(keySetTTL) {
+	if t := p.fetchedAt.Load(); t == nil || p.now().Sub(*t) >= keySetTTL {
 		return nil, false
 	}
 	key, ok := p.keySetMap()[kid]
@@ -143,7 +143,14 @@ func (p *Provider) findKey(kid string) (jwk.Key, error) {
 		return nil, err
 	}
 
-	p.mu.Lock()
+	// a cached key is served as is while another caller is fetching
+	if key, ok := p.keySetMap()[kid]; ok {
+		if !p.mu.TryLock() {
+			return key, nil
+		}
+	} else {
+		p.mu.Lock()
+	}
 	defer p.mu.Unlock()
 	// another caller may have refreshed the key set while we waited for the lock
 	if key, ok := p.cachedKey(kid); ok {
@@ -151,22 +158,26 @@ func (p *Provider) findKey(kid string) (jwk.Key, error) {
 	}
 
 	// unknown key ids wait keyFetchCooldown after a successful fetch, so a failed fetch is retried right away;
-	// a cached key past keySetTTL waits keyFetchCooldown after an attempt, so it is served while fetches fail
+	// a cached key past keySetTTL waits keyFetchCooldown after an attempt ends, so it is served while fetches fail
 	now := p.now()
-	last := time.Unix(0, p.fetchedAt.Load())
+	var last time.Time
+	if t := p.fetchedAt.Load(); t != nil {
+		last = *t
+	}
 	if _, ok := p.keySetMap()[kid]; ok {
 		last = p.attemptedAt
 	}
 	if now.Sub(last) >= keyFetchCooldown {
-		p.attemptedAt = now
-		if err := p.requestKeys(); err != nil {
+		err := p.requestKeys()
+		p.attemptedAt = p.now()
+		if err != nil {
 			logger.LogDebug("Failed to retrieve public keys from API [%s]", err)
 			if key, ok := p.keySetMap()[kid]; ok {
 				return key, nil
 			}
 			return nil, err
 		}
-		p.fetchedAt.Store(now.UnixNano())
+		p.fetchedAt.Store(&now)
 	}
 
 	key, ok := p.keySetMap()[kid]

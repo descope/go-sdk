@@ -21,10 +21,14 @@ type keysServer struct {
 	fetches atomic.Int32
 	keys    string // JSON array content of the "keys" field
 	fail    bool
+	during  func() // runs while the fetch is in flight
 }
 
 func (s *keysServer) do(_ *http.Request) (*http.Response, error) {
 	s.fetches.Add(1)
+	if s.during != nil {
+		s.during()
+	}
 	if s.fail {
 		return &http.Response{StatusCode: http.StatusInternalServerError, Body: io.NopCloser(strings.NewReader(`{}`))}, nil
 	}
@@ -147,4 +151,53 @@ func TestConcurrentUnknownKeyIDFetchOnce(t *testing.T) {
 	}
 	wg.Wait()
 	require.EqualValues(t, 1, s.fetches.Load())
+}
+
+func TestCachedKeyServedWhileFetchInFlight(t *testing.T) {
+	s := &keysServer{keys: publicKey}
+	p, clock := newKeysTestProvider(s)
+	_, err := p.findKey("testkey")
+	require.NoError(t, err)
+
+	*clock = clock.Add(keySetTTL)
+	release := make(chan struct{})
+	s.during = func() { <-release }
+	fetchDone := make(chan struct{})
+	go func() {
+		defer close(fetchDone)
+		_, _ = p.findKey("unknown")
+	}()
+	require.Eventually(t, func() bool { return s.fetches.Load() == 2 }, time.Second, time.Millisecond)
+
+	validated := make(chan error, 1)
+	go func() {
+		_, err := ValidateJWT(jwtTokenValid, p)
+		validated <- err
+	}()
+	select {
+	case err = <-validated:
+		require.NoError(t, err)
+	case <-time.After(time.Second):
+		t.Fatal("validation of a cached key waited for the in-flight fetch")
+	}
+	close(release)
+	<-fetchDone
+	require.EqualValues(t, 2, s.fetches.Load())
+}
+
+func TestSlowFailedRefreshDelaysNextRefresh(t *testing.T) {
+	s := &keysServer{keys: publicKey}
+	p, clock := newKeysTestProvider(s)
+	_, err := p.findKey("testkey")
+	require.NoError(t, err)
+
+	// the refresh fails after taking longer than keyFetchCooldown
+	*clock = clock.Add(keySetTTL)
+	s.fail = true
+	s.during = func() { *clock = clock.Add(2 * keyFetchCooldown) }
+	_, err = p.findKey("testkey")
+	require.NoError(t, err)
+	_, err = p.findKey("testkey")
+	require.NoError(t, err)
+	require.EqualValues(t, 2, s.fetches.Load())
 }
