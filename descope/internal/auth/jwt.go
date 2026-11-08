@@ -22,6 +22,8 @@ const (
 	// keyFetchCooldown limits fetches for unknown key ids after a successful fetch,
 	// and refresh retries of a cached key past keySetTTL after a fetch attempt
 	keyFetchCooldown = 30 * time.Second
+	// keyMaxStaleAge is how long after the last successful fetch cached keys may still be used when refreshes fail
+	keyMaxStaleAge = time.Hour
 )
 
 type Provider struct {
@@ -52,6 +54,14 @@ func (p *Provider) cachedKey(kid string) (jwk.Key, bool) {
 
 func (p *Provider) keySetMap() map[string]jwk.Key {
 	return p.keySet.Load().(map[string]jwk.Key)
+}
+
+// usableKeySet returns the cached key set, or nil once the last successful fetch is older than keyMaxStaleAge
+func (p *Provider) usableKeySet() map[string]jwk.Key {
+	if t := p.fetchedAt.Load(); t == nil || p.now().Sub(*t) >= keyMaxStaleAge {
+		return nil
+	}
+	return p.keySetMap()
 }
 
 func (p *Provider) publicKeyExists() bool {
@@ -144,7 +154,7 @@ func (p *Provider) findKey(kid string) (jwk.Key, error) {
 	}
 
 	// a cached key is served as is while another caller is fetching
-	if key, ok := p.keySetMap()[kid]; ok {
+	if key, ok := p.usableKeySet()[kid]; ok {
 		if !p.mu.TryLock() {
 			return key, nil
 		}
@@ -164,7 +174,7 @@ func (p *Provider) findKey(kid string) (jwk.Key, error) {
 	if t := p.fetchedAt.Load(); t != nil {
 		last = *t
 	}
-	if _, ok := p.keySetMap()[kid]; ok {
+	if _, ok := p.usableKeySet()[kid]; ok {
 		last = p.attemptedAt
 	}
 	if now.Sub(last) >= keyFetchCooldown {
@@ -172,7 +182,7 @@ func (p *Provider) findKey(kid string) (jwk.Key, error) {
 		p.attemptedAt = p.now()
 		if err != nil {
 			logger.LogDebug("Failed to retrieve public keys from API [%s]", err)
-			if key, ok := p.keySetMap()[kid]; ok {
+			if key, ok := p.usableKeySet()[kid]; ok {
 				return key, nil
 			}
 			return nil, err
@@ -180,7 +190,7 @@ func (p *Provider) findKey(kid string) (jwk.Key, error) {
 		p.fetchedAt.Store(&now)
 	}
 
-	key, ok := p.keySetMap()[kid]
+	key, ok := p.usableKeySet()[kid]
 	if !ok {
 		err := descope.ErrPublicKey.WithMessage("Required public key does not exist in key set")
 		logger.LogInfo("Required public key does not exist in key set (key set size [%d])", len(p.keySetMap()))

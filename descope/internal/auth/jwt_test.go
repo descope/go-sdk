@@ -201,3 +201,27 @@ func TestSlowFailedRefreshDelaysNextRefresh(t *testing.T) {
 	require.NoError(t, err)
 	require.EqualValues(t, 2, s.fetches.Load())
 }
+
+func TestCachedKeysNotUsedAfterMaxStaleAge(t *testing.T) {
+	s := &keysServer{keys: publicKey}
+	p, clock := newKeysTestProvider(s)
+	_, err := ValidateJWT(jwtTokenValid, p)
+	require.NoError(t, err)
+
+	s.fail = true
+	start := *clock
+	for _, age := range []time.Duration{keySetTTL, keyMaxStaleAge - time.Second} {
+		*clock = start.Add(age)
+		_, err = ValidateJWT(jwtTokenValid, p)
+		require.NoError(t, err, age)
+	}
+	*clock = start.Add(keyMaxStaleAge)
+	_, err = ValidateJWT(jwtTokenValid, p)
+	require.Error(t, err)
+	_, err = p.findKey("testkey")
+	require.Error(t, err)
+
+	s.fail = false
+	_, err = ValidateJWT(jwtTokenValid, p)
+	require.NoError(t, err)
+}
