@@ -100,6 +100,11 @@ func TestSSOApplicationCreateSAMLApplicationSuccess(t *testing.T) {
 		require.True(t, req["forceAuthentication"].(bool))
 		require.Equal(t, "http://dummy.com/logout", req["logoutRedirectUrl"])
 		require.Equal(t, "sha256", req["defaultSignatureAlgorithm"])
+		require.Equal(t, true, req["singleLogoutEnabled"])
+		require.Equal(t, "https://dummy.com/slo", req["spSingleLogoutUrl"])
+		require.Equal(t, "soap", req["spSingleLogoutBinding"])
+		require.Equal(t, "none", req["singleLogoutPropagation"])
+		require.Equal(t, "allSessions", req["singleLogoutScope"])
 
 	}, response))
 
@@ -124,6 +129,11 @@ func TestSSOApplicationCreateSAMLApplicationSuccess(t *testing.T) {
 		ForceAuthentication:       true,
 		LogoutRedirectURL:         "http://dummy.com/logout",
 		DefaultSignatureAlgorithm: "sha256",
+		SingleLogoutEnabled:       ptr(true),
+		SPSingleLogoutURL:         ptr("https://dummy.com/slo"),
+		SPSingleLogoutBinding:     ptr("soap"),
+		SingleLogoutPropagation:   ptr("none"),
+		SingleLogoutScope:         ptr("allSessions"),
 	})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)
@@ -234,6 +244,11 @@ func TestSSOApplicationUpdateSAMLApplicationSuccess(t *testing.T) {
 		require.True(t, req["forceAuthentication"].(bool))
 		require.Equal(t, "http://dummy.com/logout", req["logoutRedirectUrl"])
 		require.Equal(t, "sha256", req["defaultSignatureAlgorithm"])
+		// single logout settings that aren't set are not sent, so the app keeps its current ones
+		for _, k := range []string{"singleLogoutEnabled", "spSingleLogoutUrl", "spSingleLogoutBinding", "singleLogoutPropagation", "singleLogoutScope"} {
+			_, sent := req[k]
+			require.False(t, sent, k)
+		}
 
 	}, response))
 
@@ -495,6 +510,11 @@ func TestSSOApplicationLoadSAMLSuccess(t *testing.T) {
 			"idpLogoutUrl":              "http://dummy.com/idplogout",
 			"logoutRedirectUrl":         "http://dummy.com/logout",
 			"defaultSignatureAlgorithm": "sha256",
+			"singleLogoutEnabled":       true,
+			"spSingleLogoutUrl":         "https://dummy.com/slo",
+			"spSingleLogoutBinding":     "redirect",
+			"singleLogoutPropagation":   "allApps",
+			"singleLogoutScope":         "session",
 		},
 	}
 
@@ -533,6 +553,11 @@ func TestSSOApplicationLoadSAMLSuccess(t *testing.T) {
 	require.Equal(t, "http://dummy.com/idplogout", res.SAMLSettings.IdpLogoutURL)
 	require.Equal(t, "http://dummy.com/logout", res.SAMLSettings.LogoutRedirectURL)
 	require.Equal(t, "sha256", res.SAMLSettings.DefaultSignatureAlgorithm)
+	require.True(t, res.SAMLSettings.SingleLogoutEnabled)
+	require.Equal(t, "https://dummy.com/slo", res.SAMLSettings.SPSingleLogoutURL)
+	require.Equal(t, "redirect", res.SAMLSettings.SPSingleLogoutBinding)
+	require.Equal(t, "allApps", res.SAMLSettings.SingleLogoutPropagation)
+	require.Equal(t, "session", res.SAMLSettings.SingleLogoutScope)
 }
 
 func TestSSOApplicationLoadError(t *testing.T) {
@@ -892,4 +917,8 @@ func TestSSOApplicationLoadCustomAttributesSuccess(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, res, 1)
 	require.Equal(t, "npi_level", res[0].Name)
+}
+
+func ptr[T any](v T) *T {
+	return &v
 }

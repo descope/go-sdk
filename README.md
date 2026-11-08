@@ -1891,6 +1891,12 @@ req := &descope.SAMLApplicationRequest{
 		},
 	},
 	LogoutRedirectURL: "http://dummy.com/logout",
+	// Optional SAML Single Logout (SLO): the service provider can log the user out with a signed
+	// LogoutRequest, and it is sent one when the user's session ends. Also see SPSingleLogoutBinding
+	// ("redirect", "post" or "soap"), SingleLogoutPropagation ("allApps" or "none") and
+	// SingleLogoutScope ("session" or "allSessions").
+	SingleLogoutEnabled: &sloEnabled, // sloEnabled := true
+	SPSingleLogoutURL:   &sloURL,     // sloURL := "https://dummy.com/slo"
 }
 appID, err = descopeClient.Management.SSOApplication().CreateSAMLApplication(context.Background(), req)
 
@@ -1923,7 +1929,8 @@ err = tc.DescopeClient().Management.SSOApplication().UpdateOIDCApplication(conte
 })
 
 // Update SAML SSO application
-// Update will override all fields as is. Use carefully.
+// Update will override all fields as is, except the single logout settings, which are kept when not set.
+// Use carefully.
 req = &descope.SAMLApplicationRequest{
 	ID: samlAppID, Name: "samlNewAppName",
 	Enabled:      false,

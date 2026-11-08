@@ -343,7 +343,7 @@ func unmarshalSSOApplicationCustomAttributesResponse(res *api.HTTPResponse) ([]*
 }
 
 func makeCreateUpdateSAMLApplicationRequest(appRequest *descope.SAMLApplicationRequest) map[string]any {
-	return map[string]any{
+	req := map[string]any{
 		"id":                        appRequest.ID,
 		"name":                      appRequest.Name,
 		"description":               appRequest.Description,
@@ -366,6 +366,23 @@ func makeCreateUpdateSAMLApplicationRequest(appRequest *descope.SAMLApplicationR
 		"defaultSignatureAlgorithm": appRequest.DefaultSignatureAlgorithm,
 		"customAttributes":          appRequest.CustomAttributes,
 	}
+	// The single logout settings are sent only when set, so an update that doesn't set them keeps them
+	if appRequest.SingleLogoutEnabled != nil {
+		req["singleLogoutEnabled"] = *appRequest.SingleLogoutEnabled
+	}
+	if appRequest.SPSingleLogoutURL != nil {
+		req["spSingleLogoutUrl"] = *appRequest.SPSingleLogoutURL
+	}
+	if appRequest.SPSingleLogoutBinding != nil {
+		req["spSingleLogoutBinding"] = *appRequest.SPSingleLogoutBinding
+	}
+	if appRequest.SingleLogoutPropagation != nil {
+		req["singleLogoutPropagation"] = *appRequest.SingleLogoutPropagation
+	}
+	if appRequest.SingleLogoutScope != nil {
+		req["singleLogoutScope"] = *appRequest.SingleLogoutScope
+	}
+	return req
 }
 
 func makeCreateUpdateWSFedApplicationRequest(appRequest *descope.WSFedApplicationRequest) map[string]any {
