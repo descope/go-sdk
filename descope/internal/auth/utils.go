@@ -100,6 +100,24 @@ type notpUpdateUserRequestBody struct {
 	Locale             string                 `json:"locale,omitempty"`
 }
 
+type otpSignInRequestBody struct {
+	LoginID      string                `json:"loginId,omitempty"`
+	LoginOptions *descope.LoginOptions `json:"loginOptions,omitempty"`
+	ProviderID   string                `json:"providerId,omitempty"`
+	SSOAppID     string                `json:"ssoAppId,omitempty"`
+	UseRecovery  bool                  `json:"useRecovery,omitempty"`
+}
+
+type otpSignUpRequestBody struct {
+	WhatsApp     string                `json:"whatsapp,omitempty"`
+	Phone        string                `json:"phone,omitempty"`
+	Email        string                `json:"email,omitempty"`
+	LoginID      string                `json:"loginId,omitempty"`
+	User         *descope.SignUpUser   `json:"user"`
+	ProviderID   string                `json:"providerId,omitempty"`
+	LoginOptions *descope.LoginOptions `json:"loginOptions,omitempty"`
+}
+
 type otpUpdateEmailRequestBody struct {
 	*descope.UpdateOptions `json:",inline"`
 	LoginID                string `json:"loginId,omitempty"`
@@ -161,7 +179,7 @@ func newSignUpRequestBody(method descope.DeliveryMethod, user *descope.User) *au
 	switch method {
 	case descope.MethodSMS:
 		return &authenticationSignUpRequestBody{Phone: user.Phone}
-	case descope.MethodVoice:
+	case descope.MethodVoice, descope.MethodIM:
 		return &authenticationSignUpRequestBody{Phone: user.Phone}
 	case descope.MethodWhatsApp:
 		return &authenticationSignUpRequestBody{WhatsApp: user.Phone}
@@ -172,6 +190,36 @@ func newSignUpRequestBody(method descope.DeliveryMethod, user *descope.User) *au
 
 func newSignUPTOTPRequestBody(loginID string, user *descope.User) *totpSignUpRequestBody {
 	return &totpSignUpRequestBody{LoginID: loginID, User: user}
+}
+
+func newOTPSignInRequestBody(loginID string, options *descope.OTPSignInOptions) *otpSignInRequestBody {
+	return &otpSignInRequestBody{LoginID: loginID, LoginOptions: options.LoginOptions, ProviderID: options.ProviderID, SSOAppID: options.SSOAppID, UseRecovery: options.UseRecovery}
+}
+
+func newOTPSignUpRequestBody(method descope.DeliveryMethod, loginID string, address *descope.User, user *descope.SignUpUser, options *descope.OTPSignUpOptions) *otpSignUpRequestBody {
+	b := newSignUpRequestBody(method, address)
+	// The delivery address goes outside the user details
+	u := *user
+	if method == descope.MethodEmail {
+		u.Email = ""
+	} else {
+		u.Phone = ""
+	}
+	return &otpSignUpRequestBody{
+		WhatsApp:   b.WhatsApp,
+		Phone:      b.Phone,
+		Email:      b.Email,
+		LoginID:    loginID,
+		User:       &u,
+		ProviderID: options.ProviderID,
+		LoginOptions: &descope.LoginOptions{
+			TenantID:        options.TenantID,
+			CustomClaims:    options.CustomClaims,
+			TemplateOptions: options.TemplateOptions,
+			Locale:          options.Locale,
+			PKCEChallenge:   options.PKCEChallenge,
+		},
+	}
 }
 
 func newOTPUpdateEmailRequestBody(loginID, email string, updateOptions *descope.UpdateOptions) *otpUpdateEmailRequestBody {

@@ -934,6 +934,9 @@ func (u *user) GenerateOTPForTestUser(ctx context.Context, method descope.Delive
 }
 
 func (u *user) GenerateMagicLinkForTestUser(ctx context.Context, method descope.DeliveryMethod, loginID, URI string, loginOptions *descope.LoginOptions) (link string, err error) {
+	if method == descope.MethodIM {
+		return "", utils.NewInvalidArgumentError("method")
+	}
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}

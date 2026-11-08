@@ -160,7 +160,7 @@ if err != nil {
 
 ### OTP Authentication
 
-Send a user a one-time password (OTP) using your preferred delivery method (_Email / SMS / Voice call / WhatsApp_). An email address or phone number must be provided accordingly.
+Send a user a one-time password (OTP) using your preferred delivery method (_Email / SMS / Voice call / WhatsApp / Instant message_). An email address or phone number must be provided accordingly.
 
 The user can either `sign up`, `sign in` or `sign up or in`
 
@@ -181,6 +181,31 @@ if err != nil {
     }
     // handle other error cases
 }
+```
+
+The `WithOptions` variants take the additional request options and also return the number of verification attempts:
+
+```go
+// Sign up by instant message, with the additional user details and options
+res, err := descopeClient.Auth.OTP().SignUpWithOptions(context.Background(), descope.MethodIM, "+12025550123",
+    &descope.SignUpUser{Name: "Desmond Copeland", Email: "desmond@descope.com", Username: "desmond", Icon: "https://example.com/icon.png"},
+    &descope.OTPSignUpOptions{Locale: "en", ProviderID: "provider"})
+// res.MaskedPhone, res.VerificationAttempts
+
+// Sign in (or sign up or in) with the full login options. The request is needed only for step-up or MFA
+signInOptions := &descope.OTPSignInOptions{
+    LoginOptions: &descope.LoginOptions{SSOAppID: "app", Locale: "en"},
+    ProviderID:   "provider",
+    SSOAppID:     "app",
+    UseRecovery:  true,
+}
+res, err = descopeClient.Auth.OTP().SignInWithOptions(context.Background(), descope.MethodEmail, loginID, nil, signInOptions)
+res, err = descopeClient.Auth.OTP().SignUpOrInWithOptions(context.Background(), descope.MethodSMS, "+12025550123", nil, signInOptions)
+
+// Update the user's email or phone. The request holds the user's refresh token
+updateOptions := &descope.UpdateOptions{AddToLoginIDs: true, Locale: "en", FailOnConflict: true}
+res, err = descopeClient.Auth.OTP().UpdateUserEmailWithOptions(context.Background(), loginID, "new@example.com", updateOptions, r)
+res, err = descopeClient.Auth.OTP().UpdateUserPhoneWithOptions(context.Background(), descope.MethodIM, loginID, "+12025550123", updateOptions, r)
 ```
 
 The user will receive a code using the selected delivery method. Verify that code using:

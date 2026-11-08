@@ -798,3 +798,406 @@ func TestUpdatePhoneOTPFailures(t *testing.T) {
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }
+
+func TestSignInWithOptions(t *testing.T) {
+	phone := "+11111111111"
+	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/signin/im", r.URL.RequestURI())
+		p, jwt := getProjectAndJwt(r)
+		assert.NotEmpty(t, p)
+		assert.Empty(t, jwt)
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, map[string]any{
+			"loginId": phone,
+			"loginOptions": map[string]any{
+				"ssoAppId":                 "app",
+				"locale":                   "en",
+				"pkceChallenge":            "AQI=",
+				"revokeOtherSessions":      true,
+				"revokeOtherSessionsTypes": []any{"web"},
+				"customClaims":             map[string]any{"k1": "v1"},
+				"templateOptions":          map[string]any{"t1": "v1"},
+				"tenantId":                 "tenant",
+			},
+			"providerId":  "provider",
+			"ssoAppId":    "app2",
+			"useRecovery": true,
+		}, body)
+	}, map[string]any{"maskedPhone": "+*******111", "verificationAttempts": 3}))
+	require.NoError(t, err)
+	res, err := a.OTP().SignInWithOptions(context.Background(), descope.MethodIM, phone, nil, &descope.OTPSignInOptions{
+		LoginOptions: &descope.LoginOptions{
+			SSOAppID:                 "app",
+			Locale:                   "en",
+			PKCEChallenge:            []byte{1, 2},
+			RevokeOtherSessions:      true,
+			RevokeOtherSessionsTypes: []string{"web"},
+			CustomClaims:             map[string]any{"k1": "v1"},
+			TemplateOptions:          map[string]string{"t1": "v1"},
+			TenantID:                 "tenant",
+		},
+		ProviderID:  "provider",
+		SSOAppID:    "app2",
+		UseRecovery: true,
+	})
+	require.NoError(t, err)
+	assert.EqualValues(t, &descope.OTPResponse{MaskedPhone: "+*******111", VerificationAttempts: 3}, res)
+}
+
+func TestSignInWithOptionsStepup(t *testing.T) {
+	email := "test@email.com"
+	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
+		assert.EqualValues(t, composeSignInURL(descope.MethodEmail), r.URL.RequestURI())
+		_, jwt := getProjectAndJwt(r)
+		assert.EqualValues(t, "test", jwt)
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, map[string]any{"loginId": email, "loginOptions": map[string]any{"stepup": true}}, body)
+	}, map[string]any{"maskedEmail": "t***@email.com"}))
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}
+	res, err := a.OTP().SignInWithOptions(context.Background(), descope.MethodEmail, email, r, &descope.OTPSignInOptions{LoginOptions: &descope.LoginOptions{Stepup: true}})
+	require.NoError(t, err)
+	assert.EqualValues(t, "t***@email.com", res.MaskedEmail)
+}
+
+func TestSignInWithOptionsFailures(t *testing.T) {
+	a, err := newTestAuth(nil, DoBadRequest(nil))
+	require.NoError(t, err)
+	_, err = a.OTP().SignInWithOptions(context.Background(), descope.MethodEmail, "", nil, nil)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "loginID")
+	_, err = a.OTP().SignInWithOptions(context.Background(), descope.MethodEmail, "test@email.com", nil, &descope.OTPSignInOptions{LoginOptions: &descope.LoginOptions{MFA: true}})
+	assert.ErrorIs(t, err, descope.ErrInvalidStepUpJWT)
+	_, err = a.OTP().SignInWithOptions(context.Background(), descope.MethodEmail, "test@email.com", nil, nil)
+	assert.ErrorIs(t, err, descope.ErrBadRequest)
+}
+
+func TestSignUpWithOptions(t *testing.T) {
+	phone := "+11111111111"
+	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/signup/im", r.URL.RequestURI())
+		p, jwt := getProjectAndJwt(r)
+		assert.NotEmpty(t, p)
+		assert.Empty(t, jwt)
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, map[string]any{
+			"phone":   phone,
+			"loginId": phone,
+			"user": map[string]any{
+				"name":     "name",
+				"email":    "test@email.com",
+				"username": "user",
+				"icon":     "icon",
+			},
+			"providerId": "provider",
+			"loginOptions": map[string]any{
+				"customClaims":    map[string]any{"k1": "v1"},
+				"templateOptions": map[string]any{"t1": "v1"},
+				"locale":          "en",
+				"pkceChallenge":   "AQI=",
+			},
+		}, body)
+	}, map[string]any{"maskedPhone": "+*******111", "verificationAttempts": 3}))
+	require.NoError(t, err)
+	user := &descope.SignUpUser{Name: "name", Email: "test@email.com", Username: "user", Icon: "icon"}
+	res, err := a.OTP().SignUpWithOptions(context.Background(), descope.MethodIM, phone, user, &descope.OTPSignUpOptions{
+		CustomClaims:    map[string]any{"k1": "v1"},
+		TemplateOptions: map[string]string{"t1": "v1"},
+		Locale:          "en",
+		PKCEChallenge:   []byte{1, 2},
+		ProviderID:      "provider",
+	})
+	require.NoError(t, err)
+	assert.EqualValues(t, &descope.OTPResponse{MaskedPhone: "+*******111", VerificationAttempts: 3}, res)
+}
+
+func TestSignUpWithOptionsFailures(t *testing.T) {
+	a, err := newTestAuth(nil, DoBadRequest(func(r *http.Request) {
+		assert.EqualValues(t, "/v1/auth/otp/signup/email", r.URL.RequestURI())
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, map[string]any{"email": "test@email.com", "loginId": "test@email.com", "user": map[string]any{}, "loginOptions": map[string]any{}}, body)
+	}))
+	require.NoError(t, err)
+	_, err = a.OTP().SignUpWithOptions(context.Background(), descope.MethodIM, "abc", nil, nil)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+	_, err = a.OTP().SignUpWithOptions(context.Background(), descope.MethodEmail, "test@email.com", nil, nil)
+	assert.ErrorIs(t, err, descope.ErrBadRequest)
+}
+
+func TestSignUpOrInWithOptions(t *testing.T) {
+	phone := "+11111111111"
+	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/signup-in/voice", r.URL.RequestURI())
+		_, jwt := getProjectAndJwt(r)
+		assert.EqualValues(t, "test", jwt)
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, map[string]any{
+			"loginId": phone,
+			"loginOptions": map[string]any{
+				"stepup":                   true,
+				"mfa":                      true,
+				"ssoAppId":                 "app",
+				"locale":                   "en",
+				"pkceChallenge":            "AQI=",
+				"revokeOtherSessions":      true,
+				"revokeOtherSessionsTypes": []any{"web"},
+			},
+			"providerId":  "provider",
+			"ssoAppId":    "app2",
+			"useRecovery": true,
+		}, body)
+	}, map[string]any{"maskedPhone": "+*******111", "verificationAttempts": 3}))
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}}
+	res, err := a.OTP().SignUpOrInWithOptions(context.Background(), descope.MethodVoice, phone, r, &descope.OTPSignInOptions{
+		LoginOptions: &descope.LoginOptions{
+			Stepup:                   true,
+			MFA:                      true,
+			SSOAppID:                 "app",
+			Locale:                   "en",
+			PKCEChallenge:            []byte{1, 2},
+			RevokeOtherSessions:      true,
+			RevokeOtherSessionsTypes: []string{"web"},
+		},
+		ProviderID:  "provider",
+		SSOAppID:    "app2",
+		UseRecovery: true,
+	})
+	require.NoError(t, err)
+	assert.EqualValues(t, &descope.OTPResponse{MaskedPhone: "+*******111", VerificationAttempts: 3}, res)
+}
+
+func TestSignUpOrInWithOptionsEmptyLoginID(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	_, err = a.OTP().SignUpOrInWithOptions(context.Background(), descope.MethodEmail, "", nil, nil)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "loginID")
+}
+
+func TestUpdateUserEmailWithOptions(t *testing.T) {
+	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/update/email", r.URL.RequestURI())
+		p, jwt := getProjectAndJwt(r)
+		assert.NotEmpty(t, p)
+		assert.EqualValues(t, jwtTokenValid, jwt)
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, map[string]any{
+			"loginId":            "id",
+			"email":              "test@email.com",
+			"addToLoginIDs":      true,
+			"onMergeUseExisting": true,
+			"providerId":         "provider",
+			"templateOptions":    map[string]any{"t1": "v1"},
+			"mfa":                true,
+			"locale":             "en",
+			"failOnConflict":     true,
+		}, body)
+	}, map[string]any{"maskedEmail": "t***@email.com", "verificationAttempts": 3}))
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	res, err := a.OTP().UpdateUserEmailWithOptions(context.Background(), "id", "test@email.com", &descope.UpdateOptions{
+		AddToLoginIDs:      true,
+		OnMergeUseExisting: true,
+		ProviderID:         "provider",
+		TemplateOptions:    map[string]string{"t1": "v1"},
+		MFA:                true,
+		Locale:             "en",
+		FailOnConflict:     true,
+	}, r)
+	require.NoError(t, err)
+	assert.EqualValues(t, &descope.OTPResponse{MaskedEmail: "t***@email.com", VerificationAttempts: 3}, res)
+}
+
+func TestUpdateUserEmailWithOptionsFailures(t *testing.T) {
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	a, err := newTestAuth(nil, DoBadRequest(nil))
+	require.NoError(t, err)
+	_, err = a.OTP().UpdateUserEmailWithOptions(context.Background(), "", "test@email.com", nil, r)
+	assert.Contains(t, err.Error(), "loginID")
+	_, err = a.OTP().UpdateUserEmailWithOptions(context.Background(), "id", "", nil, r)
+	assert.Contains(t, err.Error(), "email")
+	_, err = a.OTP().UpdateUserEmailWithOptions(context.Background(), "id", "abc", nil, r)
+	assert.Contains(t, err.Error(), "email")
+	_, err = a.OTP().UpdateUserEmailWithOptions(context.Background(), "id", "test@email.com", nil, &http.Request{Header: http.Header{}})
+	assert.ErrorIs(t, err, descope.ErrRefreshToken)
+	_, err = a.OTP().UpdateUserEmailWithOptions(context.Background(), "id", "test@email.com", nil, r)
+	assert.ErrorIs(t, err, descope.ErrBadRequest)
+}
+
+func TestUpdateUserPhoneWithOptions(t *testing.T) {
+	phone := "+11111111111"
+	a, err := newTestAuth(nil, DoOkWithBody(func(r *http.Request) {
+		assert.EqualValues(t, http.MethodPost, r.Method)
+		assert.EqualValues(t, "/v1/auth/otp/update/phone/im", r.URL.RequestURI())
+		p, jwt := getProjectAndJwt(r)
+		assert.NotEmpty(t, p)
+		assert.EqualValues(t, jwtTokenValid, jwt)
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, map[string]any{
+			"loginId":        "id",
+			"phone":          phone,
+			"locale":         "en",
+			"failOnConflict": true,
+		}, body)
+	}, map[string]any{"maskedPhone": "+*******111", "verificationAttempts": 3}))
+	require.NoError(t, err)
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	res, err := a.OTP().UpdateUserPhoneWithOptions(context.Background(), descope.MethodIM, "id", phone, &descope.UpdateOptions{Locale: "en", FailOnConflict: true}, r)
+	require.NoError(t, err)
+	assert.EqualValues(t, &descope.OTPResponse{MaskedPhone: "+*******111", VerificationAttempts: 3}, res)
+}
+
+func TestUpdateUserPhoneWithOptionsFailures(t *testing.T) {
+	phone := "+11111111111"
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	a, err := newTestAuth(nil, DoBadRequest(nil))
+	require.NoError(t, err)
+	_, err = a.OTP().UpdateUserPhoneWithOptions(context.Background(), descope.MethodSMS, "", phone, nil, r)
+	assert.Contains(t, err.Error(), "loginID")
+	_, err = a.OTP().UpdateUserPhoneWithOptions(context.Background(), descope.MethodSMS, "id", "", nil, r)
+	assert.Contains(t, err.Error(), "phone")
+	_, err = a.OTP().UpdateUserPhoneWithOptions(context.Background(), descope.MethodSMS, "id", "abc", nil, r)
+	assert.Contains(t, err.Error(), "phone")
+	_, err = a.OTP().UpdateUserPhoneWithOptions(context.Background(), descope.MethodEmail, "id", phone, nil, r)
+	assert.Contains(t, err.Error(), "method")
+	_, err = a.OTP().UpdateUserPhoneWithOptions(context.Background(), descope.MethodSMS, "id", phone, nil, &http.Request{Header: http.Header{}})
+	assert.ErrorIs(t, err, descope.ErrRefreshToken)
+	_, err = a.OTP().UpdateUserPhoneWithOptions(context.Background(), descope.MethodSMS, "id", phone, nil, r)
+	assert.ErrorIs(t, err, descope.ErrBadRequest)
+}
+
+func TestOTPIM(t *testing.T) {
+	phone := "+11111111111"
+	maskedPhone := "+*******111"
+	var expectedURL string
+	a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+		assert.EqualValues(t, expectedURL, r.URL.RequestURI())
+		body, err := readBodyMap(r)
+		require.NoError(t, err)
+		assert.EqualValues(t, phone, body["loginId"])
+		if expectedURL == "/v1/auth/otp/signup/im" {
+			assert.EqualValues(t, phone, body["phone"])
+		}
+		if expectedURL == "/v1/auth/otp/verify/im" {
+			return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
+		}
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(`{"maskedPhone":"` + maskedPhone + `"}`))}, nil
+	})
+	require.NoError(t, err)
+	ctx := context.Background()
+	expectedURL = "/v1/auth/otp/signin/im"
+	mp, err := a.OTP().SignIn(ctx, descope.MethodIM, phone, nil, nil)
+	require.NoError(t, err)
+	assert.EqualValues(t, maskedPhone, mp)
+	expectedURL = "/v1/auth/otp/signup/im"
+	mp, err = a.OTP().SignUp(ctx, descope.MethodIM, phone, nil, nil)
+	require.NoError(t, err)
+	assert.EqualValues(t, maskedPhone, mp)
+	expectedURL = "/v1/auth/otp/signup-in/im"
+	mp, err = a.OTP().SignUpOrIn(ctx, descope.MethodIM, phone, nil)
+	require.NoError(t, err)
+	assert.EqualValues(t, maskedPhone, mp)
+	expectedURL = "/v1/auth/otp/verify/im"
+	_, err = a.OTP().VerifyCode(ctx, descope.MethodIM, phone, "123456", nil)
+	require.NoError(t, err)
+	expectedURL = "/v1/auth/otp/update/phone/im"
+	r := &http.Request{Header: http.Header{}}
+	r.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtTokenValid})
+	mp, err = a.OTP().UpdateUserPhone(ctx, descope.MethodIM, phone, phone, nil, r)
+	require.NoError(t, err)
+	assert.EqualValues(t, maskedPhone, mp)
+	_, err = a.OTP().SignUp(ctx, descope.MethodIM, "abc", nil, nil)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+}
+
+func TestVerifyCodeFullResponse(t *testing.T) {
+	a, err := newTestAuth(nil, DoOkWithBody(nil, map[string]any{
+		"sessionJwt":            jwtTokenValid,
+		"refreshJwt":            jwtRTokenValid,
+		"sessionExpiration":     1,
+		"externalToken":         "ext",
+		"trustedDeviceJwt":      "tdj",
+		"nextRefreshSeconds":    2,
+		"cookieName":            "cn",
+		"sessionCookieName":     "scn",
+		"sessionCookieDomain":   "scd",
+		"unsavedSSO":            true,
+		"knownDeviceJwt":        "kdj",
+		"ssoAuthenticationOnly": true,
+		"userCreationDeferred":  true,
+		"idpResponse": map[string]any{
+			"samlResponse":       "sr",
+			"samlGeneratedUser":  "sgu",
+			"samlGeneratedRoles": "sgr",
+			"oidcResponse":       "or",
+			"oidcGeneratedUser":  "ogu",
+			"oidcGeneratedRoles": "ogr",
+		},
+		"user": map[string]any{
+			"externalIds":           []string{"e1"},
+			"editable":              true,
+			"push":                  true,
+			"permissions":           []string{"p1"},
+			"consentExpiration":     3,
+			"recoveryEmail":         "r@email.com",
+			"verifiedRecoveryEmail": true,
+			"recoveryPhone":         "+11111111111",
+			"verifiedRecoveryPhone": true,
+			"roleIds":               []string{"r1"},
+			"recoveryCodes":         true,
+			"consentTenantId":       "ct",
+			"lastLoginTime":         4,
+			"userTenants":           []map[string]any{{"tenantId": "t1", "roleIds": []string{"r2"}}},
+		},
+	}))
+	require.NoError(t, err)
+	info, err := a.OTP().VerifyCode(context.Background(), descope.MethodSMS, "+11111111111", "123456", nil)
+	require.NoError(t, err)
+	assert.EqualValues(t, 1, info.SessionExpiration)
+	assert.EqualValues(t, "ext", info.ExternalToken)
+	assert.EqualValues(t, "tdj", info.TrustedDeviceJWT)
+	assert.EqualValues(t, 2, info.NextRefreshSeconds)
+	assert.EqualValues(t, "cn", info.CookieName)
+	assert.EqualValues(t, "scn", info.SessionCookieName)
+	assert.EqualValues(t, "scd", info.SessionCookieDomain)
+	assert.True(t, info.UnsavedSSO)
+	assert.EqualValues(t, "kdj", info.KnownDeviceJWT)
+	assert.True(t, info.SSOAuthenticationOnly)
+	assert.True(t, info.UserCreationDeferred)
+	assert.EqualValues(t, &descope.IDPResponse{
+		SAMLResponse: "sr", SAMLGeneratedUser: "sgu", SAMLGeneratedRoles: "sgr",
+		OIDCResponse: "or", OIDCGeneratedUser: "ogu", OIDCGeneratedRoles: "ogr",
+	}, info.IDPResponse)
+	u := info.User
+	assert.EqualValues(t, []string{"e1"}, u.ExternalIDs)
+	assert.True(t, u.Editable)
+	assert.True(t, u.Push)
+	assert.EqualValues(t, []string{"p1"}, u.Permissions)
+	assert.EqualValues(t, 3, u.ConsentExpiration)
+	assert.EqualValues(t, "r@email.com", u.RecoveryEmail)
+	assert.True(t, u.VerifiedRecoveryEmail)
+	assert.EqualValues(t, "+11111111111", u.RecoveryPhone)
+	assert.True(t, u.VerifiedRecoveryPhone)
+	assert.EqualValues(t, []string{"r1"}, u.RoleIDs)
+	assert.True(t, u.RecoveryCodes)
+	assert.EqualValues(t, "ct", u.ConsentTenantID)
+	assert.EqualValues(t, 4, u.LastLoginTime)
+	require.Len(t, u.UserTenants, 1)
+	assert.EqualValues(t, []string{"r2"}, u.UserTenants[0].RoleIDs)
+}

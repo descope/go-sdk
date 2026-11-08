@@ -131,12 +131,32 @@ type OTP interface {
 	UpdateUserEmail(ctx context.Context, loginID, email string, updateOptions *descope.UpdateOptions, request *http.Request) (maskedAddress string, err error)
 
 	// UpdateUserPhone - Use to update phone and validate via OTP
-	// allowed methods are phone based methods - whatsapp and SMS or Voice call
+	// allowed methods are phone based methods - whatsapp, instant message (IM) and SMS or Voice call
 	// LoginID of user whom we want to update
 	// UpdateOptions to determine whether to add email as a login id and if to merge with existing user in that case
 	// Request is needed to obtain JWT and send it to Descope, for verification
 	// returns the masked phone where the code was sent or an error upon failure.
 	UpdateUserPhone(ctx context.Context, method descope.DeliveryMethod, loginID, phone string, updateOptions *descope.UpdateOptions, request *http.Request) (maskedAddress string, err error)
+
+	// SignInWithOptions - Like SignIn, with the sign-in options (provider ID, SSO app ID and recovery)
+	// and a response that also includes the number of verification attempts.
+	// The request is needed only for step-up or MFA (loginOptions Stepup or MFA).
+	SignInWithOptions(ctx context.Context, method descope.DeliveryMethod, loginID string, r *http.Request, options *descope.OTPSignInOptions) (*descope.OTPResponse, error)
+
+	// SignUpWithOptions - Like SignUp, with the sign-up options (provider ID, locale and PKCE challenge),
+	// the additional user fields, and a response that also includes the number of verification attempts.
+	SignUpWithOptions(ctx context.Context, method descope.DeliveryMethod, loginID string, user *descope.SignUpUser, options *descope.OTPSignUpOptions) (*descope.OTPResponse, error)
+
+	// SignUpOrInWithOptions - Like SignUpOrIn, with the full login options and the sign-in options
+	// (provider ID, SSO app ID and recovery), and a response that also includes the number of verification attempts.
+	// The request is needed only for step-up or MFA (loginOptions Stepup or MFA).
+	SignUpOrInWithOptions(ctx context.Context, method descope.DeliveryMethod, loginID string, r *http.Request, options *descope.OTPSignInOptions) (*descope.OTPResponse, error)
+
+	// UpdateUserEmailWithOptions - Like UpdateUserEmail, with a response that also includes the number of verification attempts.
+	UpdateUserEmailWithOptions(ctx context.Context, loginID, email string, updateOptions *descope.UpdateOptions, request *http.Request) (*descope.OTPResponse, error)
+
+	// UpdateUserPhoneWithOptions - Like UpdateUserPhone, with a response that also includes the number of verification attempts.
+	UpdateUserPhoneWithOptions(ctx context.Context, method descope.DeliveryMethod, loginID, phone string, updateOptions *descope.UpdateOptions, request *http.Request) (*descope.OTPResponse, error)
 }
 
 type TOTP interface {
