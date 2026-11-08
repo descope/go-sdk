@@ -218,10 +218,14 @@ func TestCachedKeysNotUsedAfterMaxStaleAge(t *testing.T) {
 	*clock = start.Add(keyMaxStaleAge)
 	_, err = ValidateJWT(jwtTokenValid, p)
 	require.Error(t, err)
+	// past keyMaxStaleAge a kid from the old set still waits keyFetchCooldown after a failed attempt
+	fetches := s.fetches.Load()
 	_, err = p.findKey("testkey")
 	require.Error(t, err)
+	require.Equal(t, fetches, s.fetches.Load())
 
 	s.fail = false
+	*clock = clock.Add(keyFetchCooldown)
 	_, err = ValidateJWT(jwtTokenValid, p)
 	require.NoError(t, err)
 }

@@ -174,7 +174,7 @@ func (p *Provider) findKey(kid string) (jwk.Key, error) {
 	if t := p.fetchedAt.Load(); t != nil {
 		last = *t
 	}
-	if _, ok := p.usableKeySet()[kid]; ok {
+	if _, ok := p.keySetMap()[kid]; ok {
 		last = p.attemptedAt
 	}
 	if now.Sub(last) >= keyFetchCooldown {
