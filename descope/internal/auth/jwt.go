@@ -34,6 +34,7 @@ type Provider struct {
 	fetchedAt   atomic.Pointer[time.Time] // last successful fetch, nil before the first one
 	mu          sync.Mutex                // serializes fetches
 	attemptedAt time.Time                 // last fetch attempt, guarded by mu
+	attempts    atomic.Uint64             // completed fetch attempts
 	now         func() time.Time
 }
 
@@ -117,6 +118,10 @@ func (p *Provider) requestKeys() error {
 		tempKeySet[pk.KeyID()] = pk
 	}
 
+	if len(tempKeySet) == 0 {
+		return descope.ErrPublicKey.WithMessage("No public keys in key set response")
+	}
+
 	logger.LogDebug("Refresh keys set with %d key(s)", len(tempKeySet))
 	p.keySet.Store(tempKeySet)
 	return nil
@@ -154,6 +159,7 @@ func (p *Provider) findKey(kid string) (jwk.Key, error) {
 	}
 
 	// a cached key is served as is while another caller is fetching
+	attempts := p.attempts.Load()
 	if key, ok := p.usableKeySet()[kid]; ok {
 		if !p.mu.TryLock() {
 			return key, nil
@@ -168,7 +174,8 @@ func (p *Provider) findKey(kid string) (jwk.Key, error) {
 	}
 
 	// unknown key ids wait keyFetchCooldown after a successful fetch, so a failed fetch is retried right away;
-	// a cached key past keySetTTL waits keyFetchCooldown after an attempt ends, so it is served while fetches fail
+	// a cached key past keySetTTL waits keyFetchCooldown after an attempt ends, so it is served while fetches fail;
+	// callers that waited for a fetch use its outcome instead of fetching again
 	now := p.now()
 	var last time.Time
 	if t := p.fetchedAt.Load(); t != nil {
@@ -177,11 +184,12 @@ func (p *Provider) findKey(kid string) (jwk.Key, error) {
 	if _, ok := p.keySetMap()[kid]; ok {
 		last = p.attemptedAt
 	}
-	if now.Sub(last) >= keyFetchCooldown {
+	if p.attempts.Load() == attempts && now.Sub(last) >= keyFetchCooldown {
 		err := p.requestKeys()
 		p.attemptedAt = p.now()
+		p.attempts.Add(1)
 		if err != nil {
-			logger.LogDebug("Failed to retrieve public keys from API [%s]", err)
+			logger.LogError("Failed to retrieve public keys from API", err)
 			if key, ok := p.usableKeySet()[kid]; ok {
 				return key, nil
 			}

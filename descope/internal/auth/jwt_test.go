@@ -43,6 +43,8 @@ func newKeysTestProvider(s *keysServer) (*Provider, *time.Time) {
 	return p, &clock
 }
 
+var otherPublicKey = strings.Replace(publicKey, `"kid":"testkey"`, `"kid":"other"`, 1)
+
 func TestKeySetRefreshedAfterTTL(t *testing.T) {
 	s := &keysServer{keys: publicKey}
 	p, clock := newKeysTestProvider(s)
@@ -55,7 +57,7 @@ func TestKeySetRefreshedAfterTTL(t *testing.T) {
 	require.EqualValues(t, 1, s.fetches.Load())
 
 	// the key is no longer published, so it stays valid until the TTL passes
-	s.keys = ""
+	s.keys = otherPublicKey
 	*clock = clock.Add(time.Second)
 	_, err = ValidateJWT(jwtTokenValid, p)
 	require.ErrorIs(t, err, descope.ErrPublicKey)
@@ -117,7 +119,7 @@ func TestKeySetKeptOnFailedRefresh(t *testing.T) {
 	require.EqualValues(t, 5, s.fetches.Load())
 
 	s.fail = false
-	s.keys = ""
+	s.keys = otherPublicKey
 	*clock = clock.Add(keyFetchCooldown)
 	_, err = ValidateJWT(jwtTokenValid, p)
 	require.ErrorIs(t, err, descope.ErrPublicKey)
@@ -228,4 +230,80 @@ func TestCachedKeysNotUsedAfterMaxStaleAge(t *testing.T) {
 	*clock = clock.Add(keyFetchCooldown)
 	_, err = ValidateJWT(jwtTokenValid, p)
 	require.NoError(t, err)
+}
+
+func TestEmptyKeysResponseKeepsKeySet(t *testing.T) {
+	for _, body := range []string{`{}`, `{"keys":[]}`, `{"keys":[{"kty":"bogus"}]}`} {
+		s := &keysServer{keys: publicKey}
+		p, clock := newKeysTestProvider(s)
+		_, err := p.findKey("testkey")
+		require.NoError(t, err)
+
+		p.client = api.NewClient(api.ClientParams{ProjectID: "a", DefaultClient: mocks.NewTestClient(func(*http.Request) (*http.Response, error) {
+			s.fetches.Add(1)
+			return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(strings.NewReader(body))}, nil
+		})})
+		*clock = clock.Add(keySetTTL)
+		key, err := p.findKey("testkey")
+		require.NoError(t, err, body)
+		require.NotNil(t, key)
+		require.EqualValues(t, 2, s.fetches.Load())
+
+		// the failed refresh is not a successful fetch: an unknown kid is retried right away
+		_, err = p.findKey("unknown")
+		require.ErrorIs(t, err, descope.ErrPublicKey)
+		require.EqualValues(t, 3, s.fetches.Load())
+	}
+}
+
+func TestEmptyFirstKeysResponseIsFailedFetch(t *testing.T) {
+	s := &keysServer{}
+	p, _ := newKeysTestProvider(s)
+	_, err := p.findKey("testkey")
+	require.ErrorIs(t, err, descope.ErrPublicKey)
+	assert.Contains(t, err.Error(), "No public keys")
+
+	s.keys = publicKey
+	_, err = p.findKey("testkey")
+	require.NoError(t, err)
+	require.EqualValues(t, 2, s.fetches.Load())
+}
+
+func TestWaitersShareFailedFetch(t *testing.T) {
+	s := &keysServer{fail: true}
+	p, _ := newKeysTestProvider(s)
+	release := make(chan struct{})
+	s.during = func() { <-release }
+
+	var wg sync.WaitGroup
+	for range 10 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			_, err := p.findKey("unknown")
+			assert.Error(t, err)
+		}()
+	}
+	require.Eventually(t, func() bool { return s.fetches.Load() == 1 }, time.Second, time.Millisecond)
+	time.Sleep(50 * time.Millisecond) // let the other callers queue on the fetch
+	close(release)
+	wg.Wait()
+	require.EqualValues(t, 1, s.fetches.Load())
+
+	// a later separate lookup fetches again
+	_, err := p.findKey("unknown")
+	require.Error(t, err)
+	require.EqualValues(t, 2, s.fetches.Load())
+}
+
+func TestStaticKeyIgnoresFetchedKeys(t *testing.T) {
+	s := &keysServer{keys: otherPublicKey}
+	client := api.NewClient(api.ClientParams{ProjectID: "a", DefaultClient: mocks.NewTestClient(s.do)})
+	p := NewProvider(client, &AuthParams{ProjectID: "a", PublicKey: publicKey})
+	key, err := p.findKey("testkey")
+	require.NoError(t, err)
+	require.NotNil(t, key)
+	_, err = p.findKey("other")
+	require.ErrorIs(t, err, descope.ErrPublicKey)
+	require.EqualValues(t, 0, s.fetches.Load())
 }
