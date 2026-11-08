@@ -55,12 +55,18 @@ func (auth *otp) SignUpOrIn(ctx context.Context, method descope.DeliveryMethod, 
 
 	masked := getMaskedValue(method)
 	options := &api.HTTPRequest{ResBodyObj: masked}
-	_, err := auth.client.DoPostRequest(ctx, composeSignUpOrInURL(method), newSignInRequestBody(loginID, &descope.LoginOptions{
-		CustomClaims:    signUpOptions.CustomClaims,
-		TemplateOptions: signUpOptions.TemplateOptions,
-		TemplateID:      signUpOptions.TemplateID,
-		TenantID:        signUpOptions.TenantID,
-	}), options, "")
+	body := &otpSignUpOrInRequestBody{
+		authenticationRequestBody: newSignInRequestBody(loginID, &descope.LoginOptions{
+			CustomClaims:    signUpOptions.CustomClaims,
+			TemplateOptions: signUpOptions.TemplateOptions,
+			TemplateID:      signUpOptions.TemplateID,
+			TenantID:        signUpOptions.TenantID,
+			Locale:          signUpOptions.Locale,
+			PKCEChallenge:   signUpOptions.PKCEChallenge,
+		}),
+		ProviderID: signUpOptions.ProviderID,
+	}
+	_, err := auth.client.DoPostRequest(ctx, composeSignUpOrInURL(method), body, options, "")
 	return masked.GetMasked(), err
 }
 
@@ -121,7 +127,7 @@ func (auth *otp) UpdateUserPhone(ctx context.Context, method descope.DeliveryMet
 	if !phoneRegex.MatchString(phone) {
 		return "", utils.NewInvalidArgumentError("phone")
 	}
-	if method != descope.MethodSMS && method != descope.MethodVoice && method != descope.MethodWhatsApp {
+	if method != descope.MethodSMS && method != descope.MethodVoice && method != descope.MethodWhatsApp && method != descope.MethodIM {
 		return "", utils.NewInvalidArgumentError("method")
 	}
 	pswd, err := auth.getValidRefreshToken(r)

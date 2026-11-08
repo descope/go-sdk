@@ -18,6 +18,12 @@ type authenticationSignUpRequestBody struct {
 	LoginID      string                `json:"loginId,omitempty"`
 	User         *descope.User         `json:"user"`
 	LoginOptions *descope.LoginOptions `json:"loginOptions,omitempty"`
+	ProviderID   string                `json:"providerId,omitempty"`
+}
+
+type otpSignUpOrInRequestBody struct {
+	*authenticationRequestBody `json:",inline"`
+	ProviderID                 string `json:"providerId,omitempty"`
 }
 
 type authenticationWebAuthnSignUpRequestBody struct {
@@ -163,6 +169,8 @@ func newSignUpRequestBody(method descope.DeliveryMethod, user *descope.User) *au
 		return &authenticationSignUpRequestBody{Phone: user.Phone}
 	case descope.MethodVoice:
 		return &authenticationSignUpRequestBody{Phone: user.Phone}
+	case descope.MethodIM:
+		return &authenticationSignUpRequestBody{Phone: user.Phone}
 	case descope.MethodWhatsApp:
 		return &authenticationSignUpRequestBody{WhatsApp: user.Phone}
 	}
@@ -250,7 +258,10 @@ func newAuthenticationSignUpRequestBody(method descope.DeliveryMethod, loginID s
 		CustomClaims:    signUpOptions.CustomClaims,
 		TemplateOptions: signUpOptions.TemplateOptions,
 		TemplateID:      signUpOptions.TemplateID,
+		Locale:          signUpOptions.Locale,
+		PKCEChallenge:   signUpOptions.PKCEChallenge,
 	}
+	b.ProviderID = signUpOptions.ProviderID
 	return b
 }
 

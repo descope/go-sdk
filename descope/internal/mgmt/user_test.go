@@ -3255,3 +3255,14 @@ func TestUserDeleteFamilyScopedCustomAttributesError(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, res)
 }
+
+func TestGenerateMagicLinkForTestUserIMNotSupported(t *testing.T) {
+	visited := false
+	m := newTestMgmt(nil, helpers.DoOk(func(_ *http.Request) {
+		visited = true
+	}))
+	_, err := m.User().GenerateMagicLinkForTestUser(context.Background(), descope.MethodIM, "some-id", "uri", nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "method")
+	require.False(t, visited)
+}

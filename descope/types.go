@@ -30,13 +30,31 @@ type AuthenticationInfo struct {
 	FirstSeen    bool          `json:"firstSeen,omitempty"`
 	IDPResponse  *IDPResponse  `json:"idpResponse,omitempty"`
 	TenantSSOID  string        `json:"tenantSSOID,omitempty"` // the id of the tenant SSO configuration that performed the authentication (populated on SSO exchange)
+
+	SessionExpiration     int32  `json:"sessionExpiration,omitempty"`
+	ExternalToken         string `json:"externalToken,omitempty"`
+	TrustedDeviceJwt      string `json:"trustedDeviceJwt,omitempty"`
+	NextRefreshSeconds    int32  `json:"nextRefreshSeconds,omitempty"`
+	CookieName            string `json:"cookieName,omitempty"`
+	SessionCookieName     string `json:"sessionCookieName,omitempty"`
+	SessionCookieDomain   string `json:"sessionCookieDomain,omitempty"`
+	UnsavedSSO            bool   `json:"unsavedSSO,omitempty"`
+	KnownDeviceJwt        string `json:"knownDeviceJwt,omitempty"`
+	SSOAuthenticationOnly bool   `json:"ssoAuthenticationOnly,omitempty"`
+	UserCreationDeferred  bool   `json:"userCreationDeferred,omitempty"`
 }
 
 // IDPResponse contains IDP groups, SAML attributes, and OIDC claims returned from SSO authentication.
 type IDPResponse struct {
-	IDPGroups         []string       `json:"idpGroups,omitempty"`
-	IDPSAMLAttributes map[string]any `json:"idpSAMLAttributes,omitempty"`
-	IDPOIDCClaims     map[string]any `json:"idpOIDCClaims,omitempty"`
+	IDPGroups          []string       `json:"idpGroups,omitempty"`
+	IDPSAMLAttributes  map[string]any `json:"idpSAMLAttributes,omitempty"`
+	IDPOIDCClaims      map[string]any `json:"idpOIDCClaims,omitempty"`
+	SAMLResponse       string         `json:"samlResponse,omitempty"`
+	SAMLGeneratedUser  string         `json:"samlGeneratedUser,omitempty"`
+	SAMLGeneratedRoles string         `json:"samlGeneratedRoles,omitempty"`
+	OIDCResponse       string         `json:"oidcResponse,omitempty"`
+	OIDCGeneratedUser  string         `json:"oidcGeneratedUser,omitempty"`
+	OIDCGeneratedRoles string         `json:"oidcGeneratedRoles,omitempty"`
 }
 
 type AnonymousAuthenticationInfo struct {
@@ -477,6 +495,9 @@ type LoginOptions struct {
 	TemplateID               string            `json:"templateId,omitempty"`      // for overriding the default messaging template
 	TemplateOptions          map[string]string `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 	TenantID                 string            `json:"tenantId,omitempty"`        // for associating the authentication with a specific tenant
+	SSOAppID                 string            `json:"ssoAppId,omitempty"`
+	Locale                   string            `json:"locale,omitempty"`        // locale of the message, up to 254 characters
+	PKCEChallenge            string            `json:"pkceChallenge,omitempty"` // base64-encoded PKCE challenge
 }
 
 func (lo *LoginOptions) IsJWTRequired() bool {
@@ -493,6 +514,10 @@ type SignUpOptions struct {
 	TemplateID      string            `json:"templateId,omitempty"`      // for overriding the default messaging template
 	TemplateOptions map[string]string `json:"templateOptions,omitempty"` // for providing messaging template options (templates that are being sent via email / text message)
 	TenantID        string            `json:"-"`                         // for associating the authentication with a specific tenant
+	// Used by OTP only
+	ProviderID    string `json:"-"`
+	Locale        string `json:"-"` // locale of the message, up to 254 characters
+	PKCEChallenge string `json:"-"` // base64-encoded PKCE challenge
 }
 
 type EmbeddedLinkLoginOptions struct {
@@ -511,6 +536,18 @@ type JWTResponse struct {
 	FirstSeen        bool          `json:"firstSeen,omitempty"`
 	IDPResponse      *IDPResponse  `json:"idpResponse,omitempty"`
 	TenantSSOID      string        `json:"tenantSSOID,omitempty"`
+
+	SessionExpiration     int32  `json:"sessionExpiration,omitempty"`
+	ExternalToken         string `json:"externalToken,omitempty"`
+	TrustedDeviceJwt      string `json:"trustedDeviceJwt,omitempty"`
+	NextRefreshSeconds    int32  `json:"nextRefreshSeconds,omitempty"`
+	CookieName            string `json:"cookieName,omitempty"`
+	SessionCookieName     string `json:"sessionCookieName,omitempty"`
+	SessionCookieDomain   string `json:"sessionCookieDomain,omitempty"`
+	UnsavedSSO            bool   `json:"unsavedSSO,omitempty"`
+	KnownDeviceJwt        string `json:"knownDeviceJwt,omitempty"`
+	SSOAuthenticationOnly bool   `json:"ssoAuthenticationOnly,omitempty"`
+	UserCreationDeferred  bool   `json:"userCreationDeferred,omitempty"`
 }
 
 type EnchantedLinkResponse struct {
@@ -541,6 +578,18 @@ func NewAuthenticationInfo(jRes *JWTResponse, sessionToken, refreshToken *Token)
 		FirstSeen:    jRes.FirstSeen,
 		IDPResponse:  jRes.IDPResponse,
 		TenantSSOID:  jRes.TenantSSOID,
+
+		SessionExpiration:     jRes.SessionExpiration,
+		ExternalToken:         jRes.ExternalToken,
+		TrustedDeviceJwt:      jRes.TrustedDeviceJwt,
+		NextRefreshSeconds:    jRes.NextRefreshSeconds,
+		CookieName:            jRes.CookieName,
+		SessionCookieName:     jRes.SessionCookieName,
+		SessionCookieDomain:   jRes.SessionCookieDomain,
+		UnsavedSSO:            jRes.UnsavedSSO,
+		KnownDeviceJwt:        jRes.KnownDeviceJwt,
+		SSOAuthenticationOnly: jRes.SSOAuthenticationOnly,
+		UserCreationDeferred:  jRes.UserCreationDeferred,
 	}
 }
 
@@ -739,6 +788,21 @@ type UserResponse struct {
 	// TempLockExpiration is when a temporary lock ends, in unix seconds (0 when none); the user is
 	// temporarily locked while TempLockExpiration > now
 	TempLockExpiration int64 `json:"tempLockExpiration,omitempty"`
+
+	ExternalIDs           []string `json:"externalIds,omitempty"`
+	Editable              bool     `json:"editable,omitempty"`
+	Push                  bool     `json:"push,omitempty"`
+	Permissions           []string `json:"permissions,omitempty"`
+	ConsentExpiration     int32    `json:"consentExpiration,omitempty"`
+	RecoveryEmail         string   `json:"recoveryEmail,omitempty"`
+	VerifiedRecoveryEmail bool     `json:"verifiedRecoveryEmail,omitempty"`
+	RecoveryPhone         string   `json:"recoveryPhone,omitempty"`
+	VerifiedRecoveryPhone bool     `json:"verifiedRecoveryPhone,omitempty"`
+	RoleIDs               []string `json:"roleIds,omitempty"`
+	RecoveryCodes         bool     `json:"recoveryCodes,omitempty"`
+	ConsentTenantID       string   `json:"consentTenantId,omitempty"`
+	// LastLoginTime is when the user last authenticated, in unix seconds (0 when never)
+	LastLoginTime int64 `json:"lastLoginTime,omitempty"`
 }
 
 type MeTenant struct {
@@ -800,7 +864,9 @@ type UpdateOptions struct {
 	// updated factor to them (so the resulting amr keeps the previously-passed factors)
 	// instead of replacing it with a single factor. Requires a valid refresh token on the
 	// request. Currently applies to the OTP update phone / email flows.
-	MFA bool `json:"mfa,omitempty"`
+	MFA            bool   `json:"mfa,omitempty"`
+	Locale         string `json:"locale,omitempty"` // locale of the message, up to 254 characters
+	FailOnConflict bool   `json:"failOnConflict,omitempty"`
 }
 
 type NOTPTemplates struct {
@@ -847,6 +913,7 @@ type AssociatedTenant struct {
 type UserResponseAssociatedTenant struct {
 	AssociatedTenant `json:",inline"`
 	Permissions      []string `json:"permissions,omitempty"`
+	RoleIDs          []string `json:"roleIds,omitempty"` // order does not match Roles
 }
 
 // Represents a family association for a user. The family ID is required to denote which family
@@ -1662,6 +1729,7 @@ const (
 	MethodVoice    DeliveryMethod = "voice"
 	MethodEmail    DeliveryMethod = "email"
 	MethodEmbedded DeliveryMethod = "Embedded"
+	MethodIM       DeliveryMethod = "im" // instant message, OTP only
 
 	OAuthFacebook  OAuthProvider = "facebook"
 	OAuthGithub    OAuthProvider = "github"

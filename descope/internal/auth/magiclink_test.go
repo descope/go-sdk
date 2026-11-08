@@ -655,3 +655,24 @@ func TestUpdatePhoneMagicLinkFailures(t *testing.T) {
 	assert.Error(t, err)
 	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }
+
+func TestMagicLinkIMNotSupported(t *testing.T) {
+	visited := false
+	a, err := newTestAuth(nil, DoOk(func(_ *http.Request) {
+		visited = true
+	}))
+	require.NoError(t, err)
+	_, err = a.MagicLink().SignIn(context.Background(), descope.MethodIM, "+12125551234", "http://test.me", nil, nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "method")
+	_, err = a.MagicLink().SignUp(context.Background(), descope.MethodIM, "+12125551234", "http://test.me", nil, nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "method")
+	_, err = a.MagicLink().SignUpOrIn(context.Background(), descope.MethodIM, "+12125551234", "http://test.me", nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "method")
+	_, err = a.MagicLink().UpdateUserPhone(context.Background(), descope.MethodIM, "id", "+12125551234", "http://test.me", nil, &http.Request{Header: http.Header{"Cookie": []string{"DSR=test"}}})
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "method")
+	assert.False(t, visited)
+}

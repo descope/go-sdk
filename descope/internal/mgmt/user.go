@@ -937,6 +937,9 @@ func (u *user) GenerateMagicLinkForTestUser(ctx context.Context, method descope.
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
+	if method == descope.MethodIM {
+		return "", utils.NewInvalidArgumentError("method")
+	}
 	req := makeGenerateMagicLinkForTestUserRequestBody(method, loginID, URI, loginOptions)
 	res, err := u.client.DoPostRequest(ctx, api.Routes.ManagementUserGenerateMagicLinkForTest(), req, nil, "")
 	if err != nil {

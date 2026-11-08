@@ -19,6 +19,9 @@ func (auth *magicLink) SignIn(ctx context.Context, method descope.DeliveryMethod
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
 	}
+	if method == descope.MethodIM {
+		return "", utils.NewInvalidArgumentError("method")
+	}
 	if loginOptions.IsJWTRequired() {
 		pswd, err = auth.getValidRefreshToken(r)
 		if err != nil {
@@ -32,6 +35,9 @@ func (auth *magicLink) SignIn(ctx context.Context, method descope.DeliveryMethod
 }
 
 func (auth *magicLink) SignUp(ctx context.Context, method descope.DeliveryMethod, loginID, URI string, user *descope.User, signUpOptions *descope.SignUpOptions) (string, error) {
+	if method == descope.MethodIM {
+		return "", utils.NewInvalidArgumentError("method")
+	}
 	if user == nil {
 		user = &descope.User{}
 	}
@@ -47,6 +53,9 @@ func (auth *magicLink) SignUp(ctx context.Context, method descope.DeliveryMethod
 func (auth *magicLink) SignUpOrIn(ctx context.Context, method descope.DeliveryMethod, loginID, URI string, signUpOptions *descope.SignUpOptions) (string, error) {
 	if loginID == "" {
 		return "", utils.NewInvalidArgumentError("loginID")
+	}
+	if method == descope.MethodIM {
+		return "", utils.NewInvalidArgumentError("method")
 	}
 	if signUpOptions == nil {
 		signUpOptions = &descope.SignUpOptions{}

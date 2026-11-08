@@ -160,7 +160,7 @@ if err != nil {
 
 ### OTP Authentication
 
-Send a user a one-time password (OTP) using your preferred delivery method (_Email / SMS / Voice call / WhatsApp_). An email address or phone number must be provided accordingly.
+Send a user a one-time password (OTP) using your preferred delivery method (_Email / SMS / Voice call / WhatsApp / Instant message_). An email address or phone number must be provided accordingly.
 
 The user can either `sign up`, `sign in` or `sign up or in`
 
@@ -181,6 +181,15 @@ if err != nil {
     }
     // handle other error cases
 }
+```
+
+Use `descope.MethodIM` to send the code by instant message, and set the optional `SignUpOptions` fields to choose the messaging provider and locale:
+
+```go
+maskedPhone, err := descopeClient.Auth.OTP().SignUpOrIn(context.Background(), descope.MethodIM, "+12125551234", &descope.SignUpOptions{
+    ProviderID: "my-provider",
+    Locale:     "en-US",
+})
 ```
 
 The user will receive a code using the selected delivery method. Verify that code using:
