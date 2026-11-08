@@ -129,11 +129,11 @@ func TestSSOApplicationCreateSAMLApplicationSuccess(t *testing.T) {
 		ForceAuthentication:       true,
 		LogoutRedirectURL:         "http://dummy.com/logout",
 		DefaultSignatureAlgorithm: "sha256",
-		SingleLogoutEnabled:       ptr(true),
-		SPSingleLogoutURL:         ptr("https://dummy.com/slo"),
-		SPSingleLogoutBinding:     ptr("soap"),
-		SingleLogoutPropagation:   ptr("none"),
-		SingleLogoutScope:         ptr("allSessions"),
+		SingleLogoutEnabled:       true,
+		SPSingleLogoutURL:         "https://dummy.com/slo",
+		SPSingleLogoutBinding:     "soap",
+		SingleLogoutPropagation:   "none",
+		SingleLogoutScope:         "allSessions",
 	})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)
@@ -244,10 +244,10 @@ func TestSSOApplicationUpdateSAMLApplicationSuccess(t *testing.T) {
 		require.True(t, req["forceAuthentication"].(bool))
 		require.Equal(t, "http://dummy.com/logout", req["logoutRedirectUrl"])
 		require.Equal(t, "sha256", req["defaultSignatureAlgorithm"])
-		// single logout settings that aren't set are not sent, so the app keeps its current ones
-		for _, k := range []string{"singleLogoutEnabled", "spSingleLogoutUrl", "spSingleLogoutBinding", "singleLogoutPropagation", "singleLogoutScope"} {
-			_, sent := req[k]
-			require.False(t, sent, k)
+		// an update sends every field, single logout included: unset turns it off
+		require.Equal(t, false, req["singleLogoutEnabled"])
+		for _, k := range []string{"spSingleLogoutUrl", "spSingleLogoutBinding", "singleLogoutPropagation", "singleLogoutScope"} {
+			require.Equal(t, "", req[k], k)
 		}
 
 	}, response))

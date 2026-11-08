@@ -1224,25 +1224,24 @@ type SAMLApplicationRequest struct {
 	// CustomAttributes holds this app's per-app custom attribute values, keyed by attribute name.
 	CustomAttributes map[string]any `json:"customAttributes,omitempty"`
 
-	// SAML Single Logout (SLO). Each of these is sent only when set: an update that leaves them nil keeps
-	// the application's current values.
+	// SAML Single Logout (SLO).
 	//
 	// SingleLogoutEnabled turns SLO on. The service provider can then log the user out with a signed
 	// LogoutRequest, and it is sent a LogoutRequest when the user's session ends. Off by default.
-	SingleLogoutEnabled *bool `json:"singleLogoutEnabled,omitempty"`
+	SingleLogoutEnabled bool `json:"singleLogoutEnabled"`
 	// SPSingleLogoutURL is the service provider's SingleLogoutService URL. Required when SLO is on and the
 	// application is not configured by metadata URL; empty takes it from the service provider's metadata.
-	SPSingleLogoutURL *string `json:"spSingleLogoutUrl,omitempty"`
+	SPSingleLogoutURL string `json:"spSingleLogoutUrl"`
 	// SPSingleLogoutBinding is the binding of SPSingleLogoutURL: "redirect" (the default), "post" or "soap"
 	// (server to server, requires an https URL). Empty takes it from the service provider's metadata.
-	SPSingleLogoutBinding *string `json:"spSingleLogoutBinding,omitempty"`
+	SPSingleLogoutBinding string `json:"spSingleLogoutBinding"`
 	// SingleLogoutPropagation is what a logout started by the service provider reaches: "allApps" (the
 	// default) also logs the user out of the other applications in the session, "none" only ends the
 	// user's session.
-	SingleLogoutPropagation *string `json:"singleLogoutPropagation,omitempty"`
+	SingleLogoutPropagation string `json:"singleLogoutPropagation"`
 	// SingleLogoutScope is which sessions a logout started by the service provider ends: "session" (the
 	// default) only the one the LogoutRequest names, "allSessions" every session of the user.
-	SingleLogoutScope *string `json:"singleLogoutScope,omitempty"`
+	SingleLogoutScope string `json:"singleLogoutScope"`
 }
 
 type WSFedApplicationRequest struct {
