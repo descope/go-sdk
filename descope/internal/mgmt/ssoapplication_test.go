@@ -925,7 +925,3 @@ func TestSSOApplicationLoadCustomAttributesSuccess(t *testing.T) {
 	require.Len(t, res, 1)
 	require.Equal(t, "npi_level", res[0].Name)
 }
-
-func ptr[T any](v T) *T {
-	return &v
-}
