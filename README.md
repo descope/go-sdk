@@ -1870,8 +1870,8 @@ You can create, update, delete or load sso applications:
 // Create OIDC SSO application
 req := &descope.OIDCApplicationRequest{Name: "My OIDC App", Enabled: true, LoginPageURL: "http://dummy.com"}
 appID, err = descopeClient.Management.SSOApplication().CreateOIDCApplication(context.Background(), req)
-// A logout at the app's end-session endpoint also logs the user out of their other applications. Set
-// LogoutPropagation to "none" to only end the user's sessions.
+// A logout at the app's end-session endpoint only ends the user's sessions. Set LogoutPropagation to
+// "allApps" to also log the user out of their other applications.
 
 //Create SAML SSO application
 req := &descope.SAMLApplicationRequest{
