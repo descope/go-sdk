@@ -205,6 +205,31 @@ if err != nil {
 
 The session and refresh JWTs should be returned to the caller, and passed with every request in the session. Read more on [session validation](#session-validation)
 
+The `WithOptions` variants also accept an instant message delivery method (`descope.MethodIM`), more options such as a messaging provider and locale, and return the remaining verification attempts:
+
+```go
+res, err := descopeClient.Auth.OTP().SignUpWithOptions(context.Background(), descope.MethodEmail, loginID, &descope.OTPSignUpUser{
+    Username: "desmond",
+    Name:     "Desmond Copeland",
+    Phone:    "212-555-1234",
+}, &descope.OTPSignUpOptions{ProviderID: "provider-id", Locale: "en"})
+if err != nil {
+    // handle error
+}
+fmt.Println(res.MaskedEmail, res.VerificationAttempts)
+
+// Sign in, or sign up or in, with the same options
+res, err = descopeClient.Auth.OTP().SignInWithOptions(context.Background(), descope.MethodIM, "+12125551234", nil, &descope.OTPSignInOptions{
+    ProviderID:   "provider-id",
+    LoginOptions: &descope.OTPLoginOptions{Locale: "en"},
+})
+res, err = descopeClient.Auth.OTP().SignUpOrInWithOptions(context.Background(), descope.MethodSMS, "+12125551234", nil, nil)
+
+// Update a signed-in user's email or phone, request holds the user's refresh JWT
+res, err = descopeClient.Auth.OTP().UpdateUserEmailWithOptions(context.Background(), loginID, "new@descope.com", &descope.OTPUpdateOptions{Locale: "en", FailOnConflict: true}, r)
+res, err = descopeClient.Auth.OTP().UpdateUserPhoneWithOptions(context.Background(), descope.MethodIM, loginID, "+12125551234", nil, r)
+```
+
 ### Magic Link
 
 Send a user a Magic Link using your preferred delivery method (_Email / SMS / WhatsApp_).

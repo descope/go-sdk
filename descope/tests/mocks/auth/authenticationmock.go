@@ -261,6 +261,61 @@ type MockOTP struct {
 
 	UpdateUserPhoneAssert func(method descope.DeliveryMethod, loginID, phone string, updateOptions *descope.UpdateOptions, r *http.Request)
 	UpdateUserPhoneError  error
+
+	SignUpWithOptionsAssert   func(method descope.DeliveryMethod, loginID string, user *descope.OTPSignUpUser, options *descope.OTPSignUpOptions)
+	SignUpWithOptionsError    error
+	SignUpWithOptionsResponse *descope.OTPResponse
+
+	SignInWithOptionsAssert   func(method descope.DeliveryMethod, loginID string, r *http.Request, options *descope.OTPSignInOptions)
+	SignInWithOptionsError    error
+	SignInWithOptionsResponse *descope.OTPResponse
+
+	SignUpOrInWithOptionsAssert   func(method descope.DeliveryMethod, loginID string, r *http.Request, options *descope.OTPSignInOptions)
+	SignUpOrInWithOptionsError    error
+	SignUpOrInWithOptionsResponse *descope.OTPResponse
+
+	UpdateUserEmailWithOptionsAssert   func(loginID, email string, options *descope.OTPUpdateOptions, r *http.Request)
+	UpdateUserEmailWithOptionsError    error
+	UpdateUserEmailWithOptionsResponse *descope.OTPResponse
+
+	UpdateUserPhoneWithOptionsAssert   func(method descope.DeliveryMethod, loginID, phone string, options *descope.OTPUpdateOptions, r *http.Request)
+	UpdateUserPhoneWithOptionsError    error
+	UpdateUserPhoneWithOptionsResponse *descope.OTPResponse
+}
+
+func (m *MockOTP) SignUpWithOptions(_ context.Context, method descope.DeliveryMethod, loginID string, user *descope.OTPSignUpUser, options *descope.OTPSignUpOptions) (*descope.OTPResponse, error) {
+	if m.SignUpWithOptionsAssert != nil {
+		m.SignUpWithOptionsAssert(method, loginID, user, options)
+	}
+	return m.SignUpWithOptionsResponse, m.SignUpWithOptionsError
+}
+
+func (m *MockOTP) SignInWithOptions(_ context.Context, method descope.DeliveryMethod, loginID string, r *http.Request, options *descope.OTPSignInOptions) (*descope.OTPResponse, error) {
+	if m.SignInWithOptionsAssert != nil {
+		m.SignInWithOptionsAssert(method, loginID, r, options)
+	}
+	return m.SignInWithOptionsResponse, m.SignInWithOptionsError
+}
+
+func (m *MockOTP) SignUpOrInWithOptions(_ context.Context, method descope.DeliveryMethod, loginID string, r *http.Request, options *descope.OTPSignInOptions) (*descope.OTPResponse, error) {
+	if m.SignUpOrInWithOptionsAssert != nil {
+		m.SignUpOrInWithOptionsAssert(method, loginID, r, options)
+	}
+	return m.SignUpOrInWithOptionsResponse, m.SignUpOrInWithOptionsError
+}
+
+func (m *MockOTP) UpdateUserEmailWithOptions(_ context.Context, loginID, email string, options *descope.OTPUpdateOptions, r *http.Request) (*descope.OTPResponse, error) {
+	if m.UpdateUserEmailWithOptionsAssert != nil {
+		m.UpdateUserEmailWithOptionsAssert(loginID, email, options, r)
+	}
+	return m.UpdateUserEmailWithOptionsResponse, m.UpdateUserEmailWithOptionsError
+}
+
+func (m *MockOTP) UpdateUserPhoneWithOptions(_ context.Context, method descope.DeliveryMethod, loginID, phone string, options *descope.OTPUpdateOptions, r *http.Request) (*descope.OTPResponse, error) {
+	if m.UpdateUserPhoneWithOptionsAssert != nil {
+		m.UpdateUserPhoneWithOptionsAssert(method, loginID, phone, options, r)
+	}
+	return m.UpdateUserPhoneWithOptionsResponse, m.UpdateUserPhoneWithOptionsError
 }
 
 func (m *MockOTP) SignIn(_ context.Context, method descope.DeliveryMethod, loginID string, r *http.Request, loginOptions *descope.LoginOptions) (string, error) {

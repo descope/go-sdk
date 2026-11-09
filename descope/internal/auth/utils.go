@@ -112,6 +112,38 @@ type otpUpdatePhoneRequestBody struct {
 	Phone                  string `json:"phone,omitempty"`
 }
 
+type otpSignUpLoginOptions struct {
+	CustomClaims    map[string]any    `json:"customClaims,omitempty"`
+	TemplateOptions map[string]string `json:"templateOptions,omitempty"`
+	Locale          string            `json:"locale,omitempty"`
+	PKCEChallenge   []byte            `json:"pkceChallenge,omitempty"`
+	TenantID        string            `json:"tenantId,omitempty"`
+}
+
+type otpSignUpRequestBody struct {
+	Email        string                 `json:"email,omitempty"`
+	Phone        string                 `json:"phone,omitempty"`
+	LoginID      string                 `json:"loginId,omitempty"`
+	User         *descope.OTPSignUpUser `json:"user,omitempty"`
+	ProviderID   string                 `json:"providerId,omitempty"`
+	LoginOptions *otpSignUpLoginOptions `json:"loginOptions,omitempty"`
+}
+
+type otpSignInRequestBody struct {
+	LoginID      string                   `json:"loginId,omitempty"`
+	LoginOptions *descope.OTPLoginOptions `json:"loginOptions,omitempty"`
+	ProviderID   string                   `json:"providerId,omitempty"`
+	SSOAppID     string                   `json:"ssoAppId,omitempty"`
+	UseRecovery  bool                     `json:"useRecovery,omitempty"`
+}
+
+type otpUpdateWithOptionsRequestBody struct {
+	*descope.OTPUpdateOptions `json:",inline"`
+	LoginID                   string `json:"loginId,omitempty"`
+	Email                     string `json:"email,omitempty"`
+	Phone                     string `json:"phone,omitempty"`
+}
+
 type magicLinkAuthenticationRequestBody struct {
 	*authenticationRequestBody `json:",inline"`
 	URI                        string                `json:"URI,omitempty"`
@@ -212,6 +244,39 @@ func newNOTPUpdateUserRequestBody(loginID string, phone string, options *descope
 
 func newOTPUpdatePhoneRequestBody(loginID, phone string, updateOptions *descope.UpdateOptions) *otpUpdatePhoneRequestBody {
 	return &otpUpdatePhoneRequestBody{LoginID: loginID, Phone: phone, UpdateOptions: updateOptions}
+}
+
+// The address field is sent outside the user object
+func newOTPSignUpRequestBody(method descope.DeliveryMethod, loginID string, user descope.OTPSignUpUser, options *descope.OTPSignUpOptions) *otpSignUpRequestBody {
+	b := &otpSignUpRequestBody{LoginID: loginID, ProviderID: options.ProviderID}
+	if method == descope.MethodEmail {
+		b.Email, user.Email = user.Email, ""
+	} else {
+		b.Phone, user.Phone = user.Phone, ""
+	}
+	if user != (descope.OTPSignUpUser{}) {
+		b.User = &user
+	}
+	if len(options.CustomClaims) > 0 || len(options.TemplateOptions) > 0 || options.Locale != "" || len(options.PKCEChallenge) > 0 || options.TenantID != "" {
+		b.LoginOptions = &otpSignUpLoginOptions{
+			CustomClaims:    options.CustomClaims,
+			TemplateOptions: options.TemplateOptions,
+			Locale:          options.Locale,
+			PKCEChallenge:   options.PKCEChallenge,
+			TenantID:        options.TenantID,
+		}
+	}
+	return b
+}
+
+func newOTPSignInRequestBody(loginID string, options *descope.OTPSignInOptions) *otpSignInRequestBody {
+	return &otpSignInRequestBody{
+		LoginID:      loginID,
+		LoginOptions: options.LoginOptions,
+		ProviderID:   options.ProviderID,
+		SSOAppID:     options.SSOAppID,
+		UseRecovery:  options.UseRecovery,
+	}
 }
 
 func newMagicLinkAuthenticationRequestBody(value, URI string, crossDevice bool, loginOptions *descope.LoginOptions) *magicLinkAuthenticationRequestBody {

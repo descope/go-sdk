@@ -1301,6 +1301,8 @@ func getMaskedValue(method descope.DeliveryMethod) Masked {
 	case descope.MethodVoice:
 		fallthrough
 	case descope.MethodWhatsApp:
+		fallthrough
+	case descope.MethodIM:
 		m = &MaskedPhoneRes{}
 	case descope.MethodEmail:
 		m = &MaskedEmailRes{}
