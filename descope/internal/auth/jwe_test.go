@@ -111,6 +111,8 @@ func TestValidateJWTRejectsUndecryptableTokens(t *testing.T) {
 func TestJWTEncryptionKeysAreValidatedAtStartup(t *testing.T) {
 	_, shortKey := newTestJWEKey(t, "short", 16)
 	_, noKid := newTestJWEKey(t, "", jweKeyBytes)
+	_, dup := newTestJWEKey(t, "dup", jweKeyBytes)
+	_, sameKidOtherKey := newTestJWEKey(t, "dup", jweKeyBytes)
 	for name, key := range map[string]string{
 		"not a JWK":      "not-a-jwk",
 		"not symmetric":  publicKey,
@@ -118,10 +120,15 @@ func TestJWTEncryptionKeysAreValidatedAtStartup(t *testing.T) {
 		"no kid":         noKid,
 		"empty key set":  `{"keys":[]}`,
 		"bad key in set": `{"keys":[` + noKid + `]}`,
+		"duplicate kid":  `{"keys":[` + dup + `,` + sameKidOtherKey + `]}`,
 	} {
 		t.Run(name, func(t *testing.T) {
 			_, err := newTestAuthConf(&AuthParams{ProjectID: "a", PublicKey: publicKey, JWTEncryptionKeys: []string{key}}, nil, DoOk(nil))
 			require.ErrorIs(t, err, descope.ErrInvalidArguments)
 		})
 	}
+	t.Run("duplicate kid across entries", func(t *testing.T) {
+		_, err := newTestAuthConf(&AuthParams{ProjectID: "a", PublicKey: publicKey, JWTEncryptionKeys: []string{dup, sameKidOtherKey}}, nil, DoOk(nil))
+		require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	})
 }

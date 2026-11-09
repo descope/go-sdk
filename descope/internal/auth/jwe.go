@@ -31,6 +31,9 @@ func (p *Provider) loadEncryptionKeys() error {
 			if err := validateEncryptionKey(key); err != nil {
 				return err
 			}
+			if _, exists := keys[key.KeyID()]; exists {
+				return descope.ErrInvalidArguments.WithMessage("Invalid JWT encryption key: duplicate kid %s", key.KeyID())
+			}
 			keys[key.KeyID()] = key
 		}
 	}
