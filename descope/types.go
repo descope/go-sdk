@@ -1118,6 +1118,10 @@ type SSOApplicationOIDCSettings struct {
 	// DefaultAudience controls the default aud of issued tokens for modern apps (non-empty ClientType):
 	// "projectId", "clientId", or "" (both). Legacy apps always use the project ID; empty preserves it.
 	DefaultAudience string `json:"defaultAudience,omitempty"`
+	// LogoutPropagation is how far a logout at the application's end-session endpoint reaches: "allApps"
+	// (the default, empty) also logs the user out of their other applications, "none" only ends the
+	// user's sessions.
+	LogoutPropagation string `json:"logoutPropagation,omitempty"`
 }
 
 type SSOApplication struct {
@@ -1193,6 +1197,10 @@ type OIDCApplicationRequest struct {
 	// DefaultAudience controls the default aud of issued tokens for modern apps (non-empty ClientType):
 	// "projectId", "clientId", or "" (both). Legacy apps always use the project ID; empty preserves it.
 	DefaultAudience string `json:"defaultAudience,omitempty"`
+	// LogoutPropagation is how far a logout at the application's end-session endpoint reaches: "allApps"
+	// (the default, empty) also logs the user out of their other applications, "none" only ends the
+	// user's sessions. It's always sent, so an update without it sets it back to "allApps".
+	LogoutPropagation string `json:"logoutPropagation"`
 	// CustomAttributes holds this app's per-app custom attribute values, keyed by attribute name.
 	CustomAttributes map[string]any `json:"customAttributes,omitempty"`
 }

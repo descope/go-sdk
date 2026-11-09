@@ -180,6 +180,7 @@ func makeCreateUpdateOIDCApplicationRequest(appRequest *descope.OIDCApplicationR
 		"deviceCodeDisabled":        appRequest.DeviceCodeDisabled,
 		"forcePkce":                 appRequest.ForcePkce,
 		"defaultAudience":           appRequest.DefaultAudience,
+		"logoutPropagation":         appRequest.LogoutPropagation,
 		"customAttributes":          appRequest.CustomAttributes,
 	}
 	// ClientID/ClientSecret import an existing OIDC client and are immutable after create, so
