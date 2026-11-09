@@ -1118,9 +1118,9 @@ type SSOApplicationOIDCSettings struct {
 	// DefaultAudience controls the default aud of issued tokens for modern apps (non-empty ClientType):
 	// "projectId", "clientId", or "" (both). Legacy apps always use the project ID; empty preserves it.
 	DefaultAudience string `json:"defaultAudience,omitempty"`
-	// LogoutPropagation is how far a logout at the application's end-session endpoint reaches: "allApps"
-	// (the default, empty) also logs the user out of their other applications, "none" only ends the
-	// user's sessions.
+	// LogoutPropagation is how far a logout at the application's end-session endpoint reaches: "none"
+	// (the default, empty) only ends the user's sessions, "allApps" also logs the user out of their other
+	// applications.
 	LogoutPropagation string `json:"logoutPropagation,omitempty"`
 }
 
@@ -1197,9 +1197,9 @@ type OIDCApplicationRequest struct {
 	// DefaultAudience controls the default aud of issued tokens for modern apps (non-empty ClientType):
 	// "projectId", "clientId", or "" (both). Legacy apps always use the project ID; empty preserves it.
 	DefaultAudience string `json:"defaultAudience,omitempty"`
-	// LogoutPropagation is how far a logout at the application's end-session endpoint reaches: "allApps"
-	// (the default, empty) also logs the user out of their other applications, "none" only ends the
-	// user's sessions. It's always sent, so an update without it sets it back to "allApps".
+	// LogoutPropagation is how far a logout at the application's end-session endpoint reaches: "none"
+	// (the default, empty) only ends the user's sessions, "allApps" also logs the user out of their other
+	// applications. It's always sent, so an update without it sets it back to "none".
 	LogoutPropagation string `json:"logoutPropagation"`
 	// CustomAttributes holds this app's per-app custom attribute values, keyed by attribute name.
 	CustomAttributes map[string]any `json:"customAttributes,omitempty"`
@@ -1247,8 +1247,8 @@ type SAMLApplicationRequest struct {
 	// SPSingleLogoutBinding is the binding of SPSingleLogoutURL: "redirect" (the default), "post" or "soap"
 	// (server to server, requires an https URL). Empty takes it from the service provider's metadata.
 	SPSingleLogoutBinding string `json:"spSingleLogoutBinding"`
-	// SingleLogoutPropagation is what a logout started by the service provider reaches: "allApps" (the
-	// default) also logs the user out of their other applications, "none" only ends the user's session.
+	// SingleLogoutPropagation is what a logout started by the service provider reaches: "none" (the
+	// default) only ends the user's session, "allApps" also logs the user out of their other applications.
 	SingleLogoutPropagation string `json:"singleLogoutPropagation"`
 	// SingleLogoutScope is which sessions a logout started by the service provider ends: "session" (the
 	// default) only the one the LogoutRequest names, "allSessions" every session of the user.

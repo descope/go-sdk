@@ -1894,8 +1894,8 @@ req := &descope.SAMLApplicationRequest{
 	},
 	LogoutRedirectURL: "http://dummy.com/logout",
 	// Optional SAML Single Logout (SLO): the service provider can log the user out with a signed
-	// LogoutRequest, and it is sent one when the user's session ends. Also see SPSingleLogoutBinding
-	// ("redirect", "post" or "soap"), SingleLogoutPropagation ("allApps" or "none") and
+	// LogoutRequest, and it is sent one when a logout reaches the user's applications. Also see
+	// SPSingleLogoutBinding ("redirect", "post" or "soap"), SingleLogoutPropagation ("none" or "allApps") and
 	// SingleLogoutScope ("session" or "allSessions").
 	SingleLogoutEnabled: true,
 	SPSingleLogoutURL:   "https://dummy.com/slo",
