@@ -3,7 +3,9 @@ package auth
 import (
 	"context"
 	"path"
+	"sync"
 	"sync/atomic"
+	"time"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/api"
@@ -14,22 +16,54 @@ import (
 	"github.com/lestrrat-go/jwx/v2/jws"
 )
 
+const (
+	// keySetTTL is how long a successfully fetched key set is used before it is refetched
+	keySetTTL = 10 * time.Minute
+	// keyFetchCooldown limits fetches for unknown key ids after a successful fetch,
+	// and refresh retries of a cached key past keySetTTL after a fetch attempt
+	keyFetchCooldown = 30 * time.Second
+	// keyMaxStaleAge is how long after the last successful fetch cached keys may still be used when refreshes fail
+	keyMaxStaleAge = time.Hour
+)
+
 type Provider struct {
 	client         *api.Client
 	conf           *AuthParams
 	providedKey    jwk.Key
 	keySet         atomic.Value
+	fetchedAt      atomic.Pointer[time.Time] // last successful fetch, nil before the first one
+	mu             sync.Mutex                // serializes fetches
+	attemptedAt    time.Time                 // last fetch attempt, guarded by mu
+	attempts       atomic.Uint64             // completed fetch attempts
+	now            func() time.Time
 	encryptionKeys map[string]jwk.Key
 }
 
 func NewProvider(client *api.Client, conf *AuthParams) *Provider {
-	ks := atomic.Value{}
-	ks.Store(map[string]jwk.Key{})
-	return &Provider{client: client, conf: conf, keySet: ks}
+	p := &Provider{client: client, conf: conf, now: time.Now}
+	p.keySet.Store(map[string]jwk.Key{})
+	return p
+}
+
+// cachedKey returns the key from the cached key set, as long as the set is not older than keySetTTL
+func (p *Provider) cachedKey(kid string) (jwk.Key, bool) {
+	if t := p.fetchedAt.Load(); t == nil || p.now().Sub(*t) >= keySetTTL {
+		return nil, false
+	}
+	key, ok := p.keySetMap()[kid]
+	return key, ok
 }
 
 func (p *Provider) keySetMap() map[string]jwk.Key {
 	return p.keySet.Load().(map[string]jwk.Key)
+}
+
+// usableKeySet returns the cached key set, or nil once the last successful fetch is older than keyMaxStaleAge
+func (p *Provider) usableKeySet() map[string]jwk.Key {
+	if t := p.fetchedAt.Load(); t == nil || p.now().Sub(*t) >= keyMaxStaleAge {
+		return nil
+	}
+	return p.keySetMap()
 }
 
 func (p *Provider) publicKeyExists() bool {
@@ -85,6 +119,10 @@ func (p *Provider) requestKeys() error {
 		tempKeySet[pk.KeyID()] = pk
 	}
 
+	if len(tempKeySet) == 0 {
+		return descope.ErrPublicKey.WithMessage("No public keys in key set response")
+	}
+
 	logger.LogDebug("Refresh keys set with %d key(s)", len(tempKeySet))
 	p.keySet.Store(tempKeySet)
 	return nil
@@ -121,12 +159,47 @@ func (p *Provider) findKey(kid string) (jwk.Key, error) {
 		return nil, err
 	}
 
-	if err := p.requestKeys(); err != nil {
-		logger.LogDebug("Failed to retrieve public keys from API [%s]", err)
-		return nil, err
+	// a cached key is served as is while another caller is fetching
+	attempts := p.attempts.Load()
+	if key, ok := p.usableKeySet()[kid]; ok {
+		if !p.mu.TryLock() {
+			return key, nil
+		}
+	} else {
+		p.mu.Lock()
+	}
+	defer p.mu.Unlock()
+	// another caller may have refreshed the key set while we waited for the lock
+	if key, ok := p.cachedKey(kid); ok {
+		return key, nil
 	}
 
-	key, ok := p.keySetMap()[kid]
+	// unknown key ids wait keyFetchCooldown after a successful fetch, so a failed fetch is retried right away;
+	// a cached key past keySetTTL waits keyFetchCooldown after an attempt ends, so it is served while fetches fail;
+	// callers that waited for a fetch use its outcome instead of fetching again
+	now := p.now()
+	var last time.Time
+	if t := p.fetchedAt.Load(); t != nil {
+		last = *t
+	}
+	if _, ok := p.keySetMap()[kid]; ok {
+		last = p.attemptedAt
+	}
+	if p.attempts.Load() == attempts && now.Sub(last) >= keyFetchCooldown {
+		err := p.requestKeys()
+		p.attemptedAt = p.now()
+		p.attempts.Add(1)
+		if err != nil {
+			logger.LogError("Failed to retrieve public keys from API", err)
+			if key, ok := p.usableKeySet()[kid]; ok {
+				return key, nil
+			}
+			return nil, err
+		}
+		p.fetchedAt.Store(&now)
+	}
+
+	key, ok := p.usableKeySet()[kid]
 	if !ok {
 		err := descope.ErrPublicKey.WithMessage("Required public key does not exist in key set")
 		logger.LogInfo("Required public key does not exist in key set (key set size [%d])", len(p.keySetMap()))
@@ -138,7 +211,7 @@ func (p *Provider) findKey(kid string) (jwk.Key, error) {
 
 func (p *Provider) FetchKeys(_ context.Context, sink jws.KeySink, sig *jws.Signature, _ *jws.Message) error {
 	wantedKid := sig.ProtectedHeaders().KeyID()
-	v, ok := p.keySetMap()[wantedKid]
+	v, ok := p.cachedKey(wantedKid)
 	if !ok {
 		logger.LogDebug("Key was not found, looking for key id [%s]", wantedKid)
 		if key, err := p.findKey(wantedKid); key != nil {

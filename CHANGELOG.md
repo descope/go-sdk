@@ -1,5 +1,26 @@
 # Changelog
 
+## [1.39.1](https://github.com/descope/go-sdk/compare/v1.39.0...v1.39.1) (2026-11-09)
+
+
+### Bug Fixes
+
+* **auth:** refresh cached signing keys and rate limit unknown kid refetch ([#927](https://github.com/descope/go-sdk/issues/927)) ([2917903](https://github.com/descope/go-sdk/commit/2917903edfa4c6be85172214e906afd55deac693))
+* **deps:** update module github.com/descope/go-sdk to v1.39.0 ([#920](https://github.com/descope/go-sdk/issues/920)) ([77e4450](https://github.com/descope/go-sdk/commit/77e4450987ef7f16bd86648efeadff5adb1fe72e))
+
+## [1.39.0](https://github.com/descope/go-sdk/compare/v1.38.0...v1.39.0) (2026-11-05)
+
+
+### Features
+
+* add create third party application consent to management ([#919](https://github.com/descope/go-sdk/issues/919)) ([e1439c2](https://github.com/descope/go-sdk/commit/e1439c291463f73322626b94d26aaf2b51e336bf))
+* **mgmt:** allow updating management key roles ([#891](https://github.com/descope/go-sdk/issues/891)) ([8fa1b51](https://github.com/descope/go-sdk/commit/8fa1b511a0ac4fa10c343f155ce0987d34d0e77b))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.38.0 ([#878](https://github.com/descope/go-sdk/issues/878)) ([12c8c20](https://github.com/descope/go-sdk/commit/12c8c201d8e147ed5d9b2efa0bdfd93c19020bbd))
+
 ## [1.38.0](https://github.com/descope/go-sdk/compare/v1.37.0...v1.38.0) (2026-10-19)
 
 
