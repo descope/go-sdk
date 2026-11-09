@@ -63,6 +63,29 @@ func TestEnvVariableManagementKey(t *testing.T) {
 	assert.NotNil(t, a.Management)
 }
 
+// A 256-bit JWK with an all-zero key, valid for the SDK's startup checks
+const testJWEKey = `{"kty":"oct","kid":"test-kid","k":"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"}`
+
+func TestEnvVariableJWTEncryptionKeys(t *testing.T) {
+	t.Setenv(descope.EnvironmentVariableJWTEncryptionKeys, testJWEKey)
+	a, err := NewWithConfig(&Config{ProjectID: "a"})
+	require.NoError(t, err)
+	assert.Equal(t, []string{testJWEKey}, a.config.JWTEncryptionKeys)
+}
+
+func TestConfigJWTEncryptionKeysOverrideEnvVariable(t *testing.T) {
+	t.Setenv(descope.EnvironmentVariableJWTEncryptionKeys, "not-a-jwk")
+	a, err := NewWithConfig(&Config{ProjectID: "a", JWTEncryptionKeys: []string{testJWEKey}})
+	require.NoError(t, err)
+	assert.Equal(t, []string{testJWEKey}, a.config.JWTEncryptionKeys)
+}
+
+func TestInvalidJWTEncryptionKeysEnvVariable(t *testing.T) {
+	t.Setenv(descope.EnvironmentVariableJWTEncryptionKeys, "not-a-jwk")
+	_, err := NewWithConfig(&Config{ProjectID: "a"})
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+}
+
 func TestEnvVariableAuthManagementKey(t *testing.T) {
 	expectedManagementKey := "test"
 	err := os.Setenv(descope.EnvironmentVariableAuthManagementKey, expectedManagementKey)

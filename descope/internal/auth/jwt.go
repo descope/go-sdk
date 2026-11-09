@@ -27,15 +27,16 @@ const (
 )
 
 type Provider struct {
-	client      *api.Client
-	conf        *AuthParams
-	providedKey jwk.Key
-	keySet      atomic.Value
-	fetchedAt   atomic.Pointer[time.Time] // last successful fetch, nil before the first one
-	mu          sync.Mutex                // serializes fetches
-	attemptedAt time.Time                 // last fetch attempt, guarded by mu
-	attempts    atomic.Uint64             // completed fetch attempts
-	now         func() time.Time
+	client         *api.Client
+	conf           *AuthParams
+	providedKey    jwk.Key
+	keySet         atomic.Value
+	fetchedAt      atomic.Pointer[time.Time] // last successful fetch, nil before the first one
+	mu             sync.Mutex                // serializes fetches
+	attemptedAt    time.Time                 // last fetch attempt, guarded by mu
+	attempts       atomic.Uint64             // completed fetch attempts
+	now            func() time.Time
+	encryptionKeys map[string]jwk.Key
 }
 
 func NewProvider(client *api.Client, conf *AuthParams) *Provider {
