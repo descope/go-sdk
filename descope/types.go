@@ -1236,9 +1236,9 @@ type SAMLApplicationRequest struct {
 	//
 	// SingleLogoutEnabled turns SLO on. The service provider can then log the user out with a signed
 	// LogoutRequest, and it is sent a LogoutRequest, naming the user by the application's NameID, when a
-	// logout reaches the user's applications (logout of all devices, an admin logout, or another
+	// logout reaches the user's applications (logout of all devices, a force logout when enabled for the project, or another
 	// application's logout that propagates). That includes every SLO application the user can sign in to,
-	// not only ones the user used. A logout without a browser (logout of all devices, an admin logout)
+	// not only ones the user used. A logout without a browser (logout of all devices, a force logout)
 	// reaches only applications with the "soap" binding. Off by default.
 	SingleLogoutEnabled bool `json:"singleLogoutEnabled"`
 	// SPSingleLogoutURL is the service provider's SingleLogoutService URL. Required when SLO is on and the
