@@ -1251,23 +1251,28 @@ type SAMLApplicationRequest struct {
 	// the application's NotifyOnForceLogout is on, or another application's logout that propagates). That
 	// includes every SLO application the user can sign in to, not only ones the user used. A logout without
 	// a browser (the user's own logout of all devices, a force logout) reaches only applications with the
-	// "soap" binding. Off by default.
+	// "soap" binding. Off by default, and always sent: update replaces the whole application, so an update
+	// without it turns single logout off.
 	SingleLogoutEnabled bool `json:"singleLogoutEnabled"`
 	// SPSingleLogoutURL is the service provider's SingleLogoutService URL. Required when SLO is on and the
 	// application is not configured by metadata URL; empty takes it from the service provider's metadata.
 	SPSingleLogoutURL string `json:"spSingleLogoutUrl"`
-	// SPSingleLogoutBinding is the binding of SPSingleLogoutURL: "redirect" (the default), "post" or "soap"
-	// (server to server, requires an https URL). Empty takes it from the service provider's metadata.
+	// SPSingleLogoutBinding is the binding of SPSingleLogoutURL: "redirect", "post" or "soap" (server to
+	// server, requires an https URL). Empty is the default: with an SP Single Logout URL, HTTP-Redirect;
+	// without one, from the service provider's metadata (SOAP when it offers an https SOAP endpoint, else
+	// HTTP-Redirect, else HTTP-POST). Without a URL, an explicit binding takes the metadata endpoint with
+	// that binding.
 	SPSingleLogoutBinding string `json:"spSingleLogoutBinding"`
 	// SingleLogoutPropagation is what a logout started by the service provider reaches: "none" (the
-	// default) only ends the user's session, "allApps" also logs the user out of their other applications.
+	// default) only ends the user's session, "allApps" also logs the user out of their other applications
+	// (OIDC applications only when every session of the user ended).
 	SingleLogoutPropagation string `json:"singleLogoutPropagation"`
 	// SingleLogoutScope is which sessions a logout started by the service provider ends: "session" (the
 	// default) only the one the LogoutRequest names, "allSessions" every session of the user.
 	SingleLogoutScope string `json:"singleLogoutScope"`
 	// NotifyOnForceLogout is whether a force logout of the user (the Console's, or the management API's
 	// logout of all of a user's devices) notifies this application: with SLO over the "soap" binding, it
-	// is sent a LogoutRequest. Off by default.
+	// is sent a LogoutRequest. Off by default, and always sent, so an update without it turns it off.
 	NotifyOnForceLogout bool `json:"notifyOnForceLogout"`
 }
 
