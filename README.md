@@ -1906,6 +1906,9 @@ You can create, update, delete or load sso applications:
 // Create OIDC SSO application
 req := &descope.OIDCApplicationRequest{Name: "My OIDC App", Enabled: true, LoginPageURL: "http://dummy.com"}
 appID, err = descopeClient.Management.SSOApplication().CreateOIDCApplication(context.Background(), req)
+// A logout at the app's end-session endpoint only ends the user's sessions. Set LogoutPropagation to
+// "allApps" to also log the user out of their other applications. Set NotifyOnForceLogout to send the
+// app's BackChannelLogoutURL a logout token when the user is force logged out.
 
 //Create SAML SSO application
 req := &descope.SAMLApplicationRequest{
@@ -1927,6 +1930,13 @@ req := &descope.SAMLApplicationRequest{
 		},
 	},
 	LogoutRedirectURL: "http://dummy.com/logout",
+	// Optional SAML Single Logout (SLO): the service provider can log the user out with a signed
+	// LogoutRequest, and it is sent one when a logout reaches the user's applications. Also see
+	// SPSingleLogoutBinding ("redirect", "post" or "soap"), SingleLogoutPropagation ("none" or "allApps") and
+	// SingleLogoutScope ("session" or "allSessions"). NotifyOnForceLogout also sends it a LogoutRequest
+	// when the user is force logged out, which requires the "soap" binding.
+	SingleLogoutEnabled: true,
+	SPSingleLogoutURL:   "https://dummy.com/slo",
 }
 appID, err = descopeClient.Management.SSOApplication().CreateSAMLApplication(context.Background(), req)
 

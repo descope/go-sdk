@@ -1087,6 +1087,15 @@ type SSOApplicationSAMLSettings struct {
 	// SP-initiated flows use the algorithm from the SP's SAML request. Use "sha256" for SHA-256;
 	// leave empty for the default (SHA-1).
 	DefaultSignatureAlgorithm string `json:"defaultSignatureAlgorithm"`
+	// SAML Single Logout (SLO) settings, see SAMLApplicationRequest
+	SingleLogoutEnabled     bool   `json:"singleLogoutEnabled"`
+	SPSingleLogoutURL       string `json:"spSingleLogoutUrl"`
+	SPSingleLogoutBinding   string `json:"spSingleLogoutBinding"`
+	SingleLogoutPropagation string `json:"singleLogoutPropagation"`
+	SingleLogoutScope       string `json:"singleLogoutScope"`
+	// NotifyOnForceLogout is whether a force logout of the user notifies this application, see
+	// SAMLApplicationRequest
+	NotifyOnForceLogout bool `json:"notifyOnForceLogout"`
 }
 
 type SSOApplicationOIDCSettings struct {
@@ -1112,6 +1121,14 @@ type SSOApplicationOIDCSettings struct {
 	// DefaultAudience controls the default aud of issued tokens for modern apps (non-empty ClientType):
 	// "projectId", "clientId", or "" (both). Legacy apps always use the project ID; empty preserves it.
 	DefaultAudience string `json:"defaultAudience,omitempty"`
+	// LogoutPropagation is how far a logout at the application's end-session endpoint reaches: "none"
+	// (the default, empty) only ends the user's sessions, "allApps" also logs the user out of their other
+	// applications.
+	LogoutPropagation string `json:"logoutPropagation,omitempty"`
+	// NotifyOnForceLogout is whether a force logout of the user (the Console's, or the management API's
+	// logout of all of a user's devices) notifies this application: with a BackChannelLogoutURL, it is
+	// sent a logout token. Off by default.
+	NotifyOnForceLogout bool `json:"notifyOnForceLogout,omitempty"`
 }
 
 type SSOApplication struct {
@@ -1187,6 +1204,14 @@ type OIDCApplicationRequest struct {
 	// DefaultAudience controls the default aud of issued tokens for modern apps (non-empty ClientType):
 	// "projectId", "clientId", or "" (both). Legacy apps always use the project ID; empty preserves it.
 	DefaultAudience string `json:"defaultAudience,omitempty"`
+	// LogoutPropagation is how far a logout at the application's end-session endpoint reaches: "none"
+	// (the default, empty) only ends the user's sessions, "allApps" also logs the user out of their other
+	// applications. It's always sent, so an update without it sets it back to "none".
+	LogoutPropagation string `json:"logoutPropagation"`
+	// NotifyOnForceLogout is whether a force logout of the user (the Console's, or the management API's
+	// logout of all of a user's devices) notifies this application: with a BackChannelLogoutURL, it is
+	// sent a logout token. Off by default, and always sent, so an update without it turns it off.
+	NotifyOnForceLogout bool `json:"notifyOnForceLogout"`
 	// CustomAttributes holds this app's per-app custom attribute values, keyed by attribute name.
 	CustomAttributes map[string]any `json:"customAttributes,omitempty"`
 }
@@ -1217,6 +1242,42 @@ type SAMLApplicationRequest struct {
 	DefaultSignatureAlgorithm string `json:"defaultSignatureAlgorithm"`
 	// CustomAttributes holds this app's per-app custom attribute values, keyed by attribute name.
 	CustomAttributes map[string]any `json:"customAttributes,omitempty"`
+
+	// SAML Single Logout (SLO).
+	//
+	// SingleLogoutEnabled turns SLO on. The service provider can then log the user out with a signed
+	// LogoutRequest, and it is sent a LogoutRequest, naming the user by the application's NameID, when a
+	// logout reaches the user's applications (the user's own logout of all devices, a force logout when
+	// the application's NotifyOnForceLogout is on, or another application's logout that propagates). That
+	// includes every SLO application the user can sign in to, not only ones the user used. A logout without
+	// a browser (the user's own logout of all devices, a force logout) reaches only applications with the
+	// "soap" binding. Off by default, and always sent: update replaces the whole application, so an update
+	// without it turns single logout off.
+	SingleLogoutEnabled bool `json:"singleLogoutEnabled"`
+	// SPSingleLogoutURL is the service provider's SingleLogoutService URL. Required when SLO is on and the
+	// application is not configured by metadata URL; empty takes it from the service provider's metadata.
+	SPSingleLogoutURL string `json:"spSingleLogoutUrl"`
+	// SPSingleLogoutBinding is the binding of SPSingleLogoutURL: "redirect", "post" or "soap" (server to
+	// server, requires an https URL). Empty is the default: with an SP Single Logout URL, HTTP-Redirect;
+	// without one, from the service provider's metadata (SOAP when it offers an https SOAP endpoint, else
+	// HTTP-Redirect, else HTTP-POST). Without a URL, an explicit binding takes the metadata endpoint with
+	// that binding.
+	SPSingleLogoutBinding string `json:"spSingleLogoutBinding"`
+	// SingleLogoutPropagation is what a logout started by the service provider reaches: "none" (the
+	// default) none of the user's other applications, "allApps" also logs the user out of their other
+	// applications (OIDC applications only when every session of the user ended).
+	SingleLogoutPropagation string `json:"singleLogoutPropagation"`
+	// SingleLogoutScope is which sessions a logout started by the service provider ends: "session" (the
+	// default) the sessions the LogoutRequest's SessionIndex values name, "allSessions" every session of the
+	// user. With "session", a LogoutRequest with no SessionIndex, or with one Descope didn't issue, ends the
+	// browser's Descope session when the browser has one for the user, else every session of the user its
+	// NameID names, and one with several SessionIndex values that aren't all Descope's ends every session of
+	// the user. A visit to the logout URL without a LogoutRequest always ends every session of the user.
+	SingleLogoutScope string `json:"singleLogoutScope"`
+	// NotifyOnForceLogout is whether a force logout of the user (the Console's, or the management API's
+	// logout of all of a user's devices) notifies this application: with SLO over the "soap" binding, it
+	// is sent a LogoutRequest. Off by default, and always sent, so an update without it turns it off.
+	NotifyOnForceLogout bool `json:"notifyOnForceLogout"`
 }
 
 type WSFedApplicationRequest struct {
