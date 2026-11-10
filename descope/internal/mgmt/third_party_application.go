@@ -236,6 +236,37 @@ func (s *thirdPartyApplication) RotateApplicationSecret(ctx context.Context, id 
 	return res.Cleartext, nil
 }
 
+func (s *thirdPartyApplication) CreateConsent(ctx context.Context, consentRequest *descope.ThirdPartyApplicationConsentCreateRequest) (*descope.ThirdPartyApplicationConsent, error) {
+	if consentRequest == nil {
+		return nil, utils.NewInvalidArgumentError("consentRequest")
+	}
+	if consentRequest.AppID == "" {
+		return nil, utils.NewInvalidArgumentError("consentRequest.AppID")
+	}
+	if consentRequest.UserID == "" {
+		return nil, utils.NewInvalidArgumentError("consentRequest.UserID")
+	}
+
+	req := map[string]any{
+		"appId":      consentRequest.AppID,
+		"userId":     consentRequest.UserID,
+		"scopes":     consentRequest.Scopes,
+		"tenantId":   consentRequest.TenantID,
+		"expireTime": consentRequest.ExpireTime,
+	}
+	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationCreateConsent(), req, nil, "")
+	if err != nil {
+		return nil, err
+	}
+	res := struct {
+		Consent *descope.ThirdPartyApplicationConsent `json:"consent"`
+	}{}
+	if err = utils.Unmarshal([]byte(httpRes.BodyStr), &res); err != nil {
+		return nil, err
+	}
+	return res.Consent, nil
+}
+
 func (s *thirdPartyApplication) DeleteConsents(ctx context.Context, consentRequest *descope.ThirdPartyApplicationConsentDeleteOptions) error {
 	if consentRequest == nil {
 		return utils.NewInvalidArgumentError("consentRequest")

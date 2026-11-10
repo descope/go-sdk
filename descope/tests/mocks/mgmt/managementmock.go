@@ -2457,6 +2457,10 @@ type MockThirdPartyApplication struct {
 	LoadAllApplicationsTotal    int
 	LoadAllApplicationsError    error
 
+	CreateConsentAssert   func(*descope.ThirdPartyApplicationConsentCreateRequest)
+	CreateConsentResponse *descope.ThirdPartyApplicationConsent
+	CreateConsentError    error
+
 	DeleteConsentsAssert func(*descope.ThirdPartyApplicationConsentDeleteOptions)
 	DeleteConsentsError  error
 
@@ -2548,6 +2552,13 @@ func (m *MockThirdPartyApplication) RotateApplicationSecret(_ context.Context, i
 		m.RotateApplicationSecretAssert(id)
 	}
 	return m.RotateApplicationSecretResponse, m.RotateApplicationSecretError
+}
+
+func (m *MockThirdPartyApplication) CreateConsent(_ context.Context, request *descope.ThirdPartyApplicationConsentCreateRequest) (*descope.ThirdPartyApplicationConsent, error) {
+	if m.CreateConsentAssert != nil {
+		m.CreateConsentAssert(request)
+	}
+	return m.CreateConsentResponse, m.CreateConsentError
 }
 
 func (m *MockThirdPartyApplication) DeleteConsents(_ context.Context, options *descope.ThirdPartyApplicationConsentDeleteOptions) error {
@@ -2769,7 +2780,7 @@ type MockManagementKey struct {
 	CreateResponseToken string
 	CreateError         error
 
-	UpdateAssert   func(id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus)
+	UpdateAssert   func(id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus, reBac *descope.MgmtKeyReBac)
 	UpdateResponse *descope.MgmtKey
 	UpdateError    error
 
@@ -2793,9 +2804,9 @@ func (m *MockManagementKey) Create(_ context.Context, name, description string, 
 	return m.CreateResponseKey, m.CreateResponseToken, m.CreateError
 }
 
-func (m *MockManagementKey) Update(_ context.Context, id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus) (*descope.MgmtKey, error) {
+func (m *MockManagementKey) Update(_ context.Context, id, name, description string, permittedIPs []string, status descope.MgmtKeyStatus, reBac *descope.MgmtKeyReBac) (*descope.MgmtKey, error) {
 	if m.UpdateAssert != nil {
-		m.UpdateAssert(id, name, description, permittedIPs, status)
+		m.UpdateAssert(id, name, description, permittedIPs, status, reBac)
 	}
 	return m.UpdateResponse, m.UpdateError
 }

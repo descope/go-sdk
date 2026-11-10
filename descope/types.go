@@ -1175,7 +1175,7 @@ type OIDCApplicationRequest struct {
 	// the client_secret is generated server-side (fetch/rotate it via the application secret methods).
 	ClientID                  string   `json:"clientId,omitempty"`
 	ClientSecret              string   `json:"clientSecret,omitempty"`
-	ClientType                string   `json:"clientType,omitempty"`
+	ClientType                string   `json:"clientType,omitempty"` // "confidential" or "public"; if empty on create, the account's default applies (the created app's ClientType shows which)
 	ApprovedRedirectURLs      []string `json:"approvedRedirectUrls,omitempty"`
 	AuthorizationCodeDisabled bool     `json:"authorizationCodeDisabled,omitempty"`
 	ClientCredentialsDisabled bool     `json:"clientCredentialsDisabled,omitempty"`
@@ -1692,6 +1692,7 @@ const (
 	EnvironmentVariableManagementKey     = "DESCOPE_MANAGEMENT_KEY"
 	EnvironmentVariableAuthManagementKey = "DESCOPE_AUTH_MANAGEMENT_KEY" // gitleaks:allow
 	EnvironmentVariableBaseURL           = "DESCOPE_BASE_URL"
+	EnvironmentVariableJWTEncryptionKeys = "DESCOPE_JWT_ENCRYPTION_KEYS" // gitleaks:allow
 )
 
 type AccessType string
@@ -2025,7 +2026,9 @@ type ThirdPartyApplicationRequest struct {
 	ForcePkce bool `json:"forcePkce,omitempty"`
 	// DefaultAudience controls the default aud of issued tokens: "projectId", "clientId", or "" (both).
 	DefaultAudience string `json:"defaultAudience,omitempty"`
-	// ClientType sets the client authentication model: "confidential" or "public".
+	// ClientType sets the client authentication model: "confidential" or "public". If empty on create, the
+	// account's default applies (the created app's ClientType shows which). Update replaces the whole app, so
+	// pass the current type on update.
 	ClientType string `json:"clientType,omitempty"`
 	// ForceDpop requires a valid DPoP proof at the token endpoint. Only a "confidential" or "public" ClientType may require it.
 	ForceDpop bool `json:"forceDpop,omitempty"`
@@ -2081,6 +2084,22 @@ type ThirdPartyApplicationConsent struct {
 	ExpireTime int32 `json:"expireTime,omitempty"`
 	// The consent modified time in milliseconds since epoch
 	ModifiedTime int32 `json:"modifiedTime,omitempty"`
+}
+
+// Options for creating a third party application consent on behalf of a user.
+//
+// AppID - the third party application id the consent is granted to (required).
+// UserID - the id of the user who granted the consent (required).
+// Scopes - the consented scopes. Each scope must be defined by the application, and the application's
+// mandatory scopes must be included (all of its scopes when it does not allow partial scopes).
+// TenantID - optional tenant id the consent is bound to. The user must be a member of this tenant.
+// ExpireTime - optional consent expiration in seconds since epoch. Leave at 0 for a consent that never expires.
+type ThirdPartyApplicationConsentCreateRequest struct {
+	AppID      string   `json:"appId"`
+	UserID     string   `json:"userId"`
+	Scopes     []string `json:"scopes"`
+	TenantID   string   `json:"tenantId"`
+	ExpireTime int32    `json:"expireTime"`
 }
 
 // Options for deleting third party application consents. At least one of ConsentIDs, AppID or UserIDs must be provided.
