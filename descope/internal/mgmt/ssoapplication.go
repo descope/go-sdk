@@ -181,6 +181,7 @@ func makeCreateUpdateOIDCApplicationRequest(appRequest *descope.OIDCApplicationR
 		"forcePkce":                 appRequest.ForcePkce,
 		"defaultAudience":           appRequest.DefaultAudience,
 		"logoutPropagation":         appRequest.LogoutPropagation,
+		"notifyOnForceLogout":       appRequest.NotifyOnForceLogout,
 		"customAttributes":          appRequest.CustomAttributes,
 	}
 	// ClientID/ClientSecret import an existing OIDC client and are immutable after create, so
@@ -371,6 +372,7 @@ func makeCreateUpdateSAMLApplicationRequest(appRequest *descope.SAMLApplicationR
 		"spSingleLogoutBinding":     appRequest.SPSingleLogoutBinding,
 		"singleLogoutPropagation":   appRequest.SingleLogoutPropagation,
 		"singleLogoutScope":         appRequest.SingleLogoutScope,
+		"notifyOnForceLogout":       appRequest.NotifyOnForceLogout,
 	}
 }
 
