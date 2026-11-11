@@ -169,6 +169,9 @@ var (
 			userRemoveTrustedDevices:                   "mgmt/user/trusteddevices/remove",
 			userGetProviderToken:                       "mgmt/user/provider/token",
 			userLogoutAllDevices:                       "mgmt/user/logout",
+			userLogoutSessions:                         "mgmt/user/logout/sessions",
+			userLogoutSessionsList:                     "mgmt/user/logout/sessions/list",
+			userLogoutSessionsDelete:                   "mgmt/user/logout/sessions/delete",
 			userGenerateOTPForTest:                     "mgmt/tests/generate/otp",
 			userGenerateMagicLinkForTest:               "mgmt/tests/generate/magiclink",
 			userGenerateEnchantedLinkForTest:           "mgmt/tests/generate/enchantedlink",
@@ -519,6 +522,9 @@ type mgmtEndpoints struct {
 	userRemoveRecoveryCodes   string
 	userGetProviderToken      string
 	userLogoutAllDevices      string
+	userLogoutSessions        string
+	userLogoutSessionsList    string
+	userLogoutSessionsDelete  string
 	userAddSsoApps            string
 	userSetSsoApps            string
 	userRemoveSsoApps         string
@@ -1298,6 +1304,18 @@ func (e *endpoints) ManagementUserGetProviderToken() string {
 
 func (e *endpoints) ManagementUserLogoutAllDevices() string {
 	return path.Join(e.version, e.mgmt.userLogoutAllDevices)
+}
+
+func (e *endpoints) ManagementUserLogoutSessions() string {
+	return path.Join(e.version, e.mgmt.userLogoutSessions)
+}
+
+func (e *endpoints) ManagementUserLogoutSessionsList() string {
+	return path.Join(e.version, e.mgmt.userLogoutSessionsList)
+}
+
+func (e *endpoints) ManagementUserLogoutSessionsDelete() string {
+	return path.Join(e.version, e.mgmt.userLogoutSessionsDelete)
 }
 
 func (e *endpoints) ManagementUserGenerateOTPForTest() string {

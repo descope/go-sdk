@@ -2,6 +2,7 @@ package mgmt
 
 import (
 	"context"
+	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -1133,6 +1134,173 @@ func TestUserLogoutUserByLoginIdErr(t *testing.T) {
 	}, nil))
 	err := m.User().LogoutUser(context.Background(), "")
 	require.Error(t, err)
+}
+
+func TestUserLogoutSessionsCreatedBetweenSuccess(t *testing.T) {
+	before := time.Date(2026, 11, 4, 12, 0, 0, 0, time.FixedZone("x", 2*60*60))
+	after := time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC)
+	response := map[string]any{
+		"id":           "r1",
+		"after":        "2026-11-01T00:00:00Z",
+		"before":       "2026-11-04T10:00:00Z",
+		"sessionTypes": []string{"web"},
+	}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.True(t, strings.HasSuffix(r.URL.Path, "/v1/mgmt/user/logout/sessions"))
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, "2026-11-04T10:00:00Z", req["sessionsCreatedBefore"])
+		assert.EqualValues(t, "2026-11-01T00:00:00Z", req["sessionsCreatedAfter"])
+		assert.EqualValues(t, []any{"web"}, req["sessionTypes"])
+	}, response))
+	res, err := m.User().LogoutSessionsCreatedBetween(context.Background(), &before, &after, "web")
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	assert.Equal(t, "r1", res.ID)
+	assert.True(t, after.Equal(res.After))
+	assert.True(t, before.Equal(res.Before))
+	assert.Equal(t, []string{"web"}, res.SessionTypes)
+}
+
+func TestUserLogoutSessionsCreatedBetweenOpenEndedSuccess(t *testing.T) {
+	before := time.Date(2026, 11, 4, 10, 0, 0, 0, time.UTC)
+	response := map[string]any{
+		"id":     "r1",
+		"after":  "1970-01-01T00:00:00Z",
+		"before": "2026-11-04T10:00:00Z",
+	}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, "2026-11-04T10:00:00Z", req["sessionsCreatedBefore"])
+		assert.NotContains(t, req, "sessionsCreatedAfter")
+		assert.NotContains(t, req, "sessionTypes")
+	}, response))
+	res, err := m.User().LogoutSessionsCreatedBetween(context.Background(), &before, nil)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	assert.Equal(t, "r1", res.ID)
+	assert.True(t, time.Unix(0, 0).Equal(res.After))
+	assert.True(t, before.Equal(res.Before))
+	assert.Empty(t, res.SessionTypes)
+}
+
+func TestUserLogoutSessionsCreatedBetweenErr(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {
+		assert.Fail(t, "shouldn't get here")
+	}, nil))
+	res, err := m.User().LogoutSessionsCreatedBetween(context.Background(), nil, nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Nil(t, res)
+}
+
+func TestUserLogoutSessionsCreatedBetweenBeforeOmittedSuccess(t *testing.T) {
+	after := time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC)
+	response := map[string]any{
+		"id":     "r1",
+		"after":  "2026-11-01T00:00:00Z",
+		"before": "2026-11-04T10:00:00Z",
+	}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.NotContains(t, req, "sessionsCreatedBefore")
+		assert.EqualValues(t, "2026-11-01T00:00:00Z", req["sessionsCreatedAfter"])
+	}, response))
+	res, err := m.User().LogoutSessionsCreatedBetween(context.Background(), nil, &after)
+	require.NoError(t, err)
+	require.NotNil(t, res)
+	assert.Equal(t, "r1", res.ID)
+	assert.True(t, after.Equal(res.After))
+	assert.True(t, time.Date(2026, 11, 4, 10, 0, 0, 0, time.UTC).Equal(res.Before))
+}
+
+func TestUserLogoutSessionsCreatedBetweenBadTime(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(nil, map[string]any{"id": "r1", "before": "not-a-time"}))
+	now := time.Now()
+	res, err := m.User().LogoutSessionsCreatedBetween(context.Background(), &now, nil)
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserLogoutSessionsCreatedBetweenServerErr(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	now := time.Now()
+	res, err := m.User().LogoutSessionsCreatedBetween(context.Background(), &now, nil)
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserListLogoutSessionRangesSuccess(t *testing.T) {
+	response := map[string]any{
+		"ranges": []map[string]any{
+			{"id": "r1", "after": "1970-01-01T00:00:00Z", "before": "2026-11-04T10:00:00Z"},
+			{"id": "r2", "after": "2026-11-01T00:00:00Z", "before": "2026-11-02T00:00:00Z", "sessionTypes": []string{"web", "mobile"}},
+		},
+	}
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.True(t, strings.HasSuffix(r.URL.Path, "/v1/mgmt/user/logout/sessions/list"))
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Empty(t, req)
+	}, response))
+	res, err := m.User().ListLogoutSessionRanges(context.Background())
+	require.NoError(t, err)
+	require.Len(t, res, 2)
+	assert.Equal(t, "r1", res[0].ID)
+	assert.True(t, time.Unix(0, 0).Equal(res[0].After))
+	assert.True(t, time.Date(2026, 11, 4, 10, 0, 0, 0, time.UTC).Equal(res[0].Before))
+	assert.Empty(t, res[0].SessionTypes)
+	assert.Equal(t, "r2", res[1].ID)
+	assert.True(t, time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC).Equal(res[1].After))
+	assert.True(t, time.Date(2026, 11, 2, 0, 0, 0, 0, time.UTC).Equal(res[1].Before))
+	assert.Equal(t, []string{"web", "mobile"}, res[1].SessionTypes)
+}
+
+func TestUserListLogoutSessionRangesBadTime(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(nil, map[string]any{"ranges": []map[string]any{{"id": "r1", "after": "bad"}}}))
+	res, err := m.User().ListLogoutSessionRanges(context.Background())
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserListLogoutSessionRangesErr(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	res, err := m.User().ListLogoutSessionRanges(context.Background())
+	require.Error(t, err)
+	require.Nil(t, res)
+}
+
+func TestUserDeleteLogoutSessionRangeSuccess(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
+		require.True(t, strings.HasSuffix(r.URL.Path, "/v1/mgmt/user/logout/sessions/delete"))
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.EqualValues(t, "r1", req["id"])
+	}))
+	err := m.User().DeleteLogoutSessionRange(context.Background(), "r1")
+	require.NoError(t, err)
+}
+
+func TestUserDeleteLogoutSessionRangeNotFound(t *testing.T) {
+	m := newTestMgmt(nil, func(_ *http.Request) (*http.Response, error) {
+		body := `{"errorCode":"E123456","errorDescription":"Not found"}`
+		return &http.Response{StatusCode: http.StatusNotFound, Body: io.NopCloser(strings.NewReader(body))}, nil
+	})
+	err := m.User().DeleteLogoutSessionRange(context.Background(), "unknown")
+	require.Error(t, err)
+	assert.True(t, descope.IsNotFoundError(err))
+}
+
+func TestUserDeleteLogoutSessionRangeErr(t *testing.T) {
+	m := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {
+		assert.Fail(t, "shouldn't get here")
+	}, nil))
+	err := m.User().DeleteLogoutSessionRange(context.Background(), "")
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
 }
 
 func TestSearchAllUsersSuccess(t *testing.T) {

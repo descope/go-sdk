@@ -687,6 +687,17 @@ type MockUser struct {
 	LogoutAssert func(id string, sessionTypes ...string)
 	LogoutError  error
 
+	LogoutSessionsCreatedBetweenAssert   func(before *time.Time, after *time.Time, sessionTypes ...string)
+	LogoutSessionsCreatedBetweenResponse *descope.LogoutSessionRange
+	LogoutSessionsCreatedBetweenError    error
+
+	ListLogoutSessionRangesAssert   func()
+	ListLogoutSessionRangesResponse []*descope.LogoutSessionRange
+	ListLogoutSessionRangesError    error
+
+	DeleteLogoutSessionRangeAssert func(id string)
+	DeleteLogoutSessionRangeError  error
+
 	HistoryAssert   func(userIDs []string)
 	HistoryResponse []*descope.UserHistoryResponse
 	HistoryError    error
@@ -866,6 +877,27 @@ func (m *MockUser) LogoutUserByUserID(_ context.Context, userID string, sessionT
 		m.LogoutAssert(userID, sessionTypes...)
 	}
 	return m.LogoutError
+}
+
+func (m *MockUser) LogoutSessionsCreatedBetween(_ context.Context, before *time.Time, after *time.Time, sessionTypes ...string) (*descope.LogoutSessionRange, error) {
+	if m.LogoutSessionsCreatedBetweenAssert != nil {
+		m.LogoutSessionsCreatedBetweenAssert(before, after, sessionTypes...)
+	}
+	return m.LogoutSessionsCreatedBetweenResponse, m.LogoutSessionsCreatedBetweenError
+}
+
+func (m *MockUser) ListLogoutSessionRanges(_ context.Context) ([]*descope.LogoutSessionRange, error) {
+	if m.ListLogoutSessionRangesAssert != nil {
+		m.ListLogoutSessionRangesAssert()
+	}
+	return m.ListLogoutSessionRangesResponse, m.ListLogoutSessionRangesError
+}
+
+func (m *MockUser) DeleteLogoutSessionRange(_ context.Context, id string) error {
+	if m.DeleteLogoutSessionRangeAssert != nil {
+		m.DeleteLogoutSessionRangeAssert(id)
+	}
+	return m.DeleteLogoutSessionRangeError
 }
 
 func (m *MockUser) SearchAll(_ context.Context, options *descope.UserSearchOptions) ([]*descope.UserResponse, int, error) {
