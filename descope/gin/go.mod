@@ -5,7 +5,7 @@ go 1.26.0
 replace github.com/descope/go-sdk => ../../
 
 require (
-	github.com/descope/go-sdk v1.39.1
+	github.com/descope/go-sdk v1.40.0
 	github.com/gin-gonic/gin v1.12.0
 )
 
