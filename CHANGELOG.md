@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.40.0](https://github.com/descope/go-sdk/compare/v1.39.1...v1.40.0) (2026-11-11)
+
+
+### Features
+
+* **auth:** decrypt encrypted (JWE) session tokens ([#916](https://github.com/descope/go-sdk/issues/916)) ([50764b9](https://github.com/descope/go-sdk/commit/50764b956d33f7f787f9ee6af38604e4475af31e))
+* **mgmt:** log out sessions by creation time ([#918](https://github.com/descope/go-sdk/issues/918)) ([a02fe9d](https://github.com/descope/go-sdk/commit/a02fe9d35371bc8922ed58b35875d8f47bfe12b0))
+* **ssoapplication:** add SAML single logout and OIDC logout propagation settings ([#928](https://github.com/descope/go-sdk/issues/928)) ([aeccb3b](https://github.com/descope/go-sdk/commit/aeccb3b512b983a2371c6a9672a6d206839b9c36))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.39.1 ([#929](https://github.com/descope/go-sdk/issues/929)) ([7e29fa0](https://github.com/descope/go-sdk/commit/7e29fa088920dfdf8e7bc9211498362d9761c2f0))
+
 ## [1.39.1](https://github.com/descope/go-sdk/compare/v1.39.0...v1.39.1) (2026-11-09)
 
 
