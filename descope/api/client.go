@@ -307,6 +307,7 @@ var (
 			thirdPartyApplicationSecretAdd:             "mgmt/thirdparty/app/secret/add",
 			thirdPartyApplicationSecretRevoke:          "mgmt/thirdparty/app/secret/revoke",
 			thirdPartyApplicationRotate:                "mgmt/thirdparty/app/rotate",
+			thirdPartyApplicationConsentCreate:         "mgmt/thirdparty/consents/create",
 			thirdPartyApplicationConsentDelete:         "mgmt/thirdparty/consents/delete",
 			thirdPartyApplicationTenantConsentDelete:   "mgmt/thirdparty/consents/delete/tenant",
 			thirdPartyApplicationConsentsSearch:        "mgmt/thirdparty/consents/search",
@@ -682,6 +683,7 @@ type mgmtEndpoints struct {
 	thirdPartyApplicationSecretAdd           string
 	thirdPartyApplicationSecretRevoke        string
 	thirdPartyApplicationRotate              string
+	thirdPartyApplicationConsentCreate       string
 	thirdPartyApplicationConsentDelete       string
 	thirdPartyApplicationTenantConsentDelete string
 	thirdPartyApplicationConsentsSearch      string
@@ -1855,6 +1857,10 @@ func (e *endpoints) ManagementThirdPartyApplicationSecretRevoke() string {
 
 func (e *endpoints) ManagementThirdPartyApplicationRotate() string {
 	return path.Join(e.version, e.mgmt.thirdPartyApplicationRotate)
+}
+
+func (e *endpoints) ManagementThirdPartyApplicationCreateConsent() string {
+	return path.Join(e.version, e.mgmt.thirdPartyApplicationConsentCreate)
 }
 
 func (e *endpoints) ManagementThirdPartyApplicationDeleteConsent() string {

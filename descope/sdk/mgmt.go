@@ -1345,6 +1345,14 @@ type ThirdPartyApplication interface {
 	// Load all project third party applications.
 	LoadAllApplications(ctx context.Context, options *descope.ThirdPartyApplicationSearchOptions) ([]*descope.ThirdPartyApplication, int, error)
 
+	// Create a user consent for a third party application, e.g. to migrate consents a user
+	// already granted in another system so they are not asked to consent again.
+	// The request's AppID and UserID are required. The scopes are merged into the user's
+	// existing consent for the same application and tenant, if one exists.
+	// Consents of agentic applications cannot be created.
+	// Returns the resulting consent.
+	CreateConsent(ctx context.Context, request *descope.ThirdPartyApplicationConsentCreateRequest) (*descope.ThirdPartyApplicationConsent, error)
+
 	// Delete a consent for a third party application.
 	// (Note: this will not delete tenant level consents)
 	DeleteConsents(ctx context.Context, options *descope.ThirdPartyApplicationConsentDeleteOptions) error

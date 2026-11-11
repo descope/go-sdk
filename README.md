@@ -73,6 +73,35 @@ descopeClient, err := client.NewWithConfig(&client.Config{
 
 If `JWTLeeway` is not set or set to 0, the SDK will use the default 5-second leeway for backward compatibility.
 
+### Encrypted (JWE) Tokens
+
+When JWT encryption is enabled for your project, session and refresh tokens are encrypted with your project's AES key, and the SDK needs that key to validate them. Set it in the `DESCOPE_JWT_ENCRYPTION_KEYS` environment variable, as a single JWK or a JWK Set:
+
+```bash
+export DESCOPE_JWT_ENCRYPTION_KEYS='{"kty":"oct","kid":"my-key-1","k":"..."}'
+
+# after a rotation, keep the previous key next to the new one
+export DESCOPE_JWT_ENCRYPTION_KEYS='{"keys":[{"kty":"oct","kid":"my-key-2","k":"..."},{"kty":"oct","kid":"my-key-1","k":"..."}]}'
+```
+
+Or pass the keys in `Config.JWTEncryptionKeys`, which takes precedence over the environment variable:
+
+```go
+descopeClient, err := client.NewWithConfig(&client.Config{
+    ProjectID:         "project-ID",
+    JWTEncryptionKeys: []string{currentKeyJWK, previousKeyJWK},
+})
+```
+
+Each key must be a 256-bit JWK with `kty` `oct` and the `kid` Descope uses for it; an invalid key makes `NewWithConfig` return `descope.ErrInvalidArguments`. Tokens are matched to keys by `kid`, and tokens that are not encrypted are validated as before, so you can configure a new key before turning encryption on or rotating. Keep a previous key until the refresh tokens it encrypted have expired.
+
+Every service that validates tokens needs these keys to read their claims. Descope encrypts with a new key as soon as it is set, so to turn encryption on or rotate without failing valid sessions:
+
+1. Create the key yourself, e.g. `{"kty":"oct","kid":"my-key-2","k":"<base64url of 32 random bytes>"}`.
+2. Add it to your keys, next to the current one, and deploy.
+3. Upload it in the console (Project Settings > Security > JWT Encryption).
+4. Remove the previous key once the project's refresh token timeout has passed.
+
 ## Usage
 
 ### Authentication Functions
@@ -244,10 +273,10 @@ displayed when initiating the authentication process.
 
 This method is similar to [Magic Link](#magic-link) but differs in two major ways:
 
--   The user must choose the correct link out of the three, instead of having just one
-    single link.
--   This supports cross-device clicking, meaning the user can try to log in on one device,
-    like a computer, while clicking the link on another device, for instance a mobile phone.
+- The user must choose the correct link out of the three, instead of having just one
+  single link.
+- This supports cross-device clicking, meaning the user can try to log in on one device,
+  like a computer, while clicking the link on another device, for instance a mobile phone.
 
 The Enchanted Link will redirect the user to page where the its token needs to be verified.
 This redirection can be configured in code per request, or set globally in the [Descope Console](https://app.descope.com/settings/authentication/enchantedlink).
@@ -664,6 +693,9 @@ No configuration is needed. When `ValidateSessionWithRequest` or `ValidateAndRef
 - If the session token has a `cnf.jkt` claim, the `DPoP` header in the incoming request is validated (RFC 9449 §7.1–7.2).
 - Plain Bearer tokens without `cnf.jkt` are unaffected — the check is skipped entirely.
 - If a `DPoP`-scheme `Authorization` header is present but the token has no `cnf.jkt`, the request is rejected (downgrade-attack prevention).
+- Each proof is accepted at most once: proofs must have an `iat` within ~60s, and a proof whose `jti` has already been seen (JTIs are retained for ~120s) is rejected as a replay. Clients must generate a fresh proof for every request, including retries.
+
+> **Note:** The replay cache is held in memory per SDK client instance. When running multiple instances behind a load balancer, replay protection applies per instance, not across the deployment.
 
 ```go
 // DPoP enforcement is automatic — use the same session validation calls as usual.
@@ -784,6 +816,7 @@ if err != nil {
 ```
 
 A few things to keep in mind:
+
 - Only the sign-up/sign-in step requires `TenantID` — the verify step carries the tenant context automatically.
 - If `TenantID` is omitted, the request uses the non-isolated (shared) identity, as if tenant isolation were not enabled.
 - This is different from [`SelectTenant`](#tenant-selection), which switches the active tenant on an already-authenticated session. `TenantID` in `LoginOptions`/`SignUpOptions` scopes identity resolution at authentication time.
@@ -1611,6 +1644,7 @@ if err != nil {
 
 Generate a JWT for a user, simulating a signin request.
 refreshDuration - a custom refresh duration in seconds for the impersonation JWT, 0 will use project configuration
+
 ```go
 const res, err := updatedJWT, err := descopeClient.Management.JWT().SignIn(context.Background(), "dummy"), 0;
 if err != nil {
@@ -1620,6 +1654,7 @@ if err != nil {
 
 Generate a JWT for a user, simulating a signup request.
 refreshDuration - a custom refresh duration in seconds for the impersonation JWT, 0 will use project configuration
+
 ```go
 const res, err := updatedJWT, err := descopeClient.Management.JWT().SignUp(context.Background(), "dummy", 0);
 if err != nil {
@@ -1629,6 +1664,7 @@ if err != nil {
 
 Generate a JWT for a user, simulating a signup or in request.
 refreshDuration - a custom refresh duration in seconds for the impersonation JWT, 0 will use project configuration
+
 ```go
 const res, err := updatedJWT, err := descopeClient.Management.JWT().SignUpOrIn(context.Background(), "dummy", 0);
 if err != nil {
@@ -1889,6 +1925,9 @@ You can create, update, delete or load sso applications:
 // Create OIDC SSO application
 req := &descope.OIDCApplicationRequest{Name: "My OIDC App", Enabled: true, LoginPageURL: "http://dummy.com"}
 appID, err = descopeClient.Management.SSOApplication().CreateOIDCApplication(context.Background(), req)
+// A logout at the app's end-session endpoint only ends the user's sessions. Set LogoutPropagation to
+// "allApps" to also log the user out of their other applications. Set NotifyOnForceLogout to send the
+// app's BackChannelLogoutURL a logout token when the user is force logged out.
 
 //Create SAML SSO application
 req := &descope.SAMLApplicationRequest{
@@ -1910,6 +1949,13 @@ req := &descope.SAMLApplicationRequest{
 		},
 	},
 	LogoutRedirectURL: "http://dummy.com/logout",
+	// Optional SAML Single Logout (SLO): the service provider can log the user out with a signed
+	// LogoutRequest, and it is sent one when a logout reaches the user's applications. Also see
+	// SPSingleLogoutBinding ("redirect", "post" or "soap"), SingleLogoutPropagation ("none" or "allApps") and
+	// SingleLogoutScope ("session" or "allSessions"). NotifyOnForceLogout also sends it a LogoutRequest
+	// when the user is force logged out, which requires the "soap" binding.
+	SingleLogoutEnabled: true,
+	SPSingleLogoutURL:   "https://dummy.com/slo",
 }
 appID, err = descopeClient.Management.SSOApplication().CreateSAMLApplication(context.Background(), req)
 
@@ -1976,7 +2022,7 @@ descopeClient.DescopeClient().Management.SSOApplication().Delete(context.Backgro
 
 ### Manage Third Party Applications
 
-You can create, update, delete or load third party applications, while also search and delete existing consents related to any third party application:
+You can create, update, delete or load third party applications, and create, search or delete consents related to any third party application:
 
 ```go
 // Create third party application
@@ -2007,7 +2053,7 @@ app, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadApplication
 
 // Load all third party applications with options for pagination
 apps, total, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadAllApplications(context.Background(), &descope.ThirdPartyApplicationSearchOptions{
-    Page: 0, 
+    Page: 0,
     Limit: 100
 })
 
@@ -2021,6 +2067,17 @@ err = descopeClient.DescopeClient().Management.ThirdPartyApplication().DeleteApp
 // Search third party applications consents by pages using a filter options, such as application id, user id, etc.
 consents, total, err = descopeClient.DescopeClient().Management.ThirdPartyApplication().SearchConsents(context.Background(), &descope.ThirdPartyApplicationConsentSearchOptions{
 	AppID: "appId"
+})
+
+// Create a user consent for a third party application, e.g. to migrate consents a user already granted in another system
+// so they are not asked to consent again. AppID and UserID are required. The scopes must be defined by the application and
+// include its mandatory scopes. They are merged into the user's existing consent for the same application and tenant.
+// TenantID and ExpireTime (seconds since epoch, 0 means never expires) are optional.
+// Consents of agentic applications cannot be created.
+consent, err = descopeClient.DescopeClient().Management.ThirdPartyApplication().CreateConsent(context.Background(), &descope.ThirdPartyApplicationConsentCreateRequest{
+	AppID:  "appId",
+	UserID: "my-user",
+	Scopes: []string{"read", "write"},
 })
 
 // Delete third party applications consents by filter options, such as application id, consent ids or user ids.
@@ -2625,8 +2682,8 @@ Simplify your unit testing by using our mocks package for testing your app witho
 
 Mock usage examples:
 
--   [Authentication](https://github.com/descope/go-sdk/blob/main/descope/tests/mocks/auth/authenticationmock_test.go)
--   [Management](https://github.com/descope/go-sdk/blob/main/descope/tests/mocks/mgmt/managementmock_test.go)
+- [Authentication](https://github.com/descope/go-sdk/blob/main/descope/tests/mocks/auth/authenticationmock_test.go)
+- [Management](https://github.com/descope/go-sdk/blob/main/descope/tests/mocks/mgmt/managementmock_test.go)
 
 In the following snippet we mocked the Descope Authentication and Management SDKs, and have assertions to check the actual inputs passed to the SDK:
 

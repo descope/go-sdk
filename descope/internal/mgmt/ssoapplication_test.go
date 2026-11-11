@@ -24,6 +24,8 @@ func TestSSOApplicationCreateOIDCApplicationSuccess(t *testing.T) {
 		require.Equal(t, "http://dummy.com", req["loginPageUrl"])
 		require.True(t, req["forceAuthentication"].(bool))
 		require.EqualValues(t, "http://dummy.com/backchannel-logout", req["backChannelLogoutUrl"])
+		require.EqualValues(t, "none", req["logoutPropagation"])
+		require.Equal(t, true, req["notifyOnForceLogout"])
 		d, ok := req["jwtBearerSettings"].(map[string]any)
 		require.True(t, ok)
 		d, ok = d["issuers"].(map[string]any)
@@ -44,6 +46,8 @@ func TestSSOApplicationCreateOIDCApplicationSuccess(t *testing.T) {
 		LoginPageURL:         "http://dummy.com",
 		ForceAuthentication:  true,
 		BackChannelLogoutURL: "http://dummy.com/backchannel-logout",
+		LogoutPropagation:    "none",
+		NotifyOnForceLogout:  true,
 		JWTBearerSettings: &descope.JWTBearerSettings{
 			Issuers: map[string]*descope.IssuerSettings{
 				"issuer1": {
@@ -100,6 +104,12 @@ func TestSSOApplicationCreateSAMLApplicationSuccess(t *testing.T) {
 		require.True(t, req["forceAuthentication"].(bool))
 		require.Equal(t, "http://dummy.com/logout", req["logoutRedirectUrl"])
 		require.Equal(t, "sha256", req["defaultSignatureAlgorithm"])
+		require.Equal(t, true, req["singleLogoutEnabled"])
+		require.Equal(t, "https://dummy.com/slo", req["spSingleLogoutUrl"])
+		require.Equal(t, "soap", req["spSingleLogoutBinding"])
+		require.Equal(t, "none", req["singleLogoutPropagation"])
+		require.Equal(t, "allSessions", req["singleLogoutScope"])
+		require.Equal(t, true, req["notifyOnForceLogout"])
 
 	}, response))
 
@@ -124,6 +134,12 @@ func TestSSOApplicationCreateSAMLApplicationSuccess(t *testing.T) {
 		ForceAuthentication:       true,
 		LogoutRedirectURL:         "http://dummy.com/logout",
 		DefaultSignatureAlgorithm: "sha256",
+		SingleLogoutEnabled:       true,
+		SPSingleLogoutURL:         "https://dummy.com/slo",
+		SPSingleLogoutBinding:     "soap",
+		SingleLogoutPropagation:   "none",
+		SingleLogoutScope:         "allSessions",
+		NotifyOnForceLogout:       true,
 	})
 	require.NoError(t, err)
 	require.Equal(t, "qux", id)
@@ -157,6 +173,12 @@ func TestSSOApplicationUpdateOIDCApplicationSuccess(t *testing.T) {
 		require.Equal(t, "http://dummy.com", req["loginPageUrl"])
 		require.True(t, req["forceAuthentication"].(bool))
 		require.EqualValues(t, "http://dummy.com/backchannel-logout", req["backChannelLogoutUrl"])
+		logoutPropagation, sent := req["logoutPropagation"]
+		require.True(t, sent, "always sent, so an update without it sets it back to the default")
+		require.Equal(t, "", logoutPropagation)
+		notifyOnForceLogout, sent := req["notifyOnForceLogout"]
+		require.True(t, sent, "always sent, so an update without it turns it off")
+		require.Equal(t, false, notifyOnForceLogout)
 		d, ok := req["jwtBearerSettings"].(map[string]any)
 		require.True(t, ok)
 		d, ok = d["issuers"].(map[string]any)
@@ -234,6 +256,12 @@ func TestSSOApplicationUpdateSAMLApplicationSuccess(t *testing.T) {
 		require.True(t, req["forceAuthentication"].(bool))
 		require.Equal(t, "http://dummy.com/logout", req["logoutRedirectUrl"])
 		require.Equal(t, "sha256", req["defaultSignatureAlgorithm"])
+		// an update sends every field, single logout included: unset turns it off
+		require.Equal(t, false, req["singleLogoutEnabled"])
+		require.Equal(t, false, req["notifyOnForceLogout"])
+		for _, k := range []string{"spSingleLogoutUrl", "spSingleLogoutBinding", "singleLogoutPropagation", "singleLogoutScope"} {
+			require.Equal(t, "", req[k], k)
+		}
 
 	}, response))
 
@@ -436,6 +464,8 @@ func TestSSOApplicationLoadOIDCSuccess(t *testing.T) {
 				},
 			},
 			"backChannelLogoutUrl": "http://dummy.com/backchannel-logout",
+			"logoutPropagation":    "none",
+			"notifyOnForceLogout":  true,
 		},
 	}
 
@@ -457,6 +487,8 @@ func TestSSOApplicationLoadOIDCSuccess(t *testing.T) {
 	require.Equal(t, "http://dummy.com/P2AAAAA/.well-known/openid-configuration", res.OIDCSettings.DiscoveryURL)
 	require.True(t, res.OIDCSettings.ForceAuthentication)
 	require.EqualValues(t, "http://dummy.com/backchannel-logout", res.OIDCSettings.BackChannelLogoutURL)
+	require.Equal(t, "none", res.OIDCSettings.LogoutPropagation)
+	require.True(t, res.OIDCSettings.NotifyOnForceLogout)
 	require.Len(t, res.OIDCSettings.JWTBearerSettings.Issuers, 1)
 	require.EqualValues(t, "http://dummy.com/jwks", res.OIDCSettings.JWTBearerSettings.Issuers["issuer1"].JWKsURI)
 	require.EqualValues(t, "RS256", res.OIDCSettings.JWTBearerSettings.Issuers["issuer1"].SignAlgorithm)
@@ -495,6 +527,12 @@ func TestSSOApplicationLoadSAMLSuccess(t *testing.T) {
 			"idpLogoutUrl":              "http://dummy.com/idplogout",
 			"logoutRedirectUrl":         "http://dummy.com/logout",
 			"defaultSignatureAlgorithm": "sha256",
+			"singleLogoutEnabled":       true,
+			"spSingleLogoutUrl":         "https://dummy.com/slo",
+			"spSingleLogoutBinding":     "redirect",
+			"singleLogoutPropagation":   "allApps",
+			"singleLogoutScope":         "session",
+			"notifyOnForceLogout":       true,
 		},
 	}
 
@@ -533,6 +571,12 @@ func TestSSOApplicationLoadSAMLSuccess(t *testing.T) {
 	require.Equal(t, "http://dummy.com/idplogout", res.SAMLSettings.IdpLogoutURL)
 	require.Equal(t, "http://dummy.com/logout", res.SAMLSettings.LogoutRedirectURL)
 	require.Equal(t, "sha256", res.SAMLSettings.DefaultSignatureAlgorithm)
+	require.True(t, res.SAMLSettings.SingleLogoutEnabled)
+	require.Equal(t, "https://dummy.com/slo", res.SAMLSettings.SPSingleLogoutURL)
+	require.Equal(t, "redirect", res.SAMLSettings.SPSingleLogoutBinding)
+	require.Equal(t, "allApps", res.SAMLSettings.SingleLogoutPropagation)
+	require.Equal(t, "session", res.SAMLSettings.SingleLogoutScope)
+	require.True(t, res.SAMLSettings.NotifyOnForceLogout)
 }
 
 func TestSSOApplicationLoadError(t *testing.T) {
