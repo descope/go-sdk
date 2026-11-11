@@ -1,13 +1,16 @@
 package mgmt
 
 import (
+	"bytes"
 	"context"
+	"io"
 	"net/http"
 	"testing"
 
 	"github.com/descope/go-sdk/descope"
 	"github.com/descope/go-sdk/descope/internal/utils"
 	"github.com/descope/go-sdk/descope/tests/helpers"
+	"github.com/descope/go-sdk/descope/tests/mocks"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -179,6 +182,95 @@ func TestTenantPatchError(t *testing.T) {
 	require.Error(t, err)
 	err = mgmt.Tenant().Patch(context.Background(), &descope.PatchTenantRequest{})
 	require.Error(t, err)
+}
+
+func doOkWithRawBody(body string) mocks.Do {
+	return func(_ *http.Request) (*http.Response, error) {
+		return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(body))}, nil
+	}
+}
+
+func TestTenantCreateWithResponse(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, "123", req["id"])
+		assert.Equal(t, "abc", req["name"])
+	}, map[string]any{"id": "123", "ignoredAttributes": []string{"legacyOrgId"}}))
+	res, err := mgmt.Tenant().CreateWithResponse(context.Background(), "123", &descope.TenantRequest{Name: "abc", CustomAttributes: map[string]any{"legacyOrgId": "1"}})
+	require.NoError(t, err)
+	assert.Equal(t, &descope.TenantWriteResponse{ID: "123", IgnoredAttributes: []string{"legacyOrgId"}}, res)
+
+	_, err = mgmt.Tenant().CreateWithResponse(context.Background(), "", nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+
+	mgmt = newTestMgmt(nil, helpers.DoBadRequest(nil))
+	_, err = mgmt.Tenant().CreateWithResponse(context.Background(), "", &descope.TenantRequest{Name: "abc"})
+	require.Error(t, err)
+
+	mgmt = newTestMgmt(nil, doOkWithRawBody("not json"))
+	_, err = mgmt.Tenant().CreateWithResponse(context.Background(), "", &descope.TenantRequest{Name: "abc"})
+	require.Error(t, err)
+}
+
+func TestTenantUpdateWithResponse(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, "123", req["id"])
+	}, map[string]any{"ignoredAttributes": []string{"legacyOrgId"}}))
+	res, err := mgmt.Tenant().UpdateWithResponse(context.Background(), "123", &descope.TenantRequest{Name: "abc"})
+	require.NoError(t, err)
+	assert.Equal(t, &descope.TenantWriteResponse{ID: "123", IgnoredAttributes: []string{"legacyOrgId"}}, res)
+
+	// a backend that predates ignoredAttributes answers {} or nothing at all
+	for _, body := range []string{"{}", ""} {
+		mgmt = newTestMgmt(nil, doOkWithRawBody(body))
+		res, err = mgmt.Tenant().UpdateWithResponse(context.Background(), "123", &descope.TenantRequest{Name: "abc"})
+		require.NoError(t, err)
+		assert.Equal(t, &descope.TenantWriteResponse{ID: "123"}, res)
+	}
+
+	mgmt = newTestMgmt(nil, doOkWithRawBody("not json"))
+	_, err = mgmt.Tenant().UpdateWithResponse(context.Background(), "123", &descope.TenantRequest{Name: "abc"})
+	require.Error(t, err)
+
+	mgmt = newTestMgmt(nil, helpers.DoBadRequest(nil))
+	_, err = mgmt.Tenant().UpdateWithResponse(context.Background(), "123", &descope.TenantRequest{Name: "abc"})
+	require.Error(t, err)
+
+	_, err = mgmt.Tenant().UpdateWithResponse(context.Background(), "", &descope.TenantRequest{Name: "abc"})
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	_, err = mgmt.Tenant().UpdateWithResponse(context.Background(), "123", nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+}
+
+func TestTenantPatchWithResponse(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, "123", req["id"])
+		assert.EqualValues(t, map[string]any{"legacyOrgId": "789"}, req["customAttributes"])
+	}, map[string]any{"ignoredAttributes": []string{"legacyOrgId"}}))
+	res, err := mgmt.Tenant().PatchWithResponse(context.Background(), &descope.PatchTenantRequest{ID: "123", CustomAttributes: map[string]any{"legacyOrgId": "789"}})
+	require.NoError(t, err)
+	assert.Equal(t, &descope.TenantWriteResponse{ID: "123", IgnoredAttributes: []string{"legacyOrgId"}}, res)
+
+	mgmt = newTestMgmt(nil, helpers.DoBadRequest(nil))
+	_, err = mgmt.Tenant().PatchWithResponse(context.Background(), &descope.PatchTenantRequest{ID: "123"})
+	require.Error(t, err)
+
+	_, err = mgmt.Tenant().PatchWithResponse(context.Background(), nil)
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	_, err = mgmt.Tenant().PatchWithResponse(context.Background(), &descope.PatchTenantRequest{})
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+}
+
+func TestTenantCreateHTTPError(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoBadRequest(nil))
+	id, err := mgmt.Tenant().Create(context.Background(), &descope.TenantRequest{Name: "abc"})
+	require.Error(t, err)
+	assert.Empty(t, id)
 }
 
 func TestTenantDeleteSuccess(t *testing.T) {

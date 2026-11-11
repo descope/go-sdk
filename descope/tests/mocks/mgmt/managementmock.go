@@ -1344,6 +1344,18 @@ type MockTenant struct {
 	UpdateAssert func(id string, tenantRequest *descope.TenantRequest)
 	UpdateError  error
 
+	CreateWithResponseAssert   func(id string, tenantRequest *descope.TenantRequest)
+	CreateWithResponseResponse *descope.TenantWriteResponse
+	CreateWithResponseError    error
+
+	UpdateWithResponseAssert   func(id string, tenantRequest *descope.TenantRequest)
+	UpdateWithResponseResponse *descope.TenantWriteResponse
+	UpdateWithResponseError    error
+
+	PatchWithResponseAssert   func(tenantRequest *descope.PatchTenantRequest)
+	PatchWithResponseResponse *descope.TenantWriteResponse
+	PatchWithResponseError    error
+
 	DeleteAssert func(id string, cascade bool)
 	DeleteError  error
 
@@ -1405,6 +1417,27 @@ func (m *MockTenant) Patch(_ context.Context, tenantRequest *descope.PatchTenant
 		m.PatchAssert(tenantRequest)
 	}
 	return m.PatchError
+}
+
+func (m *MockTenant) CreateWithResponse(_ context.Context, id string, tenantRequest *descope.TenantRequest) (*descope.TenantWriteResponse, error) {
+	if m.CreateWithResponseAssert != nil {
+		m.CreateWithResponseAssert(id, tenantRequest)
+	}
+	return m.CreateWithResponseResponse, m.CreateWithResponseError
+}
+
+func (m *MockTenant) UpdateWithResponse(_ context.Context, id string, tenantRequest *descope.TenantRequest) (*descope.TenantWriteResponse, error) {
+	if m.UpdateWithResponseAssert != nil {
+		m.UpdateWithResponseAssert(id, tenantRequest)
+	}
+	return m.UpdateWithResponseResponse, m.UpdateWithResponseError
+}
+
+func (m *MockTenant) PatchWithResponse(_ context.Context, tenantRequest *descope.PatchTenantRequest) (*descope.TenantWriteResponse, error) {
+	if m.PatchWithResponseAssert != nil {
+		m.PatchWithResponseAssert(tenantRequest)
+	}
+	return m.PatchWithResponseResponse, m.PatchWithResponseError
 }
 
 func (m *MockTenant) Delete(_ context.Context, id string, cascade bool) error {

@@ -1000,6 +1000,13 @@ type Tenant struct {
 	FederatedAppIDs         []string        `json:"federatedAppIds,omitempty"`
 }
 
+// TenantWriteResponse is returned by the tenant *WithResponse methods.
+type TenantWriteResponse struct {
+	ID string `json:"id,omitempty"`
+	// Custom attribute keys that were not saved because the project does not declare them as tenant custom attributes
+	IgnoredAttributes []string `json:"ignoredAttributes,omitempty"`
+}
+
 type TenantRequest struct {
 	Name                    string          `json:"name"`
 	SelfProvisioningDomains []string        `json:"selfProvisioningDomains"`

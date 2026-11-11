@@ -937,6 +937,16 @@ disabled := true
 tenantPatchRequest := &descope.PatchTenantRequest{ID: "my-custom-id", Disabled: &disabled}
 err := descopeClient.Management.Tenant().Patch(context.Background(), tenantPatchRequest)
 
+// Custom attributes must be declared on the project before a tenant can store them. The *WithResponse
+// variants of Create, Update and Patch list the keys that were not saved because they are not declared.
+// Projects created after the undeclared custom attributes cutoff get an error naming them instead.
+res, err := descopeClient.Management.Tenant().CreateWithResponse(context.Background(), "my-custom-id", tenantRequest)
+if err == nil && len(res.IgnoredAttributes) > 0 {
+    // declare res.IgnoredAttributes as tenant custom attributes, then write them again
+}
+res, err := descopeClient.Management.Tenant().UpdateWithResponse(context.Background(), "my-custom-id", tenantRequest)
+res, err := descopeClient.Management.Tenant().PatchWithResponse(context.Background(), tenantPatchRequest)
+
 // Tenant deletion cannot be undone. Use carefully.
 // Pass true to cascade value, in case you want to delete all users/keys associated only with this tenant
 err := descopeClient.Management.Tenant().Delete(context.Background(), "my-custom-id", true)
