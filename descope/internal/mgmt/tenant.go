@@ -221,6 +221,9 @@ func makeCreateUpdateTenantRequest(id string, tenantRequest *descope.TenantReque
 	if includeSubTenants && len(tenantRequest.ParentTenantID) > 0 {
 		res["parent"] = tenantRequest.ParentTenantID
 	}
+	if tenantRequest.Strict {
+		res["strict"] = true
+	}
 	return res
 }
 
@@ -236,6 +239,9 @@ func makePatchTenantRequest(tenantRequest *descope.PatchTenantRequest) map[strin
 	}
 	if tenantRequest.CustomAttributes != nil {
 		res["customAttributes"] = tenantRequest.CustomAttributes
+	}
+	if tenantRequest.Strict {
+		res["strict"] = true
 	}
 	if tenantRequest.AuthType != nil {
 		res["authType"] = *tenantRequest.AuthType
