@@ -43,18 +43,6 @@ type Tenant interface {
 	// everything else is left as-is. tenantRequest.ID is required.
 	Patch(ctx context.Context, tenantRequest *descope.PatchTenantRequest) error
 
-	// CreateWithResponse creates a new tenant like Create, or like CreateWithID when id is not empty, and returns
-	// the tenant ID with IgnoredAttributes: the custom attribute keys that were not saved because the project does
-	// not declare them as tenant custom attributes. Projects created after the undeclared custom attributes cutoff
-	// return an error naming those keys instead of saving the tenant.
-	CreateWithResponse(ctx context.Context, id string, tenantRequest *descope.TenantRequest) (*descope.TenantWriteResponse, error)
-
-	// UpdateWithResponse is Update that also returns IgnoredAttributes, see CreateWithResponse.
-	UpdateWithResponse(ctx context.Context, id string, tenantRequest *descope.TenantRequest) (*descope.TenantWriteResponse, error)
-
-	// PatchWithResponse is Patch that also returns IgnoredAttributes, see CreateWithResponse.
-	PatchWithResponse(ctx context.Context, tenantRequest *descope.PatchTenantRequest) (*descope.TenantWriteResponse, error)
-
 	// Delete an existing tenant.
 	// Pass true on `cascade` in case you want to delete all users/keys associated only with this tenant
 	//

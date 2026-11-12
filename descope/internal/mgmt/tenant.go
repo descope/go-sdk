@@ -19,11 +19,7 @@ func (t *tenant) Create(ctx context.Context, tenantRequest *descope.TenantReques
 	if tenantRequest == nil {
 		tenantRequest = &descope.TenantRequest{} // notest
 	}
-	res, err := t.createWithID(ctx, "", tenantRequest)
-	if err != nil {
-		return "", err
-	}
-	return res.ID, nil
+	return t.createWithID(ctx, "", tenantRequest)
 }
 
 func (t *tenant) CreateWithID(ctx context.Context, id string, tenantRequest *descope.TenantRequest) error {
@@ -37,80 +33,46 @@ func (t *tenant) CreateWithID(ctx context.Context, id string, tenantRequest *des
 	return err
 }
 
-func (t *tenant) CreateWithResponse(ctx context.Context, id string, tenantRequest *descope.TenantRequest) (*descope.TenantWriteResponse, error) {
-	if tenantRequest == nil {
-		tenantRequest = &descope.TenantRequest{}
-	}
-	return t.createWithID(ctx, id, tenantRequest)
-}
-
-func (t *tenant) createWithID(ctx context.Context, id string, tenantRequest *descope.TenantRequest) (*descope.TenantWriteResponse, error) {
+func (t *tenant) createWithID(ctx context.Context, id string, tenantRequest *descope.TenantRequest) (string, error) {
 	if tenantRequest.Name == "" {
-		return nil, utils.NewInvalidArgumentError("name")
+		return "", utils.NewInvalidArgumentError("name")
 	}
 	req := makeCreateUpdateTenantRequest(id, tenantRequest, true)
 	httpRes, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantCreate(), req, nil, "")
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	res := &descope.TenantWriteResponse{}
+	res := &struct {
+		ID string `json:"id"`
+	}{}
 	if err = utils.Unmarshal([]byte(httpRes.BodyStr), res); err != nil {
-		return nil, err
+		return "", err
 	}
-	return res, nil
+	return res.ID, nil
 }
 
 func (t *tenant) Update(ctx context.Context, id string, tenantRequest *descope.TenantRequest) error {
-	_, err := t.UpdateWithResponse(ctx, id, tenantRequest)
-	return err
-}
-
-func (t *tenant) UpdateWithResponse(ctx context.Context, id string, tenantRequest *descope.TenantRequest) (*descope.TenantWriteResponse, error) {
 	if id == "" {
-		return nil, utils.NewInvalidArgumentError("id")
+		return utils.NewInvalidArgumentError("id")
 	}
-	if tenantRequest == nil || tenantRequest.Name == "" {
-		return nil, utils.NewInvalidArgumentError("name")
+	if tenantRequest.Name == "" {
+		return utils.NewInvalidArgumentError("name")
 	}
 	req := makeCreateUpdateTenantRequest(id, tenantRequest, false)
-	httpRes, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantUpdate(), req, nil, "")
-	if err != nil {
-		return nil, err
-	}
-	return tenantWriteResponse(id, httpRes)
+	_, err := t.client.DoPostRequest(ctx, api.Routes.ManagementTenantUpdate(), req, nil, "")
+	return err
 }
 
 func (t *tenant) Patch(ctx context.Context, tenantRequest *descope.PatchTenantRequest) error {
-	_, err := t.PatchWithResponse(ctx, tenantRequest)
-	return err
-}
-
-func (t *tenant) PatchWithResponse(ctx context.Context, tenantRequest *descope.PatchTenantRequest) (*descope.TenantWriteResponse, error) {
 	if tenantRequest == nil {
-		return nil, utils.NewInvalidArgumentError("tenantRequest")
+		return utils.NewInvalidArgumentError("tenantRequest")
 	}
 	if tenantRequest.ID == "" {
-		return nil, utils.NewInvalidArgumentError("id")
+		return utils.NewInvalidArgumentError("id")
 	}
 	req := makePatchTenantRequest(tenantRequest)
-	httpRes, err := t.client.DoPatchRequest(ctx, api.Routes.ManagementTenantPatch(), req, nil, "")
-	if err != nil {
-		return nil, err
-	}
-	return tenantWriteResponse(tenantRequest.ID, httpRes)
-}
-
-// tenantWriteResponse reads an update or patch response. Backends that predate ignoredAttributes answer {}, and
-// Update and Patch ignored the body before, so an empty one is not an error either.
-func tenantWriteResponse(id string, httpRes *api.HTTPResponse) (*descope.TenantWriteResponse, error) {
-	res := &descope.TenantWriteResponse{}
-	if httpRes.BodyStr != "" {
-		if err := utils.Unmarshal([]byte(httpRes.BodyStr), res); err != nil {
-			return nil, err
-		}
-	}
-	res.ID = id
-	return res, nil
+	_, err := t.client.DoPatchRequest(ctx, api.Routes.ManagementTenantPatch(), req, nil, "")
+	return err
 }
 
 func (t *tenant) Delete(ctx context.Context, id string, cascade bool) error {
@@ -259,6 +221,9 @@ func makeCreateUpdateTenantRequest(id string, tenantRequest *descope.TenantReque
 	if includeSubTenants && len(tenantRequest.ParentTenantID) > 0 {
 		res["parent"] = tenantRequest.ParentTenantID
 	}
+	if tenantRequest.Strict {
+		res["strict"] = true
+	}
 	return res
 }
 
@@ -274,6 +239,9 @@ func makePatchTenantRequest(tenantRequest *descope.PatchTenantRequest) map[strin
 	}
 	if tenantRequest.CustomAttributes != nil {
 		res["customAttributes"] = tenantRequest.CustomAttributes
+	}
+	if tenantRequest.Strict {
+		res["strict"] = true
 	}
 	if tenantRequest.AuthType != nil {
 		res["authType"] = *tenantRequest.AuthType

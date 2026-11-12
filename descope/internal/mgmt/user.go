@@ -38,20 +38,21 @@ type createUserRequest struct {
 	options            *descope.InviteOptions
 	ssoAppIDs          []string
 	familyAssociations []*descope.AssociatedFamily
+	strict             bool
 }
 
 func (u *user) Create(ctx context.Context, loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
-	return u.create(ctx, loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, false, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, nil, user.SSOAppIDs, user.FamilyAssociations)
+	return u.create(ctx, loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, false, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, nil, user.SSOAppIDs, user.FamilyAssociations, user.Strict)
 }
 
 func (u *user) CreateTestUser(ctx context.Context, loginID string, user *descope.UserRequest) (*descope.UserResponse, error) {
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
-	return u.create(ctx, loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, false, true, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, nil, user.SSOAppIDs, user.FamilyAssociations)
+	return u.create(ctx, loginID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, false, true, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, nil, user.SSOAppIDs, user.FamilyAssociations, user.Strict)
 }
 
 func (u *user) CreateBatch(ctx context.Context, users []*descope.BatchUser) (*descope.UsersBatchResponse, error) {
@@ -65,7 +66,7 @@ func (u *user) Invite(ctx context.Context, loginIDOrUserID string, user *descope
 	if user == nil {
 		user = &descope.UserRequest{}
 	}
-	return u.create(ctx, loginIDOrUserID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, true, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, options, user.SSOAppIDs, user.FamilyAssociations)
+	return u.create(ctx, loginIDOrUserID, user.Email, user.Phone, user.Name, user.GivenName, user.MiddleName, user.FamilyName, user.Picture, user.Roles, user.Tenants, true, false, user.CustomAttributes, user.VerifiedEmail, user.VerifiedPhone, user.AdditionalLoginIDs, options, user.SSOAppIDs, user.FamilyAssociations, user.Strict)
 }
 
 func (u *user) InviteBatch(ctx context.Context, users []*descope.BatchUser, options *descope.InviteOptions) (*descope.UsersBatchResponse, error) {
@@ -75,7 +76,7 @@ func (u *user) InviteBatch(ctx context.Context, users []*descope.BatchUser, opti
 	return u.createBatch(ctx, users, options)
 }
 
-func (u *user) create(ctx context.Context, loginID, email, phone, displayName, givenName, middleName, familyName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, options *descope.InviteOptions, ssoAppIDs []string, familyAssociations []*descope.AssociatedFamily) (*descope.UserResponse, error) {
+func (u *user) create(ctx context.Context, loginID, email, phone, displayName, givenName, middleName, familyName, picture string, roles []string, tenants []*descope.AssociatedTenant, invite, test bool, customAttributes map[string]any, verifiedEmail *bool, verifiedPhone *bool, additionalLoginIDs []string, options *descope.InviteOptions, ssoAppIDs []string, familyAssociations []*descope.AssociatedFamily, strict bool) (*descope.UserResponse, error) {
 	if loginID == "" {
 		return nil, utils.NewInvalidArgumentError("loginID")
 	}
@@ -104,6 +105,7 @@ func (u *user) create(ctx context.Context, loginID, email, phone, displayName, g
 		options:            options,
 		ssoAppIDs:          ssoAppIDs,
 		familyAssociations: familyAssociations,
+		strict:             strict,
 	})
 
 	var res *api.HTTPResponse
@@ -156,6 +158,7 @@ func (u *user) Update(ctx context.Context, loginIDOrUserID string, user *descope
 		additionalLoginIDs: user.AdditionalLoginIDs,
 		ssoAppIDs:          user.SSOAppIDs,
 		familyAssociations: user.FamilyAssociations,
+		strict:             user.Strict,
 	})
 	// Update replaces the user's family memberships, so always send the (possibly empty) list, like userTenants
 	req["familyAssociations"] = makeAssociatedFamilyList(user.FamilyAssociations)
@@ -1164,6 +1167,7 @@ func makeCreateUsersBatchRequest(users []*descope.BatchUser, options *descope.In
 			additionalLoginIDs: u.AdditionalLoginIDs,
 			ssoAppIDs:          u.SSOAppIDs,
 			familyAssociations: u.FamilyAssociations,
+			strict:             u.Strict,
 		})
 		if u.Password != nil {
 			if cleartext := u.Password.Cleartext; cleartext != "" {
@@ -1242,6 +1246,9 @@ func makeUpdateUserRequest(req *createUserRequest) map[string]any {
 	if len(req.familyAssociations) > 0 {
 		res["familyAssociations"] = makeAssociatedFamilyList(req.familyAssociations)
 	}
+	if req.strict {
+		res["strict"] = true
+	}
 	return res
 }
 
@@ -1275,6 +1282,9 @@ func makePatchUserRequest(loginID string, req *descope.PatchUserRequest) map[str
 	}
 	if req.CustomAttributes != nil {
 		res["customAttributes"] = req.CustomAttributes
+	}
+	if req.Strict {
+		res["strict"] = true
 	}
 	if req.Picture != nil {
 		res["picture"] = *req.Picture
