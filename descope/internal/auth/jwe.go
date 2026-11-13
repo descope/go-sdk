@@ -4,9 +4,9 @@ import (
 	"strings"
 
 	"github.com/descope/go-sdk/descope"
-	"github.com/lestrrat-go/jwx/v2/jwa"
-	"github.com/lestrrat-go/jwx/v2/jwe"
-	"github.com/lestrrat-go/jwx/v2/jwk"
+	"github.com/lestrrat-go/jwx/v4/jwa"
+	"github.com/lestrrat-go/jwx/v4/jwe"
+	"github.com/lestrrat-go/jwx/v4/jwk"
 )
 
 // A compact JWE has five dot separated parts where a signed JWT has three
