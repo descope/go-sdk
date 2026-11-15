@@ -607,8 +607,7 @@ type UserRequest struct {
 	AdditionalLoginIDs []string            `json:"additionalLoginIds,omitempty"`
 	SSOAppIDs          []string            `json:"ssoAppIDs,omitempty"`
 	FamilyAssociations []*AssociatedFamily `json:"familyAssociations,omitempty"`
-	// Strict rejects the request with an error listing any custom attributes the project does not declare, instead of ignoring them
-	Strict bool `json:"strict,omitempty"`
+	Strict             bool                `json:"strict,omitempty"`
 }
 
 type PatchUserRequest struct {
@@ -631,8 +630,7 @@ type PatchUserRequest struct {
 	// FamilyAssociations replaces the user's full family membership when set (even to an empty
 	// list). Leave nil to keep the user's families unchanged.
 	FamilyAssociations *[]*AssociatedFamily `json:"familyAssociations,omitempty"`
-	// Strict rejects the request with an error listing any custom attributes the project does not declare, instead of ignoring them
-	Strict bool `json:"strict,omitempty"`
+	Strict             bool                 `json:"strict,omitempty"`
 }
 
 type PatchUserBatchRequest struct {
@@ -1014,8 +1012,7 @@ type TenantRequest struct {
 	EnforceSSOExclusions    []string        `json:"enforceSSOExclusions,omitempty"`
 	RoleInheritance         RoleInheritance `json:"roleInheritance,omitempty"`
 	FederatedAppIDs         []string        `json:"federatedAppIds,omitempty"`
-	// Strict rejects the request with an error listing any custom attributes the project does not declare, instead of ignoring them
-	Strict bool `json:"strict,omitempty"`
+	Strict                  bool            `json:"strict,omitempty"`
 }
 
 // PatchTenantRequest is used to partially update an existing tenant. ID is
@@ -1032,8 +1029,7 @@ type PatchTenantRequest struct {
 	EnforceSSOExclusions    *[]string        `json:"enforceSSOExclusions,omitempty"`
 	FederatedAppIDs         *[]string        `json:"federatedAppIds,omitempty"`
 	RoleInheritance         *RoleInheritance `json:"roleInheritance,omitempty"`
-	// Strict rejects the request with an error listing any custom attributes the project does not declare, instead of ignoring them
-	Strict bool `json:"strict,omitempty"`
+	Strict                  bool             `json:"strict,omitempty"`
 }
 
 type TenantSearchOptions struct {
