@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.41.0](https://github.com/descope/go-sdk/compare/v1.40.0...v1.41.0) (2026-11-15)
+
+
+### Features
+
+* optional Strict on tenant and user write requests ([#936](https://github.com/descope/go-sdk/issues/936)) ([b243224](https://github.com/descope/go-sdk/commit/b2432243b790962c5c4b690763c81d3092f2fe40))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.40.0 ([#933](https://github.com/descope/go-sdk/issues/933)) ([34b886a](https://github.com/descope/go-sdk/commit/34b886aa3ab58078913a9f3cbc2b94419b57542b))
+
 ## [1.40.0](https://github.com/descope/go-sdk/compare/v1.39.1...v1.40.0) (2026-11-11)
 
 
