@@ -3423,3 +3423,33 @@ func TestUserDeleteFamilyScopedCustomAttributesError(t *testing.T) {
 	require.Error(t, err)
 	require.Nil(t, res)
 }
+
+func TestUserStrictIsSentOnlyWhenSet(t *testing.T) {
+	ctx := context.Background()
+	requireStrictSentOnlyWhenSet(t, map[string]func(m *managementService, strict bool) error{
+		"create": func(m *managementService, strict bool) error {
+			_, err := m.User().Create(ctx, "u", &descope.UserRequest{Strict: strict})
+			return err
+		},
+		"create test user": func(m *managementService, strict bool) error {
+			_, err := m.User().CreateTestUser(ctx, "u", &descope.UserRequest{Strict: strict})
+			return err
+		},
+		"invite": func(m *managementService, strict bool) error {
+			_, err := m.User().Invite(ctx, "u", &descope.UserRequest{Strict: strict}, nil)
+			return err
+		},
+		"update": func(m *managementService, strict bool) error {
+			_, err := m.User().Update(ctx, "u", &descope.UserRequest{Strict: strict})
+			return err
+		},
+		"create batch item": func(m *managementService, strict bool) error {
+			_, err := m.User().CreateBatch(ctx, []*descope.BatchUser{{LoginID: "u", UserRequest: descope.UserRequest{Strict: strict}}})
+			return err
+		},
+		"patch": func(m *managementService, strict bool) error {
+			_, err := m.User().Patch(ctx, "u", &descope.PatchUserRequest{Strict: strict})
+			return err
+		},
+	})
+}
