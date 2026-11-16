@@ -711,7 +711,7 @@ func dpopNewAuthForKey(t *testing.T, priv jwk.Key) *authenticationService {
 	return a
 }
 
-// dpopSignSessionJWT signs a minimal session JWT with the given key and optional extra claims.
+// dpopSignSessionJWT signs a minimal session JWT with the given key and optional extra claims; a nil value removes the claim.
 func dpopSignSessionJWT(t *testing.T, priv jwk.Key, extraClaims map[string]any) string {
 	t.Helper()
 	tok := jwt.New()
@@ -722,6 +722,10 @@ func dpopSignSessionJWT(t *testing.T, priv jwk.Key, extraClaims map[string]any) 
 	require.NoError(t, tok.Set("drn", "DS"))
 	require.NoError(t, tok.Set("iss", "test"))
 	for k, v := range extraClaims {
+		if v == nil {
+			require.NoError(t, tok.Remove(k))
+			continue
+		}
 		require.NoError(t, tok.Set(k, v))
 	}
 
@@ -1280,4 +1284,80 @@ func TestDPoP_JTIStore_ExpiredEntriesEvicted(t *testing.T) {
 
 	// jti1 was evicted — adding it again must succeed (not a replay).
 	require.NoError(t, store.seenOrAdd("jti1", t1))
+}
+
+// ---- refresh-only requests: DPoP is enforced on the refreshed session ----
+
+// dpopNewAuthWithRefreshedSession returns an auth service whose /refresh call answers with refreshedSessionJWT.
+func dpopNewAuthWithRefreshedSession(t *testing.T, signingKey jwk.Key, refreshedSessionJWT string) *authenticationService {
+	t.Helper()
+	pub, err := signingKey.PublicKey()
+	require.NoError(t, err)
+	require.NoError(t, pub.Set(jwk.KeyIDKey, "dpop-test"))
+	pubBytes, err := json.Marshal(pub)
+	require.NoError(t, err)
+	refreshBody := fmt.Sprintf(`{"sessionJwt":%q,"refreshJwt":"","cookiePath":"/","cookieDomain":""}`, refreshedSessionJWT)
+	a, err := newTestAuthConf(
+		&AuthParams{ProjectID: "a", PublicKey: string(pubBytes)},
+		&api.ClientParams{ProjectID: "a"},
+		mocks.Do(func(_ *http.Request) (*http.Response, error) {
+			return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(refreshBody))}, nil
+		}),
+	)
+	require.NoError(t, err)
+	return a
+}
+
+func TestValidateAndRefreshSessionWithRequest_RefreshOnly_DPoPBoundSession_Rejected(t *testing.T) {
+	signingKey, _ := dpopNewKeyPair(t)
+	dpopPriv, dpopPub := dpopNewKeyPair(t)
+	boundSessionJWT := dpopSignSessionJWT(t, signingKey, map[string]any{"cnf": map[string]any{"jkt": dpopJKTOf(t, dpopPub)}})
+	a := dpopNewAuthWithRefreshedSession(t, signingKey, boundSessionJWT)
+	refreshJWT := dpopSignSessionJWT(t, signingKey, map[string]any{"drn": descope.RefreshCookieName})
+
+	const reqURL = "http://example.test/resource"
+	req := httptest.NewRequest(http.MethodGet, reqURL, nil)
+	req.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: refreshJWT})
+	// even a proof signed by the bound key cannot help: there is no presented access token for ath to bind to
+	req.Header.Set("DPoP", dpopMakeProof(t, dpopPriv, dpopValidOpts(http.MethodGet, reqURL, "")))
+
+	ok, token, err := a.ValidateAndRefreshSessionWithRequest(req, nil)
+	require.ErrorIs(t, err, descope.ErrInvalidToken)
+	assert.Contains(t, err.Error(), "DPoP-bound session requires the session token and its DPoP proof; a refresh token alone cannot prove possession")
+	assert.False(t, ok)
+	assert.Nil(t, token)
+}
+
+func TestValidateAndRefreshSessionWithRequest_RefreshOnly_UnboundSession_Accepted(t *testing.T) {
+	signingKey, _ := dpopNewKeyPair(t)
+	a := dpopNewAuthWithRefreshedSession(t, signingKey, dpopSignSessionJWT(t, signingKey, nil))
+	refreshJWT := dpopSignSessionJWT(t, signingKey, map[string]any{"drn": descope.RefreshCookieName})
+
+	req := httptest.NewRequest(http.MethodGet, "/resource", nil)
+	req.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: refreshJWT})
+
+	ok, token, err := a.ValidateAndRefreshSessionWithRequest(req, nil)
+	require.NoError(t, err)
+	assert.True(t, ok)
+	assert.Equal(t, "someuser", token.ID)
+}
+
+func TestValidateAndRefreshSessionWithRequest_ExpiredBoundSession_ValidProof_RefreshAccepted(t *testing.T) {
+	signingKey, _ := dpopNewKeyPair(t)
+	dpopPriv, dpopPub := dpopNewKeyPair(t)
+	cnf := map[string]any{"jkt": dpopJKTOf(t, dpopPub)}
+	expiredSessionJWT := dpopSignSessionJWT(t, signingKey, map[string]any{"cnf": cnf, jwt.ExpirationKey: time.Now().Add(-time.Hour)})
+	a := dpopNewAuthWithRefreshedSession(t, signingKey, dpopSignSessionJWT(t, signingKey, map[string]any{"cnf": cnf}))
+	refreshJWT := dpopSignSessionJWT(t, signingKey, map[string]any{"drn": descope.RefreshCookieName})
+
+	const reqURL = "http://example.test/resource"
+	req := httptest.NewRequest(http.MethodGet, reqURL, nil)
+	req.Header.Set("Authorization", "DPoP "+expiredSessionJWT)
+	req.Header.Set("DPoP", dpopMakeProof(t, dpopPriv, dpopValidOpts(http.MethodGet, reqURL, expiredSessionJWT)))
+	req.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: refreshJWT})
+
+	ok, token, err := a.ValidateAndRefreshSessionWithRequest(req, nil)
+	require.NoError(t, err)
+	assert.True(t, ok)
+	assert.Equal(t, "someuser", token.ID)
 }

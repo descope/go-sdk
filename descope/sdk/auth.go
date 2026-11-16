@@ -360,12 +360,14 @@ type Authentication interface {
 	// ValidateSessionWithRequest - Use to validate a session of a given request.
 	// Should be called before any private API call that requires authorization.
 	// Alternatively use ValidateSessionWithToken with the token directly.
+	// A refresh token is never accepted as the session token.
 	// returns true upon success or false, the session token and an error upon failure.
 	ValidateSessionWithRequest(request *http.Request) (bool, *descope.Token, error)
 
 	// ValidateSessionWithToken - Use to validate a session token directly.
 	// Should be called before any private API call that requires authorization.
 	// Alternatively use ValidateSessionWithRequest with the incoming request.
+	// A refresh token is never accepted as the session token.
 	// returns true upon success or false, the session token and an error upon failure.
 	ValidateSessionWithToken(ctx context.Context, sessionToken string) (bool, *descope.Token, error)
 
@@ -400,6 +402,8 @@ type Authentication interface {
 	// In case the request cookie can be renewed an automatic renewal is called and returns a new set of cookies to use.
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	// Alternatively use ValidateAndRefreshSessionWithTokens with the tokens directly.
+	// A refresh token is never accepted as the session token.
+	// A DPoP-bound session requires the session token (current or expired) with its DPoP proof; a refresh cookie alone is rejected.
 	// returns true upon success or false, the potentially updated session token and an error upon failure.
 	ValidateAndRefreshSessionWithRequest(request *http.Request, w http.ResponseWriter) (bool, *descope.Token, error)
 
@@ -407,6 +411,7 @@ type Authentication interface {
 	// Should be called before any private API call that requires authorization.
 	// In case the request cookie can be renewed an automatic renewal is called and returns a new set of cookies to use.
 	// Alternatively use ValidateAndRefreshSessionWithRequest with the incoming request.
+	// A refresh token is never accepted as the session token.
 	// returns true upon success or false, the potentially updated session token and an error upon failure.
 	ValidateAndRefreshSessionWithTokens(ctx context.Context, sessionToken, refreshToken string) (bool, *descope.Token, error)
 
