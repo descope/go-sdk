@@ -1074,7 +1074,7 @@ type SSOSetupSuiteDisabledFeatures struct {
 	SSODomains   bool `json:"ssoDomains,omitempty"`
 	GroupMapping bool `json:"groupMapping,omitempty"`
 	RoleMapping  bool `json:"roleMapping,omitempty"`
-	FgaMapping   bool `json:"fgaMapping,omitempty"`
+	FGAMapping   bool `json:"fgaMapping,omitempty"`
 	SSO          bool `json:"sso,omitempty"`
 	Audit        bool `json:"audit,omitempty"`
 }
