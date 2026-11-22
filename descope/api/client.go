@@ -2171,7 +2171,7 @@ type HTTPRequest struct {
 	ResBodyObj  any
 	Request     *http.Request
 	Cookies     []*http.Cookie
-	// OmitManagementKey drops Conf.ManagementKey from the bearer
+	// OmitManagementKey drops Conf.ManagementKey from the bearer (used by the access key exchange)
 	OmitManagementKey bool
 }
 
