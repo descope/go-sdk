@@ -1696,3 +1696,95 @@ func TestSetCookieNamesDefaultsUsedWhenPrimaryEmpty(t *testing.T) {
 	assert.Contains(t, ap.GetRefreshCookieNameWithFallback(), descope.RefreshCookieName)
 	assert.Contains(t, ap.GetSessionCookieNameWithFallback(), descope.SessionCookieName)
 }
+
+const refreshAsSessionMessage = "refresh token cannot be used as a session token"
+
+func TestValidateSessionWithToken_TokenPurpose(t *testing.T) {
+	signingKey, _ := dpopNewKeyPair(t)
+	a := dpopNewAuthForKey(t, signingKey)
+
+	tests := []struct {
+		name     string
+		claims   map[string]any
+		rejected bool
+	}{
+		{name: "session refresh token (drn=DSR)", claims: map[string]any{"drn": descope.RefreshCookieName}, rejected: true},
+		{name: "OAuth refresh token (token_type=refresh_token, no drn)", claims: map[string]any{"drn": nil, "token_type": "refresh_token"}, rejected: true},
+		{name: "session token (drn=DS)", claims: nil},
+		{name: "inbound app access token (token_type=access_token, no drn)", claims: map[string]any{"drn": nil, "token_type": "access_token"}},
+		{name: "token with no drn and no token_type", claims: map[string]any{"drn": nil}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ok, token, err := a.ValidateSessionWithToken(context.Background(), dpopSignSessionJWT(t, signingKey, tt.claims))
+			if tt.rejected {
+				require.ErrorIs(t, err, descope.ErrInvalidToken)
+				assert.Contains(t, err.Error(), refreshAsSessionMessage)
+				assert.False(t, ok)
+				assert.Nil(t, token)
+				return
+			}
+			require.NoError(t, err)
+			assert.True(t, ok)
+			assert.Equal(t, "someuser", token.ID)
+		})
+	}
+}
+
+func TestValidateSessionWithRequest_BearerRefreshToken_Rejected(t *testing.T) {
+	signingKey, _ := dpopNewKeyPair(t)
+	a := dpopNewAuthForKey(t, signingKey)
+	req := httptest.NewRequest(http.MethodGet, "/resource", nil)
+	req.Header.Set("Authorization", "Bearer "+dpopSignSessionJWT(t, signingKey, map[string]any{"drn": descope.RefreshCookieName}))
+
+	ok, token, err := a.ValidateSessionWithRequest(req)
+	require.ErrorIs(t, err, descope.ErrInvalidToken)
+	assert.Contains(t, err.Error(), refreshAsSessionMessage)
+	assert.False(t, ok)
+	assert.Nil(t, token)
+}
+
+func TestValidateAndRefreshSessionWithTokens_RefreshTokenAsSession_NoRefreshToken_Rejected(t *testing.T) {
+	signingKey, _ := dpopNewKeyPair(t)
+	a := dpopNewAuthForKey(t, signingKey)
+	refreshJWT := dpopSignSessionJWT(t, signingKey, map[string]any{"drn": descope.RefreshCookieName})
+
+	ok, token, err := a.ValidateAndRefreshSessionWithTokens(context.Background(), refreshJWT, "")
+	require.ErrorIs(t, err, descope.ErrInvalidToken)
+	assert.Contains(t, err.Error(), refreshAsSessionMessage)
+	assert.False(t, ok)
+	assert.Nil(t, token)
+}
+
+func TestValidateAndRefreshSessionWithRequest_BearerRefreshToken_WithRefreshCookie_Refreshed(t *testing.T) {
+	signingKey, _ := dpopNewKeyPair(t)
+	a := dpopNewAuthWithRefreshedSession(t, signingKey, dpopSignSessionJWT(t, signingKey, nil))
+	refreshJWT := dpopSignSessionJWT(t, signingKey, map[string]any{"drn": descope.RefreshCookieName})
+
+	req := httptest.NewRequest(http.MethodGet, "/resource", nil)
+	req.Header.Set("Authorization", "Bearer "+refreshJWT)
+	req.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: refreshJWT})
+
+	ok, token, err := a.ValidateAndRefreshSessionWithRequest(req, nil)
+	require.NoError(t, err)
+	assert.True(t, ok)
+	assert.Equal(t, descope.SessionCookieName, token.Claims["drn"])
+}
+
+func TestAuthenticationMiddleware_BearerRefreshToken_NoCookie_Rejected(t *testing.T) {
+	signingKey, _ := dpopNewKeyPair(t)
+	a := dpopNewAuthForKey(t, signingKey)
+	handlerToTest := sdk.AuthenticationMiddleware(a, func(w http.ResponseWriter, _ *http.Request, err error) {
+		assert.ErrorIs(t, err, descope.ErrInvalidToken)
+		assert.Contains(t, err.Error(), refreshAsSessionMessage)
+		w.WriteHeader(http.StatusUnauthorized)
+	}, nil)(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
+		t.Error("protected handler must not run for a refresh token presented as a session token")
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/resource", nil)
+	req.Header.Set("Authorization", "Bearer "+dpopSignSessionJWT(t, signingKey, map[string]any{"drn": descope.RefreshCookieName}))
+	res := httptest.NewRecorder()
+	handlerToTest.ServeHTTP(res, req)
+	assert.EqualValues(t, http.StatusUnauthorized, res.Result().StatusCode)
+}
