@@ -978,6 +978,12 @@ settingsRequest.SessionTokenExpirationUnit = "minutes"
 settingsRequest.EnableInactivity = true
 settingsRequest.InactivityTime = 2
 settingsRequest.InactivityTimeUnit = "days"
+// Optionally configure the tenant's SSO Setup Suite, inherited by every SSO configuration link of the tenant
+// (e.g. hide role mapping). Leave nil to keep the current SSO Setup Suite settings
+settingsRequest.SSOSetupSuiteSettings = &descope.SSOSetupSuiteSettings{
+	Enabled:          true,
+	DisabledFeatures: &descope.SSOSetupSuiteDisabledFeatures{RoleMapping: true},
+}
 
 // update the tenant settings
 err := descopeClient.Management.Tenant().ConfigureSettings(context.Background(), "My Tenant", settingsRequest)
