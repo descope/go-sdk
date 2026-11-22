@@ -1055,6 +1055,28 @@ type TenantSettings struct {
 	InactivityTime             int32    `json:"inactivityTime,omitempty"`
 	InactivityTimeUnit         string   `json:"inactivityTimeUnit,omitempty"`
 	JITDisabled                bool     `json:"JITDisabled,omitempty"`
+	// Tenant level SSO Setup Suite settings, inherited by every SSO configuration link of the tenant.
+	// Left untouched by ConfigureSettings when nil
+	SSOSetupSuiteSettings *SSOSetupSuiteSettings `json:"ssoSetupSuiteSettings,omitempty"`
+}
+
+type SSOSetupSuiteSettings struct {
+	Enabled bool   `json:"enabled,omitempty"`
+	StyleID string `json:"styleId,omitempty"`
+	// Features hidden from the SSO Setup Suite. Left untouched by ConfigureSettings when nil
+	DisabledFeatures *SSOSetupSuiteDisabledFeatures `json:"disabledFeatures,omitempty"`
+}
+
+type SSOSetupSuiteDisabledFeatures struct {
+	SAML         bool `json:"saml,omitempty"`
+	OIDC         bool `json:"oidc,omitempty"`
+	SCIM         bool `json:"scim,omitempty"`
+	SSODomains   bool `json:"ssoDomains,omitempty"`
+	GroupMapping bool `json:"groupMapping,omitempty"`
+	RoleMapping  bool `json:"roleMapping,omitempty"`
+	FGAMapping   bool `json:"fgaMapping,omitempty"`
+	SSO          bool `json:"sso,omitempty"`
+	Audit        bool `json:"audit,omitempty"`
 }
 
 type SAMLIDPAttributeMappingInfo struct {
