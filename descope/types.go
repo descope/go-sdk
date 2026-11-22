@@ -162,6 +162,9 @@ type SSOSAMLSettingsResponse struct {
 	ConfigFGATenantIDResourceSuffix string                      `json:"configFGATenantIDResourceSuffix,omitempty"`
 	LastSuccessTestTime             int32                       `json:"lastSuccessTestTime,omitempty"` // epoch seconds of the last successful SSO test login on this configuration (read-only)
 	DisableSignRequest              bool                        `json:"disableSignRequest,omitempty"`  // true when Descope sends the SAML AuthnRequest to this IdP unsigned
+	SingleLogoutEnabled             bool                        `json:"singleLogoutEnabled,omitempty"` // true when SAML single logout is on for this configuration
+	IdpSingleLogoutURL              string                      `json:"idpSingleLogoutUrl,omitempty"`  // the IdP's SingleLogoutService URL set on the configuration; empty when it is taken from the IdP metadata
+	SpSingleLogoutURL               string                      `json:"spSingleLogoutUrl,omitempty"`   // Descope's single logout URL for this configuration, to set as the Single Logout URL in the IdP
 }
 
 type SSOSAMLSettings struct {
@@ -195,6 +198,18 @@ type SSOSAMLSettings struct {
 	// is empty. A pointer for the same reason as AuthenticationOnly: nil is not sent and keeps the
 	// stored value, false turns JIT back on. Read it back from SSOTenantSettingsResponse.JITDisabled.
 	JITDisabled *bool `json:"jitDisabled,omitempty"`
+
+	// SingleLogoutEnabled turns SAML single logout on for this SSO configuration: a logout with
+	// LogoutOptions.SSOLogout then also logs the user out of the IdP. Off by default. The IdP must have
+	// single logout set up with Descope's single logout URL (SSOSAMLSettingsResponse.SpSingleLogoutURL)
+	// and SP signing certificate. A pointer for the same reason as AuthenticationOnly: nil is not sent
+	// and keeps the stored value, false turns it off.
+	SingleLogoutEnabled *bool `json:"singleLogoutEnabled,omitempty"`
+
+	// IdpSingleLogoutURL is the IdP's SingleLogoutService URL (HTTP-Redirect binding) used for single
+	// logout. nil is not sent and keeps the stored value; an empty string clears it, and the URL is
+	// then taken from the IdP metadata.
+	IdpSingleLogoutURL *string `json:"idpSingleLogoutUrl,omitempty"`
 
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
 	SpACSUrl   string `json:"spACSUrl,omitempty"`
@@ -231,6 +246,18 @@ type SSOSAMLSettingsByMetadata struct {
 	// is empty. A pointer for the same reason as AuthenticationOnly: nil is not sent and keeps the
 	// stored value, false turns JIT back on. Read it back from SSOTenantSettingsResponse.JITDisabled.
 	JITDisabled *bool `json:"jitDisabled,omitempty"`
+
+	// SingleLogoutEnabled turns SAML single logout on for this SSO configuration: a logout with
+	// LogoutOptions.SSOLogout then also logs the user out of the IdP. Off by default. The IdP must have
+	// single logout set up with Descope's single logout URL (SSOSAMLSettingsResponse.SpSingleLogoutURL)
+	// and SP signing certificate. A pointer for the same reason as AuthenticationOnly: nil is not sent
+	// and keeps the stored value, false turns it off.
+	SingleLogoutEnabled *bool `json:"singleLogoutEnabled,omitempty"`
+
+	// IdpSingleLogoutURL is the IdP's SingleLogoutService URL (HTTP-Redirect binding) used for single
+	// logout. nil is not sent and keeps the stored value; an empty string clears it, and the URL is
+	// then taken from the IdP metadata.
+	IdpSingleLogoutURL *string `json:"idpSingleLogoutUrl,omitempty"`
 
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
 	SpACSUrl   string `json:"spACSUrl,omitempty"`
@@ -508,6 +535,26 @@ type SignUpOptions struct {
 type EmbeddedLinkLoginOptions struct {
 	LoginOptions
 	Timeout int64 `json:"timeout,omitempty"` // timeout in seconds for the embedded link to be valid, default is 60 seconds
+}
+
+// LogoutOptions are the options of a logout or a logout of all devices.
+type LogoutOptions struct {
+	// SSOLogout also logs the user out of their SSO identity provider. When the session signed in through
+	// a SAML SSO configuration with single logout on, LogoutResponse.SSOLogoutURL is set. The Descope
+	// session ends either way.
+	SSOLogout bool `json:"ssoLogout,omitempty"`
+	// RedirectURL is where the browser lands once the identity provider has logged the user out. Used only
+	// with SSOLogout, and must be in the project's approved domains. Empty uses the SSO configuration's
+	// redirect URL.
+	RedirectURL string `json:"redirectUrl,omitempty"`
+}
+
+// LogoutResponse is the result of a logout with LogoutOptions.
+type LogoutResponse struct {
+	// SSOLogoutURL is set by a logout with LogoutOptions.SSOLogout when the session signed in through a SAML
+	// SSO configuration with single logout on: send the browser here to log the user out of the identity
+	// provider too. Empty when there is nothing to do at the identity provider.
+	SSOLogoutURL string `json:"ssoLogoutUrl,omitempty"`
 }
 
 type JWTResponse struct {

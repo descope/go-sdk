@@ -121,6 +121,7 @@ func (s *sso) ConfigureSAMLSettings(ctx context.Context, tenantID string, settin
 		// Optional on the wire like authenticationOnly: omitting it keeps the stored value.
 		req["settings"].(map[string]any)["jitDisabled"] = *settings.JITDisabled
 	}
+	addSAMLSingleLogoutSettings(req["settings"].(map[string]any), settings.SingleLogoutEnabled, settings.IdpSingleLogoutURL)
 	if clearsDefaultSSORoles(settings.DefaultSSORoles) {
 		req["settings"].(map[string]any)["replaceDefaultSSORoles"] = true
 	}
@@ -192,11 +193,23 @@ func (s *sso) ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID stri
 		// Optional on the wire like authenticationOnly: omitting it keeps the stored value.
 		req["settings"].(map[string]any)["jitDisabled"] = *settings.JITDisabled
 	}
+	addSAMLSingleLogoutSettings(req["settings"].(map[string]any), settings.SingleLogoutEnabled, settings.IdpSingleLogoutURL)
 	if clearsDefaultSSORoles(settings.DefaultSSORoles) {
 		req["settings"].(map[string]any)["replaceDefaultSSORoles"] = true
 	}
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSAMLSettingsByMetadata(), req, nil, "")
 	return err
+}
+
+// addSAMLSingleLogoutSettings sends the single logout settings only when they are set. Both are optional
+// on the wire like authenticationOnly: omitting one keeps the stored value.
+func addSAMLSingleLogoutSettings(settings map[string]any, singleLogoutEnabled *bool, idpSingleLogoutURL *string) {
+	if singleLogoutEnabled != nil {
+		settings["singleLogoutEnabled"] = *singleLogoutEnabled
+	}
+	if idpSingleLogoutURL != nil {
+		settings["idpSingleLogoutUrl"] = *idpSingleLogoutURL
+	}
 }
 
 func (s *sso) ConfigureSSORedirectURL(ctx context.Context, tenantID string, samlRedirectURL *string, oauthRedirectURL *string, ssoID string) error {

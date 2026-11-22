@@ -1020,6 +1020,182 @@ func TestLogoutAllMissingToken(t *testing.T) {
 	assert.ErrorIs(t, err, descope.ErrRefreshToken)
 }
 
+type logoutWithOptionsFunc func(a *authenticationService, w http.ResponseWriter, options *descope.LogoutOptions) (*descope.LogoutResponse, error)
+
+func logoutRefreshCookieRequest() *http.Request {
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: descope.RefreshCookieName, Value: jwtRTokenValid})
+	return request
+}
+
+var logoutsWithOptions = map[string]struct {
+	path   string
+	logout logoutWithOptionsFunc
+}{
+	"LogoutWithOptions": {"/v1/auth/logout", func(a *authenticationService, w http.ResponseWriter, options *descope.LogoutOptions) (*descope.LogoutResponse, error) {
+		return a.LogoutWithOptions(logoutRefreshCookieRequest(), w, options)
+	}},
+	"LogoutWithTokenAndOptions": {"/v1/auth/logout", func(a *authenticationService, w http.ResponseWriter, options *descope.LogoutOptions) (*descope.LogoutResponse, error) {
+		return a.LogoutWithTokenAndOptions(jwtRTokenValid, w, options)
+	}},
+	"LogoutAllWithOptions": {"/v1/auth/logoutall", func(a *authenticationService, w http.ResponseWriter, options *descope.LogoutOptions) (*descope.LogoutResponse, error) {
+		return a.LogoutAllWithOptions(logoutRefreshCookieRequest(), w, options)
+	}},
+	"LogoutAllWithTokenAndOptions": {"/v1/auth/logoutall", func(a *authenticationService, w http.ResponseWriter, options *descope.LogoutOptions) (*descope.LogoutResponse, error) {
+		return a.LogoutAllWithTokenAndOptions(jwtRTokenValid, w, options)
+	}},
+}
+
+func TestLogoutWithOptionsSSOLogout(t *testing.T) {
+	ssoLogoutURL := "https://idp.example.com/slo?SAMLRequest=abc"
+	body := fmt.Sprintf(`{"cookiePath": "/my-path", "cookieDomain": "my-domain", "ssoLogoutUrl": "%s"}`, ssoLogoutURL)
+	for name, tc := range logoutsWithOptions {
+		t.Run(name, func(t *testing.T) {
+			calls := 0
+			a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+				calls++
+				assert.Equal(t, tc.path, r.URL.Path)
+				req, err := readBodyMap(r)
+				require.NoError(t, err)
+				assert.Equal(t, map[string]any{"ssoLogout": true, "redirectUrl": "https://app.example.com/signed-out"}, req)
+				return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(body))}, nil
+			})
+			require.NoError(t, err)
+			options := &descope.LogoutOptions{SSOLogout: true, RedirectURL: "https://app.example.com/signed-out"}
+
+			w := httptest.NewRecorder()
+			res, err := tc.logout(a, w, options)
+			require.NoError(t, err)
+			require.NotNil(t, res)
+			assert.Equal(t, ssoLogoutURL, res.SSOLogoutURL)
+			strictCookies(t, w)
+			require.Len(t, w.Result().Cookies(), 2)
+			for _, c := range w.Result().Cookies() {
+				assert.Empty(t, c.Value)
+				assert.Equal(t, "/my-path", c.Path)
+			}
+
+			// without a ResponseWriter the URL is still returned
+			res, err = tc.logout(a, nil, options)
+			require.NoError(t, err)
+			require.NotNil(t, res)
+			assert.Equal(t, ssoLogoutURL, res.SSOLogoutURL)
+			assert.Equal(t, 2, calls)
+		})
+	}
+}
+
+func TestLogoutWithOptionsOnlySetFieldsSent(t *testing.T) {
+	for name, tc := range logoutsWithOptions {
+		t.Run(name, func(t *testing.T) {
+			a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+				req, err := readBodyMap(r)
+				require.NoError(t, err)
+				assert.Equal(t, map[string]any{"ssoLogout": true}, req)
+				return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(`{}`))}, nil
+			})
+			require.NoError(t, err)
+			res, err := tc.logout(a, nil, &descope.LogoutOptions{SSOLogout: true})
+			require.NoError(t, err)
+			require.NotNil(t, res)
+			assert.Empty(t, res.SSOLogoutURL)
+		})
+	}
+}
+
+func TestLogoutWithOptionsNilOptions(t *testing.T) {
+	for name, tc := range logoutsWithOptions {
+		t.Run(name, func(t *testing.T) {
+			called := false
+			a, err := newTestAuth(nil, func(r *http.Request) (*http.Response, error) {
+				called = true
+				assert.Nil(t, r.Body, "a logout without options sends no body")
+				return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(mockAuthSessionBody))}, nil
+			})
+			require.NoError(t, err)
+			w := httptest.NewRecorder()
+			res, err := tc.logout(a, w, nil)
+			require.NoError(t, err)
+			require.NotNil(t, res)
+			assert.Empty(t, res.SSOLogoutURL)
+			require.Len(t, w.Result().Cookies(), 2)
+			assert.True(t, called)
+		})
+	}
+}
+
+func TestLogoutWithOptionsEmptyBody(t *testing.T) {
+	for name, tc := range logoutsWithOptions {
+		t.Run(name, func(t *testing.T) {
+			a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
+				return &http.Response{StatusCode: http.StatusOK}, nil
+			})
+			require.NoError(t, err)
+			w := httptest.NewRecorder()
+			res, err := tc.logout(a, w, &descope.LogoutOptions{SSOLogout: true})
+			require.NoError(t, err)
+			require.NotNil(t, res)
+			assert.Empty(t, res.SSOLogoutURL)
+			require.Len(t, w.Result().Cookies(), 2)
+		})
+	}
+}
+
+func TestLogoutWithOptionsInvalidResponse(t *testing.T) {
+	for name, tc := range logoutsWithOptions {
+		t.Run(name, func(t *testing.T) {
+			a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
+				return &http.Response{StatusCode: http.StatusOK, Body: io.NopCloser(bytes.NewBufferString(`{"ssoLogoutUrl": 1}`))}, nil
+			})
+			require.NoError(t, err)
+			res, err := tc.logout(a, nil, &descope.LogoutOptions{SSOLogout: true})
+			require.Error(t, err)
+			assert.Nil(t, res)
+		})
+	}
+}
+
+func TestLogoutWithOptionsFailure(t *testing.T) {
+	for name, tc := range logoutsWithOptions {
+		t.Run(name, func(t *testing.T) {
+			a, err := newTestAuth(nil, func(_ *http.Request) (*http.Response, error) {
+				return &http.Response{StatusCode: http.StatusBadGateway}, nil
+			})
+			require.NoError(t, err)
+			res, err := tc.logout(a, nil, &descope.LogoutOptions{SSOLogout: true})
+			require.Error(t, err)
+			assert.Nil(t, res)
+		})
+	}
+}
+
+func TestLogoutWithOptionsInvalidRequest(t *testing.T) {
+	a, err := newTestAuth(nil, nil)
+	require.NoError(t, err)
+	options := &descope.LogoutOptions{SSOLogout: true}
+
+	res, err := a.LogoutWithOptions(nil, nil, options)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Nil(t, res)
+	res, err = a.LogoutAllWithOptions(nil, nil, options)
+	assert.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Nil(t, res)
+
+	res, err = a.LogoutWithOptions(&http.Request{Header: http.Header{}}, nil, options)
+	assert.ErrorIs(t, err, descope.ErrRefreshToken)
+	assert.Nil(t, res)
+	res, err = a.LogoutAllWithOptions(&http.Request{Header: http.Header{}}, nil, options)
+	assert.ErrorIs(t, err, descope.ErrRefreshToken)
+	assert.Nil(t, res)
+
+	res, err = a.LogoutWithTokenAndOptions(jwtTokenExpired, nil, options)
+	assert.ErrorIs(t, err, descope.ErrRefreshToken)
+	assert.Nil(t, res)
+	res, err = a.LogoutAllWithTokenAndOptions(jwtTokenExpired, nil, options)
+	assert.ErrorIs(t, err, descope.ErrRefreshToken)
+	assert.Nil(t, res)
+}
+
 func TestExtractTokensEmpty(t *testing.T) {
 	a, err := newTestAuth(nil, nil)
 	require.NoError(t, err)

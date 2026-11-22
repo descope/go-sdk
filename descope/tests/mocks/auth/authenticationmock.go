@@ -758,6 +758,22 @@ type MockSession struct {
 	LogoutAllWithTokenAssert func(refreshToken string, w http.ResponseWriter)
 	LogoutAllWithTokenError  error
 
+	LogoutWithOptionsAssert   func(r *http.Request, w http.ResponseWriter, options *descope.LogoutOptions)
+	LogoutWithOptionsResponse *descope.LogoutResponse
+	LogoutWithOptionsError    error
+
+	LogoutWithTokenAndOptionsAssert   func(refreshToken string, w http.ResponseWriter, options *descope.LogoutOptions)
+	LogoutWithTokenAndOptionsResponse *descope.LogoutResponse
+	LogoutWithTokenAndOptionsError    error
+
+	LogoutAllWithOptionsAssert   func(r *http.Request, w http.ResponseWriter, options *descope.LogoutOptions)
+	LogoutAllWithOptionsResponse *descope.LogoutResponse
+	LogoutAllWithOptionsError    error
+
+	LogoutAllWithTokenAndOptionsAssert   func(refreshToken string, w http.ResponseWriter, options *descope.LogoutOptions)
+	LogoutAllWithTokenAndOptionsResponse *descope.LogoutResponse
+	LogoutAllWithTokenAndOptionsError    error
+
 	MeAssert   func(r *http.Request)
 	MeError    error
 	MeResponse *descope.UserResponse
@@ -973,6 +989,34 @@ func (m *MockSession) LogoutAllWithToken(refreshToken string, w http.ResponseWri
 		m.LogoutAllWithTokenAssert(refreshToken, w)
 	}
 	return m.LogoutAllWithTokenError
+}
+
+func (m *MockSession) LogoutWithOptions(r *http.Request, w http.ResponseWriter, options *descope.LogoutOptions) (*descope.LogoutResponse, error) {
+	if m.LogoutWithOptionsAssert != nil {
+		m.LogoutWithOptionsAssert(r, w, options)
+	}
+	return m.LogoutWithOptionsResponse, m.LogoutWithOptionsError
+}
+
+func (m *MockSession) LogoutWithTokenAndOptions(refreshToken string, w http.ResponseWriter, options *descope.LogoutOptions) (*descope.LogoutResponse, error) {
+	if m.LogoutWithTokenAndOptionsAssert != nil {
+		m.LogoutWithTokenAndOptionsAssert(refreshToken, w, options)
+	}
+	return m.LogoutWithTokenAndOptionsResponse, m.LogoutWithTokenAndOptionsError
+}
+
+func (m *MockSession) LogoutAllWithOptions(r *http.Request, w http.ResponseWriter, options *descope.LogoutOptions) (*descope.LogoutResponse, error) {
+	if m.LogoutAllWithOptionsAssert != nil {
+		m.LogoutAllWithOptionsAssert(r, w, options)
+	}
+	return m.LogoutAllWithOptionsResponse, m.LogoutAllWithOptionsError
+}
+
+func (m *MockSession) LogoutAllWithTokenAndOptions(refreshToken string, w http.ResponseWriter, options *descope.LogoutOptions) (*descope.LogoutResponse, error) {
+	if m.LogoutAllWithTokenAndOptionsAssert != nil {
+		m.LogoutAllWithTokenAndOptionsAssert(refreshToken, w, options)
+	}
+	return m.LogoutAllWithTokenAndOptionsResponse, m.LogoutAllWithTokenAndOptionsError
 }
 
 func (m *MockSession) Me(r *http.Request) (*descope.UserResponse, error) {
