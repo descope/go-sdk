@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"runtime/debug"
 	"strings"
 	"testing"
 	"time"
@@ -57,6 +58,62 @@ func TestRequestWithDescopeHeaders(t *testing.T) {
 	})})
 
 	_, err := c.DoPostRequest(context.Background(), "path", nil, nil, "")
+	require.NoError(t, err)
+}
+
+func TestSDKInfoFromBuildInfo(t *testing.T) {
+	const sdkPath = "github.com/descope/go-sdk"
+	tests := []struct {
+		name    string
+		build   *debug.BuildInfo
+		version string
+		sha     string
+	}{
+		{name: "no build info"},
+		{name: "unrelated modules", build: &debug.BuildInfo{Deps: []*debug.Module{
+			{Path: sdkPath + "/descope", Version: "v0.1.0", Sum: "wrong"},
+			{Path: sdkPath + "-fork", Version: "v0.2.0", Sum: "wrong"},
+		}}},
+		{name: "dependency", build: &debug.BuildInfo{Deps: []*debug.Module{
+			{Path: sdkPath + "/descope", Version: "v0.1.0"},
+			{Path: sdkPath, Version: "v1.40.1", Sum: "h1:original"},
+		}}, version: "v1.40.1", sha: "h1:original"},
+		{name: "replaced dependency", build: &debug.BuildInfo{Deps: []*debug.Module{
+			{Path: sdkPath, Version: "v1.40.1", Sum: "h1:original", Replace: &debug.Module{
+				Path: sdkPath, Version: "v1.40.2", Sum: "h1:replacement",
+			}},
+		}}, version: "v1.40.2", sha: "h1:replacement"},
+		{name: "local replacement", build: &debug.BuildInfo{Deps: []*debug.Module{
+			{Path: sdkPath, Version: "v1.40.1", Sum: "h1:original", Replace: &debug.Module{Path: "../go-sdk"}},
+		}}, version: "v1.40.1", sha: "h1:original"},
+		{name: "partial replacement", build: &debug.BuildInfo{Deps: []*debug.Module{
+			{Path: sdkPath, Version: "v1.40.1", Sum: "h1:original", Replace: &debug.Module{Version: "v1.40.2"}},
+		}}, version: "v1.40.2", sha: "h1:original"},
+		{name: "main module", build: &debug.BuildInfo{Main: debug.Module{Path: sdkPath, Version: "v1.40.1", Sum: "h1:main"}}, version: "v1.40.1", sha: "h1:main"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			info := sdkInfoFromBuildInfo(tt.build)
+			assert.Equal(t, "golang", info.name)
+			assert.NotEmpty(t, info.goVersion)
+			assert.Equal(t, tt.version, info.version)
+			assert.Equal(t, tt.sha, info.sha)
+		})
+	}
+}
+
+func TestSDKInfoHeaders(t *testing.T) {
+	info := sdkInfoFromBuildInfo(&debug.BuildInfo{Deps: []*debug.Module{
+		{Path: "github.com/descope/go-sdk", Version: "v1.40.1", Sum: "h1:original"},
+	}})
+	c := NewClient(ClientParams{DefaultClient: mocks.NewTestClient(func(r *http.Request) (*http.Response, error) {
+		assert.Equal(t, "v1.40.1", r.Header.Get("x-descope-sdk-version"))
+		assert.Equal(t, "h1:original", r.Header.Get("x-descope-sdk-sha"))
+		return &http.Response{StatusCode: http.StatusOK}, nil
+	})})
+	c.sdkInfo = info
+
+	_, err := c.DoGetRequest(context.Background(), "path", nil, "")
 	require.NoError(t, err)
 }
 
