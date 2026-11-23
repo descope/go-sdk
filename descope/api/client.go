@@ -2518,20 +2518,42 @@ func (c *Client) SetRateLimitTier(rateLimitTier string) {
 }
 
 func getSDKInfo() *sdkInfo {
-	sdkInfo := &sdkInfo{
+	bi, _ := debug.ReadBuildInfo()
+	return sdkInfoFromBuildInfo(bi)
+}
+
+func sdkInfoFromBuildInfo(bi *debug.BuildInfo) *sdkInfo {
+	info := &sdkInfo{
 		name:      "golang",
 		goVersion: runtime.Version(),
 	}
-	if bi, ok := debug.ReadBuildInfo(); ok && bi != nil {
-		for _, dep := range bi.Deps { // notest
-			if strings.HasPrefix(dep.Path, "github.com/descope/go-sdk/descope") && len(dep.Version) > 0 {
-				sdkInfo.version = dep.Version
-				sdkInfo.sha = dep.Sum
-				break
+	if bi == nil {
+		return info
+	}
+
+	const sdkModulePath = "github.com/descope/go-sdk"
+	if bi.Main.Path == sdkModulePath {
+		info.version = bi.Main.Version
+		info.sha = bi.Main.Sum
+		return info
+	}
+	for _, dep := range bi.Deps {
+		if dep.Path != sdkModulePath {
+			continue
+		}
+		info.version = dep.Version
+		info.sha = dep.Sum
+		if dep.Replace != nil {
+			if dep.Replace.Version != "" {
+				info.version = dep.Replace.Version
+			}
+			if dep.Replace.Sum != "" {
+				info.sha = dep.Replace.Sum
 			}
 		}
+		break
 	}
-	return sdkInfo
+	return info
 }
 
 func (mode CertificateVerifyMode) SkipVerifyValue(baseURL string) bool {

@@ -290,6 +290,8 @@ const (
 	claimAttributeName = "drn"
 	claimPermissions   = "permissions"
 	claimRoles         = "roles"
+	claimTokenType     = "token_type"
+	tokenTypeRefresh   = "refresh_token"
 )
 
 var (

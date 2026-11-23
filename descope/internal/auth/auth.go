@@ -467,6 +467,9 @@ func enforceDPoPIfNeeded(r *http.Request, tokenString string, token *descope.Tok
 	if jkt == "" {
 		return nil
 	}
+	if tokenString == "" {
+		return descope.ErrInvalidToken.WithMessage("DPoP-bound session requires the session token and its DPoP proof; a refresh token alone cannot prove possession")
+	}
 	// If the token is DPoP-bound (jkt present), a valid DPoP proof is required
 	// regardless of whether the Authorization scheme is "Bearer" or "DPoP".
 	dpopValues := r.Header.Values(dpopAuthScheme)
@@ -492,7 +495,14 @@ func (auth *authenticationService) validateSession(_ context.Context, sessionTok
 	if err != nil {
 		return false, nil, err
 	}
+	if isRefreshToken(token) {
+		return false, nil, descope.ErrInvalidToken.WithMessage("refresh token cannot be used as a session token")
+	}
 	return true, token, nil
+}
+
+func isRefreshToken(token *descope.Token) bool {
+	return token.Claims[claimAttributeName] == descope.RefreshCookieName || token.Claims[claimTokenType] == tokenTypeRefresh
 }
 
 // Refresh Session
@@ -574,7 +584,7 @@ func (auth *authenticationService) ValidateAndRefreshSessionWithRequest(request 
 	}
 	sessionToken, refreshToken := auth.provideTokens(request)
 	valid, token, err := auth.validateAndRefreshSessionWithTokens(request.Context(), sessionToken, refreshToken, w)
-	if valid && sessionToken != "" {
+	if valid { // refresh-only too: a refreshed DPoP-bound session still needs a proof
 		if dpopErr := enforceDPoPIfNeeded(request, sessionToken, token, auth.dpopJTIStore); dpopErr != nil {
 			return false, nil, dpopErr
 		}

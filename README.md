@@ -693,6 +693,7 @@ No configuration is needed. When `ValidateSessionWithRequest` or `ValidateAndRef
 - If the session token has a `cnf.jkt` claim, the `DPoP` header in the incoming request is validated (RFC 9449 §7.1–7.2).
 - Plain Bearer tokens without `cnf.jkt` are unaffected — the check is skipped entirely.
 - If a `DPoP`-scheme `Authorization` header is present but the token has no `cnf.jkt`, the request is rejected (downgrade-attack prevention).
+- A request with only a refresh token that yields a DPoP-bound session is rejected. Send the session token (current or expired) with its DPoP proof.
 - Each proof is accepted at most once: proofs must have an `iat` within ~60s, and a proof whose `jti` has already been seen (JTIs are retained for ~120s) is rejected as a replay. Clients must generate a fresh proof for every request, including retries.
 
 > **Note:** The replay cache is held in memory per SDK client instance. When running multiple instances behind a load balancer, replay protection applies per instance, not across the deployment.
@@ -977,6 +978,12 @@ settingsRequest.SessionTokenExpirationUnit = "minutes"
 settingsRequest.EnableInactivity = true
 settingsRequest.InactivityTime = 2
 settingsRequest.InactivityTimeUnit = "days"
+// Optionally configure the tenant's SSO Setup Suite, inherited by every SSO configuration link of the tenant
+// (e.g. hide role mapping). Leave nil to keep the current SSO Setup Suite settings
+settingsRequest.SSOSetupSuiteSettings = &descope.SSOSetupSuiteSettings{
+	Enabled:          true,
+	DisabledFeatures: &descope.SSOSetupSuiteDisabledFeatures{RoleMapping: true},
+}
 
 // update the tenant settings
 err := descopeClient.Management.Tenant().ConfigureSettings(context.Background(), "My Tenant", settingsRequest)
