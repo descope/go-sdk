@@ -614,7 +614,8 @@ func (auth *authenticationService) validateAndRefreshSessionWithTokens(ctx conte
 }
 
 func (auth *authenticationService) ExchangeAccessKey(ctx context.Context, accessKey string, loginOptions *descope.AccessKeyLoginOptions) (success bool, SessionToken *descope.Token, err error) {
-	httpResponse, err := auth.client.DoPostRequest(ctx, api.Routes.ExchangeAccessKey(), newExchangeAccessKeyBody(loginOptions), &api.HTTPRequest{}, accessKey)
+	// A third bearer part is read as the access key
+	httpResponse, err := auth.client.DoPostRequest(ctx, api.Routes.ExchangeAccessKey(), newExchangeAccessKeyBody(loginOptions), &api.HTTPRequest{OmitManagementKey: true}, accessKey)
 	if err != nil {
 		logger.LogError("Failed to exchange access key", err)
 		return false, nil, err

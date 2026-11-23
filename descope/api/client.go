@@ -2171,6 +2171,8 @@ type HTTPRequest struct {
 	ResBodyObj  any
 	Request     *http.Request
 	Cookies     []*http.Cookie
+	// OmitManagementKey drops Conf.ManagementKey from the bearer (used by the access key exchange)
+	OmitManagementKey bool
 }
 
 func baseURLForProjectID(projectID string) string {
@@ -2359,7 +2361,7 @@ func (c *Client) DoRequest(ctx context.Context, method, uriPath string, body io.
 		if len(pswd) > 0 {
 			bearerParts = append(bearerParts, pswd)
 		}
-		if mgmtKey := c.Conf.ManagementKey; len(mgmtKey) > 0 {
+		if mgmtKey := c.Conf.ManagementKey; len(mgmtKey) > 0 && !options.OmitManagementKey {
 			// append a management key if available, this is true for both management and authentication requests
 			// only using the different provided keys in the client initialization
 			bearerParts = append(bearerParts, mgmtKey)
