@@ -469,6 +469,93 @@ func TestSSOLoadAllSettingsDecodesJITDisabled(t *testing.T) {
 	require.False(t, res[1].JITDisabled)
 }
 
+// The server keeps the stored accepted audiences for an empty or omitted list, so a non-nil slice, an empty
+// one included, has to go with replaceAcceptedAudiences, and nil must send neither field. Both SAML saves
+// build their request map by hand, so a field left out of that map would be dropped silently.
+func TestSSOConfigureSAMLAcceptedAudiences(t *testing.T) {
+	saves := map[string]func(mgmt *managementService, acceptedAudiences []string) error{
+		"saml": func(mgmt *managementService, acceptedAudiences []string) error {
+			return mgmt.SSO().ConfigureSAMLSettings(context.Background(), "abc", &descope.SSOSAMLSettings{
+				IdpURL:            "https://idp.example.com/sso",
+				IdpEntityID:       "entity-id",
+				IdpCert:           "cert",
+				AcceptedAudiences: acceptedAudiences,
+			}, "", nil, "somessoid")
+		},
+		"saml metadata": func(mgmt *managementService, acceptedAudiences []string) error {
+			return mgmt.SSO().ConfigureSAMLSettingsByMetadata(context.Background(), "abc", &descope.SSOSAMLSettingsByMetadata{
+				IdpMetadataURL:    "https://idp.example.com/metadata",
+				AcceptedAudiences: acceptedAudiences,
+			}, "", nil, "somessoid")
+		},
+	}
+	cases := map[string]struct {
+		acceptedAudiences []string
+		wantSent          bool
+		wantAudiences     []any
+	}{
+		"nil keeps":     {acceptedAudiences: nil},
+		"list replaces": {acceptedAudiences: []string{"https://idp-audience.example.com", ""}, wantSent: true, wantAudiences: []any{"https://idp-audience.example.com", ""}},
+		"empty clears":  {acceptedAudiences: []string{}, wantSent: true, wantAudiences: []any{}},
+	}
+	for saveName, save := range saves {
+		for caseName, tc := range cases {
+			t.Run(saveName+"/"+caseName, func(t *testing.T) {
+				called := false
+				mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+					called = true
+					req := map[string]any{}
+					require.NoError(t, helpers.ReadBody(r, &req))
+					require.NotContains(t, req, "acceptedAudiences", "the field belongs under settings")
+					require.NotContains(t, req, "replaceAcceptedAudiences", "the flag belongs under settings")
+					settings, ok := req["settings"].(map[string]any)
+					require.True(t, ok)
+					if !tc.wantSent {
+						assert.NotContains(t, settings, "acceptedAudiences")
+						assert.NotContains(t, settings, "replaceAcceptedAudiences")
+						return
+					}
+					// an empty list must reach the server as [] and not null
+					assert.Equal(t, tc.wantAudiences, settings["acceptedAudiences"])
+					assert.Equal(t, true, settings["replaceAcceptedAudiences"])
+				}))
+				require.NoError(t, save(mgmt, tc.acceptedAudiences))
+				require.True(t, called)
+			})
+		}
+	}
+}
+
+func TestSSOLoadSettingsDecodesSAMLAcceptedAudiences(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, map[string]any{
+		"ssoId": "somessoid",
+		"saml": map[string]any{
+			"spEntityId":        "https://descope.example.com/sp",
+			"acceptedAudiences": []string{"https://idp-audience.example.com", ""},
+		},
+	}))
+	res, err := mgmt.SSO().LoadSettings(context.Background(), "abc", "somessoid")
+	require.NoError(t, err)
+	require.NotNil(t, res.Saml)
+	assert.Equal(t, []string{"https://idp-audience.example.com", ""}, res.Saml.AcceptedAudiences)
+}
+
+func TestSSOLoadAllSettingsDecodesSAMLAcceptedAudiences(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, map[string]any{
+		"SSOSettings": []map[string]any{
+			{"ssoId": "with-audiences", "saml": map[string]any{"acceptedAudiences": []string{"aud1", "aud2"}}},
+			{"ssoId": "without", "saml": map[string]any{"spEntityId": "https://descope.example.com/sp"}},
+		},
+	}))
+	res, err := mgmt.SSO().LoadAllSettings(context.Background(), "abc")
+	require.NoError(t, err)
+	require.Len(t, res, 2)
+	require.NotNil(t, res[0].Saml)
+	assert.Equal(t, []string{"aud1", "aud2"}, res[0].Saml.AcceptedAudiences)
+	require.NotNil(t, res[1].Saml)
+	assert.Empty(t, res[1].Saml.AcceptedAudiences)
+}
+
 func TestDeleteSSOSettingsError(t *testing.T) {
 	called := false
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(_ *http.Request) {
