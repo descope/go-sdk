@@ -121,6 +121,7 @@ func (s *sso) ConfigureSAMLSettings(ctx context.Context, tenantID string, settin
 		// Optional on the wire like authenticationOnly: omitting it keeps the stored value.
 		req["settings"].(map[string]any)["jitDisabled"] = *settings.JITDisabled
 	}
+	addSAMLAcceptedAudiences(req["settings"].(map[string]any), settings.AcceptedAudiences)
 	if clearsDefaultSSORoles(settings.DefaultSSORoles) {
 		req["settings"].(map[string]any)["replaceDefaultSSORoles"] = true
 	}
@@ -192,11 +193,24 @@ func (s *sso) ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID stri
 		// Optional on the wire like authenticationOnly: omitting it keeps the stored value.
 		req["settings"].(map[string]any)["jitDisabled"] = *settings.JITDisabled
 	}
+	addSAMLAcceptedAudiences(req["settings"].(map[string]any), settings.AcceptedAudiences)
 	if clearsDefaultSSORoles(settings.DefaultSSORoles) {
 		req["settings"].(map[string]any)["replaceDefaultSSORoles"] = true
 	}
 	_, err := s.client.DoPostRequest(ctx, api.Routes.ManagementSSOSAMLSettingsByMetadata(), req, nil, "")
 	return err
+}
+
+// addSAMLAcceptedAudiences sends the accepted audiences only when the caller set them. The server keeps the
+// stored values for an empty or omitted list, so a non-nil slice, an empty one included, goes with
+// replaceAcceptedAudiences to replace them. nil sends neither field, which keeps the stored values and
+// stays accepted by a server that predates the flag.
+func addSAMLAcceptedAudiences(settings map[string]any, acceptedAudiences []string) {
+	if acceptedAudiences == nil {
+		return
+	}
+	settings["acceptedAudiences"] = acceptedAudiences
+	settings["replaceAcceptedAudiences"] = true
 }
 
 func (s *sso) ConfigureSSORedirectURL(ctx context.Context, tenantID string, samlRedirectURL *string, oauthRedirectURL *string, ssoID string) error {

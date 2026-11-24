@@ -1390,6 +1390,13 @@ samlSettings.AuthenticationOnly = &authenticationOnly
 jitDisabled := true
 samlSettings.JITDisabled = &jitDisabled
 
+// Some IdPs send an audience in the SAML assertion other than the configuration's SP entity ID and can't
+// be changed. List the audience values to accept in its place (available on both variants above): a value
+// matches exactly, ignoring surrounding whitespace, and an empty string accepts an empty audience. Up to 20
+// values of up to 1000 characters each. nil keeps the stored values, any other slice replaces them, and an
+// empty non-nil slice clears them. Read them back from SSOSAMLSettingsResponse.AcceptedAudiences.
+samlSettings.AcceptedAudiences = []string{"https://idp.com/audience"}
+
 // You can create new SSO configuration (aka multi SSO)
 ssoID := "my-new-additional-sso-id"
 displayName := "My additional SSO configuration"

@@ -162,6 +162,7 @@ type SSOSAMLSettingsResponse struct {
 	ConfigFGATenantIDResourceSuffix string                      `json:"configFGATenantIDResourceSuffix,omitempty"`
 	LastSuccessTestTime             int32                       `json:"lastSuccessTestTime,omitempty"` // epoch seconds of the last successful SSO test login on this configuration (read-only)
 	DisableSignRequest              bool                        `json:"disableSignRequest,omitempty"`  // true when Descope sends the SAML AuthnRequest to this IdP unsigned
+	AcceptedAudiences               []string                    `json:"acceptedAudiences,omitempty"`   // audience values a SAML assertion may carry in place of the SP entity ID (see SSOSAMLSettings.AcceptedAudiences)
 }
 
 type SSOSAMLSettings struct {
@@ -195,6 +196,15 @@ type SSOSAMLSettings struct {
 	// is empty. A pointer for the same reason as AuthenticationOnly: nil is not sent and keeps the
 	// stored value, false turns JIT back on. Read it back from SSOTenantSettingsResponse.JITDisabled.
 	JITDisabled *bool `json:"jitDisabled,omitempty"`
+
+	// AcceptedAudiences lists audience values a SAML assertion from the IdP may carry in place of the
+	// configuration's SP entity ID, for IdPs that send a different audience and can't be changed. A value
+	// matches exactly, ignoring surrounding whitespace, and an empty string accepts an empty audience.
+	// Up to 20 values of up to 1000 characters each.
+	//
+	// nil keeps the stored values. Any non-nil slice replaces them, so an empty non-nil slice clears
+	// them. Read them back from SSOSAMLSettingsResponse.AcceptedAudiences.
+	AcceptedAudiences []string `json:"acceptedAudiences,omitempty"`
 
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
 	SpACSUrl   string `json:"spACSUrl,omitempty"`
@@ -231,6 +241,15 @@ type SSOSAMLSettingsByMetadata struct {
 	// is empty. A pointer for the same reason as AuthenticationOnly: nil is not sent and keeps the
 	// stored value, false turns JIT back on. Read it back from SSOTenantSettingsResponse.JITDisabled.
 	JITDisabled *bool `json:"jitDisabled,omitempty"`
+
+	// AcceptedAudiences lists audience values a SAML assertion from the IdP may carry in place of the
+	// configuration's SP entity ID, for IdPs that send a different audience and can't be changed. A value
+	// matches exactly, ignoring surrounding whitespace, and an empty string accepts an empty audience.
+	// Up to 20 values of up to 1000 characters each.
+	//
+	// nil keeps the stored values. Any non-nil slice replaces them, so an empty non-nil slice clears
+	// them. Read them back from SSOSAMLSettingsResponse.AcceptedAudiences.
+	AcceptedAudiences []string `json:"acceptedAudiences,omitempty"`
 
 	// NOTICE - the following fields should be overridden only in case of SSO migration, otherwise, do not modify these fields
 	SpACSUrl   string `json:"spACSUrl,omitempty"`
