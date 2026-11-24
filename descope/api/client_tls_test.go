@@ -127,4 +127,14 @@ func TestTLSEnforcement(t *testing.T) {
 		transport := NewClient(ClientParams{ProjectID: "test"}).httpClient.(*http.Client).Transport.(*http.Transport)
 		assert.Equal(t, uint16(tls.VersionTLS13), transport.TLSClientConfig.MinVersion)
 	})
+
+	t.Run("WeakerInheritedMinRaised", func(t *testing.T) {
+		dt := http.DefaultTransport.(*http.Transport)
+		orig := dt.TLSClientConfig
+		dt.TLSClientConfig = &tls.Config{MinVersion: tls.VersionTLS10} // #nosec G402
+		defer func() { dt.TLSClientConfig = orig }()
+
+		transport := NewClient(ClientParams{ProjectID: "test"}).httpClient.(*http.Client).Transport.(*http.Transport)
+		assert.Equal(t, uint16(tls.VersionTLS12), transport.TLSClientConfig.MinVersion)
+	})
 }
