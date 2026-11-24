@@ -40,7 +40,7 @@ func Init(LogLevel LogLevel, logger LoggerInterface) {
 	})
 }
 
-func (lw *LoggerWrapper) doLog(l LogLevel, format string, args ...any) { // notest
+func (lw *LoggerWrapper) doLog(l LogLevel, format string, args ...any) {
 	if lw.logLevel < l {
 		return
 	}
