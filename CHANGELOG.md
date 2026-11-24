@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.41.1](https://github.com/descope/go-sdk/compare/v1.41.0...v1.41.1) (2026-11-24)
+
+
+### Bug Fixes
+
+* **auth:** reject session tokens and DPoP proofs that are not in compact serialization ([GHSA-8522-j4cv-7h27](https://github.com/descope/go-sdk/security/advisories/GHSA-8522-j4cv-7h27)) ([3633f6e](https://github.com/descope/go-sdk/commit/3633f6e6d))
+* **deps:** update module github.com/descope/go-sdk to v1.41.0 ([#942](https://github.com/descope/go-sdk/issues/942)) ([35679d1](https://github.com/descope/go-sdk/commit/35679d113d9f68e4661d7c4be426f8b840663f30))
+
 ## [1.41.0](https://github.com/descope/go-sdk/compare/v1.40.0...v1.41.0) (2026-11-23)
 
 
