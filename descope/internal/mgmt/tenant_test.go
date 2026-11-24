@@ -324,6 +324,11 @@ func TestGetTenantSettingsSuccess(t *testing.T) {
 		"sessionTokenExpiration":     11,
 		"sessionTokenExpirationUnit": "minutes",
 		"JITDisabled":                true,
+		"ssoSetupSuiteSettings": map[string]any{
+			"enabled":          true,
+			"styleId":          "style",
+			"disabledFeatures": map[string]any{"roleMapping": true, "scim": false},
+		},
 	}
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
@@ -341,6 +346,12 @@ func TestGetTenantSettingsSuccess(t *testing.T) {
 	assert.EqualValues(t, 10, res.RefreshTokenExpiration)
 	assert.EqualValues(t, "weeks", res.RefreshTokenExpirationUnit)
 	assert.True(t, res.JITDisabled)
+	require.NotNil(t, res.SSOSetupSuiteSettings)
+	assert.True(t, res.SSOSetupSuiteSettings.Enabled)
+	assert.Equal(t, "style", res.SSOSetupSuiteSettings.StyleID)
+	require.NotNil(t, res.SSOSetupSuiteSettings.DisabledFeatures)
+	assert.True(t, res.SSOSetupSuiteSettings.DisabledFeatures.RoleMapping)
+	assert.False(t, res.SSOSetupSuiteSettings.DisabledFeatures.SCIM)
 }
 
 func TestGetTenantSettingsError(t *testing.T) {
@@ -366,8 +377,30 @@ func TestTenantConfigureSettingsSuccess(t *testing.T) {
 		require.Equal(t, float64(19), req["sessionTokenExpiration"])
 		require.Equal(t, true, req["JITDisabled"])
 		require.EqualValues(t, []any{"test"}, req["selfProvisioningDomains"])
+		require.NotContains(t, req, "ssoSetupSuiteSettings")
 	}))
 	err := mgmt.Tenant().ConfigureSettings(context.Background(), "tenant", &descope.TenantSettings{EnableInactivity: true, SessionSettingsEnabled: true, SessionTokenExpiration: 19, SelfProvisioningDomains: []string{"test"}, JITDisabled: true})
+	require.NoError(t, err)
+}
+
+func TestTenantConfigureSettingsSSOSetupSuiteSuccess(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "tenant", req["tenantId"])
+		require.Equal(t, map[string]any{
+			"enabled":          true,
+			"styleId":          "style",
+			"disabledFeatures": map[string]any{"roleMapping": true},
+		}, req["ssoSetupSuiteSettings"])
+	}))
+	err := mgmt.Tenant().ConfigureSettings(context.Background(), "tenant", &descope.TenantSettings{
+		SSOSetupSuiteSettings: &descope.SSOSetupSuiteSettings{
+			Enabled:          true,
+			StyleID:          "style",
+			DisabledFeatures: &descope.SSOSetupSuiteDisabledFeatures{RoleMapping: true},
+		},
+	})
 	require.NoError(t, err)
 }
 

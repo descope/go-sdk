@@ -1249,6 +1249,30 @@ func TestExchangeAccessKey(t *testing.T) {
 	require.NotNil(t, token)
 }
 
+func TestExchangeAccessKeyWithAuthManagementKey(t *testing.T) {
+	a, err := newTestAuth(&api.ClientParams{ProjectID: "a", ManagementKey: "authMgmtKey"}, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, api.BearerAuthorizationPrefix+"a:foo", r.Header.Get(api.AuthorizationHeaderName))
+	}))
+	require.NoError(t, err)
+
+	ok, token, err := a.ExchangeAccessKey(context.Background(), "foo", nil)
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.NotNil(t, token)
+}
+
+func TestRefreshSessionWithAuthManagementKey(t *testing.T) {
+	a, err := newTestAuth(&api.ClientParams{ProjectID: "a", ManagementKey: "authMgmtKey"}, DoOk(func(r *http.Request) {
+		assert.EqualValues(t, api.BearerAuthorizationPrefix+"a:"+jwtRTokenValid+":authMgmtKey", r.Header.Get(api.AuthorizationHeaderName))
+	}))
+	require.NoError(t, err)
+
+	ok, token, err := a.RefreshSessionWithToken(context.Background(), jwtRTokenValid)
+	require.NoError(t, err)
+	require.True(t, ok)
+	require.NotNil(t, token)
+}
+
 func TestExchangeAccessKeyWithLoginOptions(t *testing.T) {
 	response := map[string]any{}
 	err := utils.Unmarshal([]byte(mockAuthSessionBody), &response)

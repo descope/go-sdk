@@ -162,6 +162,7 @@ type SSOSAMLSettingsResponse struct {
 	ConfigFGATenantIDResourceSuffix string                      `json:"configFGATenantIDResourceSuffix,omitempty"`
 	LastSuccessTestTime             int32                       `json:"lastSuccessTestTime,omitempty"` // epoch seconds of the last successful SSO test login on this configuration (read-only)
 	DisableSignRequest              bool                        `json:"disableSignRequest,omitempty"`  // true when Descope sends the SAML AuthnRequest to this IdP unsigned
+	AcceptedAudiences               []string                    `json:"acceptedAudiences,omitempty"`   // audience values a SAML assertion may carry in place of the SP entity ID (see SSOSAMLSettings.AcceptedAudiences)
 	SingleLogoutEnabled             bool                        `json:"singleLogoutEnabled,omitempty"` // true when SAML single logout is on for this configuration
 	IdpSingleLogoutURL              string                      `json:"idpSingleLogoutUrl,omitempty"`  // the IdP's SingleLogoutService URL set on the configuration; empty when it is taken from the IdP metadata
 	SpSingleLogoutURL               string                      `json:"spSingleLogoutUrl,omitempty"`   // Descope's single logout URL for this configuration, to set as the Single Logout URL in the IdP
@@ -198,6 +199,15 @@ type SSOSAMLSettings struct {
 	// is empty. A pointer for the same reason as AuthenticationOnly: nil is not sent and keeps the
 	// stored value, false turns JIT back on. Read it back from SSOTenantSettingsResponse.JITDisabled.
 	JITDisabled *bool `json:"jitDisabled,omitempty"`
+
+	// AcceptedAudiences lists audience values a SAML assertion from the IdP may carry in place of the
+	// configuration's SP entity ID, for IdPs that send a different audience and can't be changed. A value
+	// matches exactly, ignoring surrounding whitespace, and an empty string accepts an empty audience.
+	// Up to 20 values of up to 1000 characters each.
+	//
+	// nil keeps the stored values. Any non-nil slice replaces them, so an empty non-nil slice clears
+	// them. Read them back from SSOSAMLSettingsResponse.AcceptedAudiences.
+	AcceptedAudiences []string `json:"acceptedAudiences,omitempty"`
 
 	// SingleLogoutEnabled turns SAML single logout on for this SSO configuration: a logout with
 	// LogoutOptions.SSOLogout then also logs the user out of the IdP. Off by default. The IdP must have
@@ -246,6 +256,15 @@ type SSOSAMLSettingsByMetadata struct {
 	// is empty. A pointer for the same reason as AuthenticationOnly: nil is not sent and keeps the
 	// stored value, false turns JIT back on. Read it back from SSOTenantSettingsResponse.JITDisabled.
 	JITDisabled *bool `json:"jitDisabled,omitempty"`
+
+	// AcceptedAudiences lists audience values a SAML assertion from the IdP may carry in place of the
+	// configuration's SP entity ID, for IdPs that send a different audience and can't be changed. A value
+	// matches exactly, ignoring surrounding whitespace, and an empty string accepts an empty audience.
+	// Up to 20 values of up to 1000 characters each.
+	//
+	// nil keeps the stored values. Any non-nil slice replaces them, so an empty non-nil slice clears
+	// them. Read them back from SSOSAMLSettingsResponse.AcceptedAudiences.
+	AcceptedAudiences []string `json:"acceptedAudiences,omitempty"`
 
 	// SingleLogoutEnabled turns SAML single logout on for this SSO configuration: a logout with
 	// LogoutOptions.SSOLogout then also logs the user out of the IdP. Off by default. The IdP must have
@@ -1102,6 +1121,28 @@ type TenantSettings struct {
 	InactivityTime             int32    `json:"inactivityTime,omitempty"`
 	InactivityTimeUnit         string   `json:"inactivityTimeUnit,omitempty"`
 	JITDisabled                bool     `json:"JITDisabled,omitempty"`
+	// Tenant level SSO Setup Suite settings, inherited by every SSO configuration link of the tenant.
+	// Left untouched by ConfigureSettings when nil
+	SSOSetupSuiteSettings *SSOSetupSuiteSettings `json:"ssoSetupSuiteSettings,omitempty"`
+}
+
+type SSOSetupSuiteSettings struct {
+	Enabled bool   `json:"enabled,omitempty"`
+	StyleID string `json:"styleId,omitempty"`
+	// Features hidden from the SSO Setup Suite. Left untouched by ConfigureSettings when nil
+	DisabledFeatures *SSOSetupSuiteDisabledFeatures `json:"disabledFeatures,omitempty"`
+}
+
+type SSOSetupSuiteDisabledFeatures struct {
+	SAML         bool `json:"saml,omitempty"`
+	OIDC         bool `json:"oidc,omitempty"`
+	SCIM         bool `json:"scim,omitempty"`
+	SSODomains   bool `json:"ssoDomains,omitempty"`
+	GroupMapping bool `json:"groupMapping,omitempty"`
+	RoleMapping  bool `json:"roleMapping,omitempty"`
+	FGAMapping   bool `json:"fgaMapping,omitempty"`
+	SSO          bool `json:"sso,omitempty"`
+	Audit        bool `json:"audit,omitempty"`
 }
 
 type SAMLIDPAttributeMappingInfo struct {

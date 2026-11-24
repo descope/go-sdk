@@ -1001,6 +1001,12 @@ settingsRequest.SessionTokenExpirationUnit = "minutes"
 settingsRequest.EnableInactivity = true
 settingsRequest.InactivityTime = 2
 settingsRequest.InactivityTimeUnit = "days"
+// Optionally configure the tenant's SSO Setup Suite, inherited by every SSO configuration link of the tenant
+// (e.g. hide role mapping). Leave nil to keep the current SSO Setup Suite settings
+settingsRequest.SSOSetupSuiteSettings = &descope.SSOSetupSuiteSettings{
+	Enabled:          true,
+	DisabledFeatures: &descope.SSOSetupSuiteDisabledFeatures{RoleMapping: true},
+}
 
 // update the tenant settings
 err := descopeClient.Management.Tenant().ConfigureSettings(context.Background(), "My Tenant", settingsRequest)
@@ -1406,6 +1412,13 @@ samlSettings.AuthenticationOnly = &authenticationOnly
 // The same field is on the OIDC settings. Read it back from SSOTenantSettingsResponse.JITDisabled.
 jitDisabled := true
 samlSettings.JITDisabled = &jitDisabled
+
+// Some IdPs send an audience in the SAML assertion other than the configuration's SP entity ID and can't
+// be changed. List the audience values to accept in its place (available on both variants above): a value
+// matches exactly, ignoring surrounding whitespace, and an empty string accepts an empty audience. Up to 20
+// values of up to 1000 characters each. nil keeps the stored values, any other slice replaces them, and an
+// empty non-nil slice clears them. Read them back from SSOSAMLSettingsResponse.AcceptedAudiences.
+samlSettings.AcceptedAudiences = []string{"https://idp.com/audience"}
 
 // SAML single logout can be turned on per SSO configuration: a logout with LogoutOptions.SSOLogout then also logs
 // the user out of the IdP (see Logging Out). The IdP's single logout URL is taken from the IdP metadata, or set

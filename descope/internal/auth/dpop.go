@@ -121,6 +121,11 @@ func validateDPoPProof(proof, method, requestURL, accessToken, storedJKT string,
 	if proof == "" {
 		return descope.ErrInvalidToken.WithMessage("DPoP proof required: access token is DPoP-bound (cnf.jkt present)")
 	}
+	// jws.Verify checks the signature over the embedded payload, but jwt.Parse below
+	// reads claims from the whole document, so only compact proofs are accepted.
+	if isJSONSerialized(proof) {
+		return descope.ErrInvalidToken.WithMessage("DPoP proof is not in compact serialization")
+	}
 
 	msg, err := jws.Parse([]byte(proof))
 	if err != nil {

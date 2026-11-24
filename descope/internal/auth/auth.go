@@ -658,7 +658,8 @@ func (auth *authenticationService) validateAndRefreshSessionWithTokens(ctx conte
 }
 
 func (auth *authenticationService) ExchangeAccessKey(ctx context.Context, accessKey string, loginOptions *descope.AccessKeyLoginOptions) (success bool, SessionToken *descope.Token, err error) {
-	httpResponse, err := auth.client.DoPostRequest(ctx, api.Routes.ExchangeAccessKey(), newExchangeAccessKeyBody(loginOptions), &api.HTTPRequest{}, accessKey)
+	// A third bearer part is read as the access key
+	httpResponse, err := auth.client.DoPostRequest(ctx, api.Routes.ExchangeAccessKey(), newExchangeAccessKeyBody(loginOptions), &api.HTTPRequest{OmitManagementKey: true}, accessKey)
 	if err != nil {
 		logger.LogError("Failed to exchange access key", err)
 		return false, nil, err
@@ -876,6 +877,12 @@ func ValidateJWT(JWT string, publicKeysProvider *Provider) (*descope.Token, erro
 			return nil, err
 		}
 	}
+	// Only compact serialization is accepted. In JWS JSON serialization the signature
+	// covers only the embedded payload, while the parser builds claims from the whole
+	// (unsigned) JSON document.
+	if isJSONSerialized(signedJWT) {
+		return nil, descope.ErrInvalidToken.WithMessage("Token is not in compact serialization")
+	}
 	leeway := getLeeway(publicKeysProvider)
 	token, err := jwt.Parse([]byte(signedJWT), jwt.WithKeyProvider(publicKeysProvider), jwt.WithVerify(true), jwt.WithValidate(true), jwt.WithAcceptableSkew(leeway))
 	if err != nil {
@@ -901,6 +908,12 @@ func ValidateJWT(JWT string, publicKeysProvider *Provider) (*descope.Token, erro
 	}
 
 	return descope.NewToken(JWT, token), err
+}
+
+// isJSONSerialized reports whether s is a JWS/JWT in JSON serialization rather than
+// compact form. Compact JWS/JWE are base64url and never start with '{'.
+func isJSONSerialized(s string) bool {
+	return strings.HasPrefix(strings.TrimSpace(s), "{")
 }
 
 func (auth *authenticationsBase) validateJWT(JWT string) (*descope.Token, error) {

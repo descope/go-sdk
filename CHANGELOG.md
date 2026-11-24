@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.41.1](https://github.com/descope/go-sdk/compare/v1.41.0...v1.41.1) (2026-11-24)
+
+
+### Bug Fixes
+
+* **auth:** reject session tokens and DPoP proofs that are not in compact serialization ([GHSA-8522-j4cv-7h27](https://github.com/descope/go-sdk/security/advisories/GHSA-8522-j4cv-7h27)) ([3633f6e](https://github.com/descope/go-sdk/commit/3633f6e6d))
+* **deps:** update module github.com/descope/go-sdk to v1.41.0 ([#942](https://github.com/descope/go-sdk/issues/942)) ([35679d1](https://github.com/descope/go-sdk/commit/35679d113d9f68e4661d7c4be426f8b840663f30))
+
+## [1.41.0](https://github.com/descope/go-sdk/compare/v1.40.0...v1.41.0) (2026-11-23)
+
+
+### Features
+
+* optional Strict on tenant and user write requests ([#936](https://github.com/descope/go-sdk/issues/936)) ([b243224](https://github.com/descope/go-sdk/commit/b2432243b790962c5c4b690763c81d3092f2fe40))
+* **tenant:** configure SSO Setup Suite settings on tenant settings ([#940](https://github.com/descope/go-sdk/issues/940)) ([387934a](https://github.com/descope/go-sdk/commit/387934abb27259f875005a1a634c923ae5e5554b))
+
+
+### Bug Fixes
+
+* **auth:** reject refresh tokens used as session tokens ([#937](https://github.com/descope/go-sdk/issues/937)) ([2e7e767](https://github.com/descope/go-sdk/commit/2e7e7671e8163473f3f85cac20906f0991c817a5))
+* **deps:** update module github.com/descope/go-sdk to v1.40.0 ([#933](https://github.com/descope/go-sdk/issues/933)) ([34b886a](https://github.com/descope/go-sdk/commit/34b886aa3ab58078913a9f3cbc2b94419b57542b))
+* omit auth management key when exchanging an access key ([#938](https://github.com/descope/go-sdk/issues/938)) ([da4bec0](https://github.com/descope/go-sdk/commit/da4bec02e4a3d9f9a36de4e48fbb1c33863858ca))
+* report go sdk build version and checksum headers ([#941](https://github.com/descope/go-sdk/issues/941)) ([28f8e7e](https://github.com/descope/go-sdk/commit/28f8e7e79920f9d48a38a64184405cdf3fd75a6d))
+
 ## [1.40.0](https://github.com/descope/go-sdk/compare/v1.39.1...v1.40.0) (2026-11-11)
 
 
