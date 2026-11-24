@@ -62,6 +62,7 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 		ExternalRequestID:    config.ExternalRequestID,
 		CertificateVerify:    config.CertificateVerify,
 		RequestTimeout:       config.RequestTimeout,
+		MinTLSVersion:        config.MinTLSVersion,
 	})
 
 	conf := &auth.AuthParams{
@@ -90,6 +91,7 @@ func NewWithConfig(config *Config) (*DescopeClient, error) {
 		ExternalRequestID:    config.ExternalRequestID,
 		CertificateVerify:    config.CertificateVerify,
 		RequestTimeout:       config.RequestTimeout,
+		MinTLSVersion:        config.MinTLSVersion,
 	})
 
 	if config.ManagementKey != "" {

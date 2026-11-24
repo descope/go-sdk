@@ -2211,7 +2211,7 @@ func NewClient(conf ClientParams) *Client {
 			// Ensure TLS config exists with MinVersion set (satisfies gosec G402)
 			if t.TLSClientConfig == nil {
 				t.TLSClientConfig = &tls.Config{MinVersion: minTLSVersion} // #nosec G402
-			} else {
+			} else if conf.MinTLSVersion != 0 || t.TLSClientConfig.MinVersion < minTLSVersion {
 				t.TLSClientConfig.MinVersion = minTLSVersion
 			}
 			t.TLSClientConfig.InsecureSkipVerify = conf.CertificateVerify.SkipVerifyValue(conf.BaseURL)
