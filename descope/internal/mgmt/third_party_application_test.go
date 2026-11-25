@@ -890,3 +890,73 @@ func TestThirdPartyApplicationLoadReturnsForceDpop(t *testing.T) {
 		ForceDpop:  res.ForceDpop,
 	}))
 }
+
+func TestThirdPartyApplicationAgenticAndOwnerSentWhenSet(t *testing.T) {
+	var bodies []map[string]any
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		bodies = append(bodies, req)
+	}, map[string]any{"id": "qux", "cleartext": "secret"}))
+
+	_, _, err := mgmt.ThirdPartyApplication().CreateApplication(context.Background(), &descope.ThirdPartyApplicationRequest{Name: "agent", Agentic: true, OwnerID: "owner@example.com"})
+	require.NoError(t, err)
+	// An update that never sets them must not send them, or it would reset the stored values.
+	err = mgmt.ThirdPartyApplication().UpdateApplication(context.Background(), &descope.ThirdPartyApplicationRequest{ID: "id1", Name: "agent"})
+	require.NoError(t, err)
+
+	require.Len(t, bodies, 2)
+	assert.Equal(t, true, bodies[0]["agentic"])
+	assert.Equal(t, "owner@example.com", bodies[0]["ownerId"])
+	assert.NotContains(t, bodies[1], "agentic")
+	assert.NotContains(t, bodies[1], "ownerId")
+}
+
+func TestThirdPartyApplicationPatchAgenticAndOwner(t *testing.T) {
+	var bodies []map[string]any
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		bodies = append(bodies, req)
+	}, map[string]any{}))
+
+	off, noOwner := false, ""
+	err := mgmt.ThirdPartyApplication().PatchApplication(context.Background(), &descope.PatchThirdPartyApplicationRequest{ID: "id1", Agentic: &off, OwnerID: &noOwner})
+	require.NoError(t, err)
+	err = mgmt.ThirdPartyApplication().PatchApplication(context.Background(), &descope.PatchThirdPartyApplicationRequest{ID: "id1"})
+	require.NoError(t, err)
+
+	require.Len(t, bodies, 2)
+	assert.Equal(t, false, bodies[0]["agentic"])
+	assert.Equal(t, "", bodies[0]["ownerId"])
+	assert.NotContains(t, bodies[1], "agentic")
+	assert.NotContains(t, bodies[1], "ownerId")
+}
+
+func TestAllThirdPartyApplicationsLoadByOwnerAndAgentic(t *testing.T) {
+	response := map[string]any{
+		"apps":  []map[string]any{{"id": "id1", "name": "agent", "agentic": true, "ownerId": "U1", "ownerDisplayName": "Ada"}},
+		"total": 1,
+	}
+	var body map[string]any
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		require.NoError(t, helpers.ReadBody(r, &body))
+	}, response))
+
+	agentic := true
+	apps, total, err := mgmt.ThirdPartyApplication().LoadAllApplications(context.Background(), &descope.ThirdPartyApplicationSearchOptions{OwnerID: "U1", Agentic: &agentic})
+	require.NoError(t, err)
+	assert.Equal(t, "U1", body["ownerId"])
+	assert.Equal(t, true, body["agentic"])
+	require.Equal(t, 1, total)
+	require.Len(t, apps, 1)
+	assert.True(t, apps[0].Agentic)
+	assert.Equal(t, "U1", apps[0].OwnerID)
+	assert.Equal(t, "Ada", apps[0].OwnerDisplayName)
+
+	body = nil
+	_, _, err = mgmt.ThirdPartyApplication().LoadAllApplications(context.Background(), nil)
+	require.NoError(t, err)
+	assert.NotContains(t, body, "ownerId")
+	assert.NotContains(t, body, "agentic")
+}

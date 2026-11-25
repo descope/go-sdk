@@ -119,6 +119,12 @@ func (s *thirdPartyApplication) LoadAllApplications(ctx context.Context, options
 		"page":  options.Page,
 		"limit": options.Limit,
 	}
+	if options.OwnerID != "" {
+		req["ownerId"] = options.OwnerID
+	}
+	if options.Agentic != nil {
+		req["agentic"] = *options.Agentic
+	}
 
 	res, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationLoadAll(), req, nil, "")
 	if err != nil {
@@ -323,7 +329,7 @@ func (s *thirdPartyApplication) SearchConsents(ctx context.Context, consentReque
 }
 
 func makeCreateUpdateThirdPartyApplicationRequest(appRequest *descope.ThirdPartyApplicationRequest) map[string]any {
-	return map[string]any{
+	req := map[string]any{
 		"id":                   appRequest.ID,
 		"name":                 appRequest.Name,
 		"description":          appRequest.Description,
@@ -339,6 +345,15 @@ func makeCreateUpdateThirdPartyApplicationRequest(appRequest *descope.ThirdParty
 		"clientType":           appRequest.ClientType,
 		"forceDpop":            appRequest.ForceDpop,
 	}
+	// Sent only when set: on update an absent field keeps the stored value, while false or an empty owner would
+	// reset it for callers that never set these fields.
+	if appRequest.Agentic {
+		req["agentic"] = true
+	}
+	if appRequest.OwnerID != "" {
+		req["ownerId"] = appRequest.OwnerID
+	}
+	return req
 }
 
 // makePatchThirdPartyApplicationRequest sends only the fields the caller set.
@@ -384,6 +399,12 @@ func makePatchThirdPartyApplicationRequest(appRequest *descope.PatchThirdPartyAp
 	}
 	if appRequest.ForceDpop != nil {
 		res["forceDpop"] = *appRequest.ForceDpop
+	}
+	if appRequest.Agentic != nil {
+		res["agentic"] = *appRequest.Agentic
+	}
+	if appRequest.OwnerID != nil {
+		res["ownerId"] = *appRequest.OwnerID
 	}
 	return res
 }

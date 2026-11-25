@@ -2125,6 +2125,13 @@ type ThirdPartyApplication struct {
 	ClientType string `json:"clientType,omitempty"`
 	// ForceDpop reports whether a valid DPoP proof is required at the token endpoint.
 	ForceDpop bool `json:"forceDpop,omitempty"`
+	// Agentic reports whether the application is a client in the Agentic Identity Hub.
+	Agentic bool `json:"agentic,omitempty"`
+	// OwnerID is the user ID of the project user who owns the application, or empty when no project user owns it.
+	OwnerID string `json:"ownerId,omitempty"`
+	// OwnerDisplayName is the owner as the console shows it: the owner's name, or else their email, login ID or
+	// user ID. When OwnerID is empty it names whoever created the application, if known.
+	OwnerDisplayName string `json:"ownerDisplayName,omitempty"`
 }
 
 type ThirdPartyApplicationRequest struct {
@@ -2148,6 +2155,13 @@ type ThirdPartyApplicationRequest struct {
 	ClientType string `json:"clientType,omitempty"`
 	// ForceDpop requires a valid DPoP proof at the token endpoint. Only a "confidential" or "public" ClientType may require it.
 	ForceDpop bool `json:"forceDpop,omitempty"`
+	// Agentic makes the application a client in the Agentic Identity Hub, the same as creating it there. On update,
+	// false leaves the stored value; use PatchApplication to turn it off.
+	Agentic bool `json:"agentic,omitempty"`
+	// OwnerID sets the project user who owns the application, given as a user ID or a login ID. On create it
+	// defaults to the calling user when the request is authenticated as a project user. On update, empty leaves the
+	// stored owner; use PatchApplication to remove it.
+	OwnerID string `json:"ownerId,omitempty"`
 }
 
 type PatchThirdPartyApplicationRequest struct {
@@ -2170,15 +2184,24 @@ type PatchThirdPartyApplicationRequest struct {
 	ClientType *string `json:"clientType,omitempty"`
 	// ForceDpop requires a valid DPoP proof at the token endpoint. Only a "confidential" or "public" ClientType may require it.
 	ForceDpop *bool `json:"forceDpop,omitempty"`
+	// Agentic makes the application a client in the Agentic Identity Hub (true) or removes it from there (false).
+	Agentic *bool `json:"agentic,omitempty"`
+	// OwnerID sets the project user who owns the application, given as a user ID or a login ID. An empty string
+	// removes the owner.
+	OwnerID *string `json:"ownerId,omitempty"`
 }
 
 // Options for loading third party applications
 //
 // Page - allows to paginate over the results. Pages start at 0 and must be non-negative.
 // Limit - limits the number of returned applications. Leave at 0 to return the default amount.
+// OwnerID - returns only the applications owned by this project user (user ID). Leave empty for every owner.
+// Agentic - when set, returns only Agentic Identity Hub clients (true) or only applications that are not (false).
 type ThirdPartyApplicationSearchOptions struct {
-	Page  int32 `json:"page"`
-	Limit int32 `json:"limit"`
+	Page    int32  `json:"page"`
+	Limit   int32  `json:"limit"`
+	OwnerID string `json:"ownerId,omitempty"`
+	Agentic *bool  `json:"agentic,omitempty"`
 }
 
 type ThirdPartyApplicationConsent struct {
