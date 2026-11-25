@@ -1291,8 +1291,8 @@ type ThirdPartyApplication interface {
 	// account's default applies; the created app's ClientType shows which.
 	// ForceDpop: Optional, requires a DPoP proof at the token endpoint. Needs a ClientType.
 	// Agentic: Optional, makes the application a client in the Agentic Identity Hub.
-	// OwnerID: Optional project user (user ID or login ID) who owns the application. Defaults to the calling
-	// user when the request is authenticated as a project user.
+	// CreatedBy: Optional project user (user ID or login ID) who owns the application; the application stores
+	// that user's display name. Defaults to the caller.
 	//
 	// The argument appRequest.Name must be unique per project.
 	CreateApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) (id string, secret string, err error)
@@ -1300,8 +1300,8 @@ type ThirdPartyApplication interface {
 	// Update an existing third party application.
 	//
 	// IMPORTANT: All parameters are required and will override whatever value is currently
-	// set in the existing sso application. Use carefully. The exceptions are Agentic and OwnerID:
-	// left unset they keep the stored value; use PatchApplication to turn Agentic off or remove the owner.
+	// set in the existing sso application. Use carefully. The exceptions are Agentic and CreatedBy:
+	// left unset they keep the stored value; use PatchApplication to turn Agentic off or clear CreatedBy.
 	UpdateApplication(ctx context.Context, appRequest *descope.ThirdPartyApplicationRequest) error
 
 	// Patch an existing third party application.

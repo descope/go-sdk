@@ -119,8 +119,8 @@ func (s *thirdPartyApplication) LoadAllApplications(ctx context.Context, options
 		"page":  options.Page,
 		"limit": options.Limit,
 	}
-	if options.OwnerID != "" {
-		req["ownerId"] = options.OwnerID
+	if options.CreatedBy != "" {
+		req["createdBy"] = options.CreatedBy
 	}
 	if options.Agentic != nil {
 		req["agentic"] = *options.Agentic
@@ -345,13 +345,13 @@ func makeCreateUpdateThirdPartyApplicationRequest(appRequest *descope.ThirdParty
 		"clientType":           appRequest.ClientType,
 		"forceDpop":            appRequest.ForceDpop,
 	}
-	// Sent only when set: on update an absent field keeps the stored value, while false or an empty owner would
-	// reset it for callers that never set these fields.
+	// Sent only when set: on update an absent field keeps the stored value, while false or an empty createdBy
+	// would reset it for callers that never set these fields.
 	if appRequest.Agentic {
 		req["agentic"] = true
 	}
-	if appRequest.OwnerID != "" {
-		req["ownerId"] = appRequest.OwnerID
+	if appRequest.CreatedBy != "" {
+		req["createdBy"] = appRequest.CreatedBy
 	}
 	return req
 }
@@ -403,8 +403,8 @@ func makePatchThirdPartyApplicationRequest(appRequest *descope.PatchThirdPartyAp
 	if appRequest.Agentic != nil {
 		res["agentic"] = *appRequest.Agentic
 	}
-	if appRequest.OwnerID != nil {
-		res["ownerId"] = *appRequest.OwnerID
+	if appRequest.CreatedBy != nil {
+		res["createdBy"] = *appRequest.CreatedBy
 	}
 	return res
 }

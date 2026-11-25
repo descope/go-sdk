@@ -2071,15 +2071,16 @@ apps, total, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadAll
     Limit: 100
 })
 
-// Mark an application as an Agentic Identity Hub client and assign its owner (a user ID or login ID)
+// Mark an application as an Agentic Identity Hub client and set its owner (a user ID or login ID);
+// the application's CreatedBy becomes that user's display name
 agentic := true
 owner := "owner@example.com"
-err = tc.DescopeClient().Management.ThirdPartyApplication().PatchApplication(context.TODO(), &descope.PatchThirdPartyApplicationRequest{ID: "my-id", Agentic: &agentic, OwnerID: &owner})
+err = tc.DescopeClient().Management.ThirdPartyApplication().PatchApplication(context.TODO(), &descope.PatchThirdPartyApplicationRequest{ID: "my-id", Agentic: &agentic, CreatedBy: &owner})
 
-// Load the Agentic Identity Hub clients a user owns
+// Load the Agentic Identity Hub clients owned by a user, by the display name shown in CreatedBy
 apps, total, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadAllApplications(context.Background(), &descope.ThirdPartyApplicationSearchOptions{
-    OwnerID: "owner-user-id",
-    Agentic: &agentic,
+    CreatedBy: "Ada Lovelace",
+    Agentic:   &agentic,
 })
 
 // Delete a third party application.
