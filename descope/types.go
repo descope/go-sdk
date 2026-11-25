@@ -2157,8 +2157,9 @@ type ThirdPartyApplicationRequest struct {
 	// false leaves the stored value; use PatchApplication to turn it off.
 	Agentic bool `json:"agentic,omitempty"`
 	// CreatedBy sets the project user who owns the application (the console's Owner), given as a user ID or a login
-	// ID; the application stores that user's display name. On create it defaults to the caller. On update, empty
-	// leaves the stored value; use PatchApplication to clear it.
+	// ID; the application stores that user's display name. Setting it needs a management key with the users read
+	// role. On create it defaults to the caller. On update, empty leaves the stored value; use PatchApplication to
+	// clear it.
 	CreatedBy string `json:"createdBy,omitempty"`
 }
 
@@ -2185,7 +2186,8 @@ type PatchThirdPartyApplicationRequest struct {
 	// Agentic makes the application a client in the Agentic Identity Hub (true) or removes it from there (false).
 	Agentic *bool `json:"agentic,omitempty"`
 	// CreatedBy sets the project user who owns the application (the console's Owner), given as a user ID or a login
-	// ID; the application stores that user's display name. An empty string clears it.
+	// ID; the application stores that user's display name. Setting it needs a management key with the users read
+	// role. An empty string clears it.
 	CreatedBy *string `json:"createdBy,omitempty"`
 }
 
