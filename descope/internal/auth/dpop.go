@@ -132,8 +132,10 @@ func validateDPoPProof(proof, method, requestURL, accessToken, storedJKT string,
 		return descope.ErrInvalidToken.WithMessage("malformed DPoP JWT")
 	}
 	sigs := msg.Signatures()
+	// Unreachable today: a compact JWS carries exactly one signature, and the JSON forms are rejected above.
+	// Kept as a guard in case that check changes.
 	if len(sigs) != 1 {
-		return descope.ErrInvalidToken.WithMessage("expected exactly one JWS signature")
+		return descope.ErrInvalidToken.WithMessage("expected exactly one JWS signature") // notest
 	}
 	hdrs := sigs[0].ProtectedHeaders()
 

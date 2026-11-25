@@ -827,8 +827,7 @@ func TestValidateSessionWithRequest_DPoPBoundToken_WrongKey_Rejected(t *testing.
 	assert.False(t, ok)
 }
 
-// "expected exactly one JWS signature" — JWS JSON General Serialization with two signatures.
-// jws.Parse succeeds and returns len(sigs)==2, which must be rejected.
+// A JWS JSON General Serialization with two signatures is rejected before parsing, as a non-compact proof.
 func TestDPoP_MultipleSignatures_Rejected(t *testing.T) {
 	priv, _ := dpopNewKeyPair(t)
 	// Build a valid compact JWS then re-serialize it as JSON with 2 signature entries.
@@ -842,6 +841,7 @@ func TestDPoP_MultipleSignatures_Rejected(t *testing.T) {
 	)
 	err := validateDPoPProof(jwsJSON, "GET", dpopTestURL, dpopTestToken, "any-jkt", time.Now, nil)
 	require.Error(t, err)
+	assert.Contains(t, err.Error(), "compact serialization")
 }
 
 // "jwk must not contain a private key" — OKP (Ed25519) private key embedded in JWK header,
