@@ -46,6 +46,8 @@ type Config struct {
 	CertificateVerify api.CertificateVerifyMode
 	// RequestTimeout (optional, 60 seconds) - override the HTTP request timeout when using the default client.
 	RequestTimeout time.Duration
+	// MinTLSVersion (optional, tls.VersionTLS12) - minimum TLS version when using the default client.
+	MinTLSVersion uint16
 	// CustomDefaultHeaders (optional, nil) - add custom headers to all requests used to communicate with descope services.
 	CustomDefaultHeaders map[string]string
 	// ExternalRequestID (optional, nil) - External request ID, it will appear in audit logs, for tracking full path of a request.
