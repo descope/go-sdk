@@ -1,5 +1,20 @@
 # Changelog
 
+## [1.42.0](https://github.com/descope/go-sdk/compare/v1.41.1...v1.42.0) (2026-11-26)
+
+
+### Features
+
+* **mgmt:** agentic flag and createdBy owner on third party applications ([#947](https://github.com/descope/go-sdk/issues/947)) ([ac2a1ce](https://github.com/descope/go-sdk/commit/ac2a1ce895966fbce3d00331f1df3027fc21bc98))
+* **sso:** add accepted audiences to SAML SSO settings ([#944](https://github.com/descope/go-sdk/issues/944)) ([68013fa](https://github.com/descope/go-sdk/commit/68013fa7d8871ae6ab2e5f5c16b40c2724edb009))
+* **sso:** SAML single logout for tenant SSO configurations ([#939](https://github.com/descope/go-sdk/issues/939)) ([6d64311](https://github.com/descope/go-sdk/commit/6d64311e53683cbc969d9f8a292341cc4bc2261c))
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/descope/go-sdk to v1.41.1 ([#945](https://github.com/descope/go-sdk/issues/945)) ([948833e](https://github.com/descope/go-sdk/commit/948833ea4abc8da17a2b525cc53142a39021b9dc))
+* **sdk:** test untested paths, simplify regex, enforce tls 1.2+ ([#708](https://github.com/descope/go-sdk/issues/708)) ([220b39a](https://github.com/descope/go-sdk/commit/220b39aaed562f76b422286436fd371fa80936f9))
+
 ## [1.41.1](https://github.com/descope/go-sdk/compare/v1.41.0...v1.41.1) (2026-11-24)
 
 
