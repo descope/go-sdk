@@ -227,45 +227,60 @@ func (auth *authenticationService) WebAuthn() sdk.WebAuthn {
 }
 
 func (auth *authenticationService) Logout(request *http.Request, w http.ResponseWriter) error {
-	return auth.logout(request, w)
+	_, err := auth.logout(request, w, nil)
+	return err
 }
 
 func (auth *authenticationService) LogoutWithToken(refreshToken string, w http.ResponseWriter) error {
-	request := &http.Request{Header: http.Header{}}
-	request.AddCookie(&http.Cookie{Name: auth.conf.GetRefreshCookieName(), Value: refreshToken})
-	return auth.logout(request, w)
+	_, err := auth.LogoutWithTokenAndOptions(refreshToken, w, nil)
+	return err
 }
 
-func (auth *authenticationService) logout(request *http.Request, w http.ResponseWriter) error {
+func (auth *authenticationService) LogoutWithOptions(request *http.Request, w http.ResponseWriter, options *descope.LogoutOptions) (*descope.LogoutResponse, error) {
+	return auth.logout(request, w, options)
+}
+
+func (auth *authenticationService) LogoutWithTokenAndOptions(refreshToken string, w http.ResponseWriter, options *descope.LogoutOptions) (*descope.LogoutResponse, error) {
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: auth.conf.GetRefreshCookieName(), Value: refreshToken})
+	return auth.logout(request, w, options)
+}
+
+func (auth *authenticationService) logout(request *http.Request, w http.ResponseWriter, options *descope.LogoutOptions) (*descope.LogoutResponse, error) {
 	if request == nil {
-		return utils.NewInvalidArgumentError("request")
+		return nil, utils.NewInvalidArgumentError("request")
 	}
 
 	_, refreshToken := auth.provideTokens(request)
 	if refreshToken == "" {
 		logger.LogDebug("Unable to find tokens from cookies")
-		return descope.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
+		return nil, descope.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
 	}
 
 	_, err := auth.validateJWT(refreshToken)
 	if err != nil {
 		logger.LogDebug("Invalid refresh token")
-		return descope.ErrRefreshToken.WithMessage("Invalid refresh token")
+		return nil, descope.ErrRefreshToken.WithMessage("Invalid refresh token")
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(request.Context(), api.Routes.Logout(), nil, &api.HTTPRequest{}, refreshToken)
+	// nil options send no body, as before options existed
+	httpResponse, err := auth.client.DoPostRequest(request.Context(), api.Routes.Logout(), options, &api.HTTPRequest{}, refreshToken)
 	if err != nil {
-		return err
+		return nil, err
+	}
+	res, err := extractLogoutResponse(httpResponse.BodyStr, options)
+	if err != nil {
+		return nil, err
 	}
 	if w == nil {
-		return nil
+		return res, nil
 	}
 
 	cookies := httpResponse.Res.Cookies()
 
 	jwtResponse, err := auth.extractJWTResponse(httpResponse.BodyStr)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if jwtResponse == nil {
 		jwtResponse = &descope.JWTResponse{}
@@ -286,49 +301,64 @@ func (auth *authenticationService) logout(request *http.Request, w http.Response
 	}, jwtResponse))
 
 	setCookies(cookies, w)
-	return nil
+	return res, nil
 }
 
 func (auth *authenticationService) LogoutAll(request *http.Request, w http.ResponseWriter) error {
-	return auth.logoutAll(request, w)
+	_, err := auth.logoutAll(request, w, nil)
+	return err
 }
 
 func (auth *authenticationService) LogoutAllWithToken(refreshToken string, w http.ResponseWriter) error {
-	request := &http.Request{Header: http.Header{}}
-	request.AddCookie(&http.Cookie{Name: auth.conf.GetRefreshCookieName(), Value: refreshToken})
-	return auth.logoutAll(request, w)
+	_, err := auth.LogoutAllWithTokenAndOptions(refreshToken, w, nil)
+	return err
 }
 
-func (auth *authenticationService) logoutAll(request *http.Request, w http.ResponseWriter) error {
+func (auth *authenticationService) LogoutAllWithOptions(request *http.Request, w http.ResponseWriter, options *descope.LogoutOptions) (*descope.LogoutResponse, error) {
+	return auth.logoutAll(request, w, options)
+}
+
+func (auth *authenticationService) LogoutAllWithTokenAndOptions(refreshToken string, w http.ResponseWriter, options *descope.LogoutOptions) (*descope.LogoutResponse, error) {
+	request := &http.Request{Header: http.Header{}}
+	request.AddCookie(&http.Cookie{Name: auth.conf.GetRefreshCookieName(), Value: refreshToken})
+	return auth.logoutAll(request, w, options)
+}
+
+func (auth *authenticationService) logoutAll(request *http.Request, w http.ResponseWriter, options *descope.LogoutOptions) (*descope.LogoutResponse, error) {
 	if request == nil {
-		return utils.NewInvalidArgumentError("request")
+		return nil, utils.NewInvalidArgumentError("request")
 	}
 
 	_, refreshToken := auth.provideTokens(request)
 	if refreshToken == "" {
 		logger.LogDebug("Unable to find tokens from cookies")
-		return descope.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
+		return nil, descope.ErrRefreshToken.WithMessage("Unable to find tokens from cookies")
 	}
 
 	_, err := auth.validateJWT(refreshToken)
 	if err != nil {
 		logger.LogDebug("Invalid refresh token")
-		return descope.ErrRefreshToken.WithMessage("Invalid refresh token")
+		return nil, descope.ErrRefreshToken.WithMessage("Invalid refresh token")
 	}
 
-	httpResponse, err := auth.client.DoPostRequest(request.Context(), api.Routes.LogoutAll(), nil, &api.HTTPRequest{}, refreshToken)
+	// nil options send no body, as before options existed
+	httpResponse, err := auth.client.DoPostRequest(request.Context(), api.Routes.LogoutAll(), options, &api.HTTPRequest{}, refreshToken)
 	if err != nil {
-		return err
+		return nil, err
+	}
+	res, err := extractLogoutResponse(httpResponse.BodyStr, options)
+	if err != nil {
+		return nil, err
 	}
 	if w == nil {
-		return nil
+		return res, nil
 	}
 
 	cookies := httpResponse.Res.Cookies()
 
 	jwtResponse, err := auth.extractJWTResponse(httpResponse.BodyStr)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if jwtResponse == nil {
 		jwtResponse = &descope.JWTResponse{}
@@ -349,7 +379,21 @@ func (auth *authenticationService) logoutAll(request *http.Request, w http.Respo
 	}, jwtResponse))
 
 	setCookies(cookies, w)
-	return nil
+	return res, nil
+}
+
+// extractLogoutResponse reads the SSO logout URL from a logout response. A logout without options never
+// gets one, so its body isn't read, as before options existed.
+func extractLogoutResponse(bodyStr string, options *descope.LogoutOptions) (*descope.LogoutResponse, error) {
+	res := &descope.LogoutResponse{}
+	if options == nil || bodyStr == "" {
+		return res, nil
+	}
+	if err := utils.Unmarshal([]byte(bodyStr), res); err != nil {
+		logger.LogError("Unable to parse logout response", err)
+		return nil, err
+	}
+	return res, nil
 }
 
 func (auth *authenticationService) Me(request *http.Request) (*descope.UserResponse, error) {

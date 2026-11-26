@@ -475,6 +475,25 @@ type Authentication interface {
 	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
 	LogoutAllWithToken(refreshToken string, w http.ResponseWriter) error
 
+	// LogoutWithOptions - Like Logout, with options. Set options.SSOLogout to also log the user out of their
+	// SSO identity provider: when the session signed in through a SAML SSO configuration with single logout
+	// on, the response's SSOLogoutURL is set, and the browser must be sent there.
+	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
+	LogoutWithOptions(request *http.Request, w http.ResponseWriter, options *descope.LogoutOptions) (*descope.LogoutResponse, error)
+
+	// LogoutWithTokenAndOptions - Like LogoutWithToken, with options. See LogoutWithOptions.
+	LogoutWithTokenAndOptions(refreshToken string, w http.ResponseWriter, options *descope.LogoutOptions) (*descope.LogoutResponse, error)
+
+	// LogoutAllWithOptions - Like LogoutAll, with options. Set options.SSOLogout to also log the user out of
+	// their SSO identity provider for the current session's login: when the session signed in through a SAML
+	// SSO configuration with single logout on, the response's SSOLogoutURL is set, and the browser must be
+	// sent there.
+	// Use the ResponseWriter (optional) to apply the cookies to the response automatically.
+	LogoutAllWithOptions(request *http.Request, w http.ResponseWriter, options *descope.LogoutOptions) (*descope.LogoutResponse, error)
+
+	// LogoutAllWithTokenAndOptions - Like LogoutAllWithToken, with options. See LogoutAllWithOptions.
+	LogoutAllWithTokenAndOptions(refreshToken string, w http.ResponseWriter, options *descope.LogoutOptions) (*descope.LogoutResponse, error)
+
 	// Me - Use to retrieve current session user details. The request requires a valid refresh token.
 	// returns the user details or error if the refresh token is not valid.
 	Me(request *http.Request) (*descope.UserResponse, error)

@@ -122,6 +122,7 @@ func (s *sso) ConfigureSAMLSettings(ctx context.Context, tenantID string, settin
 		req["settings"].(map[string]any)["jitDisabled"] = *settings.JITDisabled
 	}
 	addSAMLAcceptedAudiences(req["settings"].(map[string]any), settings.AcceptedAudiences)
+	addSAMLSingleLogoutSettings(req["settings"].(map[string]any), settings.SingleLogoutEnabled, settings.IdpSingleLogoutURL)
 	if clearsDefaultSSORoles(settings.DefaultSSORoles) {
 		req["settings"].(map[string]any)["replaceDefaultSSORoles"] = true
 	}
@@ -194,6 +195,7 @@ func (s *sso) ConfigureSAMLSettingsByMetadata(ctx context.Context, tenantID stri
 		req["settings"].(map[string]any)["jitDisabled"] = *settings.JITDisabled
 	}
 	addSAMLAcceptedAudiences(req["settings"].(map[string]any), settings.AcceptedAudiences)
+	addSAMLSingleLogoutSettings(req["settings"].(map[string]any), settings.SingleLogoutEnabled, settings.IdpSingleLogoutURL)
 	if clearsDefaultSSORoles(settings.DefaultSSORoles) {
 		req["settings"].(map[string]any)["replaceDefaultSSORoles"] = true
 	}
@@ -211,6 +213,17 @@ func addSAMLAcceptedAudiences(settings map[string]any, acceptedAudiences []strin
 	}
 	settings["acceptedAudiences"] = acceptedAudiences
 	settings["replaceAcceptedAudiences"] = true
+}
+
+// addSAMLSingleLogoutSettings sends the single logout settings only when they are set. Both are optional
+// on the wire like authenticationOnly: omitting one keeps the stored value.
+func addSAMLSingleLogoutSettings(settings map[string]any, singleLogoutEnabled *bool, idpSingleLogoutURL *string) {
+	if singleLogoutEnabled != nil {
+		settings["singleLogoutEnabled"] = *singleLogoutEnabled
+	}
+	if idpSingleLogoutURL != nil {
+		settings["idpSingleLogoutUrl"] = *idpSingleLogoutURL
+	}
 }
 
 func (s *sso) ConfigureSSORedirectURL(ctx context.Context, tenantID string, samlRedirectURL *string, oauthRedirectURL *string, ssoID string) error {

@@ -444,6 +444,81 @@ func TestSSOConfigureJITDisabled(t *testing.T) {
 	}
 }
 
+// The single logout settings are optional on the wire on both SAML saves: each is sent only when set, so
+// a caller that doesn't set them keeps the stored values, and false or an empty URL are sent as such.
+func TestSSOConfigureSAMLSingleLogout(t *testing.T) {
+	saves := map[string]func(mgmt *managementService, enabled *bool, idpURL *string) error{
+		"saml": func(mgmt *managementService, enabled *bool, idpURL *string) error {
+			return mgmt.SSO().ConfigureSAMLSettings(context.Background(), "abc", &descope.SSOSAMLSettings{
+				IdpURL:              "https://idp.example.com/sso",
+				IdpEntityID:         "entity-id",
+				IdpCert:             "cert",
+				SingleLogoutEnabled: enabled,
+				IdpSingleLogoutURL:  idpURL,
+			}, "", nil, "somessoid")
+		},
+		"saml metadata": func(mgmt *managementService, enabled *bool, idpURL *string) error {
+			return mgmt.SSO().ConfigureSAMLSettingsByMetadata(context.Background(), "abc", &descope.SSOSAMLSettingsByMetadata{
+				IdpMetadataURL:      "https://idp.example.com/metadata",
+				SingleLogoutEnabled: enabled,
+				IdpSingleLogoutURL:  idpURL,
+			}, "", nil, "somessoid")
+		},
+	}
+	on, off := true, false
+	sloURL, empty := "https://idp.example.com/slo", ""
+	cases := map[string]struct {
+		enabled *bool
+		idpURL  *string
+	}{
+		"on with url":   {&on, &sloURL},
+		"off and clear": {&off, &empty},
+		"nil":           {nil, nil},
+	}
+	for saveName, save := range saves {
+		for caseName, tc := range cases {
+			t.Run(saveName+"/"+caseName, func(t *testing.T) {
+				called := false
+				mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+					called = true
+					req := map[string]any{}
+					require.NoError(t, helpers.ReadBody(r, &req))
+					settings := req["settings"].(map[string]any)
+					if tc.enabled == nil {
+						require.NotContains(t, settings, "singleLogoutEnabled")
+					} else {
+						require.Equal(t, *tc.enabled, settings["singleLogoutEnabled"])
+					}
+					if tc.idpURL == nil {
+						require.NotContains(t, settings, "idpSingleLogoutUrl")
+					} else {
+						require.Equal(t, *tc.idpURL, settings["idpSingleLogoutUrl"])
+					}
+				}))
+				require.NoError(t, save(mgmt, tc.enabled, tc.idpURL))
+				require.True(t, called)
+			})
+		}
+	}
+}
+
+func TestSSOLoadSettingsDecodesSAMLSingleLogout(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, map[string]any{
+		"ssoId": "somessoid",
+		"saml": map[string]any{
+			"singleLogoutEnabled": true,
+			"idpSingleLogoutUrl":  "https://idp.example.com/slo",
+			"spSingleLogoutUrl":   "https://api.descope.com/v1/auth/saml/slo",
+		},
+	}))
+	res, err := mgmt.SSO().LoadSettings(context.Background(), "abc", "somessoid")
+	require.NoError(t, err)
+	require.NotNil(t, res.Saml)
+	assert.True(t, res.Saml.SingleLogoutEnabled)
+	assert.Equal(t, "https://idp.example.com/slo", res.Saml.IdpSingleLogoutURL)
+	assert.Equal(t, "https://api.descope.com/v1/auth/saml/slo", res.Saml.SpSingleLogoutURL)
+}
+
 func TestSSOLoadSettingsDecodesJITDisabled(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, map[string]any{
 		"ssoId":       "somessoid",

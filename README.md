@@ -843,6 +843,29 @@ invalidate all user's refresh tokens. After calling this function, you must inva
 descopeClient.Auth.LogoutAll(request, w)
 ```
 
+When the user signed in through a tenant's SAML SSO configuration with single logout on, you can also log them
+out of their SSO identity provider. Set `SSOLogout` in the logout options. The Descope session ends either way,
+and when there is a logout to do at the identity provider, the response's `SSOLogoutURL` is set: send the browser
+there. The identity provider logs the user out and sends the browser back to Descope, which redirects it to
+`RedirectURL` (it must be in the project's approved domains; empty uses the SSO configuration's redirect URL).
+`LogoutAllWithOptions` works the same way, and `LogoutWithTokenAndOptions` / `LogoutAllWithTokenAndOptions` take the
+refresh token directly.
+
+```go
+res, err := descopeClient.Auth.LogoutWithOptions(request, w, &descope.LogoutOptions{
+	SSOLogout:   true,
+	RedirectURL: "https://my-app.com/signed-out",
+})
+if err != nil {
+	// handle error
+}
+if res.SSOLogoutURL != "" {
+	http.Redirect(w, request, res.SSOLogoutURL, http.StatusFound)
+	return
+}
+http.Redirect(w, request, "/signed-out", http.StatusFound)
+```
+
 ### History
 
 You can get the current session user history.
@@ -1396,6 +1419,17 @@ samlSettings.JITDisabled = &jitDisabled
 // values of up to 1000 characters each. nil keeps the stored values, any other slice replaces them, and an
 // empty non-nil slice clears them. Read them back from SSOSAMLSettingsResponse.AcceptedAudiences.
 samlSettings.AcceptedAudiences = []string{"https://idp.com/audience"}
+
+// SAML single logout can be turned on per SSO configuration: a logout with LogoutOptions.SSOLogout then also logs
+// the user out of the IdP (see Logging Out). The IdP's single logout URL is taken from the IdP metadata, or set
+// IdpSingleLogoutURL for a configuration set up by hand (HTTP-Redirect binding). Both are pointers like
+// AuthenticationOnly: nil keeps the stored value, false turns single logout off and an empty URL clears it.
+// In the IdP, set up single logout with the configuration's SpSingleLogoutURL (from LoadSettings) and
+// Descope's SP signing certificate.
+singleLogoutEnabled := true
+idpSingleLogoutURL := "https://idp.com/slo"
+samlSettings.SingleLogoutEnabled = &singleLogoutEnabled
+samlSettings.IdpSingleLogoutURL = &idpSingleLogoutURL
 
 // You can create new SSO configuration (aka multi SSO)
 ssoID := "my-new-additional-sso-id"
