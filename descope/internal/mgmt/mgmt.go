@@ -46,6 +46,7 @@ type managementService struct {
 	scopeClaimMapping     sdk.ScopeClaimMapping
 	jwtTemplate           sdk.JWTTemplate
 	family                sdk.Family
+	mcpServer             sdk.MCPServer
 }
 
 func NewManagement(conf ManagementParams, provider *auth.Provider, c *api.Client) *managementService {
@@ -76,6 +77,7 @@ func NewManagement(conf ManagementParams, provider *auth.Provider, c *api.Client
 	service.scopeClaimMapping = &scopeClaimMapping{managementBase: base}
 	service.jwtTemplate = &jwtTemplate{managementBase: base}
 	service.family = &family{managementBase: base}
+	service.mcpServer = &mcpServer{managementBase: base}
 	return service
 }
 
@@ -202,6 +204,11 @@ func (mgmt *managementService) JWTTemplate() sdk.JWTTemplate {
 func (mgmt *managementService) Family() sdk.Family {
 	mgmt.ensureManagementKey()
 	return mgmt.family
+}
+
+func (mgmt *managementService) MCPServer() sdk.MCPServer {
+	mgmt.ensureManagementKey()
+	return mgmt.mcpServer
 }
 
 func (mgmt *managementService) ensureManagementKey() {
