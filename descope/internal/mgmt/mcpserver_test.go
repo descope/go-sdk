@@ -101,6 +101,32 @@ func TestMCPServerLoadError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestMCPServerLoadUpdateRoundTrip(t *testing.T) {
+	stored := map[string]any{
+		"id": "M1",
+		"sessionSettings": map[string]any{
+			"enabled": true, "enableInactivity": true, "inactivityTime": float64(30), "inactivityTimeUnit": "minutes",
+		},
+		"wellKnownCustomization": map[string]any{
+			"id": "W1", "version": float64(2), "enabled": true, "hiddenFields": []any{"a"},
+			"removedValues":   map[string]any{"grant_types_supported": map[string]any{"values": []any{"implicit"}}},
+			"scopesSupported": map[string]any{"extra": []any{"x"}, "excluded": []any{"y"}},
+			"claimsSupported": map[string]any{"extra": []any{"c"}},
+		},
+	}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		if server, ok := req["server"].(map[string]any); ok {
+			require.Equal(t, stored, server)
+		}
+	}, map[string]any{"server": stored}))
+	server, err := mgmt.MCPServer().Load(context.Background(), "M1")
+	require.NoError(t, err)
+	_, err = mgmt.MCPServer().Update(context.Background(), server)
+	require.NoError(t, err)
+}
+
 func TestMCPServerLoadAllSuccess(t *testing.T) {
 	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")

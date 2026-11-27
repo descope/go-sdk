@@ -2628,6 +2628,31 @@ type MCPSessionSettings struct {
 	KeyTemplateID                 string `json:"keyTemplateId,omitempty"`
 	KeySessionTokenExpiration     int32  `json:"keySessionTokenExpiration,omitempty"`
 	KeySessionTokenExpirationUnit string `json:"keySessionTokenExpirationUnit,omitempty"`
+	EnableInactivity              bool   `json:"enableInactivity,omitempty"`
+	InactivityTime                int32  `json:"inactivityTime,omitempty"`
+	InactivityTimeUnit            string `json:"inactivityTimeUnit,omitempty"`
+}
+
+// MCPWellKnownValueList is a list of values removed from a well-known document field.
+type MCPWellKnownValueList struct {
+	Values []string `json:"values,omitempty"`
+}
+
+// MCPWellKnownValueDelta adds or excludes values from a base well-known advisory list.
+type MCPWellKnownValueDelta struct {
+	Extra    []string `json:"extra,omitempty"`
+	Excluded []string `json:"excluded,omitempty"`
+}
+
+// MCPWellKnownCustomization customizes the well-known documents served for an MCP server.
+type MCPWellKnownCustomization struct {
+	ID              string                            `json:"id,omitempty"`
+	Version         int64                             `json:"version,omitempty"`
+	HiddenFields    []string                          `json:"hiddenFields,omitempty"`
+	RemovedValues   map[string]*MCPWellKnownValueList `json:"removedValues,omitempty"`
+	ScopesSupported *MCPWellKnownValueDelta           `json:"scopesSupported,omitempty"`
+	ClaimsSupported *MCPWellKnownValueDelta           `json:"claimsSupported,omitempty"`
+	Enabled         bool                              `json:"enabled,omitempty"`
 }
 
 // MCPCIMDDomainPolicy is a single client-identity-managed-domain policy entry.
@@ -2666,6 +2691,7 @@ type MCPServer struct {
 	ConsentFlowID                string                              `json:"consentFlowId,omitempty"`
 	ConsentFlowHostingURL        string                              `json:"consentFlowHostingURL,omitempty"`
 	ForceAddAllAuthorizationInfo bool                                `json:"forceAddAllAuthorizationInfo,omitempty"`
+	WellKnownCustomization       *MCPWellKnownCustomization          `json:"wellKnownCustomization,omitempty"`
 }
 
 // MCPServerClient is a client registered against an MCP server.
