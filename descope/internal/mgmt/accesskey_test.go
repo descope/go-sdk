@@ -333,3 +333,13 @@ func TestAccessKeyDeleteBatchError(t *testing.T) {
 	err := mgmt.AccessKey().DeleteBatch(context.Background(), nil)
 	require.Error(t, err)
 }
+
+func TestSearchAllAccessKeysSendsText(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "ak", req["text"])
+	}, map[string]any{"keys": []any{}}))
+	_, err := mgmt.AccessKey().SearchAll(context.Background(), &descope.AccessKeysSearchOptions{Text: "ak"})
+	require.NoError(t, err)
+}

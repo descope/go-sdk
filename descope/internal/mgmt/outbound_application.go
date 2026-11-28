@@ -95,7 +95,6 @@ func makeCreateUpdateOutboundApplicationRequest(app *descope.OutboundApp) map[st
 		"id":                     app.ID,
 		"name":                   app.Name,
 		"description":            app.Description,
-		"templateId":             app.TemplateID,
 		"clientId":               app.ClientID,
 		"logo":                   app.Logo,
 		"discoveryUrl":           app.DiscoveryURL,

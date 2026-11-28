@@ -2560,7 +2560,7 @@ func TestGenerateMagicLinkForTestUserSuccess(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, loginID, req["loginId"])
 		require.Equal(t, string(descope.MethodSMS), req["deliveryMethod"])
-		require.Equal(t, URI, req["URI"])
+		require.Equal(t, URI, req["redirectUrl"])
 		b, err := utils.Marshal(req["loginOptions"])
 		require.NoError(t, err)
 		var loginOptionsReq descope.LoginOptions
@@ -2593,7 +2593,7 @@ func TestGenerateMagicLinkForTestUserNoLoginID(t *testing.T) {
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, loginID, req["loginId"])
 		require.Equal(t, string(descope.MethodSMS), req["deliveryMethod"])
-		require.Equal(t, URI, req["URI"])
+		require.Equal(t, URI, req["redirectUrl"])
 		require.Equal(t, true, req["crossDevice"])
 	}, response))
 	resLink, err := m.User().GenerateMagicLinkForTestUser(context.Background(), descope.MethodSMS, "", URI, nil)
@@ -2623,7 +2623,7 @@ func TestGenerateEnchantedLinkForTestUserSuccess(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, loginID, req["loginId"])
-		require.Equal(t, URI, req["URI"])
+		require.Equal(t, URI, req["redirectUrl"])
 		b, err := utils.Marshal(req["loginOptions"])
 		require.NoError(t, err)
 		var loginOptionsReq descope.LoginOptions
@@ -2657,7 +2657,7 @@ func TestGenerateEnchantedLinkForTestUserNoLoginID(t *testing.T) {
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
 		require.Equal(t, loginID, req["loginId"])
-		require.Equal(t, URI, req["URI"])
+		require.Equal(t, URI, req["redirectUrl"])
 	}, response))
 	resLink, resPendingRef, err := m.User().GenerateEnchantedLinkForTestUser(context.Background(), "", URI, nil)
 	require.ErrorIs(t, err, descope.ErrInvalidArguments)

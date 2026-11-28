@@ -1462,12 +1462,12 @@ type generateOTPForTestUserRequestBody struct {
 type generateMagicLinkForTestUserRequestBody struct {
 	*generateForTestUserRequestBody `json:",inline"`
 	DeliveryMethod                  string `json:"deliveryMethod,omitempty"`
-	URI                             string `json:"URI,omitempty"`
+	URI                             string `json:"redirectUrl,omitempty"`
 }
 
 type generateEnchantedLinkForTestUserRequestBody struct {
 	*generateForTestUserRequestBody `json:",inline"`
-	URI                             string `json:"URI,omitempty"`
+	URI                             string `json:"redirectUrl,omitempty"`
 }
 
 func makeGenerateOTPForTestUserRequestBody(method descope.DeliveryMethod, loginID string, loginOptions *descope.LoginOptions) *generateOTPForTestUserRequestBody {

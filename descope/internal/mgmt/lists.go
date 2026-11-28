@@ -22,9 +22,6 @@ func (l *lists) Create(ctx context.Context, request *descope.ListRequest) (*desc
 	if request.Name == "" {
 		return nil, utils.NewInvalidArgumentError("name")
 	}
-	if request.Type == "" {
-		return nil, utils.NewInvalidArgumentError("type")
-	}
 	res, err := l.client.DoPostRequest(ctx, api.Routes.ManagementListCreate(), request, nil, "")
 	if err != nil {
 		return nil, err

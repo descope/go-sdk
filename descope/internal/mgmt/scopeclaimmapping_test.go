@@ -73,3 +73,24 @@ func TestScopeClaimMappingDeleteError(t *testing.T) {
 	err := mgmt.ScopeClaimMapping().Delete(context.Background())
 	require.Error(t, err)
 }
+
+func TestScopeClaimMappingClaimTargetsRoundTrip(t *testing.T) {
+	mappings := []*descope.ScopeClaimMappingEntry{{
+		Scope:                "profile",
+		Claims:               map[string]string{"name": "{{user.name}}"},
+		ClaimTargets:         map[string]*descope.ClaimTokenTargets{"name": {Tokens: []string{"idToken"}}},
+		AddToNewApplications: true,
+	}}
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		entry := req["mappings"].([]any)[0].(map[string]any)
+		assert.Equal(t, true, entry["addToNewApplications"])
+		assert.Equal(t, map[string]any{"name": map[string]any{"tokens": []any{"idToken"}}}, entry["claimTargets"])
+	}))
+	require.NoError(t, mgmt.ScopeClaimMapping().Set(context.Background(), mappings))
+	mgmt = newTestMgmt(nil, helpers.DoOkWithBody(nil, map[string]any{"mappings": mappings}))
+	res, err := mgmt.ScopeClaimMapping().Get(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, mappings, res)
+}

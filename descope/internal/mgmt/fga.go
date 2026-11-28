@@ -218,6 +218,7 @@ func (f *fga) SearchMappableResources(ctx context.Context, tenantID string, reso
 		return nil, utils.NewInvalidArgumentError("tenantID")
 	}
 
+	// The server accepts no queries but then always returns nothing.
 	if len(resourcesQueries) == 0 {
 		return nil, utils.NewInvalidArgumentError("resourcesQueries")
 	}

@@ -350,6 +350,8 @@ type SSOTenantSettingsResponse struct {
 	Saml   *SSOSAMLSettingsResponse `json:"saml,omitempty"`
 	Oidc   *SSOOIDCSettings         `json:"oidc,omitempty"`
 	SSOID  string                   `json:"ssoId,omitempty"`
+	// Name is the SSO configuration's display name; empty for the tenant's default configuration.
+	Name string `json:"name,omitempty"`
 	// AuthenticationOnly marks the configuration as verifying identity only: a login through it
 	// creates no user and issues no session. This is the field to read on a load; the one nested
 	// under Oidc is write-only and the server never sets it.
@@ -1242,7 +1244,7 @@ type SSOApplication struct {
 	AppType       string                       `json:"appType"`
 	SAMLSettings  *SSOApplicationSAMLSettings  `json:"samlSettings"`
 	OIDCSettings  *SSOApplicationOIDCSettings  `json:"oidcSettings"`
-	WSFedSettings *SSOApplicationWSFedSettings `json:"wsFedSettings"`
+	WSFedSettings *SSOApplicationWSFedSettings `json:"wsfedSettings"`
 	// CustomAttributes holds this app's per-app custom attribute values, keyed by attribute name.
 	CustomAttributes map[string]any `json:"customAttributes,omitempty"`
 }
@@ -1475,6 +1477,15 @@ type ScopeClaimMappingEntry struct {
 	Scope       string            `json:"scope,omitempty"`
 	Claims      map[string]string `json:"claims,omitempty"`
 	Description string            `json:"description,omitempty"`
+	// ClaimTargets narrows which tokens a claim is written to, keyed by claim name. No entry means every token.
+	ClaimTargets map[string]*ClaimTokenTargets `json:"claimTargets,omitempty"`
+	// AddToNewApplications adds this scope to OIDC SSO and inbound applications created from now on.
+	AddToNewApplications bool `json:"addToNewApplications,omitempty"`
+}
+
+// ClaimTokenTargets lists the tokens a claim is written to: "accessToken", "idToken" and/or "userInfo".
+type ClaimTokenTargets struct {
+	Tokens []string `json:"tokens,omitempty"`
 }
 
 type RoleSearchOptions struct {
@@ -1596,6 +1607,7 @@ type Group struct {
 
 type FlowList struct {
 	Flows []*FlowListEnty `json:"flows"`
+	Total int             `json:"total,omitempty"`
 }
 
 type FlowListEnty struct {
@@ -1781,6 +1793,8 @@ type SnapshotSecrets struct {
 	OAuthProviders []*SnapshotSecret `json:"oauthProviders,omitempty"`
 	// Any missing or input secrets for outbound applications in a snapshot
 	OutboundApps []*SnapshotSecret `json:"outboundApps,omitempty"`
+	// Any missing or input secrets for external auth providers in a snapshot
+	ExternalAuth []*SnapshotSecret `json:"externalAuth,omitempty"`
 }
 
 type SnapshotSecret struct {
@@ -1879,7 +1893,7 @@ type OutboundApp struct {
 	ID                     string       `json:"id,omitempty"`
 	Name                   string       `json:"name,omitempty"`
 	Description            string       `json:"description,omitempty"`
-	TemplateID             string       `json:"templateId,omitempty"`
+	TemplateID             string       `json:"templateId,omitempty"` // Not sent: the server ignores it on create and update
 	ClientID               string       `json:"clientId,omitempty"`
 	Logo                   string       `json:"logo,omitempty"`
 	DiscoveryURL           string       `json:"discoveryUrl,omitempty"`
@@ -2268,7 +2282,7 @@ type ThirdPartyApplicationConsent struct {
 	// The tenant id the consent was granted for
 	TenantID string `json:"tenantId"`
 	// The consent expiry time
-	ExpireTime int32 `json:"expireTime,omitempty"`
+	ExpireTime int32 `json:"ExpireTime,omitempty"`
 	// The consent modified time in milliseconds since epoch
 	ModifiedTime int32 `json:"modifiedTime,omitempty"`
 }
@@ -2455,6 +2469,7 @@ type DescoperLoadOptions struct {
 
 type AccessKeysSearchOptions struct {
 	Sort             []UserSearchSort `json:"sort,omitempty"`
+	Text             string           `json:"text,omitempty"`
 	TenantIDs        []string         `json:"tenantIds,omitempty"`
 	BoundUserID      *string          `json:"boundUserId,omitempty"`
 	CreatingUser     *string          `json:"creatingUser,omitempty"`

@@ -151,7 +151,8 @@ func TestSignUpWhatsApp(t *testing.T) {
 
 		body, err := readBodyMap(r)
 		require.NoError(t, err)
-		assert.EqualValues(t, phone, body["whatsapp"])
+		assert.EqualValues(t, phone, body["phone"])
+		assert.NotContains(t, body, "whatsapp")
 		assert.EqualValues(t, phone, body["loginId"])
 		assert.EqualValues(t, "test", body["user"].(map[string]any)["name"])
 		resp := MaskedPhoneRes{MaskedPhone: maskedPhone}

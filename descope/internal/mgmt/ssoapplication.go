@@ -267,6 +267,9 @@ func (s *ssoApplication) RevokeApplicationSecret(ctx context.Context, id string,
 	if id == "" {
 		return nil, utils.NewInvalidArgumentError("id")
 	}
+	if name == "" {
+		return nil, utils.NewInvalidArgumentError("name")
+	}
 	req := map[string]any{
 		"appId": id,
 		"name":  name,

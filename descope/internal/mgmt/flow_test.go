@@ -289,3 +289,13 @@ func TestGetManagementFlowAsyncResultFailure(t *testing.T) {
 	require.Error(t, err)
 	assert.Nil(t, res)
 }
+
+func TestListFlowsReadsTotal(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, map[string]any{
+		"flows": []any{map[string]any{"id": "abc"}},
+		"total": 7,
+	}))
+	res, err := mgmt.Flow().ListFlows(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, 7, res.Total)
+}

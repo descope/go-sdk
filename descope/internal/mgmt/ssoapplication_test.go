@@ -2,6 +2,7 @@ package mgmt
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"testing"
 
@@ -936,4 +937,19 @@ func TestSSOApplicationLoadCustomAttributesSuccess(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, res, 1)
 	require.Equal(t, "npi_level", res[0].Name)
+}
+
+func TestSSOApplicationRevokeSecretErrorEmptyName(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	secrets, err := mgmt.SSOApplication().RevokeApplicationSecret(context.Background(), "test", "")
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	require.Contains(t, err.Error(), "name")
+	require.Nil(t, secrets)
+}
+
+func TestSSOApplicationWSFedSettingsKey(t *testing.T) {
+	bs, err := json.Marshal(&descope.SSOApplication{WSFedSettings: &descope.SSOApplicationWSFedSettings{}})
+	require.NoError(t, err)
+	require.Contains(t, string(bs), `"wsfedSettings":`)
+	require.NotContains(t, string(bs), `"wsFedSettings"`)
 }
