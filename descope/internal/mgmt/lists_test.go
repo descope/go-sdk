@@ -369,15 +369,21 @@ func TestListCreateEmptyName(t *testing.T) {
 }
 
 func TestListCreateEmptyType(t *testing.T) {
-	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	response := map[string]any{"list": map[string]any{"id": "list1", "name": "Test List", "type": "texts"}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, "Test List", req["name"])
+		require.Equal(t, "", req["type"])
+	}, response))
 	listReq := &descope.ListRequest{
 		Name: "Test List",
 		Type: "",
 	}
 	list, err := mgmt.List().Create(context.Background(), listReq)
-	require.Error(t, err)
-	require.Nil(t, list)
-	require.Contains(t, err.Error(), "type")
+	require.NoError(t, err)
+	require.NotNil(t, list)
+	require.Equal(t, "list1", list.ID)
 }
 
 func TestListUpdateEmptyID(t *testing.T) {

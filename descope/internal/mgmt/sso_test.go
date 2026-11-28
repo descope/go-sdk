@@ -2189,3 +2189,13 @@ func TestDeleteXAASettingsErrorMissingTenantID(t *testing.T) {
 	require.Error(t, err)
 	require.Contains(t, err.Error(), "tenantID")
 }
+
+func TestSSOLoadSettingsDecodesName(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(nil, map[string]any{
+		"ssoId": "somessoid",
+		"name":  "Okta",
+	}))
+	res, err := mgmt.SSO().LoadSettings(context.Background(), "abc", "somessoid")
+	require.NoError(t, err)
+	require.Equal(t, "Okta", res.Name)
+}

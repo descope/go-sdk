@@ -718,3 +718,20 @@ func TestOutboundApplicationDeleteTokenByIDError(t *testing.T) {
 	require.Error(t, err)
 	require.False(t, called)
 }
+
+func TestOutboundApplicationCreateUpdateOmitTemplateID(t *testing.T) {
+	response := map[string]any{"app": map[string]any{"id": "id1", "name": "app1"}}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		if app, ok := req["app"].(map[string]any); ok {
+			req = app
+		}
+		assert.NotContains(t, req, "templateId")
+	}, response))
+	app := descope.OutboundApp{ID: "id1", Name: "app1", TemplateID: "tmpl"}
+	_, err := mgmt.OutboundApplication().CreateApplication(context.Background(), &descope.CreateOutboundAppRequest{OutboundApp: app})
+	require.NoError(t, err)
+	_, err = mgmt.OutboundApplication().UpdateApplication(context.Background(), &app, nil)
+	require.NoError(t, err)
+}

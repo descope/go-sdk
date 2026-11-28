@@ -2099,6 +2099,9 @@ err = tc.DescopeClient().Management.ThirdPartyApplication().PatchApplication(con
 // Load third party application by id
 app, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadApplication(context.Background(), "appId")
 
+// Load third party application by its OAuth client id
+app, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadApplicationByClientID(context.Background(), "clientId")
+
 // Load all third party applications with options for pagination
 apps, total, err = tc.DescopeClient().Management.ThirdPartyApplication().LoadAllApplications(context.Background(), &descope.ThirdPartyApplicationSearchOptions{
     Page: 0,

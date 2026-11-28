@@ -1324,6 +1324,9 @@ type ThirdPartyApplication interface {
 	// Load a third party application by id.
 	LoadApplication(ctx context.Context, id string) (*descope.ThirdPartyApplication, error)
 
+	// Load a third party application by its OAuth client id.
+	LoadApplicationByClientID(ctx context.Context, clientID string) (*descope.ThirdPartyApplication, error)
+
 	// Get a third party application by the application id.
 	GetApplicationSecret(ctx context.Context, id string) (string, error)
 

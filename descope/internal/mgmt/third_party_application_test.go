@@ -2,6 +2,7 @@ package mgmt
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"testing"
 
@@ -17,7 +18,7 @@ func TestThirdPartyApplicationCreateSuccess(t *testing.T) {
 		require.Equal(t, r.Header.Get("Authorization"), "Bearer a:key")
 		req := map[string]any{}
 		require.NoError(t, helpers.ReadBody(r, &req))
-		require.Equal(t, "id1", req["id"])
+		require.NotContains(t, req, "id")
 		require.Equal(t, "abc", req["name"])
 		require.Equal(t, "desc", req["description"])
 		require.Equal(t, "logo", req["logo"])
@@ -884,10 +885,11 @@ func TestThirdPartyApplicationLoadReturnsForceDpop(t *testing.T) {
 		require.Equal(t, "confidential", req["clientType"])
 	}))
 	require.NoError(t, mgmt.ThirdPartyApplication().UpdateApplication(context.Background(), &descope.ThirdPartyApplicationRequest{
-		ID:         res.ID,
-		Name:       res.Name,
-		ClientType: res.ClientType,
-		ForceDpop:  res.ForceDpop,
+		ID:           res.ID,
+		Name:         res.Name,
+		LoginPageURL: "https://example.com/login",
+		ClientType:   res.ClientType,
+		ForceDpop:    res.ForceDpop,
 	}))
 }
 
@@ -902,7 +904,7 @@ func TestThirdPartyApplicationAgenticAndCreatedBySentWhenSet(t *testing.T) {
 	_, _, err := mgmt.ThirdPartyApplication().CreateApplication(context.Background(), &descope.ThirdPartyApplicationRequest{Name: "agent", Agentic: true, CreatedBy: "owner@example.com"})
 	require.NoError(t, err)
 	// An update that never sets them must not send them, or it would reset the stored values.
-	err = mgmt.ThirdPartyApplication().UpdateApplication(context.Background(), &descope.ThirdPartyApplicationRequest{ID: "id1", Name: "agent"})
+	err = mgmt.ThirdPartyApplication().UpdateApplication(context.Background(), &descope.ThirdPartyApplicationRequest{ID: "id1", Name: "agent", LoginPageURL: "https://example.com/login"})
 	require.NoError(t, err)
 
 	require.Len(t, bodies, 2)
@@ -958,4 +960,60 @@ func TestAllThirdPartyApplicationsLoadByCreatedByAndAgentic(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotContains(t, body, "createdBy")
 	assert.NotContains(t, body, "agentic")
+}
+
+func TestThirdPartyApplicationCreateOmitsID(t *testing.T) {
+	response := map[string]any{"id": "qux", "cleartext": "secret"}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		assert.Equal(t, "foo", req["name"])
+		assert.NotContains(t, req, "id")
+	}, response))
+	id, _, err := mgmt.ThirdPartyApplication().CreateApplication(context.Background(), &descope.ThirdPartyApplicationRequest{ID: "ignored", Name: "foo"})
+	require.NoError(t, err)
+	assert.Equal(t, "qux", id)
+}
+
+func TestThirdPartyApplicationUpdateMissingLoginPageURL(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	err := mgmt.ThirdPartyApplication().UpdateApplication(context.Background(), &descope.ThirdPartyApplicationRequest{ID: "id1", Name: "foo"})
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "LoginPageURL")
+}
+
+func TestThirdPartyApplicationRevokeSecretMissingName(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	_, err := mgmt.ThirdPartyApplication().RevokeApplicationSecret(context.Background(), "id1", "")
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+	assert.Contains(t, err.Error(), "name")
+}
+
+func TestThirdPartyApplicationLoadByClientID(t *testing.T) {
+	response := map[string]any{"id": "app1", "name": "foo", "clientId": "client1"}
+	mgmt := newTestMgmt(nil, helpers.DoOkWithBody(func(r *http.Request) {
+		assert.Equal(t, http.MethodGet, r.Method)
+		assert.Equal(t, "/v2/mgmt/thirdparty/app/load", r.URL.Path)
+		assert.Equal(t, "client1", r.URL.Query().Get("clientId"))
+		assert.Empty(t, r.URL.Query().Get("id"))
+	}, response))
+	app, err := mgmt.ThirdPartyApplication().LoadApplicationByClientID(context.Background(), "client1")
+	require.NoError(t, err)
+	assert.Equal(t, "app1", app.ID)
+	assert.Equal(t, "client1", app.ClientID)
+}
+
+func TestThirdPartyApplicationLoadByClientIDMissing(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+	_, err := mgmt.ThirdPartyApplication().LoadApplicationByClientID(context.Background(), "")
+	require.ErrorIs(t, err, descope.ErrInvalidArguments)
+}
+
+func TestThirdPartyApplicationConsentExpireTimeKey(t *testing.T) {
+	bs, err := json.Marshal(&descope.ThirdPartyApplicationConsent{ExpireTime: 5})
+	require.NoError(t, err)
+	assert.Contains(t, string(bs), `"ExpireTime":5`)
+	consent := &descope.ThirdPartyApplicationConsent{}
+	require.NoError(t, json.Unmarshal([]byte(`{"ExpireTime":7}`), consent))
+	assert.EqualValues(t, 7, consent.ExpireTime)
 }

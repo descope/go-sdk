@@ -2461,6 +2461,10 @@ type MockThirdPartyApplication struct {
 	LoadApplicationResponse *descope.ThirdPartyApplication
 	LoadApplicationError    error
 
+	LoadApplicationByClientIDAssert   func(clientID string)
+	LoadApplicationByClientIDResponse *descope.ThirdPartyApplication
+	LoadApplicationByClientIDError    error
+
 	PatchApplicationAssert func(*descope.PatchThirdPartyApplicationRequest)
 	PatchApplicationError  error
 
@@ -2538,6 +2542,13 @@ func (m *MockThirdPartyApplication) LoadApplication(_ context.Context, id string
 		m.LoadApplicationAssert(id)
 	}
 	return m.LoadApplicationResponse, m.LoadApplicationError
+}
+
+func (m *MockThirdPartyApplication) LoadApplicationByClientID(_ context.Context, clientID string) (*descope.ThirdPartyApplication, error) {
+	if m.LoadApplicationByClientIDAssert != nil {
+		m.LoadApplicationByClientIDAssert(clientID)
+	}
+	return m.LoadApplicationByClientIDResponse, m.LoadApplicationByClientIDError
 }
 
 func (m *MockThirdPartyApplication) LoadAllApplications(_ context.Context, _ *descope.ThirdPartyApplicationSearchOptions) ([]*descope.ThirdPartyApplication, int, error) {

@@ -53,14 +53,37 @@ func TestProjectImportWithExcludes(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestProjectImportWithInvalidExclude(t *testing.T) {
-	mgmt := newTestMgmt(nil, helpers.DoOk(nil))
+func TestProjectImportWithOtherExcludes(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		require.Equal(t, []any{"connectors", "flows"}, req["excludes"])
+	}))
 	req := &descope.ImportSnapshotRequest{
 		Files:    map[string]any{"foo": "bar"},
-		Excludes: []descope.SnapshotExclude{"pikachu"},
+		Excludes: []descope.SnapshotExclude{"connectors", "flows"},
 	}
 	err := mgmt.Project().ImportSnapshot(context.Background(), req)
-	require.ErrorContains(t, err, "pikachu")
+	require.NoError(t, err)
+}
+
+func TestProjectImportSendsExternalAuthSecrets(t *testing.T) {
+	mgmt := newTestMgmt(nil, helpers.DoOk(func(r *http.Request) {
+		req := map[string]any{}
+		require.NoError(t, helpers.ReadBody(r, &req))
+		secrets := req["inputSecrets"].(map[string]any)
+		externalAuth := secrets["externalAuth"].([]any)
+		require.Len(t, externalAuth, 1)
+		require.Equal(t, "ea1", externalAuth[0].(map[string]any)["id"])
+	}))
+	req := &descope.ImportSnapshotRequest{
+		Files: map[string]any{"foo": "bar"},
+		InputSecrets: &descope.SnapshotSecrets{
+			ExternalAuth: []*descope.SnapshotSecret{{ID: "ea1", Name: "ext", Type: "secret", Value: "v"}},
+		},
+	}
+	err := mgmt.Project().ImportSnapshot(context.Background(), req)
+	require.NoError(t, err)
 }
 
 func TestValidateProjectImport(t *testing.T) {

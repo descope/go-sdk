@@ -24,6 +24,7 @@ func (s *thirdPartyApplication) CreateApplication(ctx context.Context, appReques
 	}
 
 	req := makeCreateUpdateThirdPartyApplicationRequest(appRequest)
+	delete(req, "id") // the server assigns the id on create
 	httpRes, err := s.client.DoPostRequest(ctx, api.Routes.ManagementThirdPartyApplicationCreate(), req, nil, "")
 	if err != nil {
 		return "", "", err
@@ -47,6 +48,9 @@ func (s *thirdPartyApplication) UpdateApplication(ctx context.Context, appReques
 	}
 	if appRequest.Name == "" {
 		return utils.NewInvalidArgumentError("appRequest.Name")
+	}
+	if appRequest.LoginPageURL == "" {
+		return utils.NewInvalidArgumentError("appRequest.LoginPageURL")
 	}
 
 	req := makeCreateUpdateThirdPartyApplicationRequest(appRequest)
@@ -91,6 +95,20 @@ func (s *thirdPartyApplication) LoadApplication(ctx context.Context, id string) 
 	}
 	req := &api.HTTPRequest{
 		QueryParams: map[string]string{"id": id},
+	}
+	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementThirdPartyApplicationLoad(), req, "")
+	if err != nil {
+		return nil, err
+	}
+	return unmarshalLoadThirdPartyApplicationResponse(res)
+}
+
+func (s *thirdPartyApplication) LoadApplicationByClientID(ctx context.Context, clientID string) (*descope.ThirdPartyApplication, error) {
+	if clientID == "" {
+		return nil, utils.NewInvalidArgumentError("clientID")
+	}
+	req := &api.HTTPRequest{
+		QueryParams: map[string]string{"clientId": clientID},
 	}
 	res, err := s.client.DoGetRequest(ctx, api.Routes.ManagementThirdPartyApplicationLoad(), req, "")
 	if err != nil {
@@ -206,6 +224,9 @@ func (s *thirdPartyApplication) RevealApplicationSecret(ctx context.Context, id 
 func (s *thirdPartyApplication) RevokeApplicationSecret(ctx context.Context, id string, name string) ([]*descope.ClientSecretMeta, error) {
 	if id == "" {
 		return nil, utils.NewInvalidArgumentError("id")
+	}
+	if name == "" {
+		return nil, utils.NewInvalidArgumentError("name")
 	}
 	req := map[string]any{
 		"id":   id,

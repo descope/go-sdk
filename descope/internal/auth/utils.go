@@ -12,7 +12,6 @@ type authenticationRequestBody struct {
 }
 
 type authenticationSignUpRequestBody struct {
-	WhatsApp     string                `json:"whatsapp,omitempty"`
 	Phone        string                `json:"phone,omitempty"`
 	Email        string                `json:"email,omitempty"`
 	LoginID      string                `json:"loginId,omitempty"`
@@ -159,12 +158,8 @@ func newSignInRequestBody(loginID string, loginOptions *descope.LoginOptions) *a
 
 func newSignUpRequestBody(method descope.DeliveryMethod, user *descope.User) *authenticationSignUpRequestBody {
 	switch method {
-	case descope.MethodSMS:
+	case descope.MethodSMS, descope.MethodVoice, descope.MethodWhatsApp:
 		return &authenticationSignUpRequestBody{Phone: user.Phone}
-	case descope.MethodVoice:
-		return &authenticationSignUpRequestBody{Phone: user.Phone}
-	case descope.MethodWhatsApp:
-		return &authenticationSignUpRequestBody{WhatsApp: user.Phone}
 	}
 
 	return &authenticationSignUpRequestBody{Email: user.Email}
