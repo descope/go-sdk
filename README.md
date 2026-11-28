@@ -2089,7 +2089,7 @@ appID, secret, err = descopeClient.Management.ThirdPartyApplication().CreateAppl
 
 // Update a third party application by id
 // Update will override all fields as is. Use carefully.
-err = tc.DescopeClient().Management.ThirdPartyApplication().UpdateApplication(context.TODO(), &descope.ThirdPartyApplicationRequest{ID: "my-id", Name: "my new name"})
+err = tc.DescopeClient().Management.ThirdPartyApplication().UpdateApplication(context.TODO(), &descope.ThirdPartyApplicationRequest{ID: "my-id", Name: "my new name", LoginPageURL: "https://example.com/login"})
 
 // Patch a third party application by id
 // Only the fields that are set are sent. Anything left nil keeps its current value.
